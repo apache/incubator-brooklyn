@@ -269,6 +269,26 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     /**
      * Publishes (via {@link #persister}) the state of this management node with itself set to master.
      */
+    protected synchronized void publishDemotionFromMaterOnFailure() {
+        checkState(getNodeState() == ManagementNodeState.FAILED, "node status must be failed on publish, but is %s", getNodeState());
+        
+        if (persister == null) {
+            LOG.info("Cannot publish management-node health as no persister");
+            return;
+        }
+        
+        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord();
+        Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder()
+                .node(memento)
+                .clearMaster(ownNodeId)
+                .build();
+        persister.delta(delta);
+        if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
+    }
+    
+    /**
+     * Publishes (via {@link #persister}) the state of this management node with itself set to master.
+     */
     protected synchronized void publishPromotionToMaster() {
         checkState(getNodeState() == ManagementNodeState.MASTER, "node status must be master on publish, but is %s", getNodeState());
         
@@ -380,14 +400,18 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 LOG.warn("Problem in promption-listener (continuing)", e);
             }
         }
+        nodeState = ManagementNodeState.MASTER;
+        publishPromotionToMaster();
         try {
-            nodeState = ManagementNodeState.MASTER;
-            publishPromotionToMaster();
             managementContext.getRebindManager().rebind();
-            managementContext.getRebindManager().start();
-        } catch (IOException e) {
-            LOG.error("Error during rebind when promoting node to master", e);
+        } catch (Exception e) {
+            LOG.info("Problem during rebind when promoting node to master; demoting to failed and rethrowing): "+e);
+            nodeState = ManagementNodeState.FAILED;
+            publishDemotionFromMaterOnFailure();
+            throw Exceptions.propagate(e);
+
         }
+        managementContext.getRebindManager().start();
     }
 
     /**

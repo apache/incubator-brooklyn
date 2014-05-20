@@ -1,6 +1,7 @@
 package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
 import brooklyn.mementos.BrooklynMemento;
@@ -19,13 +20,13 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     protected volatile MutableBrooklynMemento memento = new MutableBrooklynMemento();
     
     @Override
-    public BrooklynMemento loadMemento(LookupContext lookupContext) {
+    public BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
         // Trusting people not to cast+modify, because the in-memory persister wouldn't be used in production code
         return memento;
     }
     
     @Override
-    public BrooklynMementoManifest loadMementoManifest() {
+    public BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) {
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
         for (EntityMemento entity : memento.getEntityMementos().values()) {
             builder.entity(entity.getId(), entity.getType());

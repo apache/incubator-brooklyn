@@ -147,21 +147,39 @@ public class RebindTestUtils {
     }
 
     public static Application rebind(File mementoDir, ClassLoader classLoader) throws Exception {
+        return rebind(mementoDir, classLoader, (RebindExceptionHandler)null);
+    }
+    
+    public static Application rebind(File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
         
         LocalManagementContext newManagementContext = newPersistingManagementContextUnstarted(mementoDir, classLoader);
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        List<Application> newApps;
+        if (exceptionHandler == null) {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        } else {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
+        }
         newManagementContext.getRebindManager().start();
         if (newApps.isEmpty()) throw new IllegalStateException("Application could not be rebinded; serialization probably failed");
         return newApps.get(0);
     }
 
     public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader) throws Exception {
+        return rebind(newManagementContext, mementoDir, classLoader, (RebindExceptionHandler)null);
+    }
+    
+    public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
         
         BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister);
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        List<Application> newApps;
+        if (exceptionHandler == null) {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        } else {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
+        }
         newManagementContext.getRebindManager().start();
         return newApps.get(0);
     }

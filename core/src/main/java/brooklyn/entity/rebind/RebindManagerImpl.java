@@ -20,6 +20,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
+import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
@@ -148,26 +149,26 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public List<Application> rebind(final ClassLoader classLoader) throws IOException {
+        RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(RebindFailureMode.CONTINUE, RebindFailureMode.FAIL_AT_END);
+        return rebind(classLoader, exceptionHandler);
+    }
+    
+    @Override
+    public List<Application> rebind(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
         checkNotNull(classLoader, "classLoader");
-        
+
         try {
             Reflections reflections = new Reflections(classLoader);
             Map<String,Entity> entities = Maps.newLinkedHashMap();
             Map<String,Location> locations = Maps.newLinkedHashMap();
             Map<String,Policy> policies = Maps.newLinkedHashMap();
-            
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
     
             LookupContext realLookupContext = new LookupContext() {
-                private final boolean removeDanglingRefs = true;
                 @Override public Entity lookupEntity(Class<?> type, String id) {
                     Entity result = rebindContext.getEntity(id);
                     if (result == null) {
-                        if (removeDanglingRefs) {
-                            LOG.warn("No entity found with id "+id+"; returning null");
-                        } else {
-                            throw new IllegalStateException("No entity found with id "+id);
-                        }
+                        result = exceptionHandler.onDanglingEntityRef(id);
                     } else if (type != null && !type.isInstance(result)) {
                         LOG.warn("Entity with id "+id+" does not match type "+type+"; returning "+result);
                     }
@@ -176,11 +177,7 @@ public class RebindManagerImpl implements RebindManager {
                 @Override public Location lookupLocation(Class<?> type, String id) {
                     Location result = rebindContext.getLocation(id);
                     if (result == null) {
-                        if (removeDanglingRefs) {
-                            LOG.warn("No location found with id "+id+"; returning null");
-                        } else {
-                            throw new IllegalStateException("No location found with id "+id);
-                        }
+                        result = exceptionHandler.onDanglingLocationRef(id);
                     } else if (type != null && !type.isInstance(result)) {
                         LOG.warn("Location with id "+id+" does not match type "+type+"; returning "+result);
                     }
@@ -196,18 +193,22 @@ public class RebindManagerImpl implements RebindManager {
             // entity), then second phase might try to reconstitute an entity that has not been put in
             // the rebindContext. This should not affect normal production usage, because rebind is run
             // against a data-store that is not being written to by other brooklyn instance(s).
-            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest();
+            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
             
             // Instantiate locations
             LOG.info("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
             for (Map.Entry<String, String> entry : mementoManifest.getLocationIdToType().entrySet()) {
-                String entityId = entry.getKey();
-                String entityType = entry.getValue();
-                if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", entityId);
+                String locId = entry.getKey();
+                String locType = entry.getValue();
+                if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", locId);
                 
-                Location location = newLocation(entityId, entityType, reflections);
-                locations.put(entityId, location);
-                rebindContext.registerLocation(entityId, location);
+                try {
+                    Location location = newLocation(locId, locType, reflections);
+                    locations.put(locId, location);
+                    rebindContext.registerLocation(locId, location);
+                } catch (Exception e) {
+                    exceptionHandler.onCreateLocationFailed(locId, locType, e);
+                }
             }
             
             // Instantiate entities
@@ -217,21 +218,29 @@ public class RebindManagerImpl implements RebindManager {
                 String entityType = entry.getValue();
                 if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
                 
-                Entity entity = newEntity(entityId, entityType, reflections);
-                entities.put(entityId, entity);
-                rebindContext.registerEntity(entityId, entity);
+                try {
+                    Entity entity = newEntity(entityId, entityType, reflections);
+                    entities.put(entityId, entity);
+                    rebindContext.registerEntity(entityId, entity);
+                } catch (Exception e) {
+                    exceptionHandler.onCreateEntityFailed(entityId, entityType, e);
+                }
             }
             
-            BrooklynMemento memento = persister.loadMemento(realLookupContext);
+            BrooklynMemento memento = persister.loadMemento(realLookupContext, exceptionHandler);
             
             // Instantiate policies
             LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
             for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
                 
-                Policy policy = newPolicy(policyMemento, reflections);
-                policies.put(policyMemento.getId(), policy);
-                rebindContext.registerPolicy(policyMemento.getId(), policy);
+                try {
+                    Policy policy = newPolicy(policyMemento, reflections);
+                    policies.put(policyMemento.getId(), policy);
+                    rebindContext.registerPolicy(policyMemento.getId(), policy);
+                } catch (Exception e) {
+                    exceptionHandler.onCreatePolicyFailed(policyMemento.getId(), policyMemento.getType(), e);
+                }
             }
             
             // Reconstruct locations
@@ -239,8 +248,16 @@ public class RebindManagerImpl implements RebindManager {
             for (LocationMemento locMemento : sortParentFirst(memento.getLocationMementos()).values()) {
                 Location location = rebindContext.getLocation(locMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
-    
-                ((LocationInternal)location).getRebindSupport().reconstruct(rebindContext, locMemento);
+                if (location == null) {
+                    // usually because of creation-failure, when not using fail-fast
+                    exceptionHandler.onLocationNotFound(locMemento.getId());
+                } else {
+                    try {
+                        ((LocationInternal)location).getRebindSupport().reconstruct(rebindContext, locMemento);
+                    } catch (Exception e) {
+                        exceptionHandler.onRebindLocationFailed(location, e);
+                    }
+                }
             }
     
             // Reconstruct policies
@@ -248,8 +265,17 @@ public class RebindManagerImpl implements RebindManager {
             for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
                 Policy policy = rebindContext.getPolicy(policyMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
-    
-                policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
+
+                if (policy == null) {
+                    // usually because of creation-failure, when not using fail-fast
+                    exceptionHandler.onPolicyNotFound(policyMemento.getId());
+                } else {
+                    try {
+                        policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
+                    } catch (Exception e) {
+                        exceptionHandler.onRebindPolicyFailed(policy, e);
+                    }
+                }
             }
     
             // Reconstruct entities
@@ -258,8 +284,17 @@ public class RebindManagerImpl implements RebindManager {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
     
-                entityMemento.injectTypeClass(entity.getClass());
-                ((EntityInternal)entity).getRebindSupport().reconstruct(rebindContext, entityMemento);
+                if (entity == null) {
+                    // usually because of creation-failure, when not using fail-fast
+                    exceptionHandler.onEntityNotFound(entityMemento.getId());
+                } else {
+                    try {
+                        entityMemento.injectTypeClass(entity.getClass());
+                        ((EntityInternal)entity).getRebindSupport().reconstruct(rebindContext, entityMemento);
+                    } catch (Exception e) {
+                        exceptionHandler.onRebindEntityFailed(entity, e);
+                    }
+                }
             }
             
             LOG.info("RebindManager managing locations");
@@ -267,27 +302,53 @@ public class RebindManagerImpl implements RebindManager {
                 if (location.getParent()==null) {
                     // manage all root locations
                     // LocationManager.manage perhaps should not be deprecated, as we need to do this I think?
-                    managementContext.getLocationManager().manage(location);
+                    try {
+                        managementContext.getLocationManager().manage(location);
+                    } catch (Exception e) {
+                        exceptionHandler.onManageLocationFailed(location, e);
+                    }
                 }
             }
             
             // Manage the top-level apps (causing everything under them to become managed)
             LOG.info("RebindManager managing entities");
             for (String appId : memento.getApplicationIds()) {
-                Entities.startManagement((Application)rebindContext.getEntity(appId), managementContext);
+                Entity entity = rebindContext.getEntity(appId);
+                if (entity == null) {
+                    // usually because of creation-failure, when not using fail-fast
+                    exceptionHandler.onEntityNotFound(appId);
+                } else {
+                    try {
+                        Entities.startManagement((Application)entity, managementContext);
+                    } catch (Exception e) {
+                        exceptionHandler.onManageEntityFailed(entity, e);
+                    }
+                }
             }
             
             // Return the top-level applications
             List<Application> apps = Lists.newArrayList();
             for (String appId : memento.getApplicationIds()) {
-                apps.add((Application)rebindContext.getEntity(appId));
+                Entity entity = rebindContext.getEntity(appId);
+                if (entity == null) {
+                    // usually because of creation-failure, when not using fail-fast
+                    exceptionHandler.onEntityNotFound(appId);
+                } else {
+                    try {
+                        apps.add((Application)entity);
+                    } catch (Exception e) {
+                        exceptionHandler.onManageEntityFailed(entity, e);
+                    }
+                }
             }
-            
+
+            exceptionHandler.onDone();
+
             LOG.info("RebindManager complete; return apps: {}", memento.getApplicationIds());
             return apps;
-        } catch (Exception e) {
-            LOG.warn("Problem during rebind (rethrowing)", e);
-            throw Exceptions.propagate(e);
+            
+        } catch (RuntimeException e) {
+            throw exceptionHandler.onFailed(e);
         }
     }
     
