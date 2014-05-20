@@ -4,14 +4,13 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.EntityType;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityTypes;
@@ -44,17 +43,16 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
 
     public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
-        protected EntityType typeInfo;
-        protected Map<ConfigKey, Object> config = Maps.newLinkedHashMap();
+        protected Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
         protected Map<String, Object> configUnmatched = Maps.newLinkedHashMap();
-        protected Map<AttributeSensor, Object> attributes = Maps.newLinkedHashMap();
+        protected Map<AttributeSensor<?>, Object> attributes = Maps.newLinkedHashMap();
         protected List<String> locations = Lists.newArrayList();
         protected List<String> policies = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
+        protected List<Effector<?>> effectors = Lists.newArrayList();
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
-            typeInfo = other.getTypeInfo();
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
             configUnmatched.putAll(other.getConfigUnmatched());
@@ -62,6 +60,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             locations.addAll(other.getLocations());
             policies.addAll(other.getPolicies());
             members.addAll(other.getMembers());
+            effectors.addAll(other.getEffectors());
             return this;
         }
         public EntityMemento build() {
@@ -74,21 +73,17 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private List<String> locations;
     private List<String> members;
     private Map<String, Object> attributes;
-    private Set<String> entityReferenceConfigs;
-    private Set<String> entityReferenceAttributes;
-    private Set<String> locationReferenceConfigs;
-    private Set<String> locationReferenceAttributes;
     private List<String> policies;
     
     // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
-    private Map<String, ConfigKey> configKeys;
+    private Map<String, ConfigKey<?>> configKeys;
     private transient Map<String, ConfigKey<?>> staticConfigKeys;
-    private Map<String, AttributeSensor> attributeKeys;
+    private Map<String, AttributeSensor<?>> attributeKeys;
     private transient Map<String, Sensor<?>> staticSensorKeys;
     
-    private transient Map<ConfigKey, Object> configByKey;
+    private transient Map<ConfigKey<?>, Object> configByKey;
     private transient Map<String, Object> configUnmatched;
-    private transient Map<AttributeSensor, Object> attributesByKey;
+    private transient Map<AttributeSensor<?>, Object> attributesByKey;
 
     // for de-serialization
     @SuppressWarnings("unused")
@@ -100,10 +95,11 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     protected BasicEntityMemento(Builder builder) {
         super(builder);
         
-        setTypeInfo(builder.typeInfo);
         locations = toPersistedList(builder.locations);
         policies = toPersistedList(builder.policies);
         members = toPersistedList(builder.members);
+        
+        effectors = toPersistedList(builder.effectors);
         
         configByKey = builder.config;
         configUnmatched = builder.configUnmatched;
@@ -112,8 +108,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         if (configByKey!=null) {
             configKeys = Maps.newLinkedHashMap();
             config = Maps.newLinkedHashMap();
-            for (Map.Entry<ConfigKey, Object> entry : configByKey.entrySet()) {
-                ConfigKey key = entry.getKey();
+            for (Map.Entry<ConfigKey<?>, Object> entry : configByKey.entrySet()) {
+                ConfigKey<?> key = entry.getKey();
                 if (!key.equals(getStaticConfigKeys().get(key.getName())))
                     configKeys.put(key.getName(), key);
                 config.put(key.getName(), entry.getValue());
@@ -129,8 +125,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         if (attributesByKey!=null) {
             attributeKeys = Maps.newLinkedHashMap();
             attributes = Maps.newLinkedHashMap();
-            for (Map.Entry<AttributeSensor, Object> entry : attributesByKey.entrySet()) {
-                AttributeSensor key = entry.getKey();
+            for (Map.Entry<AttributeSensor<?>, Object> entry : attributesByKey.entrySet()) {
+                AttributeSensor<?> key = entry.getKey();
                 if (!key.equals(getStaticSensorKeys().get(key.getName())))
                     attributeKeys.put(key.getName(), key);
                 attributes.put(key.getName(), entry.getValue());
@@ -142,6 +138,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
 
     protected synchronized Map<String, ConfigKey<?>> getStaticConfigKeys() {
         if (staticConfigKeys==null) {
+            @SuppressWarnings("unchecked")
             Class<? extends Entity> clazz = (Class<? extends Entity>) getTypeClass();
             staticConfigKeys = (clazz == null) ? EntityTypes.getDefinedConfigKeys(getType()) : EntityTypes.getDefinedConfigKeys(clazz);
         }
@@ -158,6 +155,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
 
     protected synchronized Map<String, Sensor<?>> getStaticSensorKeys() {
         if (staticSensorKeys==null) {
+            @SuppressWarnings("unchecked")
             Class<? extends Entity> clazz = (Class<? extends Entity>) getTypeClass();
             staticSensorKeys = (clazz == null) ? EntityTypes.getDefinedSensors(getType()) : EntityTypes.getDefinedSensors(clazz);
         }
@@ -203,7 +201,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
     
     @Override
-    public Map<ConfigKey, Object> getConfig() {
+    public Map<ConfigKey<?>, Object> getConfig() {
         if (configByKey == null) postDeserialize();
         return Collections.unmodifiableMap(configByKey);
     }
@@ -215,7 +213,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
     
     @Override
-    public Map<AttributeSensor, Object> getAttributes() {
+    public Map<AttributeSensor<?>, Object> getAttributes() {
         if (attributesByKey == null) postDeserialize();
         return Collections.unmodifiableMap(attributesByKey);
     }
@@ -246,20 +244,9 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
                 .add("locations", getLocations());
     }
 
-    
-    // WORK IN PROGRESS @ahgittin 19 May 2014 --
-    // works but type info is way too large;
-    // disabled to prevent incompatible serialization as this is fixed
-    
-//  private EntityType typeInfo;
-    @Override
-    public EntityType getTypeInfo() {
-//      return typeInfo;
-        return null;
+    private List<Effector<?>> effectors;
+    public List<Effector<?>> getEffectors() {
+        return fromPersistedList(effectors);
     }
-    private void setTypeInfo(EntityType typeInfo) {
-// TODO set the field above
-    }
-
 
 }

@@ -19,8 +19,6 @@ import com.google.common.io.Files;
 
 public class MementoFileWriterSyncTest {
 
-    private static final long TIMEOUT_MS = 10*1000;
-    
     private File file;
     private File dir;
     private MementoSerializer<String> serializer;

@@ -20,7 +20,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.test.entity.TestApplication;
@@ -35,6 +34,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class XmlMementoSerializerTest {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(XmlMementoSerializerTest.class);
 
     private XmlMementoSerializer<Object> serializer;
@@ -118,7 +118,8 @@ public class XmlMementoSerializerTest {
         TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
         ManagementContext managementContext = app.getManagementContext();
         try {
-            final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+            @SuppressWarnings("deprecation")
+            final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(brooklyn.location.basic.SimulatedLocation.class));
             serializer.setLookupContext(new LookupContextImpl(ImmutableMap.<String,Entity>of(), ImmutableMap.of(loc.getId(), loc)));
             assertSerializeAndDeserialize(loc);
         } finally {
@@ -173,6 +174,7 @@ public class XmlMementoSerializerTest {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private <T> T assertSerializeAndDeserialize(T obj) throws Exception {
         String serializedForm = serializer.toString(obj);
         System.out.println("serializedForm="+serializedForm);

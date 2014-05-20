@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal;
@@ -43,20 +44,23 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     	return memento;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
     	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity: {}", memento.toVerboseString());
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());
-        ((EntityInternal)entity).getMutableEntityType().copyAll(memento.getTypeInfo());
+        
+        for (Effector<?> eff: memento.getEffectors())
+            ((EntityInternal)entity).getMutableEntityType().addEffector(eff);
 
-        for (Map.Entry<ConfigKey, Object> entry : memento.getConfig().entrySet()) {
+        for (Map.Entry<ConfigKey<?>, Object> entry : memento.getConfig().entrySet()) {
             try {
-                ConfigKey key = entry.getKey();
+                ConfigKey<?> key = entry.getKey();
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-                entity.setConfig(key, value);
+                entity.setConfig((ConfigKey<Object>)key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
             }
@@ -64,12 +68,12 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         ((EntityInternal)entity).getConfigMap().addToLocalBag(memento.getConfigUnmatched());
         ((EntityInternal)entity).refreshInheritedConfig();
         
-        for (Map.Entry<AttributeSensor, Object> entry : memento.getAttributes().entrySet()) {
+        for (Map.Entry<AttributeSensor<?>, Object> entry : memento.getAttributes().entrySet()) {
             try {
-                AttributeSensor key = entry.getKey();
+                AttributeSensor<?> key = entry.getKey();
                 Object value = entry.getValue();
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-                ((EntityInternal)entity).setAttributeWithoutPublishing(key, value);
+                ((EntityInternal)entity).setAttributeWithoutPublishing((AttributeSensor<Object>)key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
             }

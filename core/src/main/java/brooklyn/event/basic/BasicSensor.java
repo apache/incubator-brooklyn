@@ -55,7 +55,7 @@ public class BasicSensor<T> implements Sensor<T> {
  
     /** @see Sensor#getTypeName() */
     public String getTypeName() { 
-        return type.getName();
+        return getType().getName();
     }
  
     /** @see Sensor#getName() */

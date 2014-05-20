@@ -84,7 +84,9 @@ public class EntityDynamicType {
     private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
         this.entityClass = clazz;
         this.entity = entity;
+        // NB: official name is usu injected later, from AbstractEntity.setManagementContext
         setName((clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName());
+        
         String id = entity==null ? clazz.getName() : entity.getId();
         
         effectors.putAll(findEffectors(clazz, null));

@@ -9,7 +9,6 @@ import java.util.Map;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;

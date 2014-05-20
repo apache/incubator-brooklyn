@@ -9,7 +9,12 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BasicParameterType;
+import brooklyn.entity.effector.EffectorAndBody;
+import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
+import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.rebind.dto.BasicEntityMemento;
 import brooklyn.entity.rebind.dto.BasicLocationMemento;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
@@ -46,11 +51,19 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
 
     public XmlMementoSerializer(ClassLoader classLoader) {
         this.classLoader = checkNotNull(classLoader, "classLoader");
+        
+        // why is this aliased thusly??
         xstream.alias("brooklyn", MutableBrooklynMemento.class);
+        
         xstream.alias("entity", BasicEntityMemento.class);
         xstream.alias("location", BasicLocationMemento.class);
         xstream.alias("configKey", BasicConfigKey.class);
         xstream.alias("attributeSensor", BasicAttributeSensor.class);
+        
+        xstream.alias("effector", Effector.class);
+        xstream.addDefaultImplementation(EffectorAndBody.class, Effector.class);
+        xstream.alias("parameter", BasicParameterType.class);
+        xstream.addDefaultImplementation(EffectorBodyTaskFactory.class, EffectorTaskFactory.class);
         
         xstream.alias("entityRef", Entity.class);
         xstream.alias("locationRef", Location.class);
@@ -109,7 +122,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
 
         @Override
-        public String serializedClass(Class type) {
+        public String serializedClass(@SuppressWarnings("rawtypes") Class type) {
             if (type != null && clazz.isAssignableFrom(type)) {
                 return alias;
             } else {
@@ -118,7 +131,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
 
         @Override
-        public Class realClass(String elementName) {
+        public Class<?> realClass(String elementName) {
             if (elementName.equals(alias)) {
                 return clazz;
             } else {
@@ -127,8 +140,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
-    public abstract class IdentifiableConverter<T extends Identifiable> implements SingleValueConverter {
-        private final Class<T> clazz;
+    public abstract class IdentifiableConverter<IT extends Identifiable> implements SingleValueConverter {
+        private final Class<IT> clazz;
         
         /*
          * Ugly hack so we know what type to deserialize the string as. Remember the last call to canConvert!
@@ -138,11 +151,11 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
          */
         private Class<?> toClazz;
         
-        IdentifiableConverter(Class<T> clazz) {
+        IdentifiableConverter(Class<IT> clazz) {
             this.clazz = clazz;
         }
         @Override
-        public boolean canConvert(Class type) {
+        public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
             boolean result = clazz.isAssignableFrom(type);
             toClazz = (result) ? type : null;
             return result;
@@ -162,7 +175,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             }
         }
         
-        protected abstract T lookup(Class<?> type, String id);
+        protected abstract IT lookup(Class<?> type, String id);
     }
 
     public class LocationConverter extends IdentifiableConverter<Location> {
@@ -192,15 +205,15 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             this.mapper = mapper;
         }
         @Override
-        public boolean canConvert(Class type) {
+        public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
             return Task.class.isAssignableFrom(type);
         }
         @Override
         public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
             if (source == null) return;
-            if (((Task)source).isDone() && !((Task)source).isError()) {
+            if (((Task<?>)source).isDone() && !((Task<?>)source).isError()) {
                 try {
-                    context.convertAnother(((Task)source).get());
+                    context.convertAnother(((Task<?>)source).get());
                 } catch (InterruptedException e) {
                     throw Exceptions.propagate(e);
                 } catch (ExecutionException e) {
@@ -214,7 +227,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         @Override
         public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
             if (reader.hasMoreChildren()) {
-                Class type = HierarchicalStreams.readClassType(reader, mapper);
+                Class<?> type = HierarchicalStreams.readClassType(reader, mapper);
                 reader.moveDown();
                 Object result = context.convertAnother(null, type);
                 reader.moveUp();

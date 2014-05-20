@@ -1,7 +1,6 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -64,7 +63,7 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
     protected AbstractTreeNodeMemento(Builder<?> builder) {
         super(builder);
         parent = builder.parent;
-        children = builder.children;
+        children = toPersistedList(builder.children);
     }
 
     protected void setCustomFields(Map<String, Object> fields) {
@@ -82,7 +81,7 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
     
     @Override
     public List<String> getChildren() {
-        return Collections.unmodifiableList(children);
+        return fromPersistedList(children);
     }
 
     @Override

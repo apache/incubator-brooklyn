@@ -68,5 +68,5 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
             }
         };
     }
-    
+
 }

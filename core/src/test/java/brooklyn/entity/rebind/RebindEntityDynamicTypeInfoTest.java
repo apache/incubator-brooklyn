@@ -17,14 +17,15 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.stream.Streams;
 
 public class RebindEntityDynamicTypeInfoTest extends RebindTestFixtureWithApp {
 
     private static final Logger log = LoggerFactory.getLogger(RebindEntityDynamicTypeInfoTest.class);
-    
     
     @Override
     protected TestApplication rebind() throws Exception {
@@ -42,29 +43,41 @@ public class RebindEntityDynamicTypeInfoTest extends RebindTestFixtureWithApp {
         }
     }
     
-    @Test(enabled=false, groups="WIP")
-    // TODO re-enable, one we save entityType
+    @Test
     public void testRestoresEffectorStaticClass() throws Exception {
         origApp.getMutableEntityType().addEffector(SayHiBody.EFFECTOR);
         checkEffectorWithRebind();
     }
     
-    @Test(enabled=false, groups="WIP")
-    // TODO make sure entityType is concise
-    public void testRestoresEffectorStaticClassCheckMemento() throws Exception {
+    @Test
+    public void testMementoNotTooBig() throws Exception {
+        origApp.addChild(EntitySpec.create(TestEntity.class));
+        
+        // dynamic conf key
+        origApp.setConfig(TestEntity.CONF_NAME, "slim");
+        // declared sensor
+        origApp.setAttribute(TestApplication.MY_ATTRIBUTE, "foo");
+        // dynamic sensor
+        origApp.setAttribute(TestEntity.SEQUENCE, 98765);
+        
+        // dynamic effector
         origApp.getMutableEntityType().addEffector(SayHiBody.EFFECTOR);
+        
         RebindTestUtils.waitForPersisted(origApp);
         
         File mementoFile = new File(new File(mementoDir, "entities"), origApp.getId());
         String memento = Streams.readFully(new FileReader(mementoFile));
         log.info("memento is:\n"+memento);
-        // make sure it's not too long
-        Assert.assertTrue(memento.length() < 2000);
+        // make sure it's not too long, and doesn't have declared items
+        Assert.assertTrue(memento.length() < 4000, "length is: "+memento.length());
+        Assert.assertFalse(memento.contains("restart"));
+        Assert.assertFalse(memento.contains(TestApplication.MY_ATTRIBUTE.getDescription()));
+        Assert.assertFalse(memento.toLowerCase().contains("typetoken"));
     }
 
     // does not work, as the class is anonymous not static so pulls in too much stuff from the test fixture
     // (including e.g. mgmt context and non-serializable guice bindings)
-    @Test(enabled=false, groups="WIP")
+    @Test(enabled=false)
     public void testRestoresEffectorAnonymousClass() throws Exception {
         origApp.getMutableEntityType().addEffector(Effectors.effector(String.class, "say_hi")
             .parameter(SayHiBody.NAME_KEY)

@@ -10,7 +10,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
@@ -74,13 +76,19 @@ public class MementosGenerators {
     }
     
     public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entity) {
+        EntityDynamicType definedType = EntityTypes.getDefinedEntityType(entity.getClass());
         BasicEntityMemento.Builder builder = BasicEntityMemento.builder();
                 
         builder.id = entity.getId();
         builder.displayName = entity.getDisplayName();
         builder.type = entity.getClass().getName();
         builder.typeClass = entity.getClass();
-        builder.typeInfo = entity.getEntityType();
+
+        // TODO the dynamic attributeKeys and configKeys are computed in the BasicEntityMemento
+        // whereas effectors are computed here -- should be consistent! 
+        // (probably best to compute attrKeys and configKeys here)
+        builder.effectors.addAll(entity.getEntityType().getEffectors());
+        builder.effectors.removeAll(definedType.getEffectors().values());
 
         Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
@@ -90,7 +98,7 @@ public class MementosGenerators {
             // TODO Swapping an attributeWhenReady task for the actual value, if completed.
             // Long-term, want to just handle task-persistence properly.
             if (value instanceof Task) {
-                Task task = (Task) value;
+                Task<?> task = (Task<?>) value;
                 if (task.isDone() && !task.isError()) {
                     value = task.getUnchecked();
                 } else {
@@ -113,8 +121,9 @@ public class MementosGenerators {
             builder.configUnmatched.put(key, value); 
         }
         
+        @SuppressWarnings("rawtypes")
         Map<AttributeSensor, Object> allAttributes = ((EntityInternal)entity).getAllAttributes();
-        for (Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
+        for (@SuppressWarnings("rawtypes") Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
             AttributeSensor<?> key = checkNotNull(entry.getKey(), allAttributes);
             Object value = entry.getValue();
             builder.attributes.put((AttributeSensor<?>)key, value);

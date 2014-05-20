@@ -152,6 +152,7 @@ public class RebindTestUtils {
         LocalManagementContext newManagementContext = newPersistingManagementContextUnstarted(mementoDir, classLoader);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
         newManagementContext.getRebindManager().start();
+        if (newApps.isEmpty()) throw new IllegalStateException("Application could not be rebinded; serialization probably failed");
         return newApps.get(0);
     }
 
