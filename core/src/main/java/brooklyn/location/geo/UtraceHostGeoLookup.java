@@ -1,5 +1,6 @@
 package brooklyn.location.geo;
 
+import brooklyn.util.time.Duration;
 import groovy.util.Node;
 import groovy.util.NodeList;
 import groovy.util.XmlParser;
@@ -56,60 +57,24 @@ Beyond this you get blacklisted and requests may time out, or return none.
         return "http://xml.utrace.de/?query="+ip.trim();
     }
 
-    private static final AtomicBoolean retrievingLocalExternalIp = new AtomicBoolean(false);
-    private static final CountDownLatch triedLocalExternalIp = new CountDownLatch(1);
-    static volatile String localExternalIp;
-
-    /** returns public IP of localhost */
+    /**
+     * @deprecated since 0.7.0. Use {@link brooklyn.location.geo.LocalhostExternalIpLoader} instead.
+     */
+    @Deprecated
     public static String getLocalhostExternalIp() {
-        if (localExternalIp!=null) return localExternalIp;
-
-        // do in private thread, otherwise blocks for 30s+ on dodgy network!
-        // (we can skip it if someone else is doing it, we have synch lock so we'll get notified)
-        if (retrievingLocalExternalIp.compareAndSet(false, true)) {
-            new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        log.debug("Looking up external IP of this host in private thread "+Thread.currentThread());
-                        localExternalIp = getLocalhostExternalIpImpl();
-                        log.debug("Finished looking up external IP of this host in private thread, result "+localExternalIp);
-                    } catch (Throwable t) {
-                        log.debug("Not able to look up external IP of this host in private thread, probably offline ("+t+")");
-                    } finally {
-                        retrievingLocalExternalIp.set(false);
-                        triedLocalExternalIp.countDown();
-                    }
-                }
-            }).start();
-        }
-
-        try {
-            // only wait 2s, so startup is fast
-            triedLocalExternalIp.await(2000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        }
-        if (localExternalIp==null)  
-            throw Throwables.propagate(new IOException("Unable to discover external IP of local machine; response to server timed out (ongoing="+retrievingLocalExternalIp+")"));
-
-        log.debug("Looked up external IP of this host, result is: "+localExternalIp);
-        return localExternalIp;
+        return LocalhostExternalIpLoader.getLocalhostIpWithin(Duration.of(2, TimeUnit.SECONDS));
     }
     
     /**
-     * @return The external IP address of this host
-     * 
-     * @throws RuntimeException if lookup fails
+     * @deprecated since 0.7.0. Use {@link brooklyn.location.geo.LocalhostExternalIpLoader} instead.
      */
+    @Deprecated
     public static String getLocalhostExternalIpImpl() {
-        // Previously used "http://api.externalip.net/ip/", but this now returns:
-        // "This website has been suspended as of March 1st 2014"
-        
-        return ResourceUtils.create(HostGeoLookup.class).getResourceAsString("http://ipecho.net/plain").trim();
+        return LocalhostExternalIpLoader.getLocalhostIpWithin(Duration.of(2, TimeUnit.SECONDS));
     }
     
     public String getLookupUrlForLocalhost() {
-        return getLookupUrlForPublicIp(getLocalhostExternalIp());
+        return getLookupUrlForPublicIp(LocalhostExternalIpLoader.getLocalhostIp());
     }
 
     /** returns URL to get properties for the given address (assuming localhost if address is on a subnet) */
