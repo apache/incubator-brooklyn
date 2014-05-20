@@ -78,4 +78,4 @@ You might also find the following helpful:
 
 * **[Entity Design Tips]({{site.url}}/dev/tips/index.html#EntityDesign)**
 * The **[User Guide]({{site.url}}/use/guide/index.html)**
-* The **[Mailing List](http://groups.google.com/group/brooklyn-dev)** (brooklyn-dev@googlegroups.com)
+* The **[Mailing List](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/)**

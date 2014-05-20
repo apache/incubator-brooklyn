@@ -21,10 +21,8 @@ It incorporates a lot of improvements and feedback from our community. Thank you
 
 Thanks also go to Brooklyn's commercial users. Already Brooklyn has been adopted into some very exciting projects including 
 
-For more information, please checkout [brooklyncentral.github.io](http://brooklyncentral.github.io), and the mailing lists:
- 
-* [brooklyn-dev@googlegroups.com](http://groups.google.com/group/brooklyn-dev)
-* [brooklyn-users@googlegroups.com](http://groups.google.com/group/brooklyn-users)
+For more information, please checkout [brooklyncentral.github.io](http://brooklyncentral.github.io), and our
+[mailing list at Apache](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/).
 
 ### New Features
 

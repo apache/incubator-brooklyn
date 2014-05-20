@@ -10,7 +10,7 @@ If you've built something which you think others could use, or are interested in
 whether a new supported entity, or a policy, or an example --
 it's easy to give back to the community.  Just:
 
-1. **Tell [brooklyn-dev@googlegroups.com](http://groups.google.com/group/brooklyn-dev)** about your work or interest
+1. **Tell [the brooklyn mailing list](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/)** about your work or interest
 
 1. **Create your fork** of the project on GitHub
 
