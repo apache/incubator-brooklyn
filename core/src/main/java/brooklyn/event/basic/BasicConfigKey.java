@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
+import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;
 
@@ -102,8 +103,11 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     public BasicConfigKey(TypeToken<T> type, String name, String description, T defaultValue) {
         this.description = description;
         this.name = checkNotNull(name, "name");
-        this.typeToken = checkNotNull(type, "type");
-        this.type = typeToken.getRawType();
+        
+        checkNotNull(type, "type");
+        this.type = TypeTokens.getRawTypeIfRaw(checkNotNull(type, "type"));
+        this.typeToken = TypeTokens.getTypeTokenIfNotRaw(type);
+        
         this.defaultValue = defaultValue;
         this.reconfigurable = false;
     }
@@ -121,13 +125,13 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     @Override public String getName() { return name; }
 
     /** @see ConfigKey#getTypeName() */
-    @Override public String getTypeName() { return type.getName(); }
+    @Override public String getTypeName() { return getType().getName(); }
 
     /** @see ConfigKey#getType() */
-    @Override public Class<? super T> getType() { return type; }
+    @Override public Class<? super T> getType() { return TypeTokens.getRawType(typeToken, type); }
 
     /** @see ConfigKey#getTypeToken() */
-    @Override public TypeToken<T> getTypeToken() { return typeToken; }
+    @Override public TypeToken<T> getTypeToken() { return TypeTokens.getTypeToken(typeToken, type); }
     
     /** @see ConfigKey#getDescription() */
     @Override public String getDescription() { return description; }

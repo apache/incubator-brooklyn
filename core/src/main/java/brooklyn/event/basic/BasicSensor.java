@@ -7,6 +7,7 @@ import java.util.List;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.util.guava.TypeTokens;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
@@ -40,17 +41,17 @@ public class BasicSensor<T> implements Sensor<T> {
     }
     
     public BasicSensor(TypeToken<T> typeToken, String name, String description) {
-        this.typeToken = checkNotNull(typeToken, "typeToken");
-        this.type = typeToken.getRawType();
+        this.typeToken = TypeTokens.getTypeTokenIfNotRaw(checkNotNull(typeToken, "typeToken"));
+        this.type = TypeTokens.getRawTypeIfRaw(typeToken);
         this.name = checkNotNull(name, "name");
         this.description = description;
     }
 
     /** @see Sensor#getTypeToken() */
-    public TypeToken<T> getTypeToken() { return typeToken; }
+    public TypeToken<T> getTypeToken() { return TypeTokens.getTypeToken(typeToken, type); }
     
     /** @see Sensor#getType() */
-    public Class<? super T> getType() { return type; }
+    public Class<? super T> getType() { return TypeTokens.getRawType(typeToken, type); }
  
     /** @see Sensor#getTypeName() */
     public String getTypeName() { 
