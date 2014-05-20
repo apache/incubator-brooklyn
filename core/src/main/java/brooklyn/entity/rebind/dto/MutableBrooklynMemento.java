@@ -71,7 +71,7 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         for (EntityMemento memento : mementos) {
             entities.put(memento.getId(), memento);
             
-            if (memento.getParent()==null) {
+            if (memento.isTopLevelApp()) {
                 applicationIds.add(memento.getId());
             }
         }

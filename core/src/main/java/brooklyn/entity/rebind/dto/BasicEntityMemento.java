@@ -43,6 +43,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
 
     public static class Builder extends AbstractTreeNodeMemento.Builder<Builder> {
+        protected Boolean isTopLevelApp;
         protected Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
         protected Map<String, Object> configUnmatched = Maps.newLinkedHashMap();
         protected Map<AttributeSensor<?>, Object> attributes = Maps.newLinkedHashMap();
@@ -53,6 +54,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
+            isTopLevelApp = other.isTopLevelApp();
             displayName = other.getDisplayName();
             config.putAll(other.getConfig());
             configUnmatched.putAll(other.getConfigUnmatched());
@@ -68,6 +70,11 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             return new BasicEntityMemento(this);
         }
     }
+    
+    /** this is usually inferred based on parent==null (so left out of persistent);
+     * only needs to be set if it is an app with a parent (nested application) 
+     * or an entity without a parent (orphaned entity) */
+    private Boolean isTopLevelApp;
     
     private Map<String, Object> config;
     private List<String> locations;
@@ -95,6 +102,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     // Does not make any attempt to make unmodifiable, or immutable copy, to have cleaner (and faster) output
     protected BasicEntityMemento(Builder builder) {
         super(builder);
+        
+        isTopLevelApp = builder.isTopLevelApp==null || builder.isTopLevelApp==(getParent()==null) ? null : builder.isTopLevelApp;
         
         locations = toPersistedList(builder.locations);
         policies = toPersistedList(builder.policies);
@@ -199,6 +208,11 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
                 attributesByKey.put(getAttributeKey(entry.getKey()), entry.getValue());
             }
         }
+    }
+    
+    @Override
+    public boolean isTopLevelApp() {
+        return isTopLevelApp!=null ? isTopLevelApp : getParent()==null;
     }
     
     @Override

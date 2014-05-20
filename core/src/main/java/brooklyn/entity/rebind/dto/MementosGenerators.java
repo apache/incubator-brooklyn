@@ -89,6 +89,8 @@ public class MementosGenerators {
         // (probably best to compute attrKeys and configKeys here)
         builder.effectors.addAll(entity.getEntityType().getEffectors());
         builder.effectors.removeAll(definedType.getEffectors().values());
+        
+        builder.isTopLevelApp = (entity instanceof Application && entity.getParent() == null);
 
         Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {

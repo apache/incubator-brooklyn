@@ -22,6 +22,12 @@ public interface EntityMemento extends Memento, TreeNode {
     public List<Effector<?>> getEffectors();
 
     public Map<ConfigKey<?>, Object> getConfig();
+
+    /** true if the entity is top-level (parentless) and an application
+     * (there may be parentless "orphaned" entities, for which this is false,
+     * and "application" instances nested inside other apps, for which this is again)
+     */
+    public boolean isTopLevelApp();
     
     public Map<String, Object> getConfigUnmatched();
     
