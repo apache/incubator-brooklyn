@@ -245,10 +245,10 @@ public class Main {
         public boolean stopOnKeyPress = false;
 
         final static String PERSIST_OPTION = "--persist";
-        final static String PERSIST_OPTION_DISABLED = "disabled";
-        final static String PERSIST_OPTION_AUTO = "auto";
-        final static String PERSIST_OPTION_REBIND = "rebind";
-        final static String PERSIST_OPTION_CLEAN = "clean";
+        protected final static String PERSIST_OPTION_DISABLED = "disabled";
+        protected final static String PERSIST_OPTION_AUTO = "auto";
+        protected final static String PERSIST_OPTION_REBIND = "rebind";
+        protected final static String PERSIST_OPTION_CLEAN = "clean";
         
         // TODO currently defaults to disabled; want it to default to on, when we're ready
         // TODO how to force a line-split per option?!
@@ -270,10 +270,10 @@ public class Main {
         public String persistenceDir;
         
         final static String HA_OPTION = "--highAvailability";
-        final static String HA_OPTION_DISABLED = "disabled";
-        final static String HA_OPTION_AUTO = "auto";
-        final static String HA_OPTION_MASTER = "master";
-        final static String HA_OPTION_STANDBY = "standby";
+        protected final static String HA_OPTION_DISABLED = "disabled";
+        protected final static String HA_OPTION_AUTO = "auto";
+        protected final static String HA_OPTION_MASTER = "master";
+        protected final static String HA_OPTION_STANDBY = "standby";
         static { Enums.checkAllEnumeratedIgnoreCase(HighAvailabilityMode.class, HA_OPTION_AUTO, HA_OPTION_DISABLED, HA_OPTION_MASTER, HA_OPTION_STANDBY); }
         
         @Option(name = { HA_OPTION }, allowedValues = { HA_OPTION_DISABLED, HA_OPTION_AUTO, HA_OPTION_MASTER, HA_OPTION_STANDBY },
