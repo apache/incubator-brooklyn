@@ -10,17 +10,16 @@ It's built using standard jekyll/markdown with a few extensions.
 
 ## Jekyll
 
-Install the following:
+Firstly, install Pygments (used for source code highlighting):
 
-* [**Jekyll**](https://github.com/mojombo/jekyll/wiki/install): `sudo gem install jekyll`
-* [**JSON gem**](http://rubygems.org/gems/json): `sudo gem install json`
-* [**RDiscount**](https://github.com/rtomayko/rdiscount/#readme): `sudo gem install rdiscount`
-* [**Pygments**](http://pygments.org/): `sudo easy_install Pygments`
+    sudo easy_install Pygments
+
+Next, install Jekyll and the other Ruby Gems that we need:
+
+    bundle install
 
 Then, in the `docs/` directory, run:
-	
-	jekyll --pygments --server --auto --url ""
-or 
+
     ./_scripts/jekyll-debug.sh 
     
 Visit [http://localhost:4000/](http://localhost:4000/) and you should see the documentation.
