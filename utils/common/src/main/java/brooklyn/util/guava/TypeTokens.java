@@ -39,8 +39,8 @@ public class TypeTokens {
     /** given either a token or a raw type, returns the token */
     @SuppressWarnings("unchecked")
     public static <T> TypeToken<T> getTypeToken(TypeToken<T> token, Class<? super T> raw) {
-        if (raw!=null) return TypeToken.of((Class<T>)raw);
         if (token!=null) return token;
+        if (raw!=null) return TypeToken.of((Class<T>)raw);
         throw new IllegalStateException("Both indicators of type are null");
     }
 
