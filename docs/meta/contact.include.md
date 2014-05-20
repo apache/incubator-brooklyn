@@ -1,8 +1,5 @@
 
-Contact us on the discussion groups:
-
-* **[brooklyn-users@googlegroups.com](http://groups.google.com/group/brooklyn-users)**: discussions about _using_ Brooklyn
-* **[brooklyn-dev@googlegroups.com](http://groups.google.com/group/brooklyn-dev)**: discussions about _development_ in Brooklyn 
+Contact us on the [brooklyn mailing list](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/).
 
 Additionally look for us on:
 

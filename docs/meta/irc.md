@@ -15,8 +15,8 @@ take a little while for someone to see and respond to your question. (Be
 patient if you don't get an instant answer - unless there's already a conversation 
 happening folk will probably not have their eyes on the channel.) 
 
-You may want to do other things while you wait, like reviewing the [brooklyn-users](https://groups.google.com/forum/#!forum/brooklyn-users) and 
-[brooklyn-dev](https://groups.google.com/forum/#!forum/brooklyn-dev) lists to see if anyone has had the same issue before.
+You may want to do other things while you wait, like reviewing the [brooklyn mailing list](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/)
+lists to see if anyone has had the same issue before.
 
 ## Brooklyn IRC Channel
 
