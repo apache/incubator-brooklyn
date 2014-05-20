@@ -334,7 +334,11 @@ public class BashCommands {
                         ok(sudo("apt-get update")), 
                         sudo(aptInstall))));
         if (yumInstall != null)
-            commands.add(ifExecutableElse1("yum", sudo(yumInstall)));
+            commands.add(ifExecutableElse1("yum", 
+                    chainGroup(
+                        "echo yum exists, doing update",
+                        ok(sudo("yum check-update")),
+                        sudo(yumInstall))));
         if (brewInstall != null)
             commands.add(ifExecutableElse1("brew", brewInstall));
         if (portInstall != null)
