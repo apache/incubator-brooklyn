@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
  */
 public class MethodEffector<T> extends AbstractEffector<T> {
 
+    private static final long serialVersionUID = 6989688364011965968L;
     private static final Logger log = LoggerFactory.getLogger(MethodEffector.class);
     
     @SuppressWarnings("rawtypes")
@@ -64,13 +65,12 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             }
         }
 
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         protected static ParameterType<?> toParameterType(Method method, int paramIndex) {
             Annotation[] anns = method.getParameterAnnotations()[paramIndex];
             Class<?> type = method.getParameterTypes()[paramIndex];
             EffectorParam paramAnnotation = findAnnotation(anns, EffectorParam.class);
 
-            String paramName = (paramAnnotation == null) ? null : paramAnnotation.name();
-            
             // TODO if blank, could do "param"+(i+1); would that be better?
             // TODO this will now give "" if name is blank, rather than previously null. Is that ok?!
             String name = (paramAnnotation != null) ? paramAnnotation.name() : null;
@@ -84,6 +84,7 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             return new BasicParameterType(name, type, description, defaultValue);
         }
         
+        @SuppressWarnings("unchecked")
         protected static <T extends Annotation> T findAnnotation(Annotation[] anns, Class<T> type) {
             for (Annotation ann : anns) {
                 if (type.isInstance(ann)) return (T) ann;
@@ -115,13 +116,15 @@ public class MethodEffector<T> extends AbstractEffector<T> {
     }
 
     public MethodEffector(MethodClosure mc) {
-        this(new AnnotationsOnMethod((Class)mc.getDelegate(), mc.getMethod()), null);
+        this(new AnnotationsOnMethod((Class<?>)mc.getDelegate(), mc.getMethod()), null);
     }
 
+    @SuppressWarnings("unchecked")
     protected MethodEffector(AnnotationsOnMethod anns, String description) {
         super(anns.name, (Class<T>)anns.returnType, anns.parameters, GroovyJavaMethods.<String>elvis(description, anns.description));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public T call(Entity entity, Map parameters) {
         Object[] parametersArray = EffectorUtils.prepareArgsForEffector(this, parameters);
         if (entity instanceof AbstractEntity) {
@@ -155,7 +158,5 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             throw new IllegalStateException(msg);
         }
     }
-    /*
-
-     */
+    
 }

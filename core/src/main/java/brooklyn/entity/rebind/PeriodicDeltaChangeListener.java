@@ -117,16 +117,21 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     /**
      * This method must only be used for testing. If required in production, then revisit implementation!
+     * @deprecated since 0.7.0, use {@link #waitForPendingComplete(Duration)}
      */
     @VisibleForTesting
     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
+        waitForPendingComplete(Duration.of(timeout, unit));
+    }
+    @VisibleForTesting
+    public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
         // Every time we finish writing, we increment a counter. We note the current val, and then
         // wait until we can guarantee that a complete additional write has been done. Not sufficient
         // to wait for `writeCount > origWriteCount` because we might have read the value when almost 
         // finished a write.
         
         long startTime = System.currentTimeMillis();
-        long maxEndtime = (timeout > 0) ? (startTime + unit.toMillis(timeout)) : Long.MAX_VALUE;
+        long maxEndtime = timeout.isPositive() ? startTime + timeout.toMillisecondsRoundingUp() : Long.MAX_VALUE;
         long origWriteCount = writeCount.get();
         while (true) {
             if (!isActive()) {
@@ -136,7 +141,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             }
             
             if (System.currentTimeMillis() > maxEndtime) {
-                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeStringRounded(timeout, unit));
+                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeStringRounded(timeout));
             }
             Thread.sleep(1);
         }

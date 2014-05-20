@@ -3,23 +3,19 @@ package brooklyn.entity.rebind;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.testng.annotations.AfterMethod;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
@@ -29,32 +25,18 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
-public class RebindLocationTest {
+public class RebindLocationTest extends RebindTestFixtureWithApp {
 
-    private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext origManagementContext;
-    private TestApplication origApp;
-    private TestApplication newApp;
+    @SuppressWarnings("unused")
     private MyEntity origE;
-    private File mementoDir;
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mementoDir = Files.createTempDir();
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
+        super.setUp();
         origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() throws Exception {
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-    }
-    
     @Test
     public void testSetsLocationOnEntities() throws Exception {
         MyLocation origLoc = new MyLocation(MutableMap.of("name", "mylocname"));
@@ -150,16 +132,17 @@ public class RebindLocationTest {
     @Test
     public void testIgnoresStaticFieldsNotSetFromFlag() throws Exception {
         MyLocation origLoc = new MyLocation(MutableMap.of());
-        origLoc.myStaticFieldNotSetFromFlag = "myval";
+        MyLocation.myStaticFieldNotSetFromFlag = "myval";
         origApp.start(ImmutableList.of(origLoc));
 
         RebindTestUtils.waitForPersisted(origApp);
         MyLocation.myStaticFieldNotSetFromFlag = "mynewval";
         newApp = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
+        Assert.assertEquals(newLoc, origLoc);
         
         // static fields normally not persisted (we see new value)
-        assertEquals(newLoc.myStaticFieldNotSetFromFlag, "mynewval");
+        assertEquals(MyLocation.myStaticFieldNotSetFromFlag, "mynewval");
     }
     
     @Test
@@ -171,8 +154,9 @@ public class RebindLocationTest {
         MyLocation.myStaticFieldSetFromFlag = "mynewval"; // not auto-checkpointed
         newApp = (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
+        Assert.assertEquals(newLoc, origLoc);
         
-        assertEquals(newLoc.myStaticFieldSetFromFlag, "mynewval");
+        assertEquals(MyLocation.myStaticFieldSetFromFlag, "mynewval");
     }
     
     @Test
@@ -208,18 +192,13 @@ public class RebindLocationTest {
         assertEquals(newLoc.myfield, "myval");
     }
 
-    private TestApplication rebind() throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
-    }
-    
     public static class MyOldStyleLocation extends AbstractLocation {
         private static final long serialVersionUID = 1L;
         
         @SetFromFlag
         String myfield;
 
-        public MyOldStyleLocation(Map flags) {
+        public MyOldStyleLocation(Map<?,?> flags) {
             super(flags);
         }
     }
@@ -233,6 +212,7 @@ public class RebindLocationTest {
         @SetFromFlag(defaultVal="1")
         AtomicLong myAtomicLong;
 
+        @SuppressWarnings("unused")
         private final Object dummy = new Object(); // so not serializable
         
         @SetFromFlag
@@ -248,7 +228,7 @@ public class RebindLocationTest {
         public MyLocation() {
         }
         
-        public MyLocation(Map flags) {
+        public MyLocation(Map<?,?> flags) {
             super(flags);
         }
     }
@@ -262,12 +242,13 @@ public class RebindLocationTest {
         @SetFromFlag
         List<Location> otherLocs;
 
+        @SuppressWarnings("unused")
         private final Object dummy = new Object(); // so not serializable
 
         public MyLocationReffingOthers() {
         }
         
-        public MyLocationReffingOthers(Map flags) {
+        public MyLocationReffingOthers(Map<?,?> flags) {
             super(flags);
         }
     }
@@ -278,12 +259,13 @@ public class RebindLocationTest {
         String myfield;
         boolean rebound;
 
+        @SuppressWarnings("unused")
         private final Object dummy = new Object(); // so not serializable
 
         public MyLocationCustomProps() {
         }
         
-        public MyLocationCustomProps(Map flags) {
+        public MyLocationCustomProps(Map<?,?> flags) {
             super(flags);
             myfield = (String) flags.get("myfield");
         }

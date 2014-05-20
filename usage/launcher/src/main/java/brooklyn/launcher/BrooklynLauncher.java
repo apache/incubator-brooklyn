@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -683,7 +682,7 @@ public class BrooklynLauncher {
         if (persistMode != PersistMode.DISABLED) {
             try {
                 Stopwatch stopwatch = Stopwatch.createStarted();
-                managementContext.getRebindManager().waitForPendingComplete(10, TimeUnit.SECONDS);
+                managementContext.getRebindManager().waitForPendingComplete(Duration.TEN_SECONDS);
                 LOG.info("Finished waiting for persist; took "+Time.makeTimeStringRounded(stopwatch));
             } catch (RuntimeInterruptedException e) {
                 Thread.currentThread().interrupt(); // keep going with shutdown

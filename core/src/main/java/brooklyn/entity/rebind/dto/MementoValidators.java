@@ -32,7 +32,6 @@ public class MementoValidators {
     
     private static void validateParentChildRelations(Map<String, ? extends TreeNode> nodes) {
         for (Map.Entry<String, ? extends TreeNode> entry : nodes.entrySet()) {
-            String id = entry.getKey();
             TreeNode node = entry.getValue();
             if (node.getParent() != null && !nodes.containsKey(node.getParent())) {
                 throw new IllegalStateException("Parent "+node.getParent()+" missing, for "+node);

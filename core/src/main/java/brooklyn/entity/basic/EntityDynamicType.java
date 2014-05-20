@@ -55,7 +55,6 @@ public class EntityDynamicType {
     private final Class<? extends Entity> entityClass;
     private final AbstractEntity entity;
     private volatile String name;
-    private volatile String simpleName;
     
     /** 
      * Effectors on this entity, by name.
@@ -85,7 +84,9 @@ public class EntityDynamicType {
     private EntityDynamicType(Class<? extends Entity> clazz, AbstractEntity entity) {
         this.entityClass = clazz;
         this.entity = entity;
+        // NB: official name is usu injected later, from AbstractEntity.setManagementContext
         setName((clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName());
+        
         String id = entity==null ? clazz.getName() : entity.getId();
         
         effectors.putAll(findEffectors(clazz, null));
@@ -108,14 +109,7 @@ public class EntityDynamicType {
             throw new IllegalArgumentException("Invalid name "+(name == null ? "null" : "'"+name+"'")+"; name must be non-empty and not just white space");
         }
         this.name = name;
-        this.simpleName = toSimpleName(name);
         snapshotValid.set(false);
-    }
-    
-    private String toSimpleName(String name) {
-        String simpleName = name.substring(name.lastIndexOf(".")+1);
-        if (Strings.isBlank(simpleName)) simpleName = name.trim();
-        return Strings.makeValidFilename(simpleName);
     }
     
     public synchronized EntityType getSnapshot() {
@@ -256,7 +250,7 @@ public class EntityDynamicType {
 
     private EntityTypeSnapshot refreshSnapshot() {
         if (snapshotValid.compareAndSet(false, true)) {
-            snapshot = new EntityTypeSnapshot(name, simpleName, value(configKeys), sensors, effectors.values());
+            snapshot = new EntityTypeSnapshot(name, value(configKeys), sensors, effectors.values());
         }
         return snapshot;
     }

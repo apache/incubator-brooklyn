@@ -54,6 +54,7 @@ public class Dumpers {
     };
 
     public static class Pointer implements Serializable {
+        private static final long serialVersionUID = 1709707205457063174L;
         private static final Random random = new Random();
         private final String id;
         private final int rand;
@@ -198,7 +199,7 @@ public class Dumpers {
         
         if (o instanceof Iterable) {
             int i = 0;
-            for (Object member : (Iterable)o) {
+            for (Object member : (Iterable<?>)o) {
                 result.put("member"+(i++), member);
             }
         } else if (o instanceof Map) {
@@ -237,8 +238,10 @@ public class Dumpers {
     }
     
     private static class Entry implements Serializable {
-        final Object key;
-        final Object value;
+        private static final long serialVersionUID = -4751524179224569184L;
+        
+        @SuppressWarnings("unused")
+        final Object key, value;
         
         public Entry(Object key, Object value) {
             this.key = key;

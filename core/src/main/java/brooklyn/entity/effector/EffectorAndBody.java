@@ -2,11 +2,12 @@ package brooklyn.entity.effector;
 
 import java.util.List;
 
-import com.google.common.annotations.Beta;
-
 import brooklyn.entity.Effector;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
 
 @Beta // added in 0.6.0
 public class EffectorAndBody<T> extends EffectorBase<T> implements EffectorWithBody<T> {
@@ -27,5 +28,15 @@ public class EffectorAndBody<T> extends EffectorBase<T> implements EffectorWithB
     public EffectorTaskFactory<T> getBody() {
         return body;
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(super.hashCode(), getBody());
+    }
     
+    @Override
+    public boolean equals(Object other) {
+        return super.equals(other) && Objects.equal(getBody(), ((EffectorAndBody<?>)other).getBody());
+    }
+
 }

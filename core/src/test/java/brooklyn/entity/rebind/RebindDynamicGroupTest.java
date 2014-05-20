@@ -2,56 +2,28 @@ package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
 
-import java.io.File;
 import java.util.Collection;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
-public class RebindDynamicGroupTest {
+public class RebindDynamicGroupTest extends RebindTestFixtureWithApp {
 
-    private ClassLoader classLoader = getClass().getClassLoader();
-    private ManagementContext origManagementContext;
-    private TestApplication origApp;
-    private TestApplication newApp;
-    private File mementoDir;
-    
-    @BeforeMethod
-    public void setUp() throws Exception {
-        mementoDir = Files.createTempDir();
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-        origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
-    }
-
-    @AfterMethod
-    public void tearDown() throws Exception {
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-    }
-    
     @Test
     public void testRestoresDynamicGroup() throws Exception {
-        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        DynamicGroup origG = origApp.createAndManageChild(EntitySpec.create(DynamicGroup.class)
+        origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
+        origApp.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MyEntity.class)));
         
         newApp = rebind();
@@ -76,8 +48,4 @@ public class RebindDynamicGroupTest {
         assertEquals(group.getMembers().size(), expected.size(), "members="+group.getMembers());
     }
     
-    private TestApplication rebind() throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
-    }
 }

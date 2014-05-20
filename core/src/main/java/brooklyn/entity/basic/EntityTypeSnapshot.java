@@ -11,6 +11,8 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.ParameterType;
 import brooklyn.event.Sensor;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -21,16 +23,15 @@ public class EntityTypeSnapshot implements EntityType {
     private static final long serialVersionUID = 4670930188951106009L;
     
     private final String name;
-    private final String simpleName;
+    private transient volatile String simpleName;
     private final Map<String, ConfigKey<?>> configKeys;
     private final Map<String, Sensor<?>> sensors;
     private final Set<Effector<?>> effectors;
     private final Set<ConfigKey<?>> configKeysSet;
     private final Set<Sensor<?>> sensorsSet;
 
-    EntityTypeSnapshot(String name, String simpleName, Map<String, ConfigKey<?>> configKeys, Map<String, Sensor<?>> sensors, Collection<Effector<?>> effectors) {
+    EntityTypeSnapshot(String name, Map<String, ConfigKey<?>> configKeys, Map<String, Sensor<?>> sensors, Collection<Effector<?>> effectors) {
         this.name = name;
-        this.simpleName = simpleName;
         this.configKeys = ImmutableMap.copyOf(configKeys);
         this.sensors = ImmutableMap.copyOf(sensors);
         this.effectors = ImmutableSet.copyOf(effectors);
@@ -43,9 +44,20 @@ public class EntityTypeSnapshot implements EntityType {
         return name;
     }
     
+    private String toSimpleName(String name) {
+        String simpleName = name.substring(name.lastIndexOf(".")+1);
+        if (Strings.isBlank(simpleName)) simpleName = name.trim();
+        return Strings.makeValidFilename(simpleName);
+    }
+
     @Override
     public String getSimpleName() {
-        return simpleName;
+        String sn = simpleName;
+        if (sn==null) {
+            sn = toSimpleName(getName());
+            simpleName = sn;
+        }
+        return sn;
     }
     
     @Override
@@ -61,6 +73,15 @@ public class EntityTypeSnapshot implements EntityType {
     @Override
     public Set<Effector<?>> getEffectors() {
         return effectors;
+    }
+
+    @Override
+    public Maybe<Effector<?>> getEffectorByName(String name) {
+        for (Effector<?> contender : effectors) {
+            if (name.equals(contender.getName()))
+                return Maybe.<Effector<?>>of(contender);
+        }
+        return Maybe.<Effector<?>>absent("No effector matching '"+name+"'");        
     }
     
     @Override

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.Sensor;
+import brooklyn.util.guava.Maybe;
 
 /**
  * Gives type information for an {@link Entity}. It is an immutable snapshot.
@@ -42,10 +43,19 @@ public interface EntityType extends Serializable {
      */
     Set<Effector<?>> getEffectors();
 
+    /** @return an effector with the given name, if it exists.
+     */
+    public Maybe<Effector<?>> getEffectorByName(String name);
+        
     /**
      * @return the matching effector on this entity
      * @throws NoSuchElementException If there is no exact match for this signature
+     * <p>
+     * @deprecated since 0.7.0 use {@link #getEffectorByName(String)};
+     * use of multiple effectors with the same name is not supported by the EntityDynamicType implementation,
+     * so should be discouraged.  overloading can be achieved by inspecting the parameters map. 
      */
+    @Deprecated
     Effector<?> getEffector(String name, Class<?>... parameterTypes);
 
     /**

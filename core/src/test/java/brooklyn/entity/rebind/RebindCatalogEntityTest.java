@@ -4,13 +4,11 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNotSame;
 
-import java.io.File;
 import java.net.URL;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -26,10 +24,9 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.javalang.UrlClassLoader;
 
-import com.google.common.io.Files;
+public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplication> {
 
-public class RebindCatalogEntityTest {
-
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(RebindCatalogEntityTest.class);
 
     /*
@@ -45,30 +42,19 @@ public class RebindCatalogEntityTest {
     private static final String JAR_PATH = "brooklyn/entity/rebind/brooklyn-AppInCatalog.jar";
     private static final String APP_CLASSNAME = "brooklyn.entity.rebind.AppInCatalog";
 
-    private ClassLoader classLoader = getClass().getClassLoader();
-    private LocalManagementContext origManagementContext;
-    private Application origApp;
-    private Application newApp;
-    private LocalManagementContext newManagementContext;
-    private File mementoDir;
-    
     private URL url;
+
+    @Override
+    protected StartableApplication createApp() {
+        // do nothing here
+        return null;
+    }
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         url = getClass().getClassLoader().getResource(JAR_PATH);
         assertNotNull(url, "Could not find on classpath: "+JAR_PATH);
-
-        mementoDir = Files.createTempDir();
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-        if (newManagementContext != null) Entities.destroyAll(newManagementContext);
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+        super.setUp();
     }
 
     // TODO Fails with an NPE trying to use:
@@ -80,6 +66,7 @@ public class RebindCatalogEntityTest {
     //       AbstractMemento.injectTypeClass(Class)
     @Test
     public void testRestoresAppFromCatalogClassloader() throws Exception {
+        @SuppressWarnings("unchecked")
         Class<? extends AbstractApplication> appClazz = (Class<? extends AbstractApplication>) new UrlClassLoader(url).loadClass(APP_CLASSNAME);
         origManagementContext.getCatalog().addItem(appClazz);
         
@@ -101,17 +88,18 @@ public class RebindCatalogEntityTest {
     // TODO Not using RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     //      because that won't have right catalog classpath.
     //      How to reuse that code cleanly?
-    private Application rebind() throws Exception {
+    protected StartableApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
 
         LocalManagementContext newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
         
+        @SuppressWarnings("unchecked")
         Class<? extends AbstractApplication> appClazz = (Class<? extends AbstractApplication>) new UrlClassLoader(url).loadClass(APP_CLASSNAME);
         newManagementContext.getCatalog().addItem(appClazz);
         
         ClassLoader classLoader = newManagementContext.getCatalog().getRootClassLoader();
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
         newManagementContext.getRebindManager().start();
-        return newApps.get(0);
+        return (StartableApplication) newApps.get(0);
     }
 }

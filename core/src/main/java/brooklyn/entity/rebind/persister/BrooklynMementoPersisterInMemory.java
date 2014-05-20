@@ -97,8 +97,8 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                     }
                 };
 
-                // Not actually reconstituting, because need to use a realy lookupContext to reconstitute all the entities
-                BrooklynMemento reloadedMemento = persister.loadMemento(dummyLookupContext);
+                // Not actually reconstituting, because need to use a real lookupContext to reconstitute all the entities
+                persister.loadMemento(dummyLookupContext);
             } finally {
                 Os.tryDeleteDirectory(tempDir.getAbsolutePath());
             }

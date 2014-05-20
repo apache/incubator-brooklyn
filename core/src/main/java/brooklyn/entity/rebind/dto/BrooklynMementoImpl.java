@@ -67,6 +67,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         }
     }
 
+    @SuppressWarnings("unused")
     private String brooklynVersion;
     private List<String> applicationIds;
     private List<String> topLevelLocationIds;

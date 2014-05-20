@@ -1,7 +1,6 @@
 package brooklyn.entity.effector;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -12,6 +11,7 @@ import brooklyn.entity.ParameterType;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 
 /** concrete implementation of Effector interface, 
  * but not (at this level of the hirarchy) defining an implementation 
@@ -31,7 +31,7 @@ public class EffectorBase<T> implements Effector<T> {
     public EffectorBase(String name, Class<T> returnType, List<ParameterType<?>> parameters, String description) {
         this.name = name;
         this.returnType = returnType;
-        this.parameters = Collections.unmodifiableList(parameters);
+        this.parameters = new ArrayList<ParameterType<?>>(parameters);
         this.description = description;
     }
 
@@ -70,4 +70,20 @@ public class EffectorBase<T> implements Effector<T> {
         return name+"["+Joiner.on(",").join(parameterNames)+"]";
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(name, returnType, parameters, description);
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof EffectorBase)) return false;
+        if (!(other.getClass().equals(getClass()))) return false;
+        if (!Objects.equal(hashCode(), other.hashCode())) return false;
+        return Objects.equal(getName(), ((EffectorBase<?>)other).getName()) &&
+            Objects.equal(getReturnType(), ((EffectorBase<?>)other).getReturnType()) &&
+            Objects.equal(getParameters(), ((EffectorBase<?>)other).getParameters()) &&
+            Objects.equal(getDescription(), ((EffectorBase<?>)other).getDescription());
+    }
+    
 }

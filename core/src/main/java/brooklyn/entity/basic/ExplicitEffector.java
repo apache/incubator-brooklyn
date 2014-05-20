@@ -8,6 +8,7 @@ import java.util.Map;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 public abstract class ExplicitEffector<I,T> extends AbstractEffector<T> {
@@ -29,15 +30,27 @@ public abstract class ExplicitEffector<I,T> extends AbstractEffector<T> {
      * workaround for bug GROOVY-5122, as discussed in test class CanSayHi 
      */
     public static <I,T> ExplicitEffector<I,T> create(String name, Class<T> type, List<ParameterType<?>> parameters, String description, Closure body) {
-        return new ExplicitEffectorFromClosure(name, type, parameters, description, body);
+        return new ExplicitEffectorFromClosure<I,T>(name, type, parameters, description, body);
     }
     
     private static class ExplicitEffectorFromClosure<I,T> extends ExplicitEffector<I,T> {
+        private static final long serialVersionUID = -5771188171702382236L;
         final Closure<T> body;
         public ExplicitEffectorFromClosure(String name, Class<T> type, List<ParameterType<?>> parameters, String description, Closure<T> body) {
             super(name, type, parameters, description);
             this.body = body;
         }
         public T invokeEffector(I trait, Map<String,?> parameters) { return body.call(trait, parameters); }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(super.hashCode(), body);
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            return super.equals(other) && Objects.equal(body, ((ExplicitEffectorFromClosure<?,?>)other).body);
+        }
+        
     }
 }

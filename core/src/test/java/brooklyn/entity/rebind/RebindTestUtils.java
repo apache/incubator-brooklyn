@@ -32,9 +32,8 @@ public class RebindTestUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(RebindTestUtils.class);
 
-    private static final long TIMEOUT_MS = 20*1000;
+    private static final Duration TIMEOUT = Duration.seconds(20);
     
-    @SuppressWarnings("unchecked")
 	public static <T> T serializeAndDeserialize(T memento) throws Exception {
         ObjectReplacer replacer = new ObjectReplacer() {
             private final Map<Pointer, Object> replaced = Maps.newLinkedHashMap();
@@ -153,6 +152,7 @@ public class RebindTestUtils {
         LocalManagementContext newManagementContext = newPersistingManagementContextUnstarted(mementoDir, classLoader);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
         newManagementContext.getRebindManager().start();
+        if (newApps.isEmpty()) throw new IllegalStateException("Application could not be rebinded; serialization probably failed");
         return newApps.get(0);
     }
 
@@ -171,7 +171,7 @@ public class RebindTestUtils {
     }
     
     public static void waitForPersisted(ManagementContext managementContext) throws InterruptedException, TimeoutException {
-        managementContext.getRebindManager().waitForPendingComplete(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        managementContext.getRebindManager().waitForPendingComplete(TIMEOUT);
     }
     
     public static void checkCurrentMementoSerializable(Application app) throws Exception {
