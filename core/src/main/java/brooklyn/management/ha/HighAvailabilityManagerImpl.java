@@ -368,7 +368,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
         
         // Need to choose a new master
-        String newMasterNodeId = masterChooser.choose(memento, heartbeatTimeout, ownNodeId, now).getNodeId();
+        ManagementNodeSyncRecord newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId, now);
+        String newMasterNodeId = (newMasterRecord == null) ? null : newMasterRecord.getNodeId();
         boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
         
         LOG.warn("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
