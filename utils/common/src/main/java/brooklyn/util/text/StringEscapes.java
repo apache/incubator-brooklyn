@@ -167,6 +167,7 @@ public class StringEscapes {
     
     
     public static class JavaStringEscapes {
+        /** converts normal string to java escaped for double-quotes (but not wrapped in double quotes) */
         public static String escapeJavaString(String value) {
             StringBuilder out = new StringBuilder();
             try {
@@ -178,6 +179,7 @@ public class StringEscapes {
             return out.toString();
         }
 
+        /** converts normal string to java escaped for double-quotes and wrapped in those double quotes */
         public static String wrapJavaString(String value) {
             StringBuilder out = new StringBuilder();
             try {
@@ -189,6 +191,8 @@ public class StringEscapes {
             return out.toString();
         }
 
+        /** as {@link #unwrapJavaString(String)} if the given string is wrapped in double quotes;
+         * otherwise just returns the given string */
         public static String unwrapJavaStringIfWrapped(String s) {
             if (!StringEscapes.isWrappedInDoubleQuotes(s)) return s;
             return unwrapJavaString(s);
@@ -201,6 +205,7 @@ public class StringEscapes {
             out.append('"');
         }
 
+        /** converts normal string to java escaped for double-quotes (but not wrapped in double quotes) */
         public static void escapeJavaString(String value, Appendable out) throws IOException {
             for (int i=0; i<value.length(); i++) {
                 char c = value.charAt(i);
