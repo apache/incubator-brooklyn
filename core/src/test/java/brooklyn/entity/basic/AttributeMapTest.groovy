@@ -44,7 +44,7 @@ public class AttributeMapTest {
         
         try {
             for (int i = 0; i < 1000; i++) {
-                final BasicAttributeSensor<Integer> nextSensor = [ Integer, "attributeMapTest.exampleSensor"+i, "" ]
+                final BasicAttributeSensor<String> nextSensor = [ String, "attributeMapTest.exampleSensor"+i, "" ]
                 def future = executor.submit({ map.update(nextSensor, "a") } as Runnable)
                 futures.add(future)
             }
@@ -65,7 +65,7 @@ public class AttributeMapTest {
         
         try {
             for (int i = 0; i < 1000; i++) {
-                final BasicAttributeSensor<Integer> nextSensor = [ Integer, "attributeMapTest.exampleSensor"+i, "" ]
+                final BasicAttributeSensor<String> nextSensor = [ String, "attributeMapTest.exampleSensor"+i, "" ]
                 def future = executor.submit({ map.update(nextSensor, "a") } as Runnable)
                 def future2 = executor.submit({ map.getValue(nextSensor) } as Runnable)
                 futures.add(future)
@@ -83,8 +83,8 @@ public class AttributeMapTest {
     
     @Test
     public void testStoredSensorsCanBeRetrieved() {
-        BasicAttributeSensor<String> sensor1 = [ Integer, "a", "" ]
-        BasicAttributeSensor<String> sensor2 = [ Integer, "b.c", "" ]
+        BasicAttributeSensor<String> sensor1 = [ String, "a", "" ]
+        BasicAttributeSensor<String> sensor2 = [ String, "b.c", "" ]
         
         map.update(sensor1, "1val")
         map.update(sensor2, "2val")
@@ -98,8 +98,8 @@ public class AttributeMapTest {
         
     @Test
     public void testStoredByPathCanBeRetrieved() {
-        BasicAttributeSensor<String> sensor1 = [ Integer, "a", "" ]
-        BasicAttributeSensor<String> sensor2 = [ Integer, "b.c", "" ]
+        BasicAttributeSensor<String> sensor1 = [ String, "a", "" ]
+        BasicAttributeSensor<String> sensor2 = [ String, "b.c", "" ]
         
         map.update(["a"], "1val")
         map.update(["b", "c"], "2val")
@@ -113,8 +113,8 @@ public class AttributeMapTest {
         
     @Test
     public void testCanStoreSensorThenChildSensor() {
-        BasicAttributeSensor<String> sensor = [ Integer, "a", "" ]
-        BasicAttributeSensor<String> childSensor = [ Integer, "a.b", "" ]
+        BasicAttributeSensor<String> sensor = [ String, "a", "" ]
+        BasicAttributeSensor<String> childSensor = [ String, "a.b", "" ]
         
         map.update(sensor, "parentValue")
         map.update(childSensor, "childValue")
@@ -125,8 +125,8 @@ public class AttributeMapTest {
         
     @Test
     public void testCanStoreChildThenParentSensor() {
-        BasicAttributeSensor<String> sensor = [ Integer, "a", "" ]
-        BasicAttributeSensor<String> childSensor = [ Integer, "a.b", "" ]
+        BasicAttributeSensor<String> sensor = [ String, "a", "" ]
+        BasicAttributeSensor<String> childSensor = [ String, "a.b", "" ]
         
         map.update(childSensor, "childValue")
         map.update(sensor, "parentValue")

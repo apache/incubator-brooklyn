@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** utilities for translating consistently between a filename (http://acme.org/foo.war) and a web context path (/foo) */ 
 public class FilenameToWebContextMapper {
 
     public static final Logger log = LoggerFactory.getLogger(FilenameToWebContextMapper.class);

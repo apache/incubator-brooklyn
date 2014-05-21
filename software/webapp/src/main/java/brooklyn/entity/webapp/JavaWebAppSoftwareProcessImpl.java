@@ -138,7 +138,7 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
             if (deployedWars == null) {
                 deployedWars = Sets.newLinkedHashSet();
             }
-            deployedWars.remove(targetName);
+            deployedWars.remove( driver.getFilenameContextMapper().convertDeploymentTargetNameToContext(targetName) );
             setAttribute(DEPLOYED_WARS, deployedWars);
         } catch (RuntimeException e) {
             // Log and propagate, so that log says which entity had problems...

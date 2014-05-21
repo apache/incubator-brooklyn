@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.AttributeSensor;
+import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -23,6 +24,8 @@ import com.google.common.collect.Maps;
  * A {@link Map} of {@link Entity} attribute values.
  */
 public final class AttributeMap implements Serializable {
+
+    private static final long serialVersionUID = -6834883734250888344L;
 
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class);
 
@@ -80,6 +83,7 @@ public final class AttributeMap implements Serializable {
             log.trace("setting sensor {}={} for {}", new Object[] {path, newValue, entity});
         }
 
+        @SuppressWarnings("unchecked")
         T oldValue = (T) values.put(path, newValue);
         return (isNull(oldValue)) ? null : oldValue;
     }
@@ -145,8 +149,9 @@ public final class AttributeMap implements Serializable {
         return (isNull(result)) ? null : result;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getValue(AttributeSensor<T> sensor) {
-        return (T) getValue(sensor.getNameParts());
+        return (T) TypeCoercions.coerce(getValue(sensor.getNameParts()), sensor.getType());
     }
 
     @SuppressWarnings("unchecked")
