@@ -94,7 +94,8 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     @SetFromFlag("launchCommandCreatesPidFile")
     ConfigKey<Boolean> LAUNCH_COMMAND_CREATES_PID_FILE = ConfigKeys.newBooleanConfigKey("brooklynnode.launch.command.pid.updated",
-        "Whether the launch script creates/updates the PID file, if not the entity will do so", 
+        "Whether the launch script creates/updates the PID file, if not the entity will do so, "
+        + "but note it will not necessarily kill sub-processes", 
         true);
 
     @SetFromFlag("app")
