@@ -34,6 +34,7 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
+import brooklyn.entity.trait.FailingEntity;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
@@ -330,7 +331,10 @@ public class DynamicClusterTest {
                 .configure("factory", new EntityFactory() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         int num = counter.incrementAndGet();
-                        return new FailingEntity(flags, (num==failNum));
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_START, (num==failNum))
+                                .parent(parent));
                     }}));
 
         cluster.start(ImmutableList.of(loc));
@@ -338,7 +342,7 @@ public class DynamicClusterTest {
         assertEquals(cluster.getCurrentSize(), (Integer)2);
         assertEquals(cluster.getMembers().size(), 2);
         for (Entity member : cluster.getMembers()) {
-            assertFalse(((FailingEntity)member).failOnStart);
+            assertFalse(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
         }
     }
 
@@ -352,7 +356,10 @@ public class DynamicClusterTest {
                 .configure("factory", new EntityFactory() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         int num = counter.incrementAndGet();
-                        return new FailingEntity(flags, (num==failNum));
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_START, (num==failNum))
+                                .parent(parent));
                     }}));
 
         cluster.start(ImmutableList.of(loc));
@@ -361,7 +368,7 @@ public class DynamicClusterTest {
         assertEquals(cluster.getCurrentSize(), (Integer)1);
         assertEquals(cluster.getMembers().size(), 1);
         for (Entity member : cluster.getMembers()) {
-            assertFalse(((FailingEntity)member).failOnStart);
+            assertFalse(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
         }
     }
 
@@ -374,7 +381,10 @@ public class DynamicClusterTest {
                 .configure("factory", new EntityFactory() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         int num = counter.incrementAndGet();
-                        return new FailingEntity(flags, (num==failNum));
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_START, (num==failNum))
+                                .parent(parent));
                     }}));
 
         try {
@@ -392,7 +402,7 @@ public class DynamicClusterTest {
         assertEquals(cluster.getCurrentSize(), (Integer)1);
         assertEquals(cluster.getMembers().size(), 1);
         for (Entity member : cluster.getMembers()) {
-            assertFalse(((FailingEntity)member).failOnStart);
+            assertFalse(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
         }
     }
 
@@ -406,7 +416,10 @@ public class DynamicClusterTest {
                 .configure("factory", new EntityFactory() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         int num = counter.incrementAndGet();
-                        return new FailingEntity(flags, (num==failNum));
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_START, (num==failNum))
+                                .parent(parent));
                     }}));
 
         cluster.start(ImmutableList.of(loc));
@@ -414,13 +427,13 @@ public class DynamicClusterTest {
         assertEquals(cluster.getCurrentSize(), (Integer)2);
         assertEquals(cluster.getMembers().size(), 2);
         assertEquals(Iterables.size(Iterables.filter(cluster.getChildren(), Predicates.instanceOf(FailingEntity.class))), 3);
-        for (Entity it : cluster.getMembers()) {
-            assertFalse(((FailingEntity)it).failOnStart);
+        for (Entity member : cluster.getMembers()) {
+            assertFalse(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
         }
 
         assertEquals(cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).getMembers().size(), 1);
-        for (Entity it : cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).getMembers()) {
-            assertTrue(((FailingEntity)it).failOnStart);
+        for (Entity member : cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP).getMembers()) {
+            assertTrue(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
         }
     }
 
@@ -435,7 +448,10 @@ public class DynamicClusterTest {
                 .configure("factory", new EntityFactory() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         int num = counter.incrementAndGet();
-                        return new FailingEntity(flags, (num==failNum));
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_START, (num==failNum))
+                                .parent(parent));
                     }}));
 
         cluster.start(ImmutableList.of(loc));
@@ -452,14 +468,12 @@ public class DynamicClusterTest {
         // Failed node will not be managed either
         assertEquals(Iterables.size(Iterables.filter(cluster.getChildren(), Predicates.instanceOf(FailingEntity.class))), 2);
         for (Entity member : cluster.getMembers()) {
-            assertFalse(((FailingEntity)member).failOnStart);
+            assertFalse(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
         }
     }
 
     @Test
     public void defaultRemovalStrategyShutsDownNewestFirstWhenResizing() throws Exception {
-        TestEntity entity;
-        final int failNum = 2;
         final List<Entity> creationOrder = Lists.newArrayList();
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
@@ -709,7 +723,10 @@ public class DynamicClusterTest {
                 .configure("factory", new EntityFactory() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         int num = counter.incrementAndGet();
-                        return new FailingEntity(flags, (num==failNum));
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_START, (num==failNum))
+                                .parent(parent));
                     }}));
 
         cluster.start(ImmutableList.of(loc));
@@ -734,7 +751,10 @@ public class DynamicClusterTest {
                 .configure("factory", new EntityFactory() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         int num = counter.incrementAndGet();
-                        return new FailingEntity(flags, false, (num==failNum), IllegalStateException.class);
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_STOP, (num==failNum))
+                                .parent(parent));
                     }}));
 
         cluster.start(ImmutableList.of(loc));
@@ -765,51 +785,6 @@ public class DynamicClusterTest {
             return unwrapException(e.getCause());
         } else {
             return e;
-        }
-    }
-
-    public static class FailingEntity extends TestEntityImpl {
-        final boolean failOnStart;
-        final boolean failOnStop;
-        final Class<? extends Exception> exceptionClazz;
-    
-        public FailingEntity(Map flags, boolean failOnStart) {
-            this(flags, failOnStart, false);
-        }
-        
-        public FailingEntity(Map flags, boolean failOnStart, boolean failOnStop) {
-            this(flags, failOnStart, failOnStop, IllegalStateException.class);
-        }
-        
-        public FailingEntity(Map flags, boolean failOnStart, boolean failOnStop, Class<? extends Exception> exceptionClazz) {
-            super(flags);
-            this.failOnStart = failOnStart;
-            this.failOnStop = failOnStop;
-            this.exceptionClazz = exceptionClazz;
-        }
-        
-        @Override
-        public void start(Collection<? extends Location> locs) {
-            if (failOnStart) {
-                try {
-                    Exception e = exceptionClazz.getConstructor(String.class).newInstance("Simulating entity start failure for test");
-                    throw e;
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
-            }
-        }
-        
-        @Override
-        public void stop() {
-            if (failOnStop) {
-                try {
-                    Exception e = exceptionClazz.getConstructor(String.class).newInstance("Simulating entity stop failure for test");
-                    throw e;
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
-            }
         }
     }
 }
