@@ -42,6 +42,7 @@ public class Poller<V> {
         final PollHandler<? super V> handler;
         final Duration pollPeriod;
         final Runnable wrappedJob;
+        private boolean loggedPreviousException = false;
         
         PollJob(final Callable<V> job, final PollHandler<? super V> handler, Duration period) {
             this.handler = handler;
@@ -51,6 +52,7 @@ public class Poller<V> {
                 public void run() {
                     try {
                         V val = job.call();
+                        loggedPreviousException = false;
                         if (handler.checkSuccess(val)) {
                             handler.onSuccess(val);
                         } else {
@@ -59,7 +61,12 @@ public class Poller<V> {
                     } catch (Exception e) {
                         // 2013-12-21 AH adding add'l logging because seeing strange scheduled task abortion from here
                         // even though all paths should be catching it
-                        log.debug("PollJob for "+job+" handling "+e+" using "+handler);
+                        if (loggedPreviousException) {
+                            if (log.isTraceEnabled()) log.trace("PollJob for {}, repeated consecutive failures, handling {} using {}", new Object[] {job, e, handler});
+                        } else {
+                            if (log.isDebugEnabled()) log.debug("PollJob for {} handling {} using {}", new Object[] {job, e, handler});
+                            loggedPreviousException = true;
+                        }
                         handler.onException(e);
                     }
                 }

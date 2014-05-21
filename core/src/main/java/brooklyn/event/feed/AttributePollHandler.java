@@ -110,7 +110,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     @Override
     public void onException(Exception exception) {
         if (!feed.isConnected()) {
-            if (log.isDebugEnabled()) log.debug("Read of {} in {} gave exception (while not connected or not yet connected): {}", new Object[] {this, getBriefDescription(), exception});
+            if (log.isTraceEnabled()) log.trace("Read of {} in {} gave exception (while not connected or not yet connected): {}", new Object[] {this, getBriefDescription(), exception});
         } else {
             logProblem("exception", exception);
         }

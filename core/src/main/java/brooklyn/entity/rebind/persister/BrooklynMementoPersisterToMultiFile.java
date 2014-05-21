@@ -233,7 +233,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointed delta of memento, because not running");
             return;
         }
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento; updating {} entities, {} locations and {} policies; " +
+        if (LOG.isTraceEnabled()) LOG.trace("Checkpointed delta of memento; updating {} entities, {} locations and {} policies; " +
         		"removing {} entities, {} locations and {} policies", 
                 new Object[] {delta.entities(), delta.locations(), delta.policies(),
                 delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
