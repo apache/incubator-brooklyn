@@ -169,7 +169,7 @@ public class ManagementPlaneSyncRecordPersisterToMultiFile implements Management
             }
         }
         
-        if (LOG.isDebugEnabled()) LOG.debug("Loaded management-plane memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+        if (LOG.isTraceEnabled()) LOG.trace("Loaded management-plane memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
         return builder.build();
     }
     
@@ -179,7 +179,7 @@ public class ManagementPlaneSyncRecordPersisterToMultiFile implements Management
             if (LOG.isDebugEnabled()) LOG.debug("Persister not running; ignoring checkpointed delta of manager-memento");
             return;
         }
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento; updating {}", delta);
+        if (LOG.isTraceEnabled()) LOG.trace("Checkpointed delta of manager-memento; updating {}", delta);
         
         for (ManagementNodeSyncRecord m : delta.getNodes()) {
             persist(m);
