@@ -79,5 +79,5 @@ If you want to start writing your own policies and entities, have a look at:
   and [entities]({{ site.url }}/use/guide/entities/index.html)
 
 Where things aren't documented **please ask us** at 
-[brooklyn-dev@googlegroups.com](http://groups.google.com/group/brooklyn-dev)
+[the brooklyn mailing list](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/)
 so we can remedy this!

@@ -11,7 +11,7 @@ are invited to become **committers**.
 Most decisions about the project -- 
 agreeing approaches, accepting contributions, and resolving problems --
 are generally by consensus on the
-[brooklyn-dev@](http://groups.google.com/group/brooklyn-dev) 
+[brooklyn dev](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/) 
 mailing list,
 in which **all mailing list members** may participate.
 However, only **committers** are permitted to make changes to
@@ -38,7 +38,7 @@ Selected actions require a **PMC vote** (described below).
 
 The voting rules are as follows:
 
-* Votes are called by email to [brooklyn-dev@googlegroups.com](http://groups.google.com/group/brooklyn-dev)
+* Votes are called by email to [the brooklyn dev mailing list](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/)
 * Votes should come by email 
 * Comments are welcome from all members, and committers should take these into consideration
 * A simple majority of those committers who respond within 24h is required
