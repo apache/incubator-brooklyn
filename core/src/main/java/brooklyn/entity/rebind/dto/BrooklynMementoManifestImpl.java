@@ -21,6 +21,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         protected final Map<String, String> entityIdToType = Maps.newLinkedHashMap();
         protected final Map<String, String> locationIdToType = Maps.newLinkedHashMap();
         protected final Map<String, String> policyIdToType = Maps.newLinkedHashMap();
+        protected final Map<String, String> enricherIdToType = Maps.newLinkedHashMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
@@ -43,6 +44,12 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         public Builder policies(Map<String, String> vals) {
             policyIdToType.putAll(vals); return this;
         }
+        public Builder enricher(String id, String type) {
+            enricherIdToType.put(id, type); return this;
+        }
+        public Builder enrichers(Map<String, String> vals) {
+            enricherIdToType.putAll(vals); return this;
+        }
         public BrooklynMementoManifest build() {
             return new BrooklynMementoManifestImpl(this);
         }
@@ -51,11 +58,13 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     private Map<String, String> entityIdToType;
     private Map<String, String> locationIdToType;
     private Map<String, String> policyIdToType;
+    private Map<String, String> enricherIdToType;
     
     private BrooklynMementoManifestImpl(Builder builder) {
         entityIdToType = builder.entityIdToType;
         locationIdToType = builder.locationIdToType;
         policyIdToType = builder.policyIdToType;
+        enricherIdToType = builder.enricherIdToType;
     }
 
     @Override
@@ -71,5 +80,10 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     @Override
     public Map<String, String> getPolicyIdToType() {
         return Collections.unmodifiableMap(policyIdToType);
+    }
+
+    @Override
+    public Map<String, String> getEnricherIdToType() {
+        return Collections.unmodifiableMap(enricherIdToType);
     }
 }
