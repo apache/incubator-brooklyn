@@ -61,21 +61,22 @@ public class BrooklynShutdownHooks {
                     try {
                         stops.add(entity.invoke(Startable.STOP, new MutableMap()));
                     } catch (RuntimeException exc) {
-                        log.debug("stopOnShutdown of "+entity+" returned error (continuing): "+exc, exc);
+                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+entity+" returned error (continuing): "+exc, exc);
                     }
                 }
                 try {
                     for (Task t: stops) {
                         try {
-                            log.debug("stopOnShutdown of {} completed: {}", t, t.get());
+                            Object result = t.get();
+                            if (log.isDebugEnabled()) log.debug("stopOnShutdown of {} completed: {}", t, result);
                         } catch (Exception e) {
-                            log.debug("stopOnShutdown of "+t+" returned error (continuing): "+e, e);
+                            if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" returned error (continuing): "+e, e);
                             Exceptions.propagateIfFatal(e);
                         }
                     }
                 } catch (RuntimeInterruptedException e) {
                     Thread.currentThread().interrupt();
-                    log.debug("stopOnShutdown interrupted while waiting for entity-stop tasks; continuing: "+e);
+                    if (log.isDebugEnabled()) log.debug("stopOnShutdown interrupted while waiting for entity-stop tasks; continuing: "+e);
                 }
             }
             
