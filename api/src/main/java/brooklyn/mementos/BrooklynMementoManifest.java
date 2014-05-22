@@ -15,4 +15,7 @@ public interface BrooklynMementoManifest extends Serializable {
     public Map<String, String> getLocationIdToType();
 
     public Map<String, String> getPolicyIdToType();
+
+    public Map<String, String> getEnricherIdToType();
+
 }
