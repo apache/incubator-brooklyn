@@ -12,7 +12,6 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import brooklyn.entity.nosql.riak.RiakCluster;
 import brooklyn.entity.nosql.riak.RiakNode;
 import brooklyn.entity.proxying.EntitySpec;
@@ -49,7 +48,7 @@ public class RiakClusterExample extends AbstractApplication {
     public void init() {
         addChild(EntitySpec.create(RiakCluster.class)
                 .configure(RiakCluster.INITIAL_SIZE, getConfig(RIAK_RING_SIZE))
-                .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(RiakNode.class)
+                .configure(RiakCluster.MEMBER_SPEC, EntitySpec.create(RiakNode.class)
                         .policy(PolicySpec.create(ServiceFailureDetector.class))
                         .policy(PolicySpec.create(ServiceRestarter.class)
                                 .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, ServiceFailureDetector.ENTITY_FAILED))));
