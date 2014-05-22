@@ -378,6 +378,10 @@ public class BrooklynLauncher {
                 managementContext = new LocalManagementContext(brooklynProperties, brooklynAdditionalProperties);
             }
             brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
+            
+            // We created the management context, so we are responsible for terminating it
+            BrooklynShutdownHooks.invokeTerminateOnShutdown(managementContext);
+            
         } else if (brooklynProperties == null) {
             brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
             brooklynProperties.addFromMap(brooklynAdditionalProperties);
