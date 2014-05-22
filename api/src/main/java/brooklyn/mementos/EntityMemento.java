@@ -49,5 +49,10 @@ public interface EntityMemento extends Memento, TreeNode {
      * The ids of the policies of this entity.
      */
     public Collection<String> getPolicies();
+
+    /**
+     * The ids of the enrichers of this entity.
+     */
+    public Collection<String> getEnrichers();
     
 }

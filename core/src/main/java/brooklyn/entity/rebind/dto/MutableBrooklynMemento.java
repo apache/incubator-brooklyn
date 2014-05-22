@@ -10,6 +10,7 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
@@ -36,6 +37,7 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     private final Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
     private final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
     private final Map<String, PolicyMemento> policies = Maps.newLinkedHashMap();
+    private final Map<String, EnricherMemento> enrichers = Maps.newLinkedHashMap();
 
     public MutableBrooklynMemento() {
     }
@@ -67,6 +69,10 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         updatePolicyMementos(ImmutableSet.of(memento));
     }
     
+    public void updateEnricherMemento(EnricherMemento memento) {
+        updateEnricherMementos(ImmutableSet.of(memento));
+    }
+    
     public void updateEntityMementos(Collection<EntityMemento> mementos) {
         for (EntityMemento memento : mementos) {
             entities.put(memento.getId(), memento);
@@ -93,6 +99,12 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         }
     }
     
+    public void updateEnricherMementos(Collection<EnricherMemento> mementos) {
+        for (EnricherMemento memento : mementos) {
+            enrichers.put(memento.getId(), memento);
+        }
+    }
+    
     /**
      * Removes the entities with the given ids.
      */
@@ -102,7 +114,7 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     }
     
     /**
-     * Removes the entities with the given ids.
+     * Removes the locations with the given ids.
      */
     public void removeLocations(Collection<String> ids) {
         locations.keySet().removeAll(ids);
@@ -110,10 +122,17 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     }
 
     /**
-     * Removes the entities with the given ids.
+     * Removes the policies with the given ids.
      */
     public void removePolicies(Collection<String> ids) {
         policies.keySet().removeAll(ids);
+    }
+
+    /**
+     * Removes the enrichers with the given ids.
+     */
+    public void removeEnrichers(Collection<String> ids) {
+        enrichers.keySet().removeAll(ids);
     }
 
     @Override
@@ -129,6 +148,12 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     @Override
     public PolicyMemento getPolicyMemento(String id) {
         return policies.get(id);
+    }
+
+    
+    @Override
+    public EnricherMemento getEnricherMemento(String id) {
+        return enrichers.get(id);
     }
     
     @Override
@@ -153,6 +178,11 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     }
     
     @Override
+    public Collection<String> getEnricherIds() {
+        return Collections.unmodifiableSet(enrichers.keySet());
+    }
+    
+    @Override
     public Collection<String> getTopLevelLocationIds() {
         return Collections.unmodifiableCollection(topLevelLocationIds);
     }
@@ -170,5 +200,10 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     @Override
     public Map<String, PolicyMemento> getPolicyMementos() {
         return ImmutableMap.copyOf(policies);
+    }
+
+    @Override
+    public Map<String, EnricherMemento> getEnricherMementos() {
+        return ImmutableMap.copyOf(enrichers);
     }
 }

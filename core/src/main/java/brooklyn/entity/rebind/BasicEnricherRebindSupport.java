@@ -10,13 +10,13 @@ import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.basic.AbstractPolicy;
 
-public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
+public class BasicEnricherRebindSupport implements RebindSupport<PolicyMemento> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BasicPolicyRebindSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BasicEnricherRebindSupport.class);
     
     private final AbstractPolicy policy;
     
-    public BasicPolicyRebindSupport(AbstractPolicy policy) {
+    public BasicEnricherRebindSupport(AbstractPolicy policy) {
         this.policy = policy;
     }
     

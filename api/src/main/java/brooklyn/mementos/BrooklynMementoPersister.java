@@ -49,8 +49,10 @@ public interface BrooklynMementoPersister {
         Collection<LocationMemento> locations();
         Collection<EntityMemento> entities();
         Collection<PolicyMemento> policies();
+        Collection<EnricherMemento> enrichers();
         Collection<String> removedLocationIds();
         Collection<String> removedEntityIds();
         Collection<String> removedPolicyIds();
+        Collection<String> removedEnricherIds();
     }
 }
