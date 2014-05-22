@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
@@ -28,10 +29,13 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class LocationResource extends AbstractBrooklynRestResource implements LocationApi {
 
     private static final Logger log = LoggerFactory.getLogger(LocationResource.class);
+    
+    private final Set<String> specsWarnedOnException = Sets.newConcurrentHashSet();
     
     @Override
   public List<LocationSummary> list() {
@@ -43,8 +47,13 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
                   return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
               } catch (Exception e) {
                   Exceptions.propagateIfFatal(e);
-                  log.warn("Unable to find details of location "+l+" in REST call to list (ignoring location): "+e);
-                  log.debug("Error details for location "+l, e);
+                  String spec = l.getSpec();
+                  if (spec == null || specsWarnedOnException.add(spec)) {
+                      log.warn("Unable to find details of location {} in REST call to list (ignoring location): {}", l, e);
+                      if (log.isDebugEnabled()) log.debug("Error details for location "+l, e);
+                  } else {
+                      if (log.isTraceEnabled()) log.trace("Unable again to find details of location {} in REST call to list (ignoring location): {}", l, e);
+                  }
                   return null;
               }
           }
