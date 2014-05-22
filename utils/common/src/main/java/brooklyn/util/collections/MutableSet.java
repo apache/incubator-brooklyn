@@ -111,9 +111,6 @@ public class MutableSet<V> extends LinkedHashSet<V> {
           return new MutableSet<V>(result);
         }
         
-        public ImmutableSet<V> buildImmutable() {
-            return ImmutableSet.copyOf(result);
-        }
     }
     
     public boolean addIfNotNull(V e) {

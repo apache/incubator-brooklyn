@@ -20,7 +20,6 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -55,10 +54,10 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     }
 
     protected Set<Sensor<?>> getSensorsToTrack() {
-        return MutableSet.<Sensor<?>>builder()
+        return ImmutableSet.<Sensor<?>>builder()
                 .addAll(getRequiredConfig(SENSORS_TO_TRACK))
                 .add(Attributes.SERVICE_UP)
-                .buildImmutable();
+                .build();
     }
     
     /**
