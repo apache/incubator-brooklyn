@@ -199,7 +199,8 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
             configBag.putAll(oldConfig);
         }
     }
-    
+
+    @Override
     public ManagementContext getManagementContext() {
         return managementContext;
     }

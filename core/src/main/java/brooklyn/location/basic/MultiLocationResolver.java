@@ -8,19 +8,27 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.Lists;
 
 public class MultiLocationResolver implements LocationResolver {
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(MultiLocationResolver.class);
+
     private static final String MULTI = "multi";
     
     private static final Pattern PATTERN = Pattern.compile("(" + MULTI + "|" + MULTI.toUpperCase() + ")" + ":" + "\\((.*)\\)$");
@@ -65,29 +73,48 @@ public class MultiLocationResolver implements LocationResolver {
         // TODO do we need to pass location flags etc into the children to ensure they are inherited?
         List<Location> targets = Lists.newArrayList();
         Object targetSpecs = locationArgs.remove("targets");
-        if (targetSpecs instanceof String) {
-            for (String targetSpec : JavaStringEscapes.unwrapJsonishListIfPossible((String)targetSpecs)) {
-                targets.add(managementContext.getLocationRegistry().resolve(targetSpec));
-            }
-        } else if (targetSpecs instanceof Iterable) {
-            for (Object targetSpec: (Iterable<?>)targetSpecs) {
-                if (targetSpec instanceof String) {
-                    targets.add(managementContext.getLocationRegistry().resolve((String)targetSpec));
-                } else {
-                    Set<?> keys = ((Map<?,?>)targetSpec).keySet();
-                    if (keys.size()!=1) 
-                        throw new IllegalArgumentException("targets supplied to MultiLocation must be a list of single-entry maps (got map of size "+keys.size()+": "+targetSpec+")");
-                    Object key = keys.iterator().next();
-                    Object flagsS = ((Map<?,?>)targetSpec).get(key);
-                    targets.add(managementContext.getLocationRegistry().resolve((String)key, (Map<?,?>)flagsS));
+        try {
+            if (targetSpecs instanceof String) {
+                for (String targetSpec : JavaStringEscapes.unwrapJsonishListIfPossible((String)targetSpecs)) {
+                    targets.add(managementContext.getLocationRegistry().resolve(targetSpec));
                 }
+            } else if (targetSpecs instanceof Iterable) {
+                for (Object targetSpec: (Iterable<?>)targetSpecs) {
+                    if (targetSpec instanceof String) {
+                        targets.add(managementContext.getLocationRegistry().resolve((String)targetSpec));
+                    } else {
+                        Set<?> keys = ((Map<?,?>)targetSpec).keySet();
+                        if (keys.size()!=1) 
+                            throw new IllegalArgumentException("targets supplied to MultiLocation must be a list of single-entry maps (got map of size "+keys.size()+": "+targetSpec+")");
+                        Object key = keys.iterator().next();
+                        Object flagsS = ((Map<?,?>)targetSpec).get(key);
+                        targets.add(managementContext.getLocationRegistry().resolve((String)key, (Map<?,?>)flagsS));
+                    }
+                }
+            } else throw new IllegalArgumentException("targets must be supplied to MultiLocation, either as string spec or list of single-entry maps each being a location spec");
+            
+            MultiLocation result = managementContext.getLocationManager().createLocation(LocationSpec.create(MultiLocation.class)
+                    .configure(flags)
+                    .configure("subLocations", targets)
+                    .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
+
+            // TODO Important workaround for BasicLocationRegistry.resolveForPeeking.
+            // That creates a location (from the resolver) and immediately unmanages it.
+            // The unmanage *must* remove all the targets created here; otherwise we have a leak.
+            // Adding the targets as children achieves this.
+            for (Location target : targets) {
+                target.setParent(result);
             }
-        } else throw new IllegalArgumentException("targets must be supplied to MultiLocation, either as string spec or list of single-entry maps each being a location spec");
-        
-        return managementContext.getLocationManager().createLocation(LocationSpec.create(MultiLocation.class)
-                .configure(flags)
-                .configure("subLocations", targets)
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
+            return result;
+
+        } catch (Exception e) {
+            // Must clean up after ourselves: don't leak sub-locations on error
+            if (LOG.isDebugEnabled()) LOG.debug("Problem resolving MultiLocation; cleaning up any sub-locations and rethrowing: "+e);
+            for (Location target : targets) {
+                Entities.unmanage(target);
+            }
+            throw Exceptions.propagate(e);
+        }
     }
 
     @Override

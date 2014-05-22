@@ -742,6 +742,18 @@ public class Entities {
         };
     }
     
+    public static boolean isManaged(Location loc) {
+        ManagementContext mgmt = ((LocationInternal)loc).getManagementContext();
+        return (mgmt != null) && mgmt.isRunning() && mgmt.getLocationManager().isManaged(loc);
+    }
+
+    public static void unmanage(Location loc) {
+        if (isManaged(loc)) {
+            ManagementContext mgmt = ((LocationInternal)loc).getManagementContext();
+            mgmt.getLocationManager().unmanage(loc);
+        }
+    }
+
     /**
      * Registers the given location (and all its children) with the management context. 
      * @throws IllegalStateException if the parent location is not already managed

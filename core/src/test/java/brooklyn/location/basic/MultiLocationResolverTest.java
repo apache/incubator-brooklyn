@@ -1,6 +1,7 @@
 package brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -30,10 +31,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 public class MultiLocationResolverTest {
 
@@ -63,6 +66,14 @@ public class MultiLocationResolverTest {
         assertThrowsIllegalArgument("multi:(wrongprefix:(hosts=\"1.1.1.1\"))");
         assertThrowsIllegalArgument("multi:(foo:bar)");
     }
+
+    @Test
+    public void testCleansUpOnInvalidTarget() {
+        assertThrowsNoSuchElement("multi:(targets=\"localhost:(name=testCleansUpOnInvalidTarget),thisNamedLocationDoesNotExist\")");
+        Optional<Location> subtarget = Iterables.tryFind(managementContext.getLocationManager().getLocations(), LocationPredicates.displayNameEqualTo("testCleansUpOnInvalidTarget"));
+        assertFalse(subtarget.isPresent(), "subtarget="+subtarget);
+    }
+
 
     @Test
     public void testResolvesSubLocs() {
