@@ -9,6 +9,7 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
 import com.google.common.collect.Maps;
@@ -123,6 +124,15 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.policies.add(policy.getRebindSupport().getMemento());
+            persister.delta(delta);
+        }
+    }
+    
+    @Override
+    public void onChanged(Enricher enricher) {
+        if (running && persister != null) {
+            PersisterDeltaImpl delta = new PersisterDeltaImpl();
+            delta.enrichers.add(enricher.getRebindSupport().getMemento());
             persister.delta(delta);
         }
     }

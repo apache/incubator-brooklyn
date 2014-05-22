@@ -19,6 +19,8 @@ import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
@@ -87,6 +89,16 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                         List<Class<?>> types = MutableList.<Class<?>>of(Location.class, LocationInternal.class);
                         if (type != null) types.add(type);
                         return (Location) newDummy(types);
+                    }
+                    @Override public Policy lookupPolicy(Class<?> type, String id) {
+                        List<Class<?>> types = MutableList.<Class<?>>of(Policy.class);
+                        if (type != null) types.add(type);
+                        return (Policy) newDummy(types);
+                    }
+                    @Override public Enricher lookupEnricher(Class<?> type, String id) {
+                        List<Class<?>> types = MutableList.<Class<?>>of(Enricher.class);
+                        if (type != null) types.add(type);
+                        return (Enricher) newDummy(types);
                     }
                     private Object newDummy(List<Class<?>> types) {
                         return java.lang.reflect.Proxy.newProxyInstance(

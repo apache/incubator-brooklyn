@@ -29,10 +29,12 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -162,6 +164,8 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Entity> entities = Maps.newLinkedHashMap();
             Map<String,Location> locations = Maps.newLinkedHashMap();
             Map<String,Policy> policies = Maps.newLinkedHashMap();
+            Map<String,Enricher> enrichers = Maps.newLinkedHashMap();
+            
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
     
             LookupContext realLookupContext = new LookupContext() {
@@ -180,6 +184,24 @@ public class RebindManagerImpl implements RebindManager {
                         result = exceptionHandler.onDanglingLocationRef(id);
                     } else if (type != null && !type.isInstance(result)) {
                         LOG.warn("Location with id "+id+" does not match type "+type+"; returning "+result);
+                    }
+                    return result;
+                }
+                @Override public Policy lookupPolicy(Class<?> type, String id) {
+                    Policy result = rebindContext.getPolicy(id);
+                    if (result == null) {
+                        result = exceptionHandler.onDanglingPolicyRef(id);
+                    } else if (type != null && !type.isInstance(result)) {
+                        LOG.warn("Policy with id "+id+" does not match type "+type+"; returning "+result);
+                    }
+                    return result;
+                }
+                @Override public Enricher lookupEnricher(Class<?> type, String id) {
+                    Enricher result = rebindContext.getEnricher(id);
+                    if (result == null) {
+                        result = exceptionHandler.onDanglingEnricherRef(id);
+                    } else if (type != null && !type.isInstance(result)) {
+                        LOG.warn("Enricher with id "+id+" does not match type "+type+"; returning "+result);
                     }
                     return result;
                 }
@@ -243,6 +265,16 @@ public class RebindManagerImpl implements RebindManager {
                 }
             }
             
+            // Instantiate enrichers
+            LOG.info("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
+            for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", enricherMemento);
+                
+                Enricher enricher = newEnricher(enricherMemento, reflections);
+                enrichers.put(enricherMemento.getId(), enricher);
+                rebindContext.registerEnricher(enricherMemento.getId(), enricher);
+            }
+            
             // Reconstruct locations
             LOG.info("RebindManager reconstructing locations");
             for (LocationMemento locMemento : sortParentFirst(memento.getLocationMementos()).values()) {
@@ -259,7 +291,7 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             }
-    
+
             // Reconstruct policies
             LOG.info("RebindManager reconstructing policies");
             for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
@@ -276,6 +308,15 @@ public class RebindManagerImpl implements RebindManager {
                         exceptionHandler.onRebindPolicyFailed(policy, e);
                     }
                 }
+            }
+
+            // Reconstruct enrichers
+            LOG.info("RebindManager reconstructing enrichers");
+            for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
+                Enricher enricher = rebindContext.getEnricher(enricherMemento.getId());
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing enricher {}", enricherMemento);
+    
+                enricher.getRebindSupport().reconstruct(rebindContext, enricherMemento);
             }
     
             // Reconstruct entities
@@ -471,7 +512,6 @@ public class RebindManagerImpl implements RebindManager {
         // note 'used' config keys get marked in BasicLocationRebindSupport
     }
 
-
     /**
      * Constructs a new policy, passing to its constructor the policy id and all of memento.getFlags().
      */
@@ -486,6 +526,22 @@ public class RebindManagerImpl implements RebindManager {
                 .build();
 
         return (Policy) invokeConstructor(reflections, policyClazz, new Object[] {flags});
+    }
+
+    /**
+     * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getFlags().
+     */
+    private Enricher newEnricher(EnricherMemento memento, Reflections reflections) {
+        String id = memento.getId();
+        String enricherType = checkNotNull(memento.getType(), "enricherType of "+id);
+        Class<?> enricherClazz = reflections.loadClass(enricherType);
+
+        Map<String, Object> flags = MutableMap.<String, Object>builder()
+                .put("id", id)
+                .putAll(memento.getFlags())
+                .build();
+
+        return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});
     }
 
     private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
@@ -579,6 +635,15 @@ public class RebindManagerImpl implements RebindManager {
                 delegate.onChanged(policy);
             } catch (Throwable t) {
                 LOG.error("Error persisting mememento onChanged("+policy+"); continuing.", t);
+            }
+        }
+        
+        @Override
+        public void onChanged(Enricher enricher) {
+            try {
+                delegate.onChanged(enricher);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onChanged("+enricher+"); continuing.", t);
             }
         }
     }

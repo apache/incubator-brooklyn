@@ -344,7 +344,9 @@ public class EntityManagementSupport {
         }
         @Override
         public void onAttributeChanged(AttributeSensor<?> attribute) {
+            // if important persist, otherwiise ignore
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+            // getManagementContext().getRebindManager().getAttributeChangeListener().onChanged(entity, attribute);
         }
         @Override
         public void onConfigChanged(ConfigKey<?> key) {

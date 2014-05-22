@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -40,14 +41,14 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
 
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
         EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customFields(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity: {}", memento.toVerboseString());
-    	return memento;
+        if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity: {}", memento.toVerboseString());
+        return memento;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity: {}", memento.toVerboseString());
+        if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity: {}", memento.toVerboseString());
 
         // Note that the id should have been set in the constructor; it is immutable
         entity.setDisplayName(memento.getDisplayName());
@@ -82,6 +83,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
         addPolicies(rebindContext, memento);
+        addEnrichers(rebindContext, memento);
         addMembers(rebindContext, memento);
         addLocations(rebindContext, memento);
 
@@ -155,6 +157,18 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
             } else {
                 LOG.warn("Policy not found; discarding policy {} of entity {}({})",
                         new Object[] {policyId, memento.getType(), memento.getId()});
+            }
+        }
+    }
+    
+    protected void addEnrichers(RebindContext rebindContext, EntityMemento memento) {
+        for (String enricherId : memento.getEnrichers()) {
+            AbstractEnricher enricher = (AbstractEnricher) rebindContext.getEnricher(enricherId);
+            if (enricher != null) {
+                entity.addEnricher(enricher);
+            } else {
+                LOG.warn("Enricher not found; discarding policy {} of entity {}({})",
+                        new Object[] {enricherId, memento.getType(), memento.getId()});
             }
         }
     }
