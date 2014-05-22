@@ -151,6 +151,9 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
+    public void commitCluster(){ getDriver().commitCluster();}
+
+    @Override
     public void recoverFailedNode(String nodeName) {
         getDriver().recoverFailedNode(nodeName);
     }

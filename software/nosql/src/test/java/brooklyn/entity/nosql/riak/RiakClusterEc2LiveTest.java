@@ -29,8 +29,11 @@ public class RiakClusterEc2LiveTest extends AbstractEc2LiveTest {
         RiakNode first = (RiakNode) Iterables.get(cluster.getMembers(), 0);
         RiakNode second = (RiakNode) Iterables.get(cluster.getMembers(), 1);
 
-        EntityTestUtils.assertAttributeEqualsEventually(first, RiakNode.RIAK_NODE_IN_CLUSTER, true);
-        EntityTestUtils.assertAttributeEqualsEventually(second, RiakNode.RIAK_NODE_IN_CLUSTER, true);
+        EntityTestUtils.assertAttributeEqualsEventually(first, RiakNode.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(second, RiakNode.SERVICE_UP, true);
+
+        EntityTestUtils.assertAttributeEqualsEventually(first, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true);
+        EntityTestUtils.assertAttributeEqualsEventually(second, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true);
     }
 
     @Test(enabled = false)

@@ -11,21 +11,23 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import brooklyn.util.time.Time;
 
 
 public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
@@ -35,32 +37,48 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     public void init() {
         log.info("Initializing the riak cluster...");
         super.init();
+
+
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
         connectSensors();
+
+        Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
+
+        //FIXME: add a quorum to tolerate failed nodes before setting on fire.
+        Optional<Entity> anyNode = Iterables.tryFind(getMembers(), new Predicate<Entity>() {
+
+            @Override
+            public boolean apply(@Nullable Entity entity) {
+                return (entity instanceof RiakNode && hasMemberJoinedCluster(entity) && entity.getAttribute(RiakNode.SERVICE_UP));
+            }
+        });
+
+        if (anyNode.isPresent()) {
+            log.info("Planning and Committing cluster changes on node: {}, cluster: {}", anyNode.get().getId(), getId());
+            Entities.invokeEffector(this, anyNode.get(), RiakNode.COMMIT_RIAK_CLUSTER);
+        } else {
+            log.warn("No Riak Nodes are found on the cluster: {}. Initialization Failed", getId());
+            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+        }
     }
+
 
     protected EntitySpec<?> getMemberSpec() {
         EntitySpec<?> result = super.getMemberSpec();
-        if (result!=null) return result;
+        if (result != null) return result;
         return EntitySpec.create(RiakNode.class);
     }
-    
+
     protected void connectSensors() {
         addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Controller targets tracker")
                 .configure("sensorsToTrack", ImmutableSet.of(RiakNode.SERVICE_UP))
                 .configure("group", this));
     }
-
-    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
-        @Override protected void onEntityEvent(EventType type, Entity entity) {
-            ((RiakClusterImpl)super.entity).onServerPoolMemberChanged(entity);
-        }
-    };
 
     protected synchronized void onServerPoolMemberChanged(Entity member) {
         if (log.isTraceEnabled()) log.trace("For {}, considering membership of {} which is in locations {}",
@@ -69,7 +87,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         if (belongsInServerPool(member)) {
             // TODO can we discover the nodes by asking the riak cluster, rather than assuming what we add will be in there?
             // TODO and can we do join as part of node starting?
-            
+
             Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
             if (nodes == null) nodes = Maps.newLinkedHashMap();
             String riakName = getRiakName(member);
@@ -82,7 +100,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                     nodes.put(member, riakName);
                     setAttribute(RIAK_CLUSTER_NODES, nodes);
 
-                    ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.TRUE);
+                    ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
                     isFirstNodeSet.set(true);
 
                     log.info("Adding riak node {}: {}; {} to cluster", new Object[]{this, member, getRiakName(member)});
@@ -94,12 +112,12 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                     Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
                         @Override
                         public boolean apply(@Nullable Entity node) {
-                            return (node instanceof RiakNode && isMemberInCluster(node));
+                            return (node instanceof RiakNode && hasMemberJoinedCluster(node));
                         }
                     });
 
                     if (anyNodeInCluster.isPresent()) {
-                        if (!nodes.containsKey(member) && !isMemberInCluster(member)) {
+                        if (!nodes.containsKey(member) && !hasMemberJoinedCluster(member)) {
 
                             String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
                             Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
@@ -124,13 +142,16 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
     }
 
+    ;
+
     protected boolean belongsInServerPool(Entity member) {
         if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
             if (log.isTraceEnabled()) log.trace("Members of {}, checking {}, eliminating because not up", this, member);
             return false;
         }
         if (!getMembers().contains(member)) {
-            if (log.isTraceEnabled()) log.trace("Members of {}, checking {}, eliminating because not member", this, member);
+            if (log.isTraceEnabled())
+                log.trace("Members of {}, checking {}, eliminating because not member", this, member);
 
             return false;
         }
@@ -143,7 +164,14 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         return node.getAttribute(RiakNode.RIAK_NODE_NAME);
     }
 
-    private Boolean isMemberInCluster(Entity member) {
-        return Optional.fromNullable(member.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER)).or(Boolean.FALSE);
+    private Boolean hasMemberJoinedCluster(Entity member) {
+        return Optional.fromNullable(member.getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER)).or(Boolean.FALSE);
+    }
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityEvent(EventType type, Entity entity) {
+            ((RiakClusterImpl) super.entity).onServerPoolMemberChanged(entity);
+        }
     }
 }
