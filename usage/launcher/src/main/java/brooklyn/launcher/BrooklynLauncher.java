@@ -30,6 +30,7 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
@@ -641,7 +642,7 @@ public class BrooklynLauncher {
         List<Throwable> appExceptions = Lists.newArrayList();
         for (Application app : apps) {
             if (app instanceof Startable) {
-                if (shutdownOnExit) Entities.invokeStopOnShutdown(app);
+                if (shutdownOnExit) BrooklynShutdownHooks.invokeStopOnShutdown(app);
                 try {
                     LOG.info("Starting brooklyn application {} in location{} {}", new Object[] { app, locations.size()!=1?"s":"", locations });
                     ((Startable)app).start(locations);
