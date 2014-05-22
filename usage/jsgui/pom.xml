@@ -30,7 +30,7 @@
 
         <!-- The maven-war-plugin 2.1+ and the replacer plugin don't work well together. -->
         <maven-war-plugin.version>2.0.2</maven-war-plugin.version>
-        <exec-maven-plugin.version>1.2.1</exec-maven-plugin.version>
+        <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
 
         <project.build.webapp>
             ${project.build.directory}/${project.build.finalName}
@@ -273,31 +273,27 @@
 
                     <!-- Compress the minified files. Jetty will serve the gzipped content instead. -->
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>${exec-maven-plugin.version}</version>
-                        <configuration>
-                            <executable>${project.basedir}/build/gzip-with-redirect.sh</executable>
-                        </configuration>
+                        <artifactId>maven-antrun-plugin</artifactId>
                         <executions>
-                            <!-- This section could be *way* simpler with `gzip -k`, but -k is a new addition
-                                 to gzip and we can't assume its presence -->
                             <execution>
-                                <id>gzip-resources</id>
+                                <id>Compress resources</id>
                                 <phase>prepare-package</phase>
                                 <goals>
-                                    <goal>exec</goal>
+                                    <goal>run</goal>
                                 </goals>
                                 <configuration>
-                                    <arguments>
-                                        <argument>${project.build.webapp}/assets/css/styles.min.css</argument>
-                                        <argument>${project.build.webapp}/assets/css/brooklyn.css</argument>
-                                        <argument>${project.build.webapp}/assets/js/gui.min.js</argument>
-                                        <argument>${project.build.webapp}/assets/js/libs/require.js</argument>
-                                    </arguments>
+                                    <target>
+                                        <gzip src="${project.build.webapp}/assets/css/styles.min.css"
+                                              destfile="${project.build.webapp}/assets/css/styles.min.css.gz"/>
+                                        <gzip src="${project.build.webapp}/assets/css/brooklyn.css"
+                                              destfile="${project.build.webapp}/assets/css/brooklyn.css.gz"/>
+                                        <gzip src="${project.build.webapp}/assets/js/gui.min.js"
+                                              destfile="${project.build.webapp}/assets/js/gui.min.js.gz"/>
+                                        <gzip src="${project.build.webapp}/assets/js/libs/require.js"
+                                              destfile="${project.build.webapp}/assets/js/libs/require.js.gz"/>
+                                    </target>
                                 </configuration>
                             </execution>
-
                         </executions>
                     </plugin>
                 </plugins>
