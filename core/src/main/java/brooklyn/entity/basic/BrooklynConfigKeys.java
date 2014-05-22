@@ -40,11 +40,11 @@ public class BrooklynConfigKeys {
         + "(e.g. version, plugins, etc), but should be the same where install dirs can be shared to allow for re-use");
         
     public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
-        "${"
-        + "config['"+ONBOX_BASE_DIR.getName()+"']!"
-        + "config['"+BROOKLYN_DATA_DIR.getName()+"']!"
-        + "'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'"
-        + "}"
+            "${"
+            + "config['"+ONBOX_BASE_DIR.getName()+"']!"
+            + "config['"+BROOKLYN_DATA_DIR.getName()+"']!"
+            + "'"+Os.mergePathsUnix("/tmp", "brooklyn-"+Os.user())+"'"
+            + "}"
             + "/"
             + "installs/"
             // the  var??  tests if it exists, passing value to ?string(if_present,if_absent)
