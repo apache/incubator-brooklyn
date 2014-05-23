@@ -16,8 +16,10 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.Sensor;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.EntityManager;
+import brooklyn.policy.PolicySpec;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -132,6 +134,32 @@ public class MembershipTrackingPolicyTest {
 
         assertRecordsEventually(policy2, Record.newAdded(e1), Record.newChanged(e1));
     }
+    
+    @Test
+    public void testNotNotifiedOfExtraTrackedSensorsIfNonDuplicate() throws Exception {
+        TestEntity e1 = createAndManageChildOf(group);
+        
+        PolicySpec<RecordingMembershipTrackingPolicy> nonDuplicateTrackingPolicySpec = 
+                PolicySpec.create(RecordingMembershipTrackingPolicy.class)
+                .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
+                .configure(AbstractMembershipTrackingPolicy.NOTIFY_ON_DUPLICATES, false);
+        
+        RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = group.addPolicy(nonDuplicateTrackingPolicySpec);
+        group.addPolicy(nonDuplicateTrackingPolicy);
+        nonDuplicateTrackingPolicy.setGroup(group);
+
+        e1.setAttribute(TestEntity.NAME, "myname");
+
+        assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));
+        
+        e1.setAttribute(TestEntity.NAME, "myname");
+        
+        assertRecordsContinually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));
+        
+        e1.setAttribute(TestEntity.NAME, "mynewname");
+        
+        assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1), Record.newChanged(e1));
+    }
 
     private void assertRecordsEventually(final Record... expected) {
         assertRecordsEventually(policy, expected);
@@ -153,15 +181,24 @@ public class MembershipTrackingPolicyTest {
     }
 
     private void assertRecordsContinually(final Record... expected) {
+        assertRecordsContinually(policy, expected);
+    }
+    
+    private void assertRecordsContinually(final RecordingMembershipTrackingPolicy policy, final Record... expected) {
         Asserts.succeedsContinually(ImmutableMap.of("timeout", 100), new Runnable() {
             public void run() {
                 assertEquals(policy.records, ImmutableList.copyOf(expected), "actual="+policy.records);
             }});
     }
 
-    static class RecordingMembershipTrackingPolicy extends AbstractMembershipTrackingPolicy {
+    // Needs to be public when instantiated from a spec (i.e. by InternalPolicyFactory)
+    public static class RecordingMembershipTrackingPolicy extends AbstractMembershipTrackingPolicy {
         final List<Record> records = new CopyOnWriteArrayList<Record>();
 
+        public RecordingMembershipTrackingPolicy() {
+            super();
+        }
+        
         public RecordingMembershipTrackingPolicy(MutableMap<String, ?> flags) {
             super(flags);
         }
