@@ -1,7 +1,6 @@
 package brooklyn.entity.proxy;
 
 import java.util.Map;
-import java.util.Set;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -12,13 +11,14 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 
 /**
  * A load balancer that routes requests to set(s) of servers.
@@ -72,8 +72,10 @@ public interface LoadBalancer extends Entity, Startable {
     
     public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
 
-    public static final BasicAttributeSensor<Set<String>> SERVER_POOL_TARGETS = new BasicAttributeSensor(
-            Set.class, "proxy.serverpool.targets", "The downstream targets in the server pool");
+    public static final AttributeSensor<Map<Entity, String>> SERVER_POOL_TARGETS = Sensors.newSensor(
+            new TypeToken<Map<Entity, String>>() {},
+            "proxy.serverpool.targets", 
+            "The downstream targets in the server pool");
     
     public static final MethodEffector<Void> RELOAD = new MethodEffector<Void>(LoadBalancer.class, "reload");
     

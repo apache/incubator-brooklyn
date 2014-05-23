@@ -191,7 +191,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         String cfg = getConfigFile();
         if (cfg == null) return;
 
-        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", new Object[] {this, serverPoolAddresses, getUrlMappings()});
+        if (LOG.isDebugEnabled()) LOG.debug("Reconfiguring {}, targetting {} and {}", new Object[] {this, getServerPoolAddresses(), getUrlMappings()});
         if (LOG.isTraceEnabled()) LOG.trace("Reconfiguring {}, config file:\n{}", this, cfg);
 
         NginxSshDriver driver = (NginxSshDriver) getDriver();

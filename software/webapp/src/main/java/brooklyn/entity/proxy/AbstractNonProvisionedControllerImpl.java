@@ -119,7 +119,7 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
             LOG.info("Resetting {}, members {} with address {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
         }
         
-        setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
+        setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
     }
     
     /** 
@@ -138,7 +138,7 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
             LOG.debug("Reloading {} in response to changes", this);
             invoke(RELOAD);
         }
-        setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
+        setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
     }
     
     protected synchronized void onServerPoolMemberChanged(Entity member) {
