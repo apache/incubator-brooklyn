@@ -15,9 +15,7 @@ public class IptablesCommands {
         ACCEPT, REJECT, DROP, LOG
     }
 
-    /**
-     * @deprecated since 0.7; use {@link brooklyn.util.net.Protocol}
-     */
+    /*** @deprecated since 0.7; use {@link brooklyn.util.net.Protocol} */
     @Deprecated
     public enum Protocol {
         TCP("tcp"), UDP("udp"), ALL("all");
@@ -32,15 +30,22 @@ public class IptablesCommands {
         public String toString() {
             return protocol;
         }
-        
+
         brooklyn.util.net.Protocol convert() {
             switch (this) {
-                case TCP : return brooklyn.util.net.Protocol.TCP;
-                case UDP : return brooklyn.util.net.Protocol.UDP;
-                case ALL : return brooklyn.util.net.Protocol.ALL;
-                default:   throw new IllegalStateException("Unexpected protocol "+this);
+                case TCP: return brooklyn.util.net.Protocol.TCP;
+                case UDP: return brooklyn.util.net.Protocol.UDP;
+                case ALL: return brooklyn.util.net.Protocol.ALL;
+                default: throw new IllegalStateException("Unexpected protocol "+this);
             }
         }
+    }
+
+    @Beta // implementation not portable across distros
+    public static String iptablesService(String cmd) {
+        return sudo(BashCommands.alternatives(
+                BashCommands.ifExecutableElse1("service", "service iptables "+cmd),
+                "/sbin/service iptables " + cmd));
     }
 
     @Beta // implementation not portable across distros
@@ -63,32 +68,29 @@ public class IptablesCommands {
         return iptablesService("status");
     }
 
-    @Beta // implementation not portable across distros
-    public static String iptablesService(String cmd) {
-        return sudo("/sbin/service iptables "+cmd);
+    /**
+     * Returns the command that saves on disk iptables rules, to make them resilient to reboot.
+     *
+     * @return Returns the command that saves on disk iptables rules.
+     */
+    public static String saveIptablesRules() {
+        return BashCommands.alternatives(
+                BashCommands.ifExecutableElse1("iptables-save", sudo("iptables-save")),
+                iptablesService("save"));
     }
 
     /**
      * Returns the command that cleans up iptables rules.
-     * 
+     *
      * @return Returns the command that cleans up iptables rules.
      */
     public static String cleanUpIptablesRules() {
        return sudo("/sbin/iptables -F");
     }
-    
-    /**
-     * Returns the command that saves on disk iptables rules, to make them resilient to reboot.
-     * 
-     * @return Returns the command that saves on disk iptables rules.
-     */
-    public static String saveIptablesRules() {
-       return sudo("/sbin/service iptables save");
-    }
-    
+
     /**
      * Returns the iptables rules.
-     * 
+     *
      * @return Returns the command that list all the iptables rules.
      */
     public static String listIptablesRule() {
@@ -97,77 +99,84 @@ public class IptablesCommands {
 
     /**
      * Returns the command that inserts a rule on top of the iptables' rules to all interfaces.
-     * 
+     *
      * @return Returns the command that inserts a rule on top of the iptables'
      *         rules.
      */
     public static String insertIptablesRule(Chain chain, brooklyn.util.net.Protocol protocol, int port, Policy policy) {
         return addIptablesRule("-I", chain, Optional.<String> absent(), protocol, port, policy);
     }
-    
+
+    /** @deprecated since 0.7.0; use {@link #insertIptablesRule(Chain, brooklyn.util.net.Protocol, int, Policy)} */
+    @Deprecated
     public static String insertIptablesRule(Chain chain, Protocol protocol, int port, Policy policy) {
         return insertIptablesRule(chain, protocol.convert(), port, policy);
     }
-    
+
     /**
      * Returns the command that inserts a rule on top of the iptables' rules.
-     * 
+     *
      * @return Returns the command that inserts a rule on top of the iptables'
      *         rules.
      */
     public static String insertIptablesRule(Chain chain, String networkInterface, brooklyn.util.net.Protocol protocol, int port, Policy policy) {
         return addIptablesRule("-I", chain, Optional.of(networkInterface), protocol, port, policy);
     }
-    
+
+    /** @deprecated since 0.7.0; use {@link #insertIptablesRule(Chain, String, brooklyn.util.net.Protocol, int, Policy)} */
+    @Deprecated
     public static String insertIptablesRule(Chain chain, String networkInterface, Protocol protocol, int port, Policy policy) {
         return insertIptablesRule(chain, networkInterface, protocol.convert(), port, policy);
     }
 
     /**
      * Returns the command that appends a rule to iptables to all interfaces.
-     * 
+     *
      * @return Returns the command that appends a rule to iptables.
      */
     public static String appendIptablesRule(Chain chain, brooklyn.util.net.Protocol protocol, int port, Policy policy) {
         return addIptablesRule("-A", chain, Optional.<String> absent(), protocol, port, policy);
     }
-    
+
+    /** @deprecated since 0.7.0; use {@link #appendIptablesRule(Chain, brooklyn.util.net.Protocol, int, Policy)} */
+    @Deprecated
     public static String appendIptablesRule(Chain chain, Protocol protocol, int port, Policy policy) {
         return appendIptablesRule(chain, protocol.convert(), port, policy);
     }
-    
+
     /**
      * Returns the command that appends a rule to iptables.
-     * 
+     *
      * @return Returns the command that appends a rule to iptables.
      */
     public static String appendIptablesRule(Chain chain, String networkInterface, brooklyn.util.net.Protocol protocol, int port, Policy policy) {
         return addIptablesRule("-A", chain, Optional.of(networkInterface), protocol, port, policy);
     }
-    
+
+    /** @deprecated since 0.7.0; use {@link #appendIptablesRule(Chain, String, brooklyn.util.net.Protocol, int, Policy)} */
+    @Deprecated
     public static String appendIptablesRule(Chain chain, String networkInterface, Protocol protocol, int port, Policy policy) {
         return appendIptablesRule(chain, networkInterface, protocol.convert(), port, policy);
     }
 
     /**
      * Returns the command that creates a rule to iptables.
-     * 
-     * @return Returns the command that creates a rule to iptables.
+     *
+     * @return Returns the command that creates a rule for iptables.
      */
-    private static String addIptablesRule(String direction, Chain chain, Optional<String> networkInterface, brooklyn.util.net.Protocol protocol, int port,
-            Policy policy) {
-        String addIptablesRule; 
-        if(networkInterface.isPresent()) {  
+    public static String addIptablesRule(String direction, Chain chain, Optional<String> networkInterface, brooklyn.util.net.Protocol protocol, int port, Policy policy) {
+        String addIptablesRule;
+        if(networkInterface.isPresent()) {
            addIptablesRule = String.format("/sbin/iptables %s %s -i %s -p %s --dport %d -j %s", direction, chain, networkInterface.get(), protocol, port, policy);
         } else {
-           addIptablesRule = String.format("/sbin/iptables %s %s -p %s --dport %d -j %s", direction, chain,
-                 protocol, port, policy);
+           addIptablesRule = String.format("/sbin/iptables %s %s -p %s --dport %d -j %s", direction, chain, protocol, port, policy);
         }
         return sudo(addIptablesRule);
     }
-    
-    private static String addIptablesRule(String direction, Chain chain, Optional<String> networkInterface, Protocol protocol, int port,
-            Policy policy) {
+
+    /** @deprecated since 0.7.0; use {@link #addIptablesRule(String, Chain, Optional, brooklyn.util.net.Protocol, int, Policy)} */
+    @Deprecated
+    public static String addIptablesRule(String direction, Chain chain, Optional<String> networkInterface, Protocol protocol, int port, Policy policy) {
         return addIptablesRule(direction, chain, networkInterface, protocol.convert(), port, policy);
     }
 

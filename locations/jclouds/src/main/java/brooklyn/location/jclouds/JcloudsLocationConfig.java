@@ -118,6 +118,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Tags to be applied when creating a VM, on supported clouds " +
             "(either a single tag as a String, or an Iterable<String> or String[];" +
             "note this is not key-value pairs (e.g. what AWS calls 'tags'), for that see userMetadata)", null);
+
     @Deprecated /** @deprecated since 0.7.0 use #STRING_TAGS */
     public static final ConfigKey<Object> TAGS = STRING_TAGS;
 
