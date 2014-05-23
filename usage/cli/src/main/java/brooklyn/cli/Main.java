@@ -501,7 +501,7 @@ public class Main {
                 stopAllApps(ctx.getApplications());
             } else {
                 // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
-                log.info("Launched Brooklyn; now blocking to wait for cntrl-c or kill");
+                log.info("Launched Brooklyn; will now block until shutdown issued. Shutdown via GUI or API or process interrupt.");
                 waitUntilInterrupted();
             }
         }
