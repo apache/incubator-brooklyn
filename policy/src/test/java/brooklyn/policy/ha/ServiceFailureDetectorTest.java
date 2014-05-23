@@ -40,31 +40,23 @@ public class ServiceFailureDetectorTest {
     private ServiceFailureDetector policy;
     
     private List<SensorEvent<FailureDescriptor>> events;
+    private SensorEventListener<FailureDescriptor> eventListener;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         events = new CopyOnWriteArrayList<SensorEvent<FailureDescriptor>>();
+        eventListener = new SensorEventListener<FailureDescriptor>() {
+            @Override public void onEvent(SensorEvent<FailureDescriptor> event) {
+                events.add(event);
+            }
+        };
         
         managementContext = Entities.newManagementContext();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        app.getManagementContext().getSubscriptionManager().subscribe(
-                e1, 
-                HASensors.ENTITY_FAILED, 
-                new SensorEventListener<FailureDescriptor>() {
-                    @Override public void onEvent(SensorEvent<FailureDescriptor> event) {
-                        events.add(event);
-                    }
-                });
-        app.getManagementContext().getSubscriptionManager().subscribe(
-                e1, 
-                HASensors.ENTITY_RECOVERED, 
-                new SensorEventListener<FailureDescriptor>() {
-                    @Override public void onEvent(SensorEvent<FailureDescriptor> event) {
-                        events.add(event);
-                    }
-                });
+        app.getManagementContext().getSubscriptionManager().subscribe(e1, HASensors.ENTITY_FAILED, eventListener);
+        app.getManagementContext().getSubscriptionManager().subscribe(e1, HASensors.ENTITY_RECOVERED, eventListener);
     }
     
     @AfterMethod(alwaysRun=true)
