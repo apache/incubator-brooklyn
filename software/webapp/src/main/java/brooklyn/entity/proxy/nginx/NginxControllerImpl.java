@@ -35,6 +35,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.http.HttpToolResponse;
@@ -56,6 +57,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
 
     private volatile HttpFeed httpFeed;
     private final Set<String> installedKeysCache = Sets.newLinkedHashSet();
+    private UrlMappingsMemberTrackerPolicy urlMappingsMemberTrackerPolicy;
 
     @Override
     public void reload() {
@@ -68,6 +70,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         driver.reload();
     }
 
+    @Override
     public boolean isSticky() {
         return getConfig(STICKY);
     }
@@ -110,18 +113,34 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                 });
 
             // Listen to url-mappings being added and removed
-            AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
-                @Override protected void onEntityEvent(EventType type, Entity entity) { updateNeeded(); }
-            };
-            addPolicy(policy);
-            policy.setGroup(urlMappings);
+            urlMappingsMemberTrackerPolicy = addPolicy(PolicySpec.create(UrlMappingsMemberTrackerPolicy.class)
+                    .configure("group", urlMappings));
+        }
+    }
+
+    protected void removeUrlMappingsMemberTrackerPolicy() {
+        if (urlMappingsMemberTrackerPolicy != null) {
+            removePolicy(urlMappingsMemberTrackerPolicy);
+        }
+    }
+    
+    public static class UrlMappingsMemberTrackerPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityEvent(EventType type, Entity entity) {
+            // relies on policy-rebind injecting the implementation rather than the dynamic-proxy
+            ((NginxControllerImpl)super.entity).updateNeeded();
         }
     }
 
     @Override
+    protected void preStop() {
+        super.preStop();
+        removeUrlMappingsMemberTrackerPolicy();
+    }
+    
+    @Override
     protected void doStop() {
-        // TODO Want http.poll to set SERVICE_UP to false on IOException. How?
-        // And don't want stop to race with the last poll.
+        // TODO don't want stop to race with the last poll.
         super.doStop();
         setAttribute(SERVICE_UP, false);
     }
