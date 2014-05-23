@@ -216,7 +216,6 @@ public class JavaAppUtils {
     private static final AtomicBoolean initialized = new AtomicBoolean(false);
 
     /** Setup renderer hints for the MXBean attributes. */
-    @SuppressWarnings("rawtypes")
     public static void init() {
         if (initialized.get()) return;
         synchronized (initialized) {
@@ -233,8 +232,8 @@ public class JavaAppUtils {
             RendererHints.register(UsesJavaMXBeans.START_TIME, RendererHints.displayValue(Time.toDateString()));
             RendererHints.register(UsesJavaMXBeans.UP_TIME, RendererHints.displayValue(Duration.millisToStringRounded()));
             RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME, RendererHints.displayValue(Duration.millisToStringRounded()));
-            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, RendererHints.displayValue(Duration.millisToStringRounded()));
-            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_IN_WINDOW, RendererHints.displayValue(Duration.millisToStringRounded()));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, RendererHints.displayValue(MathFunctions.percent(4)));
+            RendererHints.register(UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_IN_WINDOW, RendererHints.displayValue(MathFunctions.percent(4)));
 
             initialized.set(true);
         }
