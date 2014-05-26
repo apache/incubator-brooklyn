@@ -4,7 +4,6 @@ import javax.annotation.Nullable;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 
 import com.google.common.base.Objects;
@@ -48,11 +47,34 @@ public class LocationPredicates {
         };
     }
 
+    /**
+     * Returns a predicate that determines if a given location is a direct child of this {@code parent}.
+     */
     public static <T> Predicate<Location> isChildOf(final Location parent) {
         return new Predicate<Location>() {
             @Override
             public boolean apply(@Nullable Location input) {
-                return Objects.equal(input.getParent(), parent);
+                return (input != null) && Objects.equal(input.getParent(), parent);
+            }
+        };
+    }
+
+    /**
+     * Returns a predicate that determines if a given location is a descendant of this {@code ancestor}.
+     */
+    public static <T> Predicate<Location> isDescendantOf(final Location ancestor) {
+        return new Predicate<Location>() {
+            @Override
+            public boolean apply(@Nullable Location input) {
+                // assumes impossible to have cycles in location-hierarchy
+                Location contenderAncestor = (input == null) ? input : input.getParent();
+                while (contenderAncestor != null) {
+                    if (Objects.equal(contenderAncestor, ancestor)) {
+                        return true;
+                    }
+                    contenderAncestor = contenderAncestor.getParent();
+                }
+                return false;
             }
         };
     }
@@ -61,7 +83,7 @@ public class LocationPredicates {
         return new Predicate<Location>() {
             @Override
             public boolean apply(@Nullable Location input) {
-                return input != null && Entities.isManaged(input);
+                return input != null && Locations.isManaged(input);
             }
         };
     }

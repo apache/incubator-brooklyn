@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
@@ -111,7 +109,7 @@ public class MultiLocationResolver implements LocationResolver {
             // Must clean up after ourselves: don't leak sub-locations on error
             if (LOG.isDebugEnabled()) LOG.debug("Problem resolving MultiLocation; cleaning up any sub-locations and rethrowing: "+e);
             for (Location target : targets) {
-                Entities.unmanage(target);
+                Locations.unmanage(target);
             }
             throw Exceptions.propagate(e);
         }

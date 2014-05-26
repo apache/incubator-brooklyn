@@ -40,6 +40,7 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocationInternal;
+import brooklyn.location.basic.Locations;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
@@ -742,34 +743,12 @@ public class Entities {
         };
     }
     
-    public static boolean isManaged(Location loc) {
-        ManagementContext mgmt = ((LocationInternal)loc).getManagementContext();
-        return (mgmt != null) && mgmt.isRunning() && mgmt.getLocationManager().isManaged(loc);
-    }
-
-    public static void unmanage(Location loc) {
-        if (isManaged(loc)) {
-            ManagementContext mgmt = ((LocationInternal)loc).getManagementContext();
-            mgmt.getLocationManager().unmanage(loc);
-        }
-    }
-
     /**
-     * Registers the given location (and all its children) with the management context. 
-     * @throws IllegalStateException if the parent location is not already managed
-     * 
      * @since 0.6.0 (added only for backwards compatibility, where locations are being created directly).
-     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead.
+     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead; or {@link Locations#manage(Location, ManagementContext)}
      */
     public static void manage(Location loc, ManagementContext managementContext) {
-        if (!managementContext.getLocationManager().isManaged(loc)) {
-            log.warn("Deprecated use of unmanaged location ("+loc+"); will be managed automatically now but not supported in future versions");
-            // FIXME this occurs MOST OF THE TIME e.g. including BrooklynLauncher.location(locationString)
-            // not sure what is the recommend way to convert from locationString to locationSpec, or the API we want to expose;
-            // deprecating some of the LocationRegistry methods seems sensible?
-            log.debug("Stack trace for location of: Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("TRACE for: Deprecated use of unmanaged location"));
-            managementContext.getLocationManager().manage(loc);
-        }
+        Locations.manage(loc, managementContext);
     }
     
     /** fails-fast if value of the given key is null or unresolveable */

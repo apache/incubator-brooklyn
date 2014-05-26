@@ -68,6 +68,9 @@ public class EntityPredicates {
         };
     }
 
+    /**
+     * Returns a predicate that determines if a given entity is a direct child of this {@code parent}.
+     */
     public static <T> Predicate<Entity> isChildOf(final Entity parent) {
         return new Predicate<Entity>() {
             @Override
