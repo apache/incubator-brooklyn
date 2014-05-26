@@ -8,6 +8,7 @@ import java.util.Map;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
@@ -31,6 +32,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         protected final Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
         protected final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
         protected final Map<String, PolicyMemento> policies = Maps.newLinkedHashMap();
+        protected final Map<String, EnricherMemento> enrichers = Maps.newLinkedHashMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
@@ -53,6 +55,9 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         public Builder policy(PolicyMemento val) {
             policies.put(val.getId(), val); return this;
         }
+        public Builder enricher(EnricherMemento val) {
+            enrichers.put(val.getId(), val); return this;
+        }
         public Builder entity(EntityMemento val) {
             entities.put(val.getId(), val); return this;
         }
@@ -61,6 +66,9 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         }
         public Builder policies(Map<String, PolicyMemento> vals) {
             policies.putAll(vals); return this;
+        }
+        public Builder enricheres(Map<String, EnricherMemento> vals) {
+            enrichers.putAll(vals); return this;
         }
         public BrooklynMemento build() {
             return new BrooklynMementoImpl(this);
@@ -74,6 +82,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     private Map<String, EntityMemento> entities;
     private Map<String, LocationMemento> locations;
     private Map<String, PolicyMemento> policies;
+    private Map<String, EnricherMemento> enrichers;
     
     private BrooklynMementoImpl(Builder builder) {
         brooklynVersion = builder.brooklynVersion;
@@ -82,6 +91,7 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         entities = builder.entities;
         locations = builder.locations;
         policies = builder.policies;
+        enrichers = builder.enrichers;
     }
 
     @Override
@@ -97,6 +107,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     @Override
     public PolicyMemento getPolicyMemento(String id) {
         return policies.get(id);
+    }
+    
+    @Override
+    public EnricherMemento getEnricherMemento(String id) {
+        return enrichers.get(id);
     }
 
     @Override
@@ -120,6 +135,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     }
     
     @Override
+    public Collection<String> getEnricherIds() {
+        return Collections.unmodifiableSet(enrichers.keySet());
+    }
+    
+    @Override
     public Collection<String> getTopLevelLocationIds() {
         return Collections.unmodifiableList(topLevelLocationIds);
     }
@@ -136,5 +156,10 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     @Override
     public Map<String, PolicyMemento> getPolicyMementos() {
         return Collections.unmodifiableMap(policies);
+    }
+
+    @Override
+    public Map<String, EnricherMemento> getEnricherMementos() {
+        return Collections.unmodifiableMap(enrichers);
     }
 }

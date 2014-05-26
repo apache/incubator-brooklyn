@@ -30,7 +30,7 @@ public interface EntityChangeListener {
 
     void onChildrenChanged();
 
-    void onPoliciesChanged();
+    void onPoliciesChanged(); // TODO
 
     void onEffectorStarting(Effector<?> effector);
     

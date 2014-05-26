@@ -27,15 +27,15 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
 
     protected PolicyMemento getMementoWithProperties(Map<String,?> props) {
         PolicyMemento memento = MementosGenerators.newPolicyMementoBuilder(policy).customFields(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy: {}", memento.toVerboseString());
-    	return memento;
+        if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy: {}", memento.toVerboseString());
+        return memento;
     }
 
     @Override
     public void reconstruct(RebindContext rebindContext, PolicyMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy: {}", memento.toVerboseString());
+        if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy: {}", memento.toVerboseString());
 
-    	// Note that the flags have been set in the constructor
+        // Note that the flags have been set in the constructor
         policy.setName(memento.getDisplayName());
         
         doReconsruct(rebindContext, memento);

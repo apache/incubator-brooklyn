@@ -3,6 +3,7 @@ package brooklyn.entity.rebind;
 import java.util.Collection;
 
 import brooklyn.mementos.BrooklynMementoPersister.Delta;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
@@ -13,9 +14,11 @@ class PersisterDeltaImpl implements Delta {
     Collection<LocationMemento> locations = Sets.newLinkedHashSet();
     Collection<EntityMemento> entities = Sets.newLinkedHashSet();
     Collection<PolicyMemento> policies = Sets.newLinkedHashSet();
+    Collection<EnricherMemento> enrichers = Sets.newLinkedHashSet();
     Collection <String> removedLocationIds = Sets.newLinkedHashSet();
     Collection <String> removedEntityIds = Sets.newLinkedHashSet();
     Collection <String> removedPolicyIds = Sets.newLinkedHashSet();
+    Collection <String> removedEnricherIds = Sets.newLinkedHashSet();
     
     @Override
     public Collection<LocationMemento> locations() {
@@ -33,6 +36,11 @@ class PersisterDeltaImpl implements Delta {
     }
 
     @Override
+    public Collection<EnricherMemento> enrichers() {
+        return enrichers;
+    }
+
+    @Override
     public Collection<String> removedLocationIds() {
         return removedLocationIds;
     }
@@ -45,5 +53,10 @@ class PersisterDeltaImpl implements Delta {
     @Override
     public Collection<String> removedPolicyIds() {
         return removedPolicyIds;
+    }
+    
+    @Override
+    public Collection<String> removedEnricherIds() {
+        return removedEnricherIds;
     }
 }

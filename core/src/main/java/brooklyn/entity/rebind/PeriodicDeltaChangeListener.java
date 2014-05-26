@@ -16,6 +16,7 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicTask;
@@ -47,13 +48,15 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         Set<Location> locations = Sets.newLinkedHashSet();
         Set<Entity> entities = Sets.newLinkedHashSet();
         Set<Policy> policies = Sets.newLinkedHashSet();
+        Set<Enricher> enrichers = Sets.newLinkedHashSet();
         Set<String> removedLocationIds = Sets.newLinkedHashSet();
         Set<String> removedEntityIds = Sets.newLinkedHashSet();
         Set<String> removedPolicyIds = Sets.newLinkedHashSet();
+        Set<String> removedEnricherIds = Sets.newLinkedHashSet();
         
         public boolean isEmpty() {
-            return locations.isEmpty() && entities.isEmpty() && policies.isEmpty() && 
-                    removedEntityIds.isEmpty() && removedLocationIds.isEmpty() && removedPolicyIds.isEmpty();
+            return locations.isEmpty() && entities.isEmpty() && policies.isEmpty() && enrichers.isEmpty() &&
+                    removedEntityIds.isEmpty() && removedLocationIds.isEmpty() && removedPolicyIds.isEmpty() && removedEnricherIds.isEmpty();
         }
     }
     
@@ -196,12 +199,20 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                         try {
                             persisterDelta.policies.add(policy.getRebindSupport().getMemento());
                         } catch (Exception e) {
-                            handleGenerateMementoException(e, "location "+policy.getClass().getSimpleName()+"("+policy.getId()+")");
+                            handleGenerateMementoException(e, "policy "+policy.getClass().getSimpleName()+"("+policy.getId()+")");
+                        }
+                    }
+                    for (Enricher enricher : prevDeltaCollector.enrichers) {
+                        try {
+                            persisterDelta.enrichers.add(enricher.getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            handleGenerateMementoException(e, "enricher "+enricher.getClass().getSimpleName()+"("+enricher.getId()+")");
                         }
                     }
                     persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
                     persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
                     persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
+                    persisterDelta.removedEnricherIds = prevDeltaCollector.removedEnricherIds;
                     
                     /*
                      * Need to guarantee "happens before", with any thread that subsequently reads
@@ -268,9 +279,13 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
             // Also, the entity constructor often re-creates the policy.
             // Also see MementosGenerator.newEntityMementoBuilder()
-//            for (Policy policy : entity.getPolicies()) {
-//                delta.policies.add(policy);
-//            }
+            for (Policy policy : entity.getPolicies()) {
+                deltaCollector.policies.add(policy);
+            }
+
+            for (Enricher enricher : entity.getEnrichers()) {
+                deltaCollector.enrichers.add(enricher);
+            }
         }
     }
     
@@ -305,6 +320,14 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", policy);
         if (!isStopped()) {
             deltaCollector.policies.add(policy);
+        }
+    }
+    
+    @Override
+    public synchronized void onChanged(Enricher enricher) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", enricher);
+        if (!isStopped()) {
+            deltaCollector.enrichers.add(enricher);
         }
     }
 }

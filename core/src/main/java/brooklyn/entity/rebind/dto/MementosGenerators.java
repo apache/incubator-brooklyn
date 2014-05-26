@@ -21,9 +21,11 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -143,9 +145,13 @@ public class MementosGenerators {
         // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
         // Also, the entity constructor often re-creates the policy
         // Also see RebindManagerImpl.CheckpointingChangeListener.onChanged(Entity)
-//        for (Policy policy : entity.getPolicies()) {
-//            builder.policies.add(policy.getId()); 
-//        }
+        for (Policy policy : entity.getPolicies()) {
+            builder.policies.add(policy.getId()); 
+        }
+        
+        for (Enricher enricher : entity.getEnrichers()) {
+            builder.enrichers.add(enricher.getId()); 
+        }
         
         Entity parentEntity = entity.getParent();
         builder.parent = (parentEntity != null) ? parentEntity.getId() : null;
@@ -216,6 +222,26 @@ public class MementosGenerators {
         builder.displayName = policy.getName();
 
         builder.flags.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(policy, Modifier.STATIC ^ Modifier.TRANSIENT));
+        
+        return builder;
+    }
+    
+    /**
+     * Given an enricher, extracts its state for serialization.
+     */
+    public static EnricherMemento newEnricherMemento(Enricher enricher) {
+        return newEnricherMementoBuilder(enricher).build();
+    }
+    
+    public static BasicEnricherMemento.Builder newEnricherMementoBuilder(Enricher enricher) {
+        BasicEnricherMemento.Builder builder = BasicEnricherMemento.builder();
+        
+        builder.type = enricher.getClass().getName();
+        builder.typeClass = enricher.getClass();
+        builder.id = enricher.getId();
+        builder.displayName = enricher.getName();
+
+        builder.flags.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(enricher, Modifier.STATIC ^ Modifier.TRANSIENT));
         
         return builder;
     }

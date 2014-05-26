@@ -49,6 +49,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         protected Map<AttributeSensor<?>, Object> attributes = Maps.newLinkedHashMap();
         protected List<String> locations = Lists.newArrayList();
         protected List<String> policies = Lists.newArrayList();
+        protected List<String> enrichers = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
         protected List<Effector<?>> effectors = Lists.newArrayList();
         
@@ -61,6 +62,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             attributes.putAll(other.getAttributes());
             locations.addAll(other.getLocations());
             policies.addAll(other.getPolicies());
+            enrichers.addAll(other.getEnrichers());
             members.addAll(other.getMembers());
             effectors.addAll(other.getEffectors());
             return this;
@@ -81,6 +83,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private List<String> members;
     private Map<String, Object> attributes;
     private List<String> policies;
+    private List<String> enrichers;
     
     // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
     private Map<String, ConfigKey<?>> configKeys;
@@ -107,6 +110,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         
         locations = toPersistedList(builder.locations);
         policies = toPersistedList(builder.policies);
+        enrichers = toPersistedList(builder.enrichers);
         members = toPersistedList(builder.members);
         
         effectors = toPersistedList(builder.effectors);
@@ -243,6 +247,11 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
     
     @Override
+    public List<String> getEnrichers() {
+        return fromPersistedList(enrichers);
+    }
+    
+    @Override
     public List<String> getMembers() {
         return fromPersistedList(members);
     }
@@ -260,6 +269,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
                 .add("configUnmatched", Entities.sanitize(getConfigUnmatched()))
                 .add("attributes", Entities.sanitize(getAttributes()))
                 .add("policies", getPolicies())
+                .add("enrichers", getEnrichers())
                 .add("locations", getLocations());
     }
 

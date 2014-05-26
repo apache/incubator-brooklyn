@@ -15,8 +15,10 @@ import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.rebind.dto.BasicEnricherMemento;
 import brooklyn.entity.rebind.dto.BasicEntityMemento;
 import brooklyn.entity.rebind.dto.BasicLocationMemento;
+import brooklyn.entity.rebind.dto.BasicPolicyMemento;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -24,6 +26,8 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.xstream.XmlSerializer;
 
@@ -57,6 +61,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         
         xstream.alias("entity", BasicEntityMemento.class);
         xstream.alias("location", BasicLocationMemento.class);
+        xstream.alias("policy", BasicPolicyMemento.class);
+        xstream.alias("enricher", BasicEnricherMemento.class);
         xstream.alias("configKey", BasicConfigKey.class);
         xstream.alias("attributeSensor", BasicAttributeSensor.class);
         
@@ -67,11 +73,14 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         
         xstream.alias("entityRef", Entity.class);
         xstream.alias("locationRef", Location.class);
+        xstream.alias("policyRef", Policy.class);
+        xstream.alias("enricherRef", Enricher.class);
 
         xstream.registerConverter(new LocationConverter());
+        xstream.registerConverter(new PolicyConverter());
+        xstream.registerConverter(new EnricherConverter());
         xstream.registerConverter(new EntityConverter());
         xstream.registerConverter(new TaskConverter(xstream.getMapper()));
-        // TODO policies/enrichers serialization/deserialization?!
     }
     
     // Warning: this is called in the super-class constuctor, so before this constructor!
@@ -185,6 +194,26 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         @Override
         protected Location lookup(Class<?> type, String id) {
             return lookupContext.lookupLocation(type, id);
+        }
+    }
+
+    public class PolicyConverter extends IdentifiableConverter<Policy> {
+        PolicyConverter() {
+            super(Policy.class);
+        }
+        @Override
+        protected Policy lookup(Class<?> type, String id) {
+            return lookupContext.lookupPolicy(type, id);
+        }
+    }
+
+    public class EnricherConverter extends IdentifiableConverter<Enricher> {
+        EnricherConverter() {
+            super(Enricher.class);
+        }
+        @Override
+        protected Enricher lookup(Class<?> type, String id) {
+            return lookupContext.lookupEnricher(type, id);
         }
     }
     
