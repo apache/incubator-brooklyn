@@ -290,5 +290,23 @@ public class StringsTest {
         Assert.assertEquals(Strings.getWordCount("hello world \nit's me!\n", true), 3);
         Assert.assertEquals(Strings.getWordCount("hello world \nit's me!\n", false), 4);
     }
+
+    @Test
+    public void testMakeRealString() {
+        // less precision = less length
+        Assert.assertEquals(Strings.makeRealString(1.23456d, 4, 2, 0), "1.2");
+        // precision trumps length, and rounds
+        Assert.assertEquals(Strings.makeRealString(1.23456d, 4, 5, 0), "1.2346");
+        // uses E notation when needed
+        Assert.assertEquals(Strings.makeRealString(123456, 2, 2, 0), "1.2E5");
+        // and works with negatives
+        Assert.assertEquals(Strings.makeRealString(-123456, 2, 2, 0), "-1.2E5");
+        // and very small negatives
+        Assert.assertEquals(Strings.makeRealString(-0.000000000123456, 2, 2, 0), "-1.2E-10");
+        // and 0
+        Assert.assertEquals(Strings.makeRealString(0.0d, 4, 2, 0), "0");
+        // skips E notation and gives extra precision when it's free
+        Assert.assertEquals(Strings.makeRealString(123456, 8, 2, 0), "123456");
+    }
     
 }

@@ -12,7 +12,13 @@ public class MathFunctionsTest {
     }
     
     @Test
+    public void testReadableString() {
+        Assert.assertEquals(MathFunctions.readableString(3, 5).apply(0.0123456), "1.23E-2");
+    }
+    
+    @Test
     public void testPercent() {
         Assert.assertEquals(MathFunctions.percent(3).apply(0.0123456), "1.23%");
     }
+    
 }
