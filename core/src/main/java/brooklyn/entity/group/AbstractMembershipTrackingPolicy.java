@@ -14,6 +14,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -30,9 +31,7 @@ import com.google.common.reflect.TypeToken;
 public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractMembershipTrackingPolicy.class);
     
-    private Group group;
-    
-    private ConcurrentMap<String,Map<Sensor<Object>, Object>> entitySensorCache = new ConcurrentHashMap<String, Map<Sensor<Object>, Object>>();
+    public enum EventType { ENTITY_CHANGE, ENTITY_ADDED, ENTITY_REMOVED }
     
     @SuppressWarnings("serial")
     public static final ConfigKey<Set<Sensor<?>>> SENSORS_TO_TRACK = ConfigKeys.newConfigKey(
@@ -44,6 +43,10 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     public static final ConfigKey<Boolean> NOTIFY_ON_DUPLICATES = ConfigKeys.newBooleanConfigKey("notifyOnDuplicates",
             "Whether to notify listeners when a sensor is published with the same value as last time",
             true);
+
+    public static final ConfigKey<Group> GROUP = ConfigKeys.newConfigKey(Group.class, "group");
+
+    private ConcurrentMap<String,Map<Sensor<Object>, Object>> entitySensorCache = new ConcurrentHashMap<String, Map<Sensor<Object>, Object>>();
     
     public AbstractMembershipTrackingPolicy(Map<?,?> flags) {
         super(flags);
@@ -60,23 +63,56 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
                 .build();
     }
     
+    @Override
+    public void setEntity(EntityLocal entity) {
+        super.setEntity(entity);
+        Group group = getGroup();
+        if (group != null) {
+            subscribeToGroup(group);
+        } else {
+            LOG.warn("Deprecated use of "+AbstractMembershipTrackingPolicy.class.getSimpleName()+"; group should be set as config");
+        }
+    }
+    
     /**
      * Sets the group to be tracked; unsubscribes from any previous group, and subscribes to this group.
      * 
      * Note this must be called *after* adding the policy to the entity.
      * 
      * @param group
+     * 
+     * @deprecated since 0.7; instead set the group as config
      */
+    @Deprecated
     public void setGroup(Group group) {
-        Preconditions.checkNotNull(group, "The group cannot be null");
-        unsubscribeFromGroup();
-        this.group = group;
-        subscribeToGroup();
+        // relies on doReconfigureConfig to make the actual change
+        LOG.warn("Deprecated use of setGroup in "+AbstractMembershipTrackingPolicy.class.getSimpleName()+"; group should be set as config");
+        setConfig(GROUP, group);
+    }
+    
+    @Override
+    protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
+        if (GROUP.getName().equals(key.getName())) {
+            Preconditions.checkNotNull(val, "%s value must not be null", GROUP.getName());
+            Preconditions.checkNotNull(val, "%s value must be a group, but was %s (of type %s)", GROUP.getName(), val, val.getClass());
+            if (val.equals(getConfig(GROUP))) {
+                if (LOG.isDebugEnabled()) LOG.debug("No-op for reconfigure group of "+AbstractMembershipTrackingPolicy.class.getSimpleName()+"; group is still "+val);
+            } else {
+                if (LOG.isInfoEnabled()) LOG.info("Membership tracker "+AbstractMembershipTrackingPolicy.class+", resubscribing to group "+val+", previously was "+getGroup());
+                unsubscribeFromGroup();
+                subscribeToGroup((Group)val);
+            }
+        } else {
+            throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
+        }
     }
     
     /**
      * Unsubscribes from the group.
+     * 
+     * @deprecated since 0.7; misleading method name; either remove the policy, or suspend/resume
      */
+    @Deprecated
     public void reset() {
         unsubscribeFromGroup();
     }
@@ -89,16 +125,23 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     
     @Override
     public void resume() {
+        boolean wasSuspended = isSuspended();
         super.resume();
-        if (group != null) {
-            subscribeToGroup();
+        
+        Group group = getGroup();
+        if (wasSuspended && group != null) {
+            subscribeToGroup(group);
         }
     }
-    
-    protected void subscribeToGroup() {
-        Preconditions.checkNotNull(group, "The group cannot be null");
 
-        LOG.debug("Subscribing to group "+group+", for memberAdded, memberRemoved, serviceUp, and {}", getSensorsToTrack());
+    protected Group getGroup() {
+        return getConfig(GROUP);
+    }
+    
+    protected void subscribeToGroup(final Group group) {
+        Preconditions.checkNotNull(group, "The group must not be null");
+
+        LOG.debug("Subscribing to group "+group+", for memberAdded, memberRemoved, and {}", getSensorsToTrack());
         
         subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
@@ -144,16 +187,13 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         }
         
         for (Entity it : group.getMembers()) { onEntityEvent(EventType.ENTITY_ADDED, it); }
-        
-        // FIXME cluster may be remote, we need to make this retrieve the remote values, or store members in local mgmt node, or use children
     }
 
     protected void unsubscribeFromGroup() {
-        if (getSubscriptionTracker()!=null && group != null) unsubscribe(group);
+        Group group = getGroup();
+        if (getSubscriptionTracker() != null && group != null) unsubscribe(group);
     }
 
-    public enum EventType { ENTITY_CHANGE, ENTITY_ADDED, ENTITY_REMOVED }
-    
     /** All entity events pass through this method. Default impl delegates to onEntityXxxx methods, whose default behaviours are no-op.
      * Callers may override this to intercept all entity events in a single place, and to suppress subsequent processing if desired. 
      */
