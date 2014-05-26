@@ -16,6 +16,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.javalang.Threads;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -24,11 +25,27 @@ public class BrooklynShutdownHooks {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynShutdownHooks.class);
 
+    private static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.TWO_MINUTES;
+    
     private static final AtomicBoolean isShutdownHookRegistered = new AtomicBoolean();
     private static final List<Entity> entitiesToStopOnShutdown = Lists.newArrayList();
-    private static final List<ManagementContextInternal> managementContextsToTermianteOnShutdown = Lists.newArrayList();
+    private static final List<ManagementContextInternal> managementContextsToTerminateOnShutdown = Lists.newArrayList();
 
+    /**
+     * Max time to wait for shutdown to complete, when stopping the entities from {@link #invokeStopOnShutdown(Entity)}.
+     * Default is two minutes - deliberately long because stopping cloud VMs can often take a minute.
+     */
+    private static volatile Duration shutdownTimeout = DEFAULT_SHUTDOWN_TIMEOUT;
+    
+    public static void setShutdownTimeout(Duration val) {
+        shutdownTimeout = val;
+    }
+    
     public static void invokeStopOnShutdown(Entity entity) {
+        if (!(entity instanceof Startable)) {
+            log.warn("Not adding entity {} for stop-on-shutdown as not an instance of {}", entity, Startable.class.getSimpleName());
+            return;
+        }
         synchronized (entitiesToStopOnShutdown) {
             entitiesToStopOnShutdown.add(entity);
         }
@@ -36,8 +53,8 @@ public class BrooklynShutdownHooks {
     }
     
     public static void invokeTerminateOnShutdown(ManagementContext managementContext) {
-        synchronized (entitiesToStopOnShutdown) {
-            managementContextsToTermianteOnShutdown.add((ManagementContextInternal) managementContext);
+        synchronized (managementContextsToTerminateOnShutdown) {
+            managementContextsToTerminateOnShutdown.add((ManagementContextInternal) managementContext);
         }
         addShutdownHookIfNotAlready();
     }
@@ -65,9 +82,11 @@ public class BrooklynShutdownHooks {
                     }
                 }
                 try {
+                    long endTime = System.currentTimeMillis() + shutdownTimeout.toMilliseconds();
                     for (Task t: stops) {
+                        Duration remainingTime = Duration.max(Duration.untilUtc(endTime), Duration.ONE_MILLISECOND);
                         try {
-                            Object result = t.get();
+                            Object result = t.get(remainingTime);
                             if (log.isDebugEnabled()) log.debug("stopOnShutdown of {} completed: {}", t, result);
                         } catch (Exception e) {
                             if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" returned error (continuing): "+e, e);
@@ -81,9 +100,9 @@ public class BrooklynShutdownHooks {
             }
             
             // Then terminate management contexts
-            synchronized (managementContextsToTermianteOnShutdown) {
-                log.info("Brooklyn terminateOnShutdown shutdown-hook invoked: terminating management contexts: "+managementContextsToTermianteOnShutdown);
-                for (ManagementContextInternal managementContext: managementContextsToTermianteOnShutdown) {
+            synchronized (managementContextsToTerminateOnShutdown) {
+                log.info("Brooklyn terminateOnShutdown shutdown-hook invoked: terminating management contexts: "+managementContextsToTerminateOnShutdown);
+                for (ManagementContextInternal managementContext: managementContextsToTerminateOnShutdown) {
                     try {
                         managementContext.terminate();
                     } catch (RuntimeException e) {
