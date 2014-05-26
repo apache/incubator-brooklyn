@@ -26,7 +26,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
@@ -106,22 +106,26 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         }
         endTracker();
         log.debug("Initializing tracker for "+this+", following "+targetEntityProvider);
-        tracker = new AbstractMembershipTrackingPolicy(MutableMap.of(
-                "name", "GeoDNS targets tracker",
-                "sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS, WebAppService.ROOT_URL)) ) {
-            @Override
-            protected void onEntityEvent(EventType type, Entity entity) { refreshGroupMembership(); }
-        };
-        addPolicy(tracker);
-        tracker.setGroup(targetEntityProvider);
+        tracker = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("GeoDNS targets tracker")
+                .configure("sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS, WebAppService.ROOT_URL))
+                .configure("group", targetEntityProvider));
         refreshGroupMembership();
     }
+    
     protected synchronized void endTracker() {
         if (tracker == null || targetEntityProvider==null) return;
         removePolicy(tracker);
         tracker = null;
     }
     
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityEvent(EventType type, Entity entity) {
+            ((AbstractGeoDnsServiceImpl)super.entity).refreshGroupMembership();
+        }
+    }
+
     @Override
     public abstract String getHostname();
     

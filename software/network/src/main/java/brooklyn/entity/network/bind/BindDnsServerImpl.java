@@ -32,6 +32,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.ssh.BashCommands;
@@ -61,7 +62,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     private AtomicLong serial = new AtomicLong(System.currentTimeMillis());
     private Object[] mutex = new Object[0];
     private DynamicGroup entities;
-    private AbstractMembershipTrackingPolicy policy;
+    private MemberTrackingPolicy policy;
     private Multimap<Location, Entity> entityLocations = HashMultimap.create();
     private ConcurrentMap<String, String> addressMappings = Maps.newConcurrentMap();
     private ConcurrentMap<String, String> reverseMappings = Maps.newConcurrentMap();
@@ -139,28 +140,35 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         setAttribute(REVERSE_LOOKUP_DOMAIN, reverseLookupDomain);
 
         Map<?, ?> flags = MutableMap.builder()
-                .put("name", "Address tracker")
-                .put("sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR)))
                 .build();
-        policy = new AbstractMembershipTrackingPolicy(flags) {
-            @Override
-            protected void onEntityChange(Entity member) { added(member); }
-            @Override
-            protected void onEntityAdded(Entity member) {
-                if (Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member); // Ignore, unless hostname set
-            }
-            @Override
-            protected void onEntityRemoved(Entity member) { removed(member); }
-        };
+        policy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("Address tracker")
+                .configure("sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR)))
+                .configure("group", entities));
 
         // For any entities that have already come up
         for (Entity member : entities.getMembers()) {
             if (Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) added(member); // Ignore, unless hostname set
         }
-
-        addPolicy(policy);
-        policy.setGroup(entities);
     }
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityChange(Entity member) {
+            // TODO Should we guard to only call if service_up and if hostname set?
+            ((BindDnsServerImpl)entity).added(member);
+        }
+        @Override
+        protected void onEntityAdded(Entity member) {
+            if (Strings.isNonBlank(member.getAttribute(getConfig(HOSTNAME_SENSOR)))) {
+                ((BindDnsServerImpl)entity).added(member); // Ignore, unless hostname set
+            }
+        }
+        @Override
+        protected void onEntityRemoved(Entity member) {
+            ((BindDnsServerImpl)entity).removed(member);
+        }
+    };
 
     @Override
     public void postStart() {

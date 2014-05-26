@@ -19,6 +19,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 
@@ -52,13 +53,14 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
         this(MutableMap.of(), parent, cluster);
     }
     public AbstractNonProvisionedControllerImpl(Map properties, Entity parent, Cluster cluster) {
-        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Controller targets tracker")) {
-            protected void onEntityChange(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityAdded(Entity member) { onServerPoolMemberChanged(member); }
-            protected void onEntityRemoved(Entity member) { onServerPoolMemberChanged(member); }
-        };
     }
-    
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override protected void onEntityEvent(EventType type, Entity member) {
+            ((AbstractNonProvisionedControllerImpl)super.entity).onServerPoolMemberChanged(member);
+        }
+    }
+
     /**
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
      * Can pass in the 'serverPool'.
@@ -80,6 +82,11 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
         preStart();
     }
 
+    @Override
+    public void stop() {
+        preStop();
+    }
+    
     protected void preStart() {
         AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
         Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
@@ -90,18 +97,25 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
         }
         
         ConfigToAttributes.apply(this);
-        LOG.info("Adding policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
-        addPolicy(serverPoolMemberTrackerPolicy);
-        resetServerPoolMemberTrackerPolicy();
+        addServerPoolMemberTrackerPolicy();
     }
     
-    protected synchronized void resetServerPoolMemberTrackerPolicy() {
-        serverPoolMemberTrackerPolicy.reset();
-        serverPoolAddresses.clear();
-        serverPoolTargets.clear();
-        if (groovyTruth(getServerPool())) {
-            serverPoolMemberTrackerPolicy.setGroup(getServerPool());
+    protected void preStop() {
+        removeServerPoolMemberTrackerPolicy();
+    }
+        
+    protected void addServerPoolMemberTrackerPolicy() {
+        Group serverPool = getServerPool();
+        if (serverPool != null) {
+            serverPoolMemberTrackerPolicy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                    .displayName("Controller targets tracker")
+                    .configure("group", serverPool));
             
+            LOG.info("Added policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
+            
+            serverPoolAddresses.clear();
+            serverPoolTargets.clear();
+                
             // Initialize ourselves immediately with the latest set of members; don't wait for
             // listener notifications because then will be out-of-date for short period (causing 
             // problems for rebind)
@@ -116,10 +130,15 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
                 }
             }
             
-            LOG.info("Resetting {}, members {} with address {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
+            LOG.info("Resetting {}, members {} with addresses {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
+            setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
         }
-        
-        setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
+    }
+    
+    protected void removeServerPoolMemberTrackerPolicy() {
+        if (serverPoolMemberTrackerPolicy != null) {
+            removePolicy(serverPoolMemberTrackerPolicy);
+        }
     }
     
     /** 
