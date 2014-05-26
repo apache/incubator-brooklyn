@@ -2,6 +2,8 @@ package brooklyn.util.math;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.text.Strings;
+
 import com.google.common.base.Function;
 
 public class MathFunctions {
@@ -61,5 +63,25 @@ public class MathFunctions {
             }
         };
     }
-    
+
+    /** returns a string of up to maxLen length (longer in extreme cases) also capped at significantDigits significantDigits */
+    public static Function<Number, String> readableString(final int significantDigits, final int maxLen) {
+        return new Function<Number, String>() {
+            public String apply(@Nullable Number input) {
+                if (input==null) return null;
+                return Strings.makeRealString(input.doubleValue(), maxLen, significantDigits, 0);
+            }
+        };
+    }
+
+    /** returns a string where the input number is expressed as percent, with given number of significant digits */
+    public static Function<Number, String> percent(final int significantDigits) {
+        return new Function<Number, String>() {
+            public String apply(@Nullable Number input) {
+                if (input==null) return null;
+                return readableString(significantDigits, significantDigits+3).apply(input.doubleValue() * 100d)+"%";
+            }
+        };
+    }
+
 }

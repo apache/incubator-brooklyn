@@ -43,6 +43,7 @@ import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadata.Status;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
@@ -99,8 +100,10 @@ import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.javalang.Enums;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Networking;
@@ -851,6 +854,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
                         tb.imageNameMatches(((CharSequence)v).toString());
                     }})
+            .put(OS_FAMILY, new CustomizeTemplateBuilder() {
+                    public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
+                        Maybe<OsFamily> osFamily = Enums.valueOfIgnoreCase(OsFamily.class, v.toString());
+                        if (osFamily.isAbsent())
+                            throw new IllegalArgumentException("Invalid "+OS_FAMILY+" value "+v);
+                        tb.osFamily(osFamily.get());
+                    }})
+            .put(OS_VERSION_REGEX, new CustomizeTemplateBuilder() {
+                    public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
+                        tb.osVersionMatches( ((CharSequence)v).toString() );
+                    }})
             .put(TEMPLATE_SPEC, new CustomizeTemplateBuilder() {
                 public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
                         tb.from(TemplateBuilderSpec.parse(((CharSequence)v).toString()));
@@ -864,7 +878,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         /* done in the code, but included here so that it is in the map */
                     }})
             .build();
-   
+    
     /** properties which cause customization of the TemplateOptions */
     public static final Map<ConfigKey<?>,CustomizeTemplateOptions> SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES = ImmutableMap.<ConfigKey<?>,CustomizeTemplateOptions>builder()
             .put(SECURITY_GROUPS, new CustomizeTemplateOptions() {

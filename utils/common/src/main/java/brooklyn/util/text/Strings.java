@@ -328,10 +328,12 @@ public class Strings {
 	 * @param skipDecimalThreshhold if positive it will not add a decimal part if the fractional part is less than this threshhold
 	 *    (but for a value 3.00001 it would show zeroes, e.g. with 3 precision and positive threshhold <= 0.00001 it would show 3.00);
 	 *    if zero or negative then decimal digits are always shown
-	 * @param useEForSmallNumbers whether to use E notation for numbers near zero
+	 * @param useEForSmallNumbers whether to use E notation for numbers near zero (e.g. 0.001)
 	 * @return such a string
 	 */
 	public static String makeRealString(double x, int maxlen, int prec, int leftPadLen, double skipDecimalThreshhold, boolean useEForSmallNumbers) {
+	    if (x<0) return 
+	        "-"+makeRealString(-x, maxlen, prec, leftPadLen);
 		NumberFormat df = DecimalFormat.getInstance();		
 		//df.setMaximumFractionDigits(maxlen);
 		df.setMinimumFractionDigits(0);
