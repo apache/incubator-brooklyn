@@ -33,6 +33,10 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         return getMementoWithProperties(Collections.<String,Object>emptyMap());
     }
 
+    /**
+     * @deprecated since 0.7.0; use generic config/attributes rather than "custom fields", so use {@link #getMemento()}
+     */
+    @Deprecated
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
         LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customFields(props).build();
     	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location: {}", memento.toVerboseString());

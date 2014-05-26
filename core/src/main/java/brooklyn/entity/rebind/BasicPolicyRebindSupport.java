@@ -1,8 +1,5 @@
 package brooklyn.entity.rebind;
 
-import java.util.Collections;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,11 +19,7 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
     
     @Override
     public PolicyMemento getMemento() {
-        return getMementoWithProperties(Collections.<String,Object>emptyMap());
-    }
-
-    protected PolicyMemento getMementoWithProperties(Map<String,?> props) {
-        PolicyMemento memento = MementosGenerators.newPolicyMementoBuilder(policy).customFields(props).build();
+        PolicyMemento memento = MementosGenerators.newPolicyMementoBuilder(policy).build();
         if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy: {}", memento.toVerboseString());
         return memento;
     }

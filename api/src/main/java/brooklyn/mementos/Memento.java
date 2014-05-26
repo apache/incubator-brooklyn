@@ -28,9 +28,16 @@ public interface Memento extends Serializable {
     /**
      * A (weakly-typed) property set for this memento.
      * These can be used to avoid sub-classing the entity memento, but developers can sub-class to get strong typing if desired.
+     * 
+     * @deprecated since 0.7.0; use config/attributes so generic persistence will work, rather than requiring "custom fields"
      */
+    @Deprecated
     public Object getCustomField(String name);
 
+    /**
+     * @deprecated since 0.7.0; use config/attributes so generic persistence will work, rather than requiring "custom fields"
+     */
+    @Deprecated
     public Map<String, ? extends Object> getCustomFields();
     
     public String toVerboseString();
