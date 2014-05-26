@@ -46,11 +46,13 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
 	    flags = toPersistedMap(builder.flags);
 	}
 	
+    @Deprecated
     @Override
     protected void setCustomFields(Map<String, Object> fields) {
         this.fields = toPersistedMap(fields);
     }
     
+    @Deprecated
     @Override
     public Map<String, Object> getCustomFields() {
         return fromPersistedMap(fields);

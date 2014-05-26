@@ -22,11 +22,7 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
     
     @Override
     public EnricherMemento getMemento() {
-        return getMementoWithProperties(Collections.<String,Object>emptyMap());
-    }
-
-    protected EnricherMemento getMementoWithProperties(Map<String,?> props) {
-        EnricherMemento memento = MementosGenerators.newEnricherMementoBuilder(enricher).customFields(props).build();
+        EnricherMemento memento = MementosGenerators.newEnricherMementoBuilder(enricher).build();
         if (LOG.isTraceEnabled()) LOG.trace("Creating memento for enricher: {}", memento.toVerboseString());
         return memento;
     }

@@ -66,10 +66,14 @@ public class AbstractTreeNodeMemento extends AbstractMemento implements Memento,
         children = toPersistedList(builder.children);
     }
 
+    @Deprecated
+    @Override
     protected void setCustomFields(Map<String, Object> fields) {
         this.fields = toPersistedMap(fields);
     }
     
+    @Deprecated
+    @Override
     public Map<String, Object> getCustomFields() {
         return fromPersistedMap(fields);
     }
