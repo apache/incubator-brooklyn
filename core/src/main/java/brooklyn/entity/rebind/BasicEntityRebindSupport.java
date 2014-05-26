@@ -171,7 +171,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
             if (enricher != null) {
                 entity.addEnricher(enricher);
             } else {
-                LOG.warn("Enricher not found; discarding policy {} of entity {}({})",
+                LOG.warn("Enricher not found; discarding enricher {} of entity {}({})",
                         new Object[] {enricherId, memento.getType(), memento.getId()});
             }
         }
