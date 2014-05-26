@@ -5,6 +5,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.mementos.EnricherMemento;
 
 import com.google.common.annotations.Beta;
@@ -15,7 +16,7 @@ import com.google.common.annotations.Beta;
  * Has some similarities to {@link Policy}. However, enrichers specifically do not invoke
  * effectors and should only function to publish new metrics.
  */
-public interface Enricher extends EntityAdjunct, Rebindable {
+public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
     /**
      * A unique id for this enricher.
      */

@@ -522,7 +522,7 @@ public class RebindManagerImpl implements RebindManager {
 
         Map<String, Object> flags = MutableMap.<String, Object>builder()
                 .put("id", id)
-                .putAll(memento.getFlags())
+                .putAll(memento.getConfig())
                 .build();
 
         return (Policy) invokeConstructor(reflections, policyClazz, new Object[] {flags});
@@ -538,7 +538,7 @@ public class RebindManagerImpl implements RebindManager {
 
         Map<String, Object> flags = MutableMap.<String, Object>builder()
                 .put("id", id)
-                .putAll(memento.getFlags())
+                .putAll(memento.getConfig())
                 .build();
 
         return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});
