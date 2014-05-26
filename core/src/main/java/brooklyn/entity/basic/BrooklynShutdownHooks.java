@@ -31,6 +31,8 @@ public class BrooklynShutdownHooks {
     private static final List<Entity> entitiesToStopOnShutdown = Lists.newArrayList();
     private static final List<ManagementContextInternal> managementContextsToTerminateOnShutdown = Lists.newArrayList();
 
+    private static final Object mutex = new Object();
+    
     /**
      * Max time to wait for shutdown to complete, when stopping the entities from {@link #invokeStopOnShutdown(Entity)}.
      * Default is two minutes - deliberately long because stopping cloud VMs can often take a minute.
@@ -46,14 +48,14 @@ public class BrooklynShutdownHooks {
             log.warn("Not adding entity {} for stop-on-shutdown as not an instance of {}", entity, Startable.class.getSimpleName());
             return;
         }
-        synchronized (entitiesToStopOnShutdown) {
+        synchronized (mutex) {
             entitiesToStopOnShutdown.add(entity);
         }
         addShutdownHookIfNotAlready();
     }
     
     public static void invokeTerminateOnShutdown(ManagementContext managementContext) {
-        synchronized (managementContextsToTerminateOnShutdown) {
+        synchronized (mutex) {
             managementContextsToTerminateOnShutdown.add((ManagementContextInternal) managementContext);
         }
         addShutdownHookIfNotAlready();
@@ -71,7 +73,7 @@ public class BrooklynShutdownHooks {
         @Override
         public void run() {
             // First stop entities; on interrupt, abort waiting for tasks - but let shutdown hook continue
-            synchronized (entitiesToStopOnShutdown) {
+            synchronized (mutex) {
                 log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping entities: "+entitiesToStopOnShutdown);
                 List<Task> stops = new ArrayList<Task>();
                 for (Entity entity: entitiesToStopOnShutdown) {
@@ -81,26 +83,27 @@ public class BrooklynShutdownHooks {
                         if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+entity+" returned error (continuing): "+exc, exc);
                     }
                 }
-                try {
-                    long endTime = System.currentTimeMillis() + shutdownTimeout.toMilliseconds();
-                    for (Task t: stops) {
-                        Duration remainingTime = Duration.max(Duration.untilUtc(endTime), Duration.ONE_MILLISECOND);
-                        try {
-                            Object result = t.get(remainingTime);
-                            if (log.isDebugEnabled()) log.debug("stopOnShutdown of {} completed: {}", t, result);
-                        } catch (Exception e) {
-                            if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" returned error (continuing): "+e, e);
-                            Exceptions.propagateIfFatal(e);
-                        }
+                long endTime = System.currentTimeMillis() + shutdownTimeout.toMilliseconds();
+                for (Task t: stops) {
+                    Duration remainingTime = Duration.max(Duration.untilUtc(endTime), Duration.ONE_MILLISECOND);
+                    try {
+                        Object result = t.get(remainingTime);
+                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of {} completed: {}", t, result);
+                    } catch (RuntimeInterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        endTime = System.currentTimeMillis();
+                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" interrupted; (continuing with immediate timeout): "+e);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        endTime = System.currentTimeMillis();
+                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" interrupted; (continuing with immediate timeout): "+e);
+                    } catch (Exception e) {
+                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" returned error (continuing): "+e, e);
+                        Exceptions.propagateIfFatal(e);
                     }
-                } catch (RuntimeInterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    if (log.isDebugEnabled()) log.debug("stopOnShutdown interrupted while waiting for entity-stop tasks; continuing: "+e);
                 }
-            }
             
-            // Then terminate management contexts
-            synchronized (managementContextsToTerminateOnShutdown) {
+                // Then terminate management contexts
                 log.info("Brooklyn terminateOnShutdown shutdown-hook invoked: terminating management contexts: "+managementContextsToTerminateOnShutdown);
                 for (ManagementContextInternal managementContext: managementContextsToTerminateOnShutdown) {
                     try {
