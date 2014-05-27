@@ -32,7 +32,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     
     @Test(enabled=false)
     public void testRestoresSimplePolicyFromConstructor() throws Exception {
-        MyPolicy origPolicy = new MyPolicy(MutableMap.of("myfield", "myval", "myconfigkey", "myConfigVal"));
+        MyPolicy origPolicy = new MyPolicy(MutableMap.of("myfield", "myFieldVal", "myconfigkey", "myConfigVal"));
         origApp.addPolicy(origPolicy);
     }
 
@@ -53,7 +53,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
         
         assertEquals(newPolicy.myfield, "myFieldVal");
-        assertEquals(newPolicy.myfield, "myConfigVal");
+        assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG), "myConfigVal");
         assertTrue(newPolicy.isRunning());
         assertFalse(origPolicy.initCalled);
         assertTrue(origPolicy.rebindCalled);

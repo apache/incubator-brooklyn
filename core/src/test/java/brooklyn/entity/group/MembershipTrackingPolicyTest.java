@@ -155,7 +155,7 @@ public class MembershipTrackingPolicyTest {
         RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
                 .configure(AbstractMembershipTrackingPolicy.NOTIFY_ON_DUPLICATES, false)
-                .configure("group", group));
+                .configure(AbstractMembershipTrackingPolicy.GROUP, group));
 
         e1.setAttribute(TestEntity.NAME, "myname");
 
@@ -177,7 +177,7 @@ public class MembershipTrackingPolicyTest {
         
         RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
-                .configure("group", group));
+                .configure(AbstractMembershipTrackingPolicy.GROUP, group));
 
         e1.setAttribute(TestEntity.NAME, "myname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));

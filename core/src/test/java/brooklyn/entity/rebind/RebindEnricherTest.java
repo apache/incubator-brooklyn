@@ -107,7 +107,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         TestApplication newApp = rebind();
         DynamicCluster newCluster = (DynamicCluster) Iterables.find(newApp.getChildren(), Predicates.instanceOf(DynamicCluster.class));
 
-        int i = 0;
+        int i = 1;
         for (Entity member : newCluster.getMembers()) {
             ((EntityInternal)member).setAttribute(METRIC1, "myval"+(i++));
         }
