@@ -344,9 +344,10 @@ public class EntityManagementSupport {
         }
         @Override
         public void onAttributeChanged(AttributeSensor<?> attribute) {
-            // if important persist, otherwiise ignore
+            // TODO Could make this more efficient by inspecting the attribute to decide if needs persisted
+            // immediately, or not important, or transient (e.g. do we really need to persist 
+            // request-per-second count for rebind purposes?!)
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
-            // getManagementContext().getRebindManager().getAttributeChangeListener().onChanged(entity, attribute);
         }
         @Override
         public void onConfigChanged(ConfigKey<?> key) {
