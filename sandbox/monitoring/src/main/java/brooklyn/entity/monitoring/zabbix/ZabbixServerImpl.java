@@ -16,7 +16,7 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.policy.PolicySpec;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -34,9 +34,8 @@ public class ZabbixServerImpl extends AbstractEntity implements ZabbixServer {
 
     private Object[] mutex = new Object[0];
     private DynamicGroup monitoredEntities;
-    private AbstractMembershipTrackingPolicy policy;
+    private AgentTrackingPolicy policy;
     private Multimap<Location, Entity> entityLocations = HashMultimap.create();
-
 
     private transient HttpFeed login;
 
@@ -66,16 +65,9 @@ public class ZabbixServerImpl extends AbstractEntity implements ZabbixServer {
                         .onSuccess(HttpValueFunctions.jsonContents("result", String.class)))
                 .build();
 
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Zabbix Agent Tracker")) {
-            @Override
-            protected void onEntityChange(Entity member) { added(member); }
-            @Override
-            protected void onEntityAdded(Entity member) { } // Ignore
-            @Override
-            protected void onEntityRemoved(Entity member) { removed(member); }
-        };
-        addPolicy(policy);
-        policy.setGroup(monitoredEntities);
+        policy = addPolicy(PolicySpec.create(AgentTrackingPolicy.class)
+                .displayName("Zabbix Agent Tracker")
+                .configure("group", monitoredEntities));
 
         for (Entity each : monitoredEntities.getMembers()) {
             added(each);
@@ -84,6 +76,19 @@ public class ZabbixServerImpl extends AbstractEntity implements ZabbixServer {
         setAttribute(Startable.SERVICE_UP, true);
     }
 
+    public static class AgentTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityChange(Entity member) {
+            ((ZabbixServerImpl)entity).added(member); }
+        @Override
+        protected void onEntityAdded(Entity member) {
+        } // Ignore
+        @Override
+        protected void onEntityRemoved(Entity member) {
+            ((ZabbixServerImpl)entity).removed(member);
+        }
+    }
+    
     public void added(Entity member) {
         synchronized (mutex) {
             Optional<Location> location = Iterables.tryFind(member.getLocations(), Predicates.instanceOf(SshMachineLocation.class));

@@ -26,20 +26,18 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.group.StopFailedRuntimeException;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Machines;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
@@ -48,7 +46,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -133,7 +130,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
     
     protected SeedTracker seedTracker = new SeedTracker();
     protected TokenGenerator tokenGenerator = null;
-    private AbstractMembershipTrackingPolicy policy;
+    private MemberTrackingPolicy policy;
 
     public CassandraDatacenterImpl() {
     }
@@ -326,32 +323,30 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
     protected void connectSensors() {
         connectEnrichers();
         
-        // track members
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-                .put("name", "Cassandra Cluster Tracker")
-                .put("sensorsToTrack", ImmutableSet.of(Attributes.SERVICE_UP, Attributes.HOSTNAME, CassandraNode.THRIFT_PORT))
-                .build();
-        policy = new AbstractMembershipTrackingPolicy(flags) {
-            @Override
-            protected void onEntityChange(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} updated in Cluster {}", member, this);
-                update();
-            }
-            @Override
-            protected void onEntityAdded(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} added to Cluster {}", member, this);
-                update();
-            }
-            @Override
-            protected void onEntityRemoved(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Node {} removed from Cluster {}", member, this);
-                update();
-            }
-        };
-        addPolicy(policy);
-        policy.setGroup(this);
+        policy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("Cassandra Cluster Tracker")
+                .configure("sensorsToTrack", ImmutableSet.of(Attributes.SERVICE_UP, Attributes.HOSTNAME, CassandraNode.THRIFT_PORT))
+                .configure("group", this));
     }
-    
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityChange(Entity member) {
+            if (log.isDebugEnabled()) log.debug("Node {} updated in Cluster {}", member, this);
+            ((CassandraDatacenterImpl)entity).update();
+        }
+        @Override
+        protected void onEntityAdded(Entity member) {
+            if (log.isDebugEnabled()) log.debug("Node {} added to Cluster {}", member, this);
+            ((CassandraDatacenterImpl)entity).update();
+        }
+        @Override
+        protected void onEntityRemoved(Entity member) {
+            if (log.isDebugEnabled()) log.debug("Node {} removed from Cluster {}", member, this);
+            ((CassandraDatacenterImpl)entity).update();
+        }
+    };
+
     @SuppressWarnings("unchecked")
     protected void connectEnrichers() {
         List<? extends List<? extends AttributeSensor<? extends Number>>> summingEnricherSetup = ImmutableList.of(

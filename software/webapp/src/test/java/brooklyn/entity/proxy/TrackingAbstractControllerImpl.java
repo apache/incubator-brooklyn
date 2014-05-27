@@ -2,6 +2,7 @@ package brooklyn.entity.proxy;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +30,10 @@ public class TrackingAbstractControllerImpl extends AbstractControllerImpl imple
     
     @Override
     protected void reconfigureService() {
-        log.info("test controller reconfigure, addresses "+serverPoolAddresses);
-        if ((!serverPoolAddresses.isEmpty() && updates.isEmpty()) || (!updates.isEmpty() && serverPoolAddresses!=updates.get(updates.size()-1))) {
-            updates.add(serverPoolAddresses);
+        Set<String> addresses = getServerPoolAddresses();
+        log.info("test controller reconfigure, targets "+addresses);
+        if ((!addresses.isEmpty() && updates.isEmpty()) || (!updates.isEmpty() && addresses != updates.get(updates.size()-1))) {
+            updates.add(addresses);
         }
     }
 
@@ -39,6 +41,8 @@ public class TrackingAbstractControllerImpl extends AbstractControllerImpl imple
     public Class getDriverInterface() {
         return MockSshDriver.class;
     }
+    
+    @Override
     public void reload() {
         // no-op
     }

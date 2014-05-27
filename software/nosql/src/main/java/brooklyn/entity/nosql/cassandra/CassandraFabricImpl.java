@@ -23,6 +23,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
@@ -56,7 +57,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
     // Mutex for synchronizing during re-size operations
     private final Object mutex = new Object[0];
 
-    private AbstractMembershipTrackingPolicy policy;
+    private MemberTrackingPolicy policy;
 
     private final Supplier<Set<Entity>> defaultSeedSupplier = new Supplier<Set<Entity>>() {
         @Override public Set<Entity> get() {
@@ -192,25 +193,9 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             setConfig(CassandraDatacenter.SEED_SUPPLIER, getSeedSupplier());
         
         // track members
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Cassandra Fabric Tracker")) {
-            @Override
-            protected void onEntityChange(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Location {} updated in Fabric {}", member, CassandraFabricImpl.this);
-                update();
-            }
-            @Override
-            protected void onEntityAdded(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Location {} added to Fabric {}", member, CassandraFabricImpl.this);
-                update();
-            }
-            @Override
-            protected void onEntityRemoved(Entity member) {
-                if (log.isDebugEnabled()) log.debug("Location {} removed from Fabric {}", member, CassandraFabricImpl.this);
-                update();
-            }
-        };
-        addPolicy(policy);
-        policy.setGroup(this);
+        policy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("Cassandra Fabric Tracker")
+                .configure("group", this));
 
         // Track first node's startup
         subscribeToMembers(this, CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, new SensorEventListener<Long>() {
@@ -244,7 +229,25 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             }
         });
     }
-    
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityChange(Entity member) {
+            if (log.isDebugEnabled()) log.debug("Location {} updated in Fabric {}", member, entity);
+            ((CassandraFabricImpl)entity).update();
+        }
+        @Override
+        protected void onEntityAdded(Entity member) {
+            if (log.isDebugEnabled()) log.debug("Location {} added to Fabric {}", member, entity);
+            ((CassandraFabricImpl)entity).update();
+        }
+        @Override
+        protected void onEntityRemoved(Entity member) {
+            if (log.isDebugEnabled()) log.debug("Location {} removed from Fabric {}", member, entity);
+            ((CassandraFabricImpl)entity).update();
+        }
+    };
+
     protected int getSeedQuorumSize() {
         Integer quorumSize = getConfig(INITIAL_QUORUM_SIZE);
         if (quorumSize!=null && quorumSize>0)

@@ -11,7 +11,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.policy.PolicySpec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -31,19 +31,21 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     @Override
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
-        AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Router cluster membership tracker")) {
-            @Override protected void onEntityAdded(Entity member) {
-                setAnyRouter();
-            }
-            @Override protected void onEntityRemoved(Entity member) {
-                setAnyRouter();
-            }
-            @Override protected void onEntityChange(Entity member) {
-                setAnyRouter();
-            }
-        };
-        addPolicy(policy);
-        policy.setGroup(this);
+        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("Router cluster membership tracker")
+                .configure("group", this));
+    }
+    
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override protected void onEntityEvent(EventType type, Entity entity) {
+            ((MongoDBRouterClusterImpl)entity).setAnyRouter();
+        }
+        @Override protected void onEntityRemoved(Entity member) {
+            ((MongoDBRouterClusterImpl)entity).setAnyRouter();
+        }
+        @Override protected void onEntityChange(Entity member) {
+            ((MongoDBRouterClusterImpl)entity).setAnyRouter();
+        }
     }
     
     protected void setAnyRouter() {

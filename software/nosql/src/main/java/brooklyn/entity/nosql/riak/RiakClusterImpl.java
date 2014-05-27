@@ -19,7 +19,7 @@ import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.policy.PolicySpec;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -50,29 +50,17 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     }
     
     protected void connectSensors() {
-
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-                .put("name", "Controller targets tracker")
-                .put("sensorsToTrack", ImmutableSet.of(RiakNode.SERVICE_UP))
-                .build();
-
-        AbstractMembershipTrackingPolicy serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(flags) {
-            protected void onEntityChange(Entity member) {
-                onServerPoolMemberChanged(member);
-            }
-
-            protected void onEntityAdded(Entity member) {
-                onServerPoolMemberChanged(member);
-            }
-
-            protected void onEntityRemoved(Entity member) {
-                onServerPoolMemberChanged(member);
-            }
-        };
-
-        addPolicy(serverPoolMemberTrackerPolicy);
-        serverPoolMemberTrackerPolicy.setGroup(this);
+        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("Controller targets tracker")
+                .configure("sensorsToTrack", ImmutableSet.of(RiakNode.SERVICE_UP))
+                .configure("group", this));
     }
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override protected void onEntityEvent(EventType type, Entity entity) {
+            ((RiakClusterImpl)super.entity).onServerPoolMemberChanged(entity);
+        }
+    };
 
     protected synchronized void onServerPoolMemberChanged(Entity member) {
         if (log.isTraceEnabled()) log.trace("For {}, considering membership of {} which is in locations {}",
