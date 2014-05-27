@@ -27,7 +27,7 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
         super(flags);
         enricherType = new EnricherTypeImpl(getAdjunctType());
         
-        if (isLegacyConstruction()) {
+        if (isLegacyConstruction() && !isLegacyNoConstructionInit()) {
             init();
         }
     }

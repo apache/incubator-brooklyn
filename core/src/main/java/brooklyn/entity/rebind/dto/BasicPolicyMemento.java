@@ -43,6 +43,7 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
 
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicPolicyMemento(Builder builder) {
+	    super(builder);
 	    config = toPersistedMap(builder.config);
 	}
 	

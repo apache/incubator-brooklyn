@@ -496,7 +496,10 @@ public class RebindManagerImpl implements RebindManager {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
             // TODO Feels very hacky!
-            Map<String, Object> flags = MutableMap.<String, Object>of("id", id, "deferConstructionChecks", true);
+            Map<String, Object> flags = MutableMap.<String, Object>of(
+                    "id", id, 
+                    "deferConstructionChecks", true,
+                    "noConstructionInit", true);
             flags.putAll(memento.getConfig());
 
             return (Policy) invokeConstructor(reflections, policyClazz, new Object[] {flags});
@@ -525,7 +528,10 @@ public class RebindManagerImpl implements RebindManager {
             // There are several possibilities for the constructor; find one that works.
             // Prefer passing in the flags because required for Application to set the management context
             // TODO Feels very hacky!
-            Map<String, Object> flags = MutableMap.<String, Object>of("id", id, "deferConstructionChecks", true);
+            Map<String, Object> flags = MutableMap.<String, Object>of(
+                    "id", id, 
+                    "deferConstructionChecks", true,
+                    "noConstructionInit", true);
             flags.putAll(memento.getConfig());
 
             return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});

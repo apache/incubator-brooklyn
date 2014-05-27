@@ -40,7 +40,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         super(flags);
         policyType = new PolicyTypeImpl(getAdjunctType());
         
-        if (isLegacyConstruction()) {
+        if (isLegacyConstruction() && !isLegacyNoConstructionInit()) {
             init();
         }
     }

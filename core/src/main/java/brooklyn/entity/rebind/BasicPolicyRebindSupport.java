@@ -31,13 +31,17 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
         if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy: {}", memento.toVerboseString());
 
         policy.setName(memento.getDisplayName());
-        
-        // FIXME Will this set config keys that are not marked with `@SetFromFlag`?
-        // Note that the flags may have been set in the constructor; but some have no-arg constructors
+
+        // TODO entity does config-lookup differently; the memento contains the config keys.
+        // BasicEntityMemento.postDeserialize uses the injectTypeClass to call EntityTypes.getDefinedConfigKeys(clazz)
+        // 
+        // Note that the flags may have been set in the constructor; but some policies have no-arg constructors
         ConfigBag configBag = ConfigBag.newInstance(memento.getConfig());
         FlagUtils.setFieldsFromFlags(policy, configBag);
+        FlagUtils.setAllConfigKeys(policy, configBag, false);
         
         doReconsruct(rebindContext, memento);
+        ((AbstractPolicy)policy).rebind();
     }
 
     /**
