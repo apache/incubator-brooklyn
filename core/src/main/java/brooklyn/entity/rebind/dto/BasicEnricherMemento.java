@@ -43,6 +43,7 @@ public class BasicEnricherMemento extends AbstractMemento implements EnricherMem
 
     // Trusts the builder to not mess around with mutability after calling build()
     protected BasicEnricherMemento(Builder builder) {
+        super(builder);
         config = toPersistedMap(builder.config);
     }
 

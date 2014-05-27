@@ -32,12 +32,16 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
 
         enricher.setName(memento.getDisplayName());
         
-        // FIXME Will this set config keys that are not marked with `@SetFromFlag`?
-        // Note that the flags may have been set in the constructor; but some have no-arg constructors
+        // TODO entity does config-lookup differently; the memento contains the config keys.
+        // BasicEntityMemento.postDeserialize uses the injectTypeClass to call EntityTypes.getDefinedConfigKeys(clazz)
+        // 
+        // Note that the flags may have been set in the constructor; but some enrichers have no-arg constructors
         ConfigBag configBag = ConfigBag.newInstance(memento.getConfig());
         FlagUtils.setFieldsFromFlags(enricher, configBag);
+        FlagUtils.setAllConfigKeys(enricher, configBag, false);
         
         doReconsruct(rebindContext, memento);
+        ((AbstractEnricher)enricher).rebind();
     }
 
 

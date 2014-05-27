@@ -52,6 +52,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     protected Map<String,Object> leftoverProperties = Maps.newLinkedHashMap();
 
     private boolean _legacyConstruction;
+    private boolean _legacyNoConstructionInit;
     
     // TODO not sure if we need this -- never read
     @SuppressWarnings("unused")
@@ -87,6 +88,8 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     public AbstractEntityAdjunct(@SuppressWarnings("rawtypes") Map flags) {
         inConstruction = true;
         _legacyConstruction = !InternalPolicyFactory.FactoryConstructionTracker.isConstructing();
+        _legacyNoConstructionInit = (flags != null) && Boolean.TRUE.equals(flags.get("noConstructionInit"));
+        
         if (!_legacyConstruction && flags!=null && !flags.isEmpty()) {
             log.debug("Using direct construction for "+getClass().getName()+" because properties were specified ("+flags+")");
             _legacyConstruction = true;
@@ -158,6 +161,15 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     protected boolean isLegacyConstruction() {
         return _legacyConstruction;
     }
+
+    /**
+     * Used for legacy-style policies/enrichers on rebind, to indicate that init() should not be called.
+     * Will likely be deleted in a future release; should not be called apart from by framework code.
+     */
+    @Beta
+    protected boolean isLegacyNoConstructionInit() {
+        return _legacyNoConstructionInit;
+    }
     
     public void setManagementContext(ManagementContext managementContext) {
         this.managementContext = managementContext;
@@ -168,7 +180,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     }
 
     /**
-     * Called by framework (in new-style policies where PolicySpec was used) after configuring, setting parent, etc,
+     * Called by framework (in new-style policies where PolicySpec was used) after configuring etc,
      * but before a reference to this policy is shared.
      * 
      * To preserve backwards compatibility for if the policy is constructed directly, one
@@ -183,6 +195,15 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
      * </pre>
      */
     public void init() {
+        // no-op
+    }
+    
+    /**
+     * Called by framework (in new-style policies/enrichers where PolicySpec/EnricherSpec was used) on rebind, 
+     * after configuring but before {@link #setEntity(EntityLocal)} and before a reference to this policy is shared.
+     * Note that {@link #init()} will not be called on rebind.
+     */
+    public void rebind() {
         // no-op
     }
     
