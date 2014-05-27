@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
@@ -266,8 +267,11 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void postRebind() {
         super.postRebind();
-        isActive = true;
-        update();
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state != null && state == Lifecycle.RUNNING) {
+            isActive = true;
+            update();
+        }
     }
 
     @Override

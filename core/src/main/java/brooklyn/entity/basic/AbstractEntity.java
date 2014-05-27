@@ -35,6 +35,7 @@ import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
 import brooklyn.internal.storage.impl.BasicReference;
 import brooklyn.location.Location;
+import brooklyn.location.basic.Locations;
 import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
@@ -725,7 +726,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             for (Location newLocation : newLocations) {
                 // Location is now reachable, so manage it
                 // TODO will not be required in future releases when creating locations always goes through LocationManager.createLocation(LocationSpec).
-                Entities.manage(newLocation, getManagementContext());
+                Locations.manage(newLocation, getManagementContext());
             }
         }
         getManagementSupport().getEntityChangeListener().onLocationsChanged();

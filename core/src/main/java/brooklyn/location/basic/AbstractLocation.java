@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
@@ -199,7 +198,8 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
             configBag.putAll(oldConfig);
         }
     }
-    
+
+    @Override
     public ManagementContext getManagementContext() {
         return managementContext;
     }
@@ -495,7 +495,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         }
         
         if (isManaged()) {
-            Entities.manage(child, managementContext);
+            Locations.manage(child, managementContext);
         } else if (managementContext != null) {
             if (((LocalLocationManager)managementContext.getLocationManager()).getLocationEvenIfPreManaged(child.getId()) == null) {
                 ((ManagementContextInternal)managementContext).prePreManage(child);

@@ -18,7 +18,7 @@ public class EntityPredicates {
         return new Predicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
-                return Objects.equal(input.getId(), val);
+                return (input != null) && Objects.equal(input.getId(), val);
             }
         };
     }
@@ -27,7 +27,7 @@ public class EntityPredicates {
         return new Predicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
-                return Objects.equal(input.getDisplayName(), val);
+                return (input != null) && Objects.equal(input.getDisplayName(), val);
             }
         };
     }
@@ -35,8 +35,8 @@ public class EntityPredicates {
     public static Predicate<Entity> applicationIdEqualTo(final String val) {
         return new Predicate<Entity>() {
             @Override
-            public boolean apply(Entity input) {
-                return val.equals(input.getApplicationId());
+            public boolean apply(@Nullable Entity input) {
+                return (input != null) && val.equals(input.getApplicationId());
             }
         };
     }
@@ -45,7 +45,7 @@ public class EntityPredicates {
         return new Predicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
-                return Objects.equal(input.getAttribute(attribute), val);
+                return (input != null) && Objects.equal(input.getAttribute(attribute), val);
             }
         };
     }
@@ -53,8 +53,8 @@ public class EntityPredicates {
     public static <T> Predicate<Entity> configEqualTo(final ConfigKey<T> configKey, final T val) {
         return new Predicate<Entity>() {
             @Override
-            public boolean apply(Entity input) {
-                return Objects.equal(input.getConfig(configKey), val);
+            public boolean apply(@Nullable Entity input) {
+                return (input != null) && Objects.equal(input.getConfig(configKey), val);
             }
         };
     }
@@ -62,17 +62,20 @@ public class EntityPredicates {
     public static <T> Predicate<Entity> configEqualTo(final HasConfigKey<T> configKey, final T val) {
         return new Predicate<Entity>() {
             @Override
-            public boolean apply(Entity input) {
-                return Objects.equal(input.getConfig(configKey), val);
+            public boolean apply(@Nullable Entity input) {
+                return (input != null) && Objects.equal(input.getConfig(configKey), val);
             }
         };
     }
 
+    /**
+     * Returns a predicate that determines if a given entity is a direct child of this {@code parent}.
+     */
     public static <T> Predicate<Entity> isChildOf(final Entity parent) {
         return new Predicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
-                return Objects.equal(input.getParent(), parent);
+                return (input != null) && Objects.equal(input.getParent(), parent);
             }
         };
     }
@@ -81,7 +84,7 @@ public class EntityPredicates {
         return new Predicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
-                return group.hasMember(input);
+                return (input != null) && group.hasMember(input);
             }
         };
     }
@@ -103,7 +106,7 @@ public class EntityPredicates {
         return new Predicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
-                return input != null && Entities.isManaged(input);
+                return (input != null) && Entities.isManaged(input);
             }
         };
     }

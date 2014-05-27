@@ -31,6 +31,7 @@ import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -114,9 +115,9 @@ public class AbstractGeoDnsServiceTest {
             }
         });
 
-        Entities.manage(westParent, managementContext);
-        Entities.manage(eastParent, managementContext);
-        Entities.manage(northParent, managementContext);
+        Locations.manage(westParent, managementContext);
+        Locations.manage(eastParent, managementContext);
+        Locations.manage(northParent, managementContext);
         
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         fabric = app.createAndManageChild(EntitySpec.create(DynamicRegionsFabric.class)
