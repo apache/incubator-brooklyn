@@ -22,6 +22,7 @@ import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
+import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.ChangeListener;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
@@ -131,6 +132,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public InternalLocationFactory getLocationFactory() {
         checkInitialManagementContextReal();
         return initialManagementContext.getLocationFactory();
+    }
+
+    @Override
+    public InternalPolicyFactory getPolicyFactory() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getPolicyFactory();
     }
 
     @Override

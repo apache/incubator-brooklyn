@@ -16,7 +16,7 @@ import com.google.common.collect.Maps;
  */
 public class BasicEnricherMemento extends AbstractMemento implements EnricherMemento, Serializable {
 
-    private static final long serialVersionUID = -1; // FIXME
+    private static final long serialVersionUID = 3922505388588186311L;
 
     public static Builder builder() {
         return new Builder();

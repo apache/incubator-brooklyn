@@ -11,6 +11,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -21,6 +22,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
+import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
@@ -36,6 +38,7 @@ import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
@@ -513,35 +516,62 @@ public class RebindManagerImpl implements RebindManager {
     }
 
     /**
-     * Constructs a new policy, passing to its constructor the policy id and all of memento.getFlags().
+     * Constructs a new policy, passing to its constructor the policy id and all of memento.getConfig().
      */
     private Policy newPolicy(PolicyMemento memento, Reflections reflections) {
         String id = memento.getId();
-        String policyType = checkNotNull(memento.getType(), "policyType of "+id);
-        Class<?> policyClazz = reflections.loadClass(policyType);
+        String policyType = checkNotNull(memento.getType(), "policy type of %s must not be null in memento", id);
+        Class<? extends Policy> policyClazz = (Class<? extends Policy>) reflections.loadClass(policyType);
 
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-                .put("id", id)
-                .putAll(memento.getConfig())
-                .build();
+        if (InternalPolicyFactory.isNewStylePolicy(policyClazz)) {
+            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+            Policy policy = policyFactory.constructPolicy(policyClazz);
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), policy);
+            ((AbstractPolicy)policy).setManagementContext(managementContext);
+            
+            return policy;
 
-        return (Policy) invokeConstructor(reflections, policyClazz, new Object[] {flags});
+        } else {
+            LOG.warn("Deprecated rebind of policy without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+policyType);
+            
+            // There are several possibilities for the constructor; find one that works.
+            // Prefer passing in the flags because required for Application to set the management context
+            // TODO Feels very hacky!
+            Map<String, Object> flags = MutableMap.<String, Object>of("id", id, "deferConstructionChecks", true);
+            flags.putAll(memento.getConfig());
+
+            return (Policy) invokeConstructor(reflections, policyClazz, new Object[] {flags});
+        }
     }
 
     /**
-     * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getFlags().
+     * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
      */
     private Enricher newEnricher(EnricherMemento memento, Reflections reflections) {
         String id = memento.getId();
-        String enricherType = checkNotNull(memento.getType(), "enricherType of "+id);
-        Class<?> enricherClazz = reflections.loadClass(enricherType);
+        String enricherType = checkNotNull(memento.getType(), "enricher type of %s must not be null in memento", id);
+        Class<? extends Enricher> enricherClazz = (Class<? extends Enricher>) reflections.loadClass(enricherType);
 
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-                .put("id", id)
-                .putAll(memento.getConfig())
-                .build();
+        if (InternalPolicyFactory.isNewStyleEnricher(enricherClazz)) {
+            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+            Enricher enricher = policyFactory.constructEnricher(enricherClazz);
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), enricher);
+            ((AbstractEnricher)enricher).setManagementContext(managementContext);
+            
+            return enricher;
 
-        return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});
+        } else {
+            LOG.warn("Deprecated rebind of enricher without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+enricherType);
+            
+            // There are several possibilities for the constructor; find one that works.
+            // Prefer passing in the flags because required for Application to set the management context
+            // TODO Feels very hacky!
+            Map<String, Object> flags = MutableMap.<String, Object>of("id", id, "deferConstructionChecks", true);
+            flags.putAll(memento.getConfig());
+
+            return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});
+        }
+
     }
 
     private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
@@ -558,6 +588,29 @@ public class RebindManagerImpl implements RebindManager {
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
     }
 
+    private static boolean isNewStylePolicy(Class<?> clazz) {
+        if (!Policy.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Class "+clazz+" is not a policy");
+        }
+        return hasNoArgConstructor(clazz);
+    }
+    
+    private static boolean isNewStyleEnricher(Class<?> clazz) {
+        if (!Enricher.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Class "+clazz+" is not an enricher");
+        }
+        return hasNoArgConstructor(clazz);
+    }
+    
+    private static boolean hasNoArgConstructor(Class<?> clazz) {
+        try {
+            clazz.getConstructor(new Class[0]);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+    
     /**
      * Wraps a ChangeListener, to log and never propagate any exceptions that it throws.
      * 
