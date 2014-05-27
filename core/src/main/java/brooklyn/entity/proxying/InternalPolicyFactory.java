@@ -113,14 +113,13 @@ public class InternalPolicyFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            FactoryConstructionTracker.setConstructing();
             T pol;
-            try {
-                pol = construct(clazz, spec);
-            } finally {
-                FactoryConstructionTracker.reset();
+            if (isNewStylePolicy(clazz)) {
+                pol = constructPolicy(clazz);
+            } else {
+                pol = constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
             }
-            
+
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setName(spec.getDisplayName());
             
@@ -154,12 +153,11 @@ public class InternalPolicyFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            FactoryConstructionTracker.setConstructing();
             T enricher;
-            try {
-                enricher = construct(clazz, spec);
-            } finally {
-                FactoryConstructionTracker.reset();
+            if (isNewStyleEnricher(clazz)) {
+                enricher = constructEnricher(clazz);
+            } else {
+                enricher = constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
             }
             
             if (spec.getDisplayName()!=null)
@@ -186,19 +184,43 @@ public class InternalPolicyFactory {
         }
     }
     
-    private <T extends Policy> T construct(Class<? extends T> clazz, PolicySpec<T> spec) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (isNewStylePolicy(clazz)) {
-            return clazz.newInstance();
-        } else {
-            return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+    /**
+     * Constructs a new-style policy (fails if no no-arg constructor).
+     */
+    public <T extends Policy> T constructPolicy(Class<T> clazz) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStylePolicy(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    throw new IllegalStateException("Policy class "+clazz+" must have a no-arg constructor");
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
     
-    private <T extends Enricher> T construct(Class<? extends T> clazz, EnricherSpec<T> spec) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (isNewStyleEnricher(clazz)) {
-            return clazz.newInstance();
-        } else {
-            return constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
+    /**
+     * Constructs a new-style enricher (fails if no no-arg constructor).
+     */
+    public <T extends Enricher> T constructEnricher(Class<T> clazz) {
+        try {
+            FactoryConstructionTracker.setConstructing();
+            try {
+                if (isNewStyleEnricher(clazz)) {
+                    return clazz.newInstance();
+                } else {
+                    throw new IllegalStateException("Enricher class "+clazz+" must have a no-arg constructor");
+                }
+            } finally {
+                FactoryConstructionTracker.reset();
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
     
