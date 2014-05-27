@@ -23,46 +23,48 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
     }
 
     public static class Builder extends AbstractMemento.Builder<Builder> {
-        protected Map<String,Object> flags = Maps.newLinkedHashMap();
+        protected Map<String,Object> config = Maps.newLinkedHashMap();
         
         public Builder from(PolicyMemento other) {
             super.from(other);
-            flags.putAll(other.getFlags());
+            config.putAll(other.getConfig());
             return this;
         }
-        public Builder flags(Map<String,?> vals) {
-            flags.putAll(vals); return this;
+        public Builder config(Map<String,?> vals) {
+            config.putAll(vals); return this;
         }
         public PolicyMemento build() {
             return new BasicPolicyMemento(this);
         }
     }
     
-	private Map<String,Object> flags;
+	private Map<String,Object> config;
     private Map<String, Object> fields;
 
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicPolicyMemento(Builder builder) {
-	    flags = toPersistedMap(builder.flags);
+	    config = toPersistedMap(builder.config);
 	}
 	
+    @Deprecated
     @Override
     protected void setCustomFields(Map<String, Object> fields) {
         this.fields = toPersistedMap(fields);
     }
     
+    @Deprecated
     @Override
     public Map<String, Object> getCustomFields() {
         return fromPersistedMap(fields);
     }
 
     @Override
-    public Map<String, Object> getFlags() {
-		return fromPersistedMap(flags);
+    public Map<String, Object> getConfig() {
+		return fromPersistedMap(config);
 	}
     
     @Override
     protected ToStringHelper newVerboseStringHelper() {
-        return super.newVerboseStringHelper().add("flags", Entities.sanitize(getFlags()));
+        return super.newVerboseStringHelper().add("config", Entities.sanitize(getConfig()));
     }
 }

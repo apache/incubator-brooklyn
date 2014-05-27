@@ -1,14 +1,13 @@
 package brooklyn.entity.rebind;
 
-import java.util.Collections;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.mementos.EnricherMemento;
-import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.FlagUtils;
 
 public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento> {
 
@@ -22,11 +21,7 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
     
     @Override
     public EnricherMemento getMemento() {
-        return getMementoWithProperties(Collections.<String,Object>emptyMap());
-    }
-
-    protected EnricherMemento getMementoWithProperties(Map<String,?> props) {
-        EnricherMemento memento = MementosGenerators.newEnricherMementoBuilder(enricher).customFields(props).build();
+        EnricherMemento memento = MementosGenerators.newEnricherMementoBuilder(enricher).build();
         if (LOG.isTraceEnabled()) LOG.trace("Creating memento for enricher: {}", memento.toVerboseString());
         return memento;
     }
@@ -35,11 +30,16 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
     public void reconstruct(RebindContext rebindContext, EnricherMemento memento) {
         if (LOG.isTraceEnabled()) LOG.trace("Reconstructing enricher: {}", memento.toVerboseString());
 
-        // Note that the flags have been set in the constructor
         enricher.setName(memento.getDisplayName());
+        
+        // FIXME Will this set config keys that are not marked with `@SetFromFlag`?
+        // Note that the flags may have been set in the constructor; but some have no-arg constructors
+        ConfigBag configBag = ConfigBag.newInstance(memento.getConfig());
+        FlagUtils.setFieldsFromFlags(enricher, configBag);
         
         doReconsruct(rebindContext, memento);
     }
+
 
     /**
      * For overriding, to give custom reconsruct behaviour.

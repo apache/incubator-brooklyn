@@ -13,5 +13,5 @@ import brooklyn.entity.rebind.RebindSupport;
  */
 public interface PolicyMemento extends Memento {
 
-    Map<String, Object> getFlags();
+    Map<String, Object> getConfig();
 }

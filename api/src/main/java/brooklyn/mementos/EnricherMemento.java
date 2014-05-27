@@ -11,6 +11,5 @@ import brooklyn.entity.rebind.RebindSupport;
  */
 public interface EnricherMemento extends Memento {
 
-    Map<String, Object> getFlags();
-
+    Map<String, Object> getConfig();
 }

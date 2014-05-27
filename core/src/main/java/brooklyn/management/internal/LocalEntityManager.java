@@ -92,6 +92,11 @@ public class LocalEntityManager implements EntityManagerInternal {
         return entityFactory;
     }
 
+    public InternalPolicyFactory getPolicyFactory() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return policyFactory;
+    }
+
     @Override
     public EntityTypeRegistry getEntityTypeRegistry() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");

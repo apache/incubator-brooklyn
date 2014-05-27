@@ -16,53 +16,55 @@ import com.google.common.collect.Maps;
  */
 public class BasicEnricherMemento extends AbstractMemento implements EnricherMemento, Serializable {
 
-    private static final long serialVersionUID = -1; // FIXME
+    private static final long serialVersionUID = 3922505388588186311L;
 
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder extends AbstractMemento.Builder<Builder> {
-        protected Map<String,Object> flags = Maps.newLinkedHashMap();
+        protected Map<String,Object> config = Maps.newLinkedHashMap();
 
         public Builder from(EnricherMemento other) {
             super.from(other);
-            flags.putAll(other.getFlags());
+            config.putAll(other.getConfig());
             return this;
         }
-        public Builder flags(Map<String,?> vals) {
-            flags.putAll(vals); return this;
+        public Builder config(Map<String,?> vals) {
+            config.putAll(vals); return this;
         }
         public EnricherMemento build() {
             return new BasicEnricherMemento(this);
         }
     }
 
-    private Map<String,Object> flags;
+    private Map<String,Object> config;
     private Map<String, Object> fields;
 
     // Trusts the builder to not mess around with mutability after calling build()
     protected BasicEnricherMemento(Builder builder) {
-        flags = toPersistedMap(builder.flags);
+        config = toPersistedMap(builder.config);
     }
 
+    @Deprecated
     @Override
     protected void setCustomFields(Map<String, Object> fields) {
         this.fields = toPersistedMap(fields);
     }
 
+    @Deprecated
     @Override
     public Map<String, Object> getCustomFields() {
         return fromPersistedMap(fields);
     }
 
     @Override
-    public Map<String, Object> getFlags() {
-        return fromPersistedMap(flags);
+    public Map<String, Object> getConfig() {
+        return fromPersistedMap(config);
     }
 
     @Override
     protected ToStringHelper newVerboseStringHelper() {
-        return super.newVerboseStringHelper().add("flags", Entities.sanitize(getFlags()));
+        return super.newVerboseStringHelper().add("config", Entities.sanitize(getConfig()));
     }
 }

@@ -39,6 +39,10 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         return getMementoWithProperties(Collections.<String,Object>emptyMap());
     }
 
+    /**
+     * @deprecated since 0.7.0; use generic config/attributes rather than "custom fields", so use {@link #getMemento()}
+     */
+    @Deprecated
     protected EntityMemento getMementoWithProperties(Map<String,?> props) {
         EntityMemento memento = MementosGenerators.newEntityMementoBuilder(entity).customFields(props).build();
         if (LOG.isTraceEnabled()) LOG.trace("Creating memento for entity: {}", memento.toVerboseString());
@@ -167,7 +171,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
             if (enricher != null) {
                 entity.addEnricher(enricher);
             } else {
-                LOG.warn("Enricher not found; discarding policy {} of entity {}({})",
+                LOG.warn("Enricher not found; discarding enricher {} of entity {}({})",
                         new Object[] {enricherId, memento.getType(), memento.getId()});
             }
         }

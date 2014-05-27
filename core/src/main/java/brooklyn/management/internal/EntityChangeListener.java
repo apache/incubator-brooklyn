@@ -30,7 +30,9 @@ public interface EntityChangeListener {
 
     void onChildrenChanged();
 
-    void onPoliciesChanged(); // TODO
+    // FIXME Also want something to be notified when policy's state/config changes.
+    //       Do we want a separate PolicyChangeListener instead? Or everything through EntityChangeListener?
+    void onPoliciesChanged();
 
     void onEffectorStarting(Effector<?> effector);
     
