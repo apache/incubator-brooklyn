@@ -1,8 +1,8 @@
 package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
 
 import java.io.File;
@@ -28,14 +28,13 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.os.Os;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 public class RebindFailuresTest extends RebindTestFixtureWithApp {
 
-    private static final long TIMEOUT_MS = 10*1000;
-    
     @Test
     public void testFailureGeneratingMementoStillPersistsOtherEntities() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
@@ -45,11 +44,11 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         
         newApp = rebind(false);
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), EntityPredicates.idEqualTo(origE.getId()));
-        MyEntity newFailingE = (MyEntity) Iterables.find(newApp.getChildren(), EntityPredicates.idEqualTo(origFailingE.getId()), null);
+        Optional<Entity> newFailingE = Iterables.tryFind(newApp.getChildren(), EntityPredicates.idEqualTo(origFailingE.getId()));
         
         // Expect origFailingE to never have been persisted, but origE to have worked
         assertNotNull(newE);
-        assertNull(newFailingE);
+        assertFalse(newFailingE.isPresent(), "newFailedE="+newFailingE);
     }
 
     @Test(invocationCount=10, groups="Integration")
@@ -68,7 +67,7 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         
         newManagementContext = new LocalManagementContext();
         EntityManager newEntityManager = newManagementContext.getEntityManager();
-        RebindExceptionHandlerImpl exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
+        RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         try {
             newApp = rebind(newManagementContext, exceptionHandler);
             fail();
@@ -94,7 +93,7 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         
         newManagementContext = new LocalManagementContext();
         EntityManager newEntityManager = newManagementContext.getEntityManager();
-        RebindExceptionHandlerImpl exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
+        RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         try {
             newApp = rebind(newManagementContext, exceptionHandler);
             fail();
@@ -120,7 +119,7 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         
         newManagementContext = new LocalManagementContext();
         EntityManager newEntityManager = newManagementContext.getEntityManager();
-        RebindExceptionHandlerImpl exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
+        RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         newApp = rebind(newManagementContext, exceptionHandler);
 
         // exception handler should have been told about failure
@@ -141,8 +140,7 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         Files.write("invalid text", new File(entitiesDir, "mycorruptfile"), Charsets.UTF_8);
         
         newManagementContext = new LocalManagementContext();
-        EntityManager newEntityManager = newManagementContext.getEntityManager();
-        RebindExceptionHandlerImpl exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
+        RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         try {
             newApp = rebind(newManagementContext, exceptionHandler);
             fail();

@@ -312,6 +312,7 @@ public class RebindManagerImpl implements RebindManager {
             
             // Manage the top-level apps (causing everything under them to become managed)
             LOG.info("RebindManager managing entities");
+            List<Application> apps = Lists.newArrayList();
             for (String appId : memento.getApplicationIds()) {
                 Entity entity = rebindContext.getEntity(appId);
                 if (entity == null) {
@@ -323,27 +324,13 @@ public class RebindManagerImpl implements RebindManager {
                     } catch (Exception e) {
                         exceptionHandler.onManageEntityFailed(entity, e);
                     }
+                    apps.add((Application)entity);
                 }
             }
             
-            // Return the top-level applications
-            List<Application> apps = Lists.newArrayList();
-            for (String appId : memento.getApplicationIds()) {
-                Entity entity = rebindContext.getEntity(appId);
-                if (entity == null) {
-                    // usually because of creation-failure, when not using fail-fast
-                    exceptionHandler.onEntityNotFound(appId);
-                } else {
-                    try {
-                        apps.add((Application)entity);
-                    } catch (Exception e) {
-                        exceptionHandler.onManageEntityFailed(entity, e);
-                    }
-                }
-            }
-
             exceptionHandler.onDone();
 
+            // Return the top-level applications
             LOG.info("RebindManager complete; return apps: {}", memento.getApplicationIds());
             return apps;
             

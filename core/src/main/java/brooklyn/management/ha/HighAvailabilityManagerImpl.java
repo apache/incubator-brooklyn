@@ -156,7 +156,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         nodeState = ManagementNodeState.STANDBY;
         running = true;
         
-        // TODO Small race in that we first check, and then we'll do checkMater() on first poll,
+        // TODO Small race in that we first check, and then we'll do checkMaster() on first poll,
         // so another node could have already become master or terminated in that window.
         ManagementNodeSyncRecord existingMaster = hasHealthyMaster();
         
@@ -269,7 +269,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     /**
      * Publishes (via {@link #persister}) the state of this management node with itself set to master.
      */
-    protected synchronized void publishDemotionFromMaterOnFailure() {
+    protected synchronized void publishDemotionFromMasterOnFailure() {
         checkState(getNodeState() == ManagementNodeState.FAILED, "node status must be failed on publish, but is %s", getNodeState());
         
         if (persister == null) {
@@ -408,9 +408,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         } catch (Exception e) {
             LOG.info("Problem during rebind when promoting node to master; demoting to failed and rethrowing): "+e);
             nodeState = ManagementNodeState.FAILED;
-            publishDemotionFromMaterOnFailure();
+            publishDemotionFromMasterOnFailure();
             throw Exceptions.propagate(e);
-
         }
         managementContext.getRebindManager().start();
     }

@@ -4,18 +4,32 @@ import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.policy.Policy;
 
+import com.google.common.annotations.Beta;
+
+/**
+ * Handler called on all exceptions to do with rebind.
+ * 
+ * @author aled
+ */
+@Beta
 public interface RebindExceptionHandler {
 
-    void onLoadBrooklynMementoFailure(String msg, Exception e);
+    void onLoadBrooklynMementoFailed(String msg, Exception e);
     
-    void onLoadLocationMementoFailure(String msg, Exception e);
+    void onLoadLocationMementoFailed(String msg, Exception e);
 
-    void onLoadEntityMementoFailure(String msg, Exception e);
+    void onLoadEntityMementoFailed(String msg, Exception e);
     
-    void onLoadPolicyMementoFailure(String msg, Exception e);
+    void onLoadPolicyMementoFailed(String msg, Exception e);
     
+    /**
+     * @return the entity to use in place of the missing one, or null (if hasn't thrown an exception)
+     */
     Entity onDanglingEntityRef(String id);
 
+    /**
+     * @return the location to use in place of the missing one, or null (if hasn't thrown an exception)
+     */
     Location onDanglingLocationRef(String id);
 
     void onCreateLocationFailed(String locId, String locType, Exception e);
@@ -29,7 +43,7 @@ public interface RebindExceptionHandler {
     void onEntityNotFound(String id);
     
     void onPolicyNotFound(String id);
-    
+
     void onRebindEntityFailed(Entity entity, Exception e);
 
     void onRebindLocationFailed(Location location, Exception e);

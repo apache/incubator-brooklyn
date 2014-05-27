@@ -3,7 +3,6 @@ package brooklyn.entity.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -16,7 +15,6 @@ import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
@@ -37,18 +35,10 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
 
     protected final Set<String> missingEntities = Sets.newLinkedHashSet();
     protected final Set<String> missingLocations = Sets.newLinkedHashSet();
-    protected final List<Exception> loadMementoFailures = Lists.newArrayList();
-    protected final Map<String, Exception> createLocationFailures = Maps.newLinkedHashMap();
-    protected final Map<String, Exception> createEntityFailures = Maps.newLinkedHashMap();
-    protected final Map<String, Exception> createPolicyFailures = Maps.newLinkedHashMap();
-    protected final Map<Location, Exception> rebindLocationFailures = Maps.newLinkedHashMap();
-    protected final Map<Entity, Exception> rebindEntityFailures = Maps.newLinkedHashMap();
-    protected final Map<Policy, Exception> rebindPolicyFailures = Maps.newLinkedHashMap();
-    protected final Map<Location, Exception> manageLocationFailures = Maps.newLinkedHashMap();
-    protected final Map<Entity, Exception> manageEntityFailures = Maps.newLinkedHashMap();
-    protected final Map<String, Exception> locationNotFoundFailures = Maps.newLinkedHashMap();
-    protected final Map<String, Exception> entityNotFoundFailures = Maps.newLinkedHashMap();
-    protected final Map<String, Exception> policyNotFoundFailures = Maps.newLinkedHashMap();
+    protected final Set<String> creationFailedEntities = Sets.newLinkedHashSet();
+    protected final Set<String> creationFailedLocations = Sets.newLinkedHashSet();
+    protected final Set<String> creationFailedPolicies = Sets.newLinkedHashSet();
+    protected final List<Exception> exceptions = Lists.newArrayList();
     
     public RebindExceptionHandlerImpl(RebindFailureMode danglingRefFailureMode, RebindFailureMode rebindFailureMode) {
         this.danglingRefFailureMode = checkNotNull(danglingRefFailureMode, "danglingRefFailureMode");
@@ -56,29 +46,29 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
 
     @Override
-    public void onLoadBrooklynMementoFailure(String msg, Exception e) {
+    public void onLoadBrooklynMementoFailed(String msg, Exception e) {
         onLoadMementoFailure(msg, e);
     }
     
     @Override
-    public void onLoadLocationMementoFailure(String msg, Exception e) {
+    public void onLoadLocationMementoFailed(String msg, Exception e) {
         onLoadMementoFailure(msg, e);
     }
     
     @Override
-    public void onLoadEntityMementoFailure(String msg, Exception e) {
+    public void onLoadEntityMementoFailed(String msg, Exception e) {
         onLoadMementoFailure(msg, e);
     }
     
     @Override
-    public void onLoadPolicyMementoFailure(String msg, Exception e) {
+    public void onLoadPolicyMementoFailed(String msg, Exception e) {
         onLoadMementoFailure(msg, e);
     }
     
     protected void onLoadMementoFailure(String msg, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem loading mementos: "+msg;
-        loadMementoFailures.add(new IllegalStateException(errmsg, e));
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
@@ -108,8 +98,8 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     public void onCreateLocationFailed(String id, String type, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem creating location "+id+" of type "+type;
-        
-        createLocationFailures.put(id, new IllegalStateException(errmsg, e));
+        creationFailedLocations.add(id);
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
@@ -117,8 +107,8 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     public void onCreateEntityFailed(String id, String type, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem creating entity "+id+" of type "+type;
-        
-        createEntityFailures.put(id, new IllegalStateException(errmsg, e));
+        creationFailedEntities.add(id);
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
@@ -127,40 +117,40 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     public void onCreatePolicyFailed(String id, String type, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem creating policy "+id+" of type "+type;
-        
-        createPolicyFailures.put(id, new IllegalStateException(errmsg, e));
+        creationFailedPolicies.add(id);
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
     @Override
     public void onLocationNotFound(String id) {
-        if (createLocationFailures.keySet().contains(id)) {
+        if (creationFailedLocations.contains(id)) {
             // already know about this; ignore
         } else {
             String errmsg = "location '"+id+"' not found";
-            locationNotFoundFailures.put(id, new IllegalStateException(errmsg));
+            exceptions.add(new IllegalStateException(errmsg));
             onErrorImpl(errmsg);
         }
     }
     
     @Override
     public void onEntityNotFound(String id) {
-        if (createEntityFailures.keySet().contains(id)) {
+        if (creationFailedEntities.contains(id)) {
             // already know about this; ignore
         } else {
             String errmsg = "entity '"+id+"' not found";
-            entityNotFoundFailures.put(id, new IllegalStateException(errmsg));
+            exceptions.add(new IllegalStateException(errmsg));
             onErrorImpl(errmsg);
         }
     }
     
     @Override
     public void onPolicyNotFound(String id) {
-        if (createPolicyFailures.keySet().contains(id)) {
+        if (creationFailedPolicies.contains(id)) {
             // already know about this; ignore
         } else {
             String errmsg = "policy'"+id+"' not found";
-            locationNotFoundFailures.put(id, new IllegalStateException(errmsg));
+            exceptions.add(new IllegalStateException(errmsg));
             onErrorImpl(errmsg);
         }
     }
@@ -168,45 +158,45 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     @Override
     public void onRebindLocationFailed(Location location, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding location "+(location == null ? null : location.getId()+" ("+location+")");
+        String errmsg = "problem rebinding location "+location.getId()+" ("+location+")";
         
-        rebindLocationFailures.put(location, new IllegalStateException(errmsg, e));
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
     @Override
     public void onRebindEntityFailed(Entity entity, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding entity "+(entity == null ? null : entity.getId()+" ("+entity+")");
+        String errmsg = "problem rebinding entity "+entity.getId()+" ("+entity+")";
         
-        rebindEntityFailures.put(entity, new IllegalStateException(errmsg, e));
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
     @Override
     public void onRebindPolicyFailed(Policy policy, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding plicy "+(policy == null ? null : policy.getId()+" ("+policy+")");
+        String errmsg = "problem rebinding plicy "+policy.getId()+" ("+policy+")";
         
-        rebindPolicyFailures.put(policy, new IllegalStateException(errmsg, e));
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
     @Override
     public void onManageLocationFailed(Location location, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem managing location "+(location == null ? null : location.getId()+" ("+location+")");
+        String errmsg = "problem managing location "+location.getId()+" ("+location+")";
         
-        manageLocationFailures.put(location, new IllegalStateException(errmsg, e));
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
     @Override
     public void onManageEntityFailed(Entity entity, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem managing entity "+(entity == null ? null : entity.getId()+" ("+entity+")");
+        String errmsg = "problem managing entity "+entity.getId()+" ("+entity+")";
         
-        manageEntityFailures.put(entity, new IllegalStateException(errmsg, e));
+        exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
     
@@ -236,38 +226,27 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected void onDoneImpl(Exception e) {
         if (e != null) Exceptions.propagateIfFatal(e);
         
-        List<Exception> exceptions = Lists.newArrayList();
+        List<Exception> allExceptions = Lists.newArrayList();
         
         if (e != null) {
-            exceptions.add(e);
+            allExceptions.add(e);
         }
         if (danglingRefFailureMode != RebindFailureMode.CONTINUE) {
             if (missingEntities.size() > 0) {
-                exceptions.add(new IllegalStateException("Missing referenced entit"+(missingEntities.size() == 1 ? "y" : "ies")+": "+missingEntities));
+                allExceptions.add(new IllegalStateException("Missing referenced entit"+(missingEntities.size() == 1 ? "y" : "ies")+": "+missingEntities));
             }
             if (missingLocations.size() > 0) {
-                exceptions.add(new IllegalStateException("Missing referenced location"+(missingEntities.size() == 1 ? "" : "s")+": "+missingLocations));
+                allExceptions.add(new IllegalStateException("Missing referenced location"+(missingEntities.size() == 1 ? "" : "s")+": "+missingLocations));
             }
         }
         if (rebindFailureMode != RebindFailureMode.CONTINUE) {
-            exceptions.addAll(loadMementoFailures);
-            exceptions.addAll(createLocationFailures.values());
-            exceptions.addAll(createEntityFailures.values());
-            exceptions.addAll(createPolicyFailures.values());
-            exceptions.addAll(rebindLocationFailures.values());
-            exceptions.addAll(rebindEntityFailures.values());
-            exceptions.addAll(rebindPolicyFailures.values());
-            exceptions.addAll(manageLocationFailures.values());
-            exceptions.addAll(manageEntityFailures.values());
-            exceptions.addAll(locationNotFoundFailures.values());
-            exceptions.addAll(entityNotFoundFailures.values());
-            exceptions.addAll(policyNotFoundFailures.values());
+            allExceptions.addAll(exceptions);
         }
         
-        if (exceptions.isEmpty()) {
+        if (allExceptions.isEmpty()) {
             return; // no errors
         } else {
-            CompoundRuntimeException compoundException = new CompoundRuntimeException("Problem"+(exceptions.size() == 1 ? "" : "s")+" rebinding", exceptions);
+            CompoundRuntimeException compoundException = new CompoundRuntimeException("Problem"+(allExceptions.size() == 1 ? "" : "s")+" rebinding", allExceptions);
             LOG.info("RebindManager failed (throwing): "+compoundException.toString());
             throw compoundException;
         }

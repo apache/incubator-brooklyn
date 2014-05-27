@@ -120,7 +120,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             locationFiles = locationsDir.listFiles(fileFilter);
             policyFiles = policiesDir.listFiles(fileFilter);
         } catch (Exception e) {
-            exceptionHandler.onLoadBrooklynMementoFailure("Failed to list files", e);
+            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
         
@@ -137,7 +137,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String type = (String) XmlUtil.xpath(contents, "/entity/type");
                     builder.entity(id, type);
                 } catch (Exception e) {
-                    exceptionHandler.onLoadEntityMementoFailure("File "+file, e);
+                    exceptionHandler.onLoadEntityMementoFailed("File "+file, e);
                 }
             }
             for (File file : locationFiles) {
@@ -147,7 +147,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String type = (String) XmlUtil.xpath(contents, "/location/type");
                     builder.location(id, type);
                 } catch (Exception e) {
-                    exceptionHandler.onLoadLocationMementoFailure("File "+file, e);
+                    exceptionHandler.onLoadLocationMementoFailed("File "+file, e);
                 }
             }
             for (File file : policyFiles) {
@@ -157,7 +157,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String type = (String) XmlUtil.xpath(contents, "/policy/type");
                     builder.policy(id, type);
                 } catch (Exception e) {
-                    exceptionHandler.onLoadPolicyMementoFailure("File "+file, e);
+                    exceptionHandler.onLoadPolicyMementoFailed("File "+file, e);
                 }
             }
             
@@ -190,7 +190,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             locationFiles = locationsDir.listFiles(fileFilter);
             policyFiles = policiesDir.listFiles(fileFilter);
         } catch (Exception e) {
-            exceptionHandler.onLoadBrooklynMementoFailure("Failed to list files", e);
+            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
 
@@ -213,7 +213,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                         }
                     }
                 } catch (Exception e) {
-                    exceptionHandler.onLoadEntityMementoFailure("File "+file, e);
+                    exceptionHandler.onLoadEntityMementoFailed("File "+file, e);
                 }
             }
             for (File file : locationFiles) {
@@ -225,7 +225,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                         builder.location(memento);
                     }
                 } catch (Exception e) {
-                    exceptionHandler.onLoadLocationMementoFailure("File "+file, e);
+                    exceptionHandler.onLoadLocationMementoFailed("File "+file, e);
                 }
             }
             for (File file : policyFiles) {
@@ -237,7 +237,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                         builder.policy(memento);
                     }
                 } catch (Exception e) {
-                    exceptionHandler.onLoadPolicyMementoFailure("File "+file, e);
+                    exceptionHandler.onLoadPolicyMementoFailed("File "+file, e);
                 }
             }
             
