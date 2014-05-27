@@ -141,10 +141,6 @@ public class MementosGenerators {
             builder.children.add(child.getId()); 
         }
         
-        // FIXME Not including policies, because lots of places register anonymous inner class policies
-        // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
-        // Also, the entity constructor often re-creates the policy
-        // Also see RebindManagerImpl.CheckpointingChangeListener.onChanged(Entity)
         for (Policy policy : entity.getPolicies()) {
             builder.policies.add(policy.getId()); 
         }

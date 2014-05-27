@@ -275,10 +275,6 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 deltaCollector.locations.addAll(TreeUtils.findLocationsInHierarchy(location));
             }
 
-            // FIXME Not including policies, because lots of places regiser anonymous inner class policies
-            // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
-            // Also, the entity constructor often re-creates the policy.
-            // Also see MementosGenerator.newEntityMementoBuilder()
             for (Policy policy : entity.getPolicies()) {
                 deltaCollector.policies.add(policy);
             }
