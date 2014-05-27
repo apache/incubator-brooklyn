@@ -23,6 +23,7 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.ChangeListener;
+import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
@@ -372,6 +373,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
         @Override
         public List<Application> rebind(ClassLoader classLoader) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
 

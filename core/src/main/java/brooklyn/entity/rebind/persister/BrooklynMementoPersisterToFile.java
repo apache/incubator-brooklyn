@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
@@ -54,7 +55,7 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     }
 
     @Override
-    public BrooklynMemento loadMemento(LookupContext lookupContext) {
+    public BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         String xml = readFile();

@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
 import brooklyn.util.time.Duration;
@@ -23,12 +24,12 @@ public interface BrooklynMementoPersister {
         Location lookupLocation(Class<?> type, String id);
     }
 
-    BrooklynMementoManifest loadMementoManifest() throws IOException;
+    BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) throws IOException;
 
     /**
      * Note that this method is *not* thread safe.
      */
-    BrooklynMemento loadMemento(LookupContext lookupContext) throws IOException;
+    BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException;
     
     void checkpoint(BrooklynMemento memento);
     

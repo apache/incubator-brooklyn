@@ -13,6 +13,9 @@ import java.util.concurrent.TimeoutException;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntityProxy;
+import brooklyn.entity.rebind.RebindExceptionHandler;
+import brooklyn.entity.rebind.RebindExceptionHandlerImpl;
+import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.mementos.BrooklynMemento;
@@ -98,7 +101,8 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                 };
 
                 // Not actually reconstituting, because need to use a real lookupContext to reconstitute all the entities
-                persister.loadMemento(dummyLookupContext);
+                RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(RebindFailureMode.FAIL_AT_END, RebindFailureMode.FAIL_AT_END);
+                persister.loadMemento(dummyLookupContext, exceptionHandler);
             } finally {
                 Os.tryDeleteDirectory(tempDir.getAbsolutePath());
             }

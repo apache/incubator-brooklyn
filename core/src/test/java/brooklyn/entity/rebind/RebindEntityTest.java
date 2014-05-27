@@ -522,25 +522,6 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     }
 
     @Test
-    public void testFailureGeneratingMementoStillPersistsOtherEntities() throws Exception {
-        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        MyEntity origFailingE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).impl(MyEntityFailingImpl.class));
-        
-        newApp = rebind(false);
-        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), EntityPredicates.idEqualTo(origE.getId()));
-        MyEntity newFailingE = (MyEntity) Iterables.find(newApp.getChildren(), EntityPredicates.idEqualTo(origFailingE.getId()), null);
-        
-        // Expect origFailingE to never have been persisted, but origE to have worked
-        assertNotNull(newE);
-        assertNull(newFailingE);
-    }
-
-    @Test(invocationCount=100, groups="Integration")
-    public void testFailureGeneratingMementoStillPersistsOtherEntitiesRepeatedly() throws Exception {
-        testFailureGeneratingMementoStillPersistsOtherEntities();
-    }
-
-    @Test
     public void testRebindWhenPreviousAppDestroyedHasNoApp() throws Exception {
         origApp.stop();
         
@@ -833,14 +814,6 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
                     MyLatchingEntityImpl.this.onReconstruct();
                 }
             };
-        }
-    }
-    
-    public static class MyEntityFailingImpl extends MyEntityImpl implements MyEntity {
-        @SuppressWarnings("rawtypes")
-        @Override
-        public Map<AttributeSensor, Object> getAllAttributes() {
-            throw new RuntimeException("Simulating failure in "+this+", which will cause memento-generation to fail");
         }
     }
 }

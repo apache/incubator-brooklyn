@@ -33,6 +33,8 @@ public interface RebindManager {
     
     public List<Application> rebind(ClassLoader classLoader) throws IOException;
 
+    public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws IOException;
+
     public ChangeListener getChangeListener();
 
     /**
