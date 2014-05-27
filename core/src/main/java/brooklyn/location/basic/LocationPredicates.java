@@ -15,7 +15,7 @@ public class LocationPredicates {
         return new Predicate<Location>() {
             @Override
             public boolean apply(@Nullable Location input) {
-                return Objects.equal(input.getId(), val);
+                return (input != null) && Objects.equal(input.getId(), val);
             }
         };
     }
@@ -24,7 +24,7 @@ public class LocationPredicates {
         return new Predicate<Location>() {
             @Override
             public boolean apply(@Nullable Location input) {
-                return Objects.equal(input.getDisplayName(), val);
+                return (input != null) && Objects.equal(input.getDisplayName(), val);
             }
         };
     }
@@ -32,8 +32,8 @@ public class LocationPredicates {
     public static <T> Predicate<Location> configEqualTo(final ConfigKey<T> configKey, final T val) {
         return new Predicate<Location>() {
             @Override
-            public boolean apply(Location input) {
-                return Objects.equal(input.getConfig(configKey), val);
+            public boolean apply(@Nullable Location input) {
+                return (input != null) && Objects.equal(input.getConfig(configKey), val);
             }
         };
     }
@@ -41,8 +41,8 @@ public class LocationPredicates {
     public static <T> Predicate<Location> configEqualTo(final HasConfigKey<T> configKey, final T val) {
         return new Predicate<Location>() {
             @Override
-            public boolean apply(Location input) {
-                return Objects.equal(input.getConfig(configKey), val);
+            public boolean apply(@Nullable Location input) {
+                return (input != null) && Objects.equal(input.getConfig(configKey), val);
             }
         };
     }
@@ -83,9 +83,8 @@ public class LocationPredicates {
         return new Predicate<Location>() {
             @Override
             public boolean apply(@Nullable Location input) {
-                return input != null && Locations.isManaged(input);
+                return (input != null) && Locations.isManaged(input);
             }
         };
     }
-
 }

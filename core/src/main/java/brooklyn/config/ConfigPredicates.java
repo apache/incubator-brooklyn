@@ -14,7 +14,7 @@ public class ConfigPredicates {
         return new Predicate<ConfigKey<?>>() {
             @Override
             public boolean apply(@Nullable ConfigKey<?> input) {
-                return input.getName().startsWith(prefix);
+                return (input != null) && input.getName().startsWith(prefix);
             }
         };
     }
@@ -23,7 +23,7 @@ public class ConfigPredicates {
         return new Predicate<ConfigKey<?>>() {
             @Override
             public boolean apply(@Nullable ConfigKey<?> input) {
-                return WildcardGlobs.isGlobMatched(glob, input.getName());
+                return (input != null) && WildcardGlobs.isGlobMatched(glob, input.getName());
             }
         };
     }
@@ -33,7 +33,7 @@ public class ConfigPredicates {
         return new Predicate<ConfigKey<?>>() {
             @Override
             public boolean apply(@Nullable ConfigKey<?> input) {
-                return p.matcher(input.getName()).matches();
+                return (input != null) && p.matcher(input.getName()).matches();
             }
         };
     }
@@ -42,7 +42,7 @@ public class ConfigPredicates {
         return new Predicate<ConfigKey<?>>() {
             @Override
             public boolean apply(@Nullable ConfigKey<?> input) {
-                return filter.apply(input.getName());
+                return (input != null) && filter.apply(input.getName());
             }
         };
     }
