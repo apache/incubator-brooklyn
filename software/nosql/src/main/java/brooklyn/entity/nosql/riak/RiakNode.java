@@ -101,4 +101,5 @@ public interface RiakNode extends SoftwareProcess {
     @Effector(description = "commit changes made to a Riak cluster")
     public void commitCluster();
 
+    public boolean hasJoinedCluster();
 }

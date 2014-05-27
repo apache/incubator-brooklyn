@@ -66,11 +66,9 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         }
     }
 
-
     protected EntitySpec<?> getMemberSpec() {
-        EntitySpec<?> result = super.getMemberSpec();
-        if (result != null) return result;
-        return EntitySpec.create(RiakNode.class);
+        return getConfig(MEMBER_SPEC, EntitySpec.create(RiakNode.class));
+
     }
 
     protected void connectSensors() {
@@ -159,8 +157,6 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
     }
 
-    ;
-
     protected boolean belongsInServerPool(Entity member) {
         if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
             if (log.isTraceEnabled()) log.trace("Members of {}, checking {}, eliminating because not up", this, member);
@@ -181,8 +177,8 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         return node.getAttribute(RiakNode.RIAK_NODE_NAME);
     }
 
-    private Boolean hasMemberJoinedCluster(Entity member) {
-        return Optional.fromNullable(member.getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER)).or(Boolean.FALSE);
+    private boolean hasMemberJoinedCluster(Entity member) {
+        return ((RiakNode) member).hasJoinedCluster();
     }
 
     public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
@@ -191,5 +187,4 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
             ((RiakClusterImpl) super.entity).onServerPoolMemberChanged(entity);
         }
     }
-
 }

@@ -9,6 +9,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
@@ -19,9 +22,6 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
-
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 
 public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
@@ -44,24 +44,24 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         Entities.getRequiredUrlConfig(this, RIAK_VM_ARGS_TEMPLATE_URL);
         Entities.getRequiredUrlConfig(this, RIAK_APP_CONFIG_TEMPLATE_URL);
     }
-    
+
     @Override
     protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
-        ConfigBag result = ConfigBag.newInstance( super.obtainProvisioningFlags(location) );
+        ConfigBag result = ConfigBag.newInstance(super.obtainProvisioningFlags(location));
         result.configure(CloudLocationConfig.OS_64_BIT, true);
         return result.getAllConfig();
     }
-    
+
     @Override
     protected Collection<Integer> getRequiredOpenPorts() {
         // TODO this creates a huge list of inbound ports; much better to define on a security group using range syntax!
         int erlangRangeStart = getConfig(ERLANG_PORT_RANGE_START).iterator().next();
         int erlangRangeEnd = getConfig(ERLANG_PORT_RANGE_END).iterator().next();
-        
-        Set<Integer> newPorts = MutableSet.<Integer>copyOf( super.getRequiredOpenPorts() );
+
+        Set<Integer> newPorts = MutableSet.<Integer>copyOf(super.getRequiredOpenPorts());
         newPorts.remove(erlangRangeStart);
         newPorts.remove(erlangRangeEnd);
-        for (int i=erlangRangeStart; i<=erlangRangeEnd; i++)
+        for (int i = erlangRangeStart; i <= erlangRangeEnd; i++)
             newPorts.add(i);
         return newPorts;
     }
@@ -125,7 +125,8 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
                                     public List<String> apply(@Nullable String[] strings) {
                                         return Arrays.asList(strings);
                                     }
-                                }))
+                                }
+                        ))
                         .onFailureOrException(Functions.constant(Arrays.asList(new String[0]))))
                 .build();
 
@@ -151,18 +152,42 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
-    public void commitCluster(){ getDriver().commitCluster();}
+    public void commitCluster() {
+        getDriver().commitCluster();
+    }
+
+    @Override
+    public boolean hasJoinedCluster() {
+        return Boolean.TRUE.equals(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER);
+    }
 
     @Override
     public void recoverFailedNode(String nodeName) {
         getDriver().recoverFailedNode(nodeName);
     }
 
-    public Integer getRiakWebPort() { return getAttribute(RiakNode.RIAK_WEB_PORT); }
-    public Integer getRiakPbPort() { return getAttribute(RiakNode.RIAK_PB_PORT); }
-    public Integer getHandoffListenerPort() { return getAttribute(RiakNode.HANDOFF_LISTENER_PORT); }
-    public Integer getEpmdListenerPort() { return getAttribute(RiakNode.EPMD_LISTENER_PORT); }
-    public Integer getErlangPortRangeStart() { return getAttribute(RiakNode.ERLANG_PORT_RANGE_START); }
-    public Integer getErlangPortRangeEnd() { return getAttribute(RiakNode.ERLANG_PORT_RANGE_END); }
+    public Integer getRiakWebPort() {
+        return getAttribute(RiakNode.RIAK_WEB_PORT);
+    }
+
+    public Integer getRiakPbPort() {
+        return getAttribute(RiakNode.RIAK_PB_PORT);
+    }
+
+    public Integer getHandoffListenerPort() {
+        return getAttribute(RiakNode.HANDOFF_LISTENER_PORT);
+    }
+
+    public Integer getEpmdListenerPort() {
+        return getAttribute(RiakNode.EPMD_LISTENER_PORT);
+    }
+
+    public Integer getErlangPortRangeStart() {
+        return getAttribute(RiakNode.ERLANG_PORT_RANGE_START);
+    }
+
+    public Integer getErlangPortRangeEnd() {
+        return getAttribute(RiakNode.ERLANG_PORT_RANGE_END);
+    }
 
 }

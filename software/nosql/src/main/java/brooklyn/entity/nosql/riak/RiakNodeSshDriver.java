@@ -48,7 +48,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         MutableMap<String, String> result = MutableMap.copyOf(super.getShellEnvironment());
         // how to change epmd port, according to 
         // http://serverfault.com/questions/582787/how-to-change-listening-interface-of-rabbitmqs-epmd-port-4369
-        result.put("ERL_EPMD_PORT", "" + getEntity().getEpmdListenerPort());
+        result.put("ERL_EPMD_PORT", "" + Integer.toString(getEntity().getEpmdListenerPort()));
         return result;
     }
 
@@ -156,7 +156,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             customizeScript.environmentVariablesReset(newPathVariable);
         }
-
         customizeScript.execute();
 
         //set the riak node name
@@ -177,7 +176,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             launchScript.environmentVariablesReset(newPathVariable);
         }
-
         launchScript.execute();
     }
 
@@ -199,7 +197,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         }
 
         int result = stopScript.execute();
-
         if (result != 0) {
             newScript(ImmutableMap.of(USE_PID_FILE, ""), STOPPING).execute();
         }
@@ -216,9 +213,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             checkRunningScript.environmentVariablesReset(newPathVariable);
         }
-
         return (checkRunningScript.execute() == 0);
-
     }
 
     public String getRiakEtcDir() {
@@ -364,7 +359,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     private Boolean hasJoinedCluster() {
-        return Optional.fromNullable(entity.getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER)).or(Boolean.FALSE);
+        return ((RiakNode) entity).hasJoinedCluster();
     }
 
     private boolean isRiakOnPath() {
