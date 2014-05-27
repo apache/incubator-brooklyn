@@ -87,17 +87,13 @@ public class BrooklynShutdownHooks {
                 for (Task t: stops) {
                     Duration remainingTime = Duration.max(Duration.untilUtc(endTime), Duration.ONE_MILLISECOND);
                     try {
-                        Object result = t.get(remainingTime);
+                        Object result = t.getUnchecked(remainingTime);
                         if (log.isDebugEnabled()) log.debug("stopOnShutdown of {} completed: {}", t, result);
                     } catch (RuntimeInterruptedException e) {
                         Thread.currentThread().interrupt();
                         endTime = System.currentTimeMillis();
                         if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" interrupted; (continuing with immediate timeout): "+e);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        endTime = System.currentTimeMillis();
-                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" interrupted; (continuing with immediate timeout): "+e);
-                    } catch (Exception e) {
+                    } catch (RuntimeException e) {
                         if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" returned error (continuing): "+e, e);
                         Exceptions.propagateIfFatal(e);
                     }
