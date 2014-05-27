@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
@@ -63,7 +64,7 @@ public abstract class YamlLauncherAbstract {
             Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("Launching "+app);
 
-            if (getShutdownAppsOnExit()) Entities.invokeStopOnShutdown(app);
+            if (getShutdownAppsOnExit()) BrooklynShutdownHooks.invokeStopOnShutdown(app);
             
             Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
             log.info("Waiting on "+tasks.size()+" task(s)");
