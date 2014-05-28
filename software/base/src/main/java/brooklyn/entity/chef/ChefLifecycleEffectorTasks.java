@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.MachineLocation;
@@ -206,6 +207,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (!result) {
             log.warn("No way to check whether "+entity()+" is running; assuming yes");
         }
+        entity().setAttribute(SoftwareProcess.SERVICE_UP, true);
     }
     
     protected boolean tryCheckStartPid() {

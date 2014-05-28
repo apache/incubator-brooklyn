@@ -32,6 +32,7 @@ public interface ChefConfig {
     /** typically set from spec, to customize the launch part of the start effector */
     public static final SetConfigKey<String> CHEF_LAUNCH_RUN_LIST = new SetConfigKey<String>(String.class, "brooklyn.chef.launch.runList");
     /** typically set from spec, to customize the launch part of the start effector */
+    @SetFromFlag("launch_attributes")
     public static final MapConfigKey<Object> CHEF_LAUNCH_ATTRIBUTES = new MapConfigKey<Object>(Object.class, "brooklyn.chef.launch.attributes");
     
     public static enum ChefModes {

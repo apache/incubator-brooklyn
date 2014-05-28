@@ -5,12 +5,17 @@ import java.util.Map;
 import brooklyn.entity.Entity;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.file.ArchiveTasks;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
@@ -28,7 +33,7 @@ public class ChefTasks {
     }
 
     public static TaskFactory<?> installCookbooks(final String chefDirectory, final Map<String,String> cookbooksAndUrls, final boolean force) {
-        return Tasks.<Void>builder().name("install cookbooks").body(
+        return Tasks.<Void>builder().name("install "+(cookbooksAndUrls==null ? "0" : cookbooksAndUrls.size())+" cookbook"+Strings.s(cookbooksAndUrls)).body(
                 new Runnable() {
                     public void run() {
                         Entity e = EffectorTasks.findEntity();
@@ -40,16 +45,46 @@ public class ChefTasks {
                 }).buildFactory();
     }
 
-    public static TaskFactory<?> installCookbook(String chefDirectory, String cookbook, String url, boolean force) {
-        // TODO if it's server, try knife first
-        // TODO support downloads from classpath / local server
-        return SshEffectorTasks.ssh(cdAndRun(chefDirectory, ChefBashCommands.downloadAndExpandCookbook(url, cookbook, force))).
-                summary("install cookbook "+cookbook).requiringExitCodeZero();
+    public static TaskFactory<?> installCookbook(final String chefDirectory, final String cookbookName, final String cookbookArchiveUrl, final boolean force) {
+        return new TaskFactory<TaskAdaptable<?>>() {
+            @Override
+            public TaskAdaptable<?> newTask() {
+                TaskBuilder<Void> tb = Tasks.<Void>builder().name("install cookbook "+cookbookName);
+                
+                String cookbookDir = Urls.mergePaths(chefDirectory, cookbookName);
+                String privateTmpDirContainingUnpackedCookbook = 
+                    Urls.mergePaths(chefDirectory, "tmp-"+Strings.makeValidFilename(cookbookName)+"-"+Identifiers.makeRandomId(4));
+
+                // TODO - skip the install earlier if it exists and isn't forced
+//                if (!force) {
+//                    // in builder.body, check 
+//                    // "ls "+cookbookDir
+//                    // and stop if it's zero
+//                    // remove reference to 'force' below
+//                }
+                
+                tb.add(ArchiveTasks.deploy(null, cookbookArchiveUrl, EffectorTasks.findSshMachine(), privateTmpDirContainingUnpackedCookbook).newTask());
+                
+                String installCmd = BashCommands.chain(
+                    "cd "+privateTmpDirContainingUnpackedCookbook,  
+                    "COOKBOOK_EXPANDED_DIR=`ls`",
+                    BashCommands.requireTest("`ls | wc -w` -eq 1", 
+                            "The deployed archive "+cookbookArchiveUrl+" must contain exactly one directory"),
+                    "mv $COOKBOOK_EXPANDED_DIR '../"+cookbookName+"'",
+                    "cd ..",
+                    "rm -rf '"+privateTmpDirContainingUnpackedCookbook+"'");
+                
+                installCmd = force ? BashCommands.alternatives("rm -rf "+cookbookDir, installCmd) : BashCommands.alternatives("ls "+cookbookDir+" > /dev/null 2> /dev/null", installCmd);
+                tb.add(SshEffectorTasks.ssh(installCmd).summary("renaming cookbook dir").requiringExitCodeZero().newTask());
+                
+                return tb.build();
+            }
+        };
     }
 
     protected static String cdAndRun(String targetDirectory, String command) {
-        return BashCommands.chain("mkdir -p "+targetDirectory,
-                "cd "+targetDirectory,
+        return BashCommands.chain("mkdir -p '"+targetDirectory+"'",
+                "cd '"+targetDirectory+"'",
                 command);
     }
 
@@ -58,11 +93,14 @@ public class ChefTasks {
         // TODO if it's server, try knife first
         // TODO configure add'l properties
         String phaseRb = 
-                "root = File.absolute_path(File.dirname(__FILE__))\n"+
-                "\n"+
-                "file_cache_path root\n"+
-//                "cookbook_path root + '/cookbooks'\n";
-                "cookbook_path '"+chefDirectory+"'\n";
+            "root = "
+            + "'"+runDirectory+"'" 
+            // recommended alternate to runDir is the following, but it is not available in some rubies
+            //+ File.absolute_path(File.dirname(__FILE__))"+
+            + "\n"+
+            "file_cache_path root\n"+
+//            "cookbook_path root + '/cookbooks'\n";
+            "cookbook_path '"+chefDirectory+"'\n";
 
         Map<String,Object> phaseJsonMap = MutableMap.of();
         if (optionalAttributes!=null)

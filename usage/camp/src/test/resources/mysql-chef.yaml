@@ -1,0 +1,26 @@
+name: chef-mysql-sample
+services:
+- type: chef:mysql
+  
+  cookbook_urls:
+    # the standard cookbooks should be packaged as tarballs, unless you have knife installed
+    mysql: file:///tmp/brooklyn-chef/cookbooks/mysql.tgz
+    openssl: file:///tmp/brooklyn-chef/cookbooks/openssl.tgz
+    
+  launch_attributes:
+    mysql:
+      # these attrs are required by the mysql cookbook under node['mysql']
+      # (many others are supported and can also be passed here)
+      server_debian_password: p4ssw0rd
+      server_root_password: p4ssw0rd
+      server_repl_password: p4ssw0rd
+      
+  # how to determine if the process is running and how to kill it
+  # (supported options are `service_name` and `pid_file`; typically pick one)
+  service_name: mysqld
+  #pid_file: /var/run/mysqld/mysqld.pid
+
+location:
+  byon:
+    hosts: 192.168.33.12
+    user: vagrant
