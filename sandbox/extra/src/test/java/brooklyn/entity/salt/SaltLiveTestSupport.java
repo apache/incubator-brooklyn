@@ -19,13 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.BrooklynMgmtContextTestSupport;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 
-public class SaltLiveTestSupport extends BrooklynMgmtContextTestSupport {
+public class SaltLiveTestSupport extends BrooklynAppLiveTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(SaltLiveTestSupport.class);
 

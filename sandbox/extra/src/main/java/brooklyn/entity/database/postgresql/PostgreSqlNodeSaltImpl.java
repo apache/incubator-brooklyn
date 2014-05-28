@@ -35,7 +35,8 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
     public static final Effector<String> EXECUTE_SCRIPT = Effectors.effector(String.class, "executeScript")
             .description("invokes a script")
             .parameter(ExecuteScriptEffectorBody.SCRIPT)
-            .impl(new ExecuteScriptEffectorBody()).build();
+            .impl(new ExecuteScriptEffectorBody())
+            .build();
 
     private SshFeed feed;
 
@@ -78,21 +79,23 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
             super.postStartCustom();
 
             // now run the creation script
-            String creationScript;
             String creationScriptUrl = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_URL);
-            if (creationScriptUrl != null)
+            String creationScript;
+            if (creationScriptUrl != null) {
                 creationScript = new ResourceUtils(entity()).getResourceAsString(creationScriptUrl);
-            else creationScript = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS);
+            } else {
+                creationScript = entity().getConfig(PostgreSqlNode.CREATION_SCRIPT_CONTENTS);
+            }
             entity().invoke(PostgreSqlNodeSaltImpl.EXECUTE_SCRIPT,
                     ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, creationScript).getAllConfig()).getUnchecked();
 
             // and finally connect sensors
-            ((PostgreSqlNodeSaltImpl)entity()).connectSensors();
+            ((PostgreSqlNodeSaltImpl) entity()).connectSensors();
         }
 
         @Override
         protected void preStopCustom() {
-            ((PostgreSqlNodeSaltImpl)entity()).disconnectSensors();
+            ((PostgreSqlNodeSaltImpl) entity()).disconnectSensors();
             super.preStopCustom();
         }
     }
@@ -111,7 +114,7 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
     }
 
     protected void connectSensors() {
-        setAttribute(DB_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
+        setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
         Location machine = Iterables.get(getLocations(), 0, null);
 
@@ -131,6 +134,26 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
 
     protected void disconnectSensors() {
         if (feed != null) feed.stop();
+    }
+
+    @Override
+    public Integer getPostgreSqlPort() { return getAttribute(POSTGRESQL_PORT); }
+
+    @Override
+    public String getSharedMemory() { return getConfig(SHARED_MEMORY); }
+
+    @Override
+    public Integer getMaxConnections() { return getConfig(MAX_CONNECTIONS); }
+
+    @Override
+    public String getShortName() {
+        return "PostgreSQL";
+    }
+
+    @Override
+    public String executeScript(String commands) {
+        return Entities.invokeEffector(this, this, EXECUTE_SCRIPT,
+                ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, commands).getAllConfig()).getUnchecked();
     }
 
 }

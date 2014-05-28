@@ -18,8 +18,8 @@ package brooklyn.entity.salt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
@@ -91,8 +91,8 @@ public class SaltLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
 
     protected void startMinionAsync() {
         // TODO make directories more configurable (both for ssh-drivers and for this)
-        String installDir = Urls.mergePaths(AbstractSoftwareProcessSshDriver.BROOKLYN_HOME_DIR, "salt-install");
-        String runDir = Urls.mergePaths(AbstractSoftwareProcessSshDriver.BROOKLYN_HOME_DIR,
+        String installDir = Urls.mergePaths(BrooklynServerConfig.getMgmtBaseDir(entity().getManagementContext()), "salt-install");
+        String runDir = Urls.mergePaths(BrooklynServerConfig.getMgmtBaseDir(entity().getManagementContext()),
                 "apps/"+entity().getApplicationId()+"/salt-entities/"+entity().getId());
 
         Boolean masterless = entity().getConfig(SaltConfig.MASTERLESS_MODE);
