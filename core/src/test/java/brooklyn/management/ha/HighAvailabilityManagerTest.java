@@ -44,7 +44,7 @@ public class HighAvailabilityManagerTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        currentTime = new AtomicLong(System.nanoTime());
+        currentTime = new AtomicLong(System.currentTimeMillis());
         ticker = new Ticker() {
             @Override public long read() {
                 return currentTime.get();
@@ -136,7 +136,7 @@ public class HighAvailabilityManagerTest {
     }
     
     private long currentTimeMillis() {
-        return TimeUnit.NANOSECONDS.toMillis(ticker.read());
+        return ticker.read();
     }
     
     private long incrementClock(long increment, TimeUnit unit) {
