@@ -22,18 +22,18 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
  * (e.g. <code>export MY_PID_FILE=$PID_FILE ; ./my_start.sh</code> or <code>nohup ./start.sh & ; echo $! > $PID_FILE ; sleep 5</code>),
  * and of course you can supply both {@link #DOWNLOAD_URL} and {@link #LAUNCH_COMMAND}.
  * <p>
- * TODO:
  * by default the PID is used to stop the process (kill followed by kill -9 if needed) and restart (process stop followed by process start),
- * but we could instead supply (through config keys)
- * <li> a custom CHECK_RUNNING_COMMAND 
- * <li> a custom STOP_COMMAND
- * <li> or specify a PID_FILE to use (done)
+ * but it is possible to override this behavior through config keys:
+ * <li> a custom {@link #CHECK_RUNNING_COMMAND}
+ * <li> a custom {@link #STOP_COMMAND}
+ * <li> specify which {@link SoftwareProcess#PID_FILE} to use
  */
 @ImplementedBy(VanillaSoftwareProcessImpl.class)
 public interface VanillaSoftwareProcess extends SoftwareProcess {
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
-    ConfigKey<String> LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("launch.command", "command to run to launch the process", "./start.sh");
-    // TODO CHECK_RUNNING_COMMAND STOP_COMMAND PID_FILE(templated config key and attribute?)
-    
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "0.0.0");
+
+    ConfigKey<String> LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("launch.command", "command to run to launch the process", "./start.sh");
+    ConfigKey<String> CHECK_RUNNING_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.command", "command to determine whether the process is running");
+    ConfigKey<String> STOP_COMMAND = ConfigKeys.newStringConfigKey("stop.command", "command to run to stop the process");
 }
