@@ -644,7 +644,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
             if ("docker".equals(this.getProvider())) {
                 Map<Integer, Integer> portMappings = getPortMappingsForDocker(sshMachineLocation);
-                PortForwardManager portForwardManager = getConfig(PORT_FORWARDING_MANAGER);
+                PortForwardManager portForwardManager = setup.get(PORT_FORWARDING_MANAGER);
                 if (portForwardManager != null) {
                     for(Integer containerPort : portMappings.keySet()) {
                         Integer hostPort = portMappings.get(containerPort);
