@@ -30,6 +30,7 @@ import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -191,7 +192,16 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             Timer timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override public void run() {
-                    connectSensors();
+                    try {
+                        if (getManagementSupport().isNoLongerManaged()) {
+                            log.debug("Entity {} no longer managed; ignoring scheduled connect sensors on rebind", SoftwareProcessImpl.this);
+                            return;
+                        }
+                        connectSensors();
+                    } catch (Throwable e) {
+                        log.warn("Problem connecting sensors on rebind of "+SoftwareProcessImpl.this, e);
+                        Exceptions.propagateIfFatal(e);
+                    }
                 }
             }, delay);
         }
