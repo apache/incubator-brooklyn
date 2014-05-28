@@ -128,6 +128,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
@@ -1435,33 +1436,53 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         try {
             if (setup.getDescription()==null) setCreationString(setup);
             
-            String rawId = (String) checkNotNull(setup.getStringKey("id"), "id");
-            String hostname = (String) setup.getStringKey("hostname");
+            final String rawId = (String) setup.getStringKey("id");
+            final String rawHostname = (String) setup.getStringKey("hostname");
             String user = checkNotNull(getUser(setup), "user");
-            String region = (String) setup.getStringKey("region");
-            String id = rawId.contains("/") ? rawId : (((region != null) ? region+"/" : "") + rawId);
+            final String rawRegion = (String) setup.getStringKey("region");
+            
+//            String id = rawId.contains("/") ? rawId : (((rawRegion != null) ? rawRegion+"/" : "") + rawId);
             
             LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
-                    new Object[] {id, user, (hostname != null ? hostname : "<unspecified>"), getProvider()});
+                    new Object[] {rawId==null ? "<lookup>" : rawId, 
+                        user, 
+                        (rawHostname != null ? rawHostname : "<unspecified>"), 
+                        getProvider()});
             
-            // can we allow re-use ?  previously didn't
             ComputeService computeService = JcloudsUtil.findComputeService(setup, true);
-            NodeMetadata node = computeService.getNodeMetadata(id);
-            if (node == null) {
-                throw new IllegalArgumentException("Node not found with id "+id);
-            }
-    
+            
+            Set<? extends NodeMetadata> candidateNodes = computeService.listNodesDetailsMatching(new Predicate<ComputeMetadata>() {
+                @Override
+                public boolean apply(ComputeMetadata input) {
+                    // ID exact match
+                    if (rawId!=null && rawId.equals(input.getId())) return true;
+                    // AWS format
+                    if (rawId!=null && rawRegion!=null && (rawRegion+"/"+rawId).equals(input.getId())) return true;
+                    // else do node metadata lookup
+                    if (!(input instanceof NodeMetadata)) return false;
+                    if (rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
+                    if (((NodeMetadata)input).getPublicAddresses().contains(rawHostname)) return true;
+                    // don't do private IP's because those might be repeated
+                    return false;
+                }
+            });
+            
+            if (candidateNodes.isEmpty())
+                throw new IllegalArgumentException("Jclouds node not found for rebind, looking for id="+rawId+" and hostname="+rawHostname);
+            if (candidateNodes.size()>1)
+                throw new IllegalArgumentException("Jclouds node for rebind matching multiple, looking for id="+rawId+" and hostname="+rawHostname+": "+candidateNodes);
+
+            NodeMetadata node = Iterables.getOnlyElement(candidateNodes);
             String pkd = LocationConfigUtils.getPrivateKeyData(setup);
             if (truth(pkd)) {
                 LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(new Credentials(user, pkd));
                 //override credentials
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
             }
+            
             // TODO confirm we can SSH ?
-
-            if (hostname == null) {
-                hostname = getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
-            }
+            // and if rawHostname not set, might want to do:
+            // getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
 
             return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
             
