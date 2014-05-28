@@ -13,6 +13,9 @@ import brooklyn.util.flags.TypeCoercions;
  */
 public class DeltaEnricher<T extends Number> extends AbstractTransformingEnricher<T> {
     Number last = 0;
+
+    public DeltaEnricher() { // for rebinding
+    }
     
     public DeltaEnricher(Entity producer, Sensor<T> source, AttributeSensor<T> target) {
         super(producer, source, target);

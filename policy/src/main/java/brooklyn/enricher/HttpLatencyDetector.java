@@ -82,7 +82,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
     final AtomicReference<String> url = new AtomicReference<String>();
     HttpFeed httpFeed = null;
 
-    HttpLatencyDetector() {
+    public HttpLatencyDetector() { // for rebinding, and for EnricherSpec usage
     }
     
     protected HttpLatencyDetector(Map flags) {

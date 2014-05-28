@@ -10,6 +10,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
 /**
@@ -50,8 +51,12 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
     private final LinkedList<Long> timestamps = new LinkedList<Long>();
     volatile ConfidenceQualifiedNumber lastAverage = new ConfidenceQualifiedNumber(0d,0d);
     
+    @SetFromFlag
     Duration timePeriod;
-    
+
+    public RollingTimeWindowMeanEnricher() { // for rebinding
+    }
+
     public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, 
         AttributeSensor<Double> target, Duration timePeriod) {
         super(producer, source, target);

@@ -6,6 +6,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
+import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Convenience base for transforming a single sensor into a single new sensor of the same type
@@ -13,9 +14,18 @@ import brooklyn.event.basic.BasicSensorEvent;
  * @deprecated since 0.7.0; use {@link Enrichers.builder()}
  */
 public abstract class AbstractTypeTransformingEnricher<T,U> extends AbstractEnricher implements SensorEventListener<T> {
+    
+    @SetFromFlag
     private Entity producer;
+    
+    @SetFromFlag
     private Sensor<T> source;
+    
+    @SetFromFlag
     protected Sensor<U> target;
+
+    public AbstractTypeTransformingEnricher() { // for rebind
+    }
     
     public AbstractTypeTransformingEnricher(Entity producer, Sensor<T> source, Sensor<U> target) {
         this.producer = producer;

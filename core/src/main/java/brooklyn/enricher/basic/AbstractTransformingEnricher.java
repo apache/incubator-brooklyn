@@ -10,6 +10,9 @@ import brooklyn.event.Sensor;
  */
 public abstract class AbstractTransformingEnricher<T> extends AbstractTypeTransformingEnricher<T,T> {
 
+    public AbstractTransformingEnricher() { // for rebinding
+    }
+    
     public AbstractTransformingEnricher(Entity producer, Sensor<T> source, Sensor<T> target) {
         super(producer, source, target);
     }
