@@ -733,6 +733,7 @@
         <profile>
             <id>Sandbox</id>
             <modules>
+                <module>sandbox/extra</module>
                 <module>sandbox/database</module>
                 <module>sandbox/web-acceptance</module>
                 <module>sandbox/dropwizard</module>
