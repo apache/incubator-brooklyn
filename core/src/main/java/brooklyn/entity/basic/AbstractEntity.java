@@ -1105,12 +1105,21 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     public void addEnricher(Enricher enricher) {
         enrichers.add((AbstractEnricher) enricher);
         ((AbstractEnricher)enricher).setEntity(this);
+        
+        getManagementSupport().getEntityChangeListener().onEnrichersChanged();
+        // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
     }
 
     @Override
     public boolean removeEnricher(Enricher enricher) {
         ((AbstractEnricher)enricher).destroy();
-        return enrichers.remove(enricher);
+        boolean changed = enrichers.remove(enricher);
+        
+        if (changed) {
+            getManagementSupport().getEntityChangeListener().onEnrichersChanged();
+        }
+        return changed;
+
     }
 
     @Override
