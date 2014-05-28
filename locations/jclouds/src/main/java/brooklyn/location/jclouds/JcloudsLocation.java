@@ -1441,10 +1441,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             String user = checkNotNull(getUser(setup), "user");
             final String rawRegion = (String) setup.getStringKey("region");
             
-//            String id = rawId.contains("/") ? rawId : (((rawRegion != null) ? rawRegion+"/" : "") + rawId);
-            
             LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
-                    new Object[] {rawId==null ? "<lookup>" : rawId, 
+                    new Object[] {rawId!=null ? rawId : "<lookup>", 
                         user, 
                         (rawHostname != null ? rawHostname : "<unspecified>"), 
                         getProvider()});
@@ -1455,13 +1453,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 @Override
                 public boolean apply(ComputeMetadata input) {
                     // ID exact match
-                    if (rawId!=null && rawId.equals(input.getId())) return true;
-                    // AWS format
-                    if (rawId!=null && rawRegion!=null && (rawRegion+"/"+rawId).equals(input.getId())) return true;
+                    if (rawId!=null) {
+                        if (rawId.equals(input.getId())) return true;
+                        // AWS format
+                        if (rawRegion!=null && (rawRegion+"/"+rawId).equals(input.getId())) return true;
+                    }
                     // else do node metadata lookup
                     if (!(input instanceof NodeMetadata)) return false;
-                    if (rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
-                    if (((NodeMetadata)input).getPublicAddresses().contains(rawHostname)) return true;
+                    if (rawHostname!=null) {
+                        if (rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
+                        if (((NodeMetadata)input).getPublicAddresses().contains(rawHostname)) return true;
+                    }
                     // don't do private IP's because those might be repeated
                     return false;
                 }
@@ -1481,8 +1483,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             
             // TODO confirm we can SSH ?
-            // and if rawHostname not set, might want to do:
-            // getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
+            // NB if rawHostname not set, get the hostname using getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
 
             return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
             
