@@ -20,7 +20,8 @@ public class DynamicToyMySqlEntityChef implements ChefConfig {
         
         ChefConfigs.addToLaunchRunList(spec, "mysql::server");
         spec.configure(PID_FILE, "/var/run/mysqld/mysql*.pid");
-        spec.configure(SERVICE_NAME, "mysql");
+        // it's sometimes mysql, sometimes mysqld, depending ubuntu/centos:
+//        spec.configure(SERVICE_NAME, "mysql");
         
         // chef mysql fails on first run but works on second if switching between server and solo modes
         spec.configure(ChefConfig.CHEF_RUN_CONVERGE_TWICE, true);

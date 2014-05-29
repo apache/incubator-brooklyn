@@ -2,18 +2,17 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
-import com.google.common.reflect.TypeToken;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.reflect.TypeToken;
 
 /**
  * An entity that, on start({@link MachineProvisioningLocation}), will obtain a machine
@@ -25,6 +24,7 @@ import brooklyn.util.flags.SetFromFlag;
  * @author aled
  */
 @ImplementedBy(SameServerEntityImpl.class)
+@SuppressWarnings("serial")
 public interface SameServerEntity extends Entity, Startable {
 
     @SetFromFlag("provisioningProperties")
@@ -35,6 +35,7 @@ public interface SameServerEntity extends Entity, Startable {
     
     AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
 
+    @SuppressWarnings("rawtypes")
     AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
     

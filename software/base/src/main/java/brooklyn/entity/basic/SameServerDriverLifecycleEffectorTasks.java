@@ -60,6 +60,7 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
         return ports;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Map<String, Object> obtainProvisioningFlags(MachineProvisioningLocation<?> location) {
         Map<String, Object> result = super.obtainProvisioningFlags(location);
@@ -78,6 +79,7 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
     }
 
     /** @return provisioning flags for the given entity */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected Map<String,Object> obtainProvisioningFlags(Entity entity, MachineProvisioningLocation location) {
         Map<String,Object> result = Maps.newLinkedHashMap();
         result.putAll(Maps.newLinkedHashMap(location.getProvisioningFlags(ImmutableList.of(entity.getEntityType().getName()))));
