@@ -241,7 +241,7 @@ public class ArchiveUtils {
      * @see #install(SshMachineLocation, String, String, int)
      */
     public static void deploy(ResourceUtils resolver, Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String destDir, boolean keepArchiveAfterUnpacking, String optionalTmpDir, String optionalDestFile) {
-        if (optionalDestFile==null) optionalDestFile = Urls.getFilename(Preconditions.checkNotNull(archiveUrl, "archiveUrl"));
+        if (optionalDestFile==null) optionalDestFile = Urls.getBasename(Preconditions.checkNotNull(archiveUrl, "archiveUrl"));
         if (Strings.isBlank(optionalDestFile)) 
             throw new IllegalStateException("Not given filename and cannot infer archive type from '"+archiveUrl+"'");
         if (optionalTmpDir==null) optionalTmpDir=Preconditions.checkNotNull(destDir, "destDir");

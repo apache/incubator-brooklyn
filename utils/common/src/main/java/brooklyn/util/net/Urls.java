@@ -145,8 +145,9 @@ public class Urls {
         }
     }
 
-    /** return the last segment of the given url before any '?', typically its name */
-    public static String getFilename(String url) {
+    /** return the last segment of the given url before any '?', e.g. the filename or last directory name in the case of directories
+     * (cf unix `basename`) */
+    public static String getBasename(String url) {
         if (url==null) return null;
         if (getProtocol(url)!=null) {
             int firstQ = url.indexOf('?');

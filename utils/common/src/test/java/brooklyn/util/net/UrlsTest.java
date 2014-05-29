@@ -35,13 +35,13 @@ public class UrlsTest {
     }
 
     @Test
-    public void testGetFilename() {
-        assertEquals(Urls.getFilename("http://somewhere.com/path/to/file.txt"), "file.txt");
-        assertEquals(Urls.getFilename("http://somewhere.com/path/to/dir/"), "dir");
-        assertEquals(Urls.getFilename("http://somewhere.com/path/to/file.txt?with/optional/suffice"), "file.txt");
-        assertEquals(Urls.getFilename("filewith?.txt"), "filewith?.txt");
-        assertEquals(Urls.getFilename(""), "");
-        assertEquals(Urls.getFilename(null), null);
+    public void testGetBasename() {
+        assertEquals(Urls.getBasename("http://somewhere.com/path/to/file.txt"), "file.txt");
+        assertEquals(Urls.getBasename("http://somewhere.com/path/to/dir/"), "dir");
+        assertEquals(Urls.getBasename("http://somewhere.com/path/to/file.txt?with/optional/suffice"), "file.txt");
+        assertEquals(Urls.getBasename("filewith?.txt"), "filewith?.txt");
+        assertEquals(Urls.getBasename(""), "");
+        assertEquals(Urls.getBasename(null), null);
     }
     
 }
