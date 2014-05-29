@@ -4,11 +4,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -16,7 +21,6 @@ import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
@@ -28,20 +32,16 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
-import brooklyn.management.SubscriptionHandle;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.WebAppMonitor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -51,17 +51,29 @@ import com.google.common.collect.Sets;
 
 public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTestFixture<StartableApplication> {
 
-    // FIXME Fails because:
-    //  - ControlledDynamicWebAppCluster should do rescanEntities to get all the members of its child.
-    //    But it doesn't on rebind; when should it do this?
+    private static final Logger LOG = LoggerFactory.getLogger(RebindWebClusterDatabaseExampleAppIntegrationTest.class);
 
     private Location origLoc;
+    private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
+    private ExecutorService executor;
 
     @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
         super.setUp();
         origLoc = origManagementContext.getLocationRegistry().resolve("localhost");
+        executor = Executors.newCachedThreadPool();
+        webAppMonitors.clear();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    @Override
+    public void tearDown() throws Exception {
+        for (WebAppMonitor monitor : webAppMonitors) {
+            monitor.terminate();
+        }
+        if (executor != null) executor.shutdownNow();
+        super.tearDown();
     }
     
     @Override
@@ -69,6 +81,16 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         return origManagementContext.getEntityManager().createEntity(EntitySpec.create(StartableApplication.class)
                 .impl(WebClusterDatabaseExampleApp.class)
                 .configure(DynamicCluster.INITIAL_SIZE, 2));
+    }
+    
+    private WebAppMonitor newWebAppMonitor(String url, int expectedResponseCode) {
+        WebAppMonitor monitor = new WebAppMonitor(url)
+//              .delayMillis(0) FIXME Re-enable to fast polling
+                .expectedResponseCode(expectedResponseCode)
+                .logFailures(LOG);
+        webAppMonitors.add(monitor);
+        executor.execute(monitor);
+        return monitor;
     }
     
     @Override
@@ -92,8 +114,15 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         
         assertAppFunctional(origApp);
         
+        String clusterUrl = checkNotNull(origApp.getAttribute(WebClusterDatabaseExampleApp.ROOT_URL), "cluster url");
+        WebAppMonitor monitor = newWebAppMonitor(clusterUrl, 200);
+        
         newApp = rebind(false);
         assertAppFunctional(newApp);
+
+        // expect no failures during rebind
+        monitor.assertNoFailures("hitting nginx url");
+        monitor.terminate();
     }
     
     private void assertAppFunctional(StartableApplication app) throws Exception {
@@ -114,9 +143,8 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         final String expectedJdbcUrl = String.format("jdbc:%s%s?user=%s\\&password=%s", dbUrl, WebClusterDatabaseExampleApp.DB_TABLE, 
                 WebClusterDatabaseExampleApp.DB_USERNAME, WebClusterDatabaseExampleApp.DB_PASSWORD);
 
-        // FIXME the rebind policy is reconfiguring nginx temporarily; the members are being removed!
-        Thread.sleep(10000);
-        
+        WebAppMonitor monitor = newWebAppMonitor(clusterUrl, 200);
+
         // expect web-app to be reachable, and wired up to database
         HttpTestUtils.assertHttpStatusCodeEquals(clusterUrl, 200);
         for (Entity appserver : appservers) {
@@ -148,10 +176,8 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         Iterable<Enricher> propagatorEnrichers = Iterables.filter(web.getEnrichers(), Predicates.instanceOf(Propagator.class));
         assertEquals(Iterables.size(propagatorEnrichers), 2, "propagatorEnrichers="+propagatorEnrichers);
 
-        // check we see evidence of the enrichers having an effect, and first triggering some activity
-        for (int i = 0; i < 10; i++) {
-            HttpTestUtils.assertHttpStatusCodeEquals(clusterUrl, 200);
-        }
+        // Check we see evidence of the enrichers having an effect.
+        // Relying on WebAppMonitor to stimulate activity.
         EntityTestUtils.assertAttributeEqualsEventually(app, WebClusterDatabaseExampleApp.APPSERVERS_COUNT, 3);
         EntityTestUtils.assertAttributeChangesEventually(web, DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW);
         EntityTestUtils.assertAttributeChangesEventually(app, DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW);
@@ -167,5 +193,8 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
             @Override public void run() {
                 assertFalse(Entities.isManaged(removedAppserver));
             }});
+        
+        monitor.assertNoFailures("hitting nginx url");
+        monitor.terminate();
     }
 }
