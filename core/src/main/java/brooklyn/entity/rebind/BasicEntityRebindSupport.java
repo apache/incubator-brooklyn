@@ -13,6 +13,7 @@ import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
@@ -92,6 +93,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         addLocations(rebindContext, memento);
 
         doReconstruct(rebindContext, memento);
+        ((AbstractEntity)entity).rebind();
     }
     
     /**

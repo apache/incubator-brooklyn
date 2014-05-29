@@ -67,12 +67,20 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         newManagementContext = newApp.getManagementContext();
         return newApp;
     }
+
+    protected T rebind(boolean checkSerializable) throws Exception {
+        // TODO What are sensible defaults?!
+        return rebind(checkSerializable, false);
+    }
     
     @SuppressWarnings("unchecked")
-    protected T rebind(boolean checkSerializable) throws Exception {
+    protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
         if (checkSerializable) {
             RebindTestUtils.checkCurrentMementoSerializable(origApp);
+        }
+        if (terminateOrigManagementContext) {
+            origManagementContext.terminate();
         }
         return (T) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }

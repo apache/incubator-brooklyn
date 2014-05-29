@@ -520,6 +520,15 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
     
     /**
+     * Called by framework (in new-style entities where EntitySpec was used) on rebind, 
+     * after configuring but before the entity is managed.
+     * Note that {@link #init()} will not be called on rebind.
+     */
+    public void rebind() {
+        // no-op
+    }
+    
+    /**
      * Adds this as a child of the given entity; registers with application if necessary.
      */
     @Override

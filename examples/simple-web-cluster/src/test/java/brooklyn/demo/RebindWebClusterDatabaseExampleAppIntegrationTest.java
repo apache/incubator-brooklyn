@@ -51,6 +51,10 @@ import com.google.common.collect.Sets;
 
 public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTestFixture<StartableApplication> {
 
+    // FIXME Fails because:
+    //  - ControlledDynamicWebAppCluster should do rescanEntities to get all the members of its child.
+    //    But it doesn't on rebind; when should it do this?
+
     private Location origLoc;
 
     @BeforeMethod(alwaysRun=true)
@@ -149,10 +153,10 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
             HttpTestUtils.assertHttpStatusCodeEquals(clusterUrl, 200);
         }
         EntityTestUtils.assertAttributeEqualsEventually(app, WebClusterDatabaseExampleApp.APPSERVERS_COUNT, 3);
-        assertAttributeChangesEventually(web, DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW);
-        assertAttributeChangesEventually(app, DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW);
-        assertAttributeChangesEventually(web, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT);
-        assertAttributeChangesEventually(web, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW);
+        EntityTestUtils.assertAttributeChangesEventually(web, DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW);
+        EntityTestUtils.assertAttributeChangesEventually(app, DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW);
+        EntityTestUtils.assertAttributeChangesEventually(web, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT);
+        EntityTestUtils.assertAttributeChangesEventually(web, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW);
 
         // Restore the web-cluster to its original size of 2
         autoScalerPolicy.setConfig(AutoScalerPolicy.MIN_POOL_SIZE, 2);
@@ -163,24 +167,5 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
             @Override public void run() {
                 assertFalse(Entities.isManaged(removedAppserver));
             }});
-    }
-
-    private void assertAttributeChangesEventually(final Entity entity, final AttributeSensor<?> attribute) {
-        final Object origValue = entity.getAttribute(attribute);
-        final AtomicBoolean changed = new AtomicBoolean();
-        SubscriptionHandle handle = ((EntityInternal)entity).subscribe(entity, attribute, new SensorEventListener<Object>() {
-            @Override public void onEvent(SensorEvent<Object> event) {
-                if (!Objects.equal(origValue, event.getValue())) {
-                    changed.set(true);
-                }
-            }});
-        try {
-            Asserts.succeedsEventually(new Runnable() {
-                @Override public void run() {
-                    assertTrue(changed.get(), entity+" -> "+attribute+" not changed");
-                }});
-        } finally {
-            ((EntityInternal)entity).unsubscribe(entity, handle);
-        }
     }
 }

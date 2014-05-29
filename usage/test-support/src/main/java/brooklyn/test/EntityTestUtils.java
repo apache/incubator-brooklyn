@@ -5,13 +5,19 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.management.SubscriptionHandle;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -97,5 +103,24 @@ public class EntityTestUtils {
                 Collection<Entity> members = group.getMembers();
                 assertEquals(members.size(), expected, "members="+members);
             }});
+    }
+    
+    public static void assertAttributeChangesEventually(final Entity entity, final AttributeSensor<?> attribute) {
+        final Object origValue = entity.getAttribute(attribute);
+        final AtomicBoolean changed = new AtomicBoolean();
+        SubscriptionHandle handle = ((EntityLocal)entity).subscribe(entity, attribute, new SensorEventListener<Object>() {
+            @Override public void onEvent(SensorEvent<Object> event) {
+                if (!Objects.equal(origValue, event.getValue())) {
+                    changed.set(true);
+                }
+            }});
+        try {
+            Asserts.succeedsEventually(new Runnable() {
+                @Override public void run() {
+                    assertTrue(changed.get(), entity+" -> "+attribute+" not changed");
+                }});
+        } finally {
+            ((EntityLocal)entity).unsubscribe(entity, handle);
+        }
     }
 }

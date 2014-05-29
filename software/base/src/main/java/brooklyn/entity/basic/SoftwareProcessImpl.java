@@ -215,11 +215,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         super.onManagementStarting();
         
         Lifecycle state = getAttribute(SERVICE_STATE);
-        if (state == Lifecycle.RUNNING) {
-            rebind();
-        } else if (state != null && state != Lifecycle.CREATED) {
-            log.warn("On start-up of {}, not (re)binding because state is {}", this, state);
-    	} else {
+        if (state == null || state == Lifecycle.CREATED) {
             // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
             setAttribute(SERVICE_UP, false);
             setAttribute(SERVICE_STATE, Lifecycle.CREATED);
@@ -236,11 +232,18 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         }
     }
     
-    protected void rebind() {
+    @Override
+    public void rebind() {
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state == null || state != Lifecycle.RUNNING) {
+            log.warn("On rebind of {}, not rebinding because state is {}", this, state);
+            return;
+        }
+
         // e.g. rebinding to a running instance
         // FIXME For rebind, what to do about things in STARTING or STOPPING state?
         // FIXME What if location not set?
-        log.info("Connecting to pre-running service: {}", this);
+        log.info("Rebind {} connecting to pre-running service", this);
         
         MachineLocation machine = getMachineOrNull();
         if (machine != null) {
