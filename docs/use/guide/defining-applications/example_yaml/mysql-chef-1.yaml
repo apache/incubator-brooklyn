@@ -1,7 +1,6 @@
 name: chef-mysql-sample
 services:
 - type: chef:mysql
-  id: db
   
   cookbook_urls:
     # only needed for chef solo; URL can be local to brooklyn, or github, etc...
@@ -13,9 +12,9 @@ services:
   launch_attributes:
     mysql:
       # these attrs are required by the mysql cookbook under node['mysql']
-      server_root_password: $brooklyn:component("db").config("mysql.password")
-      server_repl_password: $brooklyn:component("db").config("mysql.password")
-      server_debian_password: $brooklyn:component("db").config("mysql.password")
+      server_root_password: p4ssw0rd
+      server_repl_password: p4ssw0rd
+      server_debian_password: p4ssw0rd
       # many others are attrs are supported by the cookbook and can be passed here...
       
   # how to determine if the process is running and how to kill it
@@ -23,6 +22,3 @@ services:
   # here we use the pid_file because the service_name varies, mysql on centos, mysqld on ubuntu!)
   #service_name: mysqld
   pid_file: /var/run/mysqld/mysqld.pid
-    
-brooklyn.config:
-  mysql.password: p4ssw0rd
