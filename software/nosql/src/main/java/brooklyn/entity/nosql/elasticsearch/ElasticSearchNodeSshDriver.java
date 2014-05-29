@@ -1,0 +1,70 @@
+package brooklyn.entity.nosql.elasticsearch;
+
+import static java.lang.String.format;
+
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.ssh.BashCommands;
+
+public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver implements ElasticSearchNodeDriver {
+
+    public ElasticSearchNodeSshDriver(EntityLocal entity, SshMachineLocation machine) {
+        super(entity, machine);
+    }
+
+    @Override
+    public void install() {
+        DownloadResolver resolver = Entities.newDownloader(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+        
+        List<String> commands = ImmutableList.<String>builder()
+            .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
+            .add(String.format("tar zxvf %s", saveAs))
+            .build();
+        
+        newScript(INSTALLING).body.append(commands).execute();
+        
+        setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("elasticsearch-%s", getVersion())));
+    }
+
+    @Override
+    public void customize() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void launch() {
+        String pidFile = getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME;
+        entity.setAttribute(ElasticSearchNode.PID_FILE, pidFile);
+        newScript(MutableMap.of("usePidFile", false), LAUNCHING)
+            .updateTaskAndFailOnNonZeroResultCode()
+            .body.append(String.format("%s/bin/elasticsearch -d -p %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), pidFile))
+            .execute();
+    }
+    
+    @Override
+    public boolean isRunning() {
+        return newScript(MutableMap.of("usePidFile", true), CHECK_RUNNING).execute() == 0;
+    }
+    
+    @Override
+    public void stop() {
+        newScript(MutableMap.of("usePidFile", true), STOPPING).execute();
+    }
+    
+    @Override
+    public void kill() {
+        newScript(MutableMap.of("usePidFile", true), KILLING).execute();
+    }
+
+}
