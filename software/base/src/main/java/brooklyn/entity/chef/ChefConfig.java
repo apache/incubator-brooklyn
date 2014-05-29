@@ -30,6 +30,7 @@ public interface ChefConfig {
     public static final SetConfigKey<String> CHEF_RUN_LIST = new SetConfigKey<String>(String.class, "brooklyn.chef.runList");
     
     /** typically set from spec, to customize the launch part of the start effector */
+    @SetFromFlag("launch_run_list")
     public static final SetConfigKey<String> CHEF_LAUNCH_RUN_LIST = new SetConfigKey<String>(String.class, "brooklyn.chef.launch.runList");
     /** typically set from spec, to customize the launch part of the start effector */
     @SetFromFlag("launch_attributes")

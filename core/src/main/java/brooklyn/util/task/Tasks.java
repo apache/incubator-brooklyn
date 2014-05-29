@@ -99,13 +99,17 @@ public class Tasks {
     /** attempt to resolve the given value as the given type, waiting on futures, submitting if necessary,
      * and coercing as allowed by TypeCoercions;
      * contextMessage (optional) will be displayed in status reports while it waits (e.g. the name of the config key being looked up) */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
+        return resolveValue(v, type, exec, contextMessage, false);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage, boolean forceDeep) throws ExecutionException, InterruptedException {
         if (type==null) 
             throw new NullPointerException("type cannot be null in resolveValue, for '"+v+"'"+(contextMessage!=null ? ", "+contextMessage : ""));
         //if the expected type is a closure or map and that's what we have, we're done (or if it's null);
         //but not allowed to return a future or DeferredSupplier as the resolved value
-        if (v==null || (type.isInstance(v) && !Future.class.isInstance(v) && !DeferredSupplier.class.isInstance(v)))
+        if (v==null || (!forceDeep && type.isInstance(v) && !Future.class.isInstance(v) && !DeferredSupplier.class.isInstance(v)))
             return (T) v;
         try {
             //if it's a task or a future, we wait for the task to complete
@@ -146,7 +150,7 @@ public class Tasks {
                 Map result = Maps.newLinkedHashMap();
                 for (Map.Entry<?,?> entry : ((Map<?,?>)v).entrySet()) {
                     result.put(entry.getKey(), resolveValue(entry.getValue(), type, exec,
-                            (contextMessage!=null ? contextMessage+", " : "") + "map entry "+entry.getKey()));
+                            (contextMessage!=null ? contextMessage+", " : "") + "map entry "+entry.getKey(), forceDeep));
                 }
                 return (T) result;
                 
@@ -155,7 +159,7 @@ public class Tasks {
                 int count = 0;
                 for (Object it : (List)v) {
                     result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
+                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
                     count++;
                 }
                 return (T) result;
@@ -165,7 +169,7 @@ public class Tasks {
                 int count = 0;
                 for (Object it : (Set)v) {
                     result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
+                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
                     count++;
                 }
                 return (T) result;
@@ -175,7 +179,7 @@ public class Tasks {
                 int count = 0;
                 for (Object it : (Iterable)v) {
                     result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count));
+                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
                     count++;
                 }
                 return (T) result;
@@ -187,14 +191,14 @@ public class Tasks {
         } catch (Exception e) {
             throw new IllegalArgumentException("Error resolving "+(contextMessage!=null ? contextMessage+", " : "")+v+", in "+exec+": "+e, e);
         }
-        return resolveValue(v, type, exec, contextMessage);
+        return resolveValue(v, type, exec, contextMessage, forceDeep);
     }
 
     /**
      * @see #resolveDeepValue(Object, Class, ExecutionContext, String)
      */
     public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec);
+        return resolveDeepValue(v, type, exec, null);
     }
 
     /**
@@ -204,16 +208,20 @@ public class Tasks {
      * 
      *   {@code Object result = resolveDeepValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
      * 
-     * This differs from {@link #resolveValue(Object, Class, ExecutionContext, String)} only in its 
+     * This differs from {@link #resolveValue(Object, Class, ExecutionContext, String)} mainly in its 
      * use of generics and its return type. Even though the {@link #resolveValue(Object, Class, ExecutionContext, String)}
      * method does "deep" conversion of futures contained within iterables/maps, the return type implies
      * that it is the top-level object that should be coerced. For example, the following will try to return a String, 
      * when in fact it is a map, giving a {@link ClassCastException}.
      * 
-     *   {@code String result = resolveValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
+     *   {@code String result = resolveValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)}
+     *   
+     * The one other difference of note is that this forces the resolution to go deep when the type is vague,
+     * e.g. if the requested type is an Object, {@link #resolveValue(Object, Class, ExecutionContext, String)}
+     * will decide that it matches a Map and not recurse on it, whereas this will recurse on it.
      */
     public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec, contextMessage);
+        return resolveValue(v, type, exec, contextMessage, true);
     }
 
     /** sets extra status details on the current task, if possible (otherwise does nothing).

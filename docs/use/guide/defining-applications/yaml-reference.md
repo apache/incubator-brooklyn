@@ -134,7 +134,8 @@ concise DSL defined here:
 * `$brooklyn:component("ID")` refers to a Brooklyn component with the given ID; you can then access the following subfields:
   * `.attributeWhenReady("sensor")` will store a future which will be blocked when it is accessed,
     until the given `sensor` from the component `ID` has a "truthy" (i.e. non-trivial, non-empty, non-zero) value
-  * TODO 
+  * `.config("key")` will insert the value set against the given key at this entity (or nearest ancestor);
+    can be used to supply config at the root which is used in multiple places in the plan
 * `$brooklyn:component("scope", "ID")` is also supported, to limit scope to any of
   * `global`: looks for the `ID` anywhere in the plan
   * `child`: looks for the `ID` anywhere in the child only

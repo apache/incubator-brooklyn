@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -16,6 +17,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.util.task.TaskBuilder;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -99,6 +101,21 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 			}
 		};
 	}
+	
+	public BrooklynDslDeferredSupplier<Object> config(final String keyName) {
+        return new BrooklynDslDeferredSupplier<Object>() {
+            @Override
+            public Task<Object> newTask() {
+                return Tasks.builder().name("retrieving config for "+keyName).dynamic(false).body(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        Entity targetEntity = DslComponent.this.get();
+                        return targetEntity.getConfig(ConfigKeys.newConfigKey(Object.class, keyName));
+                    }
+                }).build();
+            }
+        };
+    }
 	
 	public static enum Scope {
 	    GLOBAL ("global"),

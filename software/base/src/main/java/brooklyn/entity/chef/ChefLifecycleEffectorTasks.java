@@ -18,6 +18,7 @@ import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.Jsonya.Navigator;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -153,7 +154,9 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         attrs.at("config");
         attrs.put( entity().getAllConfigBag().getAllConfig() );
         // and put launch attrs at root
-        attrs.root().put(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES));
+        try {
+            attrs.root().put((Map<?,?>)Tasks.resolveDeepValue(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES), Object.class, entity().getExecutionContext()));
+        } catch (Exception e) { Exceptions.propagate(e); }
         
         Collection<? extends String> runList = entity().getConfig(CHEF_LAUNCH_RUN_LIST);
         if (runList==null) runList = entity().getConfig(CHEF_RUN_LIST);
@@ -183,7 +186,9 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         attrs.at("config");
         attrs.put( entity().getAllConfigBag().getAllConfig() );
         // and put launch attrs at root
-        attrs.root().put(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES));
+        try {
+            attrs.root().put((Map<?,?>)Tasks.resolveDeepValue(entity().getConfig(CHEF_LAUNCH_ATTRIBUTES), Object.class, entity().getExecutionContext()));
+        } catch (Exception e) { Exceptions.propagate(e); }
 
         Collection<? extends String> runList = entity().getConfig(CHEF_LAUNCH_RUN_LIST);
         if (runList==null) runList = entity().getConfig(CHEF_RUN_LIST);
