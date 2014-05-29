@@ -56,6 +56,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.net.HostAndPort;
 
 /** 
  * Default skeleton for start/stop/restart tasks on machines.
@@ -278,6 +279,11 @@ public abstract class MachineLifecycleEffectorTasks {
             if (la.isPresent()) entity().setAttribute(Attributes.SUBNET_ADDRESS, la.get());
             entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
             entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
+            if (machine instanceof SshMachineLocation) {
+                SshMachineLocation sshMachine = (SshMachineLocation) machine;
+                String sshAddress = sshMachine.getUser() + "@"+sshMachine.getAddress().getHostName()+":"+sshMachine.getPort();
+                entity().setAttribute(Attributes.SSH_ADDRESS, sshAddress);
+            }
             
             resolveOnBoxDir(entity(), machine);            
             preStartCustom(machine);

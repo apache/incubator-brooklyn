@@ -1,5 +1,7 @@
 package brooklyn.entity.basic;
 
+import static org.testng.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -54,9 +56,19 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
+    public void testSetsMachineAttributes() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        entity.start(ImmutableList.of(loc));
+        
+        assertEquals(entity.getAttribute(SoftwareProcess.HOSTNAME), machine.getAddress().getHostName());
+        assertEquals(entity.getAttribute(SoftwareProcess.ADDRESS), machine.getAddress().getHostAddress());
+        assertEquals(entity.getAttribute(SoftwareProcess.SSH_ADDRESS), machine.getUser() + "@" + machine.getAddress().getHostName() + ":" + machine.getPort());
+        assertEquals(entity.getAttribute(SoftwareProcess.PROVISIONING_LOCATION), loc);
+    }
+
+    @Test
     public void testProcessTemplateWithExtraSubstitutions() throws Exception {
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
-        Entities.manage(entity);
         entity.start(ImmutableList.of(loc));
         SimulatedDriver driver = (SimulatedDriver) entity.getDriver();
         Map<String,String> substitutions = MutableMap.of("myname","peter");
