@@ -132,7 +132,6 @@ public class JcloudsByonLocationResolver implements LocationResolver {
                     .build();
             try {
                 JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.getAllConfigBag().putAll(machineFlags));
-                machine.setParent(null);
                 machines.add(machine);
             } catch (NoMachinesAvailableException e) {
                 log.warn("Error rebinding to jclouds machine "+hostIdentifier+" in "+jcloudsLocation, e);
