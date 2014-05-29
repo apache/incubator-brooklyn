@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ExecutionManager;
@@ -76,10 +77,16 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
     private volatile ScheduledTask scheduledTask;
 
+    private final boolean persistPoliciesEnabled;
+    private final boolean persistEnrichersEnabled;
+    
     public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, long periodMillis) {
         this.executionManager = executionManager;
         this.persister = persister;
         this.period = Duration.of(periodMillis, TimeUnit.MILLISECONDS);
+        
+        this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY);
+        this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY);
     }
     
     public void start() {
@@ -275,12 +282,16 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 deltaCollector.locations.addAll(TreeUtils.findLocationsInHierarchy(location));
             }
 
-            for (Policy policy : entity.getPolicies()) {
-                deltaCollector.policies.add(policy);
+            if (persistPoliciesEnabled) {
+                for (Policy policy : entity.getPolicies()) {
+                    deltaCollector.policies.add(policy);
+                }
             }
 
-            for (Enricher enricher : entity.getEnrichers()) {
-                deltaCollector.enrichers.add(enricher);
+            if (persistEnrichersEnabled) {
+                for (Enricher enricher : entity.getEnrichers()) {
+                    deltaCollector.enrichers.add(enricher);
+                }
             }
         }
     }

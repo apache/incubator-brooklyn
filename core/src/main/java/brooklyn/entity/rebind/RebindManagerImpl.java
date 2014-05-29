@@ -21,8 +21,9 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
-import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
@@ -75,9 +76,15 @@ public class RebindManagerImpl implements RebindManager {
     
     private volatile BrooklynMementoPersister persister;
 
+    private final boolean persistPoliciesEnabled;
+    private final boolean persistEnrichersEnabled;
+
     public RebindManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
         this.changeListener = ChangeListener.NOOP;
+        
+        this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY);
+        this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY);
     }
 
     /**
@@ -255,28 +262,36 @@ public class RebindManagerImpl implements RebindManager {
             BrooklynMemento memento = persister.loadMemento(realLookupContext, exceptionHandler);
             
             // Instantiate policies
-            LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
-            for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
-                
-                try {
-                    Policy policy = newPolicy(policyMemento, reflections);
-                    policies.put(policyMemento.getId(), policy);
-                    rebindContext.registerPolicy(policyMemento.getId(), policy);
-                } catch (Exception e) {
-                    exceptionHandler.onCreatePolicyFailed(policyMemento.getId(), policyMemento.getType(), e);
+            if (persistPoliciesEnabled) {
+                LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
+                for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
+                    
+                    try {
+                        Policy policy = newPolicy(policyMemento, reflections);
+                        policies.put(policyMemento.getId(), policy);
+                        rebindContext.registerPolicy(policyMemento.getId(), policy);
+                    } catch (Exception e) {
+                        exceptionHandler.onCreatePolicyFailed(policyMemento.getId(), policyMemento.getType(), e);
+                    }
                 }
+            } else {
+                LOG.debug("Not rebinding policies; feature disabled: {}", memento.getPolicyIds());
             }
             
             // Instantiate enrichers
-            LOG.info("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
-            for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", enricherMemento);
-                
-                Enricher enricher = newEnricher(enricherMemento, reflections);
-                enrichers.put(enricherMemento.getId(), enricher);
-                rebindContext.registerEnricher(enricherMemento.getId(), enricher);
-            }
+            if (persistEnrichersEnabled) {
+                LOG.info("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
+                for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", enricherMemento);
+                    
+                    Enricher enricher = newEnricher(enricherMemento, reflections);
+                    enrichers.put(enricherMemento.getId(), enricher);
+                    rebindContext.registerEnricher(enricherMemento.getId(), enricher);
+                }
+            } else {
+                LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getPolicyIds());
+            } 
             
             // Reconstruct locations
             LOG.info("RebindManager reconstructing locations");
@@ -296,30 +311,34 @@ public class RebindManagerImpl implements RebindManager {
             }
 
             // Reconstruct policies
-            LOG.info("RebindManager reconstructing policies");
-            for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
-                Policy policy = rebindContext.getPolicy(policyMemento.getId());
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
-
-                if (policy == null) {
-                    // usually because of creation-failure, when not using fail-fast
-                    exceptionHandler.onPolicyNotFound(policyMemento.getId());
-                } else {
-                    try {
-                        policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
-                    } catch (Exception e) {
-                        exceptionHandler.onRebindPolicyFailed(policy, e);
+            if (persistPoliciesEnabled) {
+                LOG.info("RebindManager reconstructing policies");
+                for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
+                    Policy policy = rebindContext.getPolicy(policyMemento.getId());
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
+    
+                    if (policy == null) {
+                        // usually because of creation-failure, when not using fail-fast
+                        exceptionHandler.onPolicyNotFound(policyMemento.getId());
+                    } else {
+                        try {
+                            policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
+                        } catch (Exception e) {
+                            exceptionHandler.onRebindPolicyFailed(policy, e);
+                        }
                     }
                 }
             }
 
             // Reconstruct enrichers
-            LOG.info("RebindManager reconstructing enrichers");
-            for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
-                Enricher enricher = rebindContext.getEnricher(enricherMemento.getId());
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing enricher {}", enricherMemento);
-    
-                enricher.getRebindSupport().reconstruct(rebindContext, enricherMemento);
+            if (persistEnrichersEnabled) {
+                LOG.info("RebindManager reconstructing enrichers");
+                for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
+                    Enricher enricher = rebindContext.getEnricher(enricherMemento.getId());
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing enricher {}", enricherMemento);
+        
+                    enricher.getRebindSupport().reconstruct(rebindContext, enricherMemento);
+                }
             }
     
             // Reconstruct entities

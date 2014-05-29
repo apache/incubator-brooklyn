@@ -7,6 +7,7 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.time.Duration;
@@ -24,9 +25,15 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     protected T origApp;
     protected T newApp;
     protected ManagementContext newManagementContext;
+
+    private boolean origPolicyPersistenceEnabled;
+    private boolean origEnricherPersistenceEnabled;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        origPolicyPersistenceEnabled = BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY, true);
+        origEnricherPersistenceEnabled = BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY, true);
+        
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = createApp();
@@ -37,15 +44,20 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-        origApp = null;
-        newApp = null;
-        newManagementContext = null;
-
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-        origManagementContext = null;
+        try {
+            if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
+            if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+            origApp = null;
+            newApp = null;
+            newManagementContext = null;
+    
+            if (origManagementContext != null) Entities.destroyAll(origManagementContext);
+            if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+            origManagementContext = null;
+        } finally {
+            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY, origPolicyPersistenceEnabled);
+            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY, origEnricherPersistenceEnabled);
+        }
     }
 
     /** rebinds, and sets newApp */
