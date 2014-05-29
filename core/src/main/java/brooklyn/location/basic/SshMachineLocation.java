@@ -1,6 +1,7 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+import groovy.lang.Closure;
 
 import java.io.Closeable;
 import java.io.File;
@@ -22,28 +23,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
@@ -88,7 +72,24 @@ import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers.ExecRunner;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-import groovy.lang.Closure;
+
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -667,6 +668,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
      *
      * TODO allow s3://bucket/file URIs for AWS S3 resources
      * TODO use PAX-URL style URIs for maven artifacts
+     * TODO use subtasks here for greater visibility?; deprecate in favour of SshTasks.installFromUrl?
      *
      * @param utils A {@link ResourceUtils} that can resolve the source URLs
      * @param url The source URL to be installed
@@ -687,7 +689,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             Map<String, ?> sshProps = MutableMap.<String, Object>builder().putAll(props).put("out", outO).put("err", outE).build();
             int result = execScript(sshProps, "copying remote resource "+url+" to server",  ImmutableList.of(
                     BashCommands.INSTALL_CURL, // TODO should hold the 'installing' mutex
-                    "curl "+url+" -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o "+destPath));
+                    "mkdir -p `dirname '"+destPath+"'`",
+                    "curl "+url+" -L --silent --insecure --show-error --fail --connect-timeout 60 --max-time 600 --retry 5 -o '"+destPath+"'"));
             sgsO.close();
             sgsE.close();
             if (result != 0) {

@@ -47,7 +47,7 @@ import com.google.common.collect.Iterables;
 
 @Test
 public class EntitiesYamlTest extends AbstractYamlTest {
-    private static final Logger log = LoggerFactory.getLogger(EnrichersYamlTest.class);
+    private static final Logger log = LoggerFactory.getLogger(EntitiesYamlTest.class);
 
     protected Entity setupAndCheckTestEntityInBasicTemplateWith(String ...extras) throws Exception {
         Entity app = createAndStartApplication("test-entity-basic-template.yaml", extras);

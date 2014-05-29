@@ -1,0 +1,31 @@
+name: chef-mysql-sample
+services:
+- type: chef:mysql
+  id: db
+  
+  cookbook_urls:
+    # only needed for chef solo; URL can be local to brooklyn, or github, etc...
+    mysql: https://github.com/opscode-cookbooks/mysql/archive/v4.0.12.tar.gz
+    openssl: https://github.com/opscode-cookbooks/openssl/archive/v1.1.0.tar.gz
+  
+  launch_run_list: [ "mysql::server" ]
+  launch_attributes:
+    mysql:
+      # these attrs are required by the mysql cookbook under node['mysql']
+      server_debian_password: $brooklyn:component("db").config("mysql.password")
+      server_root_password: $brooklyn:component("db").config("mysql.password")
+      server_repl_password: $brooklyn:component("db").config("mysql.password")
+      # many others are attrs are supported by the cookbook and can be passed here...
+      
+  # how to determine if the process is running and how to kill it
+  # (supported options are `service_name` and `pid_file`; typically pick one)
+  service_name: mysqld
+  #pid_file: /var/run/mysqld/mysqld.pid
+    
+brooklyn.config:
+  mysql.password: p4ssw0rd
+
+location:
+  byon:
+    hosts: 192.168.33.12
+    user: vagrant

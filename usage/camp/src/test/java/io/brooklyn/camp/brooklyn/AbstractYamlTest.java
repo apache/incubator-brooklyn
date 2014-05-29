@@ -26,8 +26,8 @@ public abstract class AbstractYamlTest {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractYamlTest.class);
 
     private ManagementContext brooklynMgmt;
-    private BrooklynCampPlatform platform;
-    private BrooklynCampPlatformLauncherNoServer launcher;
+    protected BrooklynCampPlatform platform;
+    protected BrooklynCampPlatformLauncherNoServer launcher;
     
     public AbstractYamlTest() {
         super();
@@ -40,7 +40,7 @@ public abstract class AbstractYamlTest {
         launcher = new BrooklynCampPlatformLauncherNoServer() {
             @Override
             protected LocalManagementContext newMgmtContext() {
-                return new LocalManagementContextForTests();
+                return newTestManagementContext();
             }
         };
         launcher.launch();
@@ -48,6 +48,10 @@ public abstract class AbstractYamlTest {
         platform = launcher.getCampPlatform();
     }
 
+    protected LocalManagementContext newTestManagementContext() {
+        return new LocalManagementContextForTests();
+    }
+    
     @AfterMethod(alwaysRun = true)
     public void teardown() {
         if (brooklynMgmt != null) Entities.destroyAll(brooklynMgmt);

@@ -2,20 +2,11 @@ package brooklyn.entity.chef;
 
 import java.util.Map;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.management.TaskFactory;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
-import com.google.common.collect.ImmutableList;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 @Beta
 public class ChefSoloTasks {
@@ -28,23 +19,11 @@ public class ChefSoloTasks {
     }
 
     public static TaskFactory<?> installCookbooks(final String chefDirectory, final Map<String,String> cookbooksAndUrls, final boolean force) {
-        return Tasks.<Void>builder().name("install cookbooks").body(
-                new Runnable() {
-                    public void run() {
-                        Entity e = EffectorTasks.findEntity();
-                        if (cookbooksAndUrls==null)
-                            throw new IllegalStateException("No cookbooks defined to install at "+e);
-                        for (String cookbook: cookbooksAndUrls.keySet())
-                            DynamicTasks.queue(installCookbook(chefDirectory, cookbook, cookbooksAndUrls.get(cookbook), force));
-                    }
-                }).buildFactory();
+        return ChefTasks.installCookbooks(chefDirectory, cookbooksAndUrls, force);
     }
 
-    public static TaskFactory<?> installCookbook(String chefDirectory, String cookbook, String url, boolean force) {
-        // TODO if it's server, try knife first
-        // TODO support downloads from classpath / local server
-        return SshEffectorTasks.ssh(cdAndRun(chefDirectory, ChefBashCommands.downloadAndExpandCookbook(url, cookbook, force))).
-                summary("install cookbook "+cookbook).requiringExitCodeZero();
+    public static TaskFactory<?> installCookbook(String chefDirectory, String cookbookName, String cookbookArchiveUrl, boolean force) {
+        return ChefTasks.installCookbook(chefDirectory, cookbookName, cookbookArchiveUrl, force);
     }
 
     protected static String cdAndRun(String targetDirectory, String command) {
@@ -55,26 +34,7 @@ public class ChefSoloTasks {
 
     public static TaskFactory<?> buildChefFile(String runDirectory, String chefDirectory, String phase, Iterable<? extends String> runList,
             Map<String, Object> optionalAttributes) {
-        // TODO if it's server, try knife first
-        // TODO configure add'l properties
-        String phaseRb = 
-                "root = File.absolute_path(File.dirname(__FILE__))\n"+
-                "\n"+
-                "file_cache_path root\n"+
-//                "cookbook_path root + '/cookbooks'\n";
-                "cookbook_path '"+chefDirectory+"'\n";
-
-        Map<String,Object> phaseJsonMap = MutableMap.of();
-        if (optionalAttributes!=null)
-            phaseJsonMap.putAll(optionalAttributes);
-        if (runList!=null)
-            phaseJsonMap.put("run_list", ImmutableList.copyOf(runList));
-        Gson json = new GsonBuilder().create();
-        String phaseJson = json.toJson(phaseJsonMap);
-
-        return Tasks.sequential("build chef files for "+phase,
-                    SshEffectorTasks.put(Urls.mergePaths(runDirectory)+"/"+phase+".rb").contents(phaseRb).createDirectory(),
-                    SshEffectorTasks.put(Urls.mergePaths(runDirectory)+"/"+phase+".json").contents(phaseJson));
+        return ChefTasks.buildChefFile(runDirectory, chefDirectory, phase, runList, optionalAttributes);
     }
 
     public static TaskFactory<?> runChef(String runDir, String phase) {

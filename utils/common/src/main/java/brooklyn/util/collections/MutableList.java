@@ -162,14 +162,22 @@ public class MutableList<V> extends ArrayList<V> {
             for (V item: items) add(item);
         return this;
     }
+    /** as {@link List#addAll(Collection)} but fluent style */
+    public MutableList<V> appendAll(Iterator<? extends V> items) {
+        addAll(items);
+        return this;
+    }
 
     public boolean addAll(Iterable<? extends V> setToAdd) {
         // copy of parent, but accepting Iterable and null
         if (setToAdd==null) return false;
+        return addAll(setToAdd.iterator());
+    }
+    public boolean addAll(Iterator<? extends V> setToAdd) {
+        if (setToAdd==null) return false;
         boolean modified = false;
-        Iterator<? extends V> e = setToAdd.iterator();
-        while (e.hasNext()) {
-            if (add(e.next()))
+        while (setToAdd.hasNext()) {
+            if (add(setToAdd.next()))
                 modified = true;
         }
         return modified;

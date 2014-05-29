@@ -9,6 +9,8 @@ import java.net.URLEncoder;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.text.Strings;
+
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 
@@ -141,6 +143,19 @@ public class Urls {
             } else return null;
             i++;
         }
+    }
+
+    /** return the last segment of the given url before any '?', e.g. the filename or last directory name in the case of directories
+     * (cf unix `basename`) */
+    public static String getBasename(String url) {
+        if (url==null) return null;
+        if (getProtocol(url)!=null) {
+            int firstQ = url.indexOf('?');
+            if (firstQ>=0)
+                url = url.substring(0, firstQ);
+        }
+        url = Strings.removeAllFromEnd(url, "/");
+        return url.substring(url.lastIndexOf('/')+1);
     }
 
     public static boolean isDirectory(String fileUrl) {

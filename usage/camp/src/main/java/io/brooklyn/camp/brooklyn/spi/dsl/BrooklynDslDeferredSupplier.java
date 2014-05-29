@@ -1,5 +1,7 @@
 package io.brooklyn.camp.brooklyn.spi.dsl;
 
+import java.io.Serializable;
+
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
@@ -36,7 +38,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * (TODO the precise semantics of this are under development.)
  * <p>
  **/
-public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier<T>, TaskFactory<Task<T>> {
+public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier<T>, TaskFactory<Task<T>>, Serializable {
+
+    private static final long serialVersionUID = -8789624905412198233L;
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynDslDeferredSupplier.class);
     
