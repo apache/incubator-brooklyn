@@ -302,6 +302,15 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         if (!isStopped()) {
             deltaCollector.removedEntityIds.add(entity.getId());
             deltaCollector.entities.remove(entity);
+            
+            for (Policy policy : entity.getPolicies()) {
+                deltaCollector.removedPolicyIds.add(policy.getId());
+                deltaCollector.policies.remove(policy);
+            }
+            for (Enricher enricher : entity.getEnrichers()) {
+                deltaCollector.removedEnricherIds.add(enricher.getId());
+                deltaCollector.enrichers.remove(enricher);
+            }
         }
     }
 
