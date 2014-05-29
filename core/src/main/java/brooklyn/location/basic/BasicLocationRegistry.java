@@ -28,12 +28,13 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 
 @SuppressWarnings({"rawtypes","unchecked"})
 public class BasicLocationRegistry implements LocationRegistry {
@@ -55,6 +56,8 @@ public class BasicLocationRegistry implements LocationRegistry {
     private final Map<String,LocationDefinition> definedLocations = new LinkedHashMap<String, LocationDefinition>();
 
     protected final Map<String,LocationResolver> resolvers = new LinkedHashMap<String, LocationResolver>();
+
+    private final Set<String> specsWarnedOnException = Sets.newConcurrentHashSet();
 
     public BasicLocationRegistry(ManagementContext mgmt) {
         this.mgmt = checkNotNull(mgmt, "mgmt");
@@ -212,20 +215,33 @@ public class BasicLocationRegistry implements LocationRegistry {
                 return resolver.newLocationFromString(locationFlags, spec, this);
             }
 
-            // problem: but let's ensure that classpath is sane to give better errors in common IDE bogus case
-            if (resolvers.get("id")==null || resolvers.get("named")==null) {
-                log.error("Standard location resolvers not installed, location resolution will fail shortly. This usually indicates a classpath problem, "
-                    + "such as when running from an IDE which has not properly copied META-INF/services from src/main/resources."
-                    + "Known resolvers are: "+resolvers.keySet());
-                throw new NoSuchElementException("Unresolvable location '"+spec+"': "
-                    + "Problem detected with location resolver configuration: "+resolvers.keySet()+" are the only available location resolvers. "
-                    + "More information can be found in the logs.");
+            // problem: but let's ensure that classpath is sane to give better errors in common IDE bogus case;
+            // and avoid repeated logging
+            String errmsg;
+            if (spec == null || specsWarnedOnException.add(spec)) {
+                if (resolvers.get("id")==null || resolvers.get("named")==null) {
+                    log.error("Standard location resolvers not installed, location resolution will fail shortly. "
+                            + "This usually indicates a classpath problem, such as when running from an IDE which "
+                            + "has not properly copied META-INF/services from src/main/resources. "
+                            + "Known resolvers are: "+resolvers.keySet());
+                    errmsg = "Unresolvable location '"+spec+"': "
+                            + "Problem detected with location resolver configuration; "
+                            + resolvers.keySet()+" are the only available location resolvers. "
+                            + "More information can be found in the logs.";
+                } else {
+                    log.warn("Location resolution failed for '"+spec+"' (will fail shortly): known resolvers are: "+resolvers.keySet());
+                    errmsg = "Unknown location '"+spec+"': "
+                            + "either this location is not recognised or there is a problem with location resolver configuration.";
+                }
             } else {
-                log.warn("Location resolution failed for '"+spec+"' (will fail shortly): known resolvers are: "+resolvers.keySet());
-                throw new NoSuchElementException("Unknown location '"+spec+"': "
-                    + "either this location is not recognised or there is a problem with location resolver configuration.");
+                // For helpful log message construction: assumes classpath will not suddenly become wrong; might happen with OSGi though!
+                if (log.isDebugEnabled()) log.debug("Location resolution failed again for '"+spec+"' (throwing)");
+                errmsg = "Unknown location '"+spec+"': "
+                        + "either this location is not recognised or there is a problem with location resolver configuration.";
             }
-                
+
+            throw new NoSuchElementException(errmsg);
+
         } finally {
             specsSeen.remove();
         }

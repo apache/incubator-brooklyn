@@ -20,7 +20,7 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
@@ -57,16 +57,9 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
                 .get();
 
             if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
-                AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", "Co-located router tracker")) {
-                    protected void onEntityAdded(Entity member) {
-                        routers.addMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
-                    }
-                    protected void onEntityRemoved(Entity member) {
-                        routers.removeMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
-                    }
-                };
-                addPolicy(policy);
-                policy.setGroup((Group)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP));
+                addPolicy(PolicySpec.create(ColocatedRouterTrackingPolicy.class)
+                        .displayName("Co-located router tracker")
+                        .configure("group", (Group)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP)));
             }
             setAttribute(SERVICE_UP, true);
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
@@ -76,7 +69,20 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
             throw Exceptions.propagate(e);
         }
     }
-    
+
+    public static class ColocatedRouterTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityAdded(Entity member) {
+            MongoDBRouterCluster cluster = entity.getAttribute(ROUTER_CLUSTER);
+            cluster.addMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
+        }
+        @Override
+        protected void onEntityRemoved(Entity member) {
+            MongoDBRouterCluster cluster = entity.getAttribute(ROUTER_CLUSTER);
+            cluster.removeMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
+        }
+    };
+
     @Override
     public void stop() {
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);

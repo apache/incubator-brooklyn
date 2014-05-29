@@ -1,0 +1,24 @@
+name: chef-mysql-sample
+services:
+- type: chef:mysql
+  
+  cookbook_urls:
+    # only needed for chef solo; URL can be local to brooklyn, or github, etc...
+    mysql: https://github.com/opscode-cookbooks/mysql/archive/v4.0.12.tar.gz
+    openssl: https://github.com/opscode-cookbooks/openssl/archive/v1.1.0.tar.gz
+    build-essential: https://github.com/opscode-cookbooks/build-essential/archive/v1.4.4.tar.gz
+  
+  launch_run_list: [ "mysql::server" ]
+  launch_attributes:
+    mysql:
+      # these attrs are required by the mysql cookbook under node['mysql']
+      server_root_password: p4ssw0rd
+      server_repl_password: p4ssw0rd
+      server_debian_password: p4ssw0rd
+      # many others are attrs are supported by the cookbook and can be passed here...
+      
+  # how to determine if the process is running and how to kill it
+  # (supported options are `service_name` and `pid_file`; normally you should just pick one.
+  # here we use the pid_file because the service_name varies, mysql on centos, mysqld on ubuntu!)
+  #service_name: mysqld
+  pid_file: /var/run/mysqld/mysqld.pid

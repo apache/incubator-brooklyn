@@ -3,7 +3,6 @@ package brooklyn.entity.nosql.couchbase;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -21,7 +20,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.time.Time;
 
@@ -94,28 +93,24 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
 
     protected void connectSensors() {
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-                .put("name", "Controller targets tracker")
-                .build();
-
-        AbstractMembershipTrackingPolicy serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(flags) {
-            protected void onEntityChange(Entity member) {
-                onServerPoolMemberChanged(member);
-            }
-
-            protected void onEntityAdded(Entity member) {
-                onServerPoolMemberChanged(member);
-            }
-
-            protected void onEntityRemoved(Entity member) {
-                onServerPoolMemberChanged(member);
-            }
-        };
-
-        addPolicy(serverPoolMemberTrackerPolicy);
-        serverPoolMemberTrackerPolicy.setGroup(this);
-
+        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("Controller targets tracker")
+                .configure("group", this));
     }
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override protected void onEntityChange(Entity member) {
+            ((CouchbaseClusterImpl)entity).onServerPoolMemberChanged(member);
+        }
+
+        @Override protected void onEntityAdded(Entity member) {
+            ((CouchbaseClusterImpl)entity).onServerPoolMemberChanged(member);
+        }
+
+        @Override protected void onEntityRemoved(Entity member) {
+            ((CouchbaseClusterImpl)entity).onServerPoolMemberChanged(member);
+        }
+    };
 
     protected synchronized void onServerPoolMemberChanged(Entity member) {
         if (log.isTraceEnabled()) log.trace("For {}, considering membership of {} which is in locations {}",

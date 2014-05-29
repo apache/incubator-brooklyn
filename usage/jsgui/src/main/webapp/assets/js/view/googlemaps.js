@@ -6,9 +6,9 @@ define(
             // meters squared per entity
             var area_per_entity = 300000000000;
             var local = {
-                addMapToCanvas: function( mapCanvas, lat, long, zoom ) {
+                addMapToCanvas: function( mapCanvas, lat, longitude, zoom ) {
                     var myOptions = {
-                            center: new google.maps.LatLng( lat, long ),
+                            center: new google.maps.LatLng( lat, longitude ),
                             zoom: zoom,
                             mapTypeId: google.maps.MapTypeId.SATELLITE
                     };

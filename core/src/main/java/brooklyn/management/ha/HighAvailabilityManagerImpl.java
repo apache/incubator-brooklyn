@@ -156,7 +156,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         nodeState = ManagementNodeState.STANDBY;
         running = true;
         
-        // TODO Small race in that we first check, and then we'll do checkMater() on first poll,
+        // TODO Small race in that we first check, and then we'll do checkMaster() on first poll,
         // so another node could have already become master or terminated in that window.
         ManagementNodeSyncRecord existingMaster = hasHealthyMaster();
         
@@ -269,6 +269,26 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     /**
      * Publishes (via {@link #persister}) the state of this management node with itself set to master.
      */
+    protected synchronized void publishDemotionFromMasterOnFailure() {
+        checkState(getNodeState() == ManagementNodeState.FAILED, "node status must be failed on publish, but is %s", getNodeState());
+        
+        if (persister == null) {
+            LOG.info("Cannot publish management-node health as no persister");
+            return;
+        }
+        
+        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord();
+        Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder()
+                .node(memento)
+                .clearMaster(ownNodeId)
+                .build();
+        persister.delta(delta);
+        if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
+    }
+    
+    /**
+     * Publishes (via {@link #persister}) the state of this management node with itself set to master.
+     */
     protected synchronized void publishPromotionToMaster() {
         checkState(getNodeState() == ManagementNodeState.MASTER, "node status must be master on publish, but is %s", getNodeState());
         
@@ -348,7 +368,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
         
         // Need to choose a new master
-        String newMasterNodeId = masterChooser.choose(memento, heartbeatTimeout, ownNodeId, now).getNodeId();
+        ManagementNodeSyncRecord newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId, now);
+        String newMasterNodeId = (newMasterRecord == null) ? null : newMasterRecord.getNodeId();
         boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
         
         LOG.warn("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
@@ -380,14 +401,17 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 LOG.warn("Problem in promption-listener (continuing)", e);
             }
         }
+        nodeState = ManagementNodeState.MASTER;
+        publishPromotionToMaster();
         try {
-            nodeState = ManagementNodeState.MASTER;
-            publishPromotionToMaster();
             managementContext.getRebindManager().rebind();
-            managementContext.getRebindManager().start();
-        } catch (IOException e) {
-            LOG.error("Error during rebind when promoting node to master", e);
+        } catch (Exception e) {
+            LOG.info("Problem during rebind when promoting node to master; demoting to failed and rethrowing): "+e);
+            nodeState = ManagementNodeState.FAILED;
+            publishDemotionFromMasterOnFailure();
+            throw Exceptions.propagate(e);
         }
+        managementContext.getRebindManager().start();
     }
 
     /**

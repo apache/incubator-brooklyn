@@ -51,8 +51,7 @@ public class StringPredicates {
         return new Predicate<CharSequence>() {
             @Override
             public boolean apply(CharSequence input) {
-                if (input==null) return false;
-                return input.toString().startsWith(prefix);
+                return (input != null) && input.toString().startsWith(prefix);
             }
         };
     }
@@ -62,9 +61,7 @@ public class StringPredicates {
         return new Predicate<Object>() {
             @Override
             public boolean apply(Object input) {
-                if (input==null) return false;
-                if (!(input instanceof CharSequence)) return false;
-                return input.toString().startsWith(prefix);
+                return (input instanceof CharSequence) && input.toString().startsWith(prefix);
             }
         };
     }

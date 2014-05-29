@@ -38,9 +38,15 @@ public class BrooklynDslCommon {
             return String.format(pattern, args);
         }
         return new BrooklynDslDeferredSupplier<String>() {
+            private static final long serialVersionUID = -4849297712650560863L;
+
             @Override
             public Task<String> newTask() {
                 return DependentConfiguration.formatString(pattern, args);
+            }
+            @Override
+            public String toString() {
+                return "$brooklyn:formatString("+pattern+")";
             }
         };
     }
@@ -49,7 +55,7 @@ public class BrooklynDslCommon {
     //       but that would require refactoring of Brooklyn DSL
     // TODO: Should use catalog's classloader, rather than Class.forName; how to get that? Should we return a future?!
     /** returns a Sensor from the given entity type */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Object sensor(String clazzName, String sensorName) {
         try {
             Class<?> clazz = Class.forName(clazzName);

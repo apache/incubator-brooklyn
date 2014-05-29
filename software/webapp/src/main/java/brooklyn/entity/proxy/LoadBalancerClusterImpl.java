@@ -7,6 +7,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.location.Location;
+import brooklyn.policy.PolicySpec;
 
 /**
  * A cluster of load balancers, where configuring the cluster (through the LoadBalancer interface)
@@ -37,11 +38,14 @@ public class LoadBalancerClusterImpl extends DynamicClusterImpl implements LoadB
         // TODO Is there a race here, where (dispite super.stop() calling policy.suspend),
         // this could still be executing setAttribute(true) and hence incorrectly leave
         // the cluster in a service_up==true state after stop() returns?
-        AbstractMembershipTrackingPolicy policy = new AbstractMembershipTrackingPolicy() {
-            @Override protected void onEntityEvent(EventType type, Entity entity) { setAttribute(SERVICE_UP, calculateServiceUp()); }
-        };
-        addPolicy(policy);
-        policy.setGroup(this);
+        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .configure("group", this));
+    }
+
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override protected void onEntityEvent(EventType type, Entity member) {
+            entity.setAttribute(SERVICE_UP, ((LoadBalancerClusterImpl)entity).calculateServiceUp());
+        }
     }
 
     /**

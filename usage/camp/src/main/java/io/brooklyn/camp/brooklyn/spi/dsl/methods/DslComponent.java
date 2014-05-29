@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -16,6 +17,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.util.task.TaskBuilder;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -25,7 +27,9 @@ import com.google.common.collect.Sets;
 
 public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
-	private final String componentId;
+    private static final long serialVersionUID = -7715984495268724954L;
+    
+    private final String componentId;
 	private final Scope scope;
 
 	public DslComponent(String componentId) {
@@ -87,7 +91,8 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
     
 	public BrooklynDslDeferredSupplier<?> attributeWhenReady(final String sensorName) {
 		return new BrooklynDslDeferredSupplier<Object>() {
-			@SuppressWarnings("unchecked")
+            private static final long serialVersionUID = 1740899524088902383L;
+            @SuppressWarnings("unchecked")
             @Override
 			public Task<Object> newTask() {
 				Entity targetEntity = DslComponent.this.get();
@@ -97,8 +102,32 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 				}
 				return (Task<Object>) DependentConfiguration.attributeWhenReady(targetEntity, (AttributeSensor<?>)targetSensor);
 			}
+			@Override
+			public String toString() {
+			    return DslComponent.this.toString()+"."+"attributeWhenReady("+sensorName+")";
+			}
 		};
 	}
+	
+	public BrooklynDslDeferredSupplier<Object> config(final String keyName) {
+        return new BrooklynDslDeferredSupplier<Object>() {
+            private static final long serialVersionUID = -4735177561947722511L;
+            @Override
+            public Task<Object> newTask() {
+                return Tasks.builder().name("retrieving config for "+keyName).dynamic(false).body(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        Entity targetEntity = DslComponent.this.get();
+                        return targetEntity.getConfig(ConfigKeys.newConfigKey(Object.class, keyName));
+                    }
+                }).build();
+            }
+            @Override
+            public String toString() {
+                return DslComponent.this.toString()+"."+"config("+keyName+")";
+            }
+        };
+    }
 	
 	public static enum Scope {
 	    GLOBAL ("global"),
@@ -130,5 +159,14 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 	        return false;
 	    }
 	}
+
+
+    @Override
+    public String toString() {
+        return "$brooklyn:component("+
+            (scope==Scope.GLOBAL ? "" : scope+", ")+
+            componentId+
+            ")";
+    }
 
 }

@@ -65,4 +65,15 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         return (T) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
 
+    @SuppressWarnings("unchecked")
+    protected T rebind(RebindExceptionHandler exceptionHandler) throws Exception {
+        RebindTestUtils.waitForPersisted(origApp);
+        return (T) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader(), exceptionHandler);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected T rebind(ManagementContext newManagementContext, RebindExceptionHandler exceptionHandler) throws Exception {
+        RebindTestUtils.waitForPersisted(origApp);
+        return (T) RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader(), exceptionHandler);
+    }
 }

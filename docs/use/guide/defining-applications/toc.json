@@ -6,6 +6,8 @@
   "file":  "{{ site.url }}/use/guide/defining-applications/common-usage.html" },
 { "title": "YAML Blueprints",
   "file":  "{{ site.url }}/use/guide/defining-applications/creating-yaml.html" },
+{ "title": "Chef Blueprints",
+  "file":  "{{ site.url }}/use/guide/defining-applications/chef-blueprints.html" },
 { "title": "Deploying YAML",
   "file":  "{{ site.url }}/use/guide/defining-applications/deploying-yaml.html" },
 { "title": "YAML Reference",

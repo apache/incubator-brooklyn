@@ -11,4 +11,6 @@ public interface RiakNodeDriver extends SoftwareProcessDriver {
     public void leaveCluster();
 
     public void recoverFailedNode(String nodeName);
+
+    public void commitCluster();
 }

@@ -3,8 +3,7 @@ package brooklyn.entity.proxy.nginx;
 import static org.testng.Assert.assertEquals;
 
 import java.net.URL;
-
-import javax.annotation.Nullable;
+import java.util.Map;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -20,13 +19,11 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.StubAppServer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.TestUtils;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 public class NginxLightIntegrationTest {
 
@@ -64,15 +61,14 @@ public class NginxLightIntegrationTest {
         app.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
         
         // Wait for url-mapping to update its TARGET_ADDRESSES (through async subscription)
-        TestUtils.executeUntilSucceeds(new Runnable() {
-            public void run() {
-                Iterable<String> expectedTargets = Iterables.transform(cluster.getMembers(), new Function<Entity,String>() {
-                        @Override public String apply(@Nullable Entity input) {
-                            return input.getAttribute(Attributes.HOSTNAME)+":"+input.getAttribute(Attributes.HTTP_PORT);
-                        }});
-                
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                Map<Entity, String> expectedTargets = Maps.newLinkedHashMap();
+                for (Entity member : cluster.getMembers()) {
+                    expectedTargets.put(member, member.getAttribute(Attributes.HOSTNAME)+":"+member.getAttribute(Attributes.HTTP_PORT));
+                }                
                 assertEquals(nginx.getAttribute(NginxController.SERVER_POOL_TARGETS).size(), 2);
-                assertEquals(ImmutableSet.copyOf(nginx.getAttribute(NginxController.SERVER_POOL_TARGETS)), ImmutableSet.copyOf(expectedTargets));
+                assertEquals(nginx.getAttribute(NginxController.SERVER_POOL_TARGETS), expectedTargets);
             }});
     }
 }

@@ -24,6 +24,7 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.javalang.Serializers;
 import brooklyn.util.javalang.Serializers.ObjectReplacer;
 import brooklyn.util.time.Duration;
@@ -127,9 +128,9 @@ public class RebindTestUtils {
         public LocalManagementContext buildUnstarted() {
             LocalManagementContext unstarted;
             if (properties != null) {
-                unstarted = new LocalManagementContext(properties);
+                unstarted = new LocalManagementContextForTests(properties);
             } else {
-                unstarted = new LocalManagementContext();
+                unstarted = new LocalManagementContextForTests();
             }
             BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
             ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(Duration.of(persistPeriodMillis, TimeUnit.MILLISECONDS));
@@ -147,21 +148,39 @@ public class RebindTestUtils {
     }
 
     public static Application rebind(File mementoDir, ClassLoader classLoader) throws Exception {
+        return rebind(mementoDir, classLoader, (RebindExceptionHandler)null);
+    }
+    
+    public static Application rebind(File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
         
         LocalManagementContext newManagementContext = newPersistingManagementContextUnstarted(mementoDir, classLoader);
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        List<Application> newApps;
+        if (exceptionHandler == null) {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        } else {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
+        }
         newManagementContext.getRebindManager().start();
         if (newApps.isEmpty()) throw new IllegalStateException("Application could not be rebinded; serialization probably failed");
         return newApps.get(0);
     }
 
     public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader) throws Exception {
+        return rebind(newManagementContext, mementoDir, classLoader, (RebindExceptionHandler)null);
+    }
+    
+    public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
         
         BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister);
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        List<Application> newApps;
+        if (exceptionHandler == null) {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        } else {
+            newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
+        }
         newManagementContext.getRebindManager().start();
         return newApps.get(0);
     }

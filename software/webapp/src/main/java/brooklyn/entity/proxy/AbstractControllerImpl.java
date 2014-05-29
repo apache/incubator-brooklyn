@@ -8,33 +8,32 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
-import brooklyn.entity.rebind.BasicEntityRebindSupport;
-import brooklyn.entity.rebind.RebindContext;
-import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.management.Task;
-import brooklyn.mementos.EntityMemento;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
@@ -81,17 +80,19 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public void init() {
         super.init();
-        initServerPoolMemberTrackingPolicy();
-    }
-    @Override
-    // TODO When persists policies, then can delete this code
-    protected void rebind() {
-        initServerPoolMemberTrackingPolicy();
-        
-        super.rebind();
+        setAttribute(SERVER_POOL_TARGETS, ImmutableMap.<Entity, String>of());
     }
     
-    protected void initServerPoolMemberTrackingPolicy() {
+    protected void addServerPoolMemberTrackingPolicy() {
+        Group serverPool = getServerPool();
+        if (serverPool == null) {
+            return; // no-op
+        }
+        if (serverPoolMemberTrackerPolicy != null) {
+            LOG.warn("Call to addServerPoolMemberTrackingPolicy when serverPoolMemberTrackingPolicy already exists, in {}", this);
+            removeServerPoolMemberTrackingPolicy();
+        }
+        
         AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
         AttributeSensor<?> hostnameSensor = getConfig(HOSTNAME_SENSOR);
         AttributeSensor<?> portSensor = getConfig(PORT_NUMBER_SENSOR);
@@ -101,13 +102,49 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         } else {
             sensorsToTrack = ImmutableSet.<AttributeSensor<?>>of(hostnameSensor, portSensor);
         }
-        Map<?, ?> policyFlags = MutableMap.of("name", "Controller targets tracker",
-            "sensorsToTrack", sensorsToTrack);
-        serverPoolMemberTrackerPolicy = new AbstractMembershipTrackingPolicy(policyFlags) {
-            @Override protected void onEntityEvent(EventType type, Entity entity) { onServerPoolMemberChanged(entity); }
-        };
+        
+        serverPoolMemberTrackerPolicy = addPolicy(PolicySpec.create(ServerPoolMemberTrackerPolicy.class)
+                .displayName("Controller targets tracker")
+                .configure("group", serverPool)
+                .configure("sensorsToTrack", sensorsToTrack));
+
+        LOG.info("Added policy {} to {}", serverPoolMemberTrackerPolicy, this);
+        
+        // Initialize ourselves immediately with the latest set of members; don't wait for
+        // listener notifications because then will be out-of-date for short period (causing 
+        // problems for rebind)
+        Map<Entity,String> serverPoolTargets = Maps.newLinkedHashMap();
+        for (Entity member : getServerPool().getMembers()) {
+            if (belongsInServerPool(member)) {
+                if (LOG.isTraceEnabled()) LOG.trace("Done {} checkEntity {}", this, member);
+                String address = getAddressOfEntity(member);
+                serverPoolTargets.put(member, address);
+            }
+        }
+
+        LOG.info("Resetting {}, server pool targets {}", new Object[] {this, serverPoolTargets});
+        setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
     }
     
+    protected void removeServerPoolMemberTrackingPolicy() {
+        if (serverPoolMemberTrackerPolicy != null) {
+            removePolicy(serverPoolMemberTrackerPolicy);
+        }
+    }
+    
+    public static class ServerPoolMemberTrackerPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityEvent(EventType type, Entity entity) {
+            // relies on policy-rebind injecting the implementation rather than the dynamic-proxy
+            ((AbstractControllerImpl)super.entity).onServerPoolMemberChanged(entity);
+        }
+    }
+    
+    @Override
+    public Set<String> getServerPoolAddresses() {
+        return ImmutableSet.copyOf(Iterables.filter(getAttribute(SERVER_POOL_TARGETS).values(), Predicates.notNull()));
+    }
+
     /**
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
      * Can pass in the 'serverPool'.
@@ -123,8 +160,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public void onManagementNoLongerMaster() {
         super.onManagementNoLongerMaster(); // TODO remove when deprecated method in parent removed
         isActive = false;
-        if (serverPoolMemberTrackerPolicy!=null)
-            serverPoolMemberTrackerPolicy.reset();
+        removeServerPoolMemberTrackingPolicy();
     }
 
     private Group getServerPool() {
@@ -183,11 +219,6 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         return getAttribute(HOST_AND_PORT_SENSOR);
     }
     
-    @Override
-    public Set<String> getServerPoolAddresses() {
-        return serverPoolAddresses;
-    }
-
     @Override
     public abstract void reload();
 
@@ -249,11 +280,12 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        LOG.info("Adding policy {} to {}, during start", serverPoolMemberTrackerPolicy, this);
-        addPolicy(serverPoolMemberTrackerPolicy);
         if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
         
-        resetServerPoolMemberTrackerPolicy();
+        // TODO when rebind policies, and rebind calls connectSensors, then this will cause problems.
+        // Also relying on addServerPoolMemberTrackingPolicy to set the serverPoolAddresses and serverPoolTargets.
+
+        addServerPoolMemberTrackingPolicy();
     }
     
     @Override
@@ -266,15 +298,17 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void postRebind() {
         super.postRebind();
-        isActive = true;
-        update();
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state != null && state == Lifecycle.RUNNING) {
+            isActive = true;
+            update();
+        }
     }
 
     @Override
     protected void preStop() {
         super.preStop();
-        if (serverPoolMemberTrackerPolicy!=null)
-            serverPoolMemberTrackerPolicy.reset();
+        removeServerPoolMemberTrackingPolicy();
     }
 
     /** 
@@ -308,41 +342,13 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         else {
             updateNeeded = false;
             LOG.debug("Updating {} in response to changes", this);
-            LOG.info("Updating {}, members {} with address {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
+            LOG.info("Updating {}, server pool targets {}", new Object[] {this, getAttribute(SERVER_POOL_TARGETS)});
             reconfigureService();
             LOG.debug("Reloading {} in response to changes", this);
             // reload should happen synchronously
             result = invoke(RELOAD);
         }
-        setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
         return result;
-    }
-
-    protected synchronized void resetServerPoolMemberTrackerPolicy() {
-        serverPoolMemberTrackerPolicy.reset();
-        serverPoolAddresses.clear();
-        serverPoolTargets.clear();
-        if (groovyTruth(getServerPool())) {
-            serverPoolMemberTrackerPolicy.setGroup(getServerPool());
-            
-            // Initialize ourselves immediately with the latest set of members; don't wait for
-            // listener notifications because then will be out-of-date for short period (causing 
-            // problems for rebind)
-            for (Entity member : getServerPool().getMembers()) {
-                if (belongsInServerPool(member)) {
-                    if (LOG.isTraceEnabled()) LOG.trace("Done {} checkEntity {}", this, member);
-                    String address = getAddressOfEntity(member);
-                    serverPoolTargets.put(member, address);
-                    if (address != null) {
-                        serverPoolAddresses.add(address);
-                    }
-                }
-            }
-            
-            LOG.info("Resetting {}, members {} with address {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
-        }
-        
-        setAttribute(SERVER_POOL_TARGETS, serverPoolAddresses);
     }
 
     protected synchronized void onServerPoolMemberChanged(Entity member) {
@@ -370,25 +376,20 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
     
     protected synchronized void addServerPoolMember(Entity member) {
-        String oldAddress = serverPoolTargets.get(member);
+        String oldAddress = getAttribute(SERVER_POOL_TARGETS).get(member);
         String newAddress = getAddressOfEntity(member);
-        if (newAddress == null) {
-            if (oldAddress != null) {
-                LOG.info("Removing from {}, member {} with old address {}, because inferred address is now null", new Object[] {this, member, oldAddress});
-                serverPoolAddresses.remove(oldAddress);
-            }
-        } else if (Objects.equal(newAddress, oldAddress)) {
+        if (Objects.equal(newAddress, oldAddress)) {
             if (LOG.isTraceEnabled())
-                LOG.trace("Ignoring unchanged address "+oldAddress);
+                if (LOG.isTraceEnabled()) LOG.trace("Ignoring unchanged address {}", oldAddress);
             return;
+        } else if (newAddress == null) {
+            LOG.info("Removing from {}, member {} with old address {}, because inferred address is now null", new Object[] {this, member, oldAddress});
         } else {
             if (oldAddress != null) {
                 LOG.info("Replacing in {}, member {} with old address {}, new address {}", new Object[] {this, member, oldAddress, newAddress});
-                serverPoolAddresses.remove(oldAddress);
             } else {
                 LOG.info("Adding to {}, new member {} with address {}", new Object[] {this, member, newAddress});
             }
-            serverPoolAddresses.add(newAddress);
         }
         
         if (Objects.equal(oldAddress, newAddress)) {
@@ -398,25 +399,21 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         
         // TODO this does it synchronously; an async method leaning on `updateNeeded` and `update` might
         // be more appropriate, especially when this is used in a listener
+        MapAttribute.put(this, SERVER_POOL_TARGETS, member, newAddress);
         updateAsync();
-        serverPoolTargets.put(member, newAddress);
     }
     
     protected synchronized void removeServerPoolMember(Entity member) {
-        if (!serverPoolTargets.containsKey(member)) {
+        if (!getAttribute(SERVER_POOL_TARGETS).containsKey(member)) {
             if (LOG.isTraceEnabled()) LOG.trace("For {}, not removing as don't have member {}", new Object[] {this, member});
             return;
         }
         
-        String address = serverPoolTargets.get(member);
-        if (address != null) {
-            serverPoolAddresses.remove(address);
-        }
+        String address = MapAttribute.remove(this, SERVER_POOL_TARGETS, member);
         
         LOG.info("Removing from {}, member {} with address {}", new Object[] {this, member, address});
         
         updateAsync();
-        serverPoolTargets.remove(member);
     }
     
     protected String getAddressOfEntity(Entity member) {
@@ -442,32 +439,22 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         }
     }
 
-    @Override
-    public RebindSupport<EntityMemento> getRebindSupport() {
-        return new BasicEntityRebindSupport(this) {
-            @Override public EntityMemento getMemento() {
-                // Note: using MutableMap so accepts nulls
-                Map<String, Object> flags = Maps.newLinkedHashMap();
-                flags.put("serverPoolAddresses", serverPoolAddresses);
-                flags.put("serverPoolTargets", serverPoolTargets);
-                return super.getMementoWithProperties(flags);
-            }
-            @SuppressWarnings({ "unchecked", "serial" })
-            @Override protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-                super.doReconstruct(rebindContext, memento);
-                // TODO If pool-target entity couldn't be resolved, then  serverPoolAddresses and serverPoolTargets
-                // will be out-of-sync (for ever more?)
-                serverPoolAddresses.addAll((Collection<String>) memento.getCustomField("serverPoolAddresses"));
-                serverPoolTargets.putAll((Map<Entity,String>) memento.getCustomField("serverPoolTargets"));
-            }
-        };
-    }
-
-    private final Function<Entity, String> entityIdFunction = new Function<Entity, String>() {
-        @Override
-        @Nullable
-        public String apply(@Nullable Entity input) {
-            return (input != null) ? input.getId() : null;
+    // Utilities for modifying an AttributeSensor of type map
+    private static class MapAttribute {
+        public static <K, V> V put(Entity entity, AttributeSensor<Map<K,V>> attribute, K key, V value) {
+            Map<K, V> oldMap = entity.getAttribute(attribute);
+            Map<K, V> newMap = MutableMap.copyOf(oldMap);
+            V oldVal = newMap.put(key, value);
+            ((EntityInternal)entity).setAttribute(attribute, newMap);
+            return oldVal;
         }
-    };
+        
+        public static <K, V> V remove(Entity entity, AttributeSensor<Map<K,V>> attribute, K key) {
+            Map<K, V> oldMap = entity.getAttribute(attribute);
+            Map<K, V> newMap = MutableMap.copyOf(oldMap);
+            V oldVal = newMap.remove(key);
+            ((EntityInternal)entity).setAttribute(attribute, newMap);
+            return oldVal;
+        }
+    }
 }

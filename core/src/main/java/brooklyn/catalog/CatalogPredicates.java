@@ -16,7 +16,7 @@ public class CatalogPredicates {
         return new Predicate<CatalogItem<T>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T> item) {
-                return item!=null && item.getCatalogItemType()==ciType;
+                return (item != null) && item.getCatalogItemType()==ciType;
             }
         };
     }
@@ -40,7 +40,7 @@ public class CatalogPredicates {
         return new Predicate<CatalogItem<T>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T> item) {
-                return item!=null && filter.apply(item.getName());
+                return (item != null) && filter.apply(item.getName());
             }
         };
     }
@@ -49,7 +49,7 @@ public class CatalogPredicates {
         return new Predicate<CatalogItem<T>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T> item) {
-                return item!=null && filter.apply(item.getJavaType());
+                return (item != null) && filter.apply(item.getJavaType());
             }
         };
     }
@@ -58,7 +58,7 @@ public class CatalogPredicates {
         return new Predicate<CatalogItem<T>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T> item) {
-                return item!=null && filter.apply(item.toXmlString());
+                return (item != null) && filter.apply(item.toXmlString());
             }
         };
     }

@@ -2,30 +2,6 @@ package brooklyn.entity.nosql.mongodb;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
-import brooklyn.location.Location;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.text.Strings;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -37,6 +13,34 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.enricher.Enrichers;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.location.Location;
+import brooklyn.policy.PolicySpec;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.text.Strings;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 /**
  * Implementation of {@link MongoDBReplicaSet}.
@@ -52,7 +56,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     // Provides IDs for replica set members. The first member will have ID 0.
     private final AtomicInteger nextMemberId = new AtomicInteger(0);
 
-    private AbstractMembershipTrackingPolicy policy;
+    private MemberTrackingPolicy policy;
     private final AtomicBoolean mustInitialise = new AtomicBoolean(true);
 
     @SuppressWarnings("unchecked")
@@ -261,20 +265,9 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     public void start(Collection<? extends Location> locations) {
         // Promises that all the cluster's members have SERVICE_UP true on returning.
         super.start(locations);
-        policy = new AbstractMembershipTrackingPolicy(MutableMap.of("name", getName() + " membership tracker")) {
-            @Override protected void onEntityChange(Entity member) {
-                // Ignored
-            }
-            @Override protected void onEntityAdded(Entity member) {
-                serverAdded((MongoDBServer) member);
-            }
-            @Override protected void onEntityRemoved(Entity member) {
-                serverRemoved((MongoDBServer) member);
-            }
-        };
-
-        addPolicy(policy);
-        policy.setGroup(this);
+        policy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName(getName() + " membership tracker")
+                .configure("group", this));
 
         for (AttributeSensor<Long> sensor: SENSORS_TO_SUM)
             addEnricher(Enrichers.builder()
@@ -346,4 +339,15 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         setAttribute(Startable.SERVICE_UP, false);
     }
 
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override protected void onEntityChange(Entity member) {
+            // Ignored
+        }
+        @Override protected void onEntityAdded(Entity member) {
+            ((MongoDBReplicaSetImpl)entity).serverAdded((MongoDBServer) member);
+        }
+        @Override protected void onEntityRemoved(Entity member) {
+            ((MongoDBReplicaSetImpl)entity).serverRemoved((MongoDBServer) member);
+        }
+    };
 }

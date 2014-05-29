@@ -18,8 +18,12 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.Tasks;
@@ -31,6 +35,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
@@ -147,4 +152,25 @@ public class SshTasks {
         };
     }
 
+    /** task to install a file given a url, where the url is resolved remotely first then locally */
+    public static TaskFactory<?> installFromUrl(final SshMachineLocation location, final String url, final String destPath) {
+        return installFromUrl(ResourceUtils.create(SshTasks.class), ImmutableMap.<String,Object>of(), location, url, destPath);
+    }
+    /** task to install a file given a url, where the url is resolved remotely first then locally */
+    public static TaskFactory<?> installFromUrl(final ResourceUtils utils, final Map<String, ?> props, final SshMachineLocation location, final String url, final String destPath) {
+        return new TaskFactory<TaskAdaptable<?>>() {
+            @Override
+            public TaskAdaptable<?> newTask() {
+                return Tasks.<Void>builder().name("installing "+Urls.getBasename(url)).description("installing "+url+" to "+destPath).body(new Runnable() {
+                    @Override
+                    public void run() {
+                        int result = location.installTo(utils, props, url, destPath);
+                        if (result!=0) 
+                            throw new IllegalStateException("Failed to install '"+url+"' to '"+destPath+"' at "+location+": exit code "+result);
+                    }
+                }).build();
+            }
+        };
+    }
+    
 }

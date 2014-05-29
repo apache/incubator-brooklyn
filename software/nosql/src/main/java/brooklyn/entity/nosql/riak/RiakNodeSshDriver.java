@@ -1,11 +1,6 @@
 package brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
-import static brooklyn.util.ssh.BashCommands.alternatives;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
-import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -13,6 +8,11 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
@@ -25,11 +25,6 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.DynamicTasks;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
@@ -53,10 +48,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         MutableMap<String, String> result = MutableMap.copyOf(super.getShellEnvironment());
         // how to change epmd port, according to 
         // http://serverfault.com/questions/582787/how-to-change-listening-interface-of-rabbitmqs-epmd-port-4369
-        result.put("ERL_EPMD_PORT", ""+getEntity().getEpmdListenerPort());
+        result.put("ERL_EPMD_PORT", "" + Integer.toString(getEntity().getEpmdListenerPort()));
         return result;
     }
-    
+
     @Override
     public void install() {
         DownloadResolver resolver = Entities.newDownloader(this);
@@ -129,7 +124,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         isRiakOnPath = isPackageInstall ? isRiakOnPath() : true;
 
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
-        
+
         List<String> commands = Lists.newLinkedList();
 
         String vmArgsTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_VM_ARGS_TEMPLATE_URL));
@@ -161,7 +156,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             customizeScript.environmentVariablesReset(newPathVariable);
         }
-
         customizeScript.execute();
 
         //set the riak node name
@@ -182,7 +176,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             launchScript.environmentVariablesReset(newPathVariable);
         }
-
         launchScript.execute();
     }
 
@@ -204,7 +197,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         }
 
         int result = stopScript.execute();
-
         if (result != 0) {
             newScript(ImmutableMap.of(USE_PID_FILE, ""), STOPPING).execute();
         }
@@ -221,9 +213,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             checkRunningScript.environmentVariablesReset(newPathVariable);
         }
-
         return (checkRunningScript.execute() == 0);
-
     }
 
     public String getRiakEtcDir() {
@@ -249,12 +239,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         if (getRiakName().equals(nodeName)) {
             log.warn("cannot join riak node: {} to itself", nodeName);
         } else {
-            if (!isInCluster()) {
+            if (!hasJoinedCluster()) {
 
                 ScriptHelper joinClusterScript = newScript("joinCluster")
                         .body.append(format("%s cluster join %s", getRiakAdminCmd(), nodeName))
-                        .body.append(format("%s cluster plan", getRiakAdminCmd()))
-                        .body.append(format("%s cluster commit", getRiakAdminCmd()))
                         .failOnNonZeroResultCode();
 
                 if (!isRiakOnPath) {
@@ -265,7 +253,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
                 joinClusterScript.execute();
 
-                entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.TRUE);
+                entity.setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
             } else {
                 log.warn("entity {}: is already in the riak cluster", entity.getId());
             }
@@ -278,7 +266,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         //FIXME: find a way to batch commit the changes, instead of committing for every operation.
         //FIXME: find a way to check if the node is the last in the cluster to avoid removing the only member and getting "last node error"
 
-        if (isInCluster()) {
+        if (hasJoinedCluster()) {
             ScriptHelper leaveClusterScript = newScript("leaveCluster")
                     .body.append(format("%s cluster leave", getRiakAdminCmd()))
                     .body.append(format("%s cluster plan", getRiakAdminCmd()))
@@ -292,7 +280,27 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
             leaveClusterScript.execute();
 
-            entity.setAttribute(RiakNode.RIAK_NODE_IN_CLUSTER, Boolean.FALSE);
+            entity.setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.FALSE);
+        } else {
+            log.warn("entity {}: is not in the riak cluster", entity.getId());
+        }
+    }
+
+    @Override
+    public void commitCluster() {
+
+        if (hasJoinedCluster()) {
+            ScriptHelper commitClusterScript = newScript("commitCluster")
+                    .body.append(format("%s cluster plan", getRiakAdminCmd()))
+                    .body.append(format("%s cluster commit", getRiakAdminCmd()));
+
+            if (!isRiakOnPath) {
+                Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+                log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+                commitClusterScript.environmentVariablesReset(newPathVariable);
+            }
+            commitClusterScript.execute();
+
         } else {
             log.warn("entity {}: is not in the riak cluster", entity.getId());
         }
@@ -305,7 +313,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         //argument passed 'node' is any working node in the riak cluster
         //following the instruction from: http://docs.basho.com/riak/latest/ops/running/recovery/failed-node/
 
-        if (isInCluster()) {
+        if (hasJoinedCluster()) {
             String failedNodeName = getRiakName();
 
 
@@ -350,8 +358,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             throw new IllegalArgumentException("Subnet address is not set.");
     }
 
-    private Boolean isInCluster() {
-        return Optional.fromNullable(entity.getAttribute(RiakNode.RIAK_NODE_IN_CLUSTER)).or(Boolean.FALSE);
+    private Boolean hasJoinedCluster() {
+        return ((RiakNode) entity).hasJoinedCluster();
     }
 
     private boolean isRiakOnPath() {

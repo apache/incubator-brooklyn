@@ -174,6 +174,8 @@ public class ConfigBag {
     }
 
     public ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
+        if (propertiesToSet==null)
+            return this;
         for (Map.Entry<?, ?> entry: propertiesToSet.entrySet()) {
             Object key = entry.getKey();
             if (key instanceof HasConfigKey<?>)

@@ -29,16 +29,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.StackTraceSimplifier;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
 public class ArchiveUtils {
@@ -126,6 +131,11 @@ public class ArchiveUtils {
      * @see #extractCommands(String, String)
      */
     public static List<String> extractCommands(String fileName, String sourceDir, String targetDir, boolean extractJar) {
+        return extractCommands(fileName, sourceDir, targetDir, extractJar, true);
+    }
+    
+    /** as {@link #extractCommands(String, String, String, boolean)}, but also with option to keep the original */
+    public static List<String> extractCommands(String fileName, String sourceDir, String targetDir, boolean extractJar, boolean keepOriginal) {
         List<String> commands = new LinkedList<String>();
         commands.add("cd " + targetDir);
         String sourcePath = Os.mergePathsUnix(sourceDir, fileName);
@@ -150,9 +160,12 @@ public class ArchiveUtils {
                     break;
                 }
             case UNKNOWN:
-                commands.add("cp " + sourcePath + " " + targetDir);
+                if (!sourcePath.equals(Urls.mergePaths(targetDir, fileName)))
+                    commands.add("cp " + sourcePath + " " + targetDir);
                 break;
         }
+        if (!keepOriginal && !commands.isEmpty())
+            commands.add("rm "+sourcePath);
         return commands;
     }
 
@@ -212,7 +225,10 @@ public class ArchiveUtils {
     public static void deploy(Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String destDir, String destFile) {
         deploy(props, archiveUrl, machine, destDir, destDir, destFile);
     }
-
+    public static void deploy(Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String tmpDir, String destDir, String destFile) {
+        deploy(null, props, archiveUrl, machine, destDir, true, tmpDir, destFile);
+    }
+    
     /**
      * Deploys an archive file to a remote machine and extracts the contents.
      * <p>
@@ -224,17 +240,30 @@ public class ArchiveUtils {
      * @see #deploy(Map, String, SshMachineLocation, String, String, String)
      * @see #install(SshMachineLocation, String, String, int)
      */
-    public static void deploy(Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String tmpDir, String destDir, String destFile) {
-        String destPath = Os.mergePaths(tmpDir, destFile);
+    public static void deploy(ResourceUtils resolver, Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String destDir, boolean keepArchiveAfterUnpacking, String optionalTmpDir, String optionalDestFile) {
+        if (optionalDestFile==null) optionalDestFile = Urls.getBasename(Preconditions.checkNotNull(archiveUrl, "archiveUrl"));
+        if (Strings.isBlank(optionalDestFile)) 
+            throw new IllegalStateException("Not given filename and cannot infer archive type from '"+archiveUrl+"'");
+        if (optionalTmpDir==null) optionalTmpDir=Preconditions.checkNotNull(destDir, "destDir");
+        if (props==null) props = MutableMap.of();
+        String destPath = Os.mergePaths(optionalTmpDir, optionalDestFile);
 
         // Use the location mutex to prevent package manager locking issues
         try {
             machine.acquireMutex("installing", "installing archive");
-            int result = install(props, machine, archiveUrl, destPath, NUM_RETRIES_FOR_COPYING);
+            int result = install(resolver, props, machine, archiveUrl, destPath, NUM_RETRIES_FOR_COPYING);
             if (result != 0) {
                 throw new IllegalStateException(format("Unable to install archive %s to %s", archiveUrl, machine));
             }
-            result = machine.execCommands(props, "extracting content", extractCommands(destFile, tmpDir, destDir, false));
+            
+            // extract, now using task if available
+            MutableList<String> commands = MutableList.copyOf(installCommands(optionalDestFile))
+                .appendAll(extractCommands(optionalDestFile, optionalTmpDir, destDir, false, keepArchiveAfterUnpacking));
+            if (DynamicTasks.getTaskQueuingContext()!=null) {
+                result = DynamicTasks.queue(SshTasks.newSshExecTaskFactory(machine, commands.toArray(new String[0])).summary("extracting archive").requiringExitCodeZero()).get();
+            } else {
+                result = machine.execCommands(props, "extracting content", commands);
+            }
             if (result != 0) {
                 throw new IllegalStateException(format("Failed to expand archive %s on %s", archiveUrl, machine));
             }
@@ -261,6 +290,11 @@ public class ArchiveUtils {
      * @see SshMachineLocation#installTo(Map, String, String)
      */
     public static int install(Map<String, ?> props, SshMachineLocation machine, String urlToInstall, String target, int numAttempts) {
+        return install(null, props, machine, urlToInstall, target, numAttempts);
+    }
+    
+    public static int install(ResourceUtils resolver, Map<String, ?> props, SshMachineLocation machine, String urlToInstall, String target, int numAttempts) {
+        if (resolver==null) resolver = ResourceUtils.create(machine);
         Exception lastError = null;
         int retriesRemaining = numAttempts;
         int attemptNum = 0;
@@ -269,7 +303,7 @@ public class ArchiveUtils {
             try {
                 Tasks.setBlockingDetails("Installing "+urlToInstall+" at "+machine);
                 // TODO would be nice to have this in a task (and the things within it!)
-                return machine.installTo(props, urlToInstall, target);
+                return machine.installTo(resolver, props, urlToInstall, target);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 lastError = e;

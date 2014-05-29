@@ -2,15 +2,16 @@ package brooklyn.location.basic;
 
 import java.util.Map;
 
-import com.google.common.annotations.Beta;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.location.Location;
+import brooklyn.management.ManagementContext;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.config.ConfigBag;
+
+import com.google.common.annotations.Beta;
 
 /**
  * Information about locations private to Brooklyn.
@@ -50,4 +51,6 @@ public interface LocationInternal extends Location, Rebindable {
 
     @Override
     RebindSupport<LocationMemento> getRebindSupport();
+    
+    ManagementContext getManagementContext();
 }

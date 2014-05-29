@@ -33,5 +33,15 @@ public class UrlsTest {
         Assert.assertFalse(Urls.isUrlWithProtocol("1:/"));
         Assert.assertFalse(Urls.isUrlWithProtocol(null));
     }
+
+    @Test
+    public void testGetBasename() {
+        assertEquals(Urls.getBasename("http://somewhere.com/path/to/file.txt"), "file.txt");
+        assertEquals(Urls.getBasename("http://somewhere.com/path/to/dir/"), "dir");
+        assertEquals(Urls.getBasename("http://somewhere.com/path/to/file.txt?with/optional/suffice"), "file.txt");
+        assertEquals(Urls.getBasename("filewith?.txt"), "filewith?.txt");
+        assertEquals(Urls.getBasename(""), "");
+        assertEquals(Urls.getBasename(null), null);
+    }
     
 }

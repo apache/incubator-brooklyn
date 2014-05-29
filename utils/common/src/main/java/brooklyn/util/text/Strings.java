@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -664,6 +665,24 @@ public class Strings {
     public static String s(int count) {
         return count==1 ? "" : "s";
     }
+    /** as {@link #s(int)} based on size of argument */
+    public static String s(@Nullable Map<?,?> map) {
+        if (map==null) return "s";
+        return s(map.size());
+    }
+    /** as {@link #s(int)} based on size of argument */
+    public static String s(Iterable<?> iter) {
+        if (iter==null) return "s";
+        return s(iter.iterator());
+    }
+    /** as {@link #s(int)} based on size of argument */
+    public static String s(Iterator<?> iter) {
+        if (iter==null) return "s";
+        if (!iter.hasNext()) return "s";
+        iter.next();
+        if (!iter.hasNext()) return "";
+        return "s";
+    }
 
     /** converts a map of any objects to a map of strings, preserving nulls and invoking toString where needed */
     public static Map<String, String> toStringMap(Map<?,?> map) {
@@ -721,5 +740,5 @@ public class Strings {
         else
             return Collections.list(new StringTokenizer(phrase)).size();
     }
-    
+
 }

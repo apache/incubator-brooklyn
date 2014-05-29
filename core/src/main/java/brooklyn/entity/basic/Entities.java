@@ -16,7 +16,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
@@ -40,6 +39,7 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocationInternal;
+import brooklyn.location.basic.Locations;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
@@ -58,7 +58,6 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.javalang.Threads;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
@@ -471,38 +470,12 @@ public class Entities {
         return false;
     }
 
-    private static final List<Entity> entitiesToStopOnShutdown = Lists.newArrayList();
-    private static final AtomicBoolean isShutdownHookRegistered = new AtomicBoolean();
-
+    /**
+     * @deprecated since 0.7.0; instead use {@link BrooklynShutdownHooks#invokeStopOnShutdown(Entity)}
+     */
+    @Deprecated
     public static void invokeStopOnShutdown(Entity entity) {
-        if (isShutdownHookRegistered.compareAndSet(false, true)) {
-            Threads.addShutdownHook(new Runnable() {
-                @SuppressWarnings({ "unchecked", "rawtypes" })
-                public void run() {
-                    synchronized (entitiesToStopOnShutdown) {
-                        log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping "+entitiesToStopOnShutdown);
-                        List<Task> stops = new ArrayList<Task>();
-                        for (Entity entity: entitiesToStopOnShutdown) {
-                            try {
-                                stops.add(entity.invoke(Startable.STOP, new MutableMap()));
-                            } catch (Exception exc) {
-                                log.debug("stopOnShutdown of "+entity+" returned error: "+exc, exc);
-                            }
-                        }
-                        for (Task t: stops) {
-                            try {
-                                log.debug("stopOnShutdown of {} completed: {}", t, t.get());
-                            } catch (Exception exc) {
-                                log.debug("stopOnShutdown of "+t+" returned error: "+exc, exc);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        synchronized (entitiesToStopOnShutdown) {
-            entitiesToStopOnShutdown.add(entity);
-        }
+        BrooklynShutdownHooks.invokeStopOnShutdown(entity);
     }
 
     /** convenience for starting an entity, esp a new Startable instance which has been created dynamically
@@ -743,21 +716,11 @@ public class Entities {
     }
     
     /**
-     * Registers the given location (and all its children) with the management context. 
-     * @throws IllegalStateException if the parent location is not already managed
-     * 
      * @since 0.6.0 (added only for backwards compatibility, where locations are being created directly).
-     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead.
+     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead; or {@link Locations#manage(Location, ManagementContext)}
      */
     public static void manage(Location loc, ManagementContext managementContext) {
-        if (!managementContext.getLocationManager().isManaged(loc)) {
-            log.warn("Deprecated use of unmanaged location ("+loc+"); will be managed automatically now but not supported in future versions");
-            // FIXME this occurs MOST OF THE TIME e.g. including BrooklynLauncher.location(locationString)
-            // not sure what is the recommend way to convert from locationString to locationSpec, or the API we want to expose;
-            // deprecating some of the LocationRegistry methods seems sensible?
-            log.debug("Stack trace for location of: Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("TRACE for: Deprecated use of unmanaged location"));
-            managementContext.getLocationManager().manage(loc);
-        }
+        Locations.manage(loc, managementContext);
     }
     
     /** fails-fast if value of the given key is null or unresolveable */

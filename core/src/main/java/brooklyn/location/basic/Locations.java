@@ -4,14 +4,23 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
+import brooklyn.management.LocationManager;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.collect.ImmutableList;
 
 public class Locations {
+
+    private static final Logger log = LoggerFactory.getLogger(Locations.class);
 
     public static final LocationsFilter USE_FIRST_LOCATION = new LocationsFilter() {
         private static final long serialVersionUID = 3100091615409115890L;
@@ -49,4 +58,33 @@ public class Locations {
         return locations;
     }
     
+    public static boolean isManaged(Location loc) {
+        ManagementContext mgmt = ((LocationInternal)loc).getManagementContext();
+        return (mgmt != null) && mgmt.isRunning() && mgmt.getLocationManager().isManaged(loc);
+    }
+
+    public static void unmanage(Location loc) {
+        if (isManaged(loc)) {
+            ManagementContext mgmt = ((LocationInternal)loc).getManagementContext();
+            mgmt.getLocationManager().unmanage(loc);
+        }
+    }
+    
+    /**
+     * Registers the given location (and all its children) with the management context. 
+     * @throws IllegalStateException if the parent location is not already managed
+     * 
+     * @since 0.6.0 (added only for backwards compatibility, where locations are being created directly; previously in {@link Entities}).
+     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead.
+     */
+    public static void manage(Location loc, ManagementContext managementContext) {
+        if (!managementContext.getLocationManager().isManaged(loc)) {
+            log.warn("Deprecated use of unmanaged location ("+loc+"); will be managed automatically now but not supported in future versions");
+            // FIXME this occurs MOST OF THE TIME e.g. including BrooklynLauncher.location(locationString)
+            // not sure what is the recommend way to convert from locationString to locationSpec, or the API we want to expose;
+            // deprecating some of the LocationRegistry methods seems sensible?
+            log.debug("Stack trace for location of: Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("TRACE for: Deprecated use of unmanaged location"));
+            managementContext.getLocationManager().manage(loc);
+        }
+    }
 }

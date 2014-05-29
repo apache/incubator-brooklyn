@@ -1,0 +1,64 @@
+[#ftl]
+##
+# Copyright 2013 by Cloudsoft Corp.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SaltStack Master Configuration
+#
+# /etc/salt/master
+##
+
+#interface: 0.0.0.0
+#ipv6: False
+#publish_port: ${entity.publishPort,c} # 4505
+
+#user: root
+#max_open_files: 100000
+#worker_threads: 5
+ret_port: ${entity.saltPort,c} # 4506
+
+root_dir: /
+pidfile: ${driver.pidFile}
+pki_dir: ${runDir}/pki
+cachedir: ${runDir}/cache
+log_file: ${driver.logFileLocation}
+key_logfile: ${runDir}/key.log
+
+#verify_env: True
+#keep_jobs: 24
+
+#timeout: 5
+#loop_interval: 60
+
+output: nested
+color: False
+log_level: info
+log_level_logfile: debug # Debugging
+
+#job_cache: True
+#minion_data_cache: True
+
+#open_mode: False
+#auto_accept: False
+#autosign_file: autosign.conf
+#permissive_pki_access: False
+
+fileserver_backend:
+  - git
+
+gitfs_remotes:
+  - git://github.com/saltstack/salt-states.git
+  - git://github.com/saltstack-formulas/postgres-formula.git
+  - ${entity.remoteUrl}
+  # TODO iterate through formula URLs
