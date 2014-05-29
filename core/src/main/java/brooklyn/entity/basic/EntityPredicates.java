@@ -8,14 +8,16 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.util.guava.SerializablePredicate;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 
+@SuppressWarnings("serial")
 public class EntityPredicates {
 
     public static <T> Predicate<Entity> idEqualTo(final T val) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && Objects.equal(input.getId(), val);
@@ -24,7 +26,7 @@ public class EntityPredicates {
     }
     
     public static <T> Predicate<Entity> displayNameEqualTo(final T val) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && Objects.equal(input.getDisplayName(), val);
@@ -33,7 +35,7 @@ public class EntityPredicates {
     }
     
     public static Predicate<Entity> applicationIdEqualTo(final String val) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && val.equals(input.getApplicationId());
@@ -42,7 +44,7 @@ public class EntityPredicates {
     }
 
     public static <T> Predicate<Entity> attributeEqualTo(final AttributeSensor<T> attribute, final T val) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && Objects.equal(input.getAttribute(attribute), val);
@@ -51,7 +53,7 @@ public class EntityPredicates {
     }
     
     public static <T> Predicate<Entity> configEqualTo(final ConfigKey<T> configKey, final T val) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && Objects.equal(input.getConfig(configKey), val);
@@ -60,7 +62,7 @@ public class EntityPredicates {
     }
 
     public static <T> Predicate<Entity> configEqualTo(final HasConfigKey<T> configKey, final T val) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && Objects.equal(input.getConfig(configKey), val);
@@ -72,7 +74,7 @@ public class EntityPredicates {
      * Returns a predicate that determines if a given entity is a direct child of this {@code parent}.
      */
     public static <T> Predicate<Entity> isChildOf(final Entity parent) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && Objects.equal(input.getParent(), parent);
@@ -81,7 +83,7 @@ public class EntityPredicates {
     }
 
     public static <T> Predicate<Entity> isMemberOf(final Group group) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && group.hasMember(input);
@@ -94,7 +96,7 @@ public class EntityPredicates {
      * (i.e. {@code entity.getLocations().contains(location)}).
      */
     public static <T> Predicate<Entity> withLocation(final Location location) {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && input.getLocations().contains(location);
@@ -103,7 +105,7 @@ public class EntityPredicates {
     }
     
     public static <T> Predicate<Entity> managed() {
-        return new Predicate<Entity>() {
+        return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
                 return (input != null) && Entities.isManaged(input);
