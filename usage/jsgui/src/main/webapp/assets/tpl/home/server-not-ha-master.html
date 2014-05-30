@@ -4,5 +4,10 @@
         <h1 class="lead">Warning!</h1>
         <p><strong>This Brooklyn server is not the high availability master.</strong></p>
         <p>You cannot use this server directly.</p>
+    <% if (masterUri) { %>
+        <p>The master Brooklyn server is at: <a href="<%= masterUri %>"><%= masterUri %></a></p>
+    <% } else { %>
+        <p>The master Brooklyn server is not currently known.</p>
+    <% } %>
     </div>
 </div>

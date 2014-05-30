@@ -168,12 +168,13 @@ define([
     })
 
     var HaStandbyOverlay = Backbone.View.extend({
+        template: _.template(ServerNotMasterHtml),
         initialize: function() {
             this.listenTo(ha, "change", this.render);
         },
         render: function() {
             if (!ha.isMaster()) {
-                this.$el.html(ServerNotMasterHtml);
+                this.$el.html(this.template({"masterUri": ha.getMasterUri()}));
             } else {
                 this.$el.empty();
             }

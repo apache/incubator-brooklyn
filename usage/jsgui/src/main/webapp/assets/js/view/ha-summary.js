@@ -7,7 +7,10 @@ define([
     var template = _.template(HASummaryHtml);
     var nodeRowTemplate = _.template(
         "<tr>" +
-            "<td><%= nodeId %><% if (isSelf) { %><span class='pull-right badge badge-success'>this</span><% } %></td>" +
+            "<td>" +
+                "<% if (nodeUri) { %><a href='<%= nodeUri %>'><%= nodeId %></a><% } else { %><%= nodeId %><%    } %>" +
+                "<% if (isSelf) { %><span class='pull-right badge badge-success'>this</span><% } %>" +
+            "</td>" +
             "<td><%= status %></td>" +
             "<td class='timestamp' data-timestamp='<%= timestampUtc %>'><%= timestamp %></td>" +
         "</tr>");

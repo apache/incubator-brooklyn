@@ -1363,7 +1363,6 @@ the element's children, who probably want to control their opacity separately. *
     top: 100px;
     left: 50%;
     width: 400px;
-    height: 100px;
     /* margin-left = width / 2 */
     margin: 0 0 0 -200px;
     padding: 20px;
