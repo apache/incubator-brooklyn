@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -96,13 +97,28 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
 
     @Override
     public boolean isRunning() {
-        // TODO custom
-        return newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute()==0;
+        String customCommand = getEntity().getConfig(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND);
+        ScriptHelper script = null;
+        if (customCommand == null) {
+            script = newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING);
+        } else {
+            // TODO: template substitutions?
+            script = newScript(CHECK_RUNNING).body.append(customCommand);
+        }
+        return script.execute() == 0;
     }
 
     @Override
     public void stop() {
-        // TODO custom
-        newScript(MutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
+        String customCommand = getEntity().getConfig(VanillaSoftwareProcess.STOP_COMMAND);
+        ScriptHelper script = null;
+        if (customCommand == null) {
+            script = newScript(MutableMap.of(USE_PID_FILE, getPidFile()), STOPPING);
+        } else {
+            // TODO: template substitutions?
+            script = newScript(STOPPING).body.append(customCommand);
+        }
+        script.execute();
     }
+
 }
