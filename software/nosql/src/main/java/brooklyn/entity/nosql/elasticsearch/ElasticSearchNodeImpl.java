@@ -7,6 +7,7 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -37,15 +38,20 @@ public class ElasticSearchNodeImpl extends SoftwareProcessImpl implements Elasti
                 return input.getAsJsonObject().entrySet().iterator().next().getKey();
             }
         };
-        Function<JsonElement, JsonElement> getFirstNode = new Function<JsonElement, JsonElement>() {
+        
+        Function<JsonElement, JsonElement> getFirstNodeFromNodes = new Function<JsonElement, JsonElement>() {
             @Override public JsonElement apply(JsonElement input) {
                 return input.getAsJsonObject().entrySet().iterator().next().getValue();
             }
         };
+        
+        Function<HttpToolResponse, JsonElement> getFirstNode = HttpValueFunctions.chain(HttpValueFunctions.jsonContents(), 
+            JsonFunctions.walk("nodes"), getFirstNodeFromNodes);
+                
         httpFeed = HttpFeed.builder()
             .entity(this)
             .period(1000)
-            .baseUri(String.format("http://%s:%s/_nodes/_local", hp.getHostText(), hp.getPort()))
+            .baseUri(String.format("http://%s:%s/_nodes/_local/stats", hp.getHostText(), hp.getPort()))
             .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                 .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                 .onFailureOrException(Functions.constant(false)))
@@ -53,13 +59,29 @@ public class ElasticSearchNodeImpl extends SoftwareProcessImpl implements Elasti
                         .onSuccess(HttpValueFunctions.chain(HttpValueFunctions.jsonContents(), JsonFunctions.walk("nodes"), getNodeId))
                         .onFailureOrException(Functions.constant("")))
             .poll(new HttpPollConfig<String>(NODE_NAME)
-                .onSuccess(HttpValueFunctions.chain(HttpValueFunctions.chain(HttpValueFunctions.jsonContents(), JsonFunctions.walk("nodes"), getFirstNode), 
-                        JsonFunctions.walk("name"), JsonFunctions.cast(String.class)))
-                .onFailureOrException(Functions.constant("")))
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("name"), JsonFunctions.cast(String.class)))
+                .onFailureOrException(Functions.<String>constant(null)))
             .poll(new HttpPollConfig<String>(CLUSTER_NAME)
-                .onSuccess(HttpValueFunctions.chain(HttpValueFunctions.chain(HttpValueFunctions.jsonContents(), JsonFunctions.walk("nodes"), getFirstNode), 
-                        JsonFunctions.walk("settings", "cluster", "name"), JsonFunctions.cast(String.class)))
-                .onFailureOrException(Functions.constant("")))
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("settings", "cluster", "name"), JsonFunctions.cast(String.class)))
+                .onFailureOrException(Functions.<String>constant(null)))
+            .poll(new HttpPollConfig<Integer>(DOCUMENT_COUNT)
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "docs", "count"), JsonFunctions.cast(Integer.class)))
+                .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(STORE_BYTES)
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "store", "size_in_bytes"), JsonFunctions.cast(Integer.class)))
+                .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(GET_TOTAL)
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "get", "total"), JsonFunctions.cast(Integer.class)))
+                .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(GET_TIME_IN_MILLIS)
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "get", "time_in_millis"), JsonFunctions.cast(Integer.class)))
+                .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(SEARCH_QUERY_TOTAL)
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "search", "query_total"), JsonFunctions.cast(Integer.class)))
+                .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(SEARCH_QUERY_TIME_IN_MILLIS)
+                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "search", "query_time_in_millis"), JsonFunctions.cast(Integer.class)))
+                .onFailureOrException(Functions.<Integer>constant(null)))
             .build();
     }
     

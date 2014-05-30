@@ -31,4 +31,10 @@ public interface ElasticSearchNode extends SoftwareProcess, DatastoreMixins.HasD
     AttributeSensor<String> NODE_ID = Sensors.newStringSensor("elasticsearch.node.id");
     AttributeSensor<String> NODE_NAME = Sensors.newStringSensor("elasticsearch.node.name");
     AttributeSensor<String> CLUSTER_NAME = Sensors.newStringSensor("elasticsearch.cluster.name");
+    AttributeSensor<Integer> DOCUMENT_COUNT = Sensors.newIntegerSensor("elasticsearch.docs.count");
+    AttributeSensor<Integer> STORE_BYTES = Sensors.newIntegerSensor("elasticsearch.store.bytes");
+    AttributeSensor<Integer> GET_TOTAL = Sensors.newIntegerSensor("elasticsearch.get.total");
+    AttributeSensor<Integer> GET_TIME_IN_MILLIS = Sensors.newIntegerSensor("elasticsearch.get.time.in.millis");
+    AttributeSensor<Integer> SEARCH_QUERY_TOTAL = Sensors.newIntegerSensor("elasticsearch.search.query.total");
+    AttributeSensor<Integer> SEARCH_QUERY_TIME_IN_MILLIS = Sensors.newIntegerSensor("elasticsearch.search.query.time.in.millis");
 }
