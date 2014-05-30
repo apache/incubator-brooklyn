@@ -251,7 +251,6 @@ public class MementosGenerators {
         builder.config.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(enricher, Modifier.STATIC ^ Modifier.TRANSIENT));
 
         return builder;
-
     }
     
     protected static Object configValueToPersistable(Object value) {

@@ -14,11 +14,11 @@ import com.google.common.collect.Maps;
  */
 public class BrooklynFeatureEnablement {
 
-    public static final String ENABLE_POLICY_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.policyPersistence";
+    public static final String FEATURE_POLICY_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.policyPersistence";
     
-    public static final String ENABLE_ENRICHER_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.enricherPersistence";
+    public static final String FEATURE_ENRICHER_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.enricherPersistence";
     
-    private static final Map<String, Boolean> FEATURE_ENABLEMENT_CACHE = Maps.newLinkedHashMap();
+    private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
     private static final Object MUTEX = new Object();
     
@@ -31,29 +31,37 @@ public class BrooklynFeatureEnablement {
     
     public static boolean isEnabled(String property) {
         synchronized (MUTEX) {
-            if (!FEATURE_ENABLEMENT_CACHE.containsKey(property)) {
+            if (!FEATURE_ENABLEMENTS.containsKey(property)) {
                 String rawVal = System.getProperty(property);
                 boolean val = Boolean.parseBoolean(rawVal);
-                FEATURE_ENABLEMENT_CACHE.put(property, val);
+                FEATURE_ENABLEMENTS.put(property, val);
             }
-            return FEATURE_ENABLEMENT_CACHE.get(property);
+            return FEATURE_ENABLEMENTS.get(property);
         }
+    }
+
+    public static boolean enable(String property) {
+        return setEnablement(property, true);
+    }
+    
+    public static boolean disable(String property) {
+        return setEnablement(property, false);
     }
     
     public static boolean setEnablement(String property, boolean val) {
         synchronized (MUTEX) {
             boolean oldVal = isEnabled(property);
-            FEATURE_ENABLEMENT_CACHE.put(property, val);
+            FEATURE_ENABLEMENTS.put(property, val);
             return oldVal;
         }
     }
     
     static void setDefault(String property, boolean val) {
         synchronized (MUTEX) {
-            if (!FEATURE_ENABLEMENT_CACHE.containsKey(property)) {
+            if (!FEATURE_ENABLEMENTS.containsKey(property)) {
                 String rawVal = System.getProperty(property);
                 if (rawVal == null) {
-                    FEATURE_ENABLEMENT_CACHE.put(property, val);
+                    FEATURE_ENABLEMENTS.put(property, val);
                 }
             }
         }
@@ -61,7 +69,7 @@ public class BrooklynFeatureEnablement {
     
     static void clearCache() {
         synchronized (MUTEX) {
-            FEATURE_ENABLEMENT_CACHE.clear();
+            FEATURE_ENABLEMENTS.clear();
         }
     }
 }

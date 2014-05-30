@@ -747,4 +747,12 @@ public class Reflections {
         findAllInterfaces(type.getSuperclass(), found);
     }
 
+    public static boolean hasNoArgConstructor(Class<?> clazz) {
+        try {
+            clazz.getConstructor(new Class[0]);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
 }

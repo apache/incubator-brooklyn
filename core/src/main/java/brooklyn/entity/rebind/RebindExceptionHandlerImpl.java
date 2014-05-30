@@ -264,7 +264,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
                 allExceptions.add(new IllegalStateException("Missing referenced location"+(missingLocations.size() == 1 ? "" : "s")+": "+missingLocations));
             }
             if (missingPolicies.size() > 0) {
-                allExceptions.add(new IllegalStateException("Missing referenced policy"+(missingPolicies.size() == 1 ? "" : "s")+": "+missingPolicies));
+                allExceptions.add(new IllegalStateException("Missing referenced polic"+(missingPolicies.size() == 1 ? "y" : "ies")+": "+missingPolicies));
             }
             if (missingEnrichers.size() > 0) {
                 allExceptions.add(new IllegalStateException("Missing referenced enricher"+(missingEnrichers.size() == 1 ? "" : "s")+": "+missingEnrichers));

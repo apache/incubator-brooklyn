@@ -38,15 +38,15 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
         }
     }
     
-	private Map<String,Object> config;
+    private Map<String,Object> config;
     private Map<String, Object> fields;
 
     // Trusts the builder to not mess around with mutability after calling build()
-	protected BasicPolicyMemento(Builder builder) {
-	    super(builder);
-	    config = toPersistedMap(builder.config);
-	}
-	
+    protected BasicPolicyMemento(Builder builder) {
+        super(builder);
+        config = toPersistedMap(builder.config);
+    }
+    
     @Deprecated
     @Override
     protected void setCustomFields(Map<String, Object> fields) {
@@ -61,8 +61,8 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
 
     @Override
     public Map<String, Object> getConfig() {
-		return fromPersistedMap(config);
-	}
+        return fromPersistedMap(config);
+    }
     
     @Override
     protected ToStringHelper newVerboseStringHelper() {

@@ -34,8 +34,8 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        origPolicyPersistenceEnabled = BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY, true);
-        origEnricherPersistenceEnabled = BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY, true);
+        origPolicyPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
+        origEnricherPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
         
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
@@ -58,8 +58,8 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
             if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
             origManagementContext = null;
         } finally {
-            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY, origPolicyPersistenceEnabled);
-            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY, origEnricherPersistenceEnabled);
+            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY, origPolicyPersistenceEnabled);
+            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY, origEnricherPersistenceEnabled);
         }
     }
 

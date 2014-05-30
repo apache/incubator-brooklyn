@@ -83,8 +83,8 @@ public class RebindManagerImpl implements RebindManager {
         this.managementContext = managementContext;
         this.changeListener = ChangeListener.NOOP;
         
-        this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY);
-        this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY);
+        this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
+        this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
     }
 
     /**
@@ -283,14 +283,14 @@ public class RebindManagerImpl implements RebindManager {
             if (persistEnrichersEnabled) {
                 LOG.info("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
                 for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
-                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", enricherMemento);
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating enricher {}", enricherMemento);
                     
                     Enricher enricher = newEnricher(enricherMemento, reflections);
                     enrichers.put(enricherMemento.getId(), enricher);
                     rebindContext.registerEnricher(enricherMemento.getId(), enricher);
                 }
             } else {
-                LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getPolicyIds());
+                LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
             } 
             
             // Reconstruct locations
@@ -617,23 +617,14 @@ public class RebindManagerImpl implements RebindManager {
         if (!Policy.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Class "+clazz+" is not a policy");
         }
-        return hasNoArgConstructor(clazz);
+        return Reflections.hasNoArgConstructor(clazz);
     }
     
     private static boolean isNewStyleEnricher(Class<?> clazz) {
         if (!Enricher.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Class "+clazz+" is not an enricher");
         }
-        return hasNoArgConstructor(clazz);
-    }
-    
-    private static boolean hasNoArgConstructor(Class<?> clazz) {
-        try {
-            clazz.getConstructor(new Class[0]);
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
+        return Reflections.hasNoArgConstructor(clazz);
     }
     
     /**

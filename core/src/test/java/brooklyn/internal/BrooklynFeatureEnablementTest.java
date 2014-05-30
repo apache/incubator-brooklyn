@@ -24,11 +24,11 @@ public class BrooklynFeatureEnablementTest {
         String featureProperty = "brooklyn.experimental.feature.testCanSetPropertyEnablement";
         boolean preTestVal = BrooklynFeatureEnablement.isEnabled(featureProperty);
         try {
-            boolean oldVal = BrooklynFeatureEnablement.setEnablement(featureProperty, true);
+            boolean oldVal = BrooklynFeatureEnablement.enable(featureProperty);
             assertEquals(oldVal, preTestVal);
             assertTrue(BrooklynFeatureEnablement.isEnabled(featureProperty));
             
-            boolean oldVal2 = BrooklynFeatureEnablement.setEnablement(featureProperty, false);
+            boolean oldVal2 = BrooklynFeatureEnablement.disable(featureProperty);
             assertTrue(oldVal2);
             assertFalse(BrooklynFeatureEnablement.isEnabled(featureProperty));
         } finally {

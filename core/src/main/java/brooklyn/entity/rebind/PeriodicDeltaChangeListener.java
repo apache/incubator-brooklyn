@@ -85,8 +85,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         this.persister = persister;
         this.period = Duration.of(periodMillis, TimeUnit.MILLISECONDS);
         
-        this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_POLICY_PERSISTENCE_PROPERTY);
-        this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.ENABLE_ENRICHER_PERSISTENCE_PROPERTY);
+        this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
+        this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
     }
     
     public void start() {
