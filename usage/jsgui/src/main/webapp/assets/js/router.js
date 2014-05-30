@@ -169,12 +169,23 @@ define([
 
     var HaStandbyOverlay = Backbone.View.extend({
         template: _.template(ServerNotMasterHtml),
+        scheduledRedirect: false,
         initialize: function() {
             this.listenTo(ha, "change", this.render);
         },
         render: function() {
             if (!ha.isMaster()) {
-                this.$el.html(this.template({"masterUri": ha.getMasterUri()}));
+                var masterUri = ha.getMasterUri();
+                this.$el.html(this.template({"masterUri": masterUri}));
+                if (masterUri && !this.scheduledRedirect) {
+                    var destination = masterUri + "#" + Backbone.history.fragment;
+                    var time = 5;
+                    this.scheduledRedirect = true;
+                    console.log("Redirecting to " + destination + " in " + time + " seconds");
+                    setTimeout(function () {
+                        window.location.href = destination;
+                    }, time * 1000);
+                }
             } else {
                 this.$el.empty();
             }
