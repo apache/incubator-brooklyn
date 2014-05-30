@@ -2,17 +2,22 @@ package brooklyn.entity.nosql.elasticsearch;
 
 import static java.lang.String.format;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
-
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+
+import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver implements ElasticSearchNodeDriver {
 
@@ -38,18 +43,56 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
 
     @Override
     public void customize() {
-        // TODO Auto-generated method stub
+        newScript(CUSTOMIZING).execute();  //create the directory
+        
+        String configFileUrl = entity.getConfig(ElasticSearchNode.TEMPLATE_CONFIGURATION_URL);
+        
+        if (configFileUrl == null) {
+            return;
+        }
 
+        String configScriptContents = processTemplate(configFileUrl);
+        Reader configContents = new StringReader(configScriptContents);
+
+        getMachine().copyTo(configContents, Urls.mergePaths(getRunDir(), getConfigFile()));
     }
 
     @Override
     public void launch() {
         String pidFile = getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME;
         entity.setAttribute(ElasticSearchNode.PID_FILE, pidFile);
+        StringBuilder commandBuilder = new StringBuilder()
+            .append(String.format("%s/bin/elasticsearch -d -p %s", getExpandedInstallDir(), pidFile));
+        if (entity.getConfig(ElasticSearchNode.TEMPLATE_CONFIGURATION_URL) != null) {
+            commandBuilder.append(" -Des.config=" + Os.mergePaths(getRunDir(), getConfigFile()));
+        }
+        appendConfigIfPresent(commandBuilder, ElasticSearchNode.DATA_DIR, "es.path.data", Os.mergePaths(getRunDir(), "data"));
+        appendConfigIfPresent(commandBuilder, ElasticSearchNode.LOG_DIR, "es.path.logs", Os.mergePaths(getRunDir(), "logs"));
+        appendConfigIfPresent(commandBuilder, ElasticSearchNode.NODE_NAME.getConfigKey(), "es.node.name");
+        appendConfigIfPresent(commandBuilder, ElasticSearchNode.CLUSTER_NAME.getConfigKey(), "es.cluster.name");
+        commandBuilder.append(" > out.log 2> err.log < /dev/null");
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
-            .body.append(String.format("%s/bin/elasticsearch -d -p %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), pidFile))
+            .body.append(commandBuilder.toString())
             .execute();
+    }
+    
+    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<String> configKey, String parameter) {
+        appendConfigIfPresent(builder, configKey, parameter, null);
+    }
+    
+    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<String> configKey, String parameter, String defaultValue) {
+        String config = entity.getConfig(configKey);
+        if (config == null && defaultValue != null) {
+            config = defaultValue;
+        }
+        if (config != null) {
+            builder.append(String.format(" -D%s=%s", parameter, config));
+        }
+    }
+    
+    public String getConfigFile() {
+        return "elasticsearch.yaml";
     }
     
     @Override

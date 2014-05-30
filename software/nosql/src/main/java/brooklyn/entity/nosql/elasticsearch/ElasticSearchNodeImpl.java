@@ -82,6 +82,8 @@ public class ElasticSearchNodeImpl extends SoftwareProcessImpl implements Elasti
             .poll(new HttpPollConfig<Integer>(SEARCH_QUERY_TIME_IN_MILLIS)
                 .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "search", "query_time_in_millis"), JsonFunctions.cast(Integer.class)))
                 .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<String>(CLUSTER_NAME)
+                .onSuccess(HttpValueFunctions.jsonContents("cluster_name", String.class)))
             .build();
     }
     

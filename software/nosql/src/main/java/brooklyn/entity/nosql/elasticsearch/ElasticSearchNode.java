@@ -8,6 +8,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
@@ -25,12 +26,28 @@ public interface ElasticSearchNode extends SoftwareProcess, DatastoreMixins.HasD
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${version}.tar.gz");
     
+    @SetFromFlag("dataDir")
+    ConfigKey<String> DATA_DIR = ConfigKeys.newStringConfigKey("elasticsearch.data.dir", "Directory for writing data files", null);
+    
+    @SetFromFlag("logDir")
+    ConfigKey<String> LOG_DIR = ConfigKeys.newStringConfigKey("elasticsearch.log.dir", "Directory for writing log files", null);
+    
+    @SetFromFlag("configFileUrl")
+    ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.newStringConfigKey(
+            "elasticsearch.template.configuration.url", "URL where the elasticsearch configuration file (in freemarker format) can be found");
+    
     @SetFromFlag("httpPort")
     PortAttributeSensorAndConfigKey HTTP_PORT = new PortAttributeSensorAndConfigKey(WebAppServiceConstants.HTTP_PORT, PortRanges.fromString("9200+"));
     
+    @SetFromFlag("nodeName")
+    StringAttributeSensorAndConfigKey NODE_NAME = new StringAttributeSensorAndConfigKey("elasticsearch.node.name", 
+            "Node name (or randomly selected if not set", null);
+    
+    @SetFromFlag("clusterName")
+    StringAttributeSensorAndConfigKey CLUSTER_NAME = new StringAttributeSensorAndConfigKey("elasticsearch.cluster.name", 
+            "Cluster name (or elasticsearch selected if not set", null);
+    
     AttributeSensor<String> NODE_ID = Sensors.newStringSensor("elasticsearch.node.id");
-    AttributeSensor<String> NODE_NAME = Sensors.newStringSensor("elasticsearch.node.name");
-    AttributeSensor<String> CLUSTER_NAME = Sensors.newStringSensor("elasticsearch.cluster.name");
     AttributeSensor<Integer> DOCUMENT_COUNT = Sensors.newIntegerSensor("elasticsearch.docs.count");
     AttributeSensor<Integer> STORE_BYTES = Sensors.newIntegerSensor("elasticsearch.store.bytes");
     AttributeSensor<Integer> GET_TOTAL = Sensors.newIntegerSensor("elasticsearch.get.total");
