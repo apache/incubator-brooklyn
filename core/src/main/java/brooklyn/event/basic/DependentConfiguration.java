@@ -20,9 +20,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -47,6 +49,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -375,9 +378,14 @@ public class DependentConfiguration {
         protected Function<?, ? extends V> postProcessFromMultiple;
         protected List<AttributeAndSensorCondition<?>> abortConditions = Lists.newArrayList();
         
+        /**
+         * Will wait for the attribute on the given entity.
+         * If that entity report {@link Lifecycle#ON_FIRE} for its {@link Attributes#SERVICE_STATE} then it will abort. 
+         */
         public <T2> Builder<T2,T2> attributeWhenReady(Entity source, AttributeSensor<T2> sensor) {
             this.source = checkNotNull(source, "source");
             this.sensor = (AttributeSensor) checkNotNull(sensor, "sensor");
+            abortIf(source, Attributes.SERVICE_STATE, Predicates.equalTo(Lifecycle.ON_FIRE));
             return (Builder<T2, T2>) this;
         }
         /** returns a task for parallel execution returning a list of values of the given sensor list on the given entity, 
@@ -443,7 +451,7 @@ public class DependentConfiguration {
                             }
                         });
             } else {
-                // FIXME Do we really want to try to support the list-of-entities?
+                // TODO Do we really want to try to support the list-of-entities?
                 final Task<V> task = (Task<V>) new ParallelTask<Object>(Iterables.transform(multiSource, new Function<AttributeAndSensorCondition<?>, Task<T>>() {
                     @Override public Task<T> apply(AttributeAndSensorCondition<?> it) {
                         return (Task) builder().attributeWhenReady(it.source, it.sensor).readiness((Predicate)it.predicate).build();

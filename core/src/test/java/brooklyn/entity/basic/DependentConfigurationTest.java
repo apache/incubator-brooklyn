@@ -175,6 +175,37 @@ public class DependentConfigurationTest {
     }
 
     @Test
+    public void testAttributeWhenReadyAbortsWhenOnfireByDefault() throws Exception {
+        final Task<String> t = submit(DependentConfiguration.builder()
+                .attributeWhenReady(entity, TestEntity.NAME)
+                .build());
+
+        entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        try {
+            assertDoneEventually(t);
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("Aborted waiting for ready")) throw e;
+        }
+    }
+
+    @Test
+    public void testAttributeWhenReadyAbortsWhenAlreadyOnfireByDefault() throws Exception {
+        entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        
+        final Task<String> t = submit(DependentConfiguration.builder()
+                .attributeWhenReady(entity, TestEntity.NAME)
+                .build());
+
+        try {
+            assertDoneEventually(t);
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("Aborted waiting for ready")) throw e;
+        }
+    }
+
+    @Test
     public void testListAttributeWhenReadyFromMultipleEntities() throws Exception {
         final Task<List<String>> t = submit(DependentConfiguration.builder()
                 .attributeWhenReadyFromMultiple(ImmutableList.of(entity, entity2), TestEntity.NAME)
