@@ -2,6 +2,7 @@ package brooklyn.entity.java;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -148,19 +149,17 @@ public class JmxSupport implements UsesJmx {
             host = machine.getAddress().getHostName();
         }
         
-        if (getJmxAgentMode()==JmxAgentModes.JMXMP || getJmxAgentMode()==JmxAgentModes.JMXMP_AND_RMI) {
-            // only JMXMP is valid for going through firewalls (it is the default)
-            HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
-            return JmxHelper.toJmxmpUrl(hp.getHostText(), hp.getPort());
+        if (EnumSet.of(JmxAgentModes.JMXMP, JmxAgentModes.JMXMP_AND_RMI).contains(getJmxAgentMode())) {
+            HostAndPort jmxmp = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
+            return JmxHelper.toJmxmpUrl(jmxmp.getHostText(), jmxmp.getPort());
         } else {
-            if (getJmxAgentMode()==JmxAgentModes.NONE) {
+            if (getJmxAgentMode() == JmxAgentModes.NONE) {
                 fixPortsForModeNone();
             }
             // this will work for agent or agentless
-            return JmxHelper.toRmiJmxUrl(host, 
-                    entity.getAttribute(JMX_PORT),
-                    entity.getAttribute(RMI_REGISTRY_PORT),
-                    entity.getAttribute(JMX_CONTEXT));
+            HostAndPort jmx = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
+            HostAndPort rmi = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(RMI_REGISTRY_PORT));
+            return JmxHelper.toRmiJmxUrl(jmx.getHostText(), jmx.getPort(), rmi.getPort(), entity.getAttribute(JMX_CONTEXT));
         }
     }
 
