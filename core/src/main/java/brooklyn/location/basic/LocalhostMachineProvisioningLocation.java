@@ -248,6 +248,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             LOG.debug("localhost.obtainPort("+range+"), returning "+r);
             return r;
         }
+        @Override
         public void releasePort(int portNumber) {
             synchronized (portsObtained) {
                 portsObtained.remove((Object)portNumber);
