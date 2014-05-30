@@ -10,4 +10,13 @@ services:
     nohup sleep 60 &
     echo $! > $PID_FILE
     sleep 3
+
+  # The following overrides are to test the use of a custom shell environment as well as
+  # check-running and stop commands. These are optional; default behavior will "do the
+  # right thing" with the pid file automatically.
+
+  env:                  { CHECK_MARKER: "checkRunning", STOP_MARKER: "stop" }
+  checkRunning.command: echo $CHECK_MARKER >> DATE && test -f "$PID_FILE" && ps -p `cat $PID_FILE` >/dev/null
+  stop.command:         echo $STOP_MARKER  >> DATE && test -f "$PID_FILE" && { kill -9 `cat $PID_FILE`; rm /tmp/vanilla.pid; }
+
 # can also define download.url, in which case the launch command defaults to ./start.sh in that (archive) file
