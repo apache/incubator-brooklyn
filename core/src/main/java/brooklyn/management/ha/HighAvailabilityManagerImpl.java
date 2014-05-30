@@ -85,7 +85,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile MasterChooser masterChooser = new AlphabeticMasterChooser();
     private volatile Duration pollPeriod = Duration.of(5, TimeUnit.SECONDS);
     private volatile Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
-    private volatile Ticker ticker = Ticker.systemTicker();
+    private volatile Ticker ticker = new Ticker() {
+            @Override
+            public long read() {
+                return System.currentTimeMillis();
+            }
+        };
     
     private volatile Task<?> pollingTask;
     private volatile boolean disabled;
@@ -126,6 +131,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return this;
     }
 
+    /** A ticker that reads in milliseconds */
     public HighAvailabilityManagerImpl setTicker(Ticker val) {
         this.ticker = checkNotNull(val, "ticker");
         return this;
@@ -473,6 +479,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * specific timing scenarios.
      */
     protected long currentTimeMillis() {
-        return TimeUnit.NANOSECONDS.toMillis(ticker.read());
+        return ticker.read();
     }
 }
