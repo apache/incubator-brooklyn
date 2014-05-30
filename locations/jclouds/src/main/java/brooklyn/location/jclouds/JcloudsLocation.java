@@ -1460,11 +1460,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }
                     // else do node metadata lookup
                     if (!(input instanceof NodeMetadata)) return false;
-                    if (rawHostname!=null) {
-                        if (rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
-                        if (((NodeMetadata)input).getPublicAddresses().contains(rawHostname)) return true;
-                    }
+                    if (rawHostname!=null && rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
+                    if (rawHostname!=null && ((NodeMetadata)input).getPublicAddresses().contains(rawHostname)) return true;
+                    
+                    if (rawId!=null && rawId.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
+                    if (rawId!=null && ((NodeMetadata)input).getPublicAddresses().contains(rawId)) return true;
                     // don't do private IP's because those might be repeated
+                    
+                    if (rawId!=null && rawId.equalsIgnoreCase( ((NodeMetadata)input).getProviderId() )) return true;
+                    if (rawHostname!=null && rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getProviderId() )) return true;
+                    
                     return false;
                 }
             });
