@@ -4,12 +4,14 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
+import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
 import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
 import static org.jclouds.scriptbuilder.domain.Statements.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +29,8 @@ import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.options.RunScriptOptions;
 import org.jclouds.compute.predicates.OperatingSystemPredicates;
+import org.jclouds.docker.DockerApi;
+import org.jclouds.docker.domain.Container;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.ec2.compute.domain.PasswordDataAndPrivateKey;
 import org.jclouds.ec2.compute.functions.WindowsLoginCredentialsFromEncryptedData;
@@ -46,8 +50,13 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.jclouds.config.BrooklynStandardJcloudsGuiceModule;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.net.Protocol;
+import brooklyn.util.ssh.IptablesCommands;
+import brooklyn.util.ssh.IptablesCommands.Chain;
+import brooklyn.util.ssh.IptablesCommands.Policy;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -336,5 +345,54 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         LoginCredentials credentials = f.apply(dataAndKey);
 
         return credentials.getPassword();
+    }
+
+    public static Map<Integer, Integer> dockerPortMappingsFor(JcloudsLocation docker, String containerId) {
+        ComputeServiceContext context = null;
+        try {
+            context = ContextBuilder.newBuilder("docker")
+                    .endpoint(docker.getEndpoint())
+                    .credentials("docker", "docker")
+                    .modules(ImmutableSet.<Module>of(new SLF4JLoggingModule(), new SshjSshClientModule()))
+                    .build(ComputeServiceContext.class);
+            DockerApi api = context.unwrapApi(DockerApi.class);
+            Container container = api.getRemoteApi().inspectContainer(containerId);
+            Map<Integer, Integer> portMappings = Maps.newLinkedHashMap();
+            Map<String, List<Map<String, String>>> ports = container.getNetworkSettings().getPorts();
+            LOG.debug("Docker will forward these ports {}", ports);
+            for (Map.Entry<String, List<Map<String, String>>> entrySet : ports.entrySet()) {
+                String containerPort = Iterables.get(Splitter.on("/").split(entrySet.getKey()), 0);
+                String hostPort = Iterables.getOnlyElement(Iterables.transform(entrySet.getValue(),
+                        new Function<Map<String, String>, String>() {
+                            @Override
+                            public String apply(Map<String, String> hostIpAndPort) {
+                                return hostIpAndPort.get("HostPort");
+                            }
+                        }));
+                portMappings.put(Integer.parseInt(containerPort), Integer.parseInt(hostPort));
+            }
+            return portMappings;
+        } finally {
+            if (context != null) {
+                context.close();
+            }
+        }
+    }
+
+    public static void mapSecurityGroupRuleToIpTables(ComputeService computeService, NodeMetadata node,
+            LoginCredentials credentials, String networkInterface, Iterable<Integer> ports) {
+        for (Integer port : ports) {
+            String insertIptableRule = IptablesCommands.insertIptablesRule(Chain.INPUT, networkInterface, 
+                    Protocol.TCP, port, Policy.ACCEPT);
+            Statement statement = Statements.newStatementList(exec(insertIptableRule));
+            ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,
+                    overrideLoginCredentials(credentials).runAsRoot(false));
+            if (response.getExitStatus() != 0) {
+                String msg = String.format("Cannot insert the iptables rule for port %d. Error: %s", port,
+                        response.getError());
+                LOG.error(msg);
+                throw new RuntimeException(msg);
+            }
+        }
     }
 }
