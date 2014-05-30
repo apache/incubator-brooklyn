@@ -1,7 +1,7 @@
 package brooklyn.location.cloud;
 
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,6 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
-import static org.testng.Assert.assertTrue;
 public class CloudMachineNamerTest {
 
     private static final Logger log = LoggerFactory.getLogger(CloudMachineNamerTest.class);
@@ -108,7 +107,7 @@ public class CloudMachineNamerTest {
         namer.lengthMaxPermittedForMachineName(10);
         namer.lengthReservedForNameInGroup(4);
         String groupId = namer.generateNewGroupId();
-        Assert.assertEquals(6, groupId.length());
+        Assert.assertEquals(5, groupId.length(), "groupId="+groupId);
     }
 
     @Test
