@@ -151,6 +151,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         List<String> cmds = Lists.newArrayList();
 
         cmds.add(BashCommands.INSTALL_TAR);
+        cmds.add(BashCommands.alternatives(
+                BashCommands.ifExecutableElse0("apt-get", BashCommands.installPackage("build-essential")),
+                BashCommands.ifExecutableElse0("yum", BashCommands.sudo("yum -y --nogpgcheck groupinstall \"Development Tools\""))));
         cmds.add(BashCommands.installPackage(installGccPackageFlags, "nginx-prerequisites-gcc"));
         cmds.add(BashCommands.installPackage(installMakePackageFlags, "nginx-prerequisites-make"));
         cmds.add(BashCommands.installPackage(installPackageFlags, "nginx-prerequisites"));
