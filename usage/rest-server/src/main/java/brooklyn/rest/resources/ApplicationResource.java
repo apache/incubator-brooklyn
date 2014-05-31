@@ -59,7 +59,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.Collections2;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 
 
@@ -182,8 +182,11 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   }
   
   @Override
-  public Iterable<ApplicationSummary> list() {
-    return Collections2.transform(mgmt().getApplications(), ApplicationTransformer.FROM_APPLICATION);
+  public List<ApplicationSummary> list() {
+      return FluentIterable
+              .from(mgmt().getApplications())
+              .transform(ApplicationTransformer.FROM_APPLICATION)
+              .toList();
   }
 
   @Override
@@ -353,7 +356,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   }
 
   @Override
-  public Iterable<EntitySummary> getDescendants(String application, String typeRegex) {
+  public List<EntitySummary> getDescendants(String application, String typeRegex) {
       return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, application, typeRegex));
   }
 
