@@ -1,5 +1,6 @@
 package brooklyn.rest.api;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
@@ -57,7 +58,7 @@ public interface ApplicationApi {
       value = "Fetch list of applications, as ApplicationSummary objects",
       responseClass = "brooklyn.rest.domain.ApplicationSummary"
   )
-  public Iterable<ApplicationSummary> list() ;
+  public List<ApplicationSummary> list() ;
 
   @GET
   @Path("/{application}")
@@ -170,7 +171,7 @@ public interface ApplicationApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application or entity missing")
   })
-  public Iterable<EntitySummary> getDescendants(
+  public List<EntitySummary> getDescendants(
       @ApiParam(value = "Application ID or name", required = true)
       @PathParam("application") String application,
       @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
