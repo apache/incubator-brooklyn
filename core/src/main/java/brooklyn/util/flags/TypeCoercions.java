@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,8 +31,10 @@ import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Networking;
+import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.time.Duration;
 
@@ -40,7 +43,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -410,6 +412,12 @@ public class TypeCoercions {
                 return HostAndPort.fromString(input);
             }
         });
+        registerAdapter(String.class, UserAndHostAndPort.class, new Function<String,UserAndHostAndPort>() {
+            @Override
+            public UserAndHostAndPort apply(String input) {
+                return UserAndHostAndPort.fromString(input);
+            }
+        });
         registerAdapter(String.class, Cidr.class, new Function<String,Cidr>() {
             @Override
             public Cidr apply(String input) {
@@ -422,8 +430,14 @@ public class TypeCoercions {
                 try {
                     return new URL(input);
                 } catch (Exception e) {
-                    throw Throwables.propagate(e);
+                    throw Exceptions.propagate(e);
                 }
+            }
+        });
+        registerAdapter(String.class, URI.class, new Function<String,URI>() {
+            @Override
+            public URI apply(String input) {
+                return URI.create(input);
             }
         });
         registerAdapter(Closure.class, ConfigurableEntityFactory.class, new Function<Closure,ConfigurableEntityFactory>() {

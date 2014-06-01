@@ -42,6 +42,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -278,6 +279,11 @@ public abstract class MachineLifecycleEffectorTasks {
             if (la.isPresent()) entity().setAttribute(Attributes.SUBNET_ADDRESS, la.get());
             entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
             entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
+            if (machine instanceof SshMachineLocation) {
+                SshMachineLocation sshMachine = (SshMachineLocation) machine;
+                UserAndHostAndPort sshAddress = UserAndHostAndPort.fromParts(sshMachine.getUser(), sshMachine.getAddress().getHostName(), sshMachine.getPort());
+                entity().setAttribute(Attributes.SSH_ADDRESS, sshAddress);
+            }
             
             resolveOnBoxDir(entity(), machine);            
             preStartCustom(machine);

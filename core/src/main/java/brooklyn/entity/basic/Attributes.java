@@ -10,6 +10,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+import brooklyn.util.net.UserAndHostAndPort;
 
 import com.google.common.collect.ImmutableList;
 
@@ -56,6 +57,10 @@ public interface Attributes {
 
     AttributeSensor<String> HOSTNAME = Sensors.newStringSensor( "host.name", "Host name");
     AttributeSensor<String> ADDRESS = Sensors.newStringSensor( "host.address", "Host IP address");
+    AttributeSensor<UserAndHostAndPort> SSH_ADDRESS = Sensors.newSensor(
+            UserAndHostAndPort.class, 
+            "host.sshAddress", 
+            "user@host:port for ssh'ing (or null if inappropriate)");
     AttributeSensor<String> SUBNET_HOSTNAME = Sensors.newStringSensor( "host.subnet.hostname", "Host name as known internally in " +
     		"the subnet where it is running (if different to host.name)");
     AttributeSensor<String> SUBNET_ADDRESS = Sensors.newStringSensor( "host.subnet.address", "Host address as known internally in " +
