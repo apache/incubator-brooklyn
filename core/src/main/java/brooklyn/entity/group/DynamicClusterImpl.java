@@ -27,6 +27,8 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
@@ -211,9 +213,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         EntitySpec<?> spec = getConfig(MEMBER_SPEC);
         if (spec!=null) {
-            setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType())
-                +" ("+loc+")"
-                );
+            setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType()) +" ("+loc+")");
         }
 
         if (isAvailabilityZoneEnabled()) {
@@ -263,7 +263,26 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         } catch (Exception e) {
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
+        } finally {
+            connectServiceStateSensor();
         }
+    }
+
+    protected void connectServiceStateSensor() {
+        subscribeToChildren(this, SERVICE_STATE, new SensorEventListener<Lifecycle>() {
+            @Override
+            public void onEvent(SensorEvent<Lifecycle> event) {
+                setAttribute(SERVICE_UP, allChildrenRunning());
+                setAttribute(SERVICE_STATE, allChildrenRunning() ? Lifecycle.RUNNING : Lifecycle.ON_FIRE);
+            }
+        });
+    }
+
+    protected boolean allChildrenRunning() {
+        for (Entity member : getMembers()) {
+            if (member.getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) return false;
+        }
+        return true;
     }
 
     protected List<Location> findSubLocations(Location loc) {
