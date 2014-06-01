@@ -1,13 +1,18 @@
 package brooklyn.enricher;
 
+import static org.testng.Assert.assertNotNull;
+
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.http.BetterMockWebServer;
@@ -25,13 +30,14 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
     
     private BetterMockWebServer webServer;
 
+    @AfterMethod(alwaysRun=true)
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
         if (webServer != null) webServer.shutdown();
     }
     
-    @Test(enabled=false)
+    @Test
     public void testDeltaEnricher() throws Exception {
         origApp.addEnricher(new DeltaEnricher<Integer>(origApp, INT_METRIC, INT_METRIC2));
         
@@ -42,7 +48,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(newApp, INT_METRIC2, 9);
     }
 
-    @Test(enabled=false)
+    @Test
     public void testHttpLatencyDetectorEnricher() throws Exception {
         webServer = BetterMockWebServer.newInstanceLocalhost();
         for (int i = 0; i < 1000; i++) {
@@ -56,7 +62,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
                 .period(Duration.of(10, TimeUnit.MILLISECONDS))
                 .url(baseUrl)
                 .build());
-        
+        origApp.setAttribute(Attributes.SERVICE_UP, true);
         
         TestApplication newApp = rebind();
 
@@ -67,7 +73,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEventuallyNonNull(newApp, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW);
     }
 
-    @Test(enabled=false)
+    @Test
     public void testRollingMeanEnricher() throws Exception {
         origApp.addEnricher(new RollingMeanEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, 2));
         
@@ -77,7 +83,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(newApp, DOUBLE_METRIC, 10d);
     }
 
-    @Test(enabled=false)
+    @Test
     public void testRollingTimeWindowMeanEnricher() throws Exception {
         origApp.addEnricher(new RollingTimeWindowMeanEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, Duration.of(10, TimeUnit.MILLISECONDS)));
         
@@ -87,25 +93,35 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(newApp, DOUBLE_METRIC, 10d);
     }
     
-    @Test(enabled=false)
+    @Test
     public void testTimeFractionDeltaEnricher() throws Exception {
-        origApp.addEnricher(new TimeFractionDeltaEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, TimeUnit.MICROSECONDS));
+        origApp.addEnricher(new TimeFractionDeltaEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, TimeUnit.MILLISECONDS));
         
-        TestApplication newApp = rebind();
+        final TestApplication newApp = rebind();
 
-        newApp.setAttribute(INT_METRIC, 10);
-        newApp.setAttribute(INT_METRIC, 20);
-        EntityTestUtils.assertAttributeEventuallyNonNull(newApp, DOUBLE_METRIC);
+        // TODO When doing two setAttributes in rapid succession, the test sometimes fails;
+        // my hypothesis is that the two events had exactly the same timestamp.
+        Asserts.succeedsEventually(new Runnable() {
+            private int counter;
+            public void run() {
+                newApp.setAttribute(INT_METRIC, counter++);
+                assertNotNull(newApp.getAttribute(DOUBLE_METRIC));
+            }});
     }
     
-    @Test(enabled=false)
+    @Test
     public void testTimeWeightedDeltaEnricher() throws Exception {
         origApp.addEnricher(new TimeWeightedDeltaEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, 1000));
         
-        TestApplication newApp = rebind();
+        final TestApplication newApp = rebind();
 
-        newApp.setAttribute(INT_METRIC, 10);
-        newApp.setAttribute(INT_METRIC, 20);
-        EntityTestUtils.assertAttributeEventuallyNonNull(newApp, DOUBLE_METRIC);
+        // TODO When doing two setAttributes in rapid succession, the test sometimes fails;
+        // my hypothesis is that the two events had exactly the same timestamp.
+        Asserts.succeedsEventually(new Runnable() {
+            private int counter;
+            public void run() {
+                newApp.setAttribute(INT_METRIC, counter++);
+                assertNotNull(newApp.getAttribute(DOUBLE_METRIC));
+            }});
     }
 }

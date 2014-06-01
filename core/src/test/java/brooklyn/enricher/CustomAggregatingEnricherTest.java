@@ -15,6 +15,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -35,6 +36,7 @@ public class CustomAggregatingEnricherTest {
     
     TestApplication app;
     TestEntity entity;
+    SimulatedLocation loc;
     
     AttributeSensor<Integer> intSensor;
     AttributeSensor<Double> doubleSensor;
@@ -47,8 +49,8 @@ public class CustomAggregatingEnricherTest {
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor");
         doubleSensor = new BasicAttributeSensor<Double>(Double.class, "double sensor");
         target = new BasicAttributeSensor<Integer>(Integer.class, "target sensor");
-        
-        app.start(ImmutableList.of(new SimulatedLocation()));
+        loc = app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        app.start(ImmutableList.of(loc));
     }
     
     @AfterMethod(alwaysRun=true)
@@ -337,12 +339,9 @@ public class CustomAggregatingEnricherTest {
         EntityTestUtils.assertAttributeEqualsEventually(group, target, 1);
     }
     
-    @Test(groups = "Integration")
+    @Test(groups = "Integration", invocationCount=50)
     public void testAggregatesGroupMembersFiftyTimes() {
-        for (int i=0; i<50; i++) {
-            log.debug("testAggregatesNewMembersOfGroup {}", i);
-            testAggregatesNewMembersOfGroup();
-        }
+        testAggregatesNewMembersOfGroup();
     }
     
     @Test
@@ -373,6 +372,34 @@ public class CustomAggregatingEnricherTest {
     }
     
     @Test
+    public void testAggregatesMembersOfProducer() {
+        BasicGroup group = app.addChild(EntitySpec.create(BasicGroup.class));
+        TestEntity p1 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
+        TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
+        group.addMember(p1);
+        group.addMember(p2);
+        p1.setAttribute(intSensor, 1);
+        Entities.manage(group);
+        
+        app.addEnricher(Enrichers.builder()
+                .aggregating(intSensor)
+                .publishing(target)
+                .computingSum()
+                .from(group)
+                .fromMembers()
+                .build());
+
+
+        EntityTestUtils.assertAttributeEqualsEventually(app, target, 1);
+
+        p2.setAttribute(intSensor, 2);
+        EntityTestUtils.assertAttributeEqualsEventually(app, target, 3);
+        
+        group.removeMember(p2);
+        EntityTestUtils.assertAttributeEqualsEventually(app, target, 1);
+    }
+    
+    @Test
     public void testAppliesFilterWhenAggregatingMembersOfGroup() {
         BasicGroup group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         TestEntity p1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -396,6 +423,98 @@ public class CustomAggregatingEnricherTest {
         
         group.addMember(p3);
         EntityTestUtils.assertAttributeEqualsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), group, target, 1);
+    }
+    
+    @Test
+    public void testAggregatesNewChidren() {
+        entity.addEnricher(Enrichers.builder()
+                .aggregating(intSensor)
+                .publishing(target)
+                .computingSum()
+                .fromChildren()
+                .defaultValueForUnreportedSensors(0)
+                .valueToReportIfNoSensors(0)
+                .build());
+
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 0);
+
+        TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        p1.setAttribute(intSensor, 1);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
+
+        TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        p2.setAttribute(intSensor, 2);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 3);
+
+        Entities.unmanage(p2);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
+    }
+    
+    @Test
+    public void testAggregatesExistingChildren() {
+        TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        p1.setAttribute(intSensor, 1);
+        
+        entity.addEnricher(Enrichers.builder()
+                .aggregating(intSensor)
+                .publishing(target)
+                .computingSum()
+                .fromChildren()
+                .build());
+
+
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
+
+        p2.setAttribute(intSensor, 2);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 3);
+        
+        Entities.unmanage(p2);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
+    }
+    
+    @Test
+    public void testAggregatesChildrenOfProducer() {
+        TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        p1.setAttribute(intSensor, 1);
+        
+        app.addEnricher(Enrichers.builder()
+                .aggregating(intSensor)
+                .publishing(target)
+                .computingSum()
+                .from(entity)
+                .fromChildren()
+                .build());
+
+
+        EntityTestUtils.assertAttributeEqualsEventually(app, target, 1);
+
+        p2.setAttribute(intSensor, 2);
+        EntityTestUtils.assertAttributeEqualsEventually(app, target, 3);
+        
+        Entities.unmanage(p2);
+        EntityTestUtils.assertAttributeEqualsEventually(app, target, 1);
+    }
+    
+    @Test
+    public void testAppliesFilterWhenAggregatingChildrenOfGroup() {
+        TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        p1.setAttribute(intSensor, 1);
+        
+        entity.addEnricher(Enrichers.builder()
+                .aggregating(intSensor)
+                .publishing(target)
+                .computingSum()
+                .fromChildren()
+                .entityFilter(Predicates.equalTo((Entity)p1))
+                .build());
+
+        EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
+        
+        TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
+        p2.setAttribute(intSensor, 2);
+        EntityTestUtils.assertAttributeEqualsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), entity, target, 1);
     }
     
     @Test

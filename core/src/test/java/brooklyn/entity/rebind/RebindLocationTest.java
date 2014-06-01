@@ -11,10 +11,13 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.test.entity.TestApplication;
@@ -103,6 +106,22 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
         
         // should get _modified_ value, not the one in the config map
         assertEquals(newLoc.myAtomicLong.get(), 124L);
+    }
+    
+    @Test
+    public void testRestoresConfig() throws Exception {
+        MyLocation origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class)
+                .configure(MyLocation.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME, "myVal for with setFromFlag noShortName")
+                .configure(MyLocation.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME, "myVal for setFromFlag withShortName")
+                .configure(MyLocation.MY_CONFIG_WITHOUT_SETFROMFLAG, "myVal for witout setFromFlag"));
+        origApp.start(ImmutableList.of(origLoc));
+
+        newApp = (TestApplication) rebind();
+        MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
+        
+        assertEquals(newLoc.getConfig(MyLocation.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME), "myVal for with setFromFlag noShortName");
+        assertEquals(newLoc.getConfig(MyLocation.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME), "myVal for setFromFlag withShortName");
+        assertEquals(newLoc.getConfig(MyLocation.MY_CONFIG_WITHOUT_SETFROMFLAG), "myVal for witout setFromFlag");
     }
     
     @Test
@@ -206,6 +225,14 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     public static class MyLocation extends AbstractLocation {
         private static final long serialVersionUID = 1L;
         
+        @SetFromFlag
+        public static final ConfigKey<String> MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME = ConfigKeys.newStringConfigKey("myconfig.withSetfromflag.noShortName");
+
+        @SetFromFlag("myConfigWithSetFromFlagWithShortName")
+        public static final ConfigKey<String> MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME = ConfigKeys.newStringConfigKey("myconfig.withSetfromflag.withShortName");
+
+        public static final ConfigKey<String> MY_CONFIG_WITHOUT_SETFROMFLAG = ConfigKeys.newStringConfigKey("myconfig.withoutSetfromflag");
+
         @SetFromFlag
         String myfield;
 

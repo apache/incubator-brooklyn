@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -21,10 +22,13 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
@@ -95,20 +99,7 @@ public class MementosGenerators {
         Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
             ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
-            Object value = entry.getValue();
-            
-            // TODO Swapping an attributeWhenReady task for the actual value, if completed.
-            // Long-term, want to just handle task-persistence properly.
-            if (value instanceof Task) {
-                Task<?> task = (Task<?>) value;
-                if (task.isDone() && !task.isError()) {
-                    value = task.getUnchecked();
-                } else {
-                    // TODO how to record a completed but errored task?
-                    value = null;
-                }
-            }
-
+            Object value = configValueToPersistable(entry.getValue());
             builder.config.put(key, value); 
         }
         
@@ -139,13 +130,13 @@ public class MementosGenerators {
             builder.children.add(child.getId()); 
         }
         
-        // FIXME Not including policies, because lots of places register anonymous inner class policies
-        // (e.g. AbstractController registering a AbstractMembershipTrackingPolicy)
-        // Also, the entity constructor often re-creates the policy
-        // Also see RebindManagerImpl.CheckpointingChangeListener.onChanged(Entity)
-//        for (Policy policy : entity.getPolicies()) {
-//            builder.policies.add(policy.getId()); 
-//        }
+        for (Policy policy : entity.getPolicies()) {
+            builder.policies.add(policy.getId()); 
+        }
+        
+        for (Enricher enricher : entity.getEnrichers()) {
+            builder.enrichers.add(enricher.getId()); 
+        }
         
         Entity parentEntity = entity.getParent();
         builder.parent = (parentEntity != null) ? parentEntity.getId() : null;
@@ -215,8 +206,65 @@ public class MementosGenerators {
         builder.id = policy.getId();
         builder.displayName = policy.getName();
 
-        builder.flags.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(policy, Modifier.STATIC ^ Modifier.TRANSIENT));
+        // TODO persist config keys as well? Or only support those defined on policy class;
+        // current code will lose the ConfigKey type on rebind for anything not defined on class.
+        // Whereas entities support that.
+        // TODO Do we need the "nonPersistableFlagNames" that locations use?
+        Map<ConfigKey<?>, Object> config = ((AbstractPolicy)policy).getConfigMap().getAllConfig();
+        for (Map.Entry<ConfigKey<?>, Object> entry : config.entrySet()) {
+            ConfigKey<?> key = checkNotNull(entry.getKey(), "config=%s", config);
+            Object value = configValueToPersistable(entry.getValue());
+            builder.config.put(key.getName(), value); 
+        }
         
+        builder.config.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(policy, Modifier.STATIC ^ Modifier.TRANSIENT));
+
         return builder;
+    }
+    
+    /**
+     * Given an enricher, extracts its state for serialization.
+     */
+    public static EnricherMemento newEnricherMemento(Enricher enricher) {
+        return newEnricherMementoBuilder(enricher).build();
+    }
+    
+    public static BasicEnricherMemento.Builder newEnricherMementoBuilder(Enricher enricher) {
+        BasicEnricherMemento.Builder builder = BasicEnricherMemento.builder();
+        
+        builder.type = enricher.getClass().getName();
+        builder.typeClass = enricher.getClass();
+        builder.id = enricher.getId();
+        builder.displayName = enricher.getName();
+
+        // TODO persist config keys as well? Or only support those defined on policy class;
+        // current code will lose the ConfigKey type on rebind for anything not defined on class.
+        // Whereas entities support that.
+        // TODO Do we need the "nonPersistableFlagNames" that locations use?
+        Map<ConfigKey<?>, Object> config = ((AbstractEnricher)enricher).getConfigMap().getAllConfig();
+        for (Map.Entry<ConfigKey<?>, Object> entry : config.entrySet()) {
+            ConfigKey<?> key = checkNotNull(entry.getKey(), "config=%s", config);
+            Object value = configValueToPersistable(entry.getValue());
+            builder.config.put(key.getName(), value); 
+        }
+        
+        builder.config.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(enricher, Modifier.STATIC ^ Modifier.TRANSIENT));
+
+        return builder;
+    }
+    
+    protected static Object configValueToPersistable(Object value) {
+        // TODO Swapping an attributeWhenReady task for the actual value, if completed.
+        // Long-term, want to just handle task-persistence properly.
+        if (value instanceof Task) {
+            Task<?> task = (Task<?>) value;
+            if (task.isDone() && !task.isError()) {
+                return task.getUnchecked();
+            } else {
+                // TODO how to record a completed but errored task?
+                return null;
+            }
+        }
+        return value;
     }
 }

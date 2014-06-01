@@ -7,8 +7,12 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.util.time.Duration;
 
 import com.google.common.io.Files;
@@ -24,9 +28,15 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     protected T origApp;
     protected T newApp;
     protected ManagementContext newManagementContext;
+
+    private boolean origPolicyPersistenceEnabled;
+    private boolean origEnricherPersistenceEnabled;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        origPolicyPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
+        origEnricherPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
+        
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = createApp();
@@ -37,15 +47,20 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
-        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-        origApp = null;
-        newApp = null;
-        newManagementContext = null;
-
-        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-        origManagementContext = null;
+        try {
+            if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
+            if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+            origApp = null;
+            newApp = null;
+            newManagementContext = null;
+    
+            if (origManagementContext != null) Entities.destroyAll(origManagementContext);
+            if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+            origManagementContext = null;
+        } finally {
+            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY, origPolicyPersistenceEnabled);
+            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY, origEnricherPersistenceEnabled);
+        }
     }
 
     /** rebinds, and sets newApp */
@@ -55,12 +70,20 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         newManagementContext = newApp.getManagementContext();
         return newApp;
     }
+
+    protected T rebind(boolean checkSerializable) throws Exception {
+        // TODO What are sensible defaults?!
+        return rebind(checkSerializable, false);
+    }
     
     @SuppressWarnings("unchecked")
-    protected T rebind(boolean checkSerializable) throws Exception {
+    protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
         if (checkSerializable) {
             RebindTestUtils.checkCurrentMementoSerializable(origApp);
+        }
+        if (terminateOrigManagementContext) {
+            origManagementContext.terminate();
         }
         return (T) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
@@ -75,5 +98,13 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     protected T rebind(ManagementContext newManagementContext, RebindExceptionHandler exceptionHandler) throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
         return (T) RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader(), exceptionHandler);
+    }
+    
+    protected BrooklynMementoManifest loadMementoManifest() throws Exception {
+        BrooklynMementoPersisterToMultiFile persister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
+        RebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(RebindFailureMode.FAIL_AT_END, RebindFailureMode.FAIL_AT_END);
+        BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
+        persister.stop();
+        return mementoManifest;
     }
 }

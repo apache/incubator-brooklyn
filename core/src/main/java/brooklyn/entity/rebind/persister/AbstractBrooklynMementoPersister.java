@@ -7,6 +7,7 @@ import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
@@ -37,6 +38,9 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         for (PolicyMemento entity : memento.getPolicyMementos().values()) {
             builder.policy(entity.getId(), entity.getType());
         }
+        for (EnricherMemento entity : memento.getEnricherMementos().values()) {
+            builder.enricher(entity.getId(), entity.getType());
+        }
         return builder.build();
     }
     
@@ -55,8 +59,10 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         memento.removeEntities(delta.removedEntityIds());
         memento.removeLocations(delta.removedLocationIds());
         memento.removePolicies(delta.removedPolicyIds());
+        memento.removeEnrichers(delta.removedEnricherIds());
         memento.updateEntityMementos(delta.entities());
         memento.updateLocationMementos(delta.locations());
         memento.updatePolicyMementos(delta.policies());
+        memento.updateEnricherMementos(delta.enrichers());
     }
 }

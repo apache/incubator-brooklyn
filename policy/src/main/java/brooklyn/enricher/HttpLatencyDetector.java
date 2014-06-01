@@ -82,7 +82,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
     final AtomicReference<String> url = new AtomicReference<String>();
     HttpFeed httpFeed = null;
 
-    HttpLatencyDetector() {
+    public HttpLatencyDetector() { // for rebinding, and for EnricherSpec usage
     }
     
     protected HttpLatencyDetector(Map flags) {
@@ -156,6 +156,16 @@ public class HttpLatencyDetector extends AbstractEnricher {
                     }
                 }
             });
+            
+            // TODO would be good if subscription gave us the current value, rather than risking a race with code like this.
+            String currentVal = entity.getAttribute(urlSensor);
+            if (currentVal != null) {
+                Function<String, String> postProcessor = getConfig(URL_POST_PROCESSING);
+                String newVal = (postProcessor != null) ? postProcessor.apply(currentVal) : currentVal;
+                if (AtomicReferences.setIfDifferent(url, newVal)) {
+                    log.debug("{} updated url on initial connectionon, to {}", this, newVal);
+                }
+            }
         }
     }
 

@@ -11,6 +11,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -26,10 +27,14 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
     
     Number lastValue;
     long lastTime = -1;
+    
     /** unitMillis is the number of milliseconds to apply for the conversion from input to output;
      * e.g. 1000 for counting things per second; 
-     * NB for time (e.g. "total milliseconds consumed") use {@link TimeFractionDeltaEnricher} */ 
+     * NB for time (e.g. "total milliseconds consumed") use {@link TimeFractionDeltaEnricher} */
+    @SetFromFlag
     int unitMillis;
+    
+    @SetFromFlag
     Function<Double,Double> postProcessor;
     
     // default 1 second
@@ -37,6 +42,8 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
         return new TimeWeightedDeltaEnricher<T>(producer, source, target, 1000);
     }
 
+    public TimeWeightedDeltaEnricher() { // for rebind
+    }
     public TimeWeightedDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, int unitMillis) {
         this(producer, source, target, unitMillis, Functions.<Double>identity());
     }
@@ -74,6 +81,7 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
                 if (LOG.isTraceEnabled()) LOG.trace("{} received event but no last value so will not emit, null -> {} at {}", new Object[] {this, current, eventTime}); 
             } else {
                 double duration = (lastTime < 0) ? unitMillis : eventTime - lastTime;
+                if (eventTime == lastTime) duration = 0.1; // 0.1 of a millisecond is a relatively small number: 
                 double delta = (current.doubleValue() - lastValue.doubleValue()) / (duration / unitMillis);
                 double deltaPostProcessed = postProcessor.apply(delta);
                 entity.setAttribute((AttributeSensor<Double>)target, deltaPostProcessed);

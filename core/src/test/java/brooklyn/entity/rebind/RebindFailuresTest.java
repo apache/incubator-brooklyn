@@ -23,7 +23,6 @@ import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.mementos.EntityMemento;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.os.Os;
 
@@ -174,21 +173,11 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
             }
         }
         
-        protected void rebind() {
+        @Override
+        public void rebind() {
             if (Boolean.TRUE.equals(getConfig(FAIL_ON_REBIND))) {
                 throw new RuntimeException("Simulating failure in "+this+", which will cause rebind to fail");
             }
-        }
-        
-        // TODO Want a much cleaner way of doing this, in core brooklyn! 
-        @Override
-        public RebindSupport<EntityMemento> getRebindSupport() {
-            return new BasicEntityRebindSupport(this) {
-                @Override
-                protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-                    rebind();
-                }
-            };
         }
     }
 }

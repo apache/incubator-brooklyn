@@ -92,7 +92,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public static final String DB_USERNAME = "brooklyn";
     public static final String DB_PASSWORD = "br00k11n";
     
-    AttributeSensor<Integer> APPSERVERS_COUNT = Sensors.newIntegerSensor( 
+    public static final AttributeSensor<Integer> APPSERVERS_COUNT = Sensors.newIntegerSensor( 
             "appservers.count", "Number of app servers deployed");
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW = 
             WebAppServiceConstants.REQUESTS_PER_SECOND_IN_WINDOW;

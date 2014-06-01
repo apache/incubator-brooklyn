@@ -46,6 +46,7 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
     @Override
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        super.setUp();
         origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
         events = Lists.newCopyOnWriteArrayList();
         eventListener = new SensorEventListener<FailureDescriptor>() {
@@ -55,7 +56,7 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
         };
     }
 
-    @Test(enabled=false)
+    @Test
     public void testServiceRestarterWorksAfterRebind() throws Exception {
         origEntity.addPolicy(PolicySpec.create(ServiceRestarter.class)
                 .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
@@ -71,6 +72,7 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
             }});
     }
 
+    @Test
     public void testServiceReplacerWorksAfterRebind() throws Exception {
         Location origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         DynamicCluster origCluster = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
@@ -102,11 +104,14 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
                 assertEquals(removedMembers, ImmutableSet.of(e1));
                 assertEquals(newMembers.size(), 1);
                 assertEquals(((TestEntity)Iterables.getOnlyElement(newMembers)).getCallHistory(), ImmutableList.of("start"));
-                assertEquals(e1.getCallHistory(), ImmutableList.of("start", "stop"));
+                
+                // TODO e1 not reporting "start" after rebind because callHistory is a field rather than an attribute, so was not persisted
+                Asserts.assertEqualsIgnoringOrder(e1.getCallHistory(), ImmutableList.of("stop"));
                 assertFalse(Entities.isManaged(e1));
             }});
     }
     
+    @Test
     public void testServiceFailureDetectorWorksAfterRebind() throws Exception {
         origEntity.addPolicy(PolicySpec.create(ServiceFailureDetector.class));
 

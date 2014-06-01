@@ -54,7 +54,6 @@ public class SoftwareProcessEntityRebindTest extends BrooklynAppUnitTestSupport 
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
     }
     
-    
     @Test
     public void testReleasesLocationOnStopAfterRebinding() throws Exception {
         origE = app.createAndManageChild(EntitySpec.create(MyService.class));

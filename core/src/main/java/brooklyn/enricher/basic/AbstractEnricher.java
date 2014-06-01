@@ -2,6 +2,9 @@ package brooklyn.enricher.basic;
 
 import java.util.Map;
 
+import brooklyn.entity.rebind.BasicEnricherRebindSupport;
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherType;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
@@ -24,9 +27,14 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
         super(flags);
         enricherType = new EnricherTypeImpl(getAdjunctType());
         
-        if (isLegacyConstruction()) {
+        if (isLegacyConstruction() && !isLegacyNoConstructionInit()) {
             init();
         }
+    }
+
+    @Override
+    public RebindSupport<EnricherMemento> getRebindSupport() {
+        return new BasicEnricherRebindSupport(this);
     }
     
     @Override

@@ -6,6 +6,7 @@ import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.util.flags.SetFromFlag;
 
 
 /**
@@ -15,7 +16,11 @@ import brooklyn.event.SensorEvent;
 public class RollingMeanEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {
     private LinkedList<T> values = new LinkedList<T>();
     
+    @SetFromFlag
     int windowSize;
+
+    public RollingMeanEnricher() { // for rebinding
+    }
     
     public RollingMeanEnricher(Entity producer, AttributeSensor<T> source, AttributeSensor<Double> target,
             int windowSize) {

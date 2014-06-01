@@ -10,6 +10,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Converts an absolute measure of time into a fraction of time, based on the delta between consecutive values 
@@ -23,9 +24,14 @@ import brooklyn.event.SensorEvent;
 public class TimeFractionDeltaEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {
     private static final Logger LOG = LoggerFactory.getLogger(TimeFractionDeltaEnricher.class);
     
-    private final long nanosPerOrigUnit;
+    @SetFromFlag
+    private long nanosPerOrigUnit;
+    
     protected Number lastValue;
     protected long lastTimestamp = -1;
+
+    public TimeFractionDeltaEnricher() { // for rebinding
+    }
     
     public TimeFractionDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, TimeUnit origUnits) {
         this(producer, source, target, origUnits.toNanos(1));

@@ -2,6 +2,7 @@ package brooklyn.entity.rebind;
 
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
 import com.google.common.annotations.Beta;
@@ -31,6 +32,16 @@ public interface RebindExceptionHandler {
      * @return the location to use in place of the missing one, or null (if hasn't thrown an exception)
      */
     Location onDanglingLocationRef(String id);
+
+    /**
+     * @return the policy to use in place of the missing one, or null (if hasn't thrown an exception)
+     */
+    Policy onDanglingPolicyRef(String id);
+
+    /**
+     * @return the enricher to use in place of the missing one, or null (if hasn't thrown an exception)
+     */
+    Enricher onDanglingEnricherRef(String id);
 
     void onCreateLocationFailed(String locId, String locType, Exception e);
 

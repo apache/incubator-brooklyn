@@ -99,11 +99,6 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         if (Entities.isManaged(this)) Entities.manage(cluster);
         setAttribute(CLUSTER, cluster);
         setEntityFilter(EntityPredicates.isMemberOf(cluster));
-        subscribe(cluster, DynamicWebAppCluster.GROUP_MEMBERS, new SensorEventListener<Object>() {
-            @Override public void onEvent(SensorEvent<Object> event) {
-                // TODO inefficient impl; also worth extracting this into a mixin of some sort.
-                rescanEntities();
-            }});
         
         LoadBalancer controller = getAttribute(CONTROLLER);
         if (controller == null) {
@@ -119,8 +114,28 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
             if (Entities.isManaged(this)) Entities.manage(controller);
             setAttribute(CONTROLLER, controller);
         }
+        
+        doBind();
     }
     
+    @Override
+    public void rebind() {
+        super.rebind();
+        doBind();
+    }
+
+    protected void doBind() {
+        DynamicWebAppCluster cluster = getAttribute(CLUSTER);
+        if (cluster != null) {
+            subscribe(cluster, DynamicWebAppCluster.GROUP_MEMBERS, new SensorEventListener<Object>() {
+                @Override public void onEvent(SensorEvent<Object> event) {
+                    // TODO inefficient impl; also worth extracting this into a mixin of some sort.
+                    rescanEntities();
+                }});
+        }
+    }
+    
+    @Override
     public LoadBalancer getController() {
         return getAttribute(CONTROLLER);
     }

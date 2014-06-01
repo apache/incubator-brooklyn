@@ -30,6 +30,7 @@ import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -191,7 +192,16 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             Timer timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override public void run() {
-                    connectSensors();
+                    try {
+                        if (getManagementSupport().isNoLongerManaged()) {
+                            log.debug("Entity {} no longer managed; ignoring scheduled connect sensors on rebind", SoftwareProcessImpl.this);
+                            return;
+                        }
+                        connectSensors();
+                    } catch (Throwable e) {
+                        log.warn("Problem connecting sensors on rebind of "+SoftwareProcessImpl.this, e);
+                        Exceptions.propagateIfFatal(e);
+                    }
                 }
             }, delay);
         }
@@ -205,11 +215,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         super.onManagementStarting();
         
         Lifecycle state = getAttribute(SERVICE_STATE);
-        if (state == Lifecycle.RUNNING) {
-            rebind();
-        } else if (state != null && state != Lifecycle.CREATED) {
-            log.warn("On start-up of {}, not (re)binding because state is {}", this, state);
-    	} else {
+        if (state == null || state == Lifecycle.CREATED) {
             // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
             setAttribute(SERVICE_UP, false);
             setAttribute(SERVICE_STATE, Lifecycle.CREATED);
@@ -226,11 +232,18 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         }
     }
     
-    protected void rebind() {
+    @Override
+    public void rebind() {
+        Lifecycle state = getAttribute(SERVICE_STATE);
+        if (state == null || state != Lifecycle.RUNNING) {
+            log.warn("On rebind of {}, not rebinding because state is {}", this, state);
+            return;
+        }
+
         // e.g. rebinding to a running instance
         // FIXME For rebind, what to do about things in STARTING or STOPPING state?
         // FIXME What if location not set?
-        log.info("Connecting to pre-running service: {}", this);
+        log.info("Rebind {} connecting to pre-running service", this);
         
         MachineLocation machine = getMachineOrNull();
         if (machine != null) {

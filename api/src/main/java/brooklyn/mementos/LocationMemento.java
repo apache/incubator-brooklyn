@@ -6,7 +6,7 @@ import java.util.Set;
 import brooklyn.entity.rebind.RebindSupport;
 
 /**
- * Represents the state of an location, so that it can be reconstructed (e.g. after restarting brooklyn).
+ * Represents the state of a location, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
  * @see RebindSupport
  * 

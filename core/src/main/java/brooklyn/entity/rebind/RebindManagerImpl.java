@@ -11,6 +11,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -20,7 +21,9 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
+import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
@@ -29,11 +32,14 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
@@ -70,9 +76,15 @@ public class RebindManagerImpl implements RebindManager {
     
     private volatile BrooklynMementoPersister persister;
 
+    private final boolean persistPoliciesEnabled;
+    private final boolean persistEnrichersEnabled;
+
     public RebindManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
         this.changeListener = ChangeListener.NOOP;
+        
+        this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
+        this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
     }
 
     /**
@@ -162,6 +174,8 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Entity> entities = Maps.newLinkedHashMap();
             Map<String,Location> locations = Maps.newLinkedHashMap();
             Map<String,Policy> policies = Maps.newLinkedHashMap();
+            Map<String,Enricher> enrichers = Maps.newLinkedHashMap();
+            
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
     
             LookupContext realLookupContext = new LookupContext() {
@@ -180,6 +194,24 @@ public class RebindManagerImpl implements RebindManager {
                         result = exceptionHandler.onDanglingLocationRef(id);
                     } else if (type != null && !type.isInstance(result)) {
                         LOG.warn("Location with id "+id+" does not match type "+type+"; returning "+result);
+                    }
+                    return result;
+                }
+                @Override public Policy lookupPolicy(Class<?> type, String id) {
+                    Policy result = rebindContext.getPolicy(id);
+                    if (result == null) {
+                        result = exceptionHandler.onDanglingPolicyRef(id);
+                    } else if (type != null && !type.isInstance(result)) {
+                        LOG.warn("Policy with id "+id+" does not match type "+type+"; returning "+result);
+                    }
+                    return result;
+                }
+                @Override public Enricher lookupEnricher(Class<?> type, String id) {
+                    Enricher result = rebindContext.getEnricher(id);
+                    if (result == null) {
+                        result = exceptionHandler.onDanglingEnricherRef(id);
+                    } else if (type != null && !type.isInstance(result)) {
+                        LOG.warn("Enricher with id "+id+" does not match type "+type+"; returning "+result);
                     }
                     return result;
                 }
@@ -230,18 +262,36 @@ public class RebindManagerImpl implements RebindManager {
             BrooklynMemento memento = persister.loadMemento(realLookupContext, exceptionHandler);
             
             // Instantiate policies
-            LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
-            for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
-                
-                try {
-                    Policy policy = newPolicy(policyMemento, reflections);
-                    policies.put(policyMemento.getId(), policy);
-                    rebindContext.registerPolicy(policyMemento.getId(), policy);
-                } catch (Exception e) {
-                    exceptionHandler.onCreatePolicyFailed(policyMemento.getId(), policyMemento.getType(), e);
+            if (persistPoliciesEnabled) {
+                LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
+                for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
+                    
+                    try {
+                        Policy policy = newPolicy(policyMemento, reflections);
+                        policies.put(policyMemento.getId(), policy);
+                        rebindContext.registerPolicy(policyMemento.getId(), policy);
+                    } catch (Exception e) {
+                        exceptionHandler.onCreatePolicyFailed(policyMemento.getId(), policyMemento.getType(), e);
+                    }
                 }
+            } else {
+                LOG.debug("Not rebinding policies; feature disabled: {}", memento.getPolicyIds());
             }
+            
+            // Instantiate enrichers
+            if (persistEnrichersEnabled) {
+                LOG.info("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
+                for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating enricher {}", enricherMemento);
+                    
+                    Enricher enricher = newEnricher(enricherMemento, reflections);
+                    enrichers.put(enricherMemento.getId(), enricher);
+                    rebindContext.registerEnricher(enricherMemento.getId(), enricher);
+                }
+            } else {
+                LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
+            } 
             
             // Reconstruct locations
             LOG.info("RebindManager reconstructing locations");
@@ -259,22 +309,35 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             }
-    
-            // Reconstruct policies
-            LOG.info("RebindManager reconstructing policies");
-            for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
-                Policy policy = rebindContext.getPolicy(policyMemento.getId());
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
 
-                if (policy == null) {
-                    // usually because of creation-failure, when not using fail-fast
-                    exceptionHandler.onPolicyNotFound(policyMemento.getId());
-                } else {
-                    try {
-                        policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
-                    } catch (Exception e) {
-                        exceptionHandler.onRebindPolicyFailed(policy, e);
+            // Reconstruct policies
+            if (persistPoliciesEnabled) {
+                LOG.info("RebindManager reconstructing policies");
+                for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
+                    Policy policy = rebindContext.getPolicy(policyMemento.getId());
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
+    
+                    if (policy == null) {
+                        // usually because of creation-failure, when not using fail-fast
+                        exceptionHandler.onPolicyNotFound(policyMemento.getId());
+                    } else {
+                        try {
+                            policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
+                        } catch (Exception e) {
+                            exceptionHandler.onRebindPolicyFailed(policy, e);
+                        }
                     }
+                }
+            }
+
+            // Reconstruct enrichers
+            if (persistEnrichersEnabled) {
+                LOG.info("RebindManager reconstructing enrichers");
+                for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
+                    Enricher enricher = rebindContext.getEnricher(enricherMemento.getId());
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing enricher {}", enricherMemento);
+        
+                    enricher.getRebindSupport().reconstruct(rebindContext, enricherMemento);
                 }
             }
     
@@ -471,21 +534,69 @@ public class RebindManagerImpl implements RebindManager {
         // note 'used' config keys get marked in BasicLocationRebindSupport
     }
 
-
     /**
-     * Constructs a new policy, passing to its constructor the policy id and all of memento.getFlags().
+     * Constructs a new policy, passing to its constructor the policy id and all of memento.getConfig().
      */
     private Policy newPolicy(PolicyMemento memento, Reflections reflections) {
         String id = memento.getId();
-        String policyType = checkNotNull(memento.getType(), "policyType of "+id);
-        Class<?> policyClazz = reflections.loadClass(policyType);
+        String policyType = checkNotNull(memento.getType(), "policy type of %s must not be null in memento", id);
+        Class<? extends Policy> policyClazz = (Class<? extends Policy>) reflections.loadClass(policyType);
 
-        Map<String, Object> flags = MutableMap.<String, Object>builder()
-                .put("id", id)
-                .putAll(memento.getFlags())
-                .build();
+        if (InternalPolicyFactory.isNewStylePolicy(policyClazz)) {
+            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+            Policy policy = policyFactory.constructPolicy(policyClazz);
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), policy);
+            ((AbstractPolicy)policy).setManagementContext(managementContext);
+            
+            return policy;
 
-        return (Policy) invokeConstructor(reflections, policyClazz, new Object[] {flags});
+        } else {
+            LOG.warn("Deprecated rebind of policy without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+policyType);
+            
+            // There are several possibilities for the constructor; find one that works.
+            // Prefer passing in the flags because required for Application to set the management context
+            // TODO Feels very hacky!
+            Map<String, Object> flags = MutableMap.<String, Object>of(
+                    "id", id, 
+                    "deferConstructionChecks", true,
+                    "noConstructionInit", true);
+            flags.putAll(memento.getConfig());
+
+            return (Policy) invokeConstructor(reflections, policyClazz, new Object[] {flags});
+        }
+    }
+
+    /**
+     * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
+     */
+    private Enricher newEnricher(EnricherMemento memento, Reflections reflections) {
+        String id = memento.getId();
+        String enricherType = checkNotNull(memento.getType(), "enricher type of %s must not be null in memento", id);
+        Class<? extends Enricher> enricherClazz = (Class<? extends Enricher>) reflections.loadClass(enricherType);
+
+        if (InternalPolicyFactory.isNewStyleEnricher(enricherClazz)) {
+            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+            Enricher enricher = policyFactory.constructEnricher(enricherClazz);
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), enricher);
+            ((AbstractEnricher)enricher).setManagementContext(managementContext);
+            
+            return enricher;
+
+        } else {
+            LOG.warn("Deprecated rebind of enricher without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+enricherType);
+            
+            // There are several possibilities for the constructor; find one that works.
+            // Prefer passing in the flags because required for Application to set the management context
+            // TODO Feels very hacky!
+            Map<String, Object> flags = MutableMap.<String, Object>of(
+                    "id", id, 
+                    "deferConstructionChecks", true,
+                    "noConstructionInit", true);
+            flags.putAll(memento.getConfig());
+
+            return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});
+        }
+
     }
 
     private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
@@ -502,6 +613,20 @@ public class RebindManagerImpl implements RebindManager {
         throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
     }
 
+    private static boolean isNewStylePolicy(Class<?> clazz) {
+        if (!Policy.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Class "+clazz+" is not a policy");
+        }
+        return Reflections.hasNoArgConstructor(clazz);
+    }
+    
+    private static boolean isNewStyleEnricher(Class<?> clazz) {
+        if (!Enricher.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Class "+clazz+" is not an enricher");
+        }
+        return Reflections.hasNoArgConstructor(clazz);
+    }
+    
     /**
      * Wraps a ChangeListener, to log and never propagate any exceptions that it throws.
      * 
@@ -579,6 +704,15 @@ public class RebindManagerImpl implements RebindManager {
                 delegate.onChanged(policy);
             } catch (Throwable t) {
                 LOG.error("Error persisting mememento onChanged("+policy+"); continuing.", t);
+            }
+        }
+        
+        @Override
+        public void onChanged(Enricher enricher) {
+            try {
+                delegate.onChanged(enricher);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onChanged("+enricher+"); continuing.", t);
             }
         }
     }

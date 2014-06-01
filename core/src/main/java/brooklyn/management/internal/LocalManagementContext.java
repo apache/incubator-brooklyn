@@ -25,6 +25,7 @@ import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
+import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.location.Location;
 import brooklyn.management.AccessController;
@@ -219,6 +220,11 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public InternalLocationFactory getLocationFactory() {
         return getLocationManager().getLocationFactory();
+    }
+
+    @Override
+    public InternalPolicyFactory getPolicyFactory() {
+        return getEntityManager().getPolicyFactory();
     }
 
     @Override

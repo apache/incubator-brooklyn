@@ -14,6 +14,7 @@ public interface EntityChangeListener {
         @Override public void onMembersChanged() {}
         @Override public void onChildrenChanged() {}
         @Override public void onPoliciesChanged() {}
+        @Override public void onEnrichersChanged() {}
         @Override public void onEffectorStarting(Effector<?> effector) {}
         @Override public void onEffectorCompleted(Effector<?> effector) {}
     };
@@ -30,7 +31,11 @@ public interface EntityChangeListener {
 
     void onChildrenChanged();
 
+    // FIXME Also want something to be notified when policy's state/config changes.
+    //       Do we want a separate PolicyChangeListener instead? Or everything through EntityChangeListener?
     void onPoliciesChanged();
+
+    void onEnrichersChanged();
 
     void onEffectorStarting(Effector<?> effector);
     

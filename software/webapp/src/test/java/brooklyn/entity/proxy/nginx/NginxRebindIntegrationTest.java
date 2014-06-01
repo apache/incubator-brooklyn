@@ -8,6 +8,7 @@ import static org.testng.Assert.assertEquals;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,6 +19,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
@@ -31,12 +33,14 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.Asserts;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
@@ -163,7 +167,9 @@ public class NginxRebindIntegrationTest {
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
         String rootUrl = origNginx.getAttribute(NginxController.ROOT_URL);
-
+        JBoss7Server origJboss = (JBoss7Server) Iterables.getOnlyElement(origServerPool.getMembers());
+        assertEquals(origNginx.getAttribute(NginxController.SERVER_POOL_TARGETS).keySet(), ImmutableSet.of(origJboss));
+        
         assertHttpStatusCodeEventuallyEquals(rootUrl, 200);
         WebAppMonitor monitor = newWebAppMonitor(rootUrl, 200);
         final String origConfigFile = origNginx.getConfigFile();
@@ -172,9 +178,17 @@ public class NginxRebindIntegrationTest {
         newApp = rebind();
         ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
-        DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
-        JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
+        final DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
+        final JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
 
+        // Expect continually to have same nginx members; should not lose them temporarily!
+        Asserts.succeedsContinually(new Runnable() {
+            public void run() {
+                Map<Entity, String> newNginxMemebers = newNginx.getAttribute(NginxController.SERVER_POOL_TARGETS);
+                assertEquals(newNginxMemebers.keySet(), ImmutableSet.of(newJboss));
+            }});
+        
+        
         assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(rootUrl, 200);
 

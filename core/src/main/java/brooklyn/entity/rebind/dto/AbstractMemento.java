@@ -54,6 +54,10 @@ public abstract class AbstractMemento implements Memento, Serializable {
         public B displayName(String val) {
             displayName = val; return self();
         }
+        /**
+         * @deprecated since 0.7.0; use config/attributes so generic persistence will work, rather than requiring "custom fields"
+         */
+        @Deprecated
         public B customFields(Map<String,?> vals) {
             fields.putAll(vals); return self();
         }
@@ -113,13 +117,15 @@ public abstract class AbstractMemento implements Memento, Serializable {
     public String getDisplayName() {
         return displayName;
     }
-    
+
+    @Deprecated
     @Override
     public Object getCustomField(String name) {
         if (getCustomFields()==null) return null;
         return getCustomFields().get(name);
     }
     
+    @Deprecated
     @Override
     public abstract Map<String, ? extends Object> getCustomFields();
     

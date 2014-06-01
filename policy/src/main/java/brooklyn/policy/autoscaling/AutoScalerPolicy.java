@@ -357,9 +357,18 @@ public class AutoScalerPolicy extends AbstractPolicy {
     public AutoScalerPolicy(Map<String,?> props) {
         super(props);
     }
-    
+
     @Override
     public void init() {
+        doInit();
+    }
+
+    @Override
+    public void rebind() {
+        doInit();
+    }
+    
+    protected void doInit() {
         long maxReachedNotificationDelay = getMaxReachedNotificationDelay().toMilliseconds();
         recentUnboundedResizes = new SizeHistory(maxReachedNotificationDelay);
         

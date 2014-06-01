@@ -343,7 +343,14 @@ public class EntityManagementSupport {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
+        public void onEnrichersChanged() {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
         public void onAttributeChanged(AttributeSensor<?> attribute) {
+            // TODO Could make this more efficient by inspecting the attribute to decide if needs persisted
+            // immediately, or not important, or transient (e.g. do we really need to persist 
+            // request-per-second count for rebind purposes?!)
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override

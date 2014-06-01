@@ -20,6 +20,7 @@ import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
@@ -45,10 +46,12 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     private final File entitiesDir;
     private final File locationsDir;
     private final File policiesDir;
+    private final File enrichersDir;
 
     private final ConcurrentMap<String, MementoFileWriter<EntityMemento>> entityWriters = new ConcurrentHashMap<String, MementoFileWriter<EntityMemento>>();
     private final ConcurrentMap<String, MementoFileWriter<LocationMemento>> locationWriters = new ConcurrentHashMap<String, MementoFileWriter<LocationMemento>>();
     private final ConcurrentMap<String, MementoFileWriter<PolicyMemento>> policyWriters = new ConcurrentHashMap<String, MementoFileWriter<PolicyMemento>>();
+    private final ConcurrentMap<String, MementoFileWriter<EnricherMemento>> enricherWriters = new ConcurrentHashMap<String, MementoFileWriter<EnricherMemento>>();
     
     private final MementoSerializer<Object> serializer;
 
@@ -78,6 +81,10 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         policiesDir = new File(dir, "policies");
         policiesDir.mkdir();
         checkDirIsAccessible(policiesDir);
+        
+        enrichersDir = new File(dir, "enrichers");
+        enrichersDir.mkdir();
+        checkDirIsAccessible(enrichersDir);
 
         File planeDir = new File(dir, "plane");
         planeDir.mkdir();
@@ -115,17 +122,19 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         File[] entityFiles;
         File[] locationFiles;
         File[] policyFiles;
+        File[] enricherFiles;
         try {
             entityFiles = entitiesDir.listFiles(fileFilter);
             locationFiles = locationsDir.listFiles(fileFilter);
             policyFiles = policiesDir.listFiles(fileFilter);
+            enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
             exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
         
-        LOG.info("Loading memento manifest from {}; {} entities, {} locations, {} policies", 
-                new Object[] {dir, entityFiles.length, locationFiles.length, policyFiles.length});
+        LOG.info("Loading memento manifest from {}; {} entities, {} locations, {} policies, {} enrichers", 
+                new Object[] {dir, entityFiles.length, locationFiles.length, policyFiles.length, enricherFiles.length});
         
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
         
@@ -160,6 +169,12 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     exceptionHandler.onLoadPolicyMementoFailed("File "+file, e);
                 }
             }
+            for (File file : enricherFiles) {
+                String contents = readFile(file);
+                String id = (String) XmlUtil.xpath(contents, "/enricher/id");
+                String type = (String) XmlUtil.xpath(contents, "/enricher/type");
+                builder.enricher(id, type);
+            }
             
             if (LOG.isDebugEnabled()) LOG.debug("Loaded memento manifest; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 
             return builder.build();
@@ -185,17 +200,19 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         File[] entityFiles;
         File[] locationFiles;
         File[] policyFiles;
+        File[] enricherFiles;
         try {
             entityFiles = entitiesDir.listFiles(fileFilter);
             locationFiles = locationsDir.listFiles(fileFilter);
             policyFiles = policiesDir.listFiles(fileFilter);
+            enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
             exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
 
-        LOG.info("Loading memento from {}; {} entities, {} locations, {} policies", 
-                new Object[] {dir, entityFiles.length, locationFiles.length, policyFiles.length});
+        LOG.info("Loading memento from {}; {} entities, {} locations, {} policies and {} enrichers", 
+                new Object[] {dir, entityFiles.length, locationFiles.length, policyFiles.length}, enricherFiles.length);
         
         BrooklynMementoImpl.Builder builder = BrooklynMementoImpl.builder();
         
@@ -240,6 +257,14 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     exceptionHandler.onLoadPolicyMementoFailed("File "+file, e);
                 }
             }
+            for (File file : enricherFiles) {
+                EnricherMemento memento = (EnricherMemento) serializer.fromString(readFile(file));
+                if (memento == null) {
+                    LOG.warn("No enricher-memento deserialized from file "+file+"; ignoring and continuing");
+                } else {
+                    builder.enricher(memento);
+                }
+            }
             
             if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 
             return builder.build();
@@ -266,6 +291,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         for (PolicyMemento m : newMemento.getPolicyMementos().values()) {
             persist(m);
         }
+        for (EnricherMemento m : newMemento.getEnricherMementos().values()) {
+            persist(m);
+        }
     }
     
     @Override
@@ -274,10 +302,10 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointed delta of memento, because not running");
             return;
         }
-        if (LOG.isTraceEnabled()) LOG.trace("Checkpointed delta of memento; updating {} entities, {} locations and {} policies; " +
-        		"removing {} entities, {} locations and {} policies", 
-                new Object[] {delta.entities(), delta.locations(), delta.policies(),
-                delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
+        if (LOG.isTraceEnabled()) LOG.trace("Checkpointed delta of memento; updating {} entities, {} locations, {} policies and {} enrichers; " +
+        		"removing {} entities, {} locations {} policies and {} enrichers", 
+                new Object[] {delta.entities(), delta.locations(), delta.policies(), delta.enrichers(),
+                delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds(), delta.removedEnricherIds()});
         
         for (EntityMemento entity : delta.entities()) {
             persist(entity);
@@ -288,6 +316,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         for (PolicyMemento policy : delta.policies()) {
             persist(policy);
         }
+        for (EnricherMemento enricher : delta.enrichers()) {
+            persist(enricher);
+        }
         for (String id : delta.removedEntityIds()) {
             deleteEntity(id);
         }
@@ -296,6 +327,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
         for (String id : delta.removedPolicyIds()) {
             deletePolicy(id);
+        }
+        for (String id : delta.removedEnricherIds()) {
+            deleteEnricher(id);
         }
     }
 
@@ -318,6 +352,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             writer.waitForWriteCompleted(timeout);
         }
         for (MementoFileWriter<?> writer : policyWriters.values()) {
+            writer.waitForWriteCompleted(timeout);
+        }
+        for (MementoFileWriter<?> writer : enricherWriters.values()) {
             writer.waitForWriteCompleted(timeout);
         }
     }
@@ -363,6 +400,15 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
         writer.write(policy);
     }
+    
+    private void persist(EnricherMemento enricher) {
+        MementoFileWriter<EnricherMemento> writer = enricherWriters.get(enricher.getId());
+        if (writer == null) {
+            enricherWriters.putIfAbsent(enricher.getId(), new MementoFileWriter<EnricherMemento>(getFileFor(enricher), executor, serializer));
+            writer = enricherWriters.get(enricher.getId());
+        }
+        writer.write(enricher);
+    }
 
     private void deleteEntity(String id) {
         MementoFileWriter<EntityMemento> writer = entityWriters.get(id);
@@ -384,6 +430,13 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             writer.delete();
         }
     }
+    
+    private void deleteEnricher(String id) {
+        MementoFileWriter<EnricherMemento> writer = enricherWriters.get(id);
+        if (writer != null) {
+            writer.delete();
+        }
+    }
 
     private File getFileFor(EntityMemento entity) {
         return new File(entitiesDir, entity.getId());
@@ -395,5 +448,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     
     private File getFileFor(PolicyMemento policy) {
         return new File(policiesDir, policy.getId());
+    }
+    
+    private File getFileFor(EnricherMemento enricher) {
+        return new File(enrichersDir, enricher.getId());
     }
 }

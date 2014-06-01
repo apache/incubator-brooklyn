@@ -108,19 +108,22 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
         }
         
         if (Boolean.TRUE.equals(fromMembers)) {
-            subscribe(entity, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
+            checkState(producer instanceof Group, "must be a group when fromMembers true: producer=%s; entity=%s; "
+                    + "hardcodedProducers=%s", getConfig(PRODUCER), entity, fromHardcodedProducers);
+
+            subscribe(producer, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> event) {
                     if (entityFilter.apply(event.getValue())) addProducer(event.getValue());
                 }
             });
-            subscribe(entity, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+            subscribe(producer, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> event) {
                     removeProducer(event.getValue());
                 }
             });
             
-            if (entity instanceof Group) {
-                for (Entity member : Iterables.filter(((Group)entity).getMembers(), entityFilter)) {
+            if (producer instanceof Group) {
+                for (Entity member : Iterables.filter(((Group)producer).getMembers(), entityFilter)) {
                     addProducer(member);
                 }
             }
@@ -131,12 +134,12 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
             if (LOG.isDebugEnabled()) LOG.debug("{} linked (children of {}, {}) to {}", new Object[] {this, producer, sourceSensor, targetSensor});
             subscribeToChildren(producer, sourceSensor, this);
 
-            subscribe(entity, AbstractEntity.CHILD_REMOVED, new SensorEventListener<Entity>() {
+            subscribe(producer, AbstractEntity.CHILD_REMOVED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> event) {
                     onProducerRemoved(event.getValue());
                 }
             });
-            subscribe(entity, AbstractEntity.CHILD_ADDED, new SensorEventListener<Entity>() {
+            subscribe(producer, AbstractEntity.CHILD_ADDED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> event) {
                     if (entityFilter.apply(event.getValue())) onProducerAdded(event.getValue());
                 }

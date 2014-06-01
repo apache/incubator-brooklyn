@@ -9,6 +9,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -22,6 +24,8 @@ public interface BrooklynMementoPersister {
     public static interface LookupContext {
         Entity lookupEntity(Class<?> type, String id);
         Location lookupLocation(Class<?> type, String id);
+        Policy lookupPolicy(Class<?> type, String id);
+        Enricher lookupEnricher(Class<?> type, String id);
     }
 
     BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) throws IOException;
@@ -50,8 +54,10 @@ public interface BrooklynMementoPersister {
         Collection<LocationMemento> locations();
         Collection<EntityMemento> entities();
         Collection<PolicyMemento> policies();
+        Collection<EnricherMemento> enrichers();
         Collection<String> removedLocationIds();
         Collection<String> removedEntityIds();
         Collection<String> removedPolicyIds();
+        Collection<String> removedEnricherIds();
     }
 }

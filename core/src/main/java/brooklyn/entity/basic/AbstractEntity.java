@@ -520,6 +520,15 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
     
     /**
+     * Called by framework (in new-style entities where EntitySpec was used) on rebind, 
+     * after configuring but before the entity is managed.
+     * Note that {@link #init()} will not be called on rebind.
+     */
+    public void rebind() {
+        // no-op
+    }
+    
+    /**
      * Adds this as a child of the given entity; registers with application if necessary.
      */
     @Override
@@ -1105,12 +1114,21 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     public void addEnricher(Enricher enricher) {
         enrichers.add((AbstractEnricher) enricher);
         ((AbstractEnricher)enricher).setEntity(this);
+        
+        getManagementSupport().getEntityChangeListener().onEnrichersChanged();
+        // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
     }
 
     @Override
     public boolean removeEnricher(Enricher enricher) {
         ((AbstractEnricher)enricher).destroy();
-        return enrichers.remove(enricher);
+        boolean changed = enrichers.remove(enricher);
+        
+        if (changed) {
+            getManagementSupport().getEntityChangeListener().onEnrichersChanged();
+        }
+        return changed;
+
     }
 
     @Override
