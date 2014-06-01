@@ -19,7 +19,6 @@ public interface SoftwareProcess extends Entity, Startable {
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
-    public static final AttributeSensor<String> SSH_ADDRESS = Attributes.SSH_ADDRESS;
     public static final AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
     public static final AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
 

@@ -26,6 +26,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
@@ -62,7 +63,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         
         assertEquals(entity.getAttribute(SoftwareProcess.HOSTNAME), machine.getAddress().getHostName());
         assertEquals(entity.getAttribute(SoftwareProcess.ADDRESS), machine.getAddress().getHostAddress());
-        assertEquals(entity.getAttribute(SoftwareProcess.SSH_ADDRESS), machine.getUser() + "@" + machine.getAddress().getHostName() + ":" + machine.getPort());
+        assertEquals(entity.getAttribute(Attributes.SSH_ADDRESS), UserAndHostAndPort.fromParts(machine.getUser(), machine.getAddress().getHostName(), machine.getPort()));
         assertEquals(entity.getAttribute(SoftwareProcess.PROVISIONING_LOCATION), loc);
     }
 

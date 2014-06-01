@@ -42,6 +42,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -56,7 +57,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.net.HostAndPort;
 
 /** 
  * Default skeleton for start/stop/restart tasks on machines.
@@ -281,7 +281,7 @@ public abstract class MachineLifecycleEffectorTasks {
             entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
             if (machine instanceof SshMachineLocation) {
                 SshMachineLocation sshMachine = (SshMachineLocation) machine;
-                String sshAddress = sshMachine.getUser() + "@"+sshMachine.getAddress().getHostName()+":"+sshMachine.getPort();
+                UserAndHostAndPort sshAddress = UserAndHostAndPort.fromParts(sshMachine.getUser(), sshMachine.getAddress().getHostName(), sshMachine.getPort());
                 entity().setAttribute(Attributes.SSH_ADDRESS, sshAddress);
             }
             
