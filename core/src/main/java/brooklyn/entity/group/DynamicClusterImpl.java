@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -22,6 +23,7 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
@@ -264,25 +266,36 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         } finally {
-            connectServiceStateSensor();
+            connectSensors();
         }
     }
 
-    protected void connectServiceStateSensor() {
+    protected void connectSensors() {
         subscribeToChildren(this, SERVICE_STATE, new SensorEventListener<Lifecycle>() {
             @Override
             public void onEvent(SensorEvent<Lifecycle> event) {
-                setAttribute(SERVICE_UP, allChildrenRunning());
-                setAttribute(SERVICE_STATE, allChildrenRunning() ? Lifecycle.RUNNING : Lifecycle.ON_FIRE);
+                setAttribute(SERVICE_STATE, calculateServiceState());
+            }
+        });
+        subscribeToChildren(this, SERVICE_UP, new SensorEventListener<Boolean>() {
+            @Override
+            public void onEvent(SensorEvent<Boolean> event) {
+                setAttribute(SERVICE_UP, calculateServiceUp());
             }
         });
     }
 
-    protected boolean allChildrenRunning() {
-        for (Entity member : getMembers()) {
-            if (member.getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) return false;
+    protected Lifecycle calculateServiceState() {
+        Lifecycle currentState = getAttribute(SERVICE_STATE);
+        if (EnumSet.of(Lifecycle.ON_FIRE, Lifecycle.RUNNING).contains(currentState)) {
+            Iterable<Lifecycle> memberStates = Iterables.transform(getMembers(), EntityFunctions.attribute(SERVICE_STATE));
+            int running = Iterables.frequency(memberStates, Lifecycle.RUNNING);
+            int onFire = Iterables.frequency(memberStates, Lifecycle.ON_FIRE);
+            if ((getInitialQuorumSize() > 0 ? running < getInitialQuorumSize() : true) && onFire > 0) {
+                currentState = Lifecycle.ON_FIRE;
+            }
         }
-        return true;
+        return currentState;
     }
 
     protected List<Location> findSubLocations(Location loc) {

@@ -1,6 +1,7 @@
 package brooklyn.entity.webapp;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -223,14 +224,48 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     
     void connectSensors() {
         addEnricher(Enrichers.builder()
-                .propagatingAllBut(SERVICE_UP, ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
+                .propagatingAllBut(SERVICE_STATE, SERVICE_UP, ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
                 .from(getCluster())
                 .build());
         addEnricher(Enrichers.builder()
                 // include hostname and address of controller (need both in case hostname only resolves to internal/private ip)
-                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, SERVICE_UP, ROOT_URL)
+                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, ROOT_URL)
                 .from(getController())
                 .build());
+
+        SensorEventListener<Boolean> updateServiceUp = new SensorEventListener<Boolean>() {
+            @Override
+            public void onEvent(SensorEvent<Boolean> event) {
+                setAttribute(SERVICE_UP, calculateServiceUp());
+            }
+        };
+        SensorEventListener<Lifecycle> updateServiceState = new SensorEventListener<Lifecycle>() {
+            @Override
+            public void onEvent(SensorEvent<Lifecycle> event) {
+                setAttribute(SERVICE_STATE, calculateServiceState());
+            }
+        };
+        
+        subscribe(getCluster(), SERVICE_STATE, updateServiceState);
+        subscribe(getController(), SERVICE_STATE, updateServiceState);
+        subscribe(getCluster(), SERVICE_UP, updateServiceUp);
+        subscribe(getController(), SERVICE_UP, updateServiceUp);
+    }
+
+    protected Lifecycle calculateServiceState() {
+        Lifecycle currentState = getAttribute(SERVICE_STATE);
+        if (EnumSet.of(Lifecycle.ON_FIRE, Lifecycle.RUNNING).contains(currentState)) {
+            if (getCluster().getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) currentState = Lifecycle.ON_FIRE;
+            if (getController().getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) currentState = Lifecycle.ON_FIRE;
+        }
+        return currentState;
+    }
+
+    /**
+     * Default impl is to be up when running, and !up otherwise.
+     */
+    protected boolean calculateServiceUp() {
+        return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
     }
 
     @Override

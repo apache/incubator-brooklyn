@@ -17,7 +17,6 @@ package brooklyn.config.render;
 
 import groovy.lang.Closure;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import brooklyn.entity.Entity;
