@@ -1,5 +1,8 @@
 package brooklyn.location.cloud;
 
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -13,7 +16,6 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
-
 public class CloudMachineNamerTest {
 
     private static final Logger log = LoggerFactory.getLogger(CloudMachineNamerTest.class);
@@ -105,14 +107,29 @@ public class CloudMachineNamerTest {
         namer.lengthMaxPermittedForMachineName(10);
         namer.lengthReservedForNameInGroup(4);
         String groupId = namer.generateNewGroupId();
-        Assert.assertEquals(6, groupId.length());
+        Assert.assertEquals(5, groupId.length(), "groupId="+groupId);
     }
 
     @Test
+    public void testSanitizesNewMachineName() {
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("T_%$()\r\n\t[]*.!App"));
+        TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("ent"));
+
+        ConfigBag cfg = new ConfigBag()
+            .configure(CloudLocationConfig.CALLER_CONTEXT, child);
+        CloudMachineNamer namer = new CloudMachineNamer(cfg);
+        
+        String result = namer.generateNewMachineUniqueName();
+        assertTrue(result.indexOf("t-ap") >= 0, "result="+result);
+        for (int c : "_%$()\r\n\t[]*.!".getBytes()) {
+            assertFalse(result.contains(new String(new char [] {(char)c})), "result="+result);
+        }
+    }
+    
+    @Test
     public void testSanitize() {
-        Assert.assertEquals(
-                CloudMachineNamer.sanitize("me & you like _underscores but not !!! or dots...dots...dots"),
-                "me-you-like-_underscores-but-not-or-dots-dots-dots"
-            );
+        Assert.assertEquals(CloudMachineNamer.sanitize(
+                "me & you like alphanumeric but not _ or !!! or dots...dots...dots %$()\r\n\t[]*etc"),
+                "me-you-like-alphanumeric-but-not-or-or-dots-dots-dots-etc");
     }
 }

@@ -8,6 +8,8 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringShortener;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.CharMatcher;
+
 public class CloudMachineNamer {
 
     protected final ConfigBag setup;
@@ -140,7 +142,10 @@ public class CloudMachineNamer {
     }
 
     public static String sanitize(String s) {
-        return s.replaceAll("[^_A-Za-z0-9]+", "-");
+        return CharMatcher.inRange('A', 'Z')
+                .or(CharMatcher.inRange('a', 'z'))
+                .or(CharMatcher.inRange('0', '9'))
+                .negate()
+                .trimAndCollapseFrom(s, '-');
     }
-
 }
