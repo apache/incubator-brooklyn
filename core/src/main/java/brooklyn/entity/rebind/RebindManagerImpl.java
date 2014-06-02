@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -28,6 +29,7 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
+import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
@@ -45,6 +47,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -177,9 +180,27 @@ public class RebindManagerImpl implements RebindManager {
         RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
         return rebind(classLoader, exceptionHandler);
     }
-    
+
     @Override
     public List<Application> rebind(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
+        BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+        if (ec == null) {
+            ec = new BasicExecutionContext(managementContext.getExecutionManager());
+            Task<List<Application>> task = ec.submit(new Callable<List<Application>>() {
+                @Override public List<Application> call() throws Exception {
+                    return rebindImpl(classLoader, exceptionHandler);
+                }});
+            try {
+                return task.get();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+        } else {
+            return rebindImpl(classLoader, exceptionHandler);
+        }
+    }
+    
+    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
         checkNotNull(classLoader, "classLoader");
 
         try {
