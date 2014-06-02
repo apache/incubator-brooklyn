@@ -470,6 +470,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 .nodeId(ownNodeId)
                 .status(toNodeStateForPersistence(getNodeState()))
                 .timestampUtc(currentTimeMillis())
+                .uri(managementContext.getManagementNodeUri().orNull())
                 .build();
     }
     

@@ -3,6 +3,7 @@ package brooklyn.launcher;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
@@ -35,6 +36,7 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
@@ -361,6 +363,10 @@ public class BrooklynWebServer {
         server.start();
         //reinit required because grails wipes our language extension bindings
         BrooklynLanguageExtensions.reinit();
+
+        if (managementContext instanceof AbstractManagementContext) {
+            ((AbstractManagementContext) managementContext).setManagementNodeUri(new URI(getRootUrl()));
+        }
 
         log.info("Started Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
     }
