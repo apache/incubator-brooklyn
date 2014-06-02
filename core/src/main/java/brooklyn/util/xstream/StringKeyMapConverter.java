@@ -30,14 +30,16 @@ public class StringKeyMapConverter extends MapConverter {
     // full stop is technically allowed ... goes against "best practice" ... 
     // but simplifies property maps, and is used elsewhere in xstream's repn
     final static String VALID_XML_NODE_NAME_CHARS = Identifiers.JAVA_GOOD_NONSTART_CHARS + ".";
-    
+
+    final static String VALID_XML_NODE_NAME_START_CHARS = Identifiers.JAVA_GOOD_START_CHARS + ".";
+
     public StringKeyMapConverter(Mapper mapper) {
         super(mapper);
     }
     
     protected boolean isKeyValidForNodeName(String key) {
         // return false to always write as <entry key="key" ...; otherwise only use that when key is not valid xml
-        return Identifiers.isValidToken(key, VALID_XML_NODE_NAME_CHARS, VALID_XML_NODE_NAME_CHARS);
+        return Identifiers.isValidToken(key, VALID_XML_NODE_NAME_START_CHARS, VALID_XML_NODE_NAME_CHARS);
     }
     
     public boolean canConvert(Class type) {
