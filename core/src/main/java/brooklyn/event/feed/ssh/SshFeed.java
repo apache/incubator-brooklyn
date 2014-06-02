@@ -23,6 +23,8 @@ import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
@@ -228,11 +230,15 @@ public class SshFeed extends AbstractFeed {
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
         int exitStatus;
+        ConfigBag flags = ConfigBag.newInstance()
+            .configure(SshTool.PROP_NO_EXTRA_OUTPUT, true)
+            .configure(SshTool.PROP_OUT_STREAM, stdout)
+            .configure(SshTool.PROP_ERR_STREAM, stderr);
         if (execAsCommand) {
-            exitStatus = machine.get().execCommands(MutableMap.<String,Object>of("out", stdout, "err", stderr),
+            exitStatus = machine.get().execCommands(flags.getAllConfig(),
                     "ssh-feed", ImmutableList.of(command), env);
         } else {
-            exitStatus = machine.get().execScript(MutableMap.<String,Object>of("out", stdout, "err", stderr),
+            exitStatus = machine.get().execScript(flags.getAllConfig(),
                     "ssh-feed", ImmutableList.of(command), env);
         }
 
