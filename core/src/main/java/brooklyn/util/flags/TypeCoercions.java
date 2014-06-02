@@ -515,7 +515,7 @@ public class TypeCoercions {
         });
         registerAdapter(String.class, AtomicLong.class, new Function<String,AtomicLong>() {
             @Override public AtomicLong apply(final String input) {
-                return new AtomicLong(Long.parseLong(input));
+                return new AtomicLong(Long.parseLong(input.trim()));
             }
         });
         registerAdapter(Integer.class, AtomicInteger.class, new Function<Integer,AtomicInteger>() {
@@ -525,7 +525,7 @@ public class TypeCoercions {
         });
         registerAdapter(String.class, AtomicInteger.class, new Function<String,AtomicInteger>() {
             @Override public AtomicInteger apply(final String input) {
-                return new AtomicInteger(Integer.parseInt(input));
+                return new AtomicInteger(Integer.parseInt(input.trim()));
             }
         });
         /** This always returns a {@link Double}, cast as a {@link Number}; 
