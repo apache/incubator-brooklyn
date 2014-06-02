@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.Location;
 
 import com.google.common.annotations.Beta;
@@ -38,6 +40,8 @@ public class PortForwardManager {
 
     private static final Logger log = LoggerFactory.getLogger(PortForwardManager.class);
     
+    protected Entity owningEntity;
+    
     protected final Map<String,PortMapping> mappings = new LinkedHashMap<String,PortMapping>();
     
     protected final Map<String,String> publicIpIdToHostname = new LinkedHashMap<String,String>();
@@ -45,17 +49,28 @@ public class PortForwardManager {
     // horrible hack -- see javadoc above
     AtomicInteger portReserved = new AtomicInteger(11000);
 
+    public PortForwardManager() {
+    }
+    
+    public PortForwardManager(Entity owningEntity) {
+        this.owningEntity = owningEntity;
+    }
+    
     /** reserves a unique public port on the given publicIpId
      * (often followed by {@link #associate(String, int, Location, int)}
      * to enable {@link #lookup(Location, int)}) */
-    public synchronized int acquirePublicPort(String publicIpId) {
-        // far too simple -- see javadoc above
-        int port = portReserved.incrementAndGet();
-        
-        PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
-        log.debug("allocating public port "+port+" at "+publicIpId+" (no association info yet)");
-        
-        mappings.put(makeKey(publicIpId, port), mapping);
+    public int acquirePublicPort(String publicIpId) {
+        int port;
+        synchronized (this) {
+            // far too simple -- see javadoc above
+            port = portReserved.incrementAndGet();
+            
+            PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
+            log.debug("allocating public port "+port+" at "+publicIpId+" (no association info yet)");
+            
+            mappings.put(makeKey(publicIpId, port), mapping);
+        }
+        onChanged();
         return port;
     }
 
@@ -63,7 +78,9 @@ public class PortForwardManager {
     public PortMapping acquirePublicPortExplicit(String publicIpId, int port) {
         PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
         log.debug("assigning explicit public port "+port+" at "+publicIpId);
-        return mappings.put(makeKey(publicIpId, port), mapping);        
+        PortMapping result = mappings.put(makeKey(publicIpId, port), mapping);
+        onChanged();
+        return result;
     }
 
     protected String makeKey(String publicIpId, int publicPort) {
@@ -84,9 +101,13 @@ public class PortForwardManager {
     }
 
     /** clears the given port mapping, returning the mapping if there was one */
-    public synchronized PortMapping forgetPortMapping(String publicIpId, int publicPort) {
-        PortMapping result = mappings.remove(makeKey(publicIpId, publicPort));
-        log.debug("clearing port mapping for "+publicIpId+":"+publicPort+" - "+result);
+    public PortMapping forgetPortMapping(String publicIpId, int publicPort) {
+        PortMapping result;
+        synchronized (this) {
+            result = mappings.remove(makeKey(publicIpId, publicPort));
+            log.debug("clearing port mapping for "+publicIpId+":"+publicPort+" - "+result);
+        }
+        if (result != null) onChanged();
         return result;
     }
     
@@ -105,6 +126,7 @@ public class PortForwardManager {
             if (old!=null && !old.equals(hostnameOrPublicIpAddress))
                 log.warn("Changing hostname recorded against public IP "+publicIpId+"; from "+old+" to "+hostnameOrPublicIpAddress);
         }
+        onChanged();
     }
 
     /** returns a recorded public hostname or address */
@@ -117,9 +139,13 @@ public class PortForwardManager {
     /** clears a previous call to {@link #recordPublicIpHostname(String, String)} */
     public boolean forgetPublicIpHostname(String publicIpId) {
         log.debug("forgetting public IP "+publicIpId+" association");
+        boolean result;
         synchronized (publicIpIdToHostname) {
-            return publicIpIdToHostname.remove(publicIpId) != null;
+            result = (publicIpIdToHostname.remove(publicIpId) != null);
         }
+        onChanged();
+        return result;
+
     }
 
     /** returns the public host and port for use accessing the given mapping */
@@ -136,17 +162,21 @@ public class PortForwardManager {
     /** reserves a unique public port for the purpose of forwarding to the given target,
      * associated with a given location for subsequent lookup purpose;
      * if already allocated, returns the previously allocated */
-    public synchronized int acquirePublicPort(String publicIpId, Location l, int privatePort) {
-        PortMapping old = getPortMappingWithPrivateSide(l, privatePort);
-        // only works for 1 public IP ID per location (which is the norm)
-        if (old!=null && old.publicIpId.equals(publicIpId)) {
-            log.debug("request to acquire public port at "+publicIpId+" for "+l+":"+privatePort+", reusing old assignment "+old);
-            return old.getPublicPort();
+    public int acquirePublicPort(String publicIpId, Location l, int privatePort) {
+        int publicPort;
+        synchronized (this) {
+            PortMapping old = getPortMappingWithPrivateSide(l, privatePort);
+            // only works for 1 public IP ID per location (which is the norm)
+            if (old!=null && old.publicIpId.equals(publicIpId)) {
+                log.debug("request to acquire public port at "+publicIpId+" for "+l+":"+privatePort+", reusing old assignment "+old);
+                return old.getPublicPort();
+            }
+            
+            publicPort = acquirePublicPort(publicIpId);
+            log.debug("request to acquire public port at "+publicIpId+" for "+l+":"+privatePort+", allocating "+publicPort);
+            associateImpl(publicIpId, publicPort, l, privatePort);
         }
-        
-        int publicPort = acquirePublicPort(publicIpId);
-        log.debug("request to acquire public port at "+publicIpId+" for "+l+":"+privatePort+", allocating "+publicPort);
-        associate(publicIpId, publicPort, l, privatePort);
+        onChanged();
         return publicPort;
     }
 
@@ -172,6 +202,13 @@ public class PortForwardManager {
      * e.g. if the location is not known ahead of time)
      */
     public synchronized void associate(String publicIpId, int publicPort, Location l, int privatePort) {
+        synchronized (this) {
+            associateImpl(publicIpId, publicPort, l, privatePort);
+        }
+        onChanged();
+    }
+
+    protected void associateImpl(String publicIpId, int publicPort, Location l, int privatePort) {
         PortMapping mapping = getPortMappingWithPublicSide(publicIpId, publicPort);
         log.debug("associating public port "+publicPort+" on "+publicIpId+" with private port "+privatePort+" at "+l+" ("+mapping+")");
         if (mapping==null)
@@ -197,5 +234,11 @@ public class PortForwardManager {
     @Override
     public String toString() {
         return getClass().getName()+"["+mappings+"]";
+    }
+    
+    protected void onChanged() {
+        if (owningEntity != null) {
+            ((EntityInternal)owningEntity).requestPersist();
+        }
     }
 }

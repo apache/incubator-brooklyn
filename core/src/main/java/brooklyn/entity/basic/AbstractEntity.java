@@ -1251,6 +1251,11 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     }
 
     @Override
+    public void requestPersist() {
+        getManagementSupport().getEntityChangeListener().onChanged();
+    }
+
+    @Override
     public RebindSupport<EntityMemento> getRebindSupport() {
         return new BasicEntityRebindSupport(this);
     }
