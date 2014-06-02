@@ -26,13 +26,16 @@ public abstract class AbstractFeed {
     
     protected final EntityLocal entity;
     protected final Poller<?> poller;
-    private volatile Long lastConnectionTime;
     private volatile boolean activated, suspended;
     private final Object pollerStateMutex = new Object(); 
 
     public AbstractFeed(EntityLocal entity) {
+        this(entity, false);
+    }
+    
+    public AbstractFeed(EntityLocal entity, boolean onlyIfServiceUp) {
         this.entity = checkNotNull(entity, "entity");
-        this.poller = new Poller<Object>(entity);
+        this.poller = new Poller<Object>(entity, onlyIfServiceUp);
     }
     
     /** true if everything has been _started_ (or it is starting) but not stopped,

@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -32,6 +33,7 @@ public class Poller<V> {
     public static final Logger log = LoggerFactory.getLogger(Poller.class);
 
     private final EntityLocal entity;
+    private final boolean onlyIfServiceUp;
     private final Set<Callable<?>> oneOffJobs = new LinkedHashSet<Callable<?>>();
     private final Set<PollJob<V>> pollJobs = new LinkedHashSet<PollJob<V>>();
     private final Set<Task<?>> oneOffTasks = new LinkedHashSet<Task<?>>();
@@ -74,8 +76,14 @@ public class Poller<V> {
         }
     }
     
+    /** @deprecated since 0.7.0, pass in whether should run onlyIfServiceUp */
+    @Deprecated
     public Poller(EntityLocal entity) {
+        this(entity, false);
+    }
+    public Poller(EntityLocal entity, boolean onlyIfServiceUp) {
         this.entity = entity;
+        this.onlyIfServiceUp = onlyIfServiceUp;
     }
     
     /** Submits a one-off poll job; recommended that callers supply to-String so that task has a decent description */
@@ -121,7 +129,13 @@ public class Poller<V> {
                 Callable<Task<?>> pollingTaskFactory = new Callable<Task<?>>() {
                     public Task<?> call() {
                         DynamicSequentialTask<Void> task = new DynamicSequentialTask<Void>(MutableMap.of("displayName", scheduleName, "entity", entity), 
-                            new Callable<Void>() { public Void call() { pollJob.wrappedJob.run(); return null; } } );
+                            new Callable<Void>() { public Void call() {
+                                if (onlyIfServiceUp && !Boolean.TRUE.equals(entity.getAttribute(Attributes.SERVICE_UP))) {
+                                        return null;
+                                }
+                                pollJob.wrappedJob.run();
+                                return null; 
+                            } } );
                         BrooklynTaskTags.setTransient(task);
                         return task;
                     }
