@@ -8,6 +8,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
@@ -199,6 +200,49 @@ public class BrooklynTaskTags extends TaskTags {
     
     public static void setInessential(Task<?> task) {
         addTagDynamically(task, INESSENTIAL_TASK);
+    }
+
+    // ------ effector tags
+    
+    public static String tagForEffectorName(String name) {
+        return EFFECTOR_TAG+":"+name;
+    }
+    
+    /**
+     * checks if the given task is part of the given effector call on the given entity;
+     * @param task  the task to check (false if null)
+     * @param entity  the entity where this effector task should be running, or any entity if null
+     * @param effector  the effector (matching name) where this task should be running, or any effector if null
+     * @param allowNestedEffectorCalls  whether to match ancestor effector calls, e.g. if eff1 calls eff2,
+     *   and we are checking eff2, whether to match eff1
+     * @return whether the given task is part of the given effector
+     */
+    public static boolean isInEffectorTask(Task<?> task, Entity entity, Effector<?> effector, boolean allowNestedEffectorCalls) {
+        Task<?> t = task;
+        while (t!=null) {
+            Set<Object> tags = t.getTags();
+            if (tags.contains(EFFECTOR_TAG)) {
+                if (entity!=null && !entity.equals(getTargetOrContextEntity(t)))
+                    return false;
+                if (effector!=null && !tags.contains(tagForEffectorName(effector.getName())))
+                    return false;
+                return true;
+            }
+            t = t.getSubmittedByTask();
+        }
+        return false;
+    }
+    
+    public static String getEffectorName(Task<?> task) {
+        Task<?> t = task;
+        while (t!=null) {
+            for (Object tag: task.getTags()) {
+                if (tag instanceof String && ((String)tag).startsWith(EFFECTOR_TAG+":"))
+                    return Strings.removeFromStart((String)tag, EFFECTOR_TAG+":");
+            }
+            t = t.getSubmittedByTask();
+        }
+        return null;
     }
 
 }

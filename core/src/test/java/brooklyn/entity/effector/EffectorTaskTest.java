@@ -11,14 +11,12 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.entity.effector.EffectorWithBody;
-import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.Startable;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
@@ -72,7 +70,14 @@ public class EffectorTaskTest {
     }
     
     @Test
-    // also assert it works when the entity is defined on an entity
+    public void testSyntaxOneTaggedCorrectly() throws Exception {
+        Task<Integer> t = app.invoke(DOUBLE_1, MutableMap.of("numberToDouble", 3));
+        t.get();
+        checkTags(t, app, DOUBLE_1, false);
+    }
+    
+    @Test
+    // also assert it works when the effector is defined on an entity
     public void testSimpleEffectorOnEntity() throws Exception {
         Entity doubler = app.createAndManageChild(EntitySpec.create(Entity.class, DoublingEntity.class));
         
@@ -110,6 +115,28 @@ public class EffectorTaskTest {
     @Test
     public void testSyntaxTwoDouble2() throws Exception {
         Assert.assertEquals(app.invoke(DOUBLE_2, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+    }
+
+    @Test
+    public void testEffectorImplTaggedCorrectly() throws Exception {
+        Task<Integer> t = app.invoke(DOUBLE_2, MutableMap.of("numberToDouble", 3));
+        t.get();
+        checkTags(t, app, DOUBLE_2, true);
+    }
+
+    private void checkTags(Task<Integer> t, Entity entity, Effector<?> eff, boolean shouldHaveChild) {
+        Assert.assertEquals(BrooklynTaskTags.getContextEntity(t), app);
+        Assert.assertTrue(t.getTags().contains(BrooklynTaskTags.EFFECTOR_TAG), "missing effector tag; had: "+t.getTags());
+        Assert.assertTrue(t.getDescription().contains(eff.getName()), "description missing effector name: "+t.getDescription());
+        Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(t, entity, eff, false));
+        Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(t, null, null, false));
+        Assert.assertFalse(BrooklynTaskTags.isInEffectorTask(t, entity, Startable.START, false));
+        
+        if (shouldHaveChild) {
+            Task<?> subtask = ((HasTaskChildren)t).getChildren().iterator().next();
+            Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(subtask, entity, eff, false));
+            Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(subtask, null, null, false));
+        }
     }
 
     // TEST parameter task missing

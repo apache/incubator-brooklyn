@@ -20,6 +20,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
+import brooklyn.entity.effector.EffectorTasks.EffectorMarkingTaskFactory;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
@@ -71,7 +72,7 @@ public class Effectors {
             return this;
         }
         public EffectorBuilder<T> impl(EffectorTaskFactory<T> taskFactory) {
-            this.impl = taskFactory;
+            this.impl = new EffectorMarkingTaskFactory<T>(taskFactory);
             return this;
         }
         public EffectorBuilder<T> impl(EffectorBody<T> effectorBody) {
