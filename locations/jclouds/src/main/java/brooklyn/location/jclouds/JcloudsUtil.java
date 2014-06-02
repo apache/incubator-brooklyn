@@ -61,6 +61,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -359,6 +360,8 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             Container container = api.getRemoteApi().inspectContainer(containerId);
             Map<Integer, Integer> portMappings = Maps.newLinkedHashMap();
             Map<String, List<Map<String, String>>> ports = container.getNetworkSettings().getPorts();
+            if (ports == null) ports = ImmutableMap.<String, List<Map<String,String>>>of();
+            
             LOG.debug("Docker will forward these ports {}", ports);
             for (Map.Entry<String, List<Map<String, String>>> entrySet : ports.entrySet()) {
                 String containerPort = Iterables.get(Splitter.on("/").split(entrySet.getKey()), 0);
