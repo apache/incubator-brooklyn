@@ -522,6 +522,22 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     }
 
     @Test
+    public void testRebindPersistsDynamicAttribute() throws Exception {
+        final String sensorName = "test.mydynamicsensor";
+        final String sensorDescription = "My description";
+        final AttributeSensor<String> MY_DYNAMIC_SENSOR = new BasicAttributeSensor<String>(
+                String.class, sensorName, sensorDescription);
+
+        origApp.setAttribute(MY_DYNAMIC_SENSOR, "myval");
+        assertEquals(origApp.getEntityType().getSensor(sensorName).getDescription(), sensorDescription);
+
+        newApp = rebind();
+        
+        assertEquals(newApp.getAttribute(MY_DYNAMIC_SENSOR), "myval");
+        assertEquals(newApp.getEntityType().getSensor(sensorName).getDescription(), sensorDescription);
+    }
+
+    @Test
     public void testRebindWhenPreviousAppDestroyedHasNoApp() throws Exception {
         origApp.stop();
         
