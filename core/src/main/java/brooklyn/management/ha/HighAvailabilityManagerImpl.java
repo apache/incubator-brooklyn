@@ -436,6 +436,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
             return builder.build();
         }
+        if (persister == null) {
+            // e.g. web-console may be polling before we've started up
+            LOG.debug("High availablity manager has no persister; returning empty record");
+            return ManagementPlaneSyncRecordImpl.builder().build();
+        }
         
         int maxLoadAttempts = 5;
         Exception lastException = null;
