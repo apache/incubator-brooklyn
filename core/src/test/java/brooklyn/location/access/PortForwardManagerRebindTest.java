@@ -14,6 +14,8 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
@@ -52,7 +54,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
         String publicAddress = "5.6.7.8";
 
         TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntity.class));
-        PortForwardManager origPortForwardManager = origEntity.getConfig(MyEntity.PORT_FORWARDING_MANAGER);
+        PortForwardManager origPortForwardManager = origEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
 
         // We first wait for persisted, to ensure that it is the PortForwardManager.onChanged that is causing persistence.
         RebindTestUtils.waitForPersisted(origApp);
@@ -64,23 +66,37 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
         
         TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
         Location newSimulatedMachine = newApp.getManagementContext().getLocationManager().getLocation(origSimulatedMachine.getId());
-        PortForwardManager newPortForwardManager = newEntity.getConfig(MyEntity.PORT_FORWARDING_MANAGER);
+        PortForwardManager newPortForwardManager = newEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
         
         assertEquals(newPortForwardManager.getPublicIpHostname(publicIpId), publicAddress);
         assertEquals(newPortForwardManager.lookup(newSimulatedMachine, 80), HostAndPort.fromParts(publicAddress, 40080));
     }
     
-    public static class MyEntity extends TestEntityImpl {
-        public static final ConfigKey<PortForwardManager> PORT_FORWARDING_MANAGER = ConfigKeys.newConfigKey(PortForwardManager.class, "myentity.portForwardingManager");
+    public interface HasPfm {
+        PortForwardManager getPfm();
+    }
+    
+    public static class MyEntity extends TestEntityImpl implements HasPfm {
+        public static final ConfigKey<PortForwardManager> PORT_FORWARD_MANAGER = ConfigKeys.newConfigKey(PortForwardManager.class, "myentity.portForwardManager");
+        public static final AttributeSensor<PortForwardManager> PORT_FORWARD_MANAGER_LIVE = Sensors.newSensor(PortForwardManager.class, "myentity.portForwardManager.live");
 
         @Override
         public void init() {
             super.init();
             
-            if (getConfig(PORT_FORWARDING_MANAGER) == null) {
-                setConfig(PORT_FORWARDING_MANAGER, new PortForwardManager(this));
+            if (getConfig(PORT_FORWARD_MANAGER) == null) {
+                PortForwardManagerAuthority pfm = new PortForwardManagerAuthority();
+                pfm.injectOwningEntity(this);
+                setAttribute(PORT_FORWARD_MANAGER_LIVE, pfm);
+                setConfig(PORT_FORWARD_MANAGER, PortForwardManagerClient.fromMethodOnEntity(this, "getPfm"));
             }
         }
+        
+        @Override
+        public PortForwardManager getPfm() {
+            return getAttribute(PORT_FORWARD_MANAGER_LIVE);
+        }
+        
         @SetFromFlag("myconfigflagname")
         public static final ConfigKey<String> MY_CONFIG_WITH_FLAGNAME = ConfigKeys.newStringConfigKey("myentity.myconfigwithflagname");
     }
