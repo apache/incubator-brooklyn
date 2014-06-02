@@ -142,8 +142,10 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
 
     @Override
     public T environmentVariables(Map<String,String> vars) {
-        markDirty();
-        shellEnvironment.putAll(vars);
+        if (vars!=null) {
+            markDirty();
+            shellEnvironment.putAll(vars);
+        }
         return self();
     }
 
@@ -153,6 +155,7 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
         
         tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDIN, 
                 Streams.byteArrayOfString(Strings.join(commands, "\n"))));
+        tb.tag(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, shellEnvironment));
         
         return tb;
     }

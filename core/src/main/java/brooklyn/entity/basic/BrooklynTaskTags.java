@@ -3,6 +3,7 @@ package brooklyn.entity.basic;
 import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -162,6 +164,8 @@ public class BrooklynTaskTags extends TaskTags {
     public static final String STREAM_STDIN = "stdin";
     public static final String STREAM_STDOUT = "stdout";
     public static final String STREAM_STDERR = "stderr";
+    /** not a stream, but inserted with the same mechanism */
+    public static final String STREAM_ENV = "env";
     
     /** creates a tag suitable for marking a stream available on a task */
     public static WrappedStream tagForStream(String streamType, ByteArrayOutputStream stream) {
@@ -171,6 +175,18 @@ public class BrooklynTaskTags extends TaskTags {
     /** creates a tag suitable for marking a stream available on a task */
     public static WrappedStream tagForStream(String streamType, Supplier<String> contents, Supplier<Integer> size) {
         return new WrappedStream(streamType, contents, size);
+    }
+    
+    /** creates a tag suitable for attaching a snapshot of an environment var map as a "stream" on a task;
+     * mainly for use with STREAM_ENV */ 
+    public static WrappedStream tagForEnvStream(String streamEnv, Map<?, ?> env) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<?,?> kv: env.entrySet()) {
+            Object val = kv.getValue();
+            sb.append(kv.getKey()+"=" +
+                (val!=null ? BashStringEscapes.wrapBash(val.toString()) : "") + "\n");
+        }
+        return BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_ENV, Streams.byteArrayOfString(sb.toString()));
     }
 
     /** returns the set of tags indicating the streams available on a task */
