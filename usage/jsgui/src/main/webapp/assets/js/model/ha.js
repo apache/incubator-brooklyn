@@ -7,6 +7,17 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
         isMaster: function() {
             return this.get("masterId") == this.get("ownId");
         },
+        getMasterUri: function() {
+            // Might be undefined if first fetch hasn't completed
+            var nodes = this.get("nodes") || {};
+            var master = nodes[this.get("masterId")];
+            // defensive, if this happens something more serious has gone wrong!
+            if (!master) {
+                return null;
+            } else {
+                return master.nodeUri;
+            }
+        },
         onLoad: function(f) {
             if (this.loaded) {
                 f();

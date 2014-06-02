@@ -27,6 +27,6 @@ public class HighAvailabilityTransformer {
 
     public static HaNodeSummary haNodeSummary(ManagementNodeSyncRecord memento) {
         String status = memento.getStatus() == null ? null : memento.getStatus().toString();
-        return new HaNodeSummary(memento.getNodeId(), status, memento.getTimestampUtc());
+        return new HaNodeSummary(memento.getNodeId(), memento.getUri(), status, memento.getTimestampUtc());
     }
 }

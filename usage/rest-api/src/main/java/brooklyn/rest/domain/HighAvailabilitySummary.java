@@ -11,21 +11,28 @@ public class HighAvailabilitySummary {
 
     public static class HaNodeSummary {
         private final String nodeId;
+        private final URI nodeUri;
         private final String status;
         private final Long timestampUtc;
         
         public HaNodeSummary(
                 @JsonProperty("nodeId") String nodeId,
+                @JsonProperty("nodeUri") URI nodeUri,
                 @JsonProperty("status") String status,
                 @JsonProperty("timestampUtc") Long timestampUtc
             ) {
               this.nodeId = nodeId;
+              this.nodeUri = nodeUri;
               this.status = status;
               this.timestampUtc = timestampUtc;
             }
 
             public String getNodeId() {
               return nodeId;
+            }
+
+            public URI getNodeUri() {
+              return nodeUri;
             }
 
             public String getStatus() {
