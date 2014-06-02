@@ -40,6 +40,13 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         this.owningEntity = owningEntity;
     }
     
+    public synchronized void injectOwningEntity(Entity owningEntity) {
+        if (this.owningEntity!=null && owningEntity!=null && !this.owningEntity.equals(owningEntity))
+            throw new IllegalStateException("Cannot set owningEntity for "+this+" to "+owningEntity+" when it is already "+this.owningEntity);
+        this.owningEntity = owningEntity;
+        onChanged();
+    }
+    
     /** reserves a unique public port on the given publicIpId
      * (often followed by {@link #associate(String, int, Location, int)}
      * to enable {@link #lookup(Location, int)}) */
