@@ -22,7 +22,9 @@ defining types:
 
 * `io.brooklyn.package.JavaEntityClass`
 * `java:io.brooklyn.package.JavaEntityClass`
-* *OSGi and YAML references are TODO*
+* *OSGi and YAML references are coming soon!*
+
+A reference of some of the common service `type` instances used is included in a section below.
 
 Within the `ServiceSpecification`, other key-value pairs can be supplied to customize
 the entity being defined, with these being the most common:
@@ -44,11 +46,22 @@ the entity being defined, with these being the most common:
   An `EntityInitiailzer` can perform arbitrary customization to an entity whilst it is being constructed,
   such as adding dynamic sensors and effectors. These classes must expose a public constructor taking
   a single `Map` where the `brooklyn.config` is passed in.
+  Some common initializers are:
+  
+  * `brooklyn.entity.software.ssh.SshCommandEffector`: takes a `name` and `command`,
+    and optionally a map of named `parameters` to their `description` and `defaultValue`,
+    to define an effector with the given name implemented by the given SSH command
+    (on an entity which as an ssh-able machine)
 
-Entities may accept additional key-value pairs, 
-usually documented on the entity.
-These typically consist of the config keys or flags (indicated by `@SetFromFlag`) declared on the entity class itself.
-Declared flags and config keys may be passed in at the root of the `ServiceSpecification` or in `brooklyn.config`.
+  * `brooklyn.entity.software.ssh.SshCommandSensor`: takes a `name` and `command`,
+    and optionally a `period`, to create a sensor feed which populates the sensor with
+    the given name by running the given command (on an entity which as an ssh-able machine) 
+
+Entities, policies, and initializers may accept additional key-value pairs, 
+usually documented in their documentation (e.g. javadoc), or in the case of Java
+often as static fields in the underlying Java class.
+Often there are config keys or flags (indicated by `@SetFromFlag`) declared on the class; 
+these declared flags and config keys may be passed in at the root of the `ServiceSpecification` or in `brooklyn.config`.
 (Undeclared config is only accepted in the `brooklyn.config` map.)
 
 
@@ -160,7 +173,7 @@ All entities support configuration via YAML, but these entities in particular
 have been designed for general purpose use from YAML.  Consult the Javadoc for these
 elements for more information:
 
-* **Vanilla Software** in `VanillaSoftareProcess`: makes it very easy to build entities
+* **Vanilla Software** in `VanillaSoftwareProcess`: makes it very easy to build entities
   which use `bash` commands to install and the PID to stop and restart
 * **Chef** in `ChefSoftwareProcess`: makes it easy to use Chef cookbooks to build entities,
   either with recipes following conventions or with configuration in the `ServiceSpecification`
@@ -168,5 +181,3 @@ elements for more information:
 * `DynamicCluster`: provides resizable clusters given a `memberSpec` set with `$brooklyn.entitySpec(Map)` as described above 
 * `DynamicFabric`: provides a set of homogeneous instances started in different locations,
   with an effector to `addLocation`, i.e. add a new instance in a given location, at runtime
-
-

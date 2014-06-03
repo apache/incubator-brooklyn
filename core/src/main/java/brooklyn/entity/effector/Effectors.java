@@ -79,7 +79,7 @@ public class Effectors {
         }
         /** returns the effector, with an implementation (required); @see {@link #buildAbstract()} */
         public Effector<T> build() {
-             Preconditions.checkNotNull(impl, "Cannot create effector {} with no impl (did you forget impl? or did you mean to buildAbstract?)", effectorName);
+             Preconditions.checkNotNull(impl, "Cannot create effector %s with no impl (did you forget impl? or did you mean to buildAbstract?)", effectorName);
              return new EffectorAndBody<T>(effectorName, returnType, ImmutableList.copyOf(parameters.values()), description, impl);
         }
         
