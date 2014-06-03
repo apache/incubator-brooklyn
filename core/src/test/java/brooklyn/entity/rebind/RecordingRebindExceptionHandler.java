@@ -26,7 +26,7 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
     protected final Map<String, Exception> policyNotFoundFailures = Maps.newLinkedHashMap();
     protected Exception failed;
     
-    public RecordingRebindExceptionHandler(RebindFailureMode danglingRefFailureMode, RebindFailureMode rebindFailureMode) {
+    public RecordingRebindExceptionHandler(RebindManager.RebindFailureMode danglingRefFailureMode, RebindManager.RebindFailureMode rebindFailureMode) {
         super(danglingRefFailureMode, rebindFailureMode);
     }
 

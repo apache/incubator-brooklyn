@@ -19,7 +19,7 @@ import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
-import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
+import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.LocalManagementContext;
@@ -57,8 +57,8 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testFailureRebindingEntityWhenFailAtEnd() throws Exception {
-        RebindFailureMode danglingRefFailureMode = RebindFailureMode.CONTINUE;
-        RebindFailureMode rebindFailureMode = RebindFailureMode.FAIL_AT_END;
+        RebindFailureMode danglingRefFailureMode = RebindManager.RebindFailureMode.CONTINUE;
+        RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.FAIL_AT_END;
         
         MyEntity origFailingE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
                 .impl(MyEntityFailingImpl.class)
@@ -83,8 +83,8 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testFailureRebindingEntityWhenFailFast() throws Exception {
-        RebindFailureMode danglingRefFailureMode = RebindFailureMode.CONTINUE;
-        RebindFailureMode rebindFailureMode = RebindFailureMode.FAIL_FAST;
+        RebindFailureMode danglingRefFailureMode = RebindManager.RebindFailureMode.CONTINUE;
+        RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.FAIL_FAST;
         
         MyEntity origFailingE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
                 .impl(MyEntityFailingImpl.class)
@@ -109,8 +109,8 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testFailureRebindingEntityWhenContinue() throws Exception {
-        RebindFailureMode danglingRefFailureMode = RebindFailureMode.CONTINUE;
-        RebindFailureMode rebindFailureMode = RebindFailureMode.CONTINUE;
+        RebindFailureMode danglingRefFailureMode = RebindManager.RebindFailureMode.CONTINUE;
+        RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.CONTINUE;
         
         MyEntity origFailingE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
                 .impl(MyEntityFailingImpl.class)
@@ -130,8 +130,8 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testFailureRebindingBecauseDirectoryCorrupt() throws Exception {
-        RebindFailureMode danglingRefFailureMode = RebindFailureMode.CONTINUE;
-        RebindFailureMode rebindFailureMode = RebindFailureMode.FAIL_AT_END;
+        RebindFailureMode danglingRefFailureMode = RebindManager.RebindFailureMode.CONTINUE;
+        RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.FAIL_AT_END;
         
         origManagementContext.getRebindManager().stop();
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);

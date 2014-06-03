@@ -24,6 +24,12 @@ public interface RebindManager {
     //
     // Or is that a risky API because you could call it on a non-empty managementContext?
     
+    public enum RebindFailureMode {
+        FAIL_FAST,
+        FAIL_AT_END,
+        CONTINUE;
+    }
+    
     public void setPersister(BrooklynMementoPersister persister);
 
     @VisibleForTesting
