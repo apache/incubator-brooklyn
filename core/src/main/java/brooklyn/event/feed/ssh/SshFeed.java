@@ -22,7 +22,6 @@ import brooklyn.event.feed.Poller;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.time.Duration;
@@ -140,10 +139,10 @@ public class SshFeed extends AbstractFeed {
     }
     
     private static class SshPollIdentifier {
-        final String command;
-        final Map<String, String> env;
+        final Supplier<String> command;
+        final Supplier<Map<String, String>> env;
 
-        private SshPollIdentifier(String command, Map<String, String> env) {
+        private SshPollIdentifier(Supplier<String> command, Supplier<Map<String, String>> env) {
             this.command = checkNotNull(command, "command");
             this.env = checkNotNull(env, "env");
         }
@@ -191,9 +190,7 @@ public class SshFeed extends AbstractFeed {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             SshPollConfig<?> configCopy = new SshPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
-            String command = config.getCommand();
-            Map<String, String> env = config.getEnv();
-            polls.put(new SshPollIdentifier(command, env), configCopy);
+            polls.put(new SshPollIdentifier(config.getCommandSupplier(), config.getEnvSupplier()), configCopy);
         }
     }
 
@@ -212,7 +209,7 @@ public class SshFeed extends AbstractFeed {
             getPoller().scheduleAtFixedRate(
                     new Callable<SshPollValue>() {
                         public SshPollValue call() throws Exception {
-                            return exec(pollInfo.command, pollInfo.env);
+                            return exec(pollInfo.command.get(), pollInfo.env.get());
                         }}, 
                     new DelegatingPollHandler<SshPollValue>(handlers), 
                     minPeriod);

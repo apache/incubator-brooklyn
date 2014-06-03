@@ -2,6 +2,11 @@ package brooklyn.event.feed.ssh;
 
 import static org.testng.Assert.assertTrue;
 
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -22,16 +27,21 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 public class SshFeedIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(SshFeedIntegrationTest.class);
+    
     final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
     final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor("aLong", "");
 
@@ -183,6 +193,66 @@ public class SshFeedIntegrationTest {
                 String val = entity2.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains("hello"), "val="+val);
             }});
+    }
+
+    
+    @Test(groups="Integration")
+    public void testDynamicEnvAndCommandSupplier() throws Exception {
+        final TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class).location(machine));
+        
+        final AtomicInteger count = new AtomicInteger();
+        Supplier<Map<String, String>> envSupplier = new Supplier<Map<String,String>>() {
+            @Override
+            public Map<String, String> get() {
+                return MutableMap.of("COUNT", ""+count.incrementAndGet());
+            }
+        };
+        Supplier<String> cmdSupplier = new Supplier<String>() {
+            @Override
+            public String get() {
+                return "echo count-"+count.incrementAndGet()+"-$COUNT";
+            }
+        };
+        
+        feed = SshFeed.builder()
+                .entity(entity2)
+                .poll(new SshPollConfig<String>(SENSOR_STRING)
+                        .env(envSupplier)
+                        .command(cmdSupplier)
+                        .onSuccess(SshValueFunctions.stdout()))
+                .build();
+        
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                String val = entity2.getAttribute(SENSOR_STRING);
+                assertTrue(val!=null);
+            }});
+        
+        final String val1 = assertDifferentOneInOutput(entity2);
+        
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                String val = entity2.getAttribute(SENSOR_STRING);
+                Assert.assertFalse(val1.equals(val));
+            }});
+        
+        final String val2 = assertDifferentOneInOutput(entity2);
+        log.info("vals from dynamic sensors are: "+val1.trim()+" and "+val2.trim());
+    }
+
+    private String assertDifferentOneInOutput(final TestEntity entity2) {
+        String val = entity2.getAttribute(SENSOR_STRING);
+        Assert.assertTrue(val.startsWith("count"), "val="+val);
+        try {
+            String[] fields = val.trim().split("-");
+            int field1 = Integer.parseInt(fields[1]); 
+            int field2 = Integer.parseInt(fields[2]);
+            Assert.assertEquals(Math.abs(field2-field1), 1, "expected difference of 1");
+        } catch (Throwable t) {
+            Exceptions.propagateIfFatal(t);
+            Assert.fail("Wrong output from sensor, got '"+val.trim()+"', giving error: "+t);
+        }
+        return val;
     }
 
 }
