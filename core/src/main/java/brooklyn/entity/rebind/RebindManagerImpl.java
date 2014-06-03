@@ -11,18 +11,19 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
-import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -63,6 +64,13 @@ public class RebindManagerImpl implements RebindManager {
     // TODO Use ImmediateDeltaChangeListener if the period is set to 0?
     // But for MultiFile persister, that is still async
     
+    public static final ConfigKey<RebindFailureMode> DANGLING_REFERENCE_FAILURE_MODE =
+            ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.danglingRef",
+                    "Action to take if a dangling reference is discovered during rebind", RebindFailureMode.CONTINUE);
+    public static final ConfigKey<RebindFailureMode> REBIND_FAILURE_MODE =
+            ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.rebind",
+                    "Action to take if a failure occurs during rebind", RebindFailureMode.FAIL_AT_END);
+    
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
     private volatile Duration periodicPersistPeriod = Duration.ONE_SECOND;
@@ -78,6 +86,8 @@ public class RebindManagerImpl implements RebindManager {
 
     private final boolean persistPoliciesEnabled;
     private final boolean persistEnrichersEnabled;
+    private RebindFailureMode danglingRefFailureMode;
+    private RebindFailureMode rebindFailureMode;
 
     public RebindManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
@@ -85,6 +95,9 @@ public class RebindManagerImpl implements RebindManager {
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
         this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
+
+        danglingRefFailureMode = managementContext.getConfig().getConfig(DANGLING_REFERENCE_FAILURE_MODE);
+        rebindFailureMode = managementContext.getConfig().getConfig(REBIND_FAILURE_MODE);
     }
 
     /**
@@ -161,7 +174,7 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public List<Application> rebind(final ClassLoader classLoader) throws IOException {
-        RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(RebindFailureMode.CONTINUE, RebindFailureMode.FAIL_AT_END);
+        RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
         return rebind(classLoader, exceptionHandler);
     }
     

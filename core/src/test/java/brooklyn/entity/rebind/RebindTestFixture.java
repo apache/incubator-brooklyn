@@ -7,7 +7,6 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.rebind.RebindExceptionHandlerImpl.RebindFailureMode;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ManagementContext;
@@ -102,7 +101,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     
     protected BrooklynMementoManifest loadMementoManifest() throws Exception {
         BrooklynMementoPersisterToMultiFile persister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
-        RebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(RebindFailureMode.FAIL_AT_END, RebindFailureMode.FAIL_AT_END);
+        RebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(RebindManager.RebindFailureMode.FAIL_AT_END, RebindManager.RebindFailureMode.FAIL_AT_END);
         BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
         persister.stop();
         return mementoManifest;

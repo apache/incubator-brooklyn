@@ -25,14 +25,8 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     
     private static final Logger LOG = LoggerFactory.getLogger(RebindExceptionHandlerImpl.class);
 
-    public enum RebindFailureMode {
-        FAIL_FAST,
-        FAIL_AT_END,
-        CONTINUE;
-    }
-    
-    protected final RebindFailureMode danglingRefFailureMode;
-    protected final RebindFailureMode rebindFailureMode;
+    protected final RebindManager.RebindFailureMode danglingRefFailureMode;
+    protected final RebindManager.RebindFailureMode rebindFailureMode;
 
     protected final Set<String> missingEntities = Sets.newLinkedHashSet();
     protected final Set<String> missingLocations = Sets.newLinkedHashSet();
@@ -43,7 +37,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<String> creationFailedPolicies = Sets.newLinkedHashSet();
     protected final List<Exception> exceptions = Lists.newArrayList();
     
-    public RebindExceptionHandlerImpl(RebindFailureMode danglingRefFailureMode, RebindFailureMode rebindFailureMode) {
+    public RebindExceptionHandlerImpl(RebindManager.RebindFailureMode danglingRefFailureMode, RebindManager.RebindFailureMode rebindFailureMode) {
         this.danglingRefFailureMode = checkNotNull(danglingRefFailureMode, "danglingRefFailureMode");
         this.rebindFailureMode = checkNotNull(rebindFailureMode, "rebindFailureMode");
     }
@@ -78,7 +72,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     @Override
     public Entity onDanglingEntityRef(String id) {
         missingEntities.add(id);
-        if (danglingRefFailureMode == RebindFailureMode.FAIL_FAST) {
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No entity found with id "+id);
         } else {
             LOG.warn("No entity found with id "+id+"; returning null");
@@ -89,7 +83,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     @Override
     public Location onDanglingLocationRef(String id) {
         missingLocations.add(id);
-        if (danglingRefFailureMode == RebindFailureMode.FAIL_FAST) {
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No location found with id "+id);
         } else {
             LOG.warn("No location found with id "+id+"; returning null");
@@ -100,7 +94,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     @Override
     public Policy onDanglingPolicyRef(String id) {
         missingPolicies.add(id);
-        if (danglingRefFailureMode == RebindFailureMode.FAIL_FAST) {
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No policy found with id "+id);
         } else {
             LOG.warn("No policy found with id "+id+"; returning null");
@@ -111,7 +105,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     @Override
     public Enricher onDanglingEnricherRef(String id) {
         missingEnrichers.add(id);
-        if (danglingRefFailureMode == RebindFailureMode.FAIL_FAST) {
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No enricher found with id "+id);
         } else {
             LOG.warn("No enricher found with id "+id+"; returning null");
@@ -230,7 +224,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
     
     protected void onErrorImpl(String errmsg, Exception e) {
-        if (rebindFailureMode == RebindFailureMode.FAIL_FAST) {
+        if (rebindFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
         } else {
             LOG.warn("Rebind: continuing after "+errmsg, e);
@@ -256,7 +250,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (e != null) {
             allExceptions.add(e);
         }
-        if (danglingRefFailureMode != RebindFailureMode.CONTINUE) {
+        if (danglingRefFailureMode != RebindManager.RebindFailureMode.CONTINUE) {
             if (missingEntities.size() > 0) {
                 allExceptions.add(new IllegalStateException("Missing referenced entit"+(missingEntities.size() == 1 ? "y" : "ies")+": "+missingEntities));
             }
@@ -270,7 +264,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
                 allExceptions.add(new IllegalStateException("Missing referenced enricher"+(missingEnrichers.size() == 1 ? "" : "s")+": "+missingEnrichers));
             }
         }
-        if (rebindFailureMode != RebindFailureMode.CONTINUE) {
+        if (rebindFailureMode != RebindManager.RebindFailureMode.CONTINUE) {
             allExceptions.addAll(exceptions);
         }
         
