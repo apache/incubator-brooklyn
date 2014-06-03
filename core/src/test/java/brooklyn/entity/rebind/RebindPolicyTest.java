@@ -111,6 +111,32 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         assertFalse(manifest.getLocationIdToType().containsKey(loc.getId()));
     }
 
+    @Test
+    public void testIsRebinding() throws Exception {
+        origApp.addPolicy(PolicySpec.create(PolicyChecksIsRebinding.class));
+
+        newApp = (TestApplication) rebind();
+        PolicyChecksIsRebinding newPolicy = (PolicyChecksIsRebinding) Iterables.getOnlyElement(newApp.getPolicies());
+
+        assertTrue(newPolicy.isRebindingValWhenRebinding());
+        assertFalse(newPolicy.isRebinding());
+    }
+    
+    public static class PolicyChecksIsRebinding extends AbstractPolicy {
+        boolean isRebindingValWhenRebinding;
+        
+        public boolean isRebindingValWhenRebinding() {
+            return isRebindingValWhenRebinding;
+        }
+        @Override public boolean isRebinding() {
+            return super.isRebinding();
+        }
+        @Override public void rebind() {
+            super.rebind();
+            isRebindingValWhenRebinding = isRebinding();
+        }
+    }
+    
     public static class MyPolicy extends AbstractPolicy {
         public static final ConfigKey<String> MY_CONFIG = ConfigKeys.newStringConfigKey("myconfigkey");
         

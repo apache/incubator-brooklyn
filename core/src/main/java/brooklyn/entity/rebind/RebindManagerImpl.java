@@ -92,6 +92,29 @@ public class RebindManagerImpl implements RebindManager {
     private RebindFailureMode danglingRefFailureMode;
     private RebindFailureMode rebindFailureMode;
 
+    /**
+     * For tracking if rebinding, for {@link AbstractEnricher#isRebinding()} etc.
+     *  
+     * TODO What is a better way to do this?!
+     * 
+     * @author aled
+     */
+    public static class RebindTracker {
+        private static ThreadLocal<Boolean> rebinding = new ThreadLocal<Boolean>();
+        
+        public static boolean isRebinding() {
+            return (rebinding.get() == Boolean.TRUE);
+        }
+        
+        static void reset() {
+            rebinding.set(Boolean.FALSE);
+        }
+        
+        static void setRebinding() {
+            rebinding.set(Boolean.TRUE);
+        }
+    }
+
     public RebindManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
         this.changeListener = ChangeListener.NOOP;
@@ -203,6 +226,7 @@ public class RebindManagerImpl implements RebindManager {
     protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
         checkNotNull(classLoader, "classLoader");
 
+        RebindTracker.setRebinding();
         try {
             Reflections reflections = new Reflections(classLoader);
             Map<String,Entity> entities = Maps.newLinkedHashMap();
@@ -433,6 +457,8 @@ public class RebindManagerImpl implements RebindManager {
             
         } catch (RuntimeException e) {
             throw exceptionHandler.onFailed(e);
+        } finally {
+            RebindTracker.reset();
         }
     }
     

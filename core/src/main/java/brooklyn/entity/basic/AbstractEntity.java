@@ -22,6 +22,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -271,6 +272,10 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     
     protected boolean isLegacyConstruction() {
         return _legacyConstruction;
+    }
+    
+    protected boolean isRebinding() {
+        return RebindManagerImpl.RebindTracker.isRebinding();
     }
     
     @Override

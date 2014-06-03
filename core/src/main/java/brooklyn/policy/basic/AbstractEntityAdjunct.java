@@ -20,6 +20,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -205,6 +206,10 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
      */
     public void rebind() {
         // no-op
+    }
+    
+    protected boolean isRebinding() {
+        return RebindManagerImpl.RebindTracker.isRebinding();
     }
     
     public <T> T getConfig(ConfigKey<T> key) {
