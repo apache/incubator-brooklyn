@@ -4,14 +4,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
+
+import brooklyn.util.ResourceUtils;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -216,6 +220,20 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
   
   @Override
   public Response createFromYaml(String yaml) {
+      // First of all, see if it's a URL
+      URI uri;
+      try {
+          uri = new URI(yaml);
+      } catch (URISyntaxException e) {
+          // It's not a URI then...
+          uri = null;
+      }
+      if (uri != null) {
+          log.debug("Input to createFromYaml might be a URL: " + uri);
+          yaml = ResourceUtils.create(mgmt()).getResourceAsString(uri.toString());
+          log.debug("Continuing using the contents of the URL: {}", yaml);
+      }
+
       log.debug("Creating app from yaml");
       Reader input = new StringReader(yaml);
       AssemblyTemplate at = camp().pdp().registerDeploymentPlan(input);
