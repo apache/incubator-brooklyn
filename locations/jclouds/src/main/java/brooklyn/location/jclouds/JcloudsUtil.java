@@ -224,7 +224,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         Map<?,?> cacheKey = MutableMap.builder()
                 .putAll(properties)
                 .put("provider", provider)
-                .put("identify", identity)
+                .put("identity", identity)
                 .put("credential", credential)
                 .putIfNotNull("endpoint", endpoint)
                 .build()
