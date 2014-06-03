@@ -27,6 +27,7 @@ import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
+import brooklyn.entity.webapp.WebAppServiceMethods;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -173,11 +174,11 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
 
     public boolean isHttpEnabled() {
-        return isProtocolEnabled("HTTP");
+        return WebAppServiceMethods.isProtocolEnabled(this, "HTTP");
     }
     
     public boolean isHttpsEnabled() {
-        return isProtocolEnabled("HTTPS");
+        return WebAppServiceMethods.isProtocolEnabled(this, "HTTPS");
     }
     
     public Integer getHttpPort() {

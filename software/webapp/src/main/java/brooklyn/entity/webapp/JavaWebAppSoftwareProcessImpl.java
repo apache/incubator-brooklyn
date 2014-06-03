@@ -34,11 +34,9 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
-import brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
 
 public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl implements JavaWebAppService, JavaWebAppSoftwareProcess {
 
@@ -177,34 +175,5 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
         // vs them just showing the last known value...)
         setAttribute(REQUESTS_PER_SECOND_LAST, 0D);
         setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
-    }
-    
-    protected Set<String> getEnabledProtocols() {
-        return getAttribute(JavaWebAppSoftwareProcess.ENABLED_PROTOCOLS);
-    }
-    
-    protected boolean isProtocolEnabled(String protocol) {
-        for (String contender : getEnabledProtocols()) {
-            if (protocol.equalsIgnoreCase(contender)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    protected String inferBrooklynAccessibleRootUrl() {
-        if (isProtocolEnabled("https")) {
-            Integer rawPort = getAttribute(HTTPS_PORT);
-            checkNotNull(rawPort, "HTTPS_PORT sensors not set for %s; is an acceptable port available?", this);
-            HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, rawPort);
-            return String.format("https://%s:%s/", hp.getHostText(), hp.getPort());
-        } else if (isProtocolEnabled("http")) {
-            Integer rawPort = getAttribute(HTTP_PORT);
-            checkNotNull(rawPort, "HTTP_PORT sensors not set for %s; is an acceptable port available?", this);
-            HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, rawPort);
-            return String.format("http://%s:%s/", hp.getHostText(), hp.getPort());
-        } else {
-            throw new IllegalStateException("HTTP and HTTPS protocols not enabled for "+this+"; enabled protocols are "+getEnabledProtocols());
-        }
     }
 }
