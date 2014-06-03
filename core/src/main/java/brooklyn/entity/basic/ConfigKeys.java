@@ -1,6 +1,11 @@
 package brooklyn.entity.basic;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
@@ -8,6 +13,8 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -19,6 +26,8 @@ import com.google.common.reflect.TypeToken;
  */
 public class ConfigKeys {
 
+    private static final Logger log = LoggerFactory.getLogger(ConfigKeys.class);
+    
     public static <T> ConfigKey<T> newConfigKey(Class<T> type, String name) {
         return new BasicConfigKey<T>(type, name);
     }
@@ -179,4 +188,42 @@ public class ConfigKeys {
     public static ConfigKey<Boolean> newBooleanConfigKey(String name, String description, Boolean defaultValue) {
         return newConfigKey(Boolean.class, name, description, defaultValue);
     }
+    
+    public static class DynamicKeys {
+
+        // TODO see below
+//        public static final ConfigKey<String> TYPE = ConfigKeys.newStringConfigKey("type");
+        public static final ConfigKey<String> NAME = ConfigKeys.newStringConfigKey("name");
+        public static final ConfigKey<String> DESCRIPTION = ConfigKeys.newStringConfigKey("description");
+        public static final ConfigKey<Object> DEFAULT_VALUE = ConfigKeys.newConfigKey(Object.class, "defaultValue");
+        
+        public static ConfigKey<?> newInstance(ConfigBag keyDefs) {
+            // TODO dynamic typing - see TYPE key commented out above
+            String typeName = Strings.toString(keyDefs.getStringKey("type"));
+            if (Strings.isNonBlank(typeName))
+                log.warn("Setting 'type' is not currently supported for dynamic config keys; ignoring in definition of "+keyDefs);
+            
+            Class<Object> type = Object.class;
+            String name = keyDefs.get(NAME);
+            String description = keyDefs.get(DESCRIPTION);
+            Object defaultValue = keyDefs.get(DEFAULT_VALUE);
+            return newConfigKey(type, name, description, defaultValue);
+        }
+        
+        /** creates a new {@link ConfigKey} given a map describing it */
+        public static ConfigKey<?> newInstance(Map<?,?> keyDefs) {
+            return newInstance(ConfigBag.newInstance(keyDefs));
+        }
+        
+        /** creates a new {@link ConfigKey} given a name (e.g. as a key in a larger map) and a map of other definition attributes */
+        public static ConfigKey<?> newNamedInstance(String name, Map<?,?> keyDefs) {
+            ConfigBag defs = ConfigBag.newInstance(keyDefs);
+            String oldName = defs.put(NAME, name);
+            if (!Strings.isBlank(oldName) && !oldName.equals(name))
+                log.warn("Dynamic key '"+oldName+"' being overridden as key '"+name+"' in "+keyDefs);
+            return newInstance(defs);
+        }
+
+    }
+
 }
