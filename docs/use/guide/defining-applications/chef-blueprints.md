@@ -227,3 +227,9 @@ A general schema for the supported YAML is below:
   service_name: cookbook_service
   pid_file: /var/run/cookbook.pid
 ```
+
+If you are interested in exploring the Java code for creating bluerpints,
+start with the `TypedToyMySqlEntiyChef` class, which essentially does what this tutorial has shown;
+and then move on to the `DynamicToyMySqlEntiyChef` which starts to look at more sophisticated constructs.
+(Familiarity with BASH and basic Java blueprints may be useful at that stage.)
+
