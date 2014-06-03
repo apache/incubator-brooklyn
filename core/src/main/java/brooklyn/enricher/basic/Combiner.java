@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -102,20 +103,23 @@ public class Combiner<T,U> extends AbstractEnricher implements SensorEventListen
      */
     protected void onUpdated() {
         try {
-            U val = compute();
-            emit(targetSensor, val);
+            Object v = compute();
+            if (v == Entities.UNCHANGED) {
+                // nothing
+            } else {
+                emit(targetSensor, TypeCoercions.coerce(v, targetSensor.getTypeToken()));
+            }
         } catch (Throwable t) {
             LOG.warn("Error calculating and setting combination for enricher "+this, t);
             throw Exceptions.propagate(t);
         }
     }
     
-    protected U compute() {
+    protected Object compute() {
         synchronized (values) {
             // TODO Could avoid copying when filter not needed
             List<T> vs = MutableList.copyOf(Iterables.filter(values.values(), valueFilter));
-            Object result = transformation.apply(vs);
-            return TypeCoercions.coerce(result, targetSensor.getTypeToken());
+            return transformation.apply(vs);
         }
     }
 }

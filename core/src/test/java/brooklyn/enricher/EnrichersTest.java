@@ -1,5 +1,12 @@
 package brooklyn.enricher;
 
+import java.util.Collection;
+import java.util.Set;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
@@ -11,18 +18,16 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.text.StringFunctions;
+
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-import java.util.Collection;
-import java.util.Set;
 
 public class EnrichersTest {
 
@@ -63,6 +68,42 @@ public class EnrichersTest {
         entity.setAttribute(NUM1, 2);
         entity.setAttribute(NUM2, 3);
         EntityTestUtils.assertAttributeEqualsEventually(entity, NUM3, 5);
+    }
+    
+    @Test
+    public void testCombiningWithCustomFunction() {
+        entity.addEnricher(Enrichers.builder()
+                .combining(NUM1, NUM2)
+                .publishing(NUM3)
+                .computing(Functions.constant(1))
+                .build());
+        
+        entity.setAttribute(NUM1, 2);
+        entity.setAttribute(NUM2, 3);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, NUM3, 1);
+    }
+    
+    @Test(groups="Integration") // because takes a second
+    public void testCombiningRespectsUnchanged() {
+        entity.addEnricher(Enrichers.builder()
+                .combining(NUM1, NUM2)
+                .publishing(NUM3)
+                .computing(new Function<Iterable<Integer>, Object>() {
+                        @Override public Object apply(Iterable<Integer> input) {
+                            if (input != null && Iterables.contains(input, 123)) {
+                                return Enrichers.sum((Iterable)input, 0, 0, TypeTokens.getTypeToken(null, Integer.class));
+                            } else {
+                                return Entities.UNCHANGED;
+                            }
+                        }})
+                .build());
+        
+        entity.setAttribute(NUM1, 123);
+        entity.setAttribute(NUM2, 3);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, NUM3, 126);
+        
+        entity.setAttribute(NUM1, 2);
+        EntityTestUtils.assertAttributeEqualsContinually(entity, NUM3, 126);
     }
     
     @Test
@@ -115,6 +156,24 @@ public class EnrichersTest {
         
         entity.setAttribute(STR1, "myval");
         EntityTestUtils.assertAttributeEqualsEventually(entity, STR2, "myvalmysuffix");
+    }
+
+    @Test(groups="Integration") // because takes a second
+    public void testTransformingRespectsUnchanged() {
+        entity.addEnricher(Enrichers.builder()
+                .transforming(STR1)
+                .publishing(STR2)
+                .computing(new Function<String, Object>() {
+                        @Override public Object apply(String input) {
+                            return ("ignoredval".equals(input)) ? Entities.UNCHANGED : input;
+                        }})
+                .build());
+        
+        entity.setAttribute(STR1, "myval");
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR2, "myval");
+        
+        entity.setAttribute(STR1, "ignoredval");
+        EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval");
     }
 
     @Test
@@ -247,5 +306,29 @@ public class EnrichersTest {
         
         entity.setAttribute(NUM1, 123);
         EntityTestUtils.assertAttributeEqualsEventually(group, LONG1, Long.valueOf(1));
+    }
+    
+    @Test(groups="Integration") // because takes a second
+    public void testAggregatingRespectsUnchanged() {
+        group.addMember(entity);
+        group.addEnricher(Enrichers.builder()
+                .aggregating(NUM1)
+                .publishing(LONG1)
+                .fromMembers()
+                .computing(new Function<Iterable<Integer>, Object>() {
+                        @Override public Object apply(Iterable<Integer> input) {
+                            if (input != null && Iterables.contains(input, 123)) {
+                                return Enrichers.sum((Iterable)input, 0, 0, TypeTokens.getTypeToken(null, Integer.class));
+                            } else {
+                                return Entities.UNCHANGED;
+                            }
+                        }})
+                .build());
+        
+        entity.setAttribute(NUM1, 123);
+        EntityTestUtils.assertAttributeEqualsEventually(group, LONG1, Long.valueOf(123));
+        
+        entity.setAttribute(NUM1, 987654);
+        EntityTestUtils.assertAttributeEqualsContinually(group, LONG1, Long.valueOf(123));
     }
 }

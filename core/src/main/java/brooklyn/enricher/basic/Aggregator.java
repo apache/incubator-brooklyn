@@ -17,6 +17,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.event.AttributeSensor;
@@ -218,20 +219,23 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
      */
     protected void onUpdated() {
         try {
-            U val = compute();
-            emit(targetSensor, val);
+            Object v = compute();
+            if (v == Entities.UNCHANGED) {
+                // nothing
+            } else {
+                emit(targetSensor, TypeCoercions.coerce(v, targetSensor.getTypeToken()));
+            }
         } catch (Throwable t) {
             LOG.warn("Error calculating and setting aggregate for enricher "+this, t);
             throw Exceptions.propagate(t);
         }
     }
     
-    public U compute() {
+    protected Object compute() {
         synchronized (values) {
             // TODO Could avoid copying when filter not needed
             List<T> vs = MutableList.copyOf(Iterables.filter(values.values(), valueFilter));
-            Object result = transformation.apply(vs);
-            return TypeCoercions.coerce(result, targetSensor.getTypeToken());
+            return transformation.apply(vs);
         }
     }
     
