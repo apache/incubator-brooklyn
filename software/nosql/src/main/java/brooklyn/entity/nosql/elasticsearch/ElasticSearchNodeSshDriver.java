@@ -33,6 +33,7 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
         
         List<String> commands = ImmutableList.<String>builder()
             .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
+            .add(BashCommands.installJavaLatestOrFail())
             .add(String.format("tar zxvf %s", saveAs))
             .build();
         
@@ -70,6 +71,8 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
         appendConfigIfPresent(commandBuilder, ElasticSearchNode.LOG_DIR, "es.path.logs", Os.mergePaths(getRunDir(), "logs"));
         appendConfigIfPresent(commandBuilder, ElasticSearchNode.NODE_NAME.getConfigKey(), "es.node.name");
         appendConfigIfPresent(commandBuilder, ElasticSearchNode.CLUSTER_NAME.getConfigKey(), "es.cluster.name");
+        appendConfigIfPresent(commandBuilder, ElasticSearchNode.MULTICAST_ENABLED, "es.discovery.zen.ping.multicast.enabled");
+        appendConfigIfPresent(commandBuilder, ElasticSearchNode.UNICAST_ENABLED, "es.discovery.zen.ping.unicast.enabled");
         commandBuilder.append(" > out.log 2> err.log < /dev/null");
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
@@ -77,12 +80,15 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
             .execute();
     }
     
-    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<String> configKey, String parameter) {
+    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<?> configKey, String parameter) {
         appendConfigIfPresent(builder, configKey, parameter, null);
     }
     
-    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<String> configKey, String parameter, String defaultValue) {
-        String config = entity.getConfig(configKey);
+    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<?> configKey, String parameter, String defaultValue) {
+        String config = null;
+        if (entity.getConfig(configKey) != null) {
+            config = String.valueOf(entity.getConfig(configKey));
+        }
         if (config == null && defaultValue != null) {
             config = defaultValue;
         }

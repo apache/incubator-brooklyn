@@ -1,16 +1,27 @@
 package brooklyn.entity.nosql.elasticsearch;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import org.apache.http.client.HttpClient;
+import org.bouncycastle.util.Strings;
+
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.gson.JsonElement;
 
@@ -61,9 +72,6 @@ public class ElasticSearchNodeImpl extends SoftwareProcessImpl implements Elasti
             .poll(new HttpPollConfig<String>(NODE_NAME)
                 .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("name"), JsonFunctions.cast(String.class)))
                 .onFailureOrException(Functions.<String>constant(null)))
-            .poll(new HttpPollConfig<String>(CLUSTER_NAME)
-                .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("settings", "cluster", "name"), JsonFunctions.cast(String.class)))
-                .onFailureOrException(Functions.<String>constant(null)))
             .poll(new HttpPollConfig<Integer>(DOCUMENT_COUNT)
                 .onSuccess(HttpValueFunctions.chain(getFirstNode, JsonFunctions.walk("indices", "docs", "count"), JsonFunctions.cast(Integer.class)))
                 .onFailureOrException(Functions.<Integer>constant(null)))
@@ -85,6 +93,21 @@ public class ElasticSearchNodeImpl extends SoftwareProcessImpl implements Elasti
             .poll(new HttpPollConfig<String>(CLUSTER_NAME)
                 .onSuccess(HttpValueFunctions.jsonContents("cluster_name", String.class)))
             .build();
+    }
+    
+    @Override
+    public void resetCluster(String nodeList) {
+        URI updateClusterUri;
+        try {
+            updateClusterUri = new URI(String.format("http://%s:%s/_cluster/settings", getAttribute(Attributes.HOSTNAME), getAttribute(HTTP_PORT)));
+        } catch (URISyntaxException e) {
+            throw Exceptions.propagate(e);
+        }
+        HttpClient client = HttpTool.httpClientBuilder().build();
+        
+        String payload = String.format("{\"persistent\":{\"discovery.zen.ping.unicast.hosts\":\"%s\"}}", nodeList);
+        
+        HttpToolResponse result = HttpTool.httpPut(client, updateClusterUri, ImmutableMap.<String, String>of(), Strings.toByteArray(payload));
     }
     
     @Override
