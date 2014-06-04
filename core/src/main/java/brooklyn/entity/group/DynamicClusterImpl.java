@@ -293,6 +293,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             int onFire = Iterables.frequency(memberStates, Lifecycle.ON_FIRE);
             if ((getInitialQuorumSize() > 0 ? running < getInitialQuorumSize() : true) && onFire > 0) {
                 currentState = Lifecycle.ON_FIRE;
+            } else if (onFire == 0 && running > 0) {
+                currentState = Lifecycle.RUNNING;
             }
         }
         return currentState;
