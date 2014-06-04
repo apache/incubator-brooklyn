@@ -96,21 +96,6 @@ public class ElasticSearchNodeImpl extends SoftwareProcessImpl implements Elasti
     }
     
     @Override
-    public void resetCluster(String nodeList) {
-        URI updateClusterUri;
-        try {
-            updateClusterUri = new URI(String.format("http://%s:%s/_cluster/settings", getAttribute(Attributes.HOSTNAME), getAttribute(HTTP_PORT)));
-        } catch (URISyntaxException e) {
-            throw Exceptions.propagate(e);
-        }
-        HttpClient client = HttpTool.httpClientBuilder().build();
-        
-        String payload = String.format("{\"persistent\":{\"discovery.zen.ping.unicast.hosts\":\"%s\"}}", nodeList);
-        
-        HttpToolResponse result = HttpTool.httpPut(client, updateClusterUri, ImmutableMap.<String, String>of(), Strings.toByteArray(payload));
-    }
-    
-    @Override
     protected void disconnectSensors() {
         if (httpFeed != null) {
             httpFeed.stop();

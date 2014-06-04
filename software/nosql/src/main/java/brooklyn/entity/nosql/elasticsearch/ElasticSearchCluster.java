@@ -16,7 +16,5 @@ public interface ElasticSearchCluster extends DynamicCluster {
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, 
             "elasticsearch.cluster.name", "Name of the ElasticSearch cluster", "BrooklynCluster");
     
-    AttributeSensor<String> NODE_LIST = Sensors.newStringSensor("elasticsearch.cluster.node.list", "Comma delimited list of nodes in hostname:port format");
-    
     String getName();
 }

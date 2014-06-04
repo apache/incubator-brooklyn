@@ -20,7 +20,7 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(ElasticSearchNodeImpl.class)
 public interface ElasticSearchNode extends SoftwareProcess, DatastoreMixins.HasDatastoreUrl {
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.0");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.2.1");
     
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -63,5 +63,4 @@ public interface ElasticSearchNode extends SoftwareProcess, DatastoreMixins.HasD
     AttributeSensor<Integer> SEARCH_QUERY_TOTAL = Sensors.newIntegerSensor("elasticsearch.node.search.query.total");
     AttributeSensor<Integer> SEARCH_QUERY_TIME_IN_MILLIS = Sensors.newIntegerSensor("elasticsearch.node.search.query.time.in.millis");
     
-    void resetCluster(String nodeList);
 }
