@@ -30,6 +30,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
 
@@ -130,12 +131,19 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
     @Override
     public Map<String, String> getShellEnvironment() {
-        return MutableMap.<String, String>builder()
+        Map<String, String> shellEnv =  MutableMap.<String, String>builder()
                 .putAll(super.getShellEnvironment())
-                .renameKey("JAVA_OPTS", "CATALINA_OPTS")
+                .remove("JAVA_OPTS")
                 .put("CATALINA_PID", "pid.txt")
                 .put("CATALINA_BASE", getRunDir())
                 .put("RUN", getRunDir())
                 .build();
+
+        // Double quoting of individual JAVA_OPTS entries required due to eval in catalina.sh
+        List<String> javaOpts = getJavaOpts();
+        String sJavaOpts = BashStringEscapes.doubleQuoteLiteralsForBash(javaOpts.toArray(new String[0]));
+        shellEnv.put("CATALINA_OPTS", sJavaOpts);
+
+        return shellEnv;
     }
 }
