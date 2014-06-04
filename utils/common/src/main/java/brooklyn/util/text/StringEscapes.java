@@ -152,10 +152,6 @@ public class StringEscapes {
             if (x.matches(  "[^"+BACKSLASH+DOUBLE_QUOTE+"]*"+
                     "("+BACKSLASH+BACKSLASH+")*"+
                     DOUBLE_QUOTE+".*")) return "unescaped double quote";
-            //ampersand also must have odd number of backslashes before it; even number is error
-            if (x.matches("[^"+BACKSLASH+BACKSLASH+"]*"+
-                    "("+BACKSLASH+BACKSLASH+")*"+
-                    "&"+".*")) return "unescaped ampersand";
             return null;
         }
 
