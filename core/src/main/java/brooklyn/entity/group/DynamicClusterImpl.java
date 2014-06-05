@@ -17,9 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
@@ -190,7 +188,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(QUARANTINE_FAILED_ENTITIES);
     }
 
-    protected Group getQuarantineGroup() {
+    protected QuarantineGroup getQuarantineGroup() {
         return getAttribute(QUARANTINE_GROUP);
     }
 
@@ -226,7 +224,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setAttribute(SERVICE_UP, calculateServiceUp());
         try {
             if (isQuarantineEnabled()) {
-                Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
+                QuarantineGroup quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
                 Entities.manage(quarantineGroup);
                 setAttribute(QUARANTINE_GROUP, quarantineGroup);
             }

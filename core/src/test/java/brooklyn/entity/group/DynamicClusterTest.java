@@ -407,6 +407,19 @@ public class DynamicClusterTest {
     }
 
     @Test
+    public void testQuarantineGroupOfCorrectType() throws Exception {
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure("quarantineFailedEntities", true)
+                .configure("initialSize", 0)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
+
+        cluster.start(ImmutableList.of(loc));
+        
+        QuarantineGroup quarantineGroup = cluster.getAttribute(DynamicCluster.QUARANTINE_GROUP);
+        quarantineGroup.expungeMembers(true); // sanity check by calling something on it
+    }
+
+    @Test
     public void testCanQuarantineFailedEntities() throws Exception {
         final int failNum = 2;
         final AtomicInteger counter = new AtomicInteger(0);
