@@ -152,21 +152,12 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     public abstract class IdentifiableConverter<IT extends Identifiable> implements SingleValueConverter {
         private final Class<IT> clazz;
         
-        /*
-         * Ugly hack so we know what type to deserialize the string as. Remember the last call to canConvert!
-         * This is needed for RebindManager's two-phase approach, where in the first phase we create a 
-         * dynamic proxy to represent the Entity/Location (can't return null as ImmutableList etc won't accept
-         * null values).
-         */
-        private Class<?> toClazz;
-        
         IdentifiableConverter(Class<IT> clazz) {
             this.clazz = clazz;
         }
         @Override
         public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
             boolean result = clazz.isAssignableFrom(type);
-            toClazz = (result) ? type : null;
             return result;
         }
 
@@ -180,11 +171,11 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
                 LOG.warn("Cannot unmarshall from persisted xml {} {}; no lookup context supplied!", clazz.getSimpleName(), str);
                 return null;
             } else {
-                return lookup(toClazz, str);
+                return lookup(str);
             }
         }
         
-        protected abstract IT lookup(Class<?> type, String id);
+        protected abstract IT lookup(String id);
     }
 
     public class LocationConverter extends IdentifiableConverter<Location> {
@@ -192,8 +183,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             super(Location.class);
         }
         @Override
-        protected Location lookup(Class<?> type, String id) {
-            return lookupContext.lookupLocation(type, id);
+        protected Location lookup(String id) {
+            return lookupContext.lookupLocation(id);
         }
     }
 
@@ -202,8 +193,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             super(Policy.class);
         }
         @Override
-        protected Policy lookup(Class<?> type, String id) {
-            return lookupContext.lookupPolicy(type, id);
+        protected Policy lookup(String id) {
+            return lookupContext.lookupPolicy(id);
         }
     }
 
@@ -212,8 +203,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             super(Enricher.class);
         }
         @Override
-        protected Enricher lookup(Class<?> type, String id) {
-            return lookupContext.lookupEnricher(type, id);
+        protected Enricher lookup(String id) {
+            return lookupContext.lookupEnricher(id);
         }
     }
     
@@ -222,8 +213,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             super(Entity.class);
         }
         @Override
-        protected Entity lookup(Class<?> type, String id) {
-            return lookupContext.lookupEntity(type, id);
+        protected Entity lookup(String id) {
+            return lookupContext.lookupEntity(id);
         }
     }
 

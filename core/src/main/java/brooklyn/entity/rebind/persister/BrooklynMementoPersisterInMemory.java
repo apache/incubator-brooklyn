@@ -17,15 +17,19 @@ import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocationInternal;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
@@ -76,44 +80,61 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
         try {
             File tempDir = Files.createTempDir();
             try {
-                // TODO See RebindManagerImpl.rebind for dummyLookupContext; remove duplication
+                // TODO Duplicate code for LookupContext in RebindManager
                 BrooklynMementoPersisterToMultiFile persister = new BrooklynMementoPersisterToMultiFile(tempDir , classLoader);
+                RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(RebindManager.RebindFailureMode.FAIL_AT_END, RebindManager.RebindFailureMode.FAIL_AT_END);
                 persister.checkpoint(memento);
+                final BrooklynMementoManifest manifest = persister.loadMementoManifest(exceptionHandler);
                 LookupContext dummyLookupContext = new LookupContext() {
-                    @Override public Entity lookupEntity(Class<?> type, String id) {
-                        List<Class<?>> types = MutableList.<Class<?>>of(Entity.class, EntityInternal.class, EntityProxy.class);
-                        if (type != null) types.add(type);
-                        return (Entity) newDummy(types);
+                    @Override public Entity lookupEntity(String id) {
+                        List<Class<?>> types = MutableList.<Class<?>>builder()
+                                .add(Entity.class, EntityInternal.class, EntityProxy.class)
+                                .add(loadClass(manifest.getEntityIdToType().get(id)))
+                                .build();
+                        return (Entity) java.lang.reflect.Proxy.newProxyInstance(
+                                classLoader,
+                                types.toArray(new Class<?>[types.size()]),
+                                new InvocationHandler() {
+                                    @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+                                        return m.invoke(this, args);
+                                    }
+                                });
                     }
-                    @Override public Location lookupLocation(Class<?> type, String id) {
-                        List<Class<?>> types = MutableList.<Class<?>>of(Location.class, LocationInternal.class);
-                        if (type != null) types.add(type);
-                        return (Location) newDummy(types);
+                    @Override public Location lookupLocation(String id) {
+                        Class<?> clazz = loadClass(manifest.getLocationIdToType().get(id));
+                        return (Location) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
-                    @Override public Policy lookupPolicy(Class<?> type, String id) {
-                        List<Class<?>> types = MutableList.<Class<?>>of(Policy.class);
-                        if (type != null) types.add(type);
-                        return (Policy) newDummy(types);
+                    @Override public Policy lookupPolicy(String id) {
+                        Class<?> clazz = loadClass(manifest.getPolicyIdToType().get(id));
+                        return (Policy) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
-                    @Override public Enricher lookupEnricher(Class<?> type, String id) {
-                        List<Class<?>> types = MutableList.<Class<?>>of(Enricher.class);
-                        if (type != null) types.add(type);
-                        return (Enricher) newDummy(types);
+                    @Override public Enricher lookupEnricher(String id) {
+                        Class<?> clazz = loadClass(manifest.getEnricherIdToType().get(id));
+                        return (Enricher) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
-                    private Object newDummy(List<Class<?>> types) {
-                        return java.lang.reflect.Proxy.newProxyInstance(
-                            classLoader,
-                            types.toArray(new Class<?>[types.size()]),
-                            new InvocationHandler() {
-                                @Override public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
-                                    return m.invoke(this, args);
+                    private Class<?> loadClass(String name) {
+                        try {
+                            return classLoader.loadClass(name);
+                        } catch (ClassNotFoundException e) {
+                            throw Exceptions.propagate(e);
+                        }
+                    }
+                    private <T> T invokeConstructor(Class<T> clazz, Object[]... possibleArgs) {
+                        for (Object[] args : possibleArgs) {
+                            try {
+                                Optional<T> v = Reflections.invokeConstructorWithArgs(clazz, args, true);
+                                if (v.isPresent()) {
+                                    return v.get();
                                 }
-                            });
+                            } catch (Exception e) {
+                                throw Exceptions.propagate(e);
+                            }
+                        }
+                        throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
                     }
                 };
 
                 // Not actually reconstituting, because need to use a real lookupContext to reconstitute all the entities
-                RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(RebindManager.RebindFailureMode.FAIL_AT_END, RebindManager.RebindFailureMode.FAIL_AT_END);
                 persister.loadMemento(dummyLookupContext, exceptionHandler);
             } finally {
                 Os.tryDeleteDirectory(tempDir.getAbsolutePath());

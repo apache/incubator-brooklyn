@@ -210,43 +210,27 @@ public class XmlMementoSerializerTest {
             this.policies = ImmutableMap.copyOf(policies);
             this.enrichers = ImmutableMap.copyOf(enrichers);
         }
-        @Override public Entity lookupEntity(Class<?> type, String id) {
+        @Override public Entity lookupEntity(String id) {
             if (entities.containsKey(id)) {
-                Entity result = entities.get(id);
-                if (type != null && !type.isInstance(result)) {
-                    throw new IllegalStateException("Entity with id "+id+" does not match type "+type+"; got "+result);
-                }
-                return result;
+                return entities.get(id);
             }
             throw new NoSuchElementException("no entity with id "+id+"; contenders are "+entities.keySet());
         }
-        @Override public Location lookupLocation(Class<?> type, String id) {
+        @Override public Location lookupLocation(String id) {
             if (locations.containsKey(id)) {
-                Location result = locations.get(id);
-                if (type != null && !type.isInstance(result)) {
-                    throw new IllegalStateException("Location with id "+id+" does not match type "+type+"; got "+result);
-                }
-                return result;
+                return locations.get(id);
             }
             throw new NoSuchElementException("no location with id "+id+"; contenders are "+locations.keySet());
         }
-        @Override public Policy lookupPolicy(Class<?> type, String id) {
+        @Override public Policy lookupPolicy(String id) {
             if (policies.containsKey(id)) {
-                Policy result = policies.get(id);
-                if (type != null && !type.isInstance(result)) {
-                    throw new IllegalStateException("Policy with id "+id+" does not match type "+type+"; got "+result);
-                }
-                return result;
+                return policies.get(id);
             }
             throw new NoSuchElementException("no policy with id "+id+"; contenders are "+policies.keySet());
         }
-        @Override public Enricher lookupEnricher(Class<?> type, String id) {
+        @Override public Enricher lookupEnricher(String id) {
             if (enrichers.containsKey(id)) {
-                Enricher result = enrichers.get(id);
-                if (type != null && !type.isInstance(result)) {
-                    throw new IllegalStateException("Enricher with id "+id+" does not match type "+type+"; got "+result);
-                }
-                return result;
+                return enrichers.get(id);
             }
             throw new NoSuchElementException("no enricher with id "+id+"; contenders are "+enrichers.keySet());
         }
