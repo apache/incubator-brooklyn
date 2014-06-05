@@ -22,11 +22,11 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
 
     Map<String,String> filesByName = MutableMap.<String,String>of();
     boolean prepared = false;
-
+    
     public InMemoryObjectStore() {
         log.info("Using memory-based objectStore");
     }
-
+    
     @Override
     public String getSummaryName() {
         return "in-memory (test) persistence store";
