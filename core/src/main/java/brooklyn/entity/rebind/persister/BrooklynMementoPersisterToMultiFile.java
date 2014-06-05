@@ -135,8 +135,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            if (exceptionHandler!=null)
-                exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
+            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
         
@@ -219,8 +218,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            if (exceptionHandler!=null)
-                exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
+            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
 

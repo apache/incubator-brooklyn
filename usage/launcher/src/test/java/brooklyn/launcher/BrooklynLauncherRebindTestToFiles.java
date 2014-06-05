@@ -6,7 +6,6 @@ import java.io.File;
 
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
@@ -43,7 +42,7 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
 
     protected void checkPersistenceContainerNameIsDefault() {
-        checkPersistenceContainerNameIs(BrooklynServerConfig.getPersistenceDir(BrooklynProperties.Factory.newDefault()));
+        checkPersistenceContainerNameIs(BrooklynServerConfig.DEFAULT_PERSISTENCE_DIR_FOR_FILESYSTEM);
     }
 
     @Test

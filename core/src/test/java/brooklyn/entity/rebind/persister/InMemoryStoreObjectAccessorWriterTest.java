@@ -4,13 +4,13 @@ import java.io.IOException;
 
 import org.testng.annotations.Test;
 
-import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
 
 @Test
 public class InMemoryStoreObjectAccessorWriterTest extends PersistenceStoreObjectAccessorWriterTestFixture {
 
-    protected StoreObjectAccessor newPersistenceStoreObjectAccessor() throws IOException {
-        return new InMemoryObjectStore().newAccessor("foo");
+    protected StoreObjectAccessorWithLock newPersistenceStoreObjectAccessor() throws IOException {
+        return new StoreObjectAccessorLocking(new InMemoryObjectStore().newAccessor("foo"));
     }
     
 }

@@ -2,7 +2,6 @@ package brooklyn.entity.rebind.persister;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 
@@ -39,46 +37,51 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
 
     @Override
     public StoreObjectAccessor newAccessor(final String path) {
-        return new StoreObjectAccessor() {
-            @Override
-            public void writeAsync(String val) {
-                synchronized (filesByName) {
-                    filesByName.put(path, val);
-                }
+        return new StoreObjectAccessorLocking(new SingleThreadedInMemoryStoreObjectAccessor(filesByName, path));
+    }
+    
+    public static class SingleThreadedInMemoryStoreObjectAccessor implements StoreObjectAccessor {
+        private final Map<String, String> map;
+        private final String key;
+
+        public SingleThreadedInMemoryStoreObjectAccessor(Map<String,String> map, String key) {
+            this.map = map;
+            this.key = key;
+        }
+        @Override
+        public String get() {
+            synchronized (map) {
+                return map.get(key);
             }
-            
-            @Override
-            public void waitForWriteCompleted(Duration timeout) throws InterruptedException, TimeoutException {
+        }
+        @Override
+        public boolean exists() {
+            synchronized (map) {
+                return map.containsKey(key);
             }
-            
-            @Override
-            public String read() {
-                synchronized (filesByName) {
-                    return filesByName.get(path);
-                }
+        }
+        @Override
+        public void put(String val) {
+            synchronized (map) {
+                map.put(key, val);
             }
-            
-            @Override
-            public boolean exists() {
-                synchronized (filesByName) {
-                    return filesByName.containsKey(path);
-                }
+        }
+        @Override
+        public void append(String val) {
+            synchronized (map) {
+                String val2 = get();
+                if (val2==null) val2 = val;
+                else val2 = val2 + val;
+
+                map.put(key, val);
             }
-            
-            @Override
-            public void deleteAsync() {
-                synchronized (filesByName) {
-                    filesByName.remove(path);
-                }
+        }
+        @Override
+        public void delete() {
+            synchronized (map) {
+                map.remove(key);
             }
-            
-            @Override
-            public void append(String s) {
-                synchronized (filesByName) {
-                    writeAsync(read()+s);
-                }
-            }
-        };
+        }
     }
 
     @Override
@@ -90,10 +93,6 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
                     result.add(file);
             return result;
         }
-    }
-
-    @Override
-    public void backupContents(String parentSubPath, String backupSubPath) {
     }
 
     @Override

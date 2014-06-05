@@ -13,8 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.persister.MementoSerializer;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import brooklyn.entity.rebind.persister.RetryingMementoSerializer;
+import brooklyn.entity.rebind.persister.StoreObjectAccessorLocking;
 import brooklyn.entity.rebind.persister.XmlMementoSerializer;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.management.ManagementContext;
@@ -64,10 +65,10 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     public static final String NODES_SUB_PATH = "nodes";
 
     // TODO Leak if we go through lots of managers; but tiny!
-    private final ConcurrentMap<String, StoreObjectAccessor> nodeWriters = Maps.newConcurrentMap();
+    private final ConcurrentMap<String, StoreObjectAccessorWithLock> nodeWriters = Maps.newConcurrentMap();
 
-    private final StoreObjectAccessor masterWriter;
-    private final StoreObjectAccessor changeLogWriter;
+    private final StoreObjectAccessorWithLock masterWriter;
+    private final StoreObjectAccessorWithLock changeLogWriter;
 
     private final MementoSerializer<Object> serializer;
 
@@ -91,25 +92,25 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
 
         objectStore.createSubPath(NODES_SUB_PATH);
 
-        masterWriter = objectStore.newAccessor("/master");
-        changeLogWriter = objectStore.newAccessor("/change.log");
+        masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/master"));
+        changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
 
-        LOG.info("ManagementPlaneMemento-persister will use store "+objectStore);
+        LOG.debug("ManagementPlaneMemento-persister will use store "+objectStore);
     }
 
     @Override
     public void stop() {
         running = false;
         try {
-            for (StoreObjectAccessor writer : nodeWriters.values()) {
+            for (StoreObjectAccessorWithLock writer : nodeWriters.values()) {
                 try {
-                    writer.waitForWriteCompleted(SHUTDOWN_TIMEOUT);
+                    writer.waitForCurrentWrites(SHUTDOWN_TIMEOUT);
                 } catch (TimeoutException e) {
                     LOG.warn("Timeout during shutdown, waiting for write of "+writer+"; continuing");
                 }
             }
             try {
-                masterWriter.waitForWriteCompleted(SHUTDOWN_TIMEOUT);
+                masterWriter.waitForCurrentWrites(SHUTDOWN_TIMEOUT);
             } catch (TimeoutException e) {
                 LOG.warn("Timeout during shutdown, waiting for write of "+masterWriter+"; continuing");
             }
@@ -133,7 +134,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
 
         // Be careful about order: if the master-file says nodeX then nodeX's file must have an up-to-date timestamp.
         // Therefore read master file first, followed by the other node-files.
-        String masterNodeId = masterWriter.exists() ? masterWriter.read() : null;
+        String masterNodeId = masterWriter.get();
         if (masterNodeId == null) {
             LOG.warn("No entity-memento deserialized from file "+masterWriter+"; ignoring and continuing");
         } else {
@@ -141,22 +142,25 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         }
 
         // Load node-files
-        List<String> nodeContents = objectStore.listContentsWithSubPath(NODES_SUB_PATH);
-        LOG.info("Loading nodes from {}; {} nodes.",
-                new Object[]{objectStore.getSummaryName(), nodeContents.size()});
+        List<String> nodeFiles = objectStore.listContentsWithSubPath(NODES_SUB_PATH);
+        LOG.trace("Loading nodes from {}; {} nodes.",
+                new Object[]{objectStore.getSummaryName(), nodeFiles.size()});
 
-        for (String nodeContent : nodeContents) {
-            PersistenceObjectStore.StoreObjectAccessor objectAccessor = objectStore.newAccessor(nodeContent);
-            ManagementNodeSyncRecord memento = (ManagementNodeSyncRecord) serializer.fromString(objectAccessor.read());
+        for (String nodeFile : nodeFiles) {
+            PersistenceObjectStore.StoreObjectAccessor objectAccessor = objectStore.newAccessor(nodeFile);
+            String nodeContents = objectAccessor.get();
+            ManagementNodeSyncRecord memento = nodeContents==null ? null : (ManagementNodeSyncRecord) serializer.fromString(nodeContents);
             if (memento == null) {
-                LOG.warn("No manager-memento deserialized from " + nodeContent + " (possibly just stopped?); ignoring" +
+                LOG.warn("No manager-memento deserialized from " + nodeFile + " (possibly just stopped?); ignoring" +
                         " and continuing");
             } else {
                 builder.node(memento);
             }
         }
 
-        if (LOG.isDebugEnabled()) LOG.debug("Loaded management-plane memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+        if (LOG.isDebugEnabled()) LOG.trace("Loaded management-plane memento; {} nodes, took {}",
+            nodeFiles.size(),
+            Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
         return builder.build();
     }
     
@@ -189,15 +193,15 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     }
 
     private void persistMaster(String nodeId) {
-        masterWriter.writeAsync(nodeId);
+        masterWriter.put(nodeId);
         try {
-            masterWriter.waitForWriteCompleted(SYNC_WRITE_TIMEOUT);
+            masterWriter.waitForCurrentWrites(SYNC_WRITE_TIMEOUT);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
         changeLogWriter.append(Time.makeDateString() + ": set master to " + nodeId + "\n");
         try {
-            changeLogWriter.waitForWriteCompleted(SYNC_WRITE_TIMEOUT);
+            changeLogWriter.waitForCurrentWrites(SYNC_WRITE_TIMEOUT);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
@@ -206,18 +210,18 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     @Override
     @VisibleForTesting
     public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
-        for (StoreObjectAccessor writer : nodeWriters.values()) {
-            writer.waitForWriteCompleted(timeout);
+        for (StoreObjectAccessorWithLock writer : nodeWriters.values()) {
+            writer.waitForCurrentWrites(timeout);
         }
-        masterWriter.waitForWriteCompleted(timeout);
+        masterWriter.waitForCurrentWrites(timeout);
     }
 
     private void persist(ManagementNodeSyncRecord node) {
-        StoreObjectAccessor writer = getOrCreateNodeWriter(node.getNodeId());
+        StoreObjectAccessorWithLock writer = getOrCreateNodeWriter(node.getNodeId());
         boolean fileExists = writer.exists();
-        writer.writeAsync(serializer.toString(node));
+        writer.put(serializer.toString(node));
         try {
-            writer.waitForWriteCompleted(SYNC_WRITE_TIMEOUT);
+            writer.waitForCurrentWrites(SYNC_WRITE_TIMEOUT);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
@@ -230,14 +234,15 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     }
     
     private void deleteNode(String nodeId) {
-        getOrCreateNodeWriter(nodeId).deleteAsync();
+        getOrCreateNodeWriter(nodeId).delete();
         changeLogWriter.append(Time.makeDateString()+": deleted node "+nodeId+"\n");
     }
 
-    private StoreObjectAccessor getOrCreateNodeWriter(String nodeId) {
-        PersistenceObjectStore.StoreObjectAccessor writer = nodeWriters.get(nodeId);
+    private StoreObjectAccessorWithLock getOrCreateNodeWriter(String nodeId) {
+        PersistenceObjectStore.StoreObjectAccessorWithLock writer = nodeWriters.get(nodeId);
         if (writer == null) {
-            nodeWriters.putIfAbsent(nodeId, objectStore.newAccessor(NODES_SUB_PATH+"/"+nodeId));
+            nodeWriters.putIfAbsent(nodeId, 
+                new StoreObjectAccessorLocking(objectStore.newAccessor(NODES_SUB_PATH+"/"+nodeId)));
             writer = nodeWriters.get(nodeId);
         }
         return writer;

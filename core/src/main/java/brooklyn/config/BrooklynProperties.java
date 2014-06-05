@@ -331,6 +331,10 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         return super.put(key.getName(), value);
     }
     
+    public <T> boolean putIfAbsent(ConfigKey<T> key, T value) {
+        return putIfAbsent(key.getName(), value);
+    }
+    
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
         return getConfig(key, null);
@@ -393,5 +397,5 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     public Map<String, Object> asMapWithStringKeys() {
         return this;
     }
-    
+
 }

@@ -92,7 +92,7 @@ public abstract class BrooklynMementoPersisterTestFixture {
     }
     
     @Test
-    public void testCheckPointAndLoadMementoUsingFileBasedObjectStore() throws IOException, TimeoutException, InterruptedException {
+    public void testCheckPointAndLoadMemento() throws IOException, TimeoutException, InterruptedException {
         BrooklynMemento reloadedMemento = loadMemento();
         
         assertNotNull(reloadedMemento);
@@ -103,8 +103,8 @@ public abstract class BrooklynMementoPersisterTestFixture {
 //        assertEquals(Iterables.getOnlyElement(reloadedMemento.getEnricherIds()), enricher.getId());
     }
 
-    @Test(dependsOnMethods = "testCheckPointAndLoadMementoUsingFileBasedObjectStore")
-    public void testDeltaAndLoadMementoUsingFileBasedObjectStore() throws TimeoutException, InterruptedException, IOException {
+    @Test
+    public void testDeleteAndLoadMemento() throws TimeoutException, InterruptedException, IOException {
         Entities.destroy(entity);
 
         BrooklynMemento reloadedMemento = loadMemento();

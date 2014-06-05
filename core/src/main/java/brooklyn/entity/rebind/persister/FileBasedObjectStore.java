@@ -18,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
@@ -50,7 +51,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     public FileBasedObjectStore(File basedir) {
         this.basedir = basedir;
         this.executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
-        log.info("File-based objectStore will use directory {}", basedir);
+        log.debug("File-based objectStore will use directory {}", basedir);
         // don't check accessible yet, we do that when we prepare
     }
 
@@ -74,7 +75,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     public StoreObjectAccessor newAccessor(String path) {
         String tmpExt = ".tmp";
         if (mgmt!=null && mgmt.getManagementNodeId()!=null) tmpExt = "."+mgmt.getManagementNodeId()+tmpExt;
-        return new FileBasedStoreObjectAccessor(new File(Os.mergePaths(getBaseDir().getAbsolutePath(), path)), executor, tmpExt);
+        return new FileBasedStoreObjectAccessor(new File(Os.mergePaths(getBaseDir().getAbsolutePath(), path)), tmpExt);
     }
 
     @Override
@@ -98,10 +99,6 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     }
 
     @Override
-    public void backupContents(String parentSubPath, String backupSubPath) {
-    }
-
-    @Override
     public void close() {
         executor.shutdown();
         try {
@@ -122,68 +119,82 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
             throw new IllegalStateException("Cannot change mgmt context of "+this);
         this.mgmt = mgmt;
 
-        if (persistMode!=null) {
-            File dir = getBaseDir();
-            try {
-                String persistencePath = dir.getAbsolutePath();
+        if (persistMode==null || persistMode==PersistMode.DISABLED)
+            // is this check needed? shouldn't come here now without persistence on.
+            return;
+        
+        Boolean backups = mgmt.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED);
+        if (backups==null) backups = true; // for file system
 
-                switch (persistMode) {
-                case CLEAN:
-                    if (dir.exists()) {
-                        checkPersistenceDirAccessible(dir);
-                        try {
-                            File old = moveDirectory(dir);
-                            log.info("Persist-clean using "+persistencePath+"; moved old directory to "+old.getAbsolutePath());
-                        } catch (IOException e) {
-                            throw new FatalConfigurationRuntimeException("Error moving old persistence directory "+dir.getAbsolutePath(), e);
-                        }
-                    } else {
-                        log.info("Persist-clean using "+persistencePath+"; no pre-existing persisted data");
-                    }
-                    break;
-                case REBIND:
+        File dir = getBaseDir();
+        try {
+            String persistencePath = dir.getAbsolutePath();
+
+            switch (persistMode) {
+            case CLEAN:
+                if (dir.exists()) {
                     checkPersistenceDirAccessible(dir);
-                    checkPersistenceDirNonEmpty(dir);
                     try {
-                        File backup = backupDirectory(dir);
-                        log.info("Persist-rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
+                        if (backups) {
+                            File old = backupDirByMoving(dir);
+                            log.info("Persistence mode CLEAN, directory "+persistencePath+" backed up to "+old.getAbsolutePath());
+                        } else {
+                            deleteCompletely();
+                            log.info("Persistence mode CLEAN, directory "+persistencePath+" deleted");
+                        }
+                    } catch (IOException e) {
+                        throw new FatalConfigurationRuntimeException("Error using existing persistence directory "+dir.getAbsolutePath(), e);
+                    }
+                } else {
+                    log.debug("Persistence mode CLEAN, directory "+persistencePath+", no previous state");
+                }
+                break;
+            case REBIND:
+                checkPersistenceDirAccessible(dir);
+                checkPersistenceDirNonEmpty(dir);
+                try {
+                    if (backups) {
+                        File backup = backupDirByCopying(dir);
+                        log.info("Persistence mode REBIND, directory "+persistencePath+" backed up to "+backup.getAbsolutePath());
+                    }
+                } catch (IOException e) {
+                    throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
+                }
+                break;
+            case AUTO:
+                if (dir.exists()) {
+                    checkPersistenceDirAccessible(dir);
+                }
+                if (dir.exists() && !isMementoDirExistButEmpty(dir)) {
+                    try {
+                        if (backups) {
+                            File backup = backupDirByCopying(dir);
+                            log.info("Persistence mode REBIND, directory "+persistencePath+" backed up to "+backup.getAbsolutePath());
+                        }
                     } catch (IOException e) {
                         throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
                     }
-                    break;
-                case AUTO:
-                    if (dir.exists()) {
-                        checkPersistenceDirAccessible(dir);
-                    }
-                    if (dir.exists() && !isMementoDirExistButEmpty(dir)) {
-                        try {
-                            File backup = backupDirectory(dir);
-                            log.info("Persist-auto will rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
-                        } catch (IOException e) {
-                            throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
-                        }
-                    } else {
-                        log.info("Persist-auto using fresh "+persistencePath+"; no pre-existing persisted data");
-                    }
-                    break;
-                default:
-                    throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
-                };
-
-                if (!dir.exists()) {
-                    boolean success = dir.mkdirs();
-                    if (!success) {
-                        throw new FatalConfigurationRuntimeException("Failed to create persistence directory "+dir);
-                    }
+                } else {
+                    log.debug("Persistence mode AUTO, directory "+persistencePath+", no previous state");
                 }
+                break;
+            default:
+                throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
+            };
 
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
+            if (!dir.exists()) {
+                boolean success = dir.mkdirs();
+                if (!success) {
+                    throw new FatalConfigurationRuntimeException("Failed to create persistence directory "+dir);
+                }
             }
+
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
 
-    static void checkPersistenceDirAccessible(File dir) {
+    protected void checkPersistenceDirAccessible(File dir) {
         if (!(dir.exists() && dir.isDirectory() && dir.canRead() && dir.canWrite())) {
             throw new FatalConfigurationRuntimeException("Invalid persistence directory " + dir + ": " +
                     (!dir.exists() ? "does not exist" :
@@ -191,7 +202,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
                                     (!dir.canRead() ? "not readable" :
                                             (!dir.canWrite() ? "not writable" : "unknown reason")))));
         } else {
-            log.info("Directory {} has been created.", dir);
+            log.debug("Created dir {} for {}", dir, this);
         }
     }
 
@@ -203,34 +214,62 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         }
     }
 
-    static File backupDirectory(File dir) throws IOException, InterruptedException {
+    protected File backupDirByCopying(File dir) throws IOException, InterruptedException {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
         String timestamp = new SimpleDateFormat("yyyy-MM-dd-hhmm-ss").format(new Date());
         File backupDir = new File(parentDir, simpleName+"-"+timestamp+".bak");
         
-        String cmd = "cp -R "+dir.getAbsolutePath()+" "+backupDir.getAbsolutePath();
-        Process proc = Runtime.getRuntime().exec(cmd);
-        proc.waitFor();
-        if (proc.exitValue() != 0) {
-            throw new IOException("Error backing up directory, with command `"+cmd+"` (exit value "+proc.exitValue()+")");
-        }
+        copyDir(dir, backupDir);
         return backupDir;
     }
 
-    static File moveDirectory(File dir) throws InterruptedException, IOException {
+    protected File backupDirByMoving(File dir) throws InterruptedException, IOException {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
         String timestamp = new SimpleDateFormat("yyyy-MM-dd-hhmm-ss").format(new Date());
         File newDir = new File(parentDir, simpleName+"-"+timestamp+".old");
-        
-        String cmd = "mv  "+dir.getAbsolutePath()+" "+newDir.getAbsolutePath();
-        Process proc = Runtime.getRuntime().exec(cmd);
-        proc.waitFor();
-        if (proc.exitValue() != 0) {
-            throw new IOException("Error moving directory, with command "+cmd);
-        }
+
+        moveDir(dir, newDir);
         return newDir;
+    }
+
+    /** 
+     * Attempts an fs level atomic move then fall back to pure java rename.
+     * Assumes files are on same mount point.
+     * <p>
+     * TODO Java 7 gives an atomic Files.move() which would be preferred.
+     */
+    static void moveFile(File srcFile, File destFile) throws IOException, InterruptedException {
+        if (!Os.isMicrosoftWindows()) {
+            String cmd = "mv '"+srcFile.getAbsolutePath()+"' '"+destFile.getAbsolutePath()+"'";
+            Process proc = Runtime.getRuntime().exec(cmd);
+            proc.waitFor();
+            if (proc.exitValue() == 0) return;
+        }
+        
+        destFile.delete();
+        srcFile.renameTo(destFile);
+    }
+    static void moveDir(File srcDir, File destDir) throws IOException, InterruptedException {
+        if (!Os.isMicrosoftWindows()) {
+            String cmd = "mv '"+srcDir.getAbsolutePath()+"' '"+destDir.getAbsolutePath()+"'";
+            Process proc = Runtime.getRuntime().exec(cmd);
+            proc.waitFor();
+            if (proc.exitValue() == 0) return;
+        }
+        
+        FileUtils.moveDirectory(srcDir, destDir);
+    }
+    static void copyDir(File srcDir, File destDir) throws IOException, InterruptedException {
+        if (!Os.isMicrosoftWindows()) {
+            String cmd = "cp -R '"+srcDir.getAbsolutePath()+"' '"+destDir.getAbsolutePath()+"'";
+            Process proc = Runtime.getRuntime().exec(cmd);
+            proc.waitFor();
+            if (proc.exitValue() == 0) return;
+        }
+        
+        FileUtils.copyDirectory(srcDir, destDir);
     }
 
     /**

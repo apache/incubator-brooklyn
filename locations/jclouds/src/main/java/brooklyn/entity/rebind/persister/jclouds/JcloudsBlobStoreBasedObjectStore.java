@@ -13,12 +13,14 @@ import org.jclouds.blobstore.options.ListContainerOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -30,7 +32,6 @@ import com.google.common.collect.FluentIterable;
  */
 public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore {
 
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(JcloudsBlobStoreBasedObjectStore.class);
 
     private final String containerName;
@@ -90,7 +91,9 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     @Override
     public void createSubPath(String subPath) {
         checkPrepared();
-        context.getBlobStore().createDirectory(getContainerName(), subPath);
+        // not needed, and buggy on softlayer w swift w jclouds 1.7.2:
+        // throws a "not found" if we're creating an empty directory from scratch
+//        context.getBlobStore().createDirectory(getContainerName(), subPath);
     }
 
     protected void checkPrepared() {
@@ -133,11 +136,6 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     }
 
     @Override
-    public void backupContents(String parentSubPath, String backupSubPath) {
-        // TODO for now assume object store deals with backups
-    }
-
-    @Override
     public void close() {
         if (context!=null)
             context.close();
@@ -156,10 +154,33 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
         if (this.mgmt!=null && !this.mgmt.equals(mgmt))
             throw new IllegalStateException("Cannot change mgmt context of "+this);
         this.mgmt = mgmt;
-        
-        // TODO to prepare for persistMode, see backupContents, and how FileBasedObjectStore does it.
-        
+
         getBlobStoreContext();
+        
+        if (persistMode==null || persistMode==PersistMode.DISABLED) {
+            log.warn("Should not be using "+this+" when persistMode is "+persistMode);
+            return;
+        }
+        
+        Boolean backups = mgmt.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED);
+        if (backups==null) backups = false;
+        if (backups) {
+            throw new FatalConfigurationRuntimeException("Backups not supported for object store ("+this+")");
+        }
+        
+        switch (persistMode) {
+        case CLEAN:
+            deleteCompletely();
+            break;
+        case REBIND:
+            // no op - could confirm it exists (?)
+            break;
+        case AUTO:
+            // again, no op
+            break;
+        default:
+            throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
+        }
     }
 
     @Override

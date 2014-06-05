@@ -13,7 +13,7 @@ import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nullable;
 
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import brooklyn.util.os.Os;
@@ -40,7 +40,7 @@ public class ArchiveBuilderTest {
                 }
             };
 
-    @BeforeTest
+    @BeforeClass
     public void createTmpDirAndFiles() throws IOException {
         parentDir = new File(Os.tmp(), Identifiers.makeRandomId(4));
         Os.deleteOnExitRecursively(parentDir);
@@ -50,7 +50,7 @@ public class ArchiveBuilderTest {
         Files.write("123456", new File(tmpDir, "data02.txt"), Charsets.US_ASCII);
         Files.write("qqqqqq", new File(tmpDir, "data03.txt"), Charsets.US_ASCII);
     }
-
+    
     @Test
     public void testCreateZipFromDir() throws Exception {
         File archive = ArchiveBuilder.zip().addDir(tmpDir).create();

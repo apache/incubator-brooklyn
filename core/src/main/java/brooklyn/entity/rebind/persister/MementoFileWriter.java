@@ -127,7 +127,7 @@ public class MementoFileWriter<T> {
         }
     }
 
-    public void deleteAsync() {
+    private void deleteAsync() {
         ListenableFuture<Void> future = executor.submit(new Callable<Void>() {
             @Override public Void call() throws IOException {
                 try {
@@ -146,7 +146,7 @@ public class MementoFileWriter<T> {
         addPostExecListener(future);
     }
 
-    public void writeAsync() {
+    private void writeAsync() {
         ListenableFuture<Void> future = executor.submit(new Callable<Void>() {
             @Override public Void call() throws IOException {
                 try {

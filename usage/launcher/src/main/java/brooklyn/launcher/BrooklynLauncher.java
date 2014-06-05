@@ -9,7 +9,6 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -17,6 +16,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +59,8 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -110,7 +111,7 @@ public class BrooklynLauncher {
     private boolean shutdownOnExit = true;
     private PersistMode persistMode = PersistMode.DISABLED;
     private HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
-    private File persistenceDir;
+    private String persistenceDir;
     private String persistenceLocation;
     private Duration persistPeriod = Duration.ONE_SECOND;
     private Duration haHeartbeatTimeout = Duration.THIRTY_SECONDS;
@@ -212,8 +213,8 @@ public class BrooklynLauncher {
         return this;
     }
 
-    public BrooklynLauncher persistenceLocation(String persistenceLocationSpec) {
-        persistenceLocation = checkNotNull(persistenceLocationSpec, "persistenceLocationSpec");
+    public BrooklynLauncher persistenceLocation(@Nullable String persistenceLocationSpec) {
+        persistenceLocation = persistenceLocationSpec;
         return this;
     }
 
@@ -341,14 +342,14 @@ public class BrooklynLauncher {
         return this;
     }
     
-    public BrooklynLauncher persistenceDir(String persistenceDir) {
-        if (persistenceDir==null) return persistenceDir((File)null);
-        return persistenceDir(new File(persistenceDir));
-    }
-
-    public BrooklynLauncher persistenceDir(File persistenceDir) {
+    public BrooklynLauncher persistenceDir(@Nullable String persistenceDir) {
         this.persistenceDir = persistenceDir;
         return this;
+    }
+
+    public BrooklynLauncher persistenceDir(@Nullable File persistenceDir) {
+        if (persistenceDir==null) return persistenceDir((String)null);
+        return persistenceDir(persistenceDir.getAbsolutePath());
     }
 
     public BrooklynLauncher persistPeriod(Duration persistPeriod) {
@@ -407,12 +408,13 @@ public class BrooklynLauncher {
                 .getCampPlatform();
         // TODO start CAMP rest _server_ in the below (at /camp) ?
         
+        initPersistence();
+        
         // Start the web-console
         if (startWebApps) {
             startWebApps();
         }
         
-        initPersistence();
         createApps();
         startApps();
         
@@ -455,20 +457,27 @@ public class BrooklynLauncher {
         if (persistMode == PersistMode.DISABLED) {
             LOG.info("Persistence disabled");
         } else {
-            if (persistenceDir == null) {
-                persistenceDir = new File( BrooklynServerConfig.getPersistenceDir(brooklynProperties) );
-            }
-
             if (persistenceLocation == null) {
-                objectStore = new FileBasedObjectStore(persistenceDir);
-            } else {
-                String persistenceContainer;
-                if (persistenceDir.getAbsolutePath().endsWith(Os.mergePaths("brooklyn-persisted-state", "data")))
-                    persistenceContainer = "brooklyn-persisted-state";
-                else persistenceContainer = persistenceDir.getName();
-                objectStore = new JcloudsBlobStoreBasedObjectStore(persistenceLocation, persistenceContainer);
+                persistenceLocation = brooklynProperties.getConfig(BrooklynServerConfig.PERSISTENCE_LOCATION_SPEC);
             }
-            objectStore.prepareForUse(managementContext, persistMode);
+            
+            persistenceDir = BrooklynServerConfig.resolvePersistencePath(persistenceDir, brooklynProperties, persistenceLocation);
+
+            if (Strings.isBlank(persistenceLocation)) {
+                objectStore = new FileBasedObjectStore(new File(persistenceDir));
+            } else {
+                objectStore = new JcloudsBlobStoreBasedObjectStore(persistenceLocation, persistenceDir);
+            }
+            try {
+                objectStore.prepareForUse(managementContext, persistMode);
+            } catch (FatalConfigurationRuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                LOG.debug("Error initializing persistence subsystem (rethrowing): "+e, e);
+                throw new FatalConfigurationRuntimeException("Error initializing persistence subsystem: "+
+                    Exceptions.collapseText(e), e);
+            }
 
             RebindManager rebindManager = managementContext.getRebindManager();
 
@@ -510,10 +519,10 @@ public class BrooklynLauncher {
                         rebinding = true;
                         break;
                     case AUTO:
-                        if (persistenceLocation!=null) {
+                        if (Strings.isNonBlank(persistenceLocation)) {
                             rebinding = true;
-                        } else if (persistenceDir!=null && persistenceDir.exists()) {
-                            String[] files = persistenceDir.list();
+                        } else if (persistenceDir!=null && new File(persistenceDir).exists()) {
+                            String[] files = new File(persistenceDir).list();
                             if (files==null)
                                 throw new FatalConfigurationRuntimeException("Persistence dir "+persistenceDir+" is not a directory.");
                             rebinding = (files.length > 0);
@@ -527,16 +536,22 @@ public class BrooklynLauncher {
                 
                 RebindManager rebindManager = managementContext.getRebindManager();
                 if (rebinding) {
-                    LOG.info("Management node (no high availability) rebinding to entities using "+persistenceDir.getAbsolutePath());
+                    if (Strings.isNonBlank(persistenceLocation))
+                        LOG.info("Management node (no HA) rebinding to entities at "+persistenceLocation+" in "+persistenceDir);
+                    else
+                        LOG.info("Management node (no HA) rebinding to entities on file system in "+persistenceDir);
 
                     ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
                     try {
                         rebindManager.rebind(classLoader);
-                    } catch (IOException e) {
-                        throw Exceptions.propagate(e);
+                    } catch (Exception e) {
+                        Exceptions.propagateIfFatal(e);
+                        LOG.debug("Error rebinding to persisted state (rethrowing): "+e, e);
+                        throw new FatalConfigurationRuntimeException("Error rebinding to persisted state: "+
+                            Exceptions.collapseText(e), e);
                     }
                 } else {
-                    LOG.info("Management node (no high availability) starting, no existing entities to rebind in "+persistenceDir.getAbsolutePath());
+                    LOG.debug("Management node (no HA) skipping rebind, no existing entities in "+persistenceDir);
                 }
                 rebindManager.start();
             }
@@ -557,7 +572,7 @@ public class BrooklynLauncher {
                     throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
             }
             
-            LOG.info("Management node (with high availability) starting");
+            LOG.debug("Management node (with HA) starting");
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
             haManager.start(startMode);
         }

@@ -331,10 +331,8 @@ public class Main {
                 launchApp(launcher, utils, loader);
     
                 launcher.persistMode(persistMode);
-                if (persistMode != PersistMode.DISABLED && Strings.isNonBlank(persistenceDir)) {
-                    launcher.persistenceDir(persistenceDir);
-                    launcher.persistenceLocation(persistenceLocation);
-                }
+                launcher.persistenceDir(persistenceDir);
+                launcher.persistenceLocation(persistenceLocation);
                 
                 launcher.highAvailabilityMode(highAvailabilityMode);
 
@@ -664,7 +662,7 @@ public class Main {
             System.err.println(getUsageInfo(parser)); // display cli help
             System.exit(PARSE_ERROR);
         } catch (FatalConfigurationRuntimeException e) {
-            log.error("Configuration error: " + e.getMessage(), e);
+            log.error(e.getMessage(), e.getCause());
             System.err.println("Configuration error: " + e.getMessage());
             System.exit(CONFIGURATION_ERROR);
         } catch (Exception e) { // unexpected error during command execution

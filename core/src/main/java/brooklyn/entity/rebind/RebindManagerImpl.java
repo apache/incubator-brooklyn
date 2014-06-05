@@ -45,6 +45,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -203,7 +204,7 @@ public class RebindManagerImpl implements RebindManager {
             BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
             
             // Instantiate locations
-            LOG.info("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
+            LOG.debug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
             for (Map.Entry<String, String> entry : mementoManifest.getLocationIdToType().entrySet()) {
                 String locId = entry.getKey();
                 String locType = entry.getValue();
@@ -219,7 +220,7 @@ public class RebindManagerImpl implements RebindManager {
             }
             
             // Instantiate entities
-            LOG.info("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToType().keySet());
+            LOG.debug("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToType().keySet());
             for (Map.Entry<String, String> entry : mementoManifest.getEntityIdToType().entrySet()) {
                 String entityId = entry.getKey();
                 String entityType = entry.getValue();
@@ -238,7 +239,7 @@ public class RebindManagerImpl implements RebindManager {
             
             // Instantiate policies
             if (persistPoliciesEnabled) {
-                LOG.info("RebindManager instantiating policies: {}", memento.getPolicyIds());
+                LOG.debug("RebindManager instantiating policies: {}", memento.getPolicyIds());
                 for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
                     
@@ -256,7 +257,7 @@ public class RebindManagerImpl implements RebindManager {
             
             // Instantiate enrichers
             if (persistEnrichersEnabled) {
-                LOG.info("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
+                LOG.debug("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
                 for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating enricher {}", enricherMemento);
                     
@@ -269,7 +270,7 @@ public class RebindManagerImpl implements RebindManager {
             } 
             
             // Reconstruct locations
-            LOG.info("RebindManager reconstructing locations");
+            LOG.debug("RebindManager reconstructing locations");
             for (LocationMemento locMemento : sortParentFirst(memento.getLocationMementos()).values()) {
                 Location location = rebindContext.getLocation(locMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
@@ -287,7 +288,7 @@ public class RebindManagerImpl implements RebindManager {
 
             // Reconstruct policies
             if (persistPoliciesEnabled) {
-                LOG.info("RebindManager reconstructing policies");
+                LOG.debug("RebindManager reconstructing policies");
                 for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
                     Policy policy = rebindContext.getPolicy(policyMemento.getId());
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
@@ -307,7 +308,7 @@ public class RebindManagerImpl implements RebindManager {
 
             // Reconstruct enrichers
             if (persistEnrichersEnabled) {
-                LOG.info("RebindManager reconstructing enrichers");
+                LOG.debug("RebindManager reconstructing enrichers");
                 for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
                     Enricher enricher = rebindContext.getEnricher(enricherMemento.getId());
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing enricher {}", enricherMemento);
@@ -317,7 +318,7 @@ public class RebindManagerImpl implements RebindManager {
             }
     
             // Reconstruct entities
-            LOG.info("RebindManager reconstructing entities");
+            LOG.debug("RebindManager reconstructing entities");
             for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
@@ -335,7 +336,7 @@ public class RebindManagerImpl implements RebindManager {
                 }
             }
             
-            LOG.info("RebindManager managing locations");
+            LOG.debug("RebindManager managing locations");
             for (Location location: locations.values()) {
                 if (location.getParent()==null) {
                     // manage all root locations
@@ -349,7 +350,7 @@ public class RebindManagerImpl implements RebindManager {
             }
             
             // Manage the top-level apps (causing everything under them to become managed)
-            LOG.info("RebindManager managing entities");
+            LOG.debug("RebindManager managing entities");
             List<Application> apps = Lists.newArrayList();
             for (String appId : memento.getApplicationIds()) {
                 Entity entity = rebindContext.getEntity(appId);
@@ -368,8 +369,15 @@ public class RebindManagerImpl implements RebindManager {
             
             exceptionHandler.onDone();
 
+            LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}", new Object[]{
+                apps.size(), Strings.s(apps),
+                entities.size(), Strings.ies(entities),
+                locations.size(), Strings.s(locations),
+                policies.size(), Strings.ies(policies),
+                enrichers.size(), Strings.s(enrichers) });
+
             // Return the top-level applications
-            LOG.info("RebindManager complete; return apps: {}", memento.getApplicationIds());
+            LOG.debug("RebindManager complete; return apps: {}", memento.getApplicationIds());
             return apps;
             
         } catch (RuntimeException e) {

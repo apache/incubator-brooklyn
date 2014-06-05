@@ -2,11 +2,13 @@ package brooklyn.launcher;
 
 import static org.testng.Assert.assertEquals;
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import brooklyn.entity.rebind.persister.jclouds.BlobStoreTest;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -14,13 +16,15 @@ import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Identifiers;
 
 @Test(groups="Integration")
-// Jun 2014: Alex has confirmed setting Integration here means that inherited methods are NOT run as part of normal build
 public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLauncherRebindTestFixture {
 
-    public static final String LOCATION_SPEC = "named:softlayer-objectstore-amsterdam-1";
-    
-    { persistenceLocationSpec = LOCATION_SPEC; }
-    
+    { persistenceLocationSpec = BlobStoreTest.PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC; }
+
+    @BeforeMethod
+    public void setUp() throws Exception {
+        persistenceDir = newTempPersistenceContainerName();
+    }
+
     @Override
     protected BrooklynLauncher newLauncherBase() {
         return super.newLauncherBase().persistenceLocation(persistenceLocationSpec);
@@ -52,7 +56,52 @@ public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLaunch
     }
 
     protected void checkPersistenceContainerNameIsDefault() {
-        checkPersistenceContainerNameIs(BrooklynServerConfig.PERSISTENCE_PATH_SEGMENT);
+        checkPersistenceContainerNameIs(BrooklynServerConfig.DEFAULT_PERSISTENCE_CONTAINER_NAME);
     }
-    
+
+    @Override @Test(groups="Integration")
+    public void testRebindsToExistingApp() throws Exception {
+        super.testRebindsToExistingApp();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testRebindCanAddNewApps() throws Exception {
+        super.testRebindCanAddNewApps();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testAutoRebindsToExistingApp() throws Exception {
+        super.testAutoRebindsToExistingApp();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testCleanDoesNotRebindToExistingApp() throws Exception {
+        super.testCleanDoesNotRebindToExistingApp();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testAutoRebindCreatesNewIfEmptyDir() throws Exception {
+        super.testAutoRebindCreatesNewIfEmptyDir();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testRebindRespectsPersistenceDirSetInProperties() throws Exception {
+        super.testRebindRespectsPersistenceDirSetInProperties();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testRebindRespectsDefaultPersistenceDir() throws Exception {
+        super.testRebindRespectsDefaultPersistenceDir();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testPersistenceFailsIfNoDir() throws Exception {
+        super.testPersistenceFailsIfNoDir();
+    }
+
+    @Override @Test(groups="Integration")
+    public void testExplicitRebindFailsIfEmpty() throws Exception {
+        super.testExplicitRebindFailsIfEmpty();
+    }
+
 }

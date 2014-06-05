@@ -11,6 +11,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
@@ -20,7 +21,9 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
@@ -39,6 +42,7 @@ public class BrooklynLauncherHighAvailabilityTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         persistenceDir = Files.createTempDir();
+        Os.deleteOnExitRecursively(persistenceDir);
     }
 
     @AfterMethod(alwaysRun=true)
@@ -62,6 +66,7 @@ public class BrooklynLauncherHighAvailabilityTest {
     protected void doTestStandbyTakesOver(boolean stopGracefully) throws Exception {
         primary = BrooklynLauncher.newInstance()
                 .webconsole(false)
+                .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
                 .persistenceDir(persistenceDir)
@@ -78,6 +83,7 @@ public class BrooklynLauncherHighAvailabilityTest {
         // Secondary will come up as standby
         secondary = BrooklynLauncher.newInstance()
                 .webconsole(false)
+                .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
                 .persistenceDir(persistenceDir)
@@ -103,6 +109,7 @@ public class BrooklynLauncherHighAvailabilityTest {
         // Start tertiary (will come up as standby)
         tertiary = BrooklynLauncher.newInstance()
                 .webconsole(false)
+                .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
                 .persistenceDir(persistenceDir)
@@ -126,10 +133,10 @@ public class BrooklynLauncherHighAvailabilityTest {
         assertOnlyAppEventually(tertiaryManagementContext, TestApplication.class);
     }
     
-    @Test
     public void testHighAvailabilityMasterModeFailsIfAlreadyHasMaster() throws Exception {
         primary = BrooklynLauncher.newInstance()
                 .webconsole(false)
+                .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
                 .persistenceDir(persistenceDir)
@@ -141,6 +148,7 @@ public class BrooklynLauncherHighAvailabilityTest {
             // Secondary will come up as standby
             secondary = BrooklynLauncher.newInstance()
                     .webconsole(false)
+                    .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                     .highAvailabilityMode(HighAvailabilityMode.MASTER)
                     .persistMode(PersistMode.AUTO)
                     .persistenceDir(persistenceDir)
@@ -157,6 +165,7 @@ public class BrooklynLauncherHighAvailabilityTest {
         try {
             primary = BrooklynLauncher.newInstance()
                     .webconsole(false)
+                    .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                     .highAvailabilityMode(HighAvailabilityMode.STANDBY)
                     .persistMode(PersistMode.AUTO)
                     .persistenceDir(persistenceDir)

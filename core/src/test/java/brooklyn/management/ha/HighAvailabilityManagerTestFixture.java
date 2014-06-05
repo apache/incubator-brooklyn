@@ -29,6 +29,7 @@ import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
+@Test
 public abstract class HighAvailabilityManagerTestFixture {
 
     @SuppressWarnings("unused")
@@ -79,13 +80,12 @@ public abstract class HighAvailabilityManagerTestFixture {
     public void tearDown() throws Exception {
         if (manager != null) manager.stop();
         if (managementContext != null) Entities.destroyAll(managementContext);
-        if (objectStore!=null) objectStore.deleteCompletely();
+        if (objectStore != null) objectStore.deleteCompletely();
     }
     
     // Can get a log.error about our management node's heartbeat being out of date. Caused by
     // poller first writing a heartbeat record, and then the clock being incremented. But the
     // next poll fixes it.
-    @Test
     public void testPromotes() throws Exception {
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
                 .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY, tickerCurrentMillis()))
@@ -122,7 +122,6 @@ public abstract class HighAvailabilityManagerTestFixture {
             }});
     }
 
-    @Test
     public void testGetManagementPlaneStatus() throws Exception {
         // with the name zzzzz the mgr created here should never be promoted by the alphabetical strategy!
         

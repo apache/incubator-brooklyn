@@ -19,6 +19,7 @@ import brooklyn.entity.rebind.Dumpers.Pointer;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
@@ -148,7 +149,7 @@ public class RebindTestUtils {
                 unstarted = new LocalManagementContextForTests();
             }
             
-            objectStore.prepareForUse(unstarted, null);
+            objectStore.prepareForUse(unstarted, PersistMode.AUTO);
             BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
             ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
             unstarted.getRebindManager().setPersister(newPersister);

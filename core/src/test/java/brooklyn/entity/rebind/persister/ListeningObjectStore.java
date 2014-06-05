@@ -125,12 +125,6 @@ public class ListeningObjectStore implements PersistenceObjectStore {
         return result;
     }
 
-    public void backupContents(String sourceSubPath, String targetSubPathForBackups) {
-        listener.recordQueryOut("backing up "+sourceSubPath+" to "+targetSubPathForBackups, 
-            1+sourceSubPath.length()+targetSubPathForBackups.length());
-        delegate.backupContents(sourceSubPath, targetSubPathForBackups);
-    }
-
     public void close() {
         delegate.close();
     }
@@ -156,30 +150,24 @@ public class ListeningObjectStore implements PersistenceObjectStore {
         public boolean exists() {
             return delegate.exists();
         }
-        public void writeAsync(String val) {
+        public void put(String val) {
             listener.recordDataOut("writing "+path, val.length());
-            delegate.writeAsync(val);
+            delegate.put(val);
         }
         public void append(String s) {
             listener.recordDataOut("appending "+path, s.length());
             delegate.append(s);
         }
-        public void deleteAsync() {
+        public void delete() {
             listener.recordQueryOut("deleting "+path, path.length());
-            delegate.deleteAsync();
+            delegate.delete();
         }
-        public String read() {
+        public String get() {
             listener.recordQueryOut("requesting "+path, path.length());
-            String result = delegate.read();
+            String result = delegate.get();
             listener.recordDataIn("reading "+path, result.length());
             return result;
         }
-        public void waitForWriteCompleted(Duration timeout) throws InterruptedException, TimeoutException {
-            delegate.waitForWriteCompleted(timeout);
-        }
-        
-        
-        
     }
 
 }

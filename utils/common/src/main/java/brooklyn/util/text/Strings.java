@@ -666,22 +666,47 @@ public class Strings {
         return count==1 ? "" : "s";
     }
     /** as {@link #s(int)} based on size of argument */
-    public static String s(@Nullable Map<?,?> map) {
-        if (map==null) return "s";
-        return s(map.size());
+    public static String s(@Nullable Map<?,?> x) {
+        return s(x==null ? 0 : x.size());
     }
     /** as {@link #s(int)} based on size of argument */
-    public static String s(Iterable<?> iter) {
-        if (iter==null) return "s";
-        return s(iter.iterator());
+    public static String s(Iterable<?> x) {
+        if (x==null) return s(0);
+        return s(x.iterator());
     }
     /** as {@link #s(int)} based on size of argument */
-    public static String s(Iterator<?> iter) {
-        if (iter==null) return "s";
-        if (!iter.hasNext()) return "s";
-        iter.next();
-        if (!iter.hasNext()) return "";
-        return "s";
+    public static String s(Iterator<?> x) {
+        int count = 0;
+        if (x==null || !x.hasNext()) {}
+        else { 
+            x.next(); count++;
+            if (x.hasNext()) count++;
+        }
+        return s(count);
+    }
+
+    /** returns "ies" if the argument is not 1, "y" otherwise; useful when constructing plurals */
+    public static String ies(int count) {
+        return count==1 ? "y" : "ies";
+    }
+    /** as {@link #ies(int)} based on size of argument */
+    public static String ies(@Nullable Map<?,?> x) {
+        return ies(x==null ? 0 : x.size());
+    }
+    /** as {@link #ies(int)} based on size of argument */
+    public static String ies(Iterable<?> x) {
+        if (x==null) return ies(0);
+        return ies(x.iterator());
+    }
+    /** as {@link #ies(int)} based on size of argument */
+    public static String ies(Iterator<?> x) {
+        int count = 0;
+        if (x==null || !x.hasNext()) {}
+        else { 
+            x.next(); count++;
+            if (x.hasNext()) count++;
+        }
+        return ies(count);
     }
 
     /** converts a map of any objects to a map of strings, preserving nulls and invoking toString where needed */

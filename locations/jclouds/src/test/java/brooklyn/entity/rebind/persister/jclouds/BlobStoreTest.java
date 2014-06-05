@@ -11,8 +11,8 @@ import org.jclouds.blobstore.domain.PageSet;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.blobstore.options.ListContainerOptions;
 import org.junit.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
@@ -30,7 +30,17 @@ import com.google.common.base.Preconditions;
 @Test(groups="Integration")
 public class BlobStoreTest {
 
-    public static final String PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC = "named:softlayer-objectstore-amsterdam-1";
+    /**
+     * Integration tests as written require a location defined as follows:
+     * 
+     * <code>
+     * brooklyn.location.named.brooklyn-jclouds-objstore-test-1==jclouds:swift:https://ams01.objectstorage.softlayer.net/auth/v1.0
+     * brooklyn.location.named.brooklyn-jclouds-objstore-test-1.identity=IBMOS1234-5:yourname
+     * brooklyn.location.named.brooklyn-jclouds-objstore-test-1.credential=0123abcd.......
+     * </code>
+     */
+    public static final String PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC = "named:brooklyn-jclouds-objstore-test-1";
+    
     public static final String CONTAINER_PREFIX = "brooklyn-persistence-test";
     
     private String locationSpec = PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC;
@@ -62,14 +72,14 @@ public class BlobStoreTest {
         return context;
     }
     
-    @BeforeTest(alwaysRun=true)
+    @BeforeMethod(alwaysRun=true)
     public void setup() {
         testContainerName = CONTAINER_PREFIX+"-"+Identifiers.makeRandomId(8);
         mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
         getBlobStoreContext();
     }
     
-    @AfterTest(alwaysRun=true)
+    @AfterMethod(alwaysRun=true)
     public void teardown() {
         Entities.destroyAll(mgmt);
     }
