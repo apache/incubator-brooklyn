@@ -3,6 +3,8 @@ package brooklyn.management.internal;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.event.AttributeSensor;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
 
 public interface EntityChangeListener {
 
@@ -13,8 +15,10 @@ public interface EntityChangeListener {
         @Override public void onLocationsChanged() {}
         @Override public void onMembersChanged() {}
         @Override public void onChildrenChanged() {}
-        @Override public void onPoliciesChanged() {}
-        @Override public void onEnrichersChanged() {}
+        @Override public void onPolicyAdded(Policy policy) {}
+        @Override public void onPolicyRemoved(Policy policy) {}
+        @Override public void onEnricherAdded(Enricher enricher) {}
+        @Override public void onEnricherRemoved(Enricher enricher) {}
         @Override public void onEffectorStarting(Effector<?> effector) {}
         @Override public void onEffectorCompleted(Effector<?> effector) {}
     };
@@ -31,11 +35,13 @@ public interface EntityChangeListener {
 
     void onChildrenChanged();
 
-    // FIXME Also want something to be notified when policy's state/config changes.
-    //       Do we want a separate PolicyChangeListener instead? Or everything through EntityChangeListener?
-    void onPoliciesChanged();
+    void onPolicyAdded(Policy policy);
 
-    void onEnrichersChanged();
+    void onPolicyRemoved(Policy policy);
+
+    void onEnricherAdded(Enricher enricher);
+
+    void onEnricherRemoved(Enricher enricher);
 
     void onEffectorStarting(Effector<?> effector);
     

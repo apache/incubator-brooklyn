@@ -20,6 +20,8 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
@@ -339,12 +341,24 @@ public class EntityManagementSupport {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
-        public void onPoliciesChanged() {
+        public void onPolicyAdded(Policy policy) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onManaged(policy);
         }
         @Override
-        public void onEnrichersChanged() {
+        public void onEnricherAdded(Enricher enricher) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onManaged(enricher);
+        }
+        @Override
+        public void onPolicyRemoved(Policy policy) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onUnmanaged(policy);
+        }
+        @Override
+        public void onEnricherRemoved(Enricher enricher) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onUnmanaged(enricher);
         }
         @Override
         public void onAttributeChanged(AttributeSensor<?> attribute) {

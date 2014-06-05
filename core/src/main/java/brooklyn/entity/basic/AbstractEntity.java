@@ -1065,7 +1065,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         policies.add((AbstractPolicy)policy);
         ((AbstractPolicy)policy).setEntity(this);
         
-        getManagementSupport().getEntityChangeListener().onPoliciesChanged();
+        getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
         emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
     }
 
@@ -1089,7 +1089,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         boolean changed = policies.remove(policy);
         
         if (changed) {
-            getManagementSupport().getEntityChangeListener().onPoliciesChanged();
+            getManagementSupport().getEntityChangeListener().onPolicyRemoved(policy);
             emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
         }
         return changed;
@@ -1102,11 +1102,6 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
             removePolicy(policy);
             changed = true;
         }
-        
-        if (changed) {
-            getManagementSupport().getEntityChangeListener().onPoliciesChanged();
-        }
-        
         return changed;
     }
     
@@ -1120,7 +1115,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         enrichers.add((AbstractEnricher) enricher);
         ((AbstractEnricher)enricher).setEntity(this);
         
-        getManagementSupport().getEntityChangeListener().onEnrichersChanged();
+        getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
         // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
     }
 
@@ -1130,7 +1125,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         boolean changed = enrichers.remove(enricher);
         
         if (changed) {
-            getManagementSupport().getEntityChangeListener().onEnrichersChanged();
+            getManagementSupport().getEntityChangeListener().onEnricherRemoved(enricher);
         }
         return changed;
 

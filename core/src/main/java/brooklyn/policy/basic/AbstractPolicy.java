@@ -78,7 +78,10 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
 
     @Override
     protected void onChanged() {
-        getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+        // TODO Could add PolicyChangeListener, similar to EntityChangeListener; should we do that?
+        if (getManagementContext() != null) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+        }
     }
     
     @Override

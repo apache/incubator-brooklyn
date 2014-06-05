@@ -113,6 +113,23 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     }
 
     @Test
+    public void testExpungesOnPolicyRemoved() throws Exception {
+        TestEntity entity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
+        MyPolicy policy = entity.addPolicy(PolicySpec.create(MyPolicy.class));
+        MyEnricher enricher = entity.addEnricher(EnricherSpec.create(MyEnricher.class));
+
+        RebindTestUtils.waitForPersisted(origApp);
+
+        entity.removePolicy(policy);
+        entity.removeEnricher(enricher);
+        RebindTestUtils.waitForPersisted(origApp);
+        
+        BrooklynMementoManifest manifest = loadMementoManifest();
+        assertFalse(manifest.getPolicyIdToType().containsKey(policy.getId()));
+        assertFalse(manifest.getEnricherIdToType().containsKey(enricher.getId()));
+    }
+
+    @Test
     public void testReboundConfigDoesNotContainId() throws Exception {
         MyPolicy policy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
         

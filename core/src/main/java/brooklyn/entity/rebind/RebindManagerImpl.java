@@ -715,6 +715,24 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         @Override
+        public void onManaged(Policy policy) {
+            try {
+                delegate.onManaged(policy);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onManaged("+policy+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onManaged(Enricher enricher) {
+            try {
+                delegate.onManaged(enricher);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onManaged("+enricher+"); continuing.", t);
+            }
+        }
+
+        @Override
         public void onChanged(Entity entity) {
             try {
                 delegate.onChanged(entity);
@@ -738,6 +756,24 @@ public class RebindManagerImpl implements RebindManager {
                 delegate.onUnmanaged(location);
             } catch (Throwable t) {
                 LOG.error("Error persisting mememento onUnmanaged("+location+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onUnmanaged(Policy policy) {
+            try {
+                delegate.onUnmanaged(policy);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onUnmanaged("+policy+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onUnmanaged(Enricher enricher) {
+            try {
+                delegate.onUnmanaged(enricher);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onUnmanaged("+enricher+"); continuing.", t);
             }
         }
 

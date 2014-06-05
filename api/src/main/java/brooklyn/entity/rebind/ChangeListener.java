@@ -22,7 +22,11 @@ public interface ChangeListener {
         @Override public void onManaged(Location location) {}
         @Override public void onUnmanaged(Location location) {}
         @Override public void onChanged(Location location) {}
+        @Override public void onManaged(Policy policy) {}
+        @Override public void onUnmanaged(Policy policy) {}
         @Override public void onChanged(Policy policy) {}
+        @Override public void onManaged(Enricher enricher) {}
+        @Override public void onUnmanaged(Enricher enricher) {}
         @Override public void onChanged(Enricher enricher) {}
     };
     
@@ -38,7 +42,15 @@ public interface ChangeListener {
 
     void onChanged(Location location);
     
+    void onManaged(Policy policy);
+
+    void onUnmanaged(Policy policy);
+
     void onChanged(Policy policy);
     
+    void onManaged(Enricher enricher);
+
+    void onUnmanaged(Enricher enricher);
+
     void onChanged(Enricher enricher);
 }
