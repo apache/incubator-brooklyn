@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +28,9 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Ticker;
+import com.google.common.collect.Iterables;
 
 /**
  * This is the guts of the high-availability solution in Brooklyn.
@@ -79,6 +83,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private static final Logger LOG = LoggerFactory.getLogger(HighAvailabilityManagerImpl.class);
 
     private final ManagementContextInternal managementContext;
+    private final Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> detectNodesGoneAwolFunction = new DetectNodesGoneAwol();
     private volatile String ownNodeId;
     private volatile ManagementPlaneSyncRecordPersister persister;
     private volatile PromotionListener promotionListener;
@@ -443,6 +448,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             try {
                 ManagementPlaneSyncRecord result = persister.loadSyncRecord();
                 
+                // Detect AWOL nodes
+                result = ManagementPlaneSyncRecordImpl.builder()
+                        .masterNodeId(result.getMasterNodeId())
+                        .nodes(Iterables.transform(result.getManagementNodes().values(), detectNodesGoneAwolFunction))
+                        .node(createManagementNodeSyncRecord())
+                        .build();
+                
                 if (replaceLocalNodeWithCurrentRecord) {
                     Builder builder = ManagementPlaneSyncRecordImpl.builder()
                         .masterNodeId(result.getMasterNodeId())
@@ -480,5 +492,18 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      */
     protected long currentTimeMillis() {
         return ticker.read();
+    }
+
+    private class DetectNodesGoneAwol implements Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> {
+        @Nullable
+        @Override
+        public ManagementNodeSyncRecord apply(@Nullable ManagementNodeSyncRecord input) {
+            if (input == null) return null;
+            if (isHeartbeatOk(input, currentTimeMillis())) return input;
+            return BasicManagementNodeSyncRecord.builder()
+                    .from(input)
+                    .status(ManagementNodeState.FAILED)
+                    .build();
+        }
     }
 }
