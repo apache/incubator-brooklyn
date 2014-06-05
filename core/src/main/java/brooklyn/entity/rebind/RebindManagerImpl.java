@@ -195,7 +195,7 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public List<Application> rebind() throws IOException {
-        return rebind(getClass().getClassLoader());
+        return rebind(managementContext.getCatalog().getRootClassLoader());
     }
     
     @Override

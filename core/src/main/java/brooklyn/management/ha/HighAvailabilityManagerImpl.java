@@ -410,7 +410,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         nodeState = ManagementNodeState.MASTER;
         publishPromotionToMaster();
         try {
-            managementContext.getRebindManager().rebind();
+            managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader());
         } catch (Exception e) {
             LOG.info("Problem during rebind when promoting node to master; demoting to failed and rethrowing): "+e);
             nodeState = ManagementNodeState.FAILED;

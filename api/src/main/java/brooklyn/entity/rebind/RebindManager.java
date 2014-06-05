@@ -35,6 +35,10 @@ public interface RebindManager {
     @VisibleForTesting
     public BrooklynMementoPersister getPersister();
 
+    /**
+     * @deprecated since 0.7; use {@link #rebind(ClassLoader)}
+     */
+    @Deprecated
     public List<Application> rebind() throws IOException;
     
     public List<Application> rebind(ClassLoader classLoader) throws IOException;
