@@ -89,7 +89,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
 
     BasicNotificationSensor<Entity> ENTITY_QUARANTINED = new BasicNotificationSensor<Entity>(Entity.class, "dynamiccluster.entityQuarantined", "Entity failed to start, and has been quarantined");
 
-    AttributeSensor<Group> QUARANTINE_GROUP = Sensors.newSensor(Group.class, "dynamiccluster.quarantineGroup", "Group of quarantined entities that failed to start");
+    AttributeSensor<QuarantineGroup> QUARANTINE_GROUP = Sensors.newSensor(QuarantineGroup.class, "dynamiccluster.quarantineGroup", "Group of quarantined entities that failed to start");
 
     @SetFromFlag("initialQuorumSize")
     ConfigKey<Integer> INITIAL_QUORUM_SIZE = ConfigKeys.newIntegerConfigKey(
