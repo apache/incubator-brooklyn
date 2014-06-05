@@ -124,6 +124,18 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     }
     
     @Test
+    public void testReconfigurePolicyPersistsChange() throws Exception {
+        MyPolicyReconfigurable policy = origApp.addPolicy(PolicySpec.create(MyPolicyReconfigurable.class)
+                .configure(MyPolicyReconfigurable.MY_CONFIG, "oldval"));
+        policy.setConfig(MyPolicyReconfigurable.MY_CONFIG, "newval");
+        
+        newApp = (TestApplication) rebind();
+        MyPolicyReconfigurable newPolicy = (MyPolicyReconfigurable) Iterables.getOnlyElement(newApp.getPolicies());
+
+        assertEquals(newPolicy.getConfig(MyPolicyReconfigurable.MY_CONFIG), "newval");
+    }
+
+    @Test
     public void testIsRebinding() throws Exception {
         origApp.addPolicy(PolicySpec.create(PolicyChecksIsRebinding.class));
 
@@ -182,9 +194,9 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
             initCalled = true;
         }
         
-        // TODO When AbstractPolicy declares rebind; @Override
+        @Override
         public void rebind() {
-            // TODO super.rebind();
+            super.rebind();
             rebindCalled = true;
         }
     }
@@ -192,6 +204,23 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     public static class MyPolicyWithoutNoArgConstructor extends MyPolicy {
         public MyPolicyWithoutNoArgConstructor(Map<?,?> flags) {
             super(flags);
+        }
+    }
+    
+    public static class MyPolicyReconfigurable extends AbstractPolicy {
+        public static final ConfigKey<String> MY_CONFIG = ConfigKeys.newStringConfigKey("myconfig");
+        
+        public MyPolicyReconfigurable() {
+            super();
+        }
+        
+        @Override
+        protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
+            if (MY_CONFIG.equals(key)) {
+                // we'd do here whatever reconfig meant; caller will set actual new val
+            } else {
+                super.doReconfigureConfig(key, val);
+            }
         }
     }
 }

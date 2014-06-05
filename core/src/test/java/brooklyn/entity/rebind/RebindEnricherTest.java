@@ -219,9 +219,9 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
             initCalled = true;
         }
         
-        // TODO When AbstractEnricher declares rebind; @Override
+        @Override
         public void rebind() {
-            // TODO super.rebind();
+            super.rebind();
             rebindCalled = true;
         }
     }

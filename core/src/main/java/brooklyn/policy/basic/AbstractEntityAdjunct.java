@@ -230,7 +230,9 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         if (entity != null && isRunning()) {
             doReconfigureConfig(key, val);
         }
-        return (T) configsInternal.setConfig(key, val);
+        T result = (T) configsInternal.setConfig(key, val);
+        onChanged();
+        return result;
     }
     
     // TODO make immutable
@@ -243,6 +245,8 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
         throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
     }
+    
+    protected abstract void onChanged();
     
     protected AdjunctType getAdjunctType() {
         return adjunctType;

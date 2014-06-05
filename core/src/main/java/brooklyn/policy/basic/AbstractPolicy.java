@@ -77,6 +77,11 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     }
 
     @Override
+    protected void onChanged() {
+        getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+    }
+    
+    @Override
     public RebindSupport<PolicyMemento> getRebindSupport() {
         return new BasicPolicyRebindSupport(this);
     }

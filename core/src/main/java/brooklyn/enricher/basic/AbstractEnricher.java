@@ -41,4 +41,9 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     public EnricherType getEnricherType() {
         return enricherType;
     }
+
+    @Override
+    protected void onChanged() {
+        getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+    }
 }
