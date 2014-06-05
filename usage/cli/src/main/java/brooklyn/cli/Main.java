@@ -37,15 +37,15 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.launcher.FatalConfigurationRuntimeException;
-import brooklyn.launcher.PersistMode;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Networking;
@@ -256,19 +256,24 @@ public class Main {
         //      wrapping it automatically.
         //      See https://github.com/airlift/airline/issues/30
         @Option(name = { PERSIST_OPTION }, allowedValues = { PERSIST_OPTION_DISABLED, PERSIST_OPTION_AUTO, PERSIST_OPTION_REBIND, PERSIST_OPTION_CLEAN },
-                title = "persistance mode",
+                title = "persistence mode",
                 description =
                         "The persistence mode. Possible values are: \n"+
                         "disabled: will not read or persist any state; \n"+
                         "auto: will rebind to any existing state, or start up fresh if no state; \n"+
                         "rebind: will rebind to the existing state, or fail if no state available; \n"+
-                        "clean: will start up fresh (not using any existing state)")
+                        "clean: will start up fresh (removing any existing state)")
         public String persist = PERSIST_OPTION_DISABLED;
 
         @Option(name = { "--persistenceDir" }, title = "persistence dir",
-                description = "the directory to read/write persisted state")
+                description = "the directory to read/write persisted state (or container name if using an object store)")
         public String persistenceDir;
-        
+
+        @Option(name = { "--persistenceLocation" }, title = "persistence location",
+            description = "the location spec for an object store to read/write persisted state")
+        public String persistenceLocation;
+    
+
         final static String HA_OPTION = "--highAvailability";
         protected final static String HA_OPTION_DISABLED = "disabled";
         protected final static String HA_OPTION_AUTO = "auto";
@@ -328,6 +333,7 @@ public class Main {
                 launcher.persistMode(persistMode);
                 if (persistMode != PersistMode.DISABLED && Strings.isNonBlank(persistenceDir)) {
                     launcher.persistenceDir(persistenceDir);
+                    launcher.persistenceLocation(persistenceLocation);
                 }
                 
                 launcher.highAvailabilityMode(highAvailabilityMode);
@@ -394,9 +400,10 @@ public class Main {
             }
    
             if (persistMode.get() == PersistMode.DISABLED) {
-                if (Strings.isNonBlank(persistenceDir)) {
-                    throw new FatalConfigurationRuntimeException("Cannot specify peristanceDir when persist is disabled");
-                }
+                if (Strings.isNonBlank(persistenceDir))
+                    throw new FatalConfigurationRuntimeException("Cannot specify persistenceDir when persist is disabled");
+                if (Strings.isNonBlank(persistenceLocation))
+                    throw new FatalConfigurationRuntimeException("Cannot specify persistenceLocation when persist is disabled");
             }
             return persistMode.get();
         }

@@ -85,12 +85,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile MasterChooser masterChooser = new AlphabeticMasterChooser();
     private volatile Duration pollPeriod = Duration.of(5, TimeUnit.SECONDS);
     private volatile Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
-    private volatile Ticker ticker = new Ticker() {
-            @Override
-            public long read() {
-                return System.currentTimeMillis();
-            }
-        };
+    private volatile Ticker tickerUtc = new Ticker() {
+        // strictly not a ticker because returns millis UTC, but it works fine even so
+        @Override
+        public long read() {
+            return System.currentTimeMillis();
+        }
+    };
     
     private volatile Task<?> pollingTask;
     private volatile boolean disabled;
@@ -133,7 +134,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     /** A ticker that reads in milliseconds */
     public HighAvailabilityManagerImpl setTicker(Ticker val) {
-        this.ticker = checkNotNull(val, "ticker");
+        this.tickerUtc = checkNotNull(val, "ticker");
         return this;
     }
 
@@ -474,11 +475,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     /**
-     * Gets the current time, using the {@link #ticker}. Normally this is equivalent of {@link System#currentTimeMillis()},
+     * Gets the current time, using the {@link #tickerUtc}. Normally this is equivalent of {@link System#currentTimeMillis()},
      * but in test environments a custom {@link Ticker} can be injected via {@link #setTicker(Ticker)} to allow testing of
      * specific timing scenarios.
      */
     protected long currentTimeMillis() {
-        return ticker.read();
+        return tickerUtc.read();
     }
 }

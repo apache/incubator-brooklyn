@@ -17,6 +17,7 @@ import brooklyn.util.text.Strings;
 /** config keys for the brooklyn server */
 public class BrooklynServerConfig {
 
+
     private static final Logger log = LoggerFactory.getLogger(BrooklynServerConfig.class);
     
     /** provided for setting; consumers should use {@link #getMgmtBaseDir(ManagementContext)} */ 
@@ -29,10 +30,14 @@ public class BrooklynServerConfig {
     public static final ConfigKey<String> BROOKLYN_DATA_DIR = newStringConfigKey(
             "brooklyn.datadir", "Directory for writing all brooklyn data");
 
-    /** provided for setting; consumers should use {@link #getPersistenceDir(ManagementContext)} */ 
+    /** also used for containers */
+    public static final String PERSISTENCE_PATH_SEGMENT = "brooklyn-persisted-state";
+    
+    /** provided for setting; consumers should use {@link #getPersistenceDir(ManagementContext)},
+     * but note for object stores this may be treated specially */ 
     public static final ConfigKey<String> PERSISTENCE_DIR = newStringConfigKey(
         "brooklyn.persistence.dir", "Directory for writing brooklyn persisted state; if not absolute, taken relative to mgmt base", 
-        Os.mergePaths("brooklyn-persisted-state", "data"));
+        Os.mergePaths(PERSISTENCE_PATH_SEGMENT, "data"));
 
     public static String getMgmtBaseDir(ManagementContext mgmt) {
         return getMgmtBaseDir(mgmt.getConfig());
@@ -63,9 +68,12 @@ public class BrooklynServerConfig {
         return Os.tidyPath(d);
     }
     
+    /** dir where persistence should be put according to configuration,
+     * but note for object stores this may be treated specially */
     public static String getPersistenceDir(ManagementContext mgmt) {
         return getPersistenceDir(mgmt.getConfig());
     }
+    /** see {@link #getPersistenceDir(ManagementContext)} */ 
     public static String getPersistenceDir(StringConfigMap brooklynProperties) {
         return relativeToBase(brooklynProperties, PERSISTENCE_DIR);
     }

@@ -177,7 +177,7 @@ public class Os {
         char separatorChar = File.separatorChar;
         StringBuilder result = new StringBuilder();
         for (String item: items) {
-            if (item.isEmpty()) continue;
+            if (Strings.isEmpty(item)) continue;
             if (result.length() > 0 && result.charAt(result.length()-1) != separatorChar) result.append(separatorChar);
             result.append(item);
         }

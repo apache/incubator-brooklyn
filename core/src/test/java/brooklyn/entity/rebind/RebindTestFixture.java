@@ -7,7 +7,8 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -49,6 +50,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         try {
             if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
             if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+            if (newManagementContext != null) Entities.destroyAll(newManagementContext);
             origApp = null;
             newApp = null;
             newManagementContext = null;
@@ -100,7 +102,8 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     }
     
     protected BrooklynMementoManifest loadMementoManifest() throws Exception {
-        BrooklynMementoPersisterToMultiFile persister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
+        BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
+            new FileBasedObjectStore(mementoDir), classLoader);
         RebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(RebindManager.RebindFailureMode.FAIL_AT_END, RebindManager.RebindFailureMode.FAIL_AT_END);
         BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
         persister.stop();

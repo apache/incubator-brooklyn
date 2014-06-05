@@ -144,7 +144,10 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
             newApp = rebind(newManagementContext, exceptionHandler);
             fail();
         } catch (Exception e) {
-            if (!e.toString().contains("Problems rebinding")) throw e; // expected
+            if (e.toString().contains("Problem rebinding") || e.toString().contains("Problems rebinding")) 
+                /* expected */ ;
+            else 
+                throw e; 
         }
         
         // exception handler should have been told about failure

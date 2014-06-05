@@ -5,6 +5,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -21,6 +22,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -30,17 +32,19 @@ public class RebindManagerSorterTest {
     private TestApplication app;
     private ManagementContext managementContext;
     private RebindManagerImpl rebindManager;
+    private Set<ManagementContext> mgmts = MutableSet.of();
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
+        mgmts.add(managementContext = app.getManagementContext());
         rebindManager = (RebindManagerImpl) managementContext.getRebindManager();
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        for (ManagementContext m: mgmts) Entities.destroyAll(m);
+        mgmts.clear();
     }
 
     @Test
@@ -74,6 +78,7 @@ public class RebindManagerSorterTest {
     @Test
     public void testSortOrderMultipleApps() throws Exception {
         TestApplication app2 = ApplicationBuilder.newManagedApp(TestApplication.class);
+        mgmts.add(app2.getManagementContext());
 
         TestEntity e1a = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity e1b = e1a.createAndManageChild(EntitySpec.create(TestEntity.class));

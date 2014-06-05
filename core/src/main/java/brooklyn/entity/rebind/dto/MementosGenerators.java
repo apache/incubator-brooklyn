@@ -33,6 +33,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 
 public class MementosGenerators {
@@ -150,6 +151,16 @@ public class MementosGenerators {
         return builder;
     }
     
+    public static Function<Entity, EntityMemento> entityMementoFunction() {
+        return new Function<Entity,EntityMemento>() {
+            @Override
+            public EntityMemento apply(Entity input) {
+                return MementosGenerators.newEntityMemento(input);
+            }
+        };
+    }
+
+    
     /**
      * Given a location, extracts its state for serialization.
      * 
@@ -191,6 +202,16 @@ public class MementosGenerators {
         return builder;
     }
     
+    public static Function<Location, LocationMemento> locationMementoFunction() {
+        return new Function<Location,LocationMemento>() {
+            @Override
+            public LocationMemento apply(Location input) {
+                return MementosGenerators.newLocationMemento(input);
+            }
+        };
+    }
+
+    
     /**
      * Given a policy, extracts its state for serialization.
      */
@@ -221,6 +242,16 @@ public class MementosGenerators {
 
         return builder;
     }
+    
+    public static Function<Policy, PolicyMemento> policyMementoFunction() {
+        return new Function<Policy,PolicyMemento>() {
+            @Override
+            public PolicyMemento apply(Policy input) {
+                return MementosGenerators.newPolicyMemento(input);
+            }
+        };
+    }
+
     
     /**
      * Given an enricher, extracts its state for serialization.
@@ -267,4 +298,14 @@ public class MementosGenerators {
         }
         return value;
     }
+    
+    public static Function<Enricher, EnricherMemento> enricherMementoFunction() {
+        return new Function<Enricher,EnricherMemento>() {
+            @Override
+            public EnricherMemento apply(Enricher input) {
+                return MementosGenerators.newEnricherMemento(input);
+            }
+        };
+    }
+
 }

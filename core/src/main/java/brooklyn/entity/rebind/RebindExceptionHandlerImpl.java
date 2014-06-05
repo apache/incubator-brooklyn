@@ -62,6 +62,11 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         onLoadMementoFailure(msg, e);
     }
     
+    @Override
+    public void onLoadEnricherMementoFailed(String msg, Exception e) {
+        onLoadMementoFailure(msg, e);
+    }
+    
     protected void onLoadMementoFailure(String msg, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem loading mementos: "+msg;

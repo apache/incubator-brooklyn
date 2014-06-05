@@ -16,6 +16,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
@@ -379,7 +380,7 @@ public class Enrichers {
             this.fromEntity = checkNotNull(val);
             return self();
         }
-        public EnricherSpec<?> build() {
+        public EnricherSpec<? extends Enricher> build() {
             return EnricherSpec.create(Propagator.class)
                     .configure(MutableMap.builder()
                             .putIfNotNull(Propagator.PRODUCER, fromEntity)

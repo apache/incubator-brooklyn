@@ -190,45 +190,7 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Enricher> enrichers = Maps.newLinkedHashMap();
             
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
-    
-            LookupContext realLookupContext = new LookupContext() {
-                @Override public Entity lookupEntity(Class<?> type, String id) {
-                    Entity result = rebindContext.getEntity(id);
-                    if (result == null) {
-                        result = exceptionHandler.onDanglingEntityRef(id);
-                    } else if (type != null && !type.isInstance(result)) {
-                        LOG.warn("Entity with id "+id+" does not match type "+type+"; returning "+result);
-                    }
-                    return result;
-                }
-                @Override public Location lookupLocation(Class<?> type, String id) {
-                    Location result = rebindContext.getLocation(id);
-                    if (result == null) {
-                        result = exceptionHandler.onDanglingLocationRef(id);
-                    } else if (type != null && !type.isInstance(result)) {
-                        LOG.warn("Location with id "+id+" does not match type "+type+"; returning "+result);
-                    }
-                    return result;
-                }
-                @Override public Policy lookupPolicy(Class<?> type, String id) {
-                    Policy result = rebindContext.getPolicy(id);
-                    if (result == null) {
-                        result = exceptionHandler.onDanglingPolicyRef(id);
-                    } else if (type != null && !type.isInstance(result)) {
-                        LOG.warn("Policy with id "+id+" does not match type "+type+"; returning "+result);
-                    }
-                    return result;
-                }
-                @Override public Enricher lookupEnricher(Class<?> type, String id) {
-                    Enricher result = rebindContext.getEnricher(id);
-                    if (result == null) {
-                        result = exceptionHandler.onDanglingEnricherRef(id);
-                    } else if (type != null && !type.isInstance(result)) {
-                        LOG.warn("Enricher with id "+id+" does not match type "+type+"; returning "+result);
-                    }
-                    return result;
-                }
-            };
+            LookupContext realLookupContext = new RebindContextLookupContext(rebindContext, exceptionHandler);
             
             // Two-phase deserialization.
             // First we deserialize just the "manifest" to find all instances (and their types).

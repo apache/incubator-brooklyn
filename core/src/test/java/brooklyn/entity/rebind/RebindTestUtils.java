@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -18,7 +17,9 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.Dumpers.Pointer;
 import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -68,12 +69,11 @@ public class RebindTestUtils {
     	}
     }
     
+	public static void deleteMementoDir(String path) {
+	    deleteMementoDir(new File(path));
+	}
     public static void deleteMementoDir(File f) {
-        if (f.isDirectory()) {
-          for (File c : f.listFiles())
-            deleteMementoDir(c);
-        }
-        f.delete();
+        FileBasedObjectStore.deleteCompletely(f);
     }
     
     public static void checkMementoSerializable(Application app) throws Exception {
@@ -88,35 +88,50 @@ public class RebindTestUtils {
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader) {
         return managementContextBuilder(mementoDir, classLoader).buildStarted();
     }
-
     public static LocalManagementContext newPersistingManagementContext(File mementoDir, ClassLoader classLoader, long persistPeriodMillis) {
         return managementContextBuilder(mementoDir, classLoader)
                 .persistPeriodMillis(persistPeriodMillis)
                 .buildStarted();
     }
-
+    
     public static LocalManagementContext newPersistingManagementContextUnstarted(File mementoDir, ClassLoader classLoader) {
         return managementContextBuilder(mementoDir, classLoader).buildUnstarted();
     }
-    
+
     public static ManagementContextBuilder managementContextBuilder(File mementoDir, ClassLoader classLoader) {
-        return new ManagementContextBuilder(mementoDir, classLoader);
+        return new ManagementContextBuilder(classLoader, mementoDir);
+    }
+    public static ManagementContextBuilder managementContextBuilder(ClassLoader classLoader, File mementoDir) {
+        return new ManagementContextBuilder(classLoader, mementoDir);
+    }
+    public static ManagementContextBuilder managementContextBuilder(ClassLoader classLoader, PersistenceObjectStore objectStore) {
+        return new ManagementContextBuilder(classLoader, objectStore);
     }
 
     public static class ManagementContextBuilder {
-        final File mementoDir;
         final ClassLoader classLoader;
-        long persistPeriodMillis = 100;
         BrooklynProperties properties;
+        PersistenceObjectStore objectStore;
+        Duration persistPeriod = Duration.millis(100);
 
         ManagementContextBuilder(File mementoDir, ClassLoader classLoader) {
-            this.mementoDir = checkNotNull(mementoDir, "mementoDir");
-            this.classLoader = checkNotNull(classLoader, "classLoader");
+            this(classLoader, new FileBasedObjectStore(mementoDir));
         }
-
+        ManagementContextBuilder(ClassLoader classLoader, File mementoDir) {
+            this(classLoader, new FileBasedObjectStore(mementoDir));
+        }
+        ManagementContextBuilder(ClassLoader classLoader, PersistenceObjectStore objStore) {
+            this.classLoader = checkNotNull(classLoader, "classLoader");
+            this.objectStore = checkNotNull(objStore, "objStore");
+        }
+        
         public ManagementContextBuilder persistPeriodMillis(long persistPeriodMillis) {
             checkArgument(persistPeriodMillis > 0, "persistPeriodMillis must be greater than 0; was "+persistPeriodMillis);
-            this.persistPeriodMillis = persistPeriodMillis;
+            return persistPeriod(Duration.millis(persistPeriodMillis));
+        }
+        public ManagementContextBuilder persistPeriod(Duration persistPeriod) {
+            checkNotNull(persistPeriod);
+            this.persistPeriod = persistPeriod;
             return this;
         }
 
@@ -132,8 +147,10 @@ public class RebindTestUtils {
             } else {
                 unstarted = new LocalManagementContextForTests();
             }
-            BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
-            ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(Duration.of(persistPeriodMillis, TimeUnit.MILLISECONDS));
+            
+            objectStore.prepareForUse(unstarted, null);
+            BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
+            ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
             unstarted.getRebindManager().setPersister(newPersister);
             return unstarted;
         }
@@ -171,9 +188,14 @@ public class RebindTestUtils {
     }
     
     public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
+        PersistenceObjectStore objectStore = new FileBasedObjectStore(mementoDir);
+        return rebind(newManagementContext, mementoDir, classLoader, exceptionHandler, objectStore);
+    }
+    public static Application rebind(ManagementContext newManagementContext, File mementoDir,
+                                     ClassLoader classLoader, RebindExceptionHandler exceptionHandler, PersistenceObjectStore objectStore) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
         
-        BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(mementoDir, classLoader);
+        BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister);
         List<Application> newApps;
         if (exceptionHandler == null) {

@@ -53,6 +53,12 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
         loadMementoFailures.add(new IllegalStateException("problem loading mementos: "+msg, e));
         super.onLoadPolicyMementoFailed(msg, e);
     }
+
+    @Override
+    public void onLoadEnricherMementoFailed(String msg, Exception e) {
+        loadMementoFailures.add(new IllegalStateException("problem loading mementos: "+msg, e));
+        super.onLoadPolicyMementoFailed(msg, e);
+    }
     
     @Override
     public Entity onDanglingEntityRef(String id) {

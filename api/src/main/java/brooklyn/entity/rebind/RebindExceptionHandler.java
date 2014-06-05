@@ -23,6 +23,8 @@ public interface RebindExceptionHandler {
     
     void onLoadPolicyMementoFailed(String msg, Exception e);
     
+    void onLoadEnricherMementoFailed(String msg, Exception e);
+    
     /**
      * @return the entity to use in place of the missing one, or null (if hasn't thrown an exception)
      */

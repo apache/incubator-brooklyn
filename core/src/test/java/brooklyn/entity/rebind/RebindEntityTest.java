@@ -524,9 +524,9 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     @Test
     public void testRebindWhenPreviousAppDestroyedHasNoApp() throws Exception {
         origApp.stop();
-        
+
         RebindTestUtils.waitForPersisted(origManagementContext);
-        LocalManagementContext newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
+        newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
         newManagementContext.getRebindManager().start();
         
