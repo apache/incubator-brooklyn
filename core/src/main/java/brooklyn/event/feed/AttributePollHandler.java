@@ -130,8 +130,8 @@ public class AttributePollHandler<V> implements PollHandler<V> {
 
     protected void logProblem(String type, Object val) {
         if (lastWasProblem && currentProblemLoggedAsWarning) {
-            if (log.isDebugEnabled())
-                log.debug("Recurring "+type+" reading " + this + " in " + getBriefDescription() + ": " + val);
+            if (log.isTraceEnabled())
+                log.trace("Recurring {} reading {} in {}: {}", new Object[] {type, this, getBriefDescription(), val});
         } else {
             long nowTime = System.currentTimeMillis();
             // get a non-volatile value
@@ -148,9 +148,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
                         log.debug("Trace for "+type+" reading "+getBriefDescription()+": "+val, (Throwable)val);
                 } else {
                     if (log.isDebugEnabled())
-                        log.debug("Read of " + getBriefDescription() + " gave " + type + 
-                                " (in grace period)" +
-                                ": " + val);
+                        log.debug("Read of " + getBriefDescription() + " gave " + type + " (in grace period): " + val);
                 }
                 lastWasProblem = true;
                 currentProblemStartTime = nowTime;
@@ -165,9 +163,8 @@ public class AttributePollHandler<V> implements PollHandler<V> {
                     if (log.isDebugEnabled() && val instanceof Throwable)
                         log.debug("Trace for "+type+" reading "+getBriefDescription()+": "+val, (Throwable)val);
                 } else {
-                    log.debug("Recurring "+type+" reading " + this + " for " + getBriefDescription() + 
-                            " (still in grace period)" +
-                            ": " + val);
+                    if (log.isDebugEnabled()) 
+                        log.debug("Recurring {} reading {} in {} (still in grace period): {}", new Object[] {type, this, getBriefDescription(), val});
                 }
             }
         }
