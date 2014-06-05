@@ -37,9 +37,9 @@ import com.google.common.base.Ticker;
  * That standby promotes itself.
  * <p>
  * The management nodes communicate their health/status via the {@link ManagementPlaneSyncRecordPersister}.
- * For example, if using {@link ManagementPlaneSyncRecordPersisterToMultiFile} with a shared NFS mount, 
- * then each management-node periodically writes its state. This acts as a heartbeat, being read by
- * the other management-nodes.
+ * For example, if using {@link ManagementPlaneSyncRecordPersisterToObjectStore} with a shared blobstore or 
+ * filesystem/NFS mount, then each management-node periodically writes its state. 
+ * This acts as a heartbeat, being read by the other management-nodes.
  * <p>
  * Promotion to master involves:
  * <ol>

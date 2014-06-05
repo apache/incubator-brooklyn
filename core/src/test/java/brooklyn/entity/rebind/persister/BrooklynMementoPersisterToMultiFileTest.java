@@ -15,6 +15,7 @@ import com.google.common.io.Files;
 
 /**
  * @author Andrea Turli
+ * @deprecated just tests the deprecated {@link BrooklynMementoPersisterToMultiFile}
  */
 public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPersisterTestFixture {
 

@@ -72,7 +72,9 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
 
     @Override
     public StoreObjectAccessor newAccessor(String path) {
-        return new FileBasedStoreObjectAccessor(new File(Os.mergePaths(getBaseDir().getAbsolutePath(), path)), executor);
+        String tmpExt = ".tmp";
+        if (mgmt!=null && mgmt.getManagementNodeId()!=null) tmpExt = "."+mgmt.getManagementNodeId()+tmpExt;
+        return new FileBasedStoreObjectAccessor(new File(Os.mergePaths(getBaseDir().getAbsolutePath(), path)), executor, tmpExt);
     }
 
     @Override
@@ -211,7 +213,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         Process proc = Runtime.getRuntime().exec(cmd);
         proc.waitFor();
         if (proc.exitValue() != 0) {
-            throw new IOException("Error backing up directory, with command "+cmd);
+            throw new IOException("Error backing up directory, with command `"+cmd+"` (exit value "+proc.exitValue()+")");
         }
         return backupDir;
     }

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.entity.rebind.persister.FileBasedStoreObjectAccessor;
 import brooklyn.entity.rebind.persister.MementoFileWriterSync;
 import brooklyn.entity.rebind.persister.MementoSerializer;
 import brooklyn.entity.rebind.persister.RetryingMementoSerializer;
@@ -49,8 +50,10 @@ import com.google.common.io.Files;
  * @since 0.7.0
  * 
  * @author aled
+ * @deprecated since 0.7.0 use {@link ManagementPlaneSyncRecordPersisterToObjectStore} e.g. with {@link FileBasedStoreObjectAccessor}
  */
 @Beta
+@Deprecated
 public class ManagementPlaneSyncRecordPersisterToMultiFile implements ManagementPlaneSyncRecordPersister {
 
     // TODO Multiple node appending to change.log could cause strange interleaving, or perhaps even data loss?

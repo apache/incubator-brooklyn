@@ -37,6 +37,8 @@ public class JcloudsStoreObjectAccessor implements PersistenceObjectStore.StoreO
 
     @Override
     public void writeAsync(String val) {
+        if (val==null) val = "";
+        
         blobStore.createContainerInLocation(null, containerName);
 //        blobStore.createDirectory(containerName, directoryName);
         ByteSource payload = ByteSource.wrap(val.getBytes(Charsets.UTF_8));

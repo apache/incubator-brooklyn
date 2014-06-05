@@ -27,9 +27,14 @@ import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Preconditions;
 
+@Test(groups="Integration")
 public class BlobStoreTest {
 
-    private String locationSpec = BrooklynMementoPersisterToSoftlayerObjectStoreTest.PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC;
+    public static final String PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC = "named:softlayer-objectstore-amsterdam-1";
+    public static final String CONTAINER_PREFIX = "brooklyn-persistence-test";
+    
+    private String locationSpec = PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC;
+    
     private JcloudsLocation location;
     private BlobStoreContext context;
 
@@ -59,7 +64,7 @@ public class BlobStoreTest {
     
     @BeforeTest(alwaysRun=true)
     public void setup() {
-        testContainerName = "brooklyn-test-"+Identifiers.makeRandomId(8);
+        testContainerName = CONTAINER_PREFIX+"-"+Identifiers.makeRandomId(8);
         mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
         getBlobStoreContext();
     }
@@ -70,7 +75,6 @@ public class BlobStoreTest {
     }
     
     
-    @Test(groups="Integration")
     public void testCreateListDestroyContainer() throws IOException {
         context.getBlobStore().createContainerInLocation(null, testContainerName);
         context.getBlobStore().list(testContainerName);
@@ -86,7 +90,6 @@ public class BlobStoreTest {
         context.getBlobStore().deleteContainer(testContainerName);
     }
     
-    @Test(groups="Integration")
     public void testCreateListDestroySimpleDirInContainer() throws IOException {
         context.getBlobStore().createContainerInLocation(null, testContainerName);
         context.getBlobStore().createDirectory(testContainerName, "my-dir-1");

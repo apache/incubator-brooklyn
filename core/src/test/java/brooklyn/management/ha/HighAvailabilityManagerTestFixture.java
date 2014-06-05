@@ -5,7 +5,6 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -14,29 +13,27 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Ticker;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
-
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterInMemory;
-import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.management.ha.HighAvailabilityManagerImpl.PromotionListener;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.time.Duration;
 
-public class HighAvailabilityManagerToObjectStoreTest {
+import com.google.common.base.Ticker;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+
+public abstract class HighAvailabilityManagerTestFixture {
 
     @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(HighAvailabilityManagerToObjectStoreTest.class);
+    private static final Logger log = LoggerFactory.getLogger(HighAvailabilityManagerTestFixture.class);
     
-    //private ManagementPlaneSyncRecordPersisterInMemory persister;
     private ManagementPlaneSyncRecordPersister persister;
     private ManagementContextInternal managementContext;
     private String ownNodeId;
@@ -45,6 +42,7 @@ public class HighAvailabilityManagerToObjectStoreTest {
     private AtomicLong currentTime; // used to set the ticker's return value
     private RecordingPromotionListener promotionListener;
     private ClassLoader classLoader = getClass().getClassLoader();
+    private PersistenceObjectStore objectStore;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -56,12 +54,13 @@ public class HighAvailabilityManagerToObjectStoreTest {
             }
         };
         promotionListener = new RecordingPromotionListener();
-        managementContext = new LocalManagementContext();
-        managementContext.getRebindManager().setPersister(new BrooklynMementoPersisterInMemory(classLoader));
+        managementContext = newLocalManagementContext();
         ownNodeId = managementContext.getManagementNodeId();
-        persister = new ManagementPlaneSyncRecordPersisterInMemory();
-        PersistenceObjectStore objectStore = new FileBasedObjectStore(Files.createTempDir());
-        persister = new ManagementPlaneSyncRecordPersisterToObjectStore(objectStore, classLoader);
+        objectStore = newPersistenceObjectStore();
+        objectStore.prepareForUse(managementContext, PersistMode.CLEAN);
+        persister = new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext, objectStore, classLoader);
+        BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
+        managementContext.getRebindManager().setPersister(persisterObj);
         manager = new HighAvailabilityManagerImpl(managementContext)
                 .setPollPeriod(Duration.millis(10))
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
@@ -69,11 +68,18 @@ public class HighAvailabilityManagerToObjectStoreTest {
                 .setTicker(ticker)
                 .setPersister(persister);
     }
+
+    protected ManagementContextInternal newLocalManagementContext() {
+        return new LocalManagementContextForTests();
+    }
+
+    protected abstract PersistenceObjectStore newPersistenceObjectStore();
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (manager != null) manager.stop();
         if (managementContext != null) Entities.destroyAll(managementContext);
+        if (objectStore!=null) objectStore.deleteCompletely();
     }
     
     // Can get a log.error about our management node's heartbeat being out of date. Caused by

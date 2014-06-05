@@ -17,6 +17,7 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccess
 import brooklyn.entity.rebind.persister.RetryingMementoSerializer;
 import brooklyn.entity.rebind.persister.XmlMementoSerializer;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -59,6 +60,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     private static final Logger LOG = LoggerFactory.getLogger(ManagementPlaneSyncRecordPersisterToObjectStore.class);
 
     private static final Duration SHUTDOWN_TIMEOUT = Duration.TEN_SECONDS;
+    private static final Duration SYNC_WRITE_TIMEOUT = Duration.TEN_SECONDS;
     public static final String NODES_SUB_PATH = "nodes";
 
     // TODO Leak if we go through lots of managers; but tiny!
@@ -76,10 +78,12 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     private volatile boolean running = true;
 
     /**
-     * @param objectStore the objectStore use to read/write management-plane data
+     * @param mgmt not used at present but handy to ensure we know it so that obj store is prepared
+     * @param objectStore the objectStore use to read/write management-plane data;
+     *   this must have been {@link PersistenceObjectStore#prepareForUse(ManagementContext, brooklyn.entity.rebind.persister.PersistMode)}
      * @param classLoader ClassLoader to use when deserializing data
      */
-    public ManagementPlaneSyncRecordPersisterToObjectStore(PersistenceObjectStore objectStore, ClassLoader classLoader) {
+    public ManagementPlaneSyncRecordPersisterToObjectStore(ManagementContext mgmt, PersistenceObjectStore objectStore, ClassLoader classLoader) {
         this.objectStore = checkNotNull(objectStore, "objectStore");
 
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(checkNotNull(classLoader, "classLoader"));
@@ -177,7 +181,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
             persistMaster(checkNotNull(delta.getNewMasterOrNull()));
             break;
         case CLEAR_MASTER:
-            persistMaster(null);
+            persistMaster("");
             break; // no-op
         default:
             throw new IllegalStateException("Unknown state for master-change: "+delta.getMasterChange());
@@ -187,19 +191,15 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     private void persistMaster(String nodeId) {
         masterWriter.writeAsync(nodeId);
         try {
-            masterWriter.waitForWriteCompleted(Duration.of(200, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
+            masterWriter.waitForWriteCompleted(SYNC_WRITE_TIMEOUT);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
         changeLogWriter.append(Time.makeDateString() + ": set master to " + nodeId + "\n");
         try {
-            changeLogWriter.waitForWriteCompleted(Duration.of(200, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
+            changeLogWriter.waitForWriteCompleted(SYNC_WRITE_TIMEOUT);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -217,11 +217,9 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         boolean fileExists = writer.exists();
         writer.writeAsync(serializer.toString(node));
         try {
-            writer.waitForWriteCompleted(Duration.of(200, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
+            writer.waitForWriteCompleted(SYNC_WRITE_TIMEOUT);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
         if (!fileExists) {
             changeLogWriter.append(Time.makeDateString()+": created node "+node.getNodeId()+"\n");

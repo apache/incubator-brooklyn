@@ -48,7 +48,7 @@ import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToMultiFile;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynWebConfig;
@@ -451,6 +451,7 @@ public class BrooklynLauncher {
 
     protected void initPersistence() {
         // Prepare the rebind directory, and initialise the RebindManager as required
+        PersistenceObjectStore objectStore = null;
         if (persistMode == PersistMode.DISABLED) {
             LOG.info("Persistence disabled");
         } else {
@@ -458,7 +459,6 @@ public class BrooklynLauncher {
                 persistenceDir = new File( BrooklynServerConfig.getPersistenceDir(brooklynProperties) );
             }
 
-            PersistenceObjectStore objectStore;
             if (persistenceLocation == null) {
                 objectStore = new FileBasedObjectStore(persistenceDir);
             } else {
@@ -482,13 +482,14 @@ public class BrooklynLauncher {
         if (highAvailabilityMode == HighAvailabilityMode.DISABLED) {
             LOG.info("High availability disabled");
         } else {
-            File haDir = new File(persistenceDir, "plane");
+            if (objectStore==null)
+                throw new FatalConfigurationRuntimeException("Cannot run in HA mode when no persistence configured.");
+//            File haDir = new File(persistenceDir, "plane");
             
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
-            ManagementPlaneSyncRecordPersister persister = new ManagementPlaneSyncRecordPersisterToMultiFile(
-                    haDir, 
-                    managementContext.getCatalog().getRootClassLoader(), 
-                    managementContext.getManagementNodeId());
+            ManagementPlaneSyncRecordPersister persister = 
+                new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext,
+                    objectStore, managementContext.getCatalog().getRootClassLoader());
             ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeout);
             ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriod);
             haManager.setPersister(persister);

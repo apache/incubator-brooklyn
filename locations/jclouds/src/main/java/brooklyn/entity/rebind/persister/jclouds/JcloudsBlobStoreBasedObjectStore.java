@@ -61,7 +61,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
         if (context==null) {
             if (location==null) {
                 Preconditions.checkNotNull(locationSpec, "locationSpec required for remote object store when location is null");
-                Preconditions.checkNotNull(mgmt, "mgmt required for remote object store when location is null");
+                Preconditions.checkNotNull(mgmt, "mgmt not injected / object store not prepared");
                 location = (JcloudsLocation) mgmt.getLocationRegistry().resolve(locationSpec);
             }
             
@@ -89,11 +89,18 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     
     @Override
     public void createSubPath(String subPath) {
+        checkPrepared();
         context.getBlobStore().createDirectory(getContainerName(), subPath);
+    }
+
+    protected void checkPrepared() {
+        if (context==null)
+            throw new IllegalStateException("object store not prepared");
     }
     
     @Override
     public StoreObjectAccessor newAccessor(String path) {
+        checkPrepared();
         return new JcloudsStoreObjectAccessor(context.getBlobStore(), getContainerName(), path);
     }
 
@@ -115,6 +122,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
 
     @Override
     public List<String> listContentsWithSubPath(final String parentSubPath) {
+        checkPrepared();
         return FluentIterable.from(context.getBlobStore().list(getContainerName(), ListContainerOptions.Builder.inDirectory(parentSubPath)))
                 .transform(new Function<StorageMetadata, String>() {
                     @Override
@@ -131,7 +139,8 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
 
     @Override
     public void close() {
-        context.close();
+        if (context!=null)
+            context.close();
     }
 
     @Override

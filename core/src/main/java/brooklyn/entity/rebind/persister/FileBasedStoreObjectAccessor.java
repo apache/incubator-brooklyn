@@ -25,6 +25,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
+import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -69,10 +71,10 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
      * @param file
      * @param executor A sequential executor (e.g. SingleThreadedExecutor, or equivalent)
      */
-    public FileBasedStoreObjectAccessor(File file, ListeningExecutorService executor) {
+    public FileBasedStoreObjectAccessor(File file, ListeningExecutorService executor, String tmpExtension) {
         this.file = file;
         this.executor = executor;
-        this.tmpFile = new File(file.getParentFile(), file.getName()+".tmp");
+        this.tmpFile = new File(file.getParentFile(), file.getName()+(Strings.isBlank(tmpExtension) ? ".tmp" : tmpExtension));
     }
 
     @Override
@@ -147,10 +149,8 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
         // wait until we can guarantee that a complete additional write has been done. Not sufficient
         // to wait for `writeCount > origWriteCount` because we might have read the value when it was 
         // almost finished a write.
+        CountdownTimer timer = CountdownTimer.newInstanceStarted(timeout);
 
-        long timeoutMillis = timeout.toMilliseconds();
-        long startTime = System.currentTimeMillis();
-        long maxEndtime = (timeoutMillis > 0) ? (startTime + timeoutMillis) : (timeoutMillis < 0) ? startTime : Long.MAX_VALUE;
         long origModCount = modCount.get();
         while (true) {
             if (modCount.get() > (origModCount+1)) {
@@ -163,7 +163,7 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
                 return;
             }
 
-            if (System.currentTimeMillis() > maxEndtime) {
+            if (timer.isExpired()) {
                 throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeStringRounded(timeout));
             }
             Thread.sleep(10);

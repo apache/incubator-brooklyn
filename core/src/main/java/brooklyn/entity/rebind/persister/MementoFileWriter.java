@@ -32,7 +32,10 @@ import brooklyn.util.time.Time;
  * scheduled, we will just rely on the existing one; otherwise we will write now.
  * 
  * @author aled
+ * @deprecated used only by now-deprecated {@link BrooklynMementoPersisterToMultiFile}, 
+ * impl largely moved to {@link FileBasedStoreObjectAccessor}
  */
+@Deprecated
 public class MementoFileWriter<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MementoFileWriter.class);
