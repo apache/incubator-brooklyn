@@ -86,7 +86,7 @@
         <mockito.version>1.9.5</mockito.version>
         <whirr.version>0.8.1</whirr.version>
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
-        <xstream.version>1.4.3</xstream.version>
+        <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
         <fasterxml.jackson.version>2.2.0</fasterxml.jackson.version>  <!-- fasterxml (newer) jackson, used by camp -->
         <jersey.version>1.12</jersey.version> <!-- NB: 1.17 requires changes to how we hanlde multipart in CatalogApi -->

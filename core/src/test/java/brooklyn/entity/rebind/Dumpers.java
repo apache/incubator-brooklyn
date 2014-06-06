@@ -84,9 +84,14 @@ public class Dumpers {
                 try {
                     Serializers.reconstitute(o, replacer);
                     return true;
-                } catch (Exception e) {
+                } catch (Throwable e) {
+                    Exceptions.propagateIfFatal(e);
+                    
                     // not serializable in some way: report
                     ImmutableList<Object> refChainList = ImmutableList.copyOf(refChain);
+                    // for debugging it can be useful to turn this on
+//                    LOG.warn("Unreconstitutable object detected ("+o+"): "+e);
+                    
                     
                     // First strip out any less specific paths
                     for (Iterator<List<Object>> iter = unserializablePaths.keySet().iterator(); iter.hasNext();) {

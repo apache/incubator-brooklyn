@@ -1,19 +1,38 @@
 package brooklyn.entity.rebind;
 
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
+import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
 public class RebindContextLookupContext implements LookupContext {
     
+    private static final Logger LOG = LoggerFactory.getLogger(RebindContextLookupContext.class);
+    
+    @Nullable
+    protected final ManagementContext managementContext;
+    
     protected final RebindContext rebindContext;
     protected final RebindExceptionHandler exceptionHandler;
     
     public RebindContextLookupContext(RebindContext rebindContext, RebindExceptionHandler exceptionHandler) {
+        this(null, rebindContext, exceptionHandler);
+    }
+    public RebindContextLookupContext(ManagementContext managementContext, RebindContext rebindContext, RebindExceptionHandler exceptionHandler) {
+        this.managementContext = managementContext;
         this.rebindContext = rebindContext;
         this.exceptionHandler = exceptionHandler;
+    }
+    
+    @Override public ManagementContext lookupManagementContext() {
+        return managementContext;
     }
     
     @Override public Entity lookupEntity(String id) {

@@ -47,7 +47,8 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
     // TODO json of this object should *be* this, not wrapped this ($brooklyn:literal is a bit of a hack, though it might work!)
     @JsonInclude
     @JsonProperty(value="$brooklyn:literal")
-    public final Object dsl;
+    // currently marked transient because it's only needed for logging
+    private transient Object dsl = "(gone)";
     
     public BrooklynDslDeferredSupplier() {
         PlanInterpretationNode sourceNode = BrooklynDslInterpreter.currentNode();
@@ -55,7 +56,7 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
     }
     
     /** returns the current entity; for use in implementations of {@link #get()} */
-    protected final EntityInternal entity() {
+    protected final static EntityInternal entity() {
         // rely on implicit ThreadLocal for now
         return (EntityInternal) EffectorTasks.findEntity();
     }

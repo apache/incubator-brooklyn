@@ -68,7 +68,9 @@ import brooklyn.util.task.system.SystemTasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -809,6 +811,30 @@ public class Entities {
         System.out.println(t.getStdout());
         System.err.println(t.getStderr());
         return t;
+    }
+    
+    /** returns the entity, its children, and all its children, and so on;
+     * @param root entity whose descendants should be iterated
+     */
+    public static Iterable<Entity> descendants(Entity root) {
+        Iterable<Entity> descs = Iterables.concat(Iterables.transform(root.getChildren(), new Function<Entity,Iterable<Entity>>() {
+            @Override
+            public Iterable<Entity> apply(Entity input) {
+                return descendants(input);
+            }
+        }));
+        return Iterables.concat(descs, Collections.singleton(root));
+    }
+
+    /** return all descendants of given entity matching the given predicate.
+     * see {@link EntityPredicates} for useful second arguments! */
+    public static Iterable<Entity> descendants(Entity root, Predicate<Entity> matching) {
+        return Iterables.filter(descendants(root), matching);
+    }
+
+    /** return all descendants of given entity of the given type */
+    public static <T extends Entity> Iterable<T> descendants(Entity root, Class<T> ofType) {
+        return Iterables.filter(descendants(root), ofType);
     }
     
 }

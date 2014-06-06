@@ -39,7 +39,8 @@ public class JavaWebAppWithDslYamlRebindIntegrationTest extends AbstractYamlTest
     protected LocalManagementContext newTestManagementContext() {
         if (mementoDir!=null) throw new IllegalStateException("already created mgmt context");
         mementoDir = Files.createTempDir();
-        LocalManagementContext mgmt = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
+        LocalManagementContext mgmt =
+            RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         mgmtContexts.add(mgmt);
         return mgmt;
     }
@@ -84,8 +85,8 @@ public class JavaWebAppWithDslYamlRebindIntegrationTest extends AbstractYamlTest
         Assert.assertEquals(app2.getChildren().size(), 2);
     }
 
-    // failing test based on https://github.com/brooklyncentral/brooklyn/issues/1422
-    @Test(groups="Integration", enabled=false)
+    // test for https://github.com/brooklyncentral/brooklyn/issues/1422
+    @Test(groups="Integration")
     public void testJavaWebWithMemberSpecRebind() throws Exception {
         Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl("test-java-web-app-spec-and-db-with-function.yaml"));
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
@@ -96,10 +97,9 @@ public class JavaWebAppWithDslYamlRebindIntegrationTest extends AbstractYamlTest
         Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), app);
         for (Task<?> t: tasks) t.blockUntilEnded();
         Entities.dumpInfo(app);
-
+        
         Application app2 = rebind(app);
         Assert.assertEquals(app2.getChildren().size(), 2);
     }
-    
 
 }

@@ -37,20 +37,28 @@ public class BrooklynDslCommon {
             // if all args are resolved, apply the format string now
             return String.format(pattern, args);
         }
-        return new BrooklynDslDeferredSupplier<String>() {
-            private static final long serialVersionUID = -4849297712650560863L;
-
-            @Override
-            public Task<String> newTask() {
-                return DependentConfiguration.formatString(pattern, args);
-            }
-            @Override
-            public String toString() {
-                return "$brooklyn:formatString("+pattern+")";
-            }
-        };
+        return new FormatString(pattern, args);
     }
 
+    protected static final class FormatString extends BrooklynDslDeferredSupplier<String> {
+        private static final long serialVersionUID = -4849297712650560863L;
+        private String pattern;
+        private Object[] args;
+
+        public FormatString(String pattern, Object ...args) {
+            this.pattern = pattern;
+            this.args = args;
+        }
+        @Override
+        public Task<String> newTask() {
+            return DependentConfiguration.formatString(pattern, args);
+        }
+        @Override
+        public String toString() {
+            return "$brooklyn:formatString("+pattern+")";
+        }
+    }
+    
     // TODO: Would be nice to have sensor(String sensorName), which would take the sensor from the entity in question, 
     //       but that would require refactoring of Brooklyn DSL
     // TODO: Should use catalog's classloader, rather than Class.forName; how to get that? Should we return a future?!

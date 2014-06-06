@@ -236,7 +236,7 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Enricher> enrichers = Maps.newLinkedHashMap();
             
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
-            LookupContext realLookupContext = new RebindContextLookupContext(rebindContext, exceptionHandler);
+            LookupContext realLookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
             
             // Two-phase deserialization.
             // First we deserialize just the "manifest" to find all instances (and their types).

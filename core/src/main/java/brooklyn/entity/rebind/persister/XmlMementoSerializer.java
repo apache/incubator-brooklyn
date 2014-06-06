@@ -24,6 +24,7 @@ import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
@@ -35,6 +36,7 @@ import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.SingleValueConverter;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.core.ReferencingMarshallingContext;
 import com.thoughtworks.xstream.core.util.HierarchicalStreams;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
@@ -80,6 +82,9 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.registerConverter(new PolicyConverter());
         xstream.registerConverter(new EnricherConverter());
         xstream.registerConverter(new EntityConverter());
+        
+        xstream.registerConverter(new ManagementContextConverter());
+        
         xstream.registerConverter(new TaskConverter(xstream.getMapper()));
     }
     
@@ -218,6 +223,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
+    static boolean loggedTaskWarning = false;
     public class TaskConverter implements Converter {
         private final Mapper mapper;
         
@@ -237,10 +243,18 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
                 } catch (InterruptedException e) {
                     throw Exceptions.propagate(e);
                 } catch (ExecutionException e) {
-                    LOG.warn("Unexpected exception getting done (and non-error) task result for "+source+"; continuing", e);
+                    LOG.warn("Unexpected exception getting done (and non-error) task result for "+source+"; continuing: "+e, e);
                 }
             } else {
                 // TODO How to log sensibly, without it logging this every second?!
+                // jun 2014, have added a "log once" which is not ideal but better than the log never behaviour
+                if (!loggedTaskWarning) {
+                    LOG.warn("Intercepting and skipping request to serialize a Task"
+                        + (context instanceof ReferencingMarshallingContext ? " at "+((ReferencingMarshallingContext)context).currentPath() : "")+
+                        " (only logging this once): "+source);
+                    loggedTaskWarning = true;
+                }
+                
                 return;
             }
         }
@@ -257,4 +271,28 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             }
         }
     }
+    
+    public class ManagementContextConverter implements Converter {
+        @Override
+        public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
+            return ManagementContext.class.isAssignableFrom(type);
+        }
+        @Override
+        public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
+            // we write nothing, and always insert the current mgmt context
+            
+            // if we want to explore this further, see #1422; but in short, mgmt is a common part of DSL resolution
+//            if (!loggedMgmtContextWarning) {
+//                LOG.warn("Intercepting request to serialize management context"
+//                    + (context instanceof ReferencingMarshallingContext ? " at "+((ReferencingMarshallingContext)context).currentPath() : "")+
+//                    " (only logging this once): "+source);
+//                loggedMgmtContextWarning = true;
+//            }
+        }
+        @Override
+        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+            return lookupContext.lookupManagementContext();
+        }
+    }
+    
 }
