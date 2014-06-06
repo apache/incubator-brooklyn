@@ -72,11 +72,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
         assertEquals(newPortForwardManager.lookup(newSimulatedMachine, 80), HostAndPort.fromParts(publicAddress, 40080));
     }
     
-    public interface HasPfm {
-        PortForwardManager getPfm();
-    }
-    
-    public static class MyEntity extends TestEntityImpl implements HasPfm {
+    public static class MyEntity extends TestEntityImpl {
         public static final ConfigKey<PortForwardManager> PORT_FORWARD_MANAGER = ConfigKeys.newConfigKey(PortForwardManager.class, "myentity.portForwardManager");
         public static final AttributeSensor<PortForwardManager> PORT_FORWARD_MANAGER_LIVE = Sensors.newSensor(PortForwardManager.class, "myentity.portForwardManager.live");
 
@@ -88,13 +84,8 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
                 PortForwardManagerAuthority pfm = new PortForwardManagerAuthority();
                 pfm.injectOwningEntity(this);
                 setAttribute(PORT_FORWARD_MANAGER_LIVE, pfm);
-                setConfig(PORT_FORWARD_MANAGER, PortForwardManagerClient.fromMethodOnEntity(this, "getPfm"));
+                setConfig(PORT_FORWARD_MANAGER, PortForwardManagerClient.fromAttributeOnEntity(this, PORT_FORWARD_MANAGER_LIVE));
             }
-        }
-        
-        @Override
-        public PortForwardManager getPfm() {
-            return getAttribute(PORT_FORWARD_MANAGER_LIVE);
         }
         
         @SetFromFlag("myconfigflagname")

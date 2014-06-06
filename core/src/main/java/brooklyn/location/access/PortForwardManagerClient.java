@@ -3,6 +3,7 @@ package brooklyn.location.access;
 import java.util.Collection;
 
 import brooklyn.entity.Entity;
+import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -43,6 +44,21 @@ public class PortForwardManagerClient implements PortForwardManager {
                 }
                 if (result==null)
                     throw new IllegalStateException("No PortForwardManager available via "+getterMethodOnEntity+" on "+entity+" (returned null)");
+                return result;
+            }
+        });
+    }
+
+    /** creates an instance given an entity and {@link AttributeSensor} to retrieve the PortForwardManager */ 
+    public static PortForwardManager fromAttributeOnEntity(final Entity entity, final AttributeSensor<PortForwardManager> attributeOnEntity) {
+        Preconditions.checkNotNull(entity);
+        Preconditions.checkNotNull(attributeOnEntity);
+        return new PortForwardManagerClient(new Supplier<PortForwardManager>() {
+            @Override
+            public PortForwardManager get() {
+                PortForwardManager result = entity.getAttribute(attributeOnEntity);
+                if (result==null)
+                    throw new IllegalStateException("No PortForwardManager available via "+attributeOnEntity+" on "+entity+" (returned null)");
                 return result;
             }
         });
