@@ -452,16 +452,15 @@ public class Os {
 
     public static boolean isAbsoluteLocal(String path) {
         if (Os.isMicrosoftWindows()) {
-        	return isAbsoluteWin(path);
+            return isAbsoluteWin(path);
         } else {
-        	return isAbsoluteUnix(path);
+            return isAbsoluteUnix(path);
         }
     }
-    
+
     public static boolean isAbsoluteUnix(String path) {
-    	return 
-        	path.startsWith(SEPARATOR_UNIX) || 
-        	(path.equals("~") || path.startsWith("~/"));
+        return path.startsWith(SEPARATOR_UNIX) ||
+                (path.equals("~") || path.startsWith("~/"));
     }
 
     public static boolean isAbsoluteWin(String path) {
@@ -469,9 +468,9 @@ public class Os {
     }
 
     public static boolean isMicrosoftWindows() {
-        if (System.getProperty("os.name").toLowerCase().indexOf("microsoft")>=0)
-            return true;
-        return false;
+        String os = System.getProperty("os.name").toLowerCase();
+        //see org.apache.commons.lang.SystemUtils.IS_WINDOWS
+        return os.startsWith("windows");
     }
 
     /** creates a private temp file which will be deleted on exit;
