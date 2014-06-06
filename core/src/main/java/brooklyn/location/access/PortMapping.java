@@ -39,4 +39,20 @@ public class PortMapping {
         return Objects.toStringHelper(this).add("public", publicIpId+":"+publicPort).
                 add("private", target+":"+privatePort).toString();
     }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof PortMapping)) return false;
+        PortMapping opm = (PortMapping)obj;
+        return Objects.equal(publicIpId, opm.publicIpId) &&
+            Objects.equal(publicPort, opm.publicPort) &&
+            Objects.equal(target, opm.target) &&
+            Objects.equal(privatePort, opm.privatePort);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(publicIpId, publicPort, target, privatePort);
+    }
+    
 }

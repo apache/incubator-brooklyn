@@ -117,4 +117,10 @@ public interface EntityInternal extends EntityLocal, Rebindable {
     
     @Override
     RebindSupport<EntityMemento> getRebindSupport();
+
+    /**
+     * Can be called to request that the entity be persisted.
+     * This persistence may happen asynchronously, or may not happen at all if persistence is disabled.
+     */
+    void requestPersist();
 }

@@ -49,4 +49,11 @@ public class StringKeyMapConverterTest extends ConverterTestFixture {
         assertX(m, "<MutableMap>\n  <entry key=\"a b\">x</entry>\n</MutableMap>");
     }
 
+    @Test
+    public void testWithNumericKey() throws UnknownHostException {
+        Map m = Maps.newLinkedHashMap();
+        m.put("123", "v");
+        m.put("a", "v2");
+        assertX(m, "<map>\n  <entry key=\"123\">v</entry>\n  <a>v2</a>\n</map>");
+    }
 }
