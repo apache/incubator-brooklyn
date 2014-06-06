@@ -47,9 +47,8 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         onChanged();
     }
     
-    /** reserves a unique public port on the given publicIpId
-     * (often followed by {@link #associate(String, int, Location, int)}
-     * to enable {@link #lookup(Location, int)}) */
+    /** {@inheritDoc} */
+    @Override
     public int acquirePublicPort(String publicIpId) {
         int port;
         synchronized (this) {
@@ -65,7 +64,8 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         return port;
     }
 
-    /** returns old mapping if it existed, null if it is new */
+    /** {@inheritDoc} */
+    @Override
     public PortMapping acquirePublicPortExplicit(String publicIpId, int port) {
         PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
         log.debug("assigning explicit public port "+port+" at "+publicIpId);
@@ -78,12 +78,14 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         return publicIpId+":"+publicPort;
     }
 
-    /** returns the port mapping for a given publicIpId and public port */
+    /** {@inheritDoc} */
+    @Override
     public synchronized PortMapping getPortMappingWithPublicSide(String publicIpId, int publicPort) {
         return mappings.get(makeKey(publicIpId, publicPort));
     }
 
-    /** returns the subset of port mappings associated with a given public IP ID */
+    /** {@inheritDoc} */
+    @Override
     public synchronized Collection<PortMapping> getPortMappingWithPublicIpId(String publicIpId) {
         List<PortMapping> result = new ArrayList<PortMapping>();
         for (PortMapping m: mappings.values())
@@ -91,7 +93,8 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         return result;
     }
 
-    /** clears the given port mapping, returning the mapping if there was one */
+    /** {@inheritDoc} */
+    @Override
     public PortMapping forgetPortMapping(String publicIpId, int publicPort) {
         PortMapping result;
         synchronized (this) {
@@ -102,14 +105,14 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         return result;
     }
     
+    /** {@inheritDoc} */
+    @Override
     public boolean forgetPortMapping(PortMapping m) {
         return (forgetPortMapping(m.publicIpId, m.publicPort) != null);
     }
 
-    // -----------------
-    
-    /** records a public hostname or address to be associated with the given publicIpId for lookup purposes */
-    // conceivably this may have to be access-location specific
+    /** {@inheritDoc} */
+    @Override
     public void recordPublicIpHostname(String publicIpId, String hostnameOrPublicIpAddress) {
         log.debug("recording public IP "+publicIpId+" associated with "+hostnameOrPublicIpAddress);
         synchronized (publicIpIdToHostname) {
@@ -120,14 +123,16 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         onChanged();
     }
 
-    /** returns a recorded public hostname or address */
+    /** {@inheritDoc} */
+    @Override
     public String getPublicIpHostname(String publicIpId) {
         synchronized (publicIpIdToHostname) {
             return publicIpIdToHostname.get(publicIpId);
         }
     }
     
-    /** clears a previous call to {@link #recordPublicIpHostname(String, String)} */
+    /** {@inheritDoc} */
+    @Override
     public boolean forgetPublicIpHostname(String publicIpId) {
         log.debug("forgetting public IP "+publicIpId+" association");
         boolean result;
@@ -136,11 +141,10 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         }
         onChanged();
         return result;
-
     }
 
-    /** returns the public host and port for use accessing the given mapping */
-    // conceivably this may have to be access-location specific
+    /** {@inheritDoc} */
+    @Override
     public HostAndPort getPublicHostAndPort(PortMapping m) {
         String hostname = getPublicIpHostname(m.publicIpId);
         if (hostname==null)
@@ -148,11 +152,8 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         return HostAndPort.fromParts(hostname, m.publicPort);
     }
 
-    // -----------------------------
-    
-    /** reserves a unique public port for the purpose of forwarding to the given target,
-     * associated with a given location for subsequent lookup purpose;
-     * if already allocated, returns the previously allocated */
+    /** {@inheritDoc} */
+    @Override
     public int acquirePublicPort(String publicIpId, Location l, int privatePort) {
         int publicPort;
         synchronized (this) {
@@ -171,13 +172,8 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         return publicPort;
     }
 
-    /** returns the public ip hostname and public port for use contacting the given endpoint;
-     * null if:
-     * * no publicPort is associated with this location and private port
-     * * no publicIpId is associated with this location and private port
-     * * no publicIpHostname is recorded against the associated publicIpId
-     */
-    // conceivably this may have to be access-location specific -- see recordPublicIpHostname
+    /** {@inheritDoc} */
+    @Override
     public synchronized HostAndPort lookup(Location l, int privatePort) {
         for (PortMapping m: mappings.values()) {
             if (l.equals(m.target) && privatePort==m.privatePort)
@@ -186,12 +182,8 @@ public class PortForwardManagerAuthority implements PortForwardManager {
         return null;
     }
     
-    /** records a location and private port against a publicIp and public port,
-     * to support {@link #lookup(Location, int)};
-     * superfluous if {@link #acquirePublicPort(String, Location, int)} was used;
-     * but strongly recommended if {@link #acquirePublicPortExplicit(String, int)} was used
-     * e.g. if the location is not known ahead of time)
-     */
+    /** {@inheritDoc} */
+    @Override
     public synchronized void associate(String publicIpId, int publicPort, Location l, int privatePort) {
         synchronized (this) {
             associateImpl(publicIpId, publicPort, l, privatePort);
