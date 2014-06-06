@@ -17,6 +17,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
@@ -47,6 +48,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     log.debug("Loaded catalog for "+mgmt+": "+catalog+"; search classpath is "+catalog.getRootClassLoader());
             }
         });
+    }
+    
+    public boolean blockIfNotLoaded(Duration timeout) {
+        try {
+            return getCatalog().blockIfNotLoaded(timeout);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
     
     public CatalogDo getCatalog() {
@@ -148,9 +157,18 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 "Manual Catalog Additions", "User-additions to the catalog while Brooklyn is running, " +
         		"created "+Time.makeDateString());
         CatalogDo manualAdditionsCatalog = catalog.addCatalog(manualAdditionsCatalogDto);
-        if (manualAdditionsCatalog==null)
+        if (manualAdditionsCatalog==null) {
             // not hard to support, but slightly messy -- probably have to use ID's to retrieve the loaded instance
-            throw new UnsupportedOperationException("Catalogs cannot be added until the base catalog is loaded");
+            // for now block once, then retry
+            log.warn("Blocking until catalog is loaded before changing it");
+            boolean loaded = blockIfNotLoaded(Duration.TEN_SECONDS);
+            if (!loaded)
+                log.warn("Catalog still not loaded after delay; subsequent operations may fail");
+            manualAdditionsCatalog = catalog.addCatalog(manualAdditionsCatalogDto);
+            if (manualAdditionsCatalog==null) {
+                throw new UnsupportedOperationException("Catalogs cannot be added until the base catalog is loaded, and catalog is taking a while to load!");
+            }
+        }
         
         log.debug("Creating manual additions catalog for "+mgmt+": "+manualAdditionsCatalog);
         manualAdditionsClasses = new LoadedClassLoader();

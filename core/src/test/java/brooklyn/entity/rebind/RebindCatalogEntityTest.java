@@ -85,6 +85,11 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         assertEquals(newApp.getConfig(ConfigKeys.newStringConfigKey("myconf")), "myconfval");
     }
     
+    @Test(invocationCount=100, groups="Integration")
+    public void testRestoresAppFromCatalogClassloaderManyTimes() throws Exception {
+        testRestoresAppFromCatalogClassloader();
+    }
+    
     // TODO Not using RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     //      because that won't have right catalog classpath.
     //      How to reuse that code cleanly?
@@ -102,4 +107,5 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         newManagementContext.getRebindManager().start();
         return (StartableApplication) newApps.get(0);
     }
+
 }
