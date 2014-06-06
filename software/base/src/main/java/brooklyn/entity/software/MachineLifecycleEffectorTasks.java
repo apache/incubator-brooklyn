@@ -308,7 +308,7 @@ public abstract class MachineLifecycleEffectorTasks {
         String resolvedBase = null;
         if (entity.getConfig(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION) || machine.getConfig(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION)) {
             if (log.isDebugEnabled()) log.debug("Skipping on-box base dir resolution for "+entity+" at "+machine);
-            if (!Os.isAbsolute(base)) base = "~/"+base;
+            if (!Os.isAbsoluteLocal(base)) base = "~/"+base;
             resolvedBase = Os.tidyPath(base);
         } else if (machine instanceof SshMachineLocation) {
             SshMachineLocation ms = (SshMachineLocation)machine;
@@ -327,7 +327,7 @@ public abstract class MachineLifecycleEffectorTasks {
             resolvedBase = Strings.getFragmentBetween(baseTask.block().getStdout(), "BASE_DIR_RESULT:", ":BASE_DIR_RESULT");
         }
         if (resolvedBase==null) {
-            if (!Os.isAbsolute(base)) base = "~/"+base;
+            if (!Os.isAbsoluteLocal(base)) base = "~/"+base;
             resolvedBase = Os.tidyPath(base);
             log.warn("Could not resolve on-box directory for "+entity+" at "+machine+"; using "+resolvedBase+", though this may not be accurate at the target (and may fail shortly)");
         }

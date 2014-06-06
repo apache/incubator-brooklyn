@@ -38,6 +38,9 @@ public class Os {
 
     private static final Logger log = LoggerFactory.getLogger(Os.class);
     
+    private static final String SEPARATOR_UNIX = "/";
+    private static final String SEPARATOR_WIN = "\\";
+    
     /** returns the best tmp dir to use; see {@link TmpDirFinder} for the logic
      * (and the explanation why this is needed!) */
     public static String tmp() {
@@ -447,15 +450,22 @@ public class Os {
         return result;
     }
 
-    public static boolean isAbsolute(String path) {
-        if (path.startsWith(File.separator)) return true;
+    public static boolean isAbsoluteLocal(String path) {
         if (Os.isMicrosoftWindows()) {
-            if (path.length()>=3 && path.substring(1).startsWith(":\\"))
-                return true;
+        	return isAbsoluteWin(path);
         } else {
-            if (path.equals("~") || path.startsWith("~/")) return true;
+        	return isAbsoluteUnix(path);
         }
-        return false;
+    }
+    
+    public static boolean isAbsoluteUnix(String path) {
+    	return 
+        	path.startsWith(SEPARATOR_UNIX) || 
+        	(path.equals("~") || path.startsWith("~/"));
+    }
+
+    public static boolean isAbsoluteWin(String path) {
+        return path.length()>=3 && path.substring(1).startsWith(":\\");
     }
 
     public static boolean isMicrosoftWindows() {
