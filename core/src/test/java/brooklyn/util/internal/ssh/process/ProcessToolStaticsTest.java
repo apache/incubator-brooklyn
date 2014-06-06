@@ -3,12 +3,14 @@ package brooklyn.util.internal.ssh.process;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
 
 public class ProcessToolStaticsTest {
 
@@ -21,9 +23,17 @@ public class ProcessToolStaticsTest {
         err = new ByteArrayOutputStream();
     }
     
+    private List<String> getTestCommand() {
+        if(Os.isMicrosoftWindows()) {
+            return Arrays.asList("cmd", "/c", "echo", "hello", "world");
+        } else {
+            return Arrays.asList("echo", "hello", "world");
+        }
+    }
+
     @Test
     public void testRunsWithStdout() throws Exception {
-        int code = ProcessTool.execSingleProcess(Arrays.asList("echo", "hello", "world"), null, (File)null, out, err, this);
+        int code = ProcessTool.execSingleProcess(getTestCommand(), null, (File)null, out, err, this);
         Assert.assertEquals(err.toString().trim(), "");
         Assert.assertEquals(out.toString().trim(), "hello world");
         Assert.assertEquals(code, 0);
