@@ -426,12 +426,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
 
     /**
-     * @param replaceLocalNodeWithCurrentRecord - if true, the record for this mgmt node will be replaced with the
+     * @param reportCleanedState - if true, the record for this mgmt node will be replaced with the
      * actual current status known in this JVM (may be more recent than what is on disk);
      * normally there is no reason to care because data is persisted to disk immediately
      * after any significant change, but for fringe cases this is perhaps more accurate (perhaps remove in time?)
      */
-    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean replaceLocalNodeWithCurrentRecord) {
+    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean reportCleanedState) {
         if (disabled) {
             // if HA is disabled, then we are the only node - no persistence; just load a memento to describe this node
             Builder builder = ManagementPlaneSyncRecordImpl.builder()
@@ -448,17 +448,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             try {
                 ManagementPlaneSyncRecord result = persister.loadSyncRecord();
                 
-                // Detect AWOL nodes
-                result = ManagementPlaneSyncRecordImpl.builder()
-                        .masterNodeId(result.getMasterNodeId())
-                        .nodes(Iterables.transform(result.getManagementNodes().values(), detectNodesGoneAwolFunction))
-                        .node(createManagementNodeSyncRecord())
-                        .build();
-                
-                if (replaceLocalNodeWithCurrentRecord) {
+                if (reportCleanedState) {
+                    // Report this  nodes most recent state, and detect AWOL nodes
                     Builder builder = ManagementPlaneSyncRecordImpl.builder()
                         .masterNodeId(result.getMasterNodeId())
-                        .nodes(result.getManagementNodes().values())
+                        .nodes(Iterables.transform(result.getManagementNodes().values(), detectNodesGoneAwolFunction))
                         .node(createManagementNodeSyncRecord());
                     if (getNodeState() == ManagementNodeState.MASTER) {
                         builder.masterNodeId(ownNodeId);
@@ -494,11 +488,16 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return ticker.read();
     }
 
+    /**
+     * Infers the health of a node - if it last reported itself as healthy (standby or master), but we haven't heard 
+     * from it in a long time then report that node as failed; otherwise report its health as-is.
+     */
     private class DetectNodesGoneAwol implements Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> {
         @Nullable
         @Override
         public ManagementNodeSyncRecord apply(@Nullable ManagementNodeSyncRecord input) {
             if (input == null) return null;
+            if (!(input.getStatus() == ManagementNodeState.STANDBY || input.getStatus() == ManagementNodeState.MASTER)) return input;
             if (isHeartbeatOk(input, currentTimeMillis())) return input;
             return BasicManagementNodeSyncRecord.builder()
                     .from(input)
