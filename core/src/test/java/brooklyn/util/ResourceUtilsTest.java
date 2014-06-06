@@ -106,7 +106,7 @@ public class ResourceUtilsTest {
     public void testClassLoaderDir() throws Exception {
         String d = utils.getClassLoaderDir();
         log.info("Found resource "+this+" in: "+d);
-        assertTrue(new File(d+"/brooklyn/util/").exists());
+        assertTrue(new File(d, "brooklyn/util/").exists());
     }
 
     @Test
