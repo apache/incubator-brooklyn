@@ -61,7 +61,7 @@ public class BrooklynConfigKeys {
         "${"
         + "config['"+ONBOX_BASE_DIR.getName()+"']!"
         + "config['"+BROOKLYN_DATA_DIR.getName()+"']!"
-        + "r'"+Os.mergePathsUnix(Os.tmp(),"brooklyn-"+Os.user())+"'"
+        + "r'"+Os.mergePathsUnix("/tmp","brooklyn-"+Os.user())+"'"
         + "}"
             + "/"
             + "apps/${entity.applicationId}/"
