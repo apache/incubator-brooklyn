@@ -87,9 +87,12 @@ public class ResourceUtilsTest {
 
     @Test
     public void testGetResourceViaFileWithPrefix() throws Exception {
-        // on windows the correct syntax is  file:///c:/path  (note the extra /);
-        // however our routines also accept file://c:/path so the following is portable
-        InputStream stream = utils.getResourceFromUrl("file://"+tempFile.getAbsolutePath());
+        // The correct format for file URLs is file:///<absolute path>.
+        // On UNIX file:///tmp.
+        // On Windows both file:/C:/temp and file:///C:/temp are supported by Java, 
+        // while Windows itself supports the latter only. 
+        // Note that file://C:/temp is *wrong*, because C: is interpreted as the host
+        InputStream stream = utils.getResourceFromUrl(tempFile.toURI().toURL().toString());
         assertEquals(Streams.readFullyString(stream), tempFileContents);
     }
     
