@@ -2,6 +2,7 @@ package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
@@ -146,6 +147,17 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME), "myVal for with setFromFlag noShortName");
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME), "myVal for setFromFlag withShortName");
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITHOUT_SETFROMFLAG), "myVal for witout setFromFlag");
+    }
+
+    @Test
+    public void testReboundConfigDoesNotContainId() throws Exception {
+        MyEnricher policy = origApp.addEnricher(EnricherSpec.create(MyEnricher.class));
+        
+        newApp = (TestApplication) rebind();
+        MyEnricher newEnricher = (MyEnricher) Iterables.getOnlyElement(newApp.getEnrichers());
+
+        assertNull(newEnricher.getConfig(ConfigKeys.newStringConfigKey("id")));
+        assertEquals(newEnricher.getId(), policy.getId());
     }
 
     @Test

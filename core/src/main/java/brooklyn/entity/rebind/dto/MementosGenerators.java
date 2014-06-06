@@ -168,10 +168,14 @@ public class MementosGenerators {
         Set<String> nonPersistableFlagNames = MutableMap.<String,Object>builder()
                 .putAll(FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.TRANSIENT))
                 .putAll(FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.STATIC))
+                .put("id", String.class)
                 .filterValues(Predicates.not(Predicates.instanceOf(ConfigKey.class)))
                 .build()
                 .keySet();
-        Map<String, Object> persistableFlags = FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT);
+        Map<String, Object> persistableFlags = MutableMap.<String, Object>builder()
+                .putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT))
+                .removeAll(nonPersistableFlagNames)
+                .build();
         ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getLocalConfigBag() ).removeAll(nonPersistableFlagNames);
 
         builder.type = location.getClass().getName();
@@ -217,7 +221,12 @@ public class MementosGenerators {
             builder.config.put(key.getName(), value); 
         }
         
-        builder.config.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(policy, Modifier.STATIC ^ Modifier.TRANSIENT));
+        Map<String, Object> persistableFlags = MutableMap.<String, Object>builder()
+                .putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(policy, Modifier.STATIC ^ Modifier.TRANSIENT))
+                .remove("id")
+                .remove("name")
+                .build();
+        builder.config.putAll(persistableFlags);
 
         return builder;
     }
@@ -248,7 +257,12 @@ public class MementosGenerators {
             builder.config.put(key.getName(), value); 
         }
         
-        builder.config.putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(enricher, Modifier.STATIC ^ Modifier.TRANSIENT));
+        Map<String, Object> persistableFlags = MutableMap.<String, Object>builder()
+                .putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(enricher, Modifier.STATIC ^ Modifier.TRANSIENT))
+                .remove("id")
+                .remove("name")
+                .build();
+        builder.config.putAll(persistableFlags);
 
         return builder;
     }

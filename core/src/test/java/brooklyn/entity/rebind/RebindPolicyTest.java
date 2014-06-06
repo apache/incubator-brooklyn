@@ -2,6 +2,7 @@ package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
@@ -111,6 +112,17 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         assertFalse(manifest.getLocationIdToType().containsKey(loc.getId()));
     }
 
+    @Test
+    public void testReboundConfigDoesNotContainId() throws Exception {
+        MyPolicy policy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
+        
+        newApp = (TestApplication) rebind();
+        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
+
+        assertNull(newPolicy.getConfig(ConfigKeys.newStringConfigKey("id")));
+        assertEquals(newPolicy.getId(), policy.getId());
+    }
+    
     @Test
     public void testIsRebinding() throws Exception {
         origApp.addPolicy(PolicySpec.create(PolicyChecksIsRebinding.class));
