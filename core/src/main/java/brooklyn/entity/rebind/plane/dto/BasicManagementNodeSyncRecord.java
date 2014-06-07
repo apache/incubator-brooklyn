@@ -52,7 +52,7 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         public Builder timestampUtc(long val) {
             timestampUtc = val; return self();
         }
-        public Builder from(BasicManagementNodeSyncRecord other) {
+        public Builder from(ManagementNodeSyncRecord other) {
             nodeId = other.getNodeId();
             brooklynVersion = other.getBrooklynVersion();
             timestampUtc = other.getTimestampUtc();

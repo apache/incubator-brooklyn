@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +28,9 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Ticker;
+import com.google.common.collect.Iterables;
 
 /**
  * This is the guts of the high-availability solution in Brooklyn.
@@ -79,6 +83,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private static final Logger LOG = LoggerFactory.getLogger(HighAvailabilityManagerImpl.class);
 
     private final ManagementContextInternal managementContext;
+    private final Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> detectNodesGoneAwolFunction = new DetectNodesGoneAwol();
     private volatile String ownNodeId;
     private volatile ManagementPlaneSyncRecordPersister persister;
     private volatile PromotionListener promotionListener;
@@ -421,12 +426,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
 
     /**
-     * @param replaceLocalNodeWithCurrentRecord - if true, the record for this mgmt node will be replaced with the
+     * @param reportCleanedState - if true, the record for this mgmt node will be replaced with the
      * actual current status known in this JVM (may be more recent than what is on disk);
      * normally there is no reason to care because data is persisted to disk immediately
      * after any significant change, but for fringe cases this is perhaps more accurate (perhaps remove in time?)
      */
-    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean replaceLocalNodeWithCurrentRecord) {
+    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean reportCleanedState) {
         if (disabled) {
             // if HA is disabled, then we are the only node - no persistence; just load a memento to describe this node
             Builder builder = ManagementPlaneSyncRecordImpl.builder()
@@ -443,10 +448,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             try {
                 ManagementPlaneSyncRecord result = persister.loadSyncRecord();
                 
-                if (replaceLocalNodeWithCurrentRecord) {
+                if (reportCleanedState) {
+                    // Report this  nodes most recent state, and detect AWOL nodes
                     Builder builder = ManagementPlaneSyncRecordImpl.builder()
                         .masterNodeId(result.getMasterNodeId())
-                        .nodes(result.getManagementNodes().values())
+                        .nodes(Iterables.transform(result.getManagementNodes().values(), detectNodesGoneAwolFunction))
                         .node(createManagementNodeSyncRecord());
                     if (getNodeState() == ManagementNodeState.MASTER) {
                         builder.masterNodeId(ownNodeId);
@@ -480,5 +486,23 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      */
     protected long currentTimeMillis() {
         return ticker.read();
+    }
+
+    /**
+     * Infers the health of a node - if it last reported itself as healthy (standby or master), but we haven't heard 
+     * from it in a long time then report that node as failed; otherwise report its health as-is.
+     */
+    private class DetectNodesGoneAwol implements Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> {
+        @Nullable
+        @Override
+        public ManagementNodeSyncRecord apply(@Nullable ManagementNodeSyncRecord input) {
+            if (input == null) return null;
+            if (!(input.getStatus() == ManagementNodeState.STANDBY || input.getStatus() == ManagementNodeState.MASTER)) return input;
+            if (isHeartbeatOk(input, currentTimeMillis())) return input;
+            return BasicManagementNodeSyncRecord.builder()
+                    .from(input)
+                    .status(ManagementNodeState.FAILED)
+                    .build();
+        }
     }
 }
