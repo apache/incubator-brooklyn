@@ -111,7 +111,7 @@ public class CatalogClasspathDo {
         if (scanMode==null || scanMode==CatalogScanningModes.NONE)
             return;
         
-        Stopwatch timer = new Stopwatch().start();
+        Stopwatch timer = Stopwatch.createStarted();
         ReflectionScanner scanner = null;
         if (!catalog.isLocal()) {
             log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);

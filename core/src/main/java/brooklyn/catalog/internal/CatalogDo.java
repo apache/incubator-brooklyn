@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,8 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.net.Urls;
+import brooklyn.util.time.CountdownTimer;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 
@@ -79,6 +82,21 @@ public class CatalogDo {
             log.info("Trace for failure to load "+this+": "+e, e);
         }
         isLoaded = true;
+        synchronized (this) {
+            notifyAll();
+        }
+    }
+
+    public boolean blockIfNotLoaded(Duration timeout) throws InterruptedException {
+        if (isLoaded()) return true;
+        synchronized (this) {
+            if (isLoaded()) return true;
+            CountdownTimer timer = CountdownTimer.newInstanceStarted(timeout);
+            while (!isLoaded())
+                if (!timer.waitOnForExpiry(this))
+                    return false;
+            return true;
+        }
     }
     
     protected void loadChildrenCatalogs() {
