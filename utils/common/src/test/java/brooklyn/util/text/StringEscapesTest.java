@@ -29,12 +29,11 @@ public class StringEscapesTest {
 		Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("\\\""));
 	}	
     
+    /** Bash handles ampersand in double quoted strings without escaping. */
     @Test
     public void testBashEscapableAmpersand() {
-        Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("\\&"));
-        Assert.assertFalse(BashStringEscapes.isValidForDoubleQuotingInBash("Marks & Spencer"));
-        Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("Marks \\& Spencer"));
-        Assert.assertFalse(BashStringEscapes.isValidForDoubleQuotingInBash("Marks \\\\& Spencer"));
+        Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("&"));
+        Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("Marks & Spencer"));
     }
 
     @Test

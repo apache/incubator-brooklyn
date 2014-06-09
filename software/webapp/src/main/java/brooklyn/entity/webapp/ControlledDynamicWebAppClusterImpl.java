@@ -1,6 +1,7 @@
 package brooklyn.entity.webapp;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -151,59 +152,58 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     
     public void start(Collection<? extends Location> locations) {
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+
         try {
             if (isLegacyConstruction()) {
                 init();
             }
-            
-            if (locations.isEmpty()) locations = this.getLocations();
+
+            if (locations.isEmpty()) locations = getLocations();
             addLocations(locations);
-            
+
             LoadBalancer loadBalancer = getController();
             loadBalancer.bind(MutableMap.of("serverPool", getCluster()));
-    
+
             List<Entity> childrenToStart = MutableList.<Entity>of(getCluster());
             // Set controller as child of cluster, if it does not already have a parent
             if (getController().getParent() == null) {
                 addChild(getController());
             }
-            
+
             // And only start controller if we are parent
             if (this.equals(getController().getParent())) childrenToStart.add(getController());
-        
-            Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations))
-                .get();
-            
+
+            Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).get();
+
             // wait for everything to start, then update controller, to ensure it is up to date
             // (will happen asynchronously as members come online, but we want to force it to happen)
             getController().update();
-            
-            connectSensors();
-            
+
+            setAttribute(SERVICE_UP, getCluster().getAttribute(SERVICE_UP));
+            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
         } catch (InterruptedException e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         } catch (ExecutionException e) {
             setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
+        } finally {
+            connectSensors();
         }
-
-        setAttribute(SERVICE_UP, getCluster().getAttribute(SERVICE_UP));
-        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
     }
 
     @Override
     public void stop() {
         setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+
         try {
             List<Startable> tostop = Lists.newArrayList();
             if (this.equals(getController().getParent())) tostop.add(getController());
             tostop.add(getCluster());
-            
+
             StartableMethods.stopSequentially(tostop);
-    
+
             clearLocations();
-            setAttribute(SERVICE_UP, false);
 
             setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
             setAttribute(SERVICE_UP, false);
@@ -229,11 +229,46 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
                 .build());
         addEnricher(Enrichers.builder()
                 // include hostname and address of controller (need both in case hostname only resolves to internal/private ip)
-                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, SERVICE_UP, ROOT_URL)
+                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, ROOT_URL)
                 .from(getController())
                 .build());
+
+        SensorEventListener<Boolean> updateServiceUp = new SensorEventListener<Boolean>() {
+            @Override
+            public void onEvent(SensorEvent<Boolean> event) {
+                setAttribute(SERVICE_UP, calculateServiceUp());
+            }
+        };
+        SensorEventListener<Lifecycle> updateServiceState = new SensorEventListener<Lifecycle>() {
+            @Override
+            public void onEvent(SensorEvent<Lifecycle> event) {
+                setAttribute(SERVICE_STATE, calculateServiceState());
+            }
+        };
+        
+        subscribe(getCluster(), SERVICE_STATE, updateServiceState);
+        subscribe(getController(), SERVICE_STATE, updateServiceState);
+        subscribe(getCluster(), SERVICE_UP, updateServiceUp);
+        subscribe(getController(), SERVICE_UP, updateServiceUp);
     }
 
+    protected Lifecycle calculateServiceState() {
+        Lifecycle currentState = getAttribute(SERVICE_STATE);
+        if (EnumSet.of(Lifecycle.ON_FIRE, Lifecycle.RUNNING).contains(currentState)) {
+            if (getCluster().getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) currentState = Lifecycle.ON_FIRE;
+            if (getController().getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) currentState = Lifecycle.ON_FIRE;
+        }
+        return currentState;
+    }
+
+    /**
+     * Default impl is to be up when running, and !up otherwise.
+     */
+    protected boolean calculateServiceUp() {
+        return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
+    }
+
+    @Override
     public Integer resize(Integer desiredSize) {
         return getCluster().resize(desiredSize);
     }
@@ -242,7 +277,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     public String replaceMember(String memberId) {
         return getCluster().replaceMember(memberId);
     }
-    
+
     /**
      * @return the current size of the group.
      */

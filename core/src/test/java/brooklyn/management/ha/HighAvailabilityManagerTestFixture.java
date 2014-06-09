@@ -2,6 +2,7 @@ package brooklyn.management.ha;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
@@ -151,6 +152,29 @@ public abstract class HighAvailabilityManagerTestFixture {
         testGetManagementPlaneStatus();
     }
     
+    @Test
+    public void testGetManagementPlaneSyncStateInfersTimedOutNodeAsFailed() throws Exception {
+        persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY, tickerCurrentMillis()))
+                .node(newManagerMemento("node1", ManagementNodeState.MASTER, tickerCurrentMillis()))
+                .setMaster("node1")
+                .build());
+        
+        manager.start(HighAvailabilityMode.AUTO);
+        
+        ManagementPlaneSyncRecord state = manager.getManagementPlaneSyncState();
+        assertEquals(state.getManagementNodes().get("node1").getStatus(), ManagementNodeState.MASTER);
+        assertEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.STANDBY);
+        
+        // Simulate passage of time; ticker used by this HA-manager so it will "correctly" publish
+        // its own heartbeat with the new time; but node1's record is now out-of-date.
+        tickerAdvance(Duration.seconds(31));
+        
+        ManagementPlaneSyncRecord state2 = manager.getManagementPlaneSyncState();
+        assertEquals(state2.getManagementNodes().get("node1").getStatus(), ManagementNodeState.FAILED);
+        assertNotEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.FAILED);
+    }
+
     private long tickerCurrentMillis() {
         return ticker.read();
     }
@@ -159,7 +183,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         currentTime.addAndGet(duration.toMilliseconds());
         return tickerCurrentMillis();
     }
-    
+
     private ManagementNodeSyncRecord newManagerMemento(String nodeId, ManagementNodeState status, long timestamp) {
         return BasicManagementNodeSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
     }

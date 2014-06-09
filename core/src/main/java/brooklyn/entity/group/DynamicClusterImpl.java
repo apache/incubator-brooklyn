@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -16,17 +17,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
@@ -186,7 +188,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(QUARANTINE_FAILED_ENTITIES);
     }
 
-    protected Group getQuarantineGroup() {
+    protected QuarantineGroup getQuarantineGroup() {
         return getAttribute(QUARANTINE_GROUP);
     }
 
@@ -211,9 +213,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         EntitySpec<?> spec = getConfig(MEMBER_SPEC);
         if (spec!=null) {
-            setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType())
-                +" ("+loc+")"
-                );
+            setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType()) +" ("+loc+")");
         }
 
         if (isAvailabilityZoneEnabled()) {
@@ -224,7 +224,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setAttribute(SERVICE_UP, calculateServiceUp());
         try {
             if (isQuarantineEnabled()) {
-                Group quarantineGroup = addChild(EntitySpec.create(BasicGroup.class).displayName("quarantine"));
+                QuarantineGroup quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
                 Entities.manage(quarantineGroup);
                 setAttribute(QUARANTINE_GROUP, quarantineGroup);
             }
@@ -263,7 +263,39 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         } catch (Exception e) {
             setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
+        } finally {
+            connectSensors();
         }
+    }
+
+    protected void connectSensors() {
+        subscribeToChildren(this, SERVICE_STATE, new SensorEventListener<Lifecycle>() {
+            @Override
+            public void onEvent(SensorEvent<Lifecycle> event) {
+                setAttribute(SERVICE_STATE, calculateServiceState());
+            }
+        });
+        subscribeToChildren(this, SERVICE_UP, new SensorEventListener<Boolean>() {
+            @Override
+            public void onEvent(SensorEvent<Boolean> event) {
+                setAttribute(SERVICE_UP, calculateServiceUp());
+            }
+        });
+    }
+
+    protected Lifecycle calculateServiceState() {
+        Lifecycle currentState = getAttribute(SERVICE_STATE);
+        if (EnumSet.of(Lifecycle.ON_FIRE, Lifecycle.RUNNING).contains(currentState)) {
+            Iterable<Lifecycle> memberStates = Iterables.transform(getMembers(), EntityFunctions.attribute(SERVICE_STATE));
+            int running = Iterables.frequency(memberStates, Lifecycle.RUNNING);
+            int onFire = Iterables.frequency(memberStates, Lifecycle.ON_FIRE);
+            if ((getInitialQuorumSize() > 0 ? running < getInitialQuorumSize() : true) && onFire > 0) {
+                currentState = Lifecycle.ON_FIRE;
+            } else if (onFire == 0 && running > 0) {
+                currentState = Lifecycle.RUNNING;
+            }
+        }
+        return currentState;
     }
 
     protected List<Location> findSubLocations(Location loc) {

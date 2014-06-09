@@ -157,9 +157,10 @@ public class JmxSupport implements UsesJmx {
                 fixPortsForModeNone();
             }
             // this will work for agent or agentless
-            HostAndPort jmx = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
-            HostAndPort rmi = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(RMI_REGISTRY_PORT));
-            return JmxHelper.toRmiJmxUrl(jmx.getHostText(), jmx.getPort(), rmi.getPort(), entity.getAttribute(JMX_CONTEXT));
+            return JmxHelper.toRmiJmxUrl(host,
+                    entity.getAttribute(JMX_PORT),
+                    entity.getAttribute(RMI_REGISTRY_PORT),
+                    entity.getAttribute(JMX_CONTEXT));
         }
     }
 

@@ -31,7 +31,9 @@ public class BrooklynAccessUtils {
     private static final Logger log = LoggerFactory.getLogger(BrooklynAccessUtils.class);
     
     public static final ConfigKey<PortForwardManager> PORT_FORWARDING_MANAGER = new BasicConfigKey<PortForwardManager>(
-            PortForwardManager.class, "brooklyn.portforwarding.manager");
+            PortForwardManager.class, "brooklyn.portforwarding.manager", "A port-forwarding manager to use at an entity "
+                + "or a location, where supported; note this should normally be a serializable client instance to prevent "
+                + "the creation of multiple disconnected instances via config duplication");
     
     public static final ConfigKey<Cidr> MANAGEMENT_ACCESS_CIDR = new BasicConfigKey<Cidr>(
             Cidr.class, "brooklyn.portforwarding.management.cidr", "CIDR to enable by default for port-forwarding for management",

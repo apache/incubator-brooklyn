@@ -88,8 +88,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         // do not double quote here; the env var is double quoted subsequently;
         // spaces should be preceded by double-quote
         // (if dbl quotes are needed we could pass on the command-line instead of in an env var)
-        String sJavaOpts = Joiner.on(" ").join(javaOpts);
-        // println "using java opts: $sJavaOpts"
+        String sJavaOpts = Joiner.on(' ').join(javaOpts);
         return MutableMap.<String, String>builder().putAll(super.getShellEnvironment()).put("JAVA_OPTS", sJavaOpts).build();
     }
 
