@@ -12,6 +12,7 @@ import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
+import brooklyn.management.entitlement.EntitlementManager;
 import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.util.guava.Maybe;
 
@@ -183,4 +184,8 @@ public interface ManagementContext {
      * Deregisters a listener from brooklyn.properties reload notifications 
      */
     void removePropertiesReloadListener(PropertiesReloadListener listener);
+
+    /** Active entitlements checker instance. */
+    EntitlementManager getEntitlementManager();
+    
 }

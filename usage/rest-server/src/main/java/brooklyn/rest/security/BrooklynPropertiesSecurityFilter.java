@@ -16,7 +16,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.entitlement.WebEntitlementContext;
 import brooklyn.rest.security.provider.DelegatingSecurityProvider;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 
 import com.sun.jersey.core.util.Base64;
 
@@ -45,11 +49,26 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
         }
         
         if (authenticate((HttpServletRequest)request)) {
+            String user = Strings.toString( ((HttpServletRequest)request).getSession().getAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE) );
             if (handleLogout((HttpServletRequest)request)) {
+                log.debug("REST logging out "+user+" of session "+((HttpServletRequest)request).getSession());
                 // do nothing here, fall through to below
             } else {
-                chain.doFilter(request, response);
-                return;
+                WebEntitlementContext entitlementContext = null;
+                try {
+                    entitlementContext = new WebEntitlementContext(user, ((HttpServletRequest)request).getRemoteAddr(), ((HttpServletRequest)request).getRequestURI());
+                    Entitlements.setEntitlementContext(entitlementContext);
+                    log.debug("REST starting processing request {}", entitlementContext);
+                    chain.doFilter(request, response);
+                    log.debug("REST completed processing request {}", entitlementContext);
+                    return;
+                } catch (Throwable e) {
+                    if (log.isDebugEnabled())
+                        log.debug("REST failed processing request "+entitlementContext+": "+e, e);
+                    throw Exceptions.propagate(e);
+                } finally {
+                    Entitlements.clearEntitlementContext();
+                }
             }
         }
         

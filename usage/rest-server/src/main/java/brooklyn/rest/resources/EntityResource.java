@@ -1,10 +1,9 @@
 package brooklyn.rest.resources;
 
-import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
+import static javax.ws.rs.core.Response.status;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -14,11 +13,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.common.collect.Collections2;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.management.entitlement.EntitlementPredicates;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.EntityApi;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.LocationSummary;
@@ -30,25 +36,34 @@ import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
-
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
 
-   @Override
+  @Override
   public List<EntitySummary> list(final String application) {
-       return EntityTransformer.entitySummaries(brooklyn().getApplication(application).getChildren());
+      return FluentIterable
+              .from(brooklyn().getApplication(application).getChildren())
+              .filter(EntitlementPredicates.hasEntitlementClass(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+              .transform(EntityTransformer.FROM_ENTITY)
+              .toList();
   }
 
-    @Override
-  public EntitySummary get(String application, String entity) {
-    return EntityTransformer.entitySummary(brooklyn().getEntity(application, entity));
+  @Override
+  public EntitySummary get(String application, String entityName) {
+      Entity entity = brooklyn().getEntity(application, entityName);
+      if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
+          return EntityTransformer.entitySummary(entity);
+      }
+      throw WebResourceUtils.unauthorized("User '%s' is not authorized to get entity '%s'",
+              Entitlements.getEntitlementContext().user(), entity);
   }
 
   @Override
   public List<EntitySummary> getChildren( final String application, final String entity) {
-    return EntityTransformer.entitySummaries(brooklyn().getEntity(application, entity).getChildren());
+      return FluentIterable
+              .from(brooklyn().getEntity(application, entity).getChildren())
+              .filter(EntitlementPredicates.hasEntitlementClass(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+              .transform(EntityTransformer.FROM_ENTITY)
+              .toList();
   }
 
   @Override
@@ -115,6 +130,5 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       }
       return result;
   }
-
 
 }

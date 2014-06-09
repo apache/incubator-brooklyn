@@ -19,7 +19,15 @@ import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 public class WebResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(WebResourceUtils.class);
-    
+
+    public static WebApplicationException unauthorized(String format, Object... args) {
+        String msg = String.format(format, args);
+        if (log.isDebugEnabled()) log.debug("returning 401 unauthorized("+msg+")");
+        throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .entity(ApiError.builder().message(msg).build()).build());
+    }
+
     public static WebApplicationException notFound(String format, Object... args) {
         String msg = String.format(format, args);
         if (log.isDebugEnabled()) log.debug("returning 404 notFound("+msg+") - may be a stale browser session");

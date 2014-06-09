@@ -8,6 +8,7 @@ import brooklyn.policy.Policy;
 
 public interface EntityChangeListener {
 
+    // TODO for testing only!
     public static final EntityChangeListener NOOP = new EntityChangeListener() {
         @Override public void onChanged() {}
         @Override public void onAttributeChanged(AttributeSensor<?> attribute) {}
