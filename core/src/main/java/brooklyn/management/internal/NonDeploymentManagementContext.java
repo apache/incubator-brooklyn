@@ -319,7 +319,13 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         checkInitialManagementContextReal();
         initialManagementContext.setBaseClassPathForScanning(urls);
     }
-    
+
+    @Override
+    public void setManagementNodeUri(URI uri) {
+        checkInitialManagementContextReal();
+        initialManagementContext.setManagementNodeUri(uri);
+    }
+
     @Override
     public void prePreManage(Entity entity) {
         // no-op

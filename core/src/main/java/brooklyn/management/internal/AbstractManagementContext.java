@@ -375,6 +375,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return gc;
     }
 
+    @Override
     public void setManagementNodeUri(URI uri) {
         this.uri = Maybe.of(checkNotNull(uri, "uri"));
     }
