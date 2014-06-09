@@ -211,7 +211,7 @@ public class SshFeed extends AbstractFeed {
                         public SshPollValue call() throws Exception {
                             return exec(pollInfo.command.get(), pollInfo.env.get());
                         }}, 
-                    new DelegatingPollHandler<SshPollValue>(handlers), 
+                    new DelegatingPollHandler<SshPollValue>(handlers),
                     minPeriod);
         }
     }

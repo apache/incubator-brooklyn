@@ -135,6 +135,7 @@ public class FunctionFeed extends AbstractFeed {
         super(builder.entity, builder.onlyIfServiceUp);
         
         for (FunctionPollConfig<?,?> config : builder.polls) {
+            @SuppressWarnings({ "rawtypes", "unchecked" })
             FunctionPollConfig<?,?> configCopy = new FunctionPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             Callable<?> job = config.getCallable();
@@ -142,7 +143,7 @@ public class FunctionFeed extends AbstractFeed {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected void preStart() {
         for (final FunctionPollIdentifier pollInfo : polls.keySet()) {

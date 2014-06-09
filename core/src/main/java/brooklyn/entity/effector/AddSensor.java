@@ -15,7 +15,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /** Entity initializer which adds a sensor to an entity's type definition.
- * TODO this does not add the feed. 
+ * Subclasses must add the feed; this class does not do that. 
  * @since 0.7.0 */
 @Beta
 public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {

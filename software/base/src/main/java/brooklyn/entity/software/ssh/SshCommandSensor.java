@@ -42,12 +42,6 @@ public final class SshCommandSensor<T extends String> extends AddSensor<String,A
     public void apply(final EntityLocal entity) {
         super.apply(entity);
 
-//        TODO:
-//        parameters for effectors <- test 
-//        text for new example, 
-//        and test for new example
-//        javadoc for this class
-        
         Supplier<Map<String,String>> envSupplier = new Supplier<Map<String,String>>() {
             @Override
             public Map<String, String> get() {

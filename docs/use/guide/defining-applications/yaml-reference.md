@@ -22,7 +22,7 @@ defining types:
 
 * `io.brooklyn.package.JavaEntityClass`
 * `java:io.brooklyn.package.JavaEntityClass`
-* *OSGi and YAML references are coming soon!*
+* *OSGi and YAML references are coming soon!* <!-- TODO -->
 
 A reference of some of the common service `type` instances used is included in a section below.
 

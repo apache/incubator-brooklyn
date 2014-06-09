@@ -160,6 +160,7 @@ public class ShellFeed extends AbstractFeed {
         super(builder.entity);
         
         for (ShellPollConfig<?> config : builder.polls) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             ShellPollConfig<?> configCopy = new ShellPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             String command = config.getCommand();
@@ -178,7 +179,7 @@ public class ShellFeed extends AbstractFeed {
         for (final ShellPollIdentifier pollInfo : polls.keySet()) {
             Set<ShellPollConfig<?>> configs = polls.get(pollInfo);
             long minPeriod = Integer.MAX_VALUE;
-            Set<AttributePollHandler<SshPollValue>> handlers = Sets.newLinkedHashSet();
+            Set<AttributePollHandler<? super SshPollValue>> handlers = Sets.newLinkedHashSet();
 
             for (ShellPollConfig<?> config : configs) {
                 handlers.add(new AttributePollHandler<SshPollValue>(config, entity, this));
@@ -198,7 +199,7 @@ public class ShellFeed extends AbstractFeed {
                             Optional<Integer> exitCode = Optional.fromNullable(taskWrapper.getExitCode());
                             return new SshPollValue(null, exitCode.or(-1), taskWrapper.getStdout(), taskWrapper.getStderr());
                         }}, 
-                    new DelegatingPollHandler(handlers), 
+                    new DelegatingPollHandler<SshPollValue>(handlers), 
                     minPeriod);
         }
     }

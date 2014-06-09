@@ -21,6 +21,7 @@ public class JmxOperationPollConfig<T> extends PollConfig<Object, T, JmxOperatio
     private List<String> signature = Collections.emptyList();
     private List<?> params = Collections.emptyList();
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public JmxOperationPollConfig(AttributeSensor<T> sensor) {
         super(sensor);
         onSuccess((Function)Functions.identity());

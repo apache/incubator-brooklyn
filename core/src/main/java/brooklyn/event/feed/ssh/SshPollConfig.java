@@ -1,7 +1,6 @@
 package brooklyn.event.feed.ssh;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,13 +14,11 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Maps;
 
 public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<T>> {
 
     private Supplier<String> commandSupplier;
     private List<Supplier<Map<String,String>>> dynamicEnvironmentSupplier = MutableList.of();
-    private Map<String,String> fixedEnvironment = Maps.newLinkedHashMap();
 
     public static final Predicate<SshPollValue> DEFAULT_SUCCESS = new Predicate<SshPollValue>() {
         @Override
@@ -37,7 +34,6 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
     public SshPollConfig(SshPollConfig<T> other) {
         super(other);
         commandSupplier = other.commandSupplier;
-        fixedEnvironment = other.fixedEnvironment;
     }
     
     /** @deprecated since 0.7.0; use {@link #getCommandSupplier()} and resolve just-in-time */
@@ -57,13 +53,11 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
             @Override
             public Map<String, String> get() {
                 Map<String,String> result = MutableMap.of();
-                result.putAll(fixedEnvironment);
                 for (Supplier<Map<String, String>> envS: dynamicEnvironmentSupplier) {
                     if (envS!=null) {
                         Map<String, String> envM = envS.get();
                         if (envM!=null) {
-                            // TODO deeply additive?
-                            result.putAll(envM);
+                            mergeEnvMaps(envM, result);
                         }
                     }
                 }
@@ -72,6 +66,11 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
         };
     }
     
+    protected void mergeEnvMaps(Map<String,String> supplied, Map<String,String> target) {
+        if (supplied==null) return;
+        // as the value is a string there is no need to look at deep merge behaviour
+        target.putAll(supplied);
+    }
 
     public SshPollConfig<T> command(String val) { return command(Suppliers.ofInstance(val)); }
     public SshPollConfig<T> command(Supplier<String> val) {
@@ -79,10 +78,9 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
         return this;
     }
 
-    /** add the given env param */
+    /** add the given env param; sequence is as per {@link #env(Supplier)} */
     public SshPollConfig<T> env(String key, String val) {
-        fixedEnvironment.put(checkNotNull(key, "key"), checkNotNull(val, "val"));
-        return this;
+        return env(Collections.singletonMap(key, val));
     }
     
     /** add the given env params; sequence is as per {@link #env(Supplier)} */
@@ -90,13 +88,16 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
         return env(Suppliers.ofInstance(val));
     }
 
-    /** adds the given dynamic env supplier. 
-     * these are put into the result in the order they are applied, with fixed values
-     * set via {@link #env(String, String)} preceding all these.
+    /** 
+     * adds the given dynamic supplier of environment variables.
      * <p>
-     * currently addition is not deep, in the case of two identical top-level keys 
-     * the latter one kills anything from the former. 
-     * this behaviour may change in future. */
+     * use of a supplier allows env vars to be computed on each execution,
+     * for example to take the most recent sensor values.
+     * <p>
+     * in the case of multiple map suppliers, static maps, or static {@link #env(String, String)} 
+     * key value pairs, the order in which they are specified here is the order
+     * in which they are computed and applied. 
+     **/
     public SshPollConfig<T> env(Supplier<Map<String,String>> val) {
         dynamicEnvironmentSupplier.add(val);
         return this;
