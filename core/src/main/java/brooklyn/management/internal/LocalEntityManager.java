@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
@@ -382,8 +383,18 @@ public class LocalEntityManager implements EntityManagerInternal {
      */
     private synchronized boolean unmanageNonRecursive(Entity e) {
         Entity proxyE = toProxyEntityIfAvailable(e);
+        Collection<Group> groups = e.getGroups();
         
         e.clearParent();
+        for (Group group : groups) {
+            group.removeMember(e);
+        }
+        if (e instanceof Group) {
+            Collection<Entity> members = ((Group)e).getMembers();
+            for (Entity member : members) {
+                member.removeGroup((Group)e);
+            }
+        }
         if (e instanceof Application) {
             applications.remove(proxyE);
             applicationIds.remove(e.getId());

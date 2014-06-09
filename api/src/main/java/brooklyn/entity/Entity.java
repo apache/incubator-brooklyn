@@ -135,9 +135,22 @@ public interface Entity extends Identifiable {
     Collection<Group> getGroups();
 
     /**
-     * Add this entity as a member of the given {@link Group}.
+     * Add this entity as a member of the given {@link Group}. Called by framework.
+     * <p>
+     * Users should call {@link Group#addMember(Entity)} instead; this method will then 
+     * automatically be called. However, the reverse is not true (calling this method will 
+     * not tell the group; this behaviour may change in a future release!)
      */
     void addGroup(Group group);
+
+    /**
+     * Removes this entity as a member of the given {@link Group}. Called by framework.
+     * <p>
+     * Users should call {@link Group#removeMember(Entity)} instead; this method will then 
+     * automatically be called. However, the reverse is not true (calling this method will 
+     * not tell the group; this behaviour may change in a future release!)
+     */
+    void removeGroup(Group group);
 
     /**
      * Return all the {@link Location}s this entity is deployed to.
