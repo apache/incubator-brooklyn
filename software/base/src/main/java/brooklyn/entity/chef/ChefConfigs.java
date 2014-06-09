@@ -8,6 +8,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.MapConfigKey.MapModifications;
 import brooklyn.event.basic.SetConfigKey.SetModifications;
+import brooklyn.util.git.GithubUrls;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -38,7 +39,10 @@ public class ChefConfigs {
     }
 
     public static String getGithubOpscodeRepo(String cookbookName) {
-        return "https://github.com/opscode-cookbooks/"+cookbookName+"/archive/master.tar.gz";
+        return getGithubOpscodeRepo(cookbookName, "master");
+    }
+    public static String getGithubOpscodeRepo(String cookbookName, String tag) {
+        return GithubUrls.tgz("opscode-cookbooks", cookbookName, tag);
     }
     
     public static void addToCookbooksFromGithub(EntitySpec<?> entity, String cookbookName, String cookbookUrl) {

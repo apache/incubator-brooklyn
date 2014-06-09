@@ -14,7 +14,7 @@ import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 
-@Deprecated /** @deprecated since 0.7.0 use MySqlEntityChef */
+@Deprecated /** @deprecated since 0.7.0 use see examples {Dynamic,Typed}ToyMySqlEntityChef */
 public class ChefSoloDriverToyMySqlEntity extends SoftwareProcessImpl implements ChefConfig {
 
     public static final String PID_FILE = "/var/run/mysqld/mysqld.pid";

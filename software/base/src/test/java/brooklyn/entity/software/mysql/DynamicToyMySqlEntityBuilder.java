@@ -156,7 +156,7 @@ public class DynamicToyMySqlEntityBuilder {
     }
 
     private static boolean isLinux(Supplier<MachineLocation> machineS) {
-        return machineS.get().getOsDetails().isLinux();
+        return machineS.get().getMachineDetails().getOsDetails().isLinux();
     }
 
 }
