@@ -109,7 +109,7 @@ public class XmlMementoSerializerTest {
         final TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
         ManagementContext managementContext = app.getManagementContext();
         try {
-            serializer.setLookupContext(new LookupContextImpl(ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
+            serializer.setLookupContext(new LookupContextImpl(managementContext, ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
             assertSerializeAndDeserialize(app);
         } finally {
             Entities.destroyAll(managementContext);
@@ -123,7 +123,7 @@ public class XmlMementoSerializerTest {
         try {
             @SuppressWarnings("deprecation")
             final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(brooklyn.location.basic.SimulatedLocation.class));
-            serializer.setLookupContext(new LookupContextImpl(ImmutableList.<Entity>of(), ImmutableList.of(loc), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
+            serializer.setLookupContext(new LookupContextImpl(managementContext, ImmutableList.<Entity>of(), ImmutableList.of(loc), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
             assertSerializeAndDeserialize(loc);
         } finally {
             Entities.destroyAll(managementContext);
@@ -136,7 +136,7 @@ public class XmlMementoSerializerTest {
         ReffingEntity reffer = new ReffingEntity(app);
         ManagementContext managementContext = app.getManagementContext();
         try {
-            serializer.setLookupContext(new LookupContextImpl(ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
+            serializer.setLookupContext(new LookupContextImpl(managementContext, ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
             ReffingEntity reffer2 = assertSerializeAndDeserialize(reffer);
             assertEquals(reffer2.entity, app);
         } finally {
@@ -150,7 +150,7 @@ public class XmlMementoSerializerTest {
         ReffingEntity reffer = new ReffingEntity((Object)app);
         ManagementContext managementContext = app.getManagementContext();
         try {
-            serializer.setLookupContext(new LookupContextImpl(ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
+            serializer.setLookupContext(new LookupContextImpl(managementContext, ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of()));
             ReffingEntity reffer2 = assertSerializeAndDeserialize(reffer);
             assertEquals(reffer2.obj, app);
         } finally {
@@ -187,13 +187,15 @@ public class XmlMementoSerializerTest {
     }
 
     static class LookupContextImpl implements LookupContext {
+        private final ManagementContext mgmt;
         private final Map<String, Entity> entities;
         private final Map<String, Location> locations;
         private final Map<String, Policy> policies;
         private final Map<String, Enricher> enrichers;
 
-        LookupContextImpl(Iterable<? extends Entity> entities, Iterable<? extends Location> locations,
+        LookupContextImpl(ManagementContext mgmt, Iterable<? extends Entity> entities, Iterable<? extends Location> locations,
                 Iterable<? extends Policy> policies, Iterable<? extends Enricher> enrichers) {
+            this.mgmt = mgmt;
             this.entities = Maps.newLinkedHashMap();
             this.locations = Maps.newLinkedHashMap();
             this.policies = Maps.newLinkedHashMap();
@@ -203,12 +205,16 @@ public class XmlMementoSerializerTest {
             for (Policy policy : policies) this.policies.put(policy.getId(), policy);
             for (Enricher enricher : enrichers) this.enrichers.put(enricher.getId(), enricher);
         }
-        LookupContextImpl(Map<String,? extends Entity> entities, Map<String,? extends Location> locations,
+        LookupContextImpl(ManagementContext mgmt, Map<String,? extends Entity> entities, Map<String,? extends Location> locations,
                 Map<String,? extends Policy> policies, Map<String,? extends Enricher> enrichers) {
+            this.mgmt = mgmt;
             this.entities = ImmutableMap.copyOf(entities);
             this.locations = ImmutableMap.copyOf(locations);
             this.policies = ImmutableMap.copyOf(policies);
             this.enrichers = ImmutableMap.copyOf(enrichers);
+        }
+        @Override public ManagementContext lookupManagementContext() {
+            return mgmt;
         }
         @Override public Entity lookupEntity(String id) {
             if (entities.containsKey(id)) {

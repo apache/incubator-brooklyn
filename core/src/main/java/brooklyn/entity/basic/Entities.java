@@ -68,7 +68,10 @@ import brooklyn.util.task.system.SystemTasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -442,6 +445,9 @@ public class Entities {
         return result;
     }
 
+    /** true if the given descendant includes the given ancestor in its chain.
+     * does NOT count a node as its ancestor.
+     */
     public static boolean isAncestor(Entity descendant, Entity potentialAncestor) {
         Entity ancestor = descendant.getParent();
         while (ancestor != null) {
@@ -450,8 +456,10 @@ public class Entities {
         }
         return false;
     }
-
-    /** note, it is usually preferred to use isAncestor() and swap the order, it is a cheaper method */
+    
+    /** checks whether the descendants of the given ancestor contains the given potentialDescendant.
+     * in this test, unlike in {@link #descendants(Entity)}, an entity is not counted as a descendant.
+     * note, it is usually preferred to use isAncestor() and swap the order, it is a cheaper method. */
     public static boolean isDescendant(Entity ancestor, Entity potentialDescendant) {
         Set<Entity> inspected = Sets.newLinkedHashSet();
         Stack<Entity> toinspect = new Stack<Entity>();
@@ -469,7 +477,38 @@ public class Entities {
 
         return false;
     }
+    
+    /** return all descendants of given entity matching the given predicate.
+     * see {@link EntityPredicates} for useful second arguments! */
+    public static Iterable<Entity> descendants(Entity root, Predicate<? super Entity> matching, boolean includeSelf) {
+        Iterable<Entity> descs = Iterables.concat(Iterables.transform(root.getChildren(), new Function<Entity,Iterable<Entity>>() {
+            @Override
+            public Iterable<Entity> apply(Entity input) {
+                return descendants(input);
+            }
+        }));
+        return Iterables.filter(Iterables.concat(descs, Collections.singleton(root)), matching);
+    }
 
+    /** as {@link #descendants(Entity, Predicate)}, for common case of including self */ 
+    public static Iterable<Entity> descendants(Entity root, Predicate<Entity> matching) {
+        return descendants(root, matching, true);
+    }
+
+    /**
+     * returns the entity, its children, and all its children, and so on. 
+     * as {@link #descendants(Entity, Predicate)}, for common case of matching everything and including self. */ 
+    public static Iterable<Entity> descendants(Entity root) {
+        return descendants(root, Predicates.alwaysTrue(), true);
+    }
+
+    /** return all descendants of given entity of the given type, potentially including the given root.
+     * as {@link #descendants(Entity, Predicate)}, for common case of {@link Predicates#instanceOf(Class)}, 
+     * including self, and returning the correct generics signature. */
+    public static <T extends Entity> Iterable<T> descendants(Entity root, Class<T> ofType) {
+        return Iterables.filter(descendants(root), ofType);
+    }
+    
     /**
      * @deprecated since 0.7.0; instead use {@link BrooklynShutdownHooks#invokeStopOnShutdown(Entity)}
      */

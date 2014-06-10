@@ -255,12 +255,12 @@ public class BrooklynComponentTemplateResolver {
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
             if (r.getFlagMaybeValue().isPresent()) {
-                Object transformed = transformSpecialFlags(r.getFlagMaybeValue().get(), mgmt);
+                Object transformed = new SpecialFlagsTransformer(mgmt).transformSpecialFlags(r.getFlagMaybeValue().get(), mgmt);
                 spec.configure(r.getFlagName(), transformed);
                 keyNamesUsed.add(r.getFlagName());
             }
             if (r.getConfigKeyMaybeValue().isPresent()) {
-                Object transformed = transformSpecialFlags(r.getConfigKeyMaybeValue().get(), mgmt);
+                Object transformed = new SpecialFlagsTransformer(mgmt).transformSpecialFlags(r.getConfigKeyMaybeValue().get(), mgmt);
                 spec.configure((ConfigKey<Object>)r.getConfigKey(), transformed);
                 keyNamesUsed.add(r.getConfigKey().getName());
             }
@@ -273,62 +273,54 @@ public class BrooklynComponentTemplateResolver {
             // we don't let a flag with the same name as a config key override the config key
             // (that's why we check whether it is used)
             if (!keyNamesUsed.contains(key)) {
-                Object transformed = transformSpecialFlags(bag.getStringKey(key), mgmt);
+                Object transformed = new SpecialFlagsTransformer(mgmt).transformSpecialFlags(bag.getStringKey(key), mgmt);
                 spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
             }
         }
     }
 
-    /**
-     * Makes additional transformations to the given flag with the extra knowledge of the flag's management context.
-     * @return The modified flag, or the flag unchanged.
-     */
-    protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
-        if (flag instanceof EntitySpecConfiguration) {
-            EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
-            // TODO: This should called from BrooklynAssemblyTemplateInstantiator.configureEntityConfig
-            // And have transformSpecialFlags(Object flag, ManagementContext mgmt) drill into the Object flag if it's a map or iterable?
-            @SuppressWarnings("unchecked")
-            Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration(), mgmt);
-            specConfig.setSpecConfiguration(resolvedConfig);
-            return Factory.newInstance(mgmt, specConfig.getSpecConfiguration()).resolveSpec();
+    protected static class SpecialFlagsTransformer implements Function<Object, Object> {
+        final ManagementContext mgmt;
+        public SpecialFlagsTransformer(ManagementContext mgmt) {
+            this.mgmt = mgmt;
         }
-        return flag;
-    }
-    
-    protected Map<?, ?> transformSpecialFlags(Map<?, ?> flag, final ManagementContext mgmt) {
-        // TODO: Re-usable function
-        return Maps.transformValues(flag, new Function<Object, Object>() {
-            public Object apply(Object input) {
-                if (input instanceof Map)
-                    return transformSpecialFlags((Map<?, ?>)input, mgmt);
-                else if (input instanceof Set<?>)
-                    return MutableSet.of(transformSpecialFlags((Iterable<?>)input, mgmt));
-                else if (input instanceof List<?>)
-                    return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input, mgmt));
-                else if (input instanceof Iterable<?>)
-                    return transformSpecialFlags((Iterable<?>)input, mgmt);
-                else 
-                    return transformSpecialFlags((Object)input, mgmt);
+        public Object apply(Object input) {
+            if (input instanceof Map)
+                return transformSpecialFlags((Map<?, ?>)input, mgmt);
+            else if (input instanceof Set<?>)
+                return MutableSet.of(transformSpecialFlags((Iterable<?>)input, mgmt));
+            else if (input instanceof List<?>)
+                return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input, mgmt));
+            else if (input instanceof Iterable<?>)
+                return transformSpecialFlags((Iterable<?>)input, mgmt);
+            else 
+                return transformSpecialFlags((Object)input, mgmt);
+        }
+        
+        protected Map<?, ?> transformSpecialFlags(Map<?, ?> flag, final ManagementContext mgmt) {
+            return Maps.transformValues(flag, this);
+        }
+        
+        protected Iterable<?> transformSpecialFlags(Iterable<?> flag, final ManagementContext mgmt) {
+            return Iterables.transform(flag, this);
+        }
+        
+        /**
+         * Makes additional transformations to the given flag with the extra knowledge of the flag's management context.
+         * @return The modified flag, or the flag unchanged.
+         */
+        protected Object transformSpecialFlags(Object flag, ManagementContext mgmt) {
+            if (flag instanceof EntitySpecConfiguration) {
+                EntitySpecConfiguration specConfig = (EntitySpecConfiguration) flag;
+                // TODO: This should called from BrooklynAssemblyTemplateInstantiator.configureEntityConfig
+                // And have transformSpecialFlags(Object flag, ManagementContext mgmt) drill into the Object flag if it's a map or iterable?
+                @SuppressWarnings("unchecked")
+                Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration(), mgmt);
+                specConfig.setSpecConfiguration(resolvedConfig);
+                return Factory.newInstance(mgmt, specConfig.getSpecConfiguration()).resolveSpec();
             }
-        });
-    }
-    
-    protected Iterable<?> transformSpecialFlags(Iterable<?> flag, final ManagementContext mgmt) {
-        return Iterables.transform(flag, new Function<Object, Object>() {
-            public Object apply(Object input) {
-                if (input instanceof Map<?, ?>)
-                    return transformSpecialFlags((Map<?, ?>)input, mgmt);
-                else if (input instanceof Set<?>)
-                    return MutableSet.of(transformSpecialFlags((Iterable<?>)input, mgmt));
-                else if (input instanceof List<?>)
-                    return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input, mgmt));
-                else if (input instanceof Iterable<?>)
-                    return transformSpecialFlags((Iterable<?>)input, mgmt);
-                else 
-                    return transformSpecialFlags((Object)input, mgmt);
-            }
-        });
+            return flag;
+        }
     }
 
     @SuppressWarnings("unchecked")

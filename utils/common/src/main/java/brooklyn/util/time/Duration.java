@@ -2,6 +2,7 @@ package brooklyn.util.time;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -14,8 +15,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 /** simple class determines a length of time */
-public class Duration implements Comparable<Duration> {
+public class Duration implements Comparable<Duration>, Serializable {
 
+    private static final long serialVersionUID = -2303909964519279617L;
+    
     public static final Duration ZERO = of(0, null);
     public static final Duration ONE_MILLISECOND = of(1, TimeUnit.MILLISECONDS);
     public static final Duration ONE_SECOND = of(1, TimeUnit.SECONDS);

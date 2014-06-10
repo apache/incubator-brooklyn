@@ -17,6 +17,7 @@ import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
+import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.policy.Enricher;
@@ -90,6 +91,10 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                 persister.checkpoint(memento);
                 final BrooklynMementoManifest manifest = persister.loadMementoManifest(exceptionHandler);
                 LookupContext dummyLookupContext = new LookupContext() {
+                    @Override
+                    public ManagementContext lookupManagementContext() {
+                        return null;
+                    }
                     @Override public Entity lookupEntity(String id) {
                         List<Class<?>> types = MutableList.<Class<?>>builder()
                                 .add(Entity.class, EntityInternal.class, EntityProxy.class)

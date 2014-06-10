@@ -44,45 +44,56 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
     @Override
     public Task<Entity> newTask() {
-        return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(new Callable<Entity>() {
-            @Override
-            public Entity call() throws Exception {
-                Iterable<Entity> entitiesToSearch = null;
-                switch (scope) {
-                    case THIS:
-                        return entity();
-                    case PARENT:
-                        return entity().getParent();
-                    case GLOBAL:
-                        entitiesToSearch = ((EntityManagerInternal)entity().getManagementContext().getEntityManager())
-                            .getAllEntitiesInApplication( entity().getApplication() );
-                        break;
-                    case DESCENDANT:
-                        entitiesToSearch = Sets.newLinkedHashSet();
-                        addDescendants(entity(), (Set<Entity>)entitiesToSearch);
-                        break;
-                    case SIBLING:
-                        entitiesToSearch = entity().getParent().getChildren();
-                        break;
-                    case CHILD:
-                        entitiesToSearch = entity().getChildren();
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected scope "+scope);
-                }
-                
-                Optional<Entity> result = Iterables.tryFind(entitiesToSearch, EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId));
-                
-                if (result.isPresent())
-                    return result.get();
-                
-                // TODO may want to block and repeat on new entities joining?
-                throw new NoSuchElementException("No entity matching id " + componentId);
-            }
-        }).build();
+        return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(
+            new EntityInScopeFinder(scope, componentId)).build();
     }
     
-    private void addDescendants(Entity entity, Set<Entity> entities) {
+    protected static class EntityInScopeFinder implements Callable<Entity> {
+        protected Scope scope;
+        protected String componentId;
+
+        public EntityInScopeFinder(Scope scope, String componentId) {
+            this.scope = scope;
+            this.componentId = componentId;
+        }
+
+        @Override
+        public Entity call() throws Exception {
+            Iterable<Entity> entitiesToSearch = null;
+            switch (scope) {
+                case THIS:
+                    return entity();
+                case PARENT:
+                    return entity().getParent();
+                case GLOBAL:
+                    entitiesToSearch = ((EntityManagerInternal)entity().getManagementContext().getEntityManager())
+                        .getAllEntitiesInApplication( entity().getApplication() );
+                    break;
+                case DESCENDANT:
+                    entitiesToSearch = Sets.newLinkedHashSet();
+                    addDescendants(entity(), (Set<Entity>)entitiesToSearch);
+                    break;
+                case SIBLING:
+                    entitiesToSearch = entity().getParent().getChildren();
+                    break;
+                case CHILD:
+                    entitiesToSearch = entity().getChildren();
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected scope "+scope);
+            }
+            
+            Optional<Entity> result = Iterables.tryFind(entitiesToSearch, EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId));
+            
+            if (result.isPresent())
+                return result.get();
+            
+            // TODO may want to block and repeat on new entities joining?
+            throw new NoSuchElementException("No entity matching id " + componentId);
+        }        
+    }
+    
+    private static void addDescendants(Entity entity, Set<Entity> entities) {
         entities.add(entity);
         for (Entity child : entity.getChildren()) {
             addDescendants(child, entities);
@@ -90,23 +101,29 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
     }
     
 	public BrooklynDslDeferredSupplier<?> attributeWhenReady(final String sensorName) {
-		return new BrooklynDslDeferredSupplier<Object>() {
-            private static final long serialVersionUID = 1740899524088902383L;
-            @SuppressWarnings("unchecked")
-            @Override
-			public Task<Object> newTask() {
-				Entity targetEntity = DslComponent.this.get();
-				Sensor<?> targetSensor = targetEntity.getEntityType().getSensor(sensorName);
-				if (!(targetSensor instanceof AttributeSensor<?>)) {
-					targetSensor = Sensors.newSensor(Object.class, sensorName);
-				}
-				return (Task<Object>) DependentConfiguration.attributeWhenReady(targetEntity, (AttributeSensor<?>)targetSensor);
-			}
-			@Override
-			public String toString() {
-			    return DslComponent.this.toString()+"."+"attributeWhenReady("+sensorName+")";
-			}
-		};
+		return new AttributeWhenReady(sensorName);
+	}
+	// class simply makes the memento XML files nicer
+	protected class AttributeWhenReady extends BrooklynDslDeferredSupplier<Object> {
+        private static final long serialVersionUID = 1740899524088902383L;
+        private String sensorName;
+        public AttributeWhenReady(String sensorName) {
+            this.sensorName = sensorName;
+        }
+        @SuppressWarnings("unchecked")
+        @Override
+        public Task<Object> newTask() {
+            Entity targetEntity = DslComponent.this.get();
+            Sensor<?> targetSensor = targetEntity.getEntityType().getSensor(sensorName);
+            if (!(targetSensor instanceof AttributeSensor<?>)) {
+                targetSensor = Sensors.newSensor(Object.class, sensorName);
+            }
+            return (Task<Object>) DependentConfiguration.attributeWhenReady(targetEntity, (AttributeSensor<?>)targetSensor);
+        }
+        @Override
+        public String toString() {
+            return DslComponent.this.toString()+"."+"attributeWhenReady("+sensorName+")";
+        }
 	}
 	
 	public BrooklynDslDeferredSupplier<Object> config(final String keyName) {
