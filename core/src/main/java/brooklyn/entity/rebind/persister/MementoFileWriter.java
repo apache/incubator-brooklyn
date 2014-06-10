@@ -12,10 +12,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
@@ -25,6 +21,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
+
 /**
  * For asynchronously writing to a file.
  * 
@@ -32,7 +32,10 @@ import com.google.common.util.concurrent.MoreExecutors;
  * scheduled, we will just rely on the existing one; otherwise we will write now.
  * 
  * @author aled
+ * @deprecated used only by now-deprecated {@link BrooklynMementoPersisterToMultiFile}, 
+ * impl largely moved to {@link FileBasedStoreObjectAccessor}
  */
+@Deprecated
 public class MementoFileWriter<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MementoFileWriter.class);
@@ -142,7 +145,7 @@ public class MementoFileWriter<T> {
             }});
         addPostExecListener(future);
     }
-    
+
     private void writeAsync() {
         ListenableFuture<Void> future = executor.submit(new Callable<Void>() {
             @Override public Void call() throws IOException {

@@ -16,6 +16,7 @@ import brooklyn.mementos.PolicyMemento;
  * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; 
  *             this class will be merged with {@link BrooklynMementoPersisterInMemory} in test code.
  */
+@Deprecated
 public abstract class AbstractBrooklynMementoPersister implements BrooklynMementoPersister {
 
     protected volatile MutableBrooklynMemento memento = new MutableBrooklynMemento();

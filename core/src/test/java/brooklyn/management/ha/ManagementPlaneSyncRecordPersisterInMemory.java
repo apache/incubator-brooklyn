@@ -3,19 +3,22 @@ package brooklyn.management.ha;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
+/** @deprecated since 0.7.0 use {@link ManagementPlaneSyncRecordPersisterToObjectStore}
+ * with {@link InMemoryObjectStore}
+ * <code>
+ * new ManagementPlaneSyncRecordPersisterToObjectStore(new InMemoryObjectStore(), classLoader)
+ * </code> */
+@Deprecated
 public class ManagementPlaneSyncRecordPersisterInMemory implements ManagementPlaneSyncRecordPersister {
 
     private static final Logger LOG = LoggerFactory.getLogger(ManagementPlaneSyncRecordPersisterInMemory.class);
@@ -72,69 +75,4 @@ public class ManagementPlaneSyncRecordPersisterInMemory implements ManagementPla
         }
     }
 
-    public static class MutableManagementPlaneSyncRecord implements ManagementPlaneSyncRecord {
-        private String masterNodeId;
-        private Map<String, ManagementNodeSyncRecord> managementNodes = Maps.newConcurrentMap();
-
-        @Override
-        public String getMasterNodeId() {
-            return masterNodeId;
-        }
-
-        @Override
-        public Map<String, ManagementNodeSyncRecord> getManagementNodes() {
-            return managementNodes;
-        }
-
-        @Override
-        public String toVerboseString() {
-            return toString();
-        }
-
-        public ImmutableManagementPlaneSyncRecord snapshot() {
-            return new ImmutableManagementPlaneSyncRecord(masterNodeId, managementNodes);
-        }
-        
-        public void setMasterNodeId(String masterNodeId) {
-            this.masterNodeId = masterNodeId;
-        }
-        
-        public void addNode(ManagementNodeSyncRecord memento) {
-            managementNodes.put(memento.getNodeId(), memento);
-        }
-        
-        public void deleteNode(String nodeId) {
-            managementNodes.remove(nodeId);
-        }
-    }
-    
-    public static class ImmutableManagementPlaneSyncRecord implements ManagementPlaneSyncRecord {
-        private final String masterNodeId;
-        private final Map<String, ManagementNodeSyncRecord> managementNodes;
-
-        ImmutableManagementPlaneSyncRecord(String masterNodeId, Map<String, ManagementNodeSyncRecord> nodes) {
-            this.masterNodeId = masterNodeId;
-            this.managementNodes = ImmutableMap.copyOf(nodes);
-        }
-        
-        @Override
-        public String getMasterNodeId() {
-            return masterNodeId;
-        }
-
-        @Override
-        public Map<String, ManagementNodeSyncRecord> getManagementNodes() {
-            return managementNodes;
-        }
-
-        @Override
-        public String toString() {
-            return Objects.toStringHelper(this).add("master", masterNodeId).add("nodes", managementNodes.keySet()).toString();
-        }
-        
-        @Override
-        public String toVerboseString() {
-            return Objects.toStringHelper(this).add("master", masterNodeId).add("nodes", managementNodes).toString();
-        }
-    }
 }

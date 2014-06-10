@@ -24,6 +24,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -39,7 +40,7 @@ public class DynamicMultiGroupTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, new LocalManagementContextForTests());
         app.start(ImmutableList.of(new SimulatedLocation()));
     }
 

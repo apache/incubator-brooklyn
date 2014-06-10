@@ -9,16 +9,15 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,11 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.PersistMode;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore;
+import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.PortRange;
@@ -46,17 +49,18 @@ import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToMultiFile;
+import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -107,7 +111,8 @@ public class BrooklynLauncher {
     private boolean shutdownOnExit = true;
     private PersistMode persistMode = PersistMode.DISABLED;
     private HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
-    private File persistenceDir;
+    private String persistenceDir;
+    private String persistenceLocation;
     private Duration persistPeriod = Duration.ONE_SECOND;
     private Duration haHeartbeatTimeout = Duration.THIRTY_SECONDS;
     private Duration haHeartbeatPeriod = Duration.ONE_SECOND;
@@ -205,6 +210,11 @@ public class BrooklynLauncher {
     
     public BrooklynLauncher locations(List<String> specs) {
         locationSpecs.addAll(checkNotNull(specs, "specs"));
+        return this;
+    }
+
+    public BrooklynLauncher persistenceLocation(@Nullable String persistenceLocationSpec) {
+        persistenceLocation = persistenceLocationSpec;
         return this;
     }
 
@@ -332,13 +342,14 @@ public class BrooklynLauncher {
         return this;
     }
     
-    public BrooklynLauncher persistenceDir(String persistenceDir) {
-        return persistenceDir(new File(persistenceDir));
-    }
-
-    public BrooklynLauncher persistenceDir(File persistenceDir) {
+    public BrooklynLauncher persistenceDir(@Nullable String persistenceDir) {
         this.persistenceDir = persistenceDir;
         return this;
+    }
+
+    public BrooklynLauncher persistenceDir(@Nullable File persistenceDir) {
+        if (persistenceDir==null) return persistenceDir((String)null);
+        return persistenceDir(persistenceDir.getAbsolutePath());
     }
 
     public BrooklynLauncher persistPeriod(Duration persistPeriod) {
@@ -397,12 +408,13 @@ public class BrooklynLauncher {
                 .getCampPlatform();
         // TODO start CAMP rest _server_ in the below (at /camp) ?
         
+        initPersistence();
+        
         // Start the web-console
         if (startWebApps) {
             startWebApps();
         }
         
-        initPersistence();
         createApps();
         startApps();
         
@@ -441,17 +453,37 @@ public class BrooklynLauncher {
 
     protected void initPersistence() {
         // Prepare the rebind directory, and initialise the RebindManager as required
+        PersistenceObjectStore objectStore = null;
         if (persistMode == PersistMode.DISABLED) {
             LOG.info("Persistence disabled");
         } else {
-            if (persistenceDir == null) {
-                persistenceDir = new File( BrooklynServerConfig.getPersistenceDir(brooklynProperties) );
+            if (persistenceLocation == null) {
+                persistenceLocation = brooklynProperties.getConfig(BrooklynServerConfig.PERSISTENCE_LOCATION_SPEC);
             }
-            preparePersistenceDir(persistenceDir);
             
+            persistenceDir = BrooklynServerConfig.resolvePersistencePath(persistenceDir, brooklynProperties, persistenceLocation);
+
+            if (Strings.isBlank(persistenceLocation)) {
+                objectStore = new FileBasedObjectStore(new File(persistenceDir));
+            } else {
+                objectStore = new JcloudsBlobStoreBasedObjectStore(persistenceLocation, persistenceDir);
+            }
+            try {
+                objectStore.prepareForUse(managementContext, persistMode);
+            } catch (FatalConfigurationRuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                LOG.debug("Error initializing persistence subsystem (rethrowing): "+e, e);
+                throw new FatalConfigurationRuntimeException("Error initializing persistence subsystem: "+
+                    Exceptions.collapseText(e), e);
+            }
+
             RebindManager rebindManager = managementContext.getRebindManager();
-            BrooklynMementoPersister persister = new BrooklynMementoPersisterToMultiFile(persistenceDir, managementContext.getCatalog().getRootClassLoader());
-            ((RebindManagerImpl)rebindManager).setPeriodicPersistPeriod(persistPeriod);
+
+            BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(objectStore,
+                    managementContext.getCatalog().getRootClassLoader());
+            ((RebindManagerImpl) rebindManager).setPeriodicPersistPeriod(persistPeriod);
             rebindManager.setPersister(persister);
         }
         
@@ -459,13 +491,14 @@ public class BrooklynLauncher {
         if (highAvailabilityMode == HighAvailabilityMode.DISABLED) {
             LOG.info("High availability disabled");
         } else {
-            File haDir = new File(persistenceDir, "plane");
+            if (objectStore==null)
+                throw new FatalConfigurationRuntimeException("Cannot run in HA mode when no persistence configured.");
+//            File haDir = new File(persistenceDir, "plane");
             
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
-            ManagementPlaneSyncRecordPersister persister = new ManagementPlaneSyncRecordPersisterToMultiFile(
-                    haDir, 
-                    managementContext.getCatalog().getRootClassLoader(), 
-                    managementContext.getManagementNodeId());
+            ManagementPlaneSyncRecordPersister persister = 
+                new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext,
+                    objectStore, managementContext.getCatalog().getRootClassLoader());
             ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeout);
             ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriod);
             haManager.setPersister(persister);
@@ -486,7 +519,16 @@ public class BrooklynLauncher {
                         rebinding = true;
                         break;
                     case AUTO:
-                        rebinding = (persistenceDir.exists() && !isMementoDirEmpty(persistenceDir));
+                        if (Strings.isNonBlank(persistenceLocation)) {
+                            rebinding = true;
+                        } else if (persistenceDir!=null && new File(persistenceDir).exists()) {
+                            String[] files = new File(persistenceDir).list();
+                            if (files==null)
+                                throw new FatalConfigurationRuntimeException("Persistence dir "+persistenceDir+" is not a directory.");
+                            rebinding = (files.length > 0);
+                        } else {
+                            rebinding = false;
+                        }
                         break;
                     default:
                         throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
@@ -494,16 +536,22 @@ public class BrooklynLauncher {
                 
                 RebindManager rebindManager = managementContext.getRebindManager();
                 if (rebinding) {
-                    LOG.info("Management node (no high availability) rebinding to entities using "+persistenceDir.getAbsolutePath());
+                    if (Strings.isNonBlank(persistenceLocation))
+                        LOG.info("Management node (no HA) rebinding to entities at "+persistenceLocation+" in "+persistenceDir);
+                    else
+                        LOG.info("Management node (no HA) rebinding to entities on file system in "+persistenceDir);
 
                     ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
                     try {
                         rebindManager.rebind(classLoader);
-                    } catch (IOException e) {
-                        throw Exceptions.propagate(e);
+                    } catch (Exception e) {
+                        Exceptions.propagateIfFatal(e);
+                        LOG.debug("Error rebinding to persisted state (rethrowing): "+e, e);
+                        throw new FatalConfigurationRuntimeException("Error rebinding to persisted state: "+
+                            Exceptions.collapseText(e), e);
                     }
                 } else {
-                    LOG.info("Management node (no high availability) starting, no existing entities to rebind in "+persistenceDir.getAbsolutePath());
+                    LOG.debug("Management node (no HA) skipping rebind, no existing entities in "+persistenceDir);
                 }
                 rebindManager.start();
             }
@@ -524,88 +572,9 @@ public class BrooklynLauncher {
                     throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
             }
             
-            LOG.info("Management node (with high availability) starting");
+            LOG.debug("Management node (with HA) starting");
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
             haManager.start(startMode);
-        }
-    }
-
-    /**
-     * Prepares the persistence directory for use (e.g. backing up old dir, checking is non-empty 
-     * or deleting as required, etc).
-     */
-    protected void preparePersistenceDir(File dir) {
-        try {
-            String persistencePath = dir.getAbsolutePath();
-            
-            switch (persistMode) {
-                case CLEAN:
-                    if (dir.exists()) {
-                        checkPersistenceDirAccessible(dir);
-                        try {
-                            File old = moveDirectory(dir);
-                            LOG.info("Persist-clean using "+persistencePath+"; moved old directory to "+old.getAbsolutePath());
-                        } catch (IOException e) {
-                            throw new FatalConfigurationRuntimeException("Error moving old persistence directory "+dir.getAbsolutePath(), e);
-                        }
-                    } else {
-                        LOG.info("Persist-clean using "+persistencePath+"; no pre-existing persisted data");
-                    }
-                    break;
-                case REBIND:
-                    checkPersistenceDirAccessible(dir);
-                    checkPersistenceDirNonEmpty(dir);
-                    try {
-                        File backup = backupDirectory(dir);
-                        LOG.info("Persist-rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
-                    } catch (IOException e) {
-                        throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
-                    }
-                    break;
-                case AUTO:
-                    if (dir.exists()) {
-                        checkPersistenceDirAccessible(dir);
-                    }
-                    if (dir.exists() && !isMementoDirEmpty(dir)) {
-                        try {
-                            File backup = backupDirectory(dir);
-                            LOG.info("Persist-auto will rebind using "+persistencePath+"; backed up directory to "+backup.getAbsolutePath());
-                        } catch (IOException e) {
-                            throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
-                        }
-                    } else {
-                        LOG.info("Persist-auto using fresh "+persistencePath+"; no pre-existing persisted data");
-                    }
-                    break;
-                default:
-                    throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
-            };
-            
-            if (!dir.exists()) {
-                boolean success = dir.mkdirs();
-                if (!success) {
-                    throw new FatalConfigurationRuntimeException("Failed to create persistence directory "+dir);
-                }
-            }
-
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-
-    protected void checkPersistenceDirAccessible(File persistenceDir) {
-        if (!(persistenceDir.exists() && persistenceDir.isDirectory() && persistenceDir.canRead() && persistenceDir.canWrite())) {
-            throw new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because "+
-                    (!persistenceDir.exists() ? "does not exist" :
-                        (!persistenceDir.isDirectory() ? "not a directory" :
-                            (!persistenceDir.canRead() ? "not readable" :
-                                (!persistenceDir.canWrite() ? "not writable" : "unknown reason")))));
-        }
-    }
-    
-    protected void checkPersistenceDirNonEmpty(File persistenceDir) {
-        if (isMementoDirEmpty(persistenceDir)) {
-            throw new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because directory is empty");
         }
     }
 
@@ -709,45 +678,4 @@ public class BrooklynLauncher {
         }
     }
     
-    static File backupDirectory(File dir) throws IOException, InterruptedException {
-        File parentDir = dir.getParentFile();
-        String simpleName = dir.getName();
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd-hhmm-ss").format(new Date());
-        File backupDir = new File(parentDir, simpleName+"-"+timestamp+".bak");
-        
-        String cmd = "cp -R "+dir.getAbsolutePath()+" "+backupDir.getAbsolutePath();
-        Process proc = Runtime.getRuntime().exec(cmd);
-        proc.waitFor();
-        if (proc.exitValue() != 0) {
-            throw new IOException("Error backing up directory, with command "+cmd);
-        }
-        return backupDir;
-    }
-
-    static File moveDirectory(File dir) throws InterruptedException, IOException {
-        File parentDir = dir.getParentFile();
-        String simpleName = dir.getName();
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd-hhmm-ss").format(new Date());
-        File newDir = new File(parentDir, simpleName+"-"+timestamp+".old");
-        
-        String cmd = "mv  "+dir.getAbsolutePath()+" "+newDir.getAbsolutePath();
-        Process proc = Runtime.getRuntime().exec(cmd);
-        proc.waitFor();
-        if (proc.exitValue() != 0) {
-            throw new IOException("Error moving directory, with command "+cmd);
-        }
-        return newDir;
-    }
-
-    /**
-     * Empty if directory is entirely empty, or only contains empty directories.
-     */
-    static boolean isMementoDirEmpty(File dir) {
-        if (!dir.exists()) return false;
-        for (File sub : dir.listFiles()) {
-            if (sub.isFile()) return false;
-            if (sub.isDirectory() && sub.listFiles().length > 0) return false;
-        }
-        return true;
-    }
 }

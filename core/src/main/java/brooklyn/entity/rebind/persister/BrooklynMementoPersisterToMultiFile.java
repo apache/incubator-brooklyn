@@ -15,6 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.RebindExceptionHandler;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
+import com.google.common.io.Files;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.mementos.BrooklynMemento;
@@ -29,13 +36,11 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 import brooklyn.util.xstream.XmlUtil;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Stopwatch;
-import com.google.common.io.Files;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
+/**
+ * @deprecated since 0.7.0 use {@link BrooklynMementoPersisterToObjectStore} instead;
+ * it has a multi-file filesystem backend for equivalent functionality, but is pluggable
+ * to support other storage backends 
+ */
 public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersister {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynMementoPersisterToMultiFile.class);
@@ -43,6 +48,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     private static final int SHUTDOWN_TIMEOUT_MS = 10*1000;
     
     private final File dir;
+    
     private final File entitiesDir;
     private final File locationsDir;
     private final File policiesDir;
@@ -65,7 +71,6 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     public BrooklynMementoPersisterToMultiFile(File dir, ClassLoader classLoader) {
         this.dir = checkNotNull(dir, "dir");
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
-//        this.serializer = new JsonMementoSerializer(classLoader);
         this.serializer = new RetryingMementoSerializer<Object>(rawSerializer, MAX_SERIALIZATION_ATTEMPTS);
         
         checkDirIsAccessible(dir);
@@ -129,6 +134,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             policyFiles = policiesDir.listFiles(fileFilter);
             enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
@@ -170,10 +176,14 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                 }
             }
             for (File file : enricherFiles) {
-                String contents = readFile(file);
-                String id = (String) XmlUtil.xpath(contents, "/enricher/id");
-                String type = (String) XmlUtil.xpath(contents, "/enricher/type");
-                builder.enricher(id, type);
+                try {
+                    String contents = readFile(file);
+                    String id = (String) XmlUtil.xpath(contents, "/enricher/id");
+                    String type = (String) XmlUtil.xpath(contents, "/enricher/type");
+                    builder.enricher(id, type);
+                } catch (Exception e) {
+                    exceptionHandler.onLoadEnricherMementoFailed("File "+file, e);
+                }
             }
             
             if (LOG.isDebugEnabled()) LOG.debug("Loaded memento manifest; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 
@@ -207,6 +217,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             policyFiles = policiesDir.listFiles(fileFilter);
             enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }

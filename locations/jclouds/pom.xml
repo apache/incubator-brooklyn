@@ -38,6 +38,17 @@
 
         <dependency>
             <groupId>${jclouds.groupId}</groupId>
+            <artifactId>jclouds-blobstore</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}</groupId>
+            <artifactId>jclouds-allblobstore</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${jclouds.groupId}</groupId>
             <artifactId>jclouds-allcompute</artifactId>
             <version>${jclouds.version}</version>
         </dependency>

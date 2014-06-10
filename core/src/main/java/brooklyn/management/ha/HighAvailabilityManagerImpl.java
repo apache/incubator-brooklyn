@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -41,9 +42,9 @@ import com.google.common.collect.Iterables;
  * That standby promotes itself.
  * <p>
  * The management nodes communicate their health/status via the {@link ManagementPlaneSyncRecordPersister}.
- * For example, if using {@link ManagementPlaneSyncRecordPersisterToMultiFile} with a shared NFS mount, 
- * then each management-node periodically writes its state. This acts as a heartbeat, being read by
- * the other management-nodes.
+ * For example, if using {@link ManagementPlaneSyncRecordPersisterToObjectStore} with a shared blobstore or 
+ * filesystem/NFS mount, then each management-node periodically writes its state. 
+ * This acts as a heartbeat, being read by the other management-nodes.
  * <p>
  * Promotion to master involves:
  * <ol>
@@ -90,12 +91,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile MasterChooser masterChooser = new AlphabeticMasterChooser();
     private volatile Duration pollPeriod = Duration.of(5, TimeUnit.SECONDS);
     private volatile Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
-    private volatile Ticker ticker = new Ticker() {
-            @Override
-            public long read() {
-                return System.currentTimeMillis();
-            }
-        };
+    private volatile Ticker tickerUtc = new Ticker() {
+        // strictly not a ticker because returns millis UTC, but it works fine even so
+        @Override
+        public long read() {
+            return System.currentTimeMillis();
+        }
+    };
     
     private volatile Task<?> pollingTask;
     private volatile boolean disabled;
@@ -138,7 +140,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     /** A ticker that reads in milliseconds */
     public HighAvailabilityManagerImpl setTicker(Ticker val) {
-        this.ticker = checkNotNull(val, "ticker");
+        this.tickerUtc = checkNotNull(val, "ticker");
         return this;
     }
 
@@ -174,25 +176,28 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         switch (startMode) {
         case AUTO:
             // don't care; let's start and see if we promote ourselves
-            doPollTask();
+            publishAndCheck(true);
             if (nodeState == ManagementNodeState.STANDBY) {
-                LOG.info("Management node (with high availability mode 'auto') started as standby");
+                String masterNodeId = getManagementPlaneSyncState().getMasterNodeId();
+                ManagementNodeSyncRecord masterNodeDetails = getManagementPlaneSyncState().getManagementNodes().get(masterNodeId);
+                LOG.info("Management node started as HA STANDBY autodetected, master is "+masterNodeId+
+                    (masterNodeDetails==null || masterNodeDetails.getUri()==null ? " (no further info)" : " at "+masterNodeDetails.getUri()));
             } else {
-                LOG.info("Management node (with high availability mode 'auto') started as master");
+                LOG.info("Management node started as HA MASTER autodetected");
             }
             break;
         case MASTER:
             if (existingMaster == null) {
                 promoteToMaster();
-                LOG.info("Management node (with high availability mode 'master') started as master");
+                LOG.info("Management node started as HA MASTER explicitly");
             } else {
                 throw new IllegalStateException("Master already exists; cannot start as master ("+existingMaster.toVerboseString()+")");
             }
             break;
         case STANDBY:
             if (existingMaster != null) {
-                doPollTask();
-                LOG.info("Management node (with high availability mode 'standby') started; status "+nodeState);
+                publishAndCheck(true);
+                LOG.info("Management node started as HA STANDBY explicitly, status "+nodeState);
             } else {
                 throw new IllegalStateException("No existing master; cannot start as standby");
             }
@@ -237,7 +242,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         final Runnable job = new Runnable() {
             @Override public void run() {
                 try {
-                    doPollTask();
+                    publishAndCheck(false);
                 } catch (Exception e) {
                     if (running) {
                         LOG.error("Problem in HA-poller: "+e, e);
@@ -260,9 +265,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         pollingTask = managementContext.getExecutionManager().submit(task);
     }
     
-    protected synchronized void doPollTask() {
+    /** invoked manually when initializing, and periodically thereafter */
+    protected synchronized void publishAndCheck(boolean initializing) {
         publishHealth();
-        checkMaster();
+        checkMaster(initializing);
     }
     
     protected synchronized void publishHealth() {
@@ -348,7 +354,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * Looks up the state of all nodes in the management plane, and checks if the master is still ok.
      * If it's not then determines which node should be promoted to master. If it is ourself, then promotes.
      */
-    protected void checkMaster() {
+    protected void checkMaster(boolean initializin) {
         long now = currentTimeMillis();
         ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
         
@@ -381,16 +387,22 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         // Need to choose a new master
         ManagementNodeSyncRecord newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId, now);
         String newMasterNodeId = (newMasterRecord == null) ? null : newMasterRecord.getNodeId();
+        URI newMasterNodeUri = (newMasterRecord == null) ? null : newMasterRecord.getUri();
         boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
         
-        LOG.warn("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
-                new Object[] {
-                        (newMasterNodeId == null ? "<none>" : newMasterNodeId),
-                        (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()),
-                        memento,
-                        ownNodeMemento.toVerboseString(), 
-                        heartbeatTimeout
-                });
+        LOG.debug("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
+            new Object[] {
+            (newMasterRecord == null ? "<none>" : newMasterRecord.toVerboseString()),
+            (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()),
+            memento,
+            ownNodeMemento.toVerboseString(), 
+            heartbeatTimeout
+        });
+        if (!initializin) {
+            LOG.warn("HA subsystem detected change of master from "+masterNodeId+" to "
+                + (newMasterNodeId == null ? "<unknown>" : 
+                    newMasterNodeId + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")));
+        }
 
         // New master is ourself: promote
         if (newMasterIsSelf) {
@@ -417,7 +429,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         try {
             managementContext.getRebindManager().rebind();
         } catch (Exception e) {
-            LOG.info("Problem during rebind when promoting node to master; demoting to failed and rethrowing): "+e);
+            LOG.info("Problem during rebind when promoting node to master; demoting to failed and rethrowing: "+e);
             nodeState = ManagementNodeState.FAILED;
             publishDemotionFromMasterOnFailure();
             throw Exceptions.propagate(e);
@@ -480,12 +492,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     /**
-     * Gets the current time, using the {@link #ticker}. Normally this is equivalent of {@link System#currentTimeMillis()},
+     * Gets the current time, using the {@link #tickerUtc}. Normally this is equivalent of {@link System#currentTimeMillis()},
      * but in test environments a custom {@link Ticker} can be injected via {@link #setTicker(Ticker)} to allow testing of
      * specific timing scenarios.
      */
     protected long currentTimeMillis() {
-        return ticker.read();
+        return tickerUtc.read();
     }
 
     /**

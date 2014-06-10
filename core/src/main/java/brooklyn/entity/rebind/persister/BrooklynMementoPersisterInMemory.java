@@ -31,7 +31,11 @@ import com.google.common.io.Files;
 
 /**
  * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; class be moved to tests
+ * <code>
+ * new BrooklynMementoPersisterToObjectStore(new InMemoryObjectStore(), classLoader)
+ * </code>
  */
+@Deprecated
 public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPersister {
 
     private final ClassLoader classLoader;

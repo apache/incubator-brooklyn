@@ -1,9 +1,7 @@
 package brooklyn.test.entity;
 
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
-import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 
 /** management context which forces an empty catalog to prevent scanning / interacting with local filesystem.
@@ -12,10 +10,14 @@ import brooklyn.management.internal.LocalManagementContext;
 public class LocalManagementContextForTests extends LocalManagementContext {
 
     public LocalManagementContextForTests(BrooklynProperties brooklynProperties) {
-        super(brooklynProperties);
-        catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDefaultLocalScanningDto(CatalogScanningModes.NONE));
+        super(setEmptyCatalogAsDefault(brooklynProperties));
     }
     
+    public static BrooklynProperties setEmptyCatalogAsDefault(BrooklynProperties brooklynProperties) {
+        brooklynProperties.putIfAbsent(AbstractManagementContext.BROOKLYN_CATALOG_URL, "classpath://brooklyn-catalog-empty.xml");
+        return brooklynProperties;
+    }
+
     public LocalManagementContextForTests() {
         this(BrooklynProperties.Factory.newEmpty());
     }

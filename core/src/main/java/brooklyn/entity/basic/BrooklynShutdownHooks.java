@@ -74,7 +74,10 @@ public class BrooklynShutdownHooks {
         public void run() {
             // First stop entities; on interrupt, abort waiting for tasks - but let shutdown hook continue
             synchronized (mutex) {
-                log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping entities: "+entitiesToStopOnShutdown);
+                if (entitiesToStopOnShutdown.isEmpty())
+                    log.debug("Brooklyn stopOnShutdown shutdown-hook invoked: no entities to stop");
+                else
+                    log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping entities: "+entitiesToStopOnShutdown);
                 List<Task> stops = new ArrayList<Task>();
                 for (Entity entity: entitiesToStopOnShutdown) {
                     try {
@@ -100,7 +103,7 @@ public class BrooklynShutdownHooks {
                 }
             
                 // Then terminate management contexts
-                log.info("Brooklyn terminateOnShutdown shutdown-hook invoked: terminating management contexts: "+managementContextsToTerminateOnShutdown);
+                log.debug("Brooklyn terminateOnShutdown shutdown-hook invoked: terminating management contexts: "+managementContextsToTerminateOnShutdown);
                 for (ManagementContextInternal managementContext: managementContextsToTerminateOnShutdown) {
                     try {
                         managementContext.terminate();

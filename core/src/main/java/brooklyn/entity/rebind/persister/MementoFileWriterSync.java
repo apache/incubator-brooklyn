@@ -28,7 +28,9 @@ import com.google.common.io.Files;
  * block.
  * 
  * @author aled
+ * @deprecated since 0.7.0 we use {@link PersistenceObjectStore} instances now, and when we need sync behaviour we just wait
  */
+@Deprecated
 public class MementoFileWriterSync<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MementoFileWriterSync.class);

@@ -9,7 +9,6 @@ import org.testng.annotations.Test;
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterInMemory.MutableManagementPlaneSyncRecord;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableSet;
