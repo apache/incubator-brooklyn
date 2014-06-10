@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,6 +58,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -218,6 +221,10 @@ public class Main {
         @Option(name = { "-b", "--bindAddress" },
                 description = "Specifies the IP address of the NIC to bind the Brooklyn Management Console to")
         public String bindAddress = null;
+
+        @Option(name = { "-pa", "--publicAddress" },
+                description = "Specifies the IP address or URL that the Brooklyn Management Console Rest API will be available on")
+        public String publicAddress = null;
 
         @Option(name = { "--noConsoleSecurity" },
                 description = "Whether to disable security for the web console with no security (i.e. no authentication required)")
@@ -449,6 +456,15 @@ public class Main {
             if (Strings.isNonEmpty(bindAddress)) {
                 InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
                 launcher.bindAddress(ip);
+            }
+            if (Strings.isNonEmpty(publicAddress)) {
+                URI address;
+                try {
+                     address = new URI(publicAddress);
+                } catch (URISyntaxException e) {
+                    throw Throwables.propagate(e);
+                }
+                launcher.publicAddress(address);
             }
             if (explicitManagementContext!=null) {
                 launcher.managementContext(explicitManagementContext);

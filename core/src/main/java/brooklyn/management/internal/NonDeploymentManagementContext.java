@@ -2,6 +2,7 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,7 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
@@ -90,7 +92,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public String getManagementNodeId() {
         return null;
     }
-    
+
+    @Override
+    public Maybe<URI> getManagementNodeUri() {
+        return Maybe.absent();
+    }
+
     public void setManagementContext(ManagementContextInternal val) {
         this.initialManagementContext = checkNotNull(val, "initialManagementContext");
         this.entityManager = new NonDeploymentEntityManager(val);
@@ -312,7 +319,13 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         checkInitialManagementContextReal();
         initialManagementContext.setBaseClassPathForScanning(urls);
     }
-    
+
+    @Override
+    public void setManagementNodeUri(URI uri) {
+        checkInitialManagementContextReal();
+        initialManagementContext.setManagementNodeUri(uri);
+    }
+
     @Override
     public void prePreManage(Entity entity) {
         // no-op

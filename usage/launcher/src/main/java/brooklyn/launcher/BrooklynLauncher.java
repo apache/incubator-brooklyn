@@ -11,6 +11,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -105,6 +106,7 @@ public class BrooklynLauncher {
     private boolean startWebApps = true;
     private PortRange port = PortRanges.fromString("8081+");
     private InetAddress bindAddress = null;
+    private URI publicAddress = null;
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
     private Map<String, ?> webconsoleFlags = Maps.newLinkedHashMap();
     private Boolean skipSecurityFilter = null;
@@ -312,7 +314,17 @@ public class BrooklynLauncher {
         this.bindAddress = bindAddress;
         return this;
     }
-    
+
+    /**
+     * Specifies the address that the management context's REST API will be available on. Defaults
+     * to {@link #bindAddress} if it is not 0.0.0.0.
+     * @see #bindAddress(java.net.InetAddress)
+     */
+    public BrooklynLauncher publicAddress(URI publicAddress) {
+        this.publicAddress = publicAddress;
+        return this;
+    }
+
     /**
      * Specifies additional flags to be passed to {@link BrooklynWebServer}.
      */ 
@@ -435,6 +447,7 @@ public class BrooklynLauncher {
         try {
             webServer = new BrooklynWebServer(webconsoleFlags, managementContext);
             webServer.setBindAddress(bindAddress);
+            webServer.setPublicAddress(publicAddress);
             webServer.setPort(port);
             webServer.putAttributes(brooklynProperties);
             if (skipSecurityFilter != Boolean.TRUE) {

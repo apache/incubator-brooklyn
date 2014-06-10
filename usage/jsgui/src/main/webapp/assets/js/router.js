@@ -183,7 +183,10 @@ define([
                     this.scheduledRedirect = true;
                     console.log("Redirecting to " + destination + " in " + time + " seconds");
                     setTimeout(function () {
-                        window.location.href = destination;
+                        // re-check, in case the server's status changed in the wait
+                        if (!ha.isMaster()) {
+                            window.location.href = destination;
+                        }
                     }, time * 1000);
                 }
             } else {

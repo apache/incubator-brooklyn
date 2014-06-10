@@ -1,5 +1,6 @@
 package brooklyn.management.internal;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -36,6 +37,8 @@ public interface ManagementContextInternal extends ManagementContext {
     Iterable<URL> getBaseClassPathForScanning();
 
     void setBaseClassPathForScanning(Iterable<URL> urls);
+
+    void setManagementNodeUri(URI uri);
 
     void addEntitySetListener(CollectionChangeListener<Entity> listener);
 

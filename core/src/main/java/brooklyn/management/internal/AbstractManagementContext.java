@@ -1,8 +1,10 @@
 package brooklyn.management.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.io.FileNotFoundException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -123,6 +125,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     private final BrooklynStorage storage;
 
     private volatile boolean running = true;
+
+    protected Maybe<URI> uri = Maybe.absent();
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
         this(brooklynProperties, null);
@@ -369,5 +373,15 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     public BrooklynGarbageCollector getGarbageCollector() {
         return gc;
+    }
+
+    @Override
+    public void setManagementNodeUri(URI uri) {
+        this.uri = Maybe.of(checkNotNull(uri, "uri"));
+    }
+
+    @Override
+    public Maybe<URI> getManagementNodeUri() {
+        return uri;
     }
 }

@@ -30,7 +30,13 @@ public class EmptySoftwareProcessSshDriver extends AbstractSoftwareProcessSshDri
     public void launch() {
         running.set(true);
     }
-    
+
+    @Override
+    public void rebind() {
+        super.rebind();
+        running.set(true);
+    }
+
     @Override
     public void stop() {
         running.set(false);

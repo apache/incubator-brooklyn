@@ -3,6 +3,7 @@ package brooklyn.launcher;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
@@ -35,6 +36,7 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
@@ -95,7 +97,7 @@ public class BrooklynWebServer {
     protected volatile int actualPort = -1;
     /** actual NIC where this is listening; in the case of 0.0.0.0 being passed in as bindAddress,
      * this will revert to one address (such as localhost) */
-    protected InetAddress actualAddress = null; 
+    protected InetAddress actualAddress = null;
 
     @SetFromFlag
     protected String war = BROOKLYN_WAR_URL;
@@ -104,7 +106,11 @@ public class BrooklynWebServer {
      * (e.g. 0.0.0.0 if security is configured, or loopback if no security) */
     @SetFromFlag
     protected InetAddress bindAddress = null;
-    
+
+    /** The URI that this server's management context will be publically available on. */
+    @SetFromFlag
+    protected URI publicAddress = null;
+
     /**
      * map of context-prefix to file
      */
@@ -201,10 +207,11 @@ public class BrooklynWebServer {
     
     /** URL for accessing this web server (root context) */
     public String getRootUrl() {
+        String address = (publicAddress != null) ? publicAddress.toString() : getAddress().getHostName();
         if (getActualPort()>0){
             String protocol = getHttpsEnabled()?"https":"http";
-            return protocol+"://"+getAddress().getHostName()+":"+getActualPort()+"/";
-        }else{
+            return protocol+"://"+address+":"+getActualPort()+"/";
+        } else {
             return null;
         }
     }
@@ -223,13 +230,21 @@ public class BrooklynWebServer {
         return this;
     }
 
-    /** InetAddress to which server should bind; 
+    /** InetAddress to which server should bind;
      * defaults to 0.0.0.0 (although common call path is to set to 127.0.0.1 when security is not set) */
     public BrooklynWebServer setBindAddress(InetAddress address) {
         bindAddress = address;
         return this;
     }
-    
+
+    /**
+     * Sets the public address that the server's management context's REST API will be available on
+     */
+    public BrooklynWebServer setPublicAddress(URI address) {
+        publicAddress = address;
+        return this;
+    }
+
     /** @deprecated use setAttribute */
     public BrooklynWebServer addAttribute(String field, Object value) {
         return setAttribute(field, value);
@@ -294,7 +309,7 @@ public class BrooklynWebServer {
             actualAddress = BrooklynNetworkUtils.getLocalhostInetAddress();
             server = new Server(actualPort);
         }
-        
+
         // use a nice name in the thread pool (otherwise this is exactly the same as Server defaults)
         QueuedThreadPool threadPool = new QueuedThreadPool();
         threadPool.setName("brooklyn-jetty-server-"+actualPort+"-"+threadPool.getName());
@@ -361,6 +376,10 @@ public class BrooklynWebServer {
         server.start();
         //reinit required because grails wipes our language extension bindings
         BrooklynLanguageExtensions.reinit();
+
+        if (managementContext instanceof ManagementContextInternal) {
+            ((ManagementContextInternal) managementContext).setManagementNodeUri(new URI(getRootUrl()));
+        }
 
         log.info("Started Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
     }

@@ -1,5 +1,6 @@
 package brooklyn.management;
 
+import java.net.URI;
 import java.util.Collection;
 
 import brooklyn.catalog.BrooklynCatalog;
@@ -12,6 +13,7 @@ import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
 import brooklyn.management.ha.HighAvailabilityManager;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 
@@ -55,7 +57,13 @@ public interface ManagementContext {
      * This value should not be null unless the management context is a non-functional
      * (non-deployment) instance. */
     String getManagementNodeId();
-    
+
+    /**
+     * The URI that this management node's REST API is available at, or absent if the node's
+     * API is unavailable.
+     */
+    Maybe<URI> getManagementNodeUri();
+
     /**
      * All applications under control of this management plane
      */
