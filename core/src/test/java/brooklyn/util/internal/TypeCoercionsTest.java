@@ -101,8 +101,21 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce("STARTING", Lifecycle.class), Lifecycle.STARTING);
         assertEquals(TypeCoercions.coerce("Starting", Lifecycle.class), Lifecycle.STARTING);
         assertEquals(TypeCoercions.coerce("starting", Lifecycle.class), Lifecycle.STARTING);
+        
+        assertEquals(TypeCoercions.coerce("LOWERCASE", PerverseEnum.class), PerverseEnum.lowercase);
+        assertEquals(TypeCoercions.coerce("CAMELCASE", PerverseEnum.class), PerverseEnum.camelCase);
+        assertEquals(TypeCoercions.coerce("upper", PerverseEnum.class), PerverseEnum.UPPER);
+        assertEquals(TypeCoercions.coerce("upper_with_underscore", PerverseEnum.class), PerverseEnum.UPPER_WITH_UNDERSCORE);
+        assertEquals(TypeCoercions.coerce("LOWER_WITH_UNDERSCORE", PerverseEnum.class), PerverseEnum.lower_with_underscore);
     }
-
+    public static enum PerverseEnum {
+        lowercase,
+        camelCase,
+        UPPER,
+        UPPER_WITH_UNDERSCORE,
+        lower_with_underscore;
+    }
+    
     @Test(expectedExceptions = ClassCoercionException.class)
     public void testCoerceStringToEnumFailure() {
         TypeCoercions.coerce("scrambled-eggs", Lifecycle.class);
