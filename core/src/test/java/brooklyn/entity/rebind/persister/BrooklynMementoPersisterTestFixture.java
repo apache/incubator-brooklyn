@@ -85,7 +85,12 @@ public abstract class BrooklynMementoPersisterTestFixture {
         RebindTestUtils.waitForPersisted(localManagementContext);
         
         RecordingRebindExceptionHandler failFast = new RecordingRebindExceptionHandler(RebindFailureMode.FAIL_FAST, RebindFailureMode.FAIL_FAST);
-        RebindContextLookupContext lookupContext = new RebindContextLookupContext(new RebindContextImpl(classLoader), failFast);
+        RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
+        RebindContextLookupContext lookupContext = new RebindContextLookupContext(rebindContext, failFast);
+        // here we force these two to be reegistered in order to resolve the enricher and policy
+        // (normally rebind will do that after loading the manifests, but in this test we are just looking at persistence/manifest)
+        rebindContext.registerEntity(app.getId(), app);
+        rebindContext.registerEntity(entity.getId(), entity);
         
         BrooklynMemento reloadedMemento = persister.loadMemento(lookupContext, failFast);
         return reloadedMemento;
@@ -98,9 +103,8 @@ public abstract class BrooklynMementoPersisterTestFixture {
         assertNotNull(reloadedMemento);
         assertTrue(Iterables.contains(reloadedMemento.getEntityIds(), entity.getId()));
         assertEquals(Iterables.getOnlyElement(reloadedMemento.getLocationIds()), location.getId());
-        // FIXME when policies and enrichers working, re-enable these.
-//        assertEquals(Iterables.getOnlyElement(reloadedMemento.getPolicyIds()), policy.getId());
-//        assertEquals(Iterables.getOnlyElement(reloadedMemento.getEnricherIds()), enricher.getId());
+        assertEquals(Iterables.getOnlyElement(reloadedMemento.getPolicyIds()), policy.getId());
+        assertEquals(Iterables.getOnlyElement(reloadedMemento.getEnricherIds()), enricher.getId());
     }
 
     @Test
