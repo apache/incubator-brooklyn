@@ -32,6 +32,8 @@ import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.UserAndHostAndPort;
@@ -181,7 +183,8 @@ public class TypeCoercions {
      * Type coercion {@link Function function} for {@link Enum enums}.
      * <p>
      * Tries to convert the string to {@link CaseFormat#UPPER_UNDERSCORE} first,
-     * handling all of the different {@link CaseFormat format} possibilites.
+     * handling all of the different {@link CaseFormat format} possibilites. Failing 
+     * that, it tries a case-insensitive comparison with the valid enum values.
      * <p>
      * Returns {@code defaultValue} if the string cannot be converted.
      *
@@ -206,7 +209,8 @@ public class TypeCoercions {
                         continue;
                     }
                 }
-                return defaultValue;
+                Maybe<E> result = Enums.valueOfIgnoreCase(type, input);
+                return (result.isPresent()) ? result.get() : defaultValue;
             }
         };
     }
