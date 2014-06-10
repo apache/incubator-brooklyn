@@ -152,12 +152,14 @@ public class LocalManagementContext extends AbstractManagementContext {
         this.managementNodeId = Strings.makeRandomId(8);
         checkNotNull(configMap, "brooklynProperties");
         this.builder = builder;
-        this.locationManager = new LocalLocationManager(this);
-        this.accessManager = new LocalAccessManager();
-        this.usageManager = new LocalUsageManager(this);
         this.brooklynAdditionalProperties = brooklynAdditionalProperties;
         if (brooklynAdditionalProperties != null)
             configMap.addFromMap(brooklynAdditionalProperties);
+        
+        this.locationManager = new LocalLocationManager(this);
+        this.accessManager = new LocalAccessManager();
+        this.usageManager = new LocalUsageManager(this);
+        
         INSTANCES.add(this);
         log.debug("Created management context "+this);
     }
