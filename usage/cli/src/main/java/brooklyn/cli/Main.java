@@ -14,9 +14,7 @@ import io.airlift.command.ParseException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +56,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -454,17 +451,10 @@ public class Main {
                 launcher.installSecurityFilter(false);
             }
             if (Strings.isNonEmpty(bindAddress)) {
-                InetAddress ip = Networking.getInetAddressWithFixedName(bindAddress);
-                launcher.bindAddress(ip);
+                launcher.bindAddress( Networking.getInetAddressWithFixedName(bindAddress) );
             }
             if (Strings.isNonEmpty(publicAddress)) {
-                URI address;
-                try {
-                     address = new URI(publicAddress);
-                } catch (URISyntaxException e) {
-                    throw Throwables.propagate(e);
-                }
-                launcher.publicAddress(address);
+                launcher.publicAddress( URI.create(publicAddress) );
             }
             if (explicitManagementContext!=null) {
                 launcher.managementContext(explicitManagementContext);

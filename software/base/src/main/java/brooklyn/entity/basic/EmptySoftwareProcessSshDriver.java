@@ -34,6 +34,8 @@ public class EmptySoftwareProcessSshDriver extends AbstractSoftwareProcessSshDri
     @Override
     public void rebind() {
         super.rebind();
+        /* TODO not necessarily, but there is not yet an easy way to persist state without 
+         * using config/sensors which we might not want do. */
         running.set(true);
     }
 
