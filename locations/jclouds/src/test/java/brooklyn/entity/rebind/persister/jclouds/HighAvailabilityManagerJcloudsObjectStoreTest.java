@@ -53,4 +53,10 @@ public class HighAvailabilityManagerJcloudsObjectStoreTest extends HighAvailabil
     public void testGetManagementPlaneSyncStateInfersTimedOutNodeAsFailed() throws Exception {
         super.testGetManagementPlaneSyncStateInfersTimedOutNodeAsFailed();
     }
+    
+    @Test(groups="Integration")
+    @Override
+    public void testGetManagementPlaneSyncStateDoesNotThrowNpeBeforePersisterSet() throws Exception {
+        super.testGetManagementPlaneSyncStateDoesNotThrowNpeBeforePersisterSet();
+    }
 }
