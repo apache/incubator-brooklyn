@@ -3,6 +3,7 @@ package brooklyn.management.ha;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
@@ -84,6 +85,23 @@ public abstract class HighAvailabilityManagerTestFixture {
         if (objectStore != null) objectStore.deleteCompletely();
     }
     
+    // The web-console could still be polling (e.g. if have just restarted brooklyn), before the persister is set.
+    // Must not throw NPE, but instead return something sensible (e.g. an empty state record).
+    @Test
+    public void testGetManagementPlaneSyncStateDoesNotThrowNpeBeforePersisterSet() throws Exception {
+        HighAvailabilityManagerImpl manager2 = new HighAvailabilityManagerImpl(managementContext)
+            .setPollPeriod(Duration.millis(10))
+            .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
+            .setPromotionListener(promotionListener)
+            .setTicker(ticker);
+        try {
+            ManagementPlaneSyncRecord state = manager2.getManagementPlaneSyncState();
+            assertNotNull(state);
+        } finally {
+            manager2.stop();
+        }
+
+    }
     // Can get a log.error about our management node's heartbeat being out of date. Caused by
     // poller first writing a heartbeat record, and then the clock being incremented. But the
     // next poll fixes it.

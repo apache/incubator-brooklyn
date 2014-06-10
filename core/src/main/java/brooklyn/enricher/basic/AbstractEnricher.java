@@ -41,4 +41,12 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     public EnricherType getEnricherType() {
         return enricherType;
     }
+
+    @Override
+    protected void onChanged() {
+        // TODO Could add EnricherChangeListener, similar to EntityChangeListener; should we do that?
+        if (getManagementContext() != null) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+        }
+    }
 }

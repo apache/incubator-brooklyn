@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -84,11 +85,15 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
 
     @Override
     public void onEvent(SensorEvent<T> event) {
-        emit(targetSensor, compute(event));
+        Object v = compute(event);
+        if (v == Entities.UNCHANGED) {
+            // nothing
+        } else {
+            emit(targetSensor, TypeCoercions.coerce(v, targetSensor.getTypeToken()));
+        }
     }
 
-    protected U compute(SensorEvent<T> event) {
-        Object result = transformation.apply(event);
-        return TypeCoercions.coerce(result, targetSensor.getTypeToken());
+    protected Object compute(SensorEvent<T> event) {
+        return transformation.apply(event);
     }
 }

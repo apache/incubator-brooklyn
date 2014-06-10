@@ -258,17 +258,25 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     @Override
     public synchronized void onManaged(Entity entity) {
         if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", entity);
-        if (!isStopped()) {
-            onChanged(entity);
-        }
+        onChanged(entity);
     }
 
     @Override
     public synchronized void onManaged(Location location) {
         if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", location);
-        if (!isStopped()) {
-            onChanged(location);
-        }
+        onChanged(location);
+    }
+    
+    @Override
+    public synchronized void onManaged(Policy policy) {
+        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", policy);
+        onChanged(policy);
+    }
+    
+    @Override
+    public synchronized void onManaged(Enricher enricher) {
+        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", enricher);
+        onChanged(enricher);
     }
     
     @Override
@@ -320,6 +328,24 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         if (!isStopped()) {
             deltaCollector.removedLocationIds.add(location.getId());
             deltaCollector.locations.remove(location);
+        }
+    }
+
+    @Override
+    public synchronized void onUnmanaged(Policy policy) {
+        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", policy);
+        if (!isStopped()) {
+            deltaCollector.removedPolicyIds.add(policy.getId());
+            deltaCollector.policies.remove(policy);
+        }
+    }
+
+    @Override
+    public synchronized void onUnmanaged(Enricher enricher) {
+        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", enricher);
+        if (!isStopped()) {
+            deltaCollector.removedEnricherIds.add(enricher.getId());
+            deltaCollector.enrichers.remove(enricher);
         }
     }
 

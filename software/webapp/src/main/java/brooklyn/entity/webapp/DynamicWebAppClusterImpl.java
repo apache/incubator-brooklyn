@@ -76,7 +76,9 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
 
         subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
+                if (!isRebinding()) {
+                    setAttribute(SERVICE_UP, calculateServiceUp());
+                }
             }
         });
     }
@@ -84,14 +86,18 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
     @Override
     public synchronized boolean addMember(Entity member) {
         boolean result = super.addMember(member);
-        setAttribute(SERVICE_UP, calculateServiceUp());
+        if (!isRebinding()) {
+            setAttribute(SERVICE_UP, calculateServiceUp());
+        }
         return result;
     }
     
     @Override
     public synchronized boolean removeMember(Entity member) {
         boolean result = super.removeMember(member);
-        setAttribute(SERVICE_UP, calculateServiceUp());
+        if (!isRebinding()) {
+            setAttribute(SERVICE_UP, calculateServiceUp());
+        }
         return result;
     }
 

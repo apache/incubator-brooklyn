@@ -427,9 +427,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         nodeState = ManagementNodeState.MASTER;
         publishPromotionToMaster();
         try {
-            managementContext.getRebindManager().rebind();
+            managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader());
         } catch (Exception e) {
-            LOG.info("Problem during rebind when promoting node to master; demoting to failed and rethrowing: "+e);
+            LOG.error("Management node enountered problem during rebind when promoting self to master; demoting to FAILED and rethrowing: "+e);
             nodeState = ManagementNodeState.FAILED;
             publishDemotionFromMasterOnFailure();
             throw Exceptions.propagate(e);
@@ -452,6 +452,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 builder.masterNodeId(ownNodeId);
             }
             return builder.build();
+        }
+        if (persister == null) {
+            // e.g. web-console may be polling before we've started up
+            LOG.debug("High availablity manager has no persister; returning empty record");
+            return ManagementPlaneSyncRecordImpl.builder().build();
         }
         
         int maxLoadAttempts = 5;

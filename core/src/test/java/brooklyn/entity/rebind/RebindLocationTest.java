@@ -1,6 +1,8 @@
 package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
@@ -211,6 +213,44 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
         assertEquals(newLoc.myfield, "myval");
     }
 
+    @Test
+    public void testReboundConfigDoesNotContainId() throws Exception {
+        MyLocation origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class));
+        origApp.start(ImmutableList.of(origLoc));
+
+        newApp = (TestApplication) rebind();
+        MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
+
+        assertNull(newLoc.getAllConfigBag().getStringKey("id"));
+        assertEquals(newLoc.getId(), origLoc.getId());
+    }
+    
+    @Test
+    public void testIsRebinding() throws Exception {
+        LocationChecksIsRebinding origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(LocationChecksIsRebinding.class));
+
+        rebind();
+        LocationChecksIsRebinding newLoc = (LocationChecksIsRebinding) newManagementContext.getLocationManager().getLocation(origLoc.getId());
+
+        assertTrue(newLoc.isRebindingValWhenRebinding());
+        assertFalse(newLoc.isRebinding());
+    }
+    
+    public static class LocationChecksIsRebinding extends AbstractLocation {
+        boolean isRebindingValWhenRebinding;
+        
+        public boolean isRebindingValWhenRebinding() {
+            return isRebindingValWhenRebinding;
+        }
+        @Override public boolean isRebinding() {
+            return super.isRebinding();
+        }
+        @Override public void rebind() {
+            super.rebind();
+            isRebindingValWhenRebinding = isRebinding();
+        }
+    }
+    
     public static class MyOldStyleLocation extends AbstractLocation {
         private static final long serialVersionUID = 1L;
         

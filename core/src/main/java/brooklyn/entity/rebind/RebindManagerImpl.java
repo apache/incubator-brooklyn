@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -28,6 +29,7 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
+import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
@@ -45,6 +47,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -89,6 +92,29 @@ public class RebindManagerImpl implements RebindManager {
     private final boolean persistEnrichersEnabled;
     private RebindFailureMode danglingRefFailureMode;
     private RebindFailureMode rebindFailureMode;
+
+    /**
+     * For tracking if rebinding, for {@link AbstractEnricher#isRebinding()} etc.
+     *  
+     * TODO What is a better way to do this?!
+     * 
+     * @author aled
+     */
+    public static class RebindTracker {
+        private static ThreadLocal<Boolean> rebinding = new ThreadLocal<Boolean>();
+        
+        public static boolean isRebinding() {
+            return (rebinding.get() == Boolean.TRUE);
+        }
+        
+        static void reset() {
+            rebinding.set(Boolean.FALSE);
+        }
+        
+        static void setRebinding() {
+            rebinding.set(Boolean.TRUE);
+        }
+    }
 
     public RebindManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
@@ -170,7 +196,7 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public List<Application> rebind() throws IOException {
-        return rebind(getClass().getClassLoader());
+        return rebind(managementContext.getCatalog().getRootClassLoader());
     }
     
     @Override
@@ -178,11 +204,30 @@ public class RebindManagerImpl implements RebindManager {
         RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
         return rebind(classLoader, exceptionHandler);
     }
-    
+
     @Override
     public List<Application> rebind(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
+        BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+        if (ec == null) {
+            ec = new BasicExecutionContext(managementContext.getExecutionManager());
+            Task<List<Application>> task = ec.submit(new Callable<List<Application>>() {
+                @Override public List<Application> call() throws Exception {
+                    return rebindImpl(classLoader, exceptionHandler);
+                }});
+            try {
+                return task.get();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+        } else {
+            return rebindImpl(classLoader, exceptionHandler);
+        }
+    }
+    
+    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
         checkNotNull(classLoader, "classLoader");
 
+        RebindTracker.setRebinding();
         try {
             Reflections reflections = new Reflections(classLoader);
             Map<String,Entity> entities = Maps.newLinkedHashMap();
@@ -382,6 +427,8 @@ public class RebindManagerImpl implements RebindManager {
             
         } catch (RuntimeException e) {
             throw exceptionHandler.onFailed(e);
+        } finally {
+            RebindTracker.reset();
         }
     }
     
@@ -646,6 +693,24 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         @Override
+        public void onManaged(Policy policy) {
+            try {
+                delegate.onManaged(policy);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onManaged("+policy+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onManaged(Enricher enricher) {
+            try {
+                delegate.onManaged(enricher);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onManaged("+enricher+"); continuing.", t);
+            }
+        }
+
+        @Override
         public void onChanged(Entity entity) {
             try {
                 delegate.onChanged(entity);
@@ -669,6 +734,24 @@ public class RebindManagerImpl implements RebindManager {
                 delegate.onUnmanaged(location);
             } catch (Throwable t) {
                 LOG.error("Error persisting mememento onUnmanaged("+location+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onUnmanaged(Policy policy) {
+            try {
+                delegate.onUnmanaged(policy);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onUnmanaged("+policy+"); continuing.", t);
+            }
+        }
+
+        @Override
+        public void onUnmanaged(Enricher enricher) {
+            try {
+                delegate.onUnmanaged(enricher);
+            } catch (Throwable t) {
+                LOG.error("Error persisting mememento onUnmanaged("+enricher+"); continuing.", t);
             }
         }
 

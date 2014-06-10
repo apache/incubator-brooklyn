@@ -49,8 +49,8 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Durations;
@@ -491,7 +491,6 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         
         origE.createAndManageChild(EntitySpec.create(TestEntity.class));
 
-        //Thread.sleep(1000);
         newApp = rebind();
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
         final TestEntity newChildE = (TestEntity) Iterables.find(newE.getChildren(), Predicates.instanceOf(TestEntity.class));
@@ -499,13 +498,8 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         assertEquals(newE.getAllConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
         assertEquals(newE.getLocalConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
         
-        try {
-            assertEquals(newChildE.getAllConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
-            assertFalse(newChildE.getLocalConfigBag().containsKey("myunmatchedkey"));
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw Exceptions.propagate(t);
-        }
+        assertEquals(newChildE.getAllConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
+        assertFalse(newChildE.getLocalConfigBag().containsKey("myunmatchedkey"));
     }
 
     @Test
@@ -519,6 +513,22 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         
         assertNull(newE.getAttribute(MyEntity.MY_SENSOR));
+    }
+
+    @Test
+    public void testRebindPersistsDynamicAttribute() throws Exception {
+        final String sensorName = "test.mydynamicsensor";
+        final String sensorDescription = "My description";
+        final AttributeSensor<String> MY_DYNAMIC_SENSOR = new BasicAttributeSensor<String>(
+                String.class, sensorName, sensorDescription);
+
+        origApp.setAttribute(MY_DYNAMIC_SENSOR, "myval");
+        assertEquals(origApp.getEntityType().getSensor(sensorName).getDescription(), sensorDescription);
+
+        newApp = rebind();
+        
+        assertEquals(newApp.getAttribute(MY_DYNAMIC_SENSOR), "myval");
+        assertEquals(newApp.getEntityType().getSensor(sensorName).getDescription(), sensorDescription);
     }
 
     @Test
@@ -554,6 +564,38 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         assertEquals(newE.getConfig(MyOldStyleEntity.CONF_NAME), "myval");
     }
 
+    @Test
+    public void testIsRebinding() throws Exception {
+        origApp.createAndManageChild(EntitySpec.create(EntityChecksIsRebinding.class));
+
+        newApp = rebind();
+        final EntityChecksIsRebinding newE = (EntityChecksIsRebinding) Iterables.find(newApp.getChildren(), Predicates.instanceOf(EntityChecksIsRebinding.class));
+
+        assertTrue(newE.isRebindingValWhenRebinding());
+        assertFalse(newE.isRebinding());
+    }
+    
+    @ImplementedBy(EntityChecksIsRebindingImpl.class)
+    public static interface EntityChecksIsRebinding extends TestEntity {
+        boolean isRebindingValWhenRebinding();
+        boolean isRebinding();
+    }
+    
+    public static class EntityChecksIsRebindingImpl extends TestEntityImpl implements EntityChecksIsRebinding {
+        boolean isRebindingValWhenRebinding;
+        
+        @Override public boolean isRebindingValWhenRebinding() {
+            return isRebindingValWhenRebinding;
+        }
+        @Override public boolean isRebinding() {
+            return super.isRebinding();
+        }
+        @Override public void rebind() {
+            super.rebind();
+            isRebindingValWhenRebinding = isRebinding();
+        }
+    }
+    
     public static class MyOldStyleEntity extends AbstractEntity {
         @SetFromFlag("confName")
         public static final ConfigKey<String> CONF_NAME = TestEntity.CONF_NAME;

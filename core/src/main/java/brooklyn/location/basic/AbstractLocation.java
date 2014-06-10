@@ -19,6 +19,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
@@ -300,7 +301,10 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         // no-op
     }
 
-
+    protected boolean isRebinding() {
+        return RebindManagerImpl.RebindTracker.isRebinding();
+    }
+    
     public boolean isManaged() {
         return managementContext != null && managed;
     }

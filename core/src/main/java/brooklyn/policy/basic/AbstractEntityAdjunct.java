@@ -20,6 +20,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -207,6 +208,10 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         // no-op
     }
     
+    protected boolean isRebinding() {
+        return RebindManagerImpl.RebindTracker.isRebinding();
+    }
+    
     public <T> T getConfig(ConfigKey<T> key) {
         return configsInternal.getConfig(key);
     }
@@ -225,7 +230,9 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         if (entity != null && isRunning()) {
             doReconfigureConfig(key, val);
         }
-        return (T) configsInternal.setConfig(key, val);
+        T result = (T) configsInternal.setConfig(key, val);
+        onChanged();
+        return result;
     }
     
     // TODO make immutable
@@ -238,6 +245,8 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
         throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
     }
+    
+    protected abstract void onChanged();
     
     protected AdjunctType getAdjunctType() {
         return adjunctType;

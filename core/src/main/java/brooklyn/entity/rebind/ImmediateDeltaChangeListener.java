@@ -32,16 +32,22 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
     
     @Override
     public void onManaged(Entity entity) {
-        if (running && persister != null) {
-            onChanged(entity);
-        }
+        onChanged(entity);
     }
 
     @Override
     public void onManaged(Location location) {
-        if (running && persister != null) {
-            onChanged(location);
-        }
+        onChanged(location);
+    }
+    
+    @Override
+    public void onManaged(Policy policy) {
+        onChanged(policy);
+    }
+    
+    @Override
+    public void onManaged(Enricher enricher) {
+        onChanged(enricher);
     }
     
     @Override
@@ -106,6 +112,24 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.removedLocationIds.add(location.getId());
+            persister.delta(delta);
+        }
+    }
+
+    @Override
+    public void onUnmanaged(Policy policy) {
+        if (running && persister != null) {
+            PersisterDeltaImpl delta = new PersisterDeltaImpl();
+            delta.removedPolicyIds.add(policy.getId());
+            persister.delta(delta);
+        }
+    }
+
+    @Override
+    public void onUnmanaged(Enricher enricher) {
+        if (running && persister != null) {
+            PersisterDeltaImpl delta = new PersisterDeltaImpl();
+            delta.removedEnricherIds.add(enricher.getId());
             persister.delta(delta);
         }
     }

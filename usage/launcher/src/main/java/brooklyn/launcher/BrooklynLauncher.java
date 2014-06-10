@@ -574,12 +574,12 @@ public class BrooklynLauncher {
             
             HighAvailabilityMode startMode;
             switch (highAvailabilityMode) {
-                case AUTO:     
+                case AUTO:
                 case MASTER:
                 case STANDBY:
                     startMode = highAvailabilityMode;
                     break;
-                case DISABLED: 
+                case DISABLED:
                     throw new IllegalStateException("Unexpected code-branch for high availability mode "+highAvailabilityMode);
                 default:       
                     throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);

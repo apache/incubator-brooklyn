@@ -2,6 +2,7 @@ package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
@@ -111,6 +112,72 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         assertFalse(manifest.getLocationIdToType().containsKey(loc.getId()));
     }
 
+    @Test
+    public void testExpungesOnPolicyRemoved() throws Exception {
+        TestEntity entity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
+        MyPolicy policy = entity.addPolicy(PolicySpec.create(MyPolicy.class));
+        MyEnricher enricher = entity.addEnricher(EnricherSpec.create(MyEnricher.class));
+
+        RebindTestUtils.waitForPersisted(origApp);
+
+        entity.removePolicy(policy);
+        entity.removeEnricher(enricher);
+        RebindTestUtils.waitForPersisted(origApp);
+        
+        BrooklynMementoManifest manifest = loadMementoManifest();
+        assertFalse(manifest.getPolicyIdToType().containsKey(policy.getId()));
+        assertFalse(manifest.getEnricherIdToType().containsKey(enricher.getId()));
+    }
+
+    @Test
+    public void testReboundConfigDoesNotContainId() throws Exception {
+        MyPolicy policy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
+        
+        newApp = (TestApplication) rebind();
+        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
+
+        assertNull(newPolicy.getConfig(ConfigKeys.newStringConfigKey("id")));
+        assertEquals(newPolicy.getId(), policy.getId());
+    }
+    
+    @Test
+    public void testReconfigurePolicyPersistsChange() throws Exception {
+        MyPolicyReconfigurable policy = origApp.addPolicy(PolicySpec.create(MyPolicyReconfigurable.class)
+                .configure(MyPolicyReconfigurable.MY_CONFIG, "oldval"));
+        policy.setConfig(MyPolicyReconfigurable.MY_CONFIG, "newval");
+        
+        newApp = (TestApplication) rebind();
+        MyPolicyReconfigurable newPolicy = (MyPolicyReconfigurable) Iterables.getOnlyElement(newApp.getPolicies());
+
+        assertEquals(newPolicy.getConfig(MyPolicyReconfigurable.MY_CONFIG), "newval");
+    }
+
+    @Test
+    public void testIsRebinding() throws Exception {
+        origApp.addPolicy(PolicySpec.create(PolicyChecksIsRebinding.class));
+
+        newApp = (TestApplication) rebind();
+        PolicyChecksIsRebinding newPolicy = (PolicyChecksIsRebinding) Iterables.getOnlyElement(newApp.getPolicies());
+
+        assertTrue(newPolicy.isRebindingValWhenRebinding());
+        assertFalse(newPolicy.isRebinding());
+    }
+    
+    public static class PolicyChecksIsRebinding extends AbstractPolicy {
+        boolean isRebindingValWhenRebinding;
+        
+        public boolean isRebindingValWhenRebinding() {
+            return isRebindingValWhenRebinding;
+        }
+        @Override public boolean isRebinding() {
+            return super.isRebinding();
+        }
+        @Override public void rebind() {
+            super.rebind();
+            isRebindingValWhenRebinding = isRebinding();
+        }
+    }
+    
     public static class MyPolicy extends AbstractPolicy {
         public static final ConfigKey<String> MY_CONFIG = ConfigKeys.newStringConfigKey("myconfigkey");
         
@@ -144,9 +211,9 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
             initCalled = true;
         }
         
-        // TODO When AbstractPolicy declares rebind; @Override
+        @Override
         public void rebind() {
-            // TODO super.rebind();
+            super.rebind();
             rebindCalled = true;
         }
     }
@@ -154,6 +221,23 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     public static class MyPolicyWithoutNoArgConstructor extends MyPolicy {
         public MyPolicyWithoutNoArgConstructor(Map<?,?> flags) {
             super(flags);
+        }
+    }
+    
+    public static class MyPolicyReconfigurable extends AbstractPolicy {
+        public static final ConfigKey<String> MY_CONFIG = ConfigKeys.newStringConfigKey("myconfig");
+        
+        public MyPolicyReconfigurable() {
+            super();
+        }
+        
+        @Override
+        protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
+            if (MY_CONFIG.equals(key)) {
+                // we'd do here whatever reconfig meant; caller will set actual new val
+            } else {
+                super.doReconfigureConfig(key, val);
+            }
         }
     }
 }
