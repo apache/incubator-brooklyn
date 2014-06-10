@@ -344,9 +344,9 @@ public class BashCommands {
         if (portInstall != null)
             commands.add(ifExecutableElse1("port", sudo(portInstall)));
 
-        String lastCommand = warn("WARNING: no known/successful package manager to install " +
+        String lastCommand = ok(warn("WARNING: no known/successful package manager to install " +
                 (packageDefaultName!=null ? packageDefaultName : flags.toString()) +
-                ", may fail subsequently");
+                ", may fail subsequently"));
         if (optionalCommandToRunIfNone != null)
             lastCommand = chain(lastCommand, optionalCommandToRunIfNone);
         commands.add(lastCommand);
