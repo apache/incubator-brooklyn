@@ -293,7 +293,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
           if (!template.getPlatformComponentTemplates().isEmpty() || !template.getApplicationComponentTemplates().isEmpty()) {
               looksLikeYaml = true;
           } else {
-              if (template.getCustomAttributes().containsKey("type")) {
+              if (template.getCustomAttributes().containsKey("type") || template.getCustomAttributes().containsKey("entities")) {
                   looksLikeLegacy = true;
               }
           }
@@ -314,7 +314,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
           }
       }
       
-      if (looksLikeLegacy && legacyFormatException!=null)
+      if ((looksLikeLegacy || !looksLikeYaml) && legacyFormatException!=null)
           // throw the error from legacy creation if it looks like it was the legacy format
           throw Throwables.propagate(legacyFormatException);
       
