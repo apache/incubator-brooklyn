@@ -131,4 +131,7 @@ public class BrooklynServerConfig {
         "or empty for no URL (use default scanner)", 
         new File(Os.fromHome(".brooklyn/catalog.xml")).toURI().toString());
     
+    public static final ConfigKey<Boolean> USE_OSGI = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.enabled",
+        "Whether OSGi is enabled, defaulting to true", true);
+
 }
