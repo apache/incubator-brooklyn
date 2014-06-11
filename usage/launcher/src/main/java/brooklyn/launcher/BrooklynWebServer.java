@@ -232,7 +232,7 @@ public class BrooklynWebServer {
     /** specifies a WAR to use at a given context path (only if server not yet started);
      * cf deploy(path, url) */
     public BrooklynWebServer addWar(String path, String warUrl) {
-        deploy(path, warUrl);
+        wars.put(path, warUrl);
         return this;
     }
 
@@ -379,14 +379,17 @@ public class BrooklynWebServer {
 
         addShutdownHook();
 
-        for (Map.Entry<String, String> entry : wars.entrySet()) {
+        MutableMap<String, String> allWars = MutableMap.copyOf(wars);
+        String rootWar = allWars.remove("/");
+        if (rootWar==null) rootWar = war;
+        
+        for (Map.Entry<String, String> entry : allWars.entrySet()) {
             String pathSpec = entry.getKey();
             String warUrl = entry.getValue();
             WebAppContext webapp = deploy(pathSpec, warUrl);
             webapp.setTempDirectory(Os.mkdirs(new File(webappTempDir, newTimestampedDirName("war", 8))));
         }
-
-        rootContext = deploy("/", war);
+        rootContext = deploy("/", rootWar);
         rootContext.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
 
         if (securityFilterClazz != null) {
@@ -404,7 +407,7 @@ public class BrooklynWebServer {
             ((ManagementContextInternal) managementContext).setManagementNodeUri(new URI(getRootUrl()));
         }
 
-        log.info("Started Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
+        log.info("Started Brooklyn console at "+getRootUrl()+", running " + rootWar + (allWars!=null && !allWars.isEmpty() ? " and " + wars.values() : ""));
     }
 
     private String newTimestampedDirName(String prefix, int randomSuffixLength) {
