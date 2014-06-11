@@ -1,6 +1,8 @@
 package brooklyn.location.basic;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -87,8 +89,8 @@ public class SshMachineLocationTest {
     // Note: requires `ssh localhost` to be setup such that no password is required    
     @Test(groups = "Integration")
     public void testCopyFileTo() throws Exception {
-        File dest = new File(Os.tmp(), "sssMachineLocationTest_dest.tmp");
-        File src = File.createTempFile("sssMachineLocationTest_src", "tmp");
+        File dest = Os.newTempFile(getClass(), ".dest.tmp");
+        File src = Os.newTempFile(getClass(), ".src.tmp");
         try {
             Files.write("abc", src, Charsets.UTF_8);
             host.copyTo(src, dest);

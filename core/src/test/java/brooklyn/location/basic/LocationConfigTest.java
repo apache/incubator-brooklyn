@@ -11,6 +11,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableMap;
@@ -23,7 +24,7 @@ public class LocationConfigTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
     }
     
     @AfterMethod(alwaysRun=true)

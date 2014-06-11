@@ -88,6 +88,8 @@ public class Main {
     public static final int EXECUTION_ERROR = 2;
     public static final int CONFIGURATION_ERROR = 3;
 
+    /** @deprecated since 0.7.0 will become private static, subclasses should define their own logger */
+    @Deprecated
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {

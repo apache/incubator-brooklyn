@@ -21,6 +21,7 @@ import brooklyn.management.EntityManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.TestUtils;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -37,7 +38,7 @@ public class EntityPreManagementTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
         entityManager = managementContext.getEntityManager();
     }
     

@@ -45,10 +45,13 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynProperties.class);
 
     public static class Factory {
+        /** creates a new empty {@link BrooklynProperties} */
         public static BrooklynProperties newEmpty() {
             return new BrooklynProperties();
         }
 
+        /** creates a new {@link BrooklynProperties} with contents loaded 
+         * from the usual places, including *.properties files and environment variables */
         public static BrooklynProperties newDefault() {
             return new Builder().build();
         }

@@ -19,12 +19,12 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
 public class MultiLocationRebindTest {
 
@@ -43,7 +43,7 @@ public class MultiLocationRebindTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mementoDir = Files.createTempDir();
+        mementoDir = Os.newTempDir(getClass());
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), origManagementContext);
     }

@@ -11,6 +11,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.os.Os;
 
 import com.google.common.io.Files;
 
@@ -90,8 +91,7 @@ public class SecureKeysAndSignerTest {
     public void testReadRsaPassphraseKeyAndWriteWithoutPassphrase() throws Exception {
         KeyPair key = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), "passphrase");
         checkNonTrivial(key);
-        File f = File.createTempFile("brooklyn-sample_rsa_passphrase_without_passphrase", "pem");
-        f.deleteOnExit();
+        File f = Os.newTempFile(getClass(), "brooklyn-sample_rsa_passphrase_without_passphrase.pem");
         Files.write(SecureKeys.stringPem(key), f, Charset.defaultCharset());
         KeyPair key2 = SecureKeys.readPem(new FileInputStream(f), null);
         checkNonTrivial(key2);

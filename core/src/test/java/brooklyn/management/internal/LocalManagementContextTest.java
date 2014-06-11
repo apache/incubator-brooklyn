@@ -1,13 +1,10 @@
 package brooklyn.management.internal;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.AfterMethod;
@@ -18,6 +15,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext.PropertiesReloadListener;
+import brooklyn.util.os.Os;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -28,7 +26,7 @@ public class LocalManagementContextTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        globalPropertiesFile = File.createTempFile("local-brooklyn-properties-test", ".properties");
+        globalPropertiesFile = Os.newTempFile(getClass(), "global.properties");
     }
     
     @AfterMethod(alwaysRun=true)

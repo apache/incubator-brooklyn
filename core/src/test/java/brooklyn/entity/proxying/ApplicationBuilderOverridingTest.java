@@ -27,6 +27,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.Exceptions;
@@ -45,7 +46,7 @@ public class ApplicationBuilderOverridingTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        spareManagementContext = Entities.newManagementContext();
+        spareManagementContext = new LocalManagementContextForTests();
         executor = Executors.newCachedThreadPool();
     }
     

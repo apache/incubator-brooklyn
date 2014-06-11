@@ -12,6 +12,7 @@ import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriverDepende
 import brooklyn.entity.drivers.RegistryEntityDriverFactoryTest.MyOtherSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 
 public class EntityDriverRegistryTest {
@@ -21,7 +22,7 @@ public class EntityDriverRegistryTest {
 
     @BeforeMethod
     public void setUp() throws Exception {
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
         sshLocation = new SshMachineLocation(MutableMap.of("address", "localhost"));
     }
 

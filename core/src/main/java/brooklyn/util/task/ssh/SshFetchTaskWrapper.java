@@ -12,6 +12,7 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskWrapper;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.os.Os;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -68,7 +69,7 @@ public class SshFetchTaskWrapper implements TaskWrapper<String> {
             int result = -1;
             try {
                 Preconditions.checkNotNull(getMachine(), "machine");
-                backingFile = File.createTempFile("brooklyn-ssh-fetch-", FilenameUtils.getName(remoteFile));
+                backingFile = Os.newTempFile("brooklyn-ssh-fetch-", FilenameUtils.getName(remoteFile));
                 backingFile.deleteOnExit();
                 
                 result = getMachine().copyFrom(config.getAllConfig(), remoteFile, backingFile.getPath());

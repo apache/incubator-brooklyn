@@ -22,6 +22,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
@@ -51,7 +52,7 @@ public class ServiceFailureDetectorTest {
             }
         };
         
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         

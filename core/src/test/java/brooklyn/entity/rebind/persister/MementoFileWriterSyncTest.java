@@ -10,12 +10,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class MementoFileWriterSyncTest {
 
@@ -27,8 +28,8 @@ public class MementoFileWriterSyncTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        dir = Files.createTempDir();
-        file = File.createTempFile("mementoFileWriterSyncTest", "txt");
+        dir = Os.newTempDir(JavaClassNames.cleanSimpleClassName(this));
+        file = Os.newTempFile(getClass(), "txt");
         serializer = new MementoSerializer<String>() {
             @Override public String toString(String memento) {
                 return memento;
@@ -47,8 +48,7 @@ public class MementoFileWriterSyncTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (file != null) file.delete();
-        if (dir != null) Os.tryDeleteDirectory(dir);
-        
+        dir = Os.deleteRecursively(dir).asNullOrThrowing();
     }
 
     @Test

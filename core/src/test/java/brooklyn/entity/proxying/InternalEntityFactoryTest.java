@@ -14,6 +14,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
@@ -26,7 +27,7 @@ public class InternalEntityFactoryTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = (ManagementContextInternal) Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
         InternalPolicyFactory policyFactory = new InternalPolicyFactory(managementContext);
         factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry(), policyFactory);
     }

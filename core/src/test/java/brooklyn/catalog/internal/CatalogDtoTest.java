@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 public class CatalogDtoTest {
 
@@ -19,7 +20,7 @@ public class CatalogDtoTest {
     
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = new LocalManagementContextForTests();
     }
     
     @AfterMethod(alwaysRun = true)
@@ -27,15 +28,15 @@ public class CatalogDtoTest {
         if (managementContext != null) Entities.destroyAll(managementContext);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testCatalogLookup() {
-        CatalogDto root = buildHadoopsExample();
+        CatalogDto root = buildExampleCatalog();
         checkHadoopsExample(root);
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testCatalogSerializeAndLookup() {
-        CatalogDto root = buildHadoopsExample();
+        CatalogDto root = buildExampleCatalog();
         CatalogXmlSerializer seriailizer = new CatalogXmlSerializer();
         
         String xml = seriailizer.toString(root);
@@ -54,7 +55,7 @@ public class CatalogDtoTest {
         Assert.assertEquals(worker.getName(), "M3 Worker Node");
     }
 
-    public static CatalogDto buildHadoopsExample() {
+    public static CatalogDto buildExampleCatalog() {
         CatalogDo root = new CatalogDo(CatalogDto.newNamedInstance("My Local Catalog", 
                 "My favourite local settings, including remote catalogs -- " +
         		"intended partly as a teaching example for what can be expressed, and how"));

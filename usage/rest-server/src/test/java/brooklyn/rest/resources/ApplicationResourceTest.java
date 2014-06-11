@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -44,9 +45,13 @@ import brooklyn.rest.testing.mocks.EverythingGroup;
 import brooklyn.rest.testing.mocks.RestMockApp;
 import brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
+import brooklyn.test.Asserts;
+import brooklyn.test.HttpTestUtils;
+import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -108,7 +113,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   public void testDeployApplication() throws InterruptedException, TimeoutException, JsonGenerationException, JsonMappingException, UniformInterfaceException, ClientHandlerException, IOException {
     ClientResponse response = clientDeploy(simpleSpec);
     
-    assertTrue(response.getStatus()/100 == 2, "response is "+response);
+    HttpTestUtils.assertHealthyStatusCode(response.getStatus());
     assertEquals(getManagementContext().getApplications().size(), 1);
     assertRegexMatches(response.getLocation().getPath(), "/v1/applications/.*");
 //    Object taskO = response.getEntity(Object.class);
@@ -477,7 +482,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   @Test(dependsOnMethods = {"testListEffectors", "testFetchApplicationsAndEntity", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes","testLocatedLocation"})
   public void testDeleteApplication() throws TimeoutException, InterruptedException {
     waitForPageFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
-    int size = getManagementContext().getApplications().size();
+    Collection<Application> apps = getManagementContext().getApplications();
+    log.info("Deleting simple-app from "+apps);
+    int size = apps.size();
     
     ClientResponse response = client().resource("/v1/applications/simple-app")
         .delete(ClientResponse.class);
@@ -489,7 +496,11 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     
     waitForPageNotFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
 
-    Collection<Application> apps = getManagementContext().getApplications();
-    assertEquals(apps.size(), size-1, "apps="+apps);
+    log.info("App appears gone, apps are: "+getManagementContext().getApplications());
+    // more logging above, for failure in the check below
+
+    Asserts.eventually(
+        EntityFunctions.applications(getManagementContext()),
+        Predicates.compose(Predicates.equalTo(size-1), CollectionFunctionals.sizeFunction()) );
   }
 }

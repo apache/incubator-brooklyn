@@ -25,8 +25,10 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -63,19 +65,19 @@ public class BashCommandsIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mgmt = Entities.newManagementContext();
+        mgmt = new LocalManagementContextForTests();
         exec = new BasicExecutionContext(mgmt.getExecutionManager());
         
-        destFile = java.io.File.createTempFile("commoncommands-test-dest", "txt");
+        destFile = Os.newTempFile(getClass(), "commoncommands-test-dest.txt");
         
         sourceNonExistantFile = new File("/this/does/not/exist/ERQBETJJIG1234");
         sourceNonExistantFileUrl = sourceNonExistantFile.toURI().toString();
         
-        sourceFile1 = java.io.File.createTempFile("commoncommands-test", "txt");
+        sourceFile1 = Os.newTempFile(getClass(), "commoncommands-test.txt");
         sourceFileUrl1 = sourceFile1.toURI().toString();
         Files.write("mysource1".getBytes(), sourceFile1);
         
-        sourceFile2 = java.io.File.createTempFile("commoncommands-test2", "txt");
+        sourceFile2 = Os.newTempFile(getClass(), "commoncommands-test2.txt");
         sourceFileUrl2 = sourceFile2.toURI().toString();
         Files.write("mysource2".getBytes(), sourceFile2);
 
@@ -281,7 +283,7 @@ public class BashCommandsIntegrationTest {
         assertFalse(output.contains("Couldn't find"), "output="+output);
     }
     
-    @Test(groups="Integration")
+    @Test(groups="Integration", dependsOnMethods="testSudo")
     public void testWaitForPortFreeWhenAbortingOnTimeout() throws Exception {
         ServerSocket serverSocket = openServerSocket();
         try {
@@ -300,7 +302,7 @@ public class BashCommandsIntegrationTest {
         }
     }
 
-    @Test(groups="Integration")
+    @Test(groups="Integration", dependsOnMethods="testSudo")
     public void testWaitForPortFreeWhenNotAbortingOnTimeout() throws Exception {
         ServerSocket serverSocket = openServerSocket();
         try {
@@ -319,7 +321,7 @@ public class BashCommandsIntegrationTest {
         }
     }
     
-    @Test(groups="Integration")
+    @Test(groups="Integration", dependsOnMethods="testSudo")
     public void testWaitForPortFreeWhenFreedAfterStart() throws Exception {
         ServerSocket serverSocket = openServerSocket();
         try {

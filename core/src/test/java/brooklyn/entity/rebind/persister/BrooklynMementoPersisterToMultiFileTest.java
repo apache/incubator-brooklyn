@@ -5,13 +5,11 @@ import java.io.File;
 import org.testng.annotations.AfterMethod;
 
 import brooklyn.entity.rebind.RebindManagerImpl;
-import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
-
-import com.google.common.io.Files;
 
 /**
  * @author Andrea Turli
@@ -21,10 +19,9 @@ public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPers
 
     protected File mementoDir;
     
-    @SuppressWarnings("deprecation")
     @Override
     protected LocalManagementContext newPersistingManagementContext() {
-        mementoDir = Files.createTempDir();
+        mementoDir = Os.newTempDir(JavaClassNames.cleanSimpleClassName(this));
         Os.deleteOnExitRecursively(mementoDir);
         
         LocalManagementContext mgmt = new LocalManagementContextForTests();
@@ -38,7 +35,7 @@ public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPers
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
         super.tearDown();
     }
 

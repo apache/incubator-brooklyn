@@ -17,6 +17,7 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
@@ -42,7 +43,7 @@ public class DataEntityTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
         loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }

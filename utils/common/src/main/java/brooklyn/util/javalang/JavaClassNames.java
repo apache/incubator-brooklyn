@@ -66,7 +66,17 @@ public class JavaClassNames {
             return className.substring(lastDot+1);
         return className;
     }
- 
+
+    /** as {@link #simpleClassName(Object)} but making the result clean for use on filesystems and as java identifiers */
+    public static String cleanSimpleClassName(Object x) {
+        return Strings.makeValidFilename(simpleClassName(x));
+    }
+    
+    /** as {@link #simpleClassName(Object)} but making the result clean for use on filesystems and as java identifiers */
+    public static String cleanSimpleClassName(Class<?> x) {
+        return Strings.makeValidFilename(simpleClassName(x));
+    }
+    
     public static String packageName(Object x) {
         return componentType(x).getPackage().getName();
     }

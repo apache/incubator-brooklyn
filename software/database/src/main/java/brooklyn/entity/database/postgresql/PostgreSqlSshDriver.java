@@ -49,6 +49,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
@@ -292,7 +293,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         try {
             executeDatabaseCreationScript();
         } catch (RuntimeException r) {
-            copyLogFileContents();
+            logTailOfPostgresLog();
             throw Exceptions.propagate(r);
         }
 
@@ -346,13 +347,17 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         return getRunDir() + "/postgresql.pid";
     }
 
-    public void copyLogFileContents() {
+    /** @deprecated since 0.7.0 renamed {@link #logTailOfPostgresLog()} */
+    @Deprecated
+    public void copyLogFileContents() { logTailOfPostgresLog(); }
+    public void logTailOfPostgresLog() {
         try {
-            File file = File.createTempFile("postgresql-log", getEntity().getId());
+            File file = Os.newTempFile("postgresql-"+getEntity().getId(), "log");
             int result = getMachine().copyFrom(getLogFile(), file.getAbsolutePath());
             if (result != 0) throw new IllegalStateException("Could not access log file " + getLogFile());
             log.info("Saving {} contents as {}", getLogFile(), file);
             Streams.logStreamTail(log, "postgresql.log", Streams.byteArrayOfString(Files.toString(file, Charsets.UTF_8)), 1024);
+            file.delete();
         } catch (IOException ioe) {
             log.debug("Error reading copied log file: {}", ioe);
         }

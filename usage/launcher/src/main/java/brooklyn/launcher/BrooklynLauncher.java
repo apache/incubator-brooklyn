@@ -455,7 +455,7 @@ public class BrooklynLauncher {
             }
             
             for (Map.Entry<String, String> webapp : webApps.entrySet())
-                webServer.deploy(webapp.getKey(), webapp.getValue());
+                webServer.addWar(webapp.getKey(), webapp.getValue());
             
             webServer.start();
             

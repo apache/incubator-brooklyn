@@ -125,5 +125,9 @@ public class BrooklynServerConfig {
             throw e2;
         }
     }
+
+    public static final ConfigKey<String> BROOKLYN_CATALOG_URL = ConfigKeys.newStringConfigKey("brooklyn.catalog.url",
+        "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
+        "or empty for no URL (use default scanner)", "file://~/.brooklyn/catalog.xml");
     
 }

@@ -55,7 +55,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        if (tempDataDir != null) Os.tryDeleteDirectory(tempDataDir);
+        if (tempDataDir != null) Os.deleteRecursively(tempDataDir);
     }
 
     // Integration test because requires ssh'ing (and takes about 5 seconds)
@@ -180,7 +180,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
         } catch (SshException e) {
             // success
         } finally {
-            Os.tryDeleteDirectory(tempDataDirSub);
+            Os.deleteRecursively(tempDataDirSub);
         }
         
         // Copy to absolute path
@@ -188,7 +188,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
             entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDest.getAbsolutePath(), true);
             assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
         } finally {
-            Os.tryDeleteDirectory(tempDataDirSub);
+            Os.deleteRecursively(tempDataDirSub);
         }
         
         // Copy to absolute path
@@ -200,7 +200,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
             entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDestRelativeToRunDir, true);
             assertEquals(Files.readLines(tempDestInRunDir, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
         } finally {
-            Os.tryDeleteDirectory(new File(runDir, tempDataDirRelativeToRunDir));
+            Os.deleteRecursively(new File(runDir, tempDataDirRelativeToRunDir));
         }
     }
 

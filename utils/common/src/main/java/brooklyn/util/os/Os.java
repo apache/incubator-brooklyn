@@ -18,8 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -186,28 +188,75 @@ public class Os {
 
     /** tries to delete a directory recursively;
      * use with care - see http://stackoverflow.com/questions/8320376/why-is-files-deletedirectorycontents-deprecated-in-guava.
-     * @return true if there are no errors (but the directory may still exist if a file is created there in parallel),
-     * false if there are errors (without reporting the errors)
      * <p>
-     * NB: this method might change, based on Guava choosing to deprecate it;
-     * also the return type might be modified in future to supply more information;
-     * thus it is marked beta */
+     * also note this implementation refuses to delete / or ~ or anything else not passing {@link #checkSafe(File)}.
+     * if you might really want to delete something like that, use {@link #deleteRecursively(File, boolean)}.
+     */
     @Beta
-    public static boolean tryDeleteDirectory(File dir) {
+    public static DeletionResult deleteRecursively(File dir) {
+        return deleteRecursively(dir, false);
+    }
+    
+    /** 
+     * as {@link #deleteRecursively(File)} but includes safety checks to prevent deletion of / or ~
+     * or anything else not passing {@link #checkSafe(File)}, unless the skipSafetyChecks parameter is set
+     */
+    @Beta
+    public static DeletionResult deleteRecursively(File dir, boolean skipSafetyChecks) {
         try {
+            if (dir==null) return new DeletionResult(null, true, null);
+            
+            if (!skipSafetyChecks) checkSafe(dir);
+
             FileUtils.deleteDirectory(dir);
-            return true;
+            return new DeletionResult(dir, true, null);
         } catch (IOException e) {
-            return false;
+            return new DeletionResult(dir, false, e);
         }
+    }
+
+    /** fails if the dir is not "safe" for deletion, currently length <= 2 or the home directory */
+    protected static void checkSafe(File dir) throws IOException {
+        String dp = dir.getAbsolutePath();
+        dp = Strings.removeFromEnd(dp, "/");
+        if (dp.length()<=2)
+            throw new IOException("Refusing instruction to delete "+dir+": name too short");
+
+        if (Os.home().equals(dp))
+            throw new IOException("Refusing instruction to delete "+dir+": it's the home directory");
     }
     
     /**
-     * @see {@link #tryDeleteDirectory(File)}
+     * @see {@link #deleteRecursively(File)}
      */
     @Beta
-    public static boolean tryDeleteDirectory(String dir) {
-        return tryDeleteDirectory(new File(dir));
+    public static DeletionResult deleteRecursively(String dir) {
+        if (dir==null) return new DeletionResult(null, true, null);
+        return deleteRecursively(new File(dir));
+    }
+    
+    public static class DeletionResult {
+        private final File file;
+        private final boolean successful;
+        private final Throwable throwable;
+        public DeletionResult(File file, boolean successful, Throwable throwable) {
+            this.file = file;
+            this.successful = successful;
+            this.throwable = throwable;
+        }
+        public boolean wasSuccessful() { return successful; }
+        public DeletionResult throwIfFailed() {
+            if (!successful)
+                throw Exceptions.propagate(new IOException("Unable to delete '"+file+"': delete returned false", throwable));
+            return this; 
+        }
+        public File getFile() { return file; }
+        public Throwable getThrowable() { return throwable; }
+        public <T> T asNullIgnoringError() { return null; }
+        public <T> T asNullOrThrowing() {
+            throwIfFailed();
+            return null; 
+        }
     }
 
     private static class FileDeletionHook {
@@ -221,7 +270,7 @@ public class Os {
         public void run() throws IOException {
             if (path.exists()) {
                 if (recursively && path.isDirectory()) {
-                    FileUtils.deleteDirectory(path);
+                    Os.deleteRecursively(path);
                 } else {
                     path.delete();
                 }
@@ -413,6 +462,45 @@ public class Os {
         if (System.getProperty("os.name").toLowerCase().indexOf("microsoft")>=0)
             return true;
         return false;
+    }
+
+    /** creates a private temp file which will be deleted on exit;
+     * either prefix or ext may be null; 
+     * if ext does not start with a . and is <= 4 chars in length, a dot will be inserted */
+    public static File newTempFile(String prefix, String ext) {
+        String baseName = (prefix!=null ? prefix + "-" : "") + Identifiers.makeRandomId(4) + 
+            (ext!=null ? ext.startsWith(".") || ext.length()>4 ? ext : "."+ext : "");
+        File tempFile = new File(tmp(), baseName);
+        try {
+            if (tempFile.createNewFile()) {
+                tempFile.deleteOnExit();
+                return tempFile;
+            }
+            throw new IllegalStateException("cannot create temp file "+tempFile+", call returned false");
+        } catch (IOException e) {
+            throw new IllegalStateException("cannot create temp file "+tempFile+", error: "+e, e);
+        }
+    }
+    
+    /** as {@link #newTempFile(String, String)} using the class as the basis for a prefix */
+    public static File newTempFile(Class<?> clazz, String ext) {
+        return newTempFile(JavaClassNames.cleanSimpleClassName(clazz), ext);
+    }
+
+    /** creates a temp dir which will be deleted on exit */
+    public static File newTempDir(String prefix) {
+        String baseName = (prefix==null ? "" : prefix + "-") + "-" + Identifiers.makeRandomId(4);
+        File tempDir = new File(tmp(), baseName);
+        if (tempDir.mkdir()) {
+            Os.deleteOnExitRecursively(tempDir);
+            return tempDir;
+        }
+        throw new IllegalStateException("cannot write to temp dir, making directory "+tempDir);
+    }
+    
+    /** as {@link #newTempDir(String)}, using the class as the basis for a prefix */
+    public static File newTempDir(Class<?> clazz) {
+        return newTempDir(JavaClassNames.cleanSimpleClassName(clazz));
     }
 
 }

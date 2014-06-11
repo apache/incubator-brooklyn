@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableMap;
@@ -19,7 +20,7 @@ public class EntityConfigTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
     }
     
     @AfterMethod(alwaysRun=true)

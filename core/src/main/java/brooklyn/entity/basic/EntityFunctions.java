@@ -2,14 +2,18 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
+import com.google.common.base.Supplier;
 
 public class EntityFunctions {
 
@@ -91,6 +95,15 @@ public class EntityFunctions {
             @Override
             public Void apply(T input) {
                 return settingSensorsConstant(values).apply(entity);
+            }
+        };
+    }
+
+    public static Supplier<Collection<Application>> applications(final ManagementContext mgmt) {
+        return new Supplier<Collection<Application>>() {
+            @Override
+            public Collection<Application> get() {
+                return mgmt.getApplications();
             }
         };
     }

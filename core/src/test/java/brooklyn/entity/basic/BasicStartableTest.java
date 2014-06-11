@@ -17,6 +17,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.Locations.LocationsFilter;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
@@ -38,7 +39,7 @@ public class BasicStartableTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
         loc1 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         loc2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);

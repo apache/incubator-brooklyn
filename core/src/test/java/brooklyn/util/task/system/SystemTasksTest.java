@@ -2,7 +2,6 @@ package brooklyn.util.task.system;
 
 import java.io.File;
 
-import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -11,9 +10,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.os.Os;
 import brooklyn.util.task.ssh.SshTasks;
-
-import com.google.common.io.Files;
 
 /**
  * Some tests for {@link SystemTasks}. See {@link SshTasks}.
@@ -30,14 +28,14 @@ public class SystemTasksTest {
         mgmt = new LocalManagementContext();
         
         clearExpectedFailure();
-        tempDir = Files.createTempDir();
+        tempDir = Os.newTempDir(getClass());
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (mgmt != null) Entities.destroyAll(mgmt);
         mgmt = null;
-        FileUtils.deleteDirectory(tempDir);
+        tempDir = Os.deleteRecursively(tempDir).asNullOrThrowing();
         checkExpectedFailure();
     }
 

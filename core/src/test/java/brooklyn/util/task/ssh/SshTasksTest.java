@@ -19,11 +19,10 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommandsIntegrationTest;
 import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
-
-import com.google.common.io.Files;
 
 /**
  * Some tests for {@link SshTasks}. Note more tests in {@link BashCommandsIntegrationTest}, 
@@ -46,14 +45,14 @@ public class SshTasksTest {
         LocalhostMachineProvisioningLocation lhc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
         host = lhc.obtain();
         clearExpectedFailure();
-        tempDir = Files.createTempDir();
+        tempDir = Os.newTempDir(getClass());
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (mgmt != null) Entities.destroyAll(mgmt);
         mgmt = null;
-        FileUtils.deleteDirectory(tempDir);
+        tempDir = Os.deleteRecursively(tempDir).asNullOrThrowing();
         checkExpectedFailure();
     }
 

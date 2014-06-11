@@ -25,6 +25,7 @@ import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
@@ -32,7 +33,6 @@ import brooklyn.util.time.Duration;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.io.Files;
 
 /**
  * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; class be moved to tests
@@ -83,7 +83,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
     private void reserializeMemento() {
         // To confirm always serializable
         try {
-            File tempDir = Files.createTempDir();
+            File tempDir = Os.newTempDir(JavaClassNames.cleanSimpleClassName(this));
             try {
                 // TODO Duplicate code for LookupContext in RebindManager
                 BrooklynMementoPersisterToMultiFile persister = new BrooklynMementoPersisterToMultiFile(tempDir , classLoader);
@@ -146,7 +146,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                 // Not actually reconstituting, because need to use a real lookupContext to reconstitute all the entities
                 persister.loadMemento(dummyLookupContext, exceptionHandler);
             } finally {
-                Os.tryDeleteDirectory(tempDir.getAbsolutePath());
+                Os.deleteRecursively(tempDir);
             }
         } catch (IOException e) {
             throw Throwables.propagate(e);

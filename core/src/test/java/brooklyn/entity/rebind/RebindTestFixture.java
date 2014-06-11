@@ -13,9 +13,8 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
-
-import com.google.common.io.Files;
 
 public abstract class RebindTestFixture<T extends StartableApplication> {
 
@@ -37,7 +36,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         origPolicyPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
         origEnricherPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
         
-        mementoDir = Files.createTempDir();
+        mementoDir = Os.newTempDir(getClass());
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         origApp = createApp();
     }
@@ -56,7 +55,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
             newManagementContext = null;
     
             if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-            if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+            if (mementoDir != null) FileBasedObjectStore.deleteCompletely(mementoDir);
             origManagementContext = null;
         } finally {
             BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY, origPolicyPersistenceEnabled);

@@ -151,7 +151,7 @@ public class EntitySubscriptionTest {
         }
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testSubscribeToMembersIgnoresEventsForDynamicallyRemovedMembers() {
         entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
