@@ -170,6 +170,9 @@ public class Repeater {
         return delayOnIteration(new Function<Integer, Duration>() {
             @Override
             public Duration apply(Integer iteration) {
+                /* we iterate because otherwise we risk overflow errors by using multiplier^iteration; 
+                 * e.g. with:
+                 * return Duration.min(initialDelay.multiply(Math.pow(multiplier, iteration)), finalDelay); */
                 Duration result = initialDelay;
                 for (int i=0; i<iteration; i++) {
                     result = result.multiply(multiplier);
@@ -177,8 +180,6 @@ public class Repeater {
                         return finalDelay;
                 }
                 return result;
-                // prefer the above to the below because the below can overflow in loops get large
-//                return Duration.min(initialDelay.multiply(Math.pow(multiplier, iteration)), finalDelay);
             }
         });
     }
