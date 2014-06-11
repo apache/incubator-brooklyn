@@ -78,7 +78,7 @@ public class BrooklynWebServer {
                 BROOKLYN_WAR_URL, "/usage/launcher/target", 
                 "/usage/jsgui/target/brooklyn-jsgui-"+BrooklynVersion.get()+".war"));
     }
-
+    
     static {
         LoggingSetup.installJavaUtilLoggingBridge();
     }
@@ -126,10 +126,16 @@ public class BrooklynWebServer {
     private Boolean httpsEnabled;
 
     @SetFromFlag
+    private String sslCertificate;
+
+    @SetFromFlag
     private String keystorePath;
 
     @SetFromFlag
     private String keystorePassword;
+
+    @SetFromFlag
+    private String keystoreCertAlias;
 
     @SetFromFlag
     private String truststorePath;
@@ -326,23 +332,40 @@ public class BrooklynWebServer {
             }
 
             SslContextFactory sslContextFactory = new SslContextFactory();
+
+            if (keystorePath==null) keystorePath = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_URL);
+            if (keystorePassword==null) keystorePassword = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_PASSWORD);
+            if (keystoreCertAlias==null) keystoreCertAlias = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_CERTIFICATE_ALIAS);
+            
             if (keystorePath!=null) {
                 sslContextFactory.setKeyStorePath(checkFileExists(keystorePath, "keystore"));
+                if (Strings.isEmpty(keystorePassword))
+                    throw new IllegalArgumentException("Keystore password is required and non-empty if keystore is specified.");
                 sslContextFactory.setKeyStorePassword(keystorePassword);
+                if (Strings.isNonEmpty(keystoreCertAlias))
+                    sslContextFactory.setCertAlias(keystoreCertAlias);
             } else {
                 // TODO allow webconsole keystore & related properties to be set in brooklyn.properties 
                 log.info("No keystore specified but https enabled; creating a default keystore");
+                
+                if (Strings.isEmpty(keystoreCertAlias))
+                    keystoreCertAlias = "web-console";
+                
                 // if password is blank the process will block and read from stdin !
-                if (Strings.isEmpty(keystorePassword))
-                    keystorePassword = "password";
+                if (Strings.isEmpty(keystorePassword)) {
+                    keystorePassword = Identifiers.makeRandomId(8);
+                    log.debug("created random password "+keystorePassword+" for ad hoc internal keystore");
+                }
                 
                 KeyStore ks = SecureKeys.newKeyStore();
                 KeyPair key = SecureKeys.newKeyPair();
                 X509Certificate cert = new FluentKeySigner("brooklyn").newCertificateFor("web-console", key);
-                ks.setKeyEntry("web-console", key.getPrivate(), keystorePassword.toCharArray(),
-                        new Certificate[] { cert });                
+                ks.setKeyEntry(keystoreCertAlias, key.getPrivate(), keystorePassword.toCharArray(),
+                    new Certificate[] { cert });
+                
                 sslContextFactory.setKeyStore(ks);
                 sslContextFactory.setKeyStorePassword(keystorePassword);
+                sslContextFactory.setCertAlias(keystoreCertAlias);
             }
             if (!Strings.isEmpty(truststorePath)) {
                 sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));

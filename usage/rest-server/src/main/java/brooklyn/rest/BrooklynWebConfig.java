@@ -31,15 +31,6 @@ public class BrooklynWebConfig {
         return new BasicConfigKey<String>(String.class, BASE_NAME_SECURITY+".user."+user+".password");
     }
     
-    /** @deprecated since 0.6.0; use #USERS */
-    public final static ConfigKey<String> SECURITY_PROVIDER_EXPLICIT__USERS = new BasicConfigKey<String>(String.class,
-            BASE_NAME_SECURITY+".explicit.users");
-    
-    /** @deprecated since 0.6.0; use #PASSWORD_FOR_USER */
-    public final static ConfigKey<String> SECURITY_PROVIDER_EXPLICIT__PASSWORD(String user) {
-        return new BasicConfigKey<String>(String.class, BASE_NAME+".security.explicit.user."+user);
-    }
-
     public final static ConfigKey<String> LDAP_URL = new BasicConfigKey<String>(String.class,
             BASE_NAME_SECURITY+".ldap.url");
 
@@ -48,6 +39,16 @@ public class BrooklynWebConfig {
 
     public final static ConfigKey<Boolean> HTTPS_REQUIRED = ConfigKeys.newBooleanConfigKey(BASE_NAME+".security.https.required",
             "Whether HTTPS is required", false); 
+
+    public final static ConfigKey<String> KEYSTORE_URL = ConfigKeys.newStringConfigKey(BASE_NAME+".security.keystore.url",
+        "Keystore from which to take the certificate to present when running HTTPS; "
+        + "note that normally the password is also required, and an alias for the certificate if the keystore has more than one"); 
+
+    public final static ConfigKey<String> KEYSTORE_PASSWORD = ConfigKeys.newStringConfigKey(BASE_NAME+".security.keystore.password",
+        "Password for the "+KEYSTORE_URL); 
+
+    public final static ConfigKey<String> KEYSTORE_CERTIFICATE_ALIAS = ConfigKeys.newStringConfigKey(BASE_NAME+".security.keystore.certificate.alias",
+        "Alias in "+KEYSTORE_URL+" for the certificate to use; defaults to the first if not supplied"); 
 
     public final static boolean hasNoSecurityOptions(ConfigMap config) {
         return config.submap(ConfigPredicates.startingWith(BrooklynWebConfig.BASE_NAME_SECURITY)).isEmpty();

@@ -14,6 +14,7 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -21,6 +22,9 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.rest.BrooklynWebConfig;
+import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 
@@ -50,7 +54,7 @@ public class BrooklynWebServerTest {
     }
     
     private LocalManagementContext newManagementContext(BrooklynProperties brooklynProperties) {
-        LocalManagementContext result = new LocalManagementContext(brooklynProperties);
+        LocalManagementContext result = new LocalManagementContextForTests(brooklynProperties);
         managementContexts.add(result);
         return result;
     }
@@ -74,10 +78,34 @@ public class BrooklynWebServerTest {
                 .put("httpsEnabled", true)
                 .put("keystorePath", getFile("server.ks"))
                 .put("keystorePassword", "password")
-                .put("truststorePath", getFile("server.ts"))
-                .put("trustStorePassword", "password")
                 .build();
         webServer = new BrooklynWebServer(flags, newManagementContext(brooklynProperties));
+        webServer.start();
+        
+        try {
+            KeyStore keyStore = load("client.ks", "password");
+            KeyStore trustStore = load("client.ts", "password");
+            SSLSocketFactory socketFactory = new SSLSocketFactory(SSLSocketFactory.TLS, keyStore, "password", trustStore, (SecureRandom)null, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+
+            HttpToolResponse response = HttpTool.execAndConsume(
+                    HttpTool.httpClientBuilder()
+                            .port(webServer.getActualPort())
+                            .https(true)
+                            .socketFactory(socketFactory)
+                            .build(),
+                    new HttpGet(webServer.getRootUrl()));
+            assertEquals(response.getResponseCode(), 200);
+        } finally {
+            webServer.stop();
+        }
+    }
+
+    @Test
+    public void verifyHttpsFromConfig() throws Exception {
+        brooklynProperties.put(BrooklynWebConfig.HTTPS_REQUIRED, true);
+        brooklynProperties.put(BrooklynWebConfig.KEYSTORE_URL, getFile("server.ks"));
+        brooklynProperties.put(BrooklynWebConfig.KEYSTORE_PASSWORD, "password");
+        webServer = new BrooklynWebServer(MutableMap.of(), newManagementContext(brooklynProperties));
         webServer.start();
         
         try {
@@ -106,6 +134,7 @@ public class BrooklynWebServerTest {
     }
 
     private String getFile(String file) {
+        // this works because both IDE and Maven run tests with classes/resources on the file system
         return new File(getClass().getResource("/" + file).getFile()).getAbsolutePath();
     }
 }

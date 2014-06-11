@@ -1,7 +1,5 @@
 package brooklyn.rest.security.provider;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -24,8 +22,6 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     
     public static final String AUTHENTICATION_KEY = ExplicitUsersSecurityProvider.class.getCanonicalName()+"."+"AUTHENTICATED";
 
-    private static final Set<String> DEPRECATED_WARNING_EXPLICIT_USERS = Collections.synchronizedSet(new HashSet<String>());
-    
     protected final ManagementContext mgmt;
     
     public ExplicitUsersSecurityProvider(ManagementContext mgmt) {
@@ -43,7 +39,6 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
     
     private Set<String> allowedUsers = null;
     
-    @SuppressWarnings("deprecation")
     private synchronized void initialize() {
         if (allowedUsers!=null) return;
 
@@ -51,12 +46,6 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
 
         allowedUsers = new LinkedHashSet<String>();
         String users = properties.getConfig(BrooklynWebConfig.USERS);
-        if (users==null) {
-            users = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__USERS);
-            if (users!=null) 
-                LOG.warn("Using deprecated config key "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__USERS.getName()+"; " +
-            		"use "+BrooklynWebConfig.USERS.getName()+" instead");
-        }
         if (users==null) {
             LOG.warn("Web console has no users configured; no one will be able to log in!");
         } else if ("*".equals(users)) {
@@ -71,7 +60,6 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         }       
     }
     
-    @SuppressWarnings("deprecation")
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
         if (session==null || user==null) return false;
@@ -87,15 +75,6 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
 
         BrooklynProperties properties = (BrooklynProperties) mgmt.getConfig();
         String actualP = properties.getConfig(BrooklynWebConfig.PASSWORD_FOR_USER(user));
-        if (actualP==null) {
-            actualP = properties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user));
-            if (actualP!=null) {
-                if (DEPRECATED_WARNING_EXPLICIT_USERS.add(user)) {
-                    LOG.warn("Web console user password set using deprecated property "+BrooklynWebConfig.SECURITY_PROVIDER_EXPLICIT__PASSWORD(user).getName()+"; " +
-                		"configure using "+BrooklynWebConfig.PASSWORD_FOR_USER(user).getName()+" instead");
-                }
-            }
-        }
         if (actualP==null) {
             LOG.warn("Web console rejecting passwordless user "+user);
             return false;

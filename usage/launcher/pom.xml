@@ -75,6 +75,14 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        
     	<dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-nosql</artifactId>
