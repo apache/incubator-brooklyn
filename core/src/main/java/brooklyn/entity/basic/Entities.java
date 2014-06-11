@@ -820,7 +820,7 @@ public class Entities {
         String description = "Waiting for SERVICE_UP on "+entity;
         Tasks.setBlockingDetails(description);
         if (!Repeater.create(description).limitTimeTo(timeout)
-                .rethrowException().every(Duration.ONE_SECOND)
+                .rethrowException().backoffTo(Duration.ONE_SECOND)
                 .until(new Callable<Boolean>() {
                     public Boolean call() {
                         return entity.getAttribute(Startable.SERVICE_UP);

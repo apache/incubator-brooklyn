@@ -6,6 +6,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +16,8 @@ import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.util.concurrent.Callables;
@@ -62,8 +66,8 @@ public class Repeater {
     private final String description;
     private Callable<?> body = Callables.returning(null);
     private Callable<Boolean> exitCondition;
-    private Duration period = null;
-    private Duration durationLimit = null;
+    private Function<? super Integer,Duration> delayOnIteration = null;
+    private Duration timeLimit = null;
     private int iterationLimit = 0;
     private boolean rethrowException = false;
     private boolean rethrowExceptionImmediately = false;
@@ -136,17 +140,55 @@ public class Repeater {
     }
 
     /**
-     * Set how long to wait between loop iterations.
+     * Set how long to wait between loop iterations, as a constant function in {@link #delayOnIteration}
      */
     public Repeater every(Duration duration) {
         Preconditions.checkNotNull(duration, "duration must not be null");
         Preconditions.checkArgument(duration.toMilliseconds()>0, "period must be positive: %s", duration);
-        this.period = duration;
-        return this;
+        return delayOnIteration(Functions.constant(duration));
     }
 
     public Repeater every(groovy.time.Duration duration) {
         return every(Duration.of(duration));
+    }
+    
+    /** sets a function which determines how long to delay on a given iteration between checks,
+     * with 0 being mapped to the initial delay (after the initial check) */
+    public Repeater delayOnIteration(Function<? super Integer,Duration> delayFunction) {
+        Preconditions.checkNotNull(delayFunction, "delayFunction must not be null");
+        this.delayOnIteration = delayFunction;
+        return this;
+    }
+
+    /** sets the {@link #delayOnIteration(Function)} function to be an exponential backoff as follows:
+     * @param initialDelay  the delay on the first iteration, after the initial check
+     * @param multiplier  the rate at which to increase the loop delay, must be >= 1
+     * @param finalDelay  an optional cap on the loop delay   */
+    public Repeater backoff(final Duration initialDelay, final double multiplier, @Nullable final Duration finalDelay) {
+        Preconditions.checkNotNull(initialDelay, "initialDelay");
+        Preconditions.checkArgument(multiplier>=1.0, "multiplier >= 1.0");
+        return delayOnIteration(new Function<Integer, Duration>() {
+            @Override
+            public Duration apply(Integer iteration) {
+                /* we iterate because otherwise we risk overflow errors by using multiplier^iteration; 
+                 * e.g. with:
+                 * return Duration.min(initialDelay.multiply(Math.pow(multiplier, iteration)), finalDelay); */
+                Duration result = initialDelay;
+                for (int i=0; i<iteration; i++) {
+                    result = result.multiply(multiplier);
+                    if (finalDelay!=null && result.compareTo(finalDelay)>0)
+                        return finalDelay;
+                }
+                return result;
+            }
+        });
+    }
+
+    /** convenience to start with a 10ms delay and exponentially back-off at a rate of 1.2 
+     * up to a max per-iteration delay as supplied here.
+     * 1.2 chosen because it decays nicely, going from 10ms to 1s in approx 25 iterations totalling 5s elapsed time. */
+    public Repeater backoffTo(final Duration finalDelay) {
+        return backoff(Duration.millis(10), 1.2, finalDelay);
     }
 
     /**
@@ -230,7 +272,7 @@ public class Repeater {
     public Repeater limitTimeTo(Duration duration) {
         Preconditions.checkNotNull(duration, "duration must not be null");
         Preconditions.checkArgument(duration.toMilliseconds() > 0, "deadline must be positive: %s", duration);
-        this.durationLimit = duration;
+        this.timeLimit = duration;
         return this;
     }
 
@@ -242,13 +284,14 @@ public class Repeater {
     public boolean run() {
         Preconditions.checkState(body != null, "repeat() method has not been called to set the body");
         Preconditions.checkState(exitCondition != null, "until() method has not been called to set the exit condition");
-        Preconditions.checkState(period != null, "every() method has not been called to set the loop period time units");
+        Preconditions.checkState(delayOnIteration != null, "every() method (or other delaySupplier() / backoff() method) has not been called to set the loop delay");
 
         Throwable lastError = null;
         int iterations = 0;
-        CountdownTimer timer = durationLimit!=null ? CountdownTimer.newInstanceStarted(durationLimit) : CountdownTimer.newInstancePaused(Duration.PRACTICALLY_FOREVER);
+        CountdownTimer timer = timeLimit!=null ? CountdownTimer.newInstanceStarted(timeLimit) : CountdownTimer.newInstancePaused(Duration.PRACTICALLY_FOREVER);
 
         while (true) {
+            Duration delayThisIteration = delayOnIteration.apply(iterations);
             iterations++;
 
             try {
@@ -296,7 +339,7 @@ public class Repeater {
 
             if (timer.isExpired()) {
                 if (log.isDebugEnabled()) log.debug("{}: condition not satisfied, with {} elapsed (limit {})", 
-                    new Object[] { description, Time.makeTimeStringRounded(timer.getDurationElapsed()), Time.makeTimeStringRounded(durationLimit) });
+                    new Object[] { description, Time.makeTimeStringRounded(timer.getDurationElapsed()), Time.makeTimeStringRounded(timeLimit) });
                 if (rethrowException && lastError != null) {
                     log.error("{}: error caught checking condition: {}", description, lastError.getMessage());
                     throw Exceptions.propagate(lastError);
@@ -304,7 +347,7 @@ public class Repeater {
                 return false;
             }
 
-            Time.sleep(period);
+            Time.sleep(delayThisIteration);
         }
     }
 }
