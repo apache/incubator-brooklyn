@@ -46,6 +46,7 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
@@ -194,7 +195,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
     protected void killEntityBehindBack(Entity tokill) throws Exception {
         // Previously was calling entity.getDriver().kill(); but now our entity instance is a proxy so can't do that
         ManagementContext newManagementContext = null;
-        File tempDir = Files.createTempDir();
+        File tempDir = Os.newTempDir(getClass());
         try {
             ManagementContext managementContext = ((EntityInternal)tokill).getManagementContext();
             BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
@@ -204,7 +205,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
             oldPersister.waitForWritesCompleted(30*1000, TimeUnit.MILLISECONDS);
 
             BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            newManagementContext = Entities.newManagementContext();
+            newManagementContext = new LocalManagementContextForTests();
             newManagementContext.getRebindManager().setPersister(newPersister);
             newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
             newManagementContext.getRebindManager().start();
@@ -212,7 +213,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
             entity2.stop();
         } finally {
             if (newManagementContext != null) ((ManagementContextInternal)newManagementContext).terminate();
-            Os.tryDeleteDirectory(tempDir.getAbsolutePath());
+            Os.deleteRecursively(tempDir.getAbsolutePath());
         }
         log.info("called to stop {} in parallel mgmt universe", entity);
     }

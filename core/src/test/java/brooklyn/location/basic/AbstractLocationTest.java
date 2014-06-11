@@ -16,6 +16,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -42,7 +43,7 @@ public class AbstractLocationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mgmt = Entities.newManagementContext();
+        mgmt = new LocalManagementContextForTests();
     }
     
     @AfterMethod(alwaysRun = true)

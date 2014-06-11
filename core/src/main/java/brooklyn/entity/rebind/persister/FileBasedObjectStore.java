@@ -23,6 +23,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.os.Os;
+import brooklyn.util.os.Os.DeletionResult;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -293,22 +294,9 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     }
     
     public static void deleteCompletely(File d) {
-        try {
-            if (d==null) return;
-            String dp = d.getAbsolutePath();
-            if (dp.length()<=4) {
-                log.warn("Refusing instruction to delete base dir "+d+": name too short");
-                return;
-            }
-            if (Os.home().equals(dp)) {
-                log.warn("Refusing instruction to delete base dir "+d+": it's the home directory");
-                return;
-            }
-            FileUtils.deleteDirectory(d);
-        } catch (IOException e) {
-            Exceptions.propagateIfFatal(e);
+        DeletionResult result = Os.deleteRecursively(d);
+        if (!result.wasSuccessful())
             log.warn("Unable to delete persistence dir "+d);
-        }
     }
 
 }

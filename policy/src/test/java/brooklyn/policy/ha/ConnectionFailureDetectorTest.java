@@ -23,6 +23,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
@@ -50,7 +51,7 @@ public class ConnectionFailureDetectorTest {
     public void setUp() throws Exception {
         events = new CopyOnWriteArrayList<SensorEvent<FailureDescriptor>>();
         
-        managementContext = Entities.newManagementContext();
+        managementContext = new LocalManagementContextForTests();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         
         app.getManagementContext().getSubscriptionManager().subscribe(

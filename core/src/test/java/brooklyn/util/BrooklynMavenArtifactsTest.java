@@ -8,7 +8,10 @@ import org.testng.annotations.Test;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 @Test
 public class BrooklynMavenArtifactsTest {
@@ -27,7 +30,11 @@ public class BrooklynMavenArtifactsTest {
         log.info("found example war at: "+url);
     }
 
+    @Test(groups="Integration")
+    // runs without internet but doesn't assert what it should, and can take a long time, so integration
     public void testBadExampleWar() {
+        Time.sleep(Duration.FIVE_SECONDS);
+        log.info("boo!");
         String url = BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-GOODBYE-world-sql-webapp", "war");
         Assert.assertFalse(ResourceUtils.create(this).doesUrlExist(url), "should not exist: "+url);
     }
@@ -54,7 +61,7 @@ public class BrooklynMavenArtifactsTest {
 
     private void checkValidArchive(String url) {
         try {
-            byte[] bytes = ResourceUtils.readFullyBytes(ResourceUtils.create(this).getResourceFromUrl(url));
+            byte[] bytes = Streams.readFully(ResourceUtils.create(this).getResourceFromUrl(url));
             // confirm this follow redirects!
             Assert.assertTrue(bytes.length > 100*1000, "download of "+url+" is suspect ("+Strings.makeSizeString(bytes.length)+")");
             // (could also check it is a zip etc)

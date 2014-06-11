@@ -11,6 +11,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
@@ -29,7 +30,7 @@ public class MementoFileWriterTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        file = File.createTempFile("mementoFileWriterTest", "txt");
+        file = Os.newTempFile(getClass(), "txt");
         executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         serializer = new MementoSerializer<String>() {
             @Override public String toString(String memento) {

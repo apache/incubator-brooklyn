@@ -93,7 +93,7 @@ public class ScheduledExecutionTest {
 		assertEquals(i, 5)
 	}
 
-    @Test
+    @Test(groups="Integration")
     public void testScheduledTaskTakesLongerThanPeriod() {
         final int PERIOD = 1;
         final int SLEEP_TIME = 100;

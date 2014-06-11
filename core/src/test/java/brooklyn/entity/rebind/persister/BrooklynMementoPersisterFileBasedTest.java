@@ -2,14 +2,14 @@ package brooklyn.entity.rebind.persister;
 
 import java.io.File;
 
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
-
-import com.google.common.io.Files;
 
 /**
  * @author Andrea Turli
@@ -20,10 +20,16 @@ public class BrooklynMementoPersisterFileBasedTest extends BrooklynMementoPersis
     protected File mementoDir;
     
     protected ManagementContext newPersistingManagementContext() {
-        mementoDir = Files.createTempDir();
+        mementoDir = Os.newTempDir(JavaClassNames.cleanSimpleClassName(this));
         Os.deleteOnExitRecursively(mementoDir);
         return RebindTestUtils.managementContextBuilder(classLoader, new FileBasedObjectStore(mementoDir))
             .persistPeriod(Duration.millis(10)).buildStarted();
     }
-    
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
+        super.tearDown();
+    }
+
 }

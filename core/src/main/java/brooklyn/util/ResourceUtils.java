@@ -310,11 +310,16 @@ public class ResourceUtils {
                 .put("address", InetAddress.getByName(address))
                 .build());
         try {
-            File tempFile = File.createTempFile("brooklyn-sftp", ".tmp");
-            tempFile.deleteOnExit();
+            final File tempFile = Os.newTempFile("brooklyn-sftp", "tmp");
             tempFile.setReadable(true, true);
             machine.copyFrom(path, tempFile.getAbsolutePath());
-            return new FileInputStream(tempFile);
+            return new FileInputStream(tempFile) {
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    tempFile.delete();
+                }
+            };
         } finally {
             Streams.closeQuietly(machine);
         }

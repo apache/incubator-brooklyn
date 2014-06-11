@@ -15,6 +15,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.Exceptions;
@@ -28,7 +29,7 @@ public class AccessManagerTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = new LocalManagementContextForTests();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
     }
     

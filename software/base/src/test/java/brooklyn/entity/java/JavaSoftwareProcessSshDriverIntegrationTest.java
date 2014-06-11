@@ -103,7 +103,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         setup(mgmt);
         
         doTestSpecifiedDirectory(dir, dir);
-        Os.tryDeleteDirectory(dir);
+        Os.deleteRecursively(dir);
     }
     
     @Test(groups = "Integration")
@@ -113,7 +113,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
             app.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, dir);
             doTestSpecifiedDirectory(dir, dir);
         } finally {
-            Os.tryDeleteDirectory(dir);
+            Os.deleteRecursively(dir);
         }
     }
     
@@ -124,8 +124,8 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         app.setConfig(BrooklynConfigKeys.INSTALL_DIR, dir1);
         app.setConfig(BrooklynConfigKeys.RUN_DIR, dir2);
         doTestSpecifiedDirectory(dir1, dir2);
-        Os.tryDeleteDirectory(dir1);
-        Os.tryDeleteDirectory(dir2);
+        Os.deleteRecursively(dir1);
+        Os.deleteRecursively(dir2);
     }
     
     @Test(groups = "Integration")
@@ -140,8 +140,8 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         
         app.setConfig(BrooklynConfigKeys.RUN_DIR, dir2);
         doTestSpecifiedDirectory(dir1, dir2);
-        Os.tryDeleteDirectory(dir1);
-        Os.tryDeleteDirectory(dir2);
+        Os.deleteRecursively(dir1);
+        Os.deleteRecursively(dir2);
     }
     
     protected void doTestSpecifiedDirectory(final String installDirPrefix, final String runDirPrefix) {

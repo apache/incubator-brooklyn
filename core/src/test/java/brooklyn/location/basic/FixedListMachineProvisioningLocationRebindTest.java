@@ -18,11 +18,11 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.os.Os;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
 public class FixedListMachineProvisioningLocationRebindTest {
 
@@ -35,7 +35,7 @@ public class FixedListMachineProvisioningLocationRebindTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mementoDir = Files.createTempDir();
+        mementoDir = Os.newTempDir(getClass());
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         
     	origLoc = new FixedListMachineProvisioningLocation.Builder(origManagementContext.getLocationManager())

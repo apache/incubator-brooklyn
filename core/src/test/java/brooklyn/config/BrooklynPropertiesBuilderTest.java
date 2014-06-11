@@ -8,8 +8,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.util.os.Os;
+
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 @Test
@@ -20,8 +21,8 @@ public class BrooklynPropertiesBuilderTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        globalPropertiesFile = File.createTempFile("global-brooklyn-properties-test", ".properties");
-        localPropertiesFile = File.createTempFile("local-brooklyn-properties-test", ".properties");
+        globalPropertiesFile = Os.newTempFile(getClass(), ".global.properties");
+        localPropertiesFile = Os.newTempFile(getClass(), "local.properties");
     }
     
     @AfterMethod(alwaysRun=true)
