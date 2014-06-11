@@ -10,15 +10,22 @@ import brooklyn.management.internal.LocalManagementContext;
 public class LocalManagementContextForTests extends LocalManagementContext {
 
     public LocalManagementContextForTests(BrooklynProperties brooklynProperties) {
-        super(setEmptyCatalogAsDefault(brooklynProperties));
+        super(emptyIfNull(setEmptyCatalogAsDefault(brooklynProperties)));
     }
     
+    private static BrooklynProperties emptyIfNull(BrooklynProperties bp) {
+        if (bp!=null) return bp;
+        return BrooklynProperties.Factory.newEmpty();
+    }
+
     public static BrooklynProperties setEmptyCatalogAsDefault(BrooklynProperties brooklynProperties) {
+        if (brooklynProperties==null) return null;
         brooklynProperties.putIfAbsent(AbstractManagementContext.BROOKLYN_CATALOG_URL, "classpath://brooklyn-catalog-empty.xml");
         return brooklynProperties;
     }
-
+    
     public LocalManagementContextForTests() {
-        this(BrooklynProperties.Factory.newEmpty());
+        this(null);
     }
+    
 }

@@ -189,7 +189,7 @@ public class Os {
     /** tries to delete a directory recursively;
      * use with care - see http://stackoverflow.com/questions/8320376/why-is-files-deletedirectorycontents-deprecated-in-guava.
      * <p>
-     * also note this implementation refuses to delete / or ~, it needs length at least 4 for safety.
+     * also note this implementation refuses to delete / or ~ or anything else not passing {@link #checkSafe(File)}.
      * if you might really want to delete something like that, use {@link #deleteRecursively(File, boolean)}.
      */
     @Beta
@@ -199,27 +199,31 @@ public class Os {
     
     /** 
      * as {@link #deleteRecursively(File)} but includes safety checks to prevent deletion of / or ~
-     * or any path of length 4 or less.
+     * or anything else not passing {@link #checkSafe(File)}, unless the skipSafetyChecks parameter is set
      */
     @Beta
     public static DeletionResult deleteRecursively(File dir, boolean skipSafetyChecks) {
         try {
             if (dir==null) return new DeletionResult(null, true, null);
             
-            if (!skipSafetyChecks) {
-                String dp = dir.getAbsolutePath();
-                if (dp.length()<=4)
-                    throw new IOException("Refusing instruction to delete "+dir+": name too short");
-
-                if (Os.home().equals(dp))
-                    throw new IOException("Refusing instruction to delete "+dir+": it's the home directory");
-            }
+            if (!skipSafetyChecks) checkSafe(dir);
 
             FileUtils.deleteDirectory(dir);
             return new DeletionResult(dir, true, null);
         } catch (IOException e) {
             return new DeletionResult(dir, false, e);
         }
+    }
+
+    /** fails if the dir is not "safe" for deletion, currently length <= 2 or the home directory */
+    protected static void checkSafe(File dir) throws IOException {
+        String dp = dir.getAbsolutePath();
+        dp = Strings.removeFromEnd(dp, "/");
+        if (dp.length()<=2)
+            throw new IOException("Refusing instruction to delete "+dir+": name too short");
+
+        if (Os.home().equals(dp))
+            throw new IOException("Refusing instruction to delete "+dir+": it's the home directory");
     }
     
     /**
