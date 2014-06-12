@@ -14,6 +14,7 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -45,6 +46,9 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             //FIXME installation return error but the server is up and running.
             newScript(INSTALLING)
                     .body.append(commands).execute();
+        } else {
+            Tasks.markInessential();
+            throw new IllegalStateException("Unsupported OS for installing Couchbase. Will continue but may fail later.");
         }
     }
 

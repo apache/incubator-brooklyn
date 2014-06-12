@@ -1,0 +1,8 @@
+name: Couchbase
+services:
+- type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+  adminUsername: Administrator
+  adminPassword: Password
+  initialSize: 3
+- type: brooklyn.entity.nosql.couchbase.CouchbaseLoadGenerator
+location: aws-ec2

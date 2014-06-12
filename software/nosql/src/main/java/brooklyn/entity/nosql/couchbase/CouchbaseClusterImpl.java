@@ -22,6 +22,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Optional;
@@ -62,7 +63,9 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 addServers(serversToAdd);
 
                 //wait for servers to be added to the couchbase server
+                Tasks.setBlockingDetails("Delaying before advertising cluster up");
                 Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
+                Tasks.resetBlockingDetails();
                 Entities.invokeEffector(this, getPrimaryNode(), CouchbaseNode.REBALANCE);
 
                 setAttribute(IS_CLUSTER_INITIALIZED, true);
