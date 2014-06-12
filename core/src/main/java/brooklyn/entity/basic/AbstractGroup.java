@@ -31,6 +31,9 @@ public interface AbstractGroup extends Entity, Group, Changeable {
     ConfigKey<Boolean> MEMBER_DELEGATE_CHILDREN = ConfigKeys.newBooleanConfigKey(
             "group.members.delegate", "Add delegate child entities for members of the group", Boolean.FALSE);
 
+    ConfigKey<String> MEMBER_DELEGATE_NAME_FORMAT = ConfigKeys.newStringConfigKey(
+            "group.members.delegate.nameFormat", "Delegate members name format string (Use %s for the original entity display name)", "%s");
+
     void setMembers(Collection<Entity> m);
 
     /**

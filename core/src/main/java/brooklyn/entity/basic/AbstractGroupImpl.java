@@ -88,9 +88,10 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
                     Optional<Entity> result = Iterables.tryFind(getChildren(), Predicates.equalTo(member));
                     if (!result.isPresent()) {
+                        String nameFormat = Optional.fromNullable(getConfig(MEMBER_DELEGATE_NAME_FORMAT)).or("%s");
                         DelegateEntity child = addChild(EntitySpec.create(DelegateEntity.class)
                                 .configure(DelegateEntity.DELEGATE_ENTITY, member)
-                                .displayName(String.format("(%s)", member.getDisplayName())));
+                                .displayName(String.format(nameFormat, member.getDisplayName())));
                         Entities.manage(child);
                     }
                 }
