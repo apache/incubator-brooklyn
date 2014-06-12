@@ -19,6 +19,7 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
@@ -55,6 +56,29 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                         return addresses;
                 }
             }).build()
+        );
+        
+        addSummingMemberEnricher(CouchbaseNode.OPS);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_DOCS_DATA_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.EP_BG_FETCHED);
+        addSummingMemberEnricher(CouchbaseNode.MEM_USED);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_VIEWS_ACTUAL_DISK_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.CURR_ITEMS);
+        addSummingMemberEnricher(CouchbaseNode.VB_REPLICA_CURR_ITEMS);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_VIEWS_DATA_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.GET_HITS);
+        addSummingMemberEnricher(CouchbaseNode.CMD_GET);
+        addSummingMemberEnricher(CouchbaseNode.CURR_ITEMS_TOT);
+    }
+    
+    private void addSummingMemberEnricher(AttributeSensor<Integer> source) {
+        addEnricher(Enrichers.builder()
+            .aggregating(source)
+            .publishing(source)
+            .fromMembers()
+            .computingSum()
+            .build()
         );
     }
 
