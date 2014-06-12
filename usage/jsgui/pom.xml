@@ -167,7 +167,7 @@
 
     <profiles>
         <profile>
-            <id>Optimise resources</id>
+            <id>Optimize resources</id>
             <activation>
                 <property>
                     <name>!skipOptimization</name>
@@ -194,39 +194,6 @@
                         </configuration>
                     </plugin>
 
-                    <!-- Runs the require.js optimiser with node to produce a single artifact. -->
-                    <plugin>
-                        <groupId>com.github.mcheely</groupId>
-                        <artifactId>requirejs-maven-plugin</artifactId>
-                        <version>${requirejs-maven-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>Optimise javascript</id>
-                                <goals>
-                                    <goal>optimize</goal>
-                                </goals>
-                                <configuration>
-                                    <configFile>${project.basedir}/src/main/resources/optimise-javascript.build.js</configFile>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>Concatenate CSS files</id>
-                                <goals>
-                                    <goal>optimize</goal>
-                                </goals>
-                                <configuration>
-                                    <configFile>${project.basedir}/src/main/resources/optimise-css.build.js</configFile>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <nodeExecutable>${project.basedir}/target/nodejs/node</nodeExecutable>
-                            <optimizerFile>${project.basedir}/src/main/resources/r.js</optimizerFile>
-                            <!-- Replaces Maven tokens in the build file with their values -->
-                            <filterConfig>true</filterConfig>
-                        </configuration>
-                    </plugin>
-
                     <!-- Including the exploded goal means sources are in place ready for the replacer plugin. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -243,13 +210,49 @@
                         </executions>
                     </plugin>
 
+                    <!-- Runs the require.js optimizer with node to produce a single artifact. -->
+                    <plugin>
+                        <groupId>com.github.mcheely</groupId>
+                        <artifactId>requirejs-maven-plugin</artifactId>
+                        <version>${requirejs-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>optimize-js</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <configFile>${project.basedir}/src/build/optimize-js.json</configFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>optimize-css</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <configFile>${project.basedir}/src/build/optimize-css.json</configFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <nodeExecutable>${project.basedir}/target/nodejs/node</nodeExecutable>
+                            <optimizerFile>${project.basedir}/src/build/requirejs-maven-plugin/r.js</optimizerFile>
+                            <!-- Replaces Maven tokens in the build file with their values -->
+                            <filterConfig>true</filterConfig>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Modify index.html to point to the optimized resources generated above. -->
                     <plugin>
                         <groupId>com.google.code.maven-replacer-plugin</groupId>
                         <artifactId>replacer</artifactId>
                         <version>${maven-replacer-plugin.version}</version>
                         <executions>
                             <execution>
-                                <id>Use optimised resources in index.html</id>
+                                <id>modify-for-optimized</id>
                                 <phase>prepare-package</phase>
                                 <goals>
                                     <goal>replace</goal>
@@ -261,7 +264,7 @@
                             <replacements>
                                 <replacement>
                                     <token>assets/js/config.js</token>
-                                    <value>assets/js/gui.min.js</value>
+                                    <value>assets/js/gui.all.min.js</value>
                                 </replacement>
                                 <replacement>
                                     <token>assets/css/styles.css</token>

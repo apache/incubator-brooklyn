@@ -1,5 +1,5 @@
 ({
-    cssIn: "${project.basedir}/src/main/webapp/assets/css/styles.css",
+    cssIn: "${project.build.webapp}/assets/css/styles.css",
     out: "${project.build.webapp}/assets/css/styles.min.css",
 
     // CSS optimization options are:
