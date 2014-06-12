@@ -86,13 +86,13 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 setAttribute(GROUP_MEMBERS, getMembers());
 
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
-	                Optional<Entity> result = Iterables.tryFind(getChildren(), Predicates.equalTo(member));
-	                if (!result.isPresent()) {
-		                DelegateEntity child = addChild(EntitySpec.create(DelegateEntity.class)
-		                		.configure(DelegateEntity.DELEGATE_ENTITY, member)
-		                		.displayName(String.format("(%s)", member.getDisplayName())));
-		                Entities.manage(child);
-	                }
+                    Optional<Entity> result = Iterables.tryFind(getChildren(), Predicates.equalTo(member));
+                    if (!result.isPresent()) {
+                        DelegateEntity child = addChild(EntitySpec.create(DelegateEntity.class)
+                                .configure(DelegateEntity.DELEGATE_ENTITY, member)
+                                .displayName(String.format("(%s)", member.getDisplayName())));
+                        Entities.manage(child);
+                    }
                 }
 
                 getManagementSupport().getEntityChangeListener().onMembersChanged();
@@ -115,17 +115,17 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 setAttribute(GROUP_MEMBERS, getMembers());
 
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
-	                Optional<Entity> result = Iterables.tryFind(getChildren(), new Predicate<Entity>() {
-						@Override
-						public boolean apply(Entity input) {
-							return input.getConfig(DelegateEntity.DELEGATE_ENTITY).equals(member);
-						}      	
-	                });
-	                if (result.isPresent()) {
-	                	Entity child = result.get();
-	                	removeChild(child);
-	                	Entities.unmanage(child);
-	                }
+                    Optional<Entity> result = Iterables.tryFind(getChildren(), new Predicate<Entity>() {
+                        @Override
+                        public boolean apply(Entity input) {
+                            return input.getConfig(DelegateEntity.DELEGATE_ENTITY).equals(member);
+                        }
+                    });
+                    if (result.isPresent()) {
+                        Entity child = result.get();
+                        removeChild(child);
+                        Entities.unmanage(child);
+                       }
                 }
 
                 getManagementSupport().getEntityChangeListener().onMembersChanged();

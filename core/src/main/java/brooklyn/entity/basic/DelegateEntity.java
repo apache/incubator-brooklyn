@@ -1,5 +1,9 @@
 package brooklyn.entity.basic;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Nullable;
+
 import com.google.common.base.Function;
 
 import brooklyn.config.render.RendererHints;
@@ -20,8 +24,10 @@ public interface DelegateEntity extends Entity {
 
     AttributeSensor<String> DELEGATE_ENTITY_LINK = Sensors.newStringSensor("webapp.url", "The delegate entity link");
 
+    /** Hints for rendering the delegate entity as a link in the Brooklyn console UI. */
     public static class EntityUrl {
- 
+
+        private static final AtomicBoolean initialized = new AtomicBoolean(false);
         private static final Function<Object, String> entityUrlFunction = new Function<Object, String>() {
             @Override
             public String apply(Object input) {
@@ -37,9 +43,17 @@ public interface DelegateEntity extends Entity {
 
         public static Function<Object, String> entityUrl() { return entityUrlFunction; }
 
-        static {
+        /** Setup renderer hints. */
+        @SuppressWarnings("rawtypes")
+        public static void init() {
+            if (initialized.getAndSet(true)) return;
+
             RendererHints.register(DELEGATE_ENTITY, new RendererHints.NamedActionWithUrl("Open", entityUrl()));
             RendererHints.register(DELEGATE_ENTITY_LINK, new RendererHints.NamedActionWithUrl("Open"));
+        }
+
+        static {
+            init();
         }
     }
 

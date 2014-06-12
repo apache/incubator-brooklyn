@@ -29,7 +29,7 @@ public interface AbstractGroup extends Entity, Group, Changeable {
             new TypeToken<Collection<Entity>>() { }, "group.members", "Members of the group");
 
     ConfigKey<Boolean> MEMBER_DELEGATE_CHILDREN = ConfigKeys.newBooleanConfigKey(
-    		"group.members.delegate", "Add delegate child entities for members of the group", Boolean.FALSE);
+            "group.members.delegate", "Add delegate child entities for members of the group", Boolean.FALSE);
 
     void setMembers(Collection<Entity> m);
 
