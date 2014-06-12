@@ -1,8 +1,8 @@
 ({
     // The entry point to the application. Brooklyn's is in config.js.
     name: "config",
-    baseUrl: "${project.basedir}/src/main/webapp/assets/js",
-    mainConfigFile: "${project.basedir}/src/main/webapp/assets/js/config.js",
+    baseUrl: "${project.build.webapp}/assets/js",
+    mainConfigFile: "${project.build.webapp}/assets/js/config.js",
     paths: {
         // Include paths to external resources (e.g. on a CDN) here.
 
@@ -11,7 +11,7 @@
     },
 
     // Place the optimised file in target/<war>/assets.
-    out: "${project.build.webapp}/assets/js/gui.min.js",
+    out: "${project.build.webapp}/assets/js/gui.all.min.js",
 
     // Set to "none" to skip minification
     optimize: "uglify"
