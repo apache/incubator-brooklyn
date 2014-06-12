@@ -2,6 +2,7 @@ package brooklyn.entity.basic;
 
 import java.util.Collection;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.trait.Changeable;
@@ -26,6 +27,9 @@ public interface AbstractGroup extends Entity, Group, Changeable {
 
     AttributeSensor<Collection<Entity>> GROUP_MEMBERS = Sensors.newSensor(
             new TypeToken<Collection<Entity>>() { }, "group.members", "Members of the group");
+
+    ConfigKey<Boolean> MEMBER_DELEGATE_CHILDREN = ConfigKeys.newBooleanConfigKey(
+    		"group.members.delegate", "Add delegate child entities for members of the group", Boolean.FALSE);
 
     void setMembers(Collection<Entity> m);
 
