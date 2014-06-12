@@ -85,17 +85,17 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
     @Override
     public String getManagementPlaneId() {
-        return null;
+        return (initialManagementContext == null) ? null : initialManagementContext.getManagementPlaneId();
     }
     
     @Override
     public String getManagementNodeId() {
-        return null;
+        return (initialManagementContext == null) ? null : initialManagementContext.getManagementNodeId();
     }
 
     @Override
     public Maybe<URI> getManagementNodeUri() {
-        return Maybe.absent();
+        return (initialManagementContext == null) ? Maybe.<URI>absent() : initialManagementContext.getManagementNodeUri();
     }
 
     public void setManagementContext(ManagementContextInternal val) {
