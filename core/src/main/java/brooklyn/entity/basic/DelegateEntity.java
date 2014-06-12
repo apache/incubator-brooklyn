@@ -1,9 +1,11 @@
 package brooklyn.entity.basic;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 
 /**
  * A delegate entity for use as a {@link Group} child proxy for members.
@@ -11,6 +13,8 @@ import brooklyn.event.basic.AttributeSensorAndConfigKey;
 @ImplementedBy(DelegateEntityImpl.class)
 public interface DelegateEntity extends Entity {
 
-    AttributeSensorAndConfigKey<Entity, Entity> DELEGATE_ENTITY = ConfigKeys.newSensorAndConfigKey(Entity.class, "delegate.entity", "The delegate entity");
+    ConfigKey<Entity> DELEGATE_ENTITY = ConfigKeys.newConfigKey(Entity.class, "delegate.entity", "The delegate entity");
+
+    AttributeSensor<Entity> DELEGATE_ENTITY_LINK = Sensors.newSensor(Entity.class, "webapp.url", "The delegate entity link");
 
 }
