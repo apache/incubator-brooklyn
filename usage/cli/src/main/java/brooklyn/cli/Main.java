@@ -47,6 +47,7 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Networking;
@@ -391,10 +392,11 @@ public class Main {
             // Launch server
             try {
                 launcher.start();
-            } catch (FatalConfigurationRuntimeException e) {
+            } catch (FatalRuntimeException e) {
                 // rely on caller logging this propagated exception
                 throw e;
             } catch (Exception e) {
+                // for other exceptions we log it, possibly redundantly but better too much than too little
                 Exceptions.propagateIfFatal(e);
                 log.error("Error launching brooklyn: "+Exceptions.collapseText(e), e);
                 try {
@@ -737,9 +739,13 @@ public class Main {
             System.err.println(getUsageInfo(parser)); // display cli help
             System.exit(PARSE_ERROR);
         } catch (FatalConfigurationRuntimeException e) {
-            log.error(e.getMessage(), e.getCause());
+            log.error("Configuration error: "+e.getMessage(), e.getCause());
             System.err.println("Configuration error: " + e.getMessage());
             System.exit(CONFIGURATION_ERROR);
+        } catch (FatalRuntimeException e) { // anticipated non-configuration error
+            log.error("Startup error: "+e.getMessage(), e.getCause());
+            System.err.println("Startup error: "+e.getMessage());
+            System.exit(EXECUTION_ERROR);
         } catch (Exception e) { // unexpected error during command execution
             log.error("Execution error: " + e.getMessage(), e);
             System.err.println("Execution error: " + e.getMessage());

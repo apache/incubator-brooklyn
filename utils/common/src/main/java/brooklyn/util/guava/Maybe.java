@@ -78,8 +78,18 @@ public abstract class Maybe<T> implements Serializable {
         };
     }
     
+    /** returns a Maybe containing the next element in the iterator, or absent if none */ 
     public static <T> Maybe<T> next(Iterator<T> iterator) {
         return iterator.hasNext() ? Maybe.of(iterator.next()) : Maybe.<T>absent();
+    }
+
+    /** returns a Maybe containing the only element in the collection, or absent if either none or multiple */
+    public static <T> Maybe<T> singleton(Iterable<T> iterable) {
+        if (iterable==null) return Maybe.<T>absent("null");
+        Iterator<T> iterator = iterable.iterator();
+        if (!iterator.hasNext()) return Maybe.<T>absent("no such element");
+        if (iterator.hasNext()) return Maybe.<T>absent("multiple elements");
+        return Maybe.of(iterator.next()); 
     }
     
     public abstract boolean isPresent();

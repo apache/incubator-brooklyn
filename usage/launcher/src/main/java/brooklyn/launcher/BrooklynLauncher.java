@@ -58,6 +58,7 @@ import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
@@ -500,7 +501,8 @@ public class BrooklynLauncher {
             webServer.start();
             
         } catch (Exception e) {
-            LOG.warn("Failed to start Brooklyn web-console: "+e, e);
+            LOG.warn("Failed to start Brooklyn web-console (rethrowing): "+Exceptions.collapseText(e));
+            throw new FatalRuntimeException("Failed to start Brooklyn web-console: "+Exceptions.collapseText(e), e);
         }
     }
 
@@ -531,7 +533,7 @@ public class BrooklynLauncher {
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 LOG.debug("Error initializing persistence subsystem (rethrowing): "+e, e);
-                throw new FatalConfigurationRuntimeException("Error initializing persistence subsystem: "+
+                throw new FatalRuntimeException("Error initializing persistence subsystem: "+
                     Exceptions.collapseText(e), e);
             }
 
