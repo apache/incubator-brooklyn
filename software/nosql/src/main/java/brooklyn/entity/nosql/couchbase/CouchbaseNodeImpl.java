@@ -10,12 +10,27 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.feed.http.HttpFeed;
+import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.http.HttpToolResponse;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
+import com.google.common.net.HostAndPort;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseNode {
+    
+    HttpFeed httpFeed;
 
     @Override
     public Class<CouchbaseNodeDriver> getDriverInterface() {
@@ -77,11 +92,78 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
+        
+        Function<HttpToolResponse, JsonElement> getThisNodesStats = HttpValueFunctions.chain(
+            HttpValueFunctions.jsonContents(), 
+            JsonFunctions.walk("nodes"), 
+            new Function<JsonElement, JsonElement>() {
+                @Override public JsonElement apply(JsonElement input) {
+                    JsonArray nodes = input.getAsJsonArray();
+                    for (JsonElement element : nodes) {
+                        if (Boolean.TRUE.equals(element.getAsJsonObject().get("thisNode").getAsBoolean())) {
+                            return element.getAsJsonObject().get("interestingStats");
+                        }
+                    }
+                    return null;
+            }}
+        );
+        
+        Integer rawPort = getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
+        Preconditions.checkNotNull(rawPort, "HTTP_PORT sensors not set for %s; is an acceptable port available?", this);
+        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, rawPort);
+        
+        String adminUrl = String.format("http://%s:%s", hp.getHostText(), hp.getPort());
+        
+        httpFeed = HttpFeed.builder()
+            .entity(this)
+            .period(1000)
+            .baseUri(adminUrl + "/pools/nodes/")
+            .credentialsIfNotNull(getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME), getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.OPS)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("ops"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_DOCS_DATA_SIZE)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_docs_data_size"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_docs_actual_disk_size"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.EP_BG_FETCHED)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("ep_bg_fetched"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.MEM_USED)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("mem_used"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_VIEWS_ACTUAL_DISK_SIZE)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_views_actual_disk_size"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.CURR_ITEMS)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("curr_items"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.VB_REPLICA_CURR_ITEMS)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("vb_replica_curr_items"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_VIEWS_DATA_SIZE)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_views_data_size"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.GET_HITS)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("get_hits"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.CMD_GET)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("cmd_get"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(new HttpPollConfig<Integer>(CouchbaseNode.CURR_ITEMS_TOT)
+                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("curr_items_tot"), JsonFunctions.cast(Integer.class)))
+                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .build();
     }
 
     public void disconnectSensors() {
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
+        if (httpFeed != null) {
+            httpFeed.stop();
+        }
     }
 
 

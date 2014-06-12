@@ -3,11 +3,13 @@ package brooklyn.entity.nosql.couchbase;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -25,7 +27,9 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class CouchbaseClusterImpl extends DynamicClusterImpl implements CouchbaseCluster {
@@ -35,6 +39,23 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     public void init() {
         log.info("Initializing the Couchbase cluster...");
         super.init();
+        
+        addEnricher(
+            Enrichers.builder()
+                .transforming(COUCHBASE_CLUSTER_UP_NODES)
+                .from(this)
+                .publishing(COUCHBASE_CLUSTER_UP_NODE_ADDRESSES)
+                .computing(new Function<Set<Entity>, List<String>>() {
+                    @Override public List<String> apply(Set<Entity> input) {
+                        List<String> addresses = Lists.newArrayList();
+                        for (Entity entity : input) {
+                            addresses.add(String.format("%s:%s", entity.getAttribute(Attributes.ADDRESS), 
+                                    entity.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT)));
+                        }
+                        return addresses;
+                }
+            }).build()
+        );
     }
 
     @Override
@@ -255,4 +276,5 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     public boolean isMemberInCluster(Entity e) {
         return Optional.fromNullable(e.getAttribute(CouchbaseNode.IS_IN_CLUSTER)).or(false);
     }
+    
 }
