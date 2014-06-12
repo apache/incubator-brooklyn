@@ -90,7 +90,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
 	                if (!result.isPresent()) {
 		                DelegateEntity child = addChild(EntitySpec.create(DelegateEntity.class)
 		                		.configure(DelegateEntity.DELEGATE_ENTITY, member)
-		                		.displayName(member.getDisplayName()));
+		                		.displayName(String.format("(%s)", member.getDisplayName())));
 		                Entities.manage(child);
 	                }
                 }
