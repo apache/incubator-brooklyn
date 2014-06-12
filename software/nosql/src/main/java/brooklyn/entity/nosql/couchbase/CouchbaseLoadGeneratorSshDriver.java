@@ -33,12 +33,13 @@ public class CouchbaseLoadGeneratorSshDriver extends AbstractSoftwareProcessSshD
                 BashCommands.sudo("wget -O/etc/yum.repos.d/couchbase.repo http://packages.couchbase.com/rpm/couchbase-centos55-x86_64.repo")
             ));
             String installPackage = BashCommands.installPackage(ImmutableMap.of(
-                "apt-get", "libcouchbase2-libevent libcouchbase-dev libcouchbase2-bin",
+                "apt", "libcouchbase2-libevent libcouchbase-dev libcouchbase2-bin",
                 "yum", "libcouchbase2-libevent libcouchbase-devel libcouchbase2-bin"
             ), null);
             List<String> commands = ImmutableList.<String>builder()
                     .add(BashCommands.INSTALL_WGET)
-                    .add(BashCommands.alternatives(aptSetup, yumSetup, installPackage))
+                    .add(BashCommands.alternatives(aptSetup, yumSetup))
+                    .add(installPackage)
                     .build();
             newScript(INSTALLING)
                     .body.append(commands).execute();

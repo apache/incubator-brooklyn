@@ -63,9 +63,12 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 addServers(serversToAdd);
 
                 //wait for servers to be added to the couchbase server
-                Tasks.setBlockingDetails("Delaying before advertising cluster up");
-                Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
-                Tasks.resetBlockingDetails();
+                try {
+                    Tasks.setBlockingDetails("Delaying before advertising cluster up");
+                    Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
+                } finally {
+                    Tasks.resetBlockingDetails();
+                }
                 Entities.invokeEffector(this, getPrimaryNode(), CouchbaseNode.REBALANCE);
 
                 setAttribute(IS_CLUSTER_INITIALIZED, true);

@@ -65,6 +65,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
         String yum = chainGroup(
                 "which yum",
+                sudo("yum check-update"),
                 sudo("yum install -y pkgconfig"),
                 // RHEL requires openssl version 098
                 sudo("[ -f /etc/redhat-release ] && (grep -i \"red hat\" /etc/redhat-release && yum install -y openssl098e) || :"),
