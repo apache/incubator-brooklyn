@@ -14,6 +14,7 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -45,6 +46,9 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             //FIXME installation return error but the server is up and running.
             newScript(INSTALLING)
                     .body.append(commands).execute();
+        } else {
+            Tasks.markInessential();
+            throw new IllegalStateException("Unsupported OS for installing Couchbase. Will continue but may fail later.");
         }
     }
 
@@ -61,6 +65,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
         String yum = chainGroup(
                 "which yum",
+                sudo("yum check-update"),
                 sudo("yum install -y pkgconfig"),
                 // RHEL requires openssl version 098
                 sudo("[ -f /etc/redhat-release ] && (grep -i \"red hat\" /etc/redhat-release && yum install -y openssl098e) || :"),
