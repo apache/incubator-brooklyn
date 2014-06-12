@@ -290,8 +290,8 @@
                                               destfile="${project.build.webapp}/assets/css/styles.min.css.gz"/>
                                         <gzip src="${project.build.webapp}/assets/css/brooklyn.css"
                                               destfile="${project.build.webapp}/assets/css/brooklyn.css.gz"/>
-                                        <gzip src="${project.build.webapp}/assets/js/gui.min.js"
-                                              destfile="${project.build.webapp}/assets/js/gui.min.js.gz"/>
+                                        <gzip src="${project.build.webapp}/assets/js/gui.all.min.js"
+                                              destfile="${project.build.webapp}/assets/js/gui.all.min.js.gz"/>
                                         <gzip src="${project.build.webapp}/assets/js/libs/require.js"
                                               destfile="${project.build.webapp}/assets/js/libs/require.js.gz"/>
                                     </target>
