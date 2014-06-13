@@ -118,8 +118,12 @@ public class BasicLocationRegistry implements LocationRegistry {
 
     @Override
     public void removeDefinedLocation(String id) {
+        LocationDefinition removed;
         synchronized (definedLocations) { 
-            definedLocations.remove(id); 
+            removed = definedLocations.remove(id);
+        }
+        if (removed == null && log.isDebugEnabled()) {
+            log.debug("{} was asked to remove location with id {} but no such location was registered", this, id);
         }
     }
     
