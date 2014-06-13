@@ -8,12 +8,14 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.ByteSizeStrings;
 
 @ImplementedBy(CouchbaseNodeImpl.class)
 public interface CouchbaseNode extends SoftwareProcess {
@@ -78,27 +80,33 @@ public interface CouchbaseNode extends SoftwareProcess {
             "Retrieved from pools/nodes/<current node>/interestingStats/cmd_get");
     AttributeSensor<Integer> CURR_ITEMS_TOT = Sensors.newIntegerSensor("couchbase.stats.curr.items.tot", 
             "Retrieved from pools/nodes/<current node>/interestingStats/curr_items_tot");
-    
-    // this class is added because the ROOT_URL relies on a static initialization which unfortunately
-    // can't be added to
-    // an interface.
-    class RootUrl {
-        public static final AttributeSensor<String> ROOT_URL = Sensors.newStringSensor("webapp.url", "URL");
 
+    
+    class RootUrl {
+        public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
+        
         static {
-            RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));
+            // ROOT_URL does not need init because it refers to something already initialized
             RendererHints.register(COUCHBASE_WEB_ADMIN_URL, new RendererHints.NamedActionWithUrl("Open"));
+
+            RendererHints.register(COUCH_DOCS_DATA_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(COUCH_DOCS_ACTUAL_DISK_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(MEM_USED, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(COUCH_VIEWS_ACTUAL_DISK_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(COUCH_VIEWS_DATA_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
         }
     }
+    
+    // this long-winded reference is done just to trigger the initialization above
+    AttributeSensor<String> ROOT_URL = RootUrl.ROOT_URL;
 
-    public static final MethodEffector<Void> SERVER_ADD = new MethodEffector<Void>(CouchbaseNode.class, "serverAdd");
-    public static final MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
+    MethodEffector<Void> SERVER_ADD = new MethodEffector<Void>(CouchbaseNode.class, "serverAdd");
+    MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
 
     @Effector(description = "add a server to a cluster")
     public void serverAdd(@EffectorParam(name = "serverHostname") String serverToAdd, @EffectorParam(name = "username") String username, @EffectorParam(name = "password") String password);
 
     @Effector(description = "rebalance the couchbase cluster")
     public void rebalance();
-
 
 }

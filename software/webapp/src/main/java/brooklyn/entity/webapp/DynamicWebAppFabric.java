@@ -23,12 +23,8 @@ public interface DynamicWebAppFabric extends DynamicFabric, WebAppService {
     public static final AttributeSensor<Integer> ERROR_COUNT_PER_NODE = new BasicAttributeSensor<Integer>(
             Integer.class, "webapp.reqs.errors.perNode", "Fabric entity request error average");
 
-    public static final AttributeSensor<Double> REQUESTS_PER_SECOND_LAST_PER_NODE = new BasicAttributeSensor<Double>(
-            Double.class, "webapp.reqs.perSec.last.perNode", "Reqs/sec (last datapoint) averaged over all nodes");
+    public static final AttributeSensor<Double> REQUESTS_PER_SECOND_LAST_PER_NODE = DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE;
+    public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE = DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE;
+    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME_PER_NODE = DynamicWebAppCluster.TOTAL_PROCESSING_TIME_PER_NODE;
 
-    public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE = new BasicAttributeSensor<Double>(
-            Double.class, "webapp.reqs.perSec.windowed.perNode", "Reqs/sec (over time window) averaged over all nodes");
-
-    public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME_PER_NODE = new BasicAttributeSensor<Integer>(
-            Integer.class, "webapp.reqs.processingTime.perNode", "Total processing time per node");
 }

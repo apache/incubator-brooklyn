@@ -10,6 +10,8 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.ByteSizeStrings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 
@@ -71,5 +73,9 @@ class RootUrl {
 
     static {
         RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));
+        RendererHints.register(WebAppServiceConstants.TOTAL_PROCESSING_TIME, RendererHints.displayValue(Duration.millisToStringRounded()));
+        RendererHints.register(WebAppServiceConstants.MAX_PROCESSING_TIME, RendererHints.displayValue(Duration.millisToStringRounded()));
+        RendererHints.register(WebAppServiceConstants.BYTES_RECEIVED, RendererHints.displayValue(ByteSizeStrings.metric()));
+        RendererHints.register(WebAppServiceConstants.BYTES_SENT, RendererHints.displayValue(ByteSizeStrings.metric()));
     }
 }
