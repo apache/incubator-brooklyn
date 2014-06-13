@@ -7,7 +7,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
+import javax.annotation.Nonnull;
+
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.annotations.Beta;
@@ -94,6 +98,7 @@ public class Jsonya {
         protected final Object root;
         protected final Class<? extends Map> mapType;
         protected Object focus;
+        protected Stack<Object> focusStack = new Stack<Object>();
         protected Function<Object,Void> creationInPreviousFocus;
         protected Function<Object,Object> translator;
 
@@ -109,15 +114,33 @@ public class Jsonya {
         public Object get() {
             return focus;
         }
+
+        /** as {@link #get()} but always wrapped in a {@link Maybe}, absent if null */
+        public @Nonnull Maybe<Object> getMaybe() {
+            return Maybe.fromNullable(focus);
+        }
         
-        /** returns the object at the focus, casted to the given type, null if none */
+        /** returns the object at the focus, casted to the given type, null if none
+         * @throws ClassCastException if object exists here but of the wrong type  */
         public <V> V get(Class<V> type) {
             return (V)focus;
         }
-        
+
+        /** as {@link #get(Class)} but always wrapped in a {@link Maybe}, absent if null
+         * @throws ClassCastException if object exists here but of the wrong type  */
+        public @Nonnull <V> Maybe<V> getMaybe(Class<V> type) {
+            return Maybe.fromNullable(get(type));
+        }
+
+        /** gets the object at the indicated path from the current focus
+         * (without changing the path to that focus; use {@link #at(Object, Object...)} to change focus) */
+        // Jun 2014, semantics changed so that focus does not change, which is more natural
         public Object get(Object pathSegment, Object ...furtherPathSegments) {
+            push();
             at(pathSegment, furtherPathSegments);
-            return get();
+            Object result = get();
+            pop();
+            return result;
         }
         
         public Navigator<T> root() {
@@ -140,6 +163,12 @@ public class Jsonya {
         public T getFocusMap() {
             map();
             return (T)focus;
+        }
+        
+        /** as {@link #getFocusMap()} but always wrapped in a {@link Maybe}, absent if null
+         * @throws ClassCastException if object exists here but of the wrong type  */
+        public @Nonnull Maybe<T> getFocusMapMaybe() {
+            return Maybe.fromNullable(getFocusMap());
         }
 
         /** specifies a translator function to use when new data is added;
@@ -168,7 +197,19 @@ public class Jsonya {
 
         // ------------- navigation (map mainly)
 
-        /** returns the navigator focussed at the indicated key sequence in the given map */
+        /** pushes the current focus to a stack, so that this location will be restored on the corresponding {@link #pop()} */
+        public Navigator<T> push() {
+            focusStack.push(focus);
+            return this;
+        }
+        
+        /** pops the most recently pushed focus, so that it returns to the last location {@link #push()}ed */
+        public Navigator<T> pop() {
+            focus = focusStack.pop();
+            return this;
+        }
+        
+        /** returns the navigator moved to focus at the indicated key sequence in the given map */
         public Navigator<T> at(Object pathSegment, Object ...furtherPathSegments) {
             down(pathSegment);
             return atArray(furtherPathSegments);

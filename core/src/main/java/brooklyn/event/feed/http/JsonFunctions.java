@@ -7,6 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.annotation.Nullable;
+
+import brooklyn.util.guava.Functionals;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.guava.MaybeFunctions;
+
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -40,17 +46,23 @@ public class JsonFunctions {
         };
     }
 
-    public static Function<JsonElement, JsonElement> walk(String elements) {
-        Iterable<String> iterable = Splitter.on('.').split(elements);
-        return walk(iterable);
+    
+    /** as {@link #walkM(Iterable)} taking a single string consisting of a dot separated path */
+    public static Function<JsonElement, JsonElement> walk(String elementOrDotSeparatedElements) {
+        return walk( Splitter.on('.').split(elementOrDotSeparatedElements) );
     }
 
-    public static Function<JsonElement, JsonElement> walk(Iterable<String> elements) {
-        String[] array = Lists.newArrayList(elements).toArray(new String[0]);
-        return walk(array);
-    }
-
+    /** as {@link #walkM(Iterable)} taking a series of strings (dot separators not respected here) */
     public static Function<JsonElement, JsonElement> walk(final String... elements) {
+        return walk(Arrays.asList(elements));
+    }
+
+    /** returns a function which traverses the supplied path of entries in a json object (maps of maps of maps...), 
+     * @throws NoSuchElementException if any path is not present as a key in that map */
+    public static Function<JsonElement, JsonElement> walk(final Iterable<String> elements) {
+        // could do this instead, pointing at Maybe for this, and for walkN, but it's slightly less efficient
+//      return Functionals.chain(MaybeFunctions.<JsonElement>wrap(), walkM(elements), MaybeFunctions.<JsonElement>get());
+        
         return new Function<JsonElement, JsonElement>() {
             @Override public JsonElement apply(JsonElement input) {
                 JsonElement curr = input;
@@ -58,13 +70,68 @@ public class JsonFunctions {
                     JsonObject jo = curr.getAsJsonObject();
                     curr = jo.get(element);
                     if (curr==null) 
-                        throw new NoSuchElementException("No element '"+element+" in JSON, when walking "+Arrays.asList(elements));
+                        throw new NoSuchElementException("No element '"+element+" in JSON, when walking "+elements);
                 }
                 return curr;
             }
         };
     }
+
     
+    /** as {@link #walk(String)} but if any element is not found it simply returns null */
+    public static Function<JsonElement, JsonElement> walkN(@Nullable String elements) {
+        return walkN( Splitter.on('.').split(elements) );
+    }
+
+    /** as {@link #walk(String...))} but if any element is not found it simply returns null */
+    public static Function<JsonElement, JsonElement> walkN(final String... elements) {
+        return walkN(Arrays.asList(elements));
+    }
+
+    /** as {@link #walk(Iterable))} but if any element is not found it simply returns null */
+    public static Function<JsonElement, JsonElement> walkN(final Iterable<String> elements) {
+        return new Function<JsonElement, JsonElement>() {
+            @Override public JsonElement apply(JsonElement input) {
+                JsonElement curr = input;
+                for (String element : elements) {
+                    if (curr==null) return null;
+                    JsonObject jo = curr.getAsJsonObject();
+                    curr = jo.get(element);
+                }
+                return curr;
+            }
+        };
+    }
+
+    /** as {@link #walk(String))} and {@link #walk(Iterable)} */
+    public static Function<Maybe<JsonElement>, Maybe<JsonElement>> walkM(@Nullable String elements) {
+        return walkM( Splitter.on('.').split(elements) );
+    }
+
+    /** as {@link #walk(String...))} and {@link #walk(Iterable)} */
+    public static Function<Maybe<JsonElement>, Maybe<JsonElement>> walkM(final String... elements) {
+        return walkM(Arrays.asList(elements));
+    }
+
+    /** as {@link #walk(Iterable))} but working with objects which {@link Maybe} contain {@link JsonElement},
+     * simply preserving a {@link Maybe#absent()} object if additional walks are requested upon it
+     * (cf jquery) */
+    public static Function<Maybe<JsonElement>, Maybe<JsonElement>> walkM(final Iterable<String> elements) {
+        return new Function<Maybe<JsonElement>, Maybe<JsonElement>>() {
+            @Override public Maybe<JsonElement> apply(Maybe<JsonElement> input) {
+                Maybe<JsonElement> curr = input;
+                for (String element : elements) {
+                    if (curr.isAbsent()) return curr;
+                    JsonObject jo = curr.get().getAsJsonObject();
+                    JsonElement currO = jo.get(element);
+                    if (currO==null) return Maybe.absent("No element '"+element+" in JSON, when walking "+elements);
+                    curr = Maybe.of(currO);
+                }
+                return curr;
+            }
+        };
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> Function<JsonElement, T> cast(final Class<T> expected) {
         return new Function<JsonElement, T>() {
@@ -120,4 +187,19 @@ public class JsonFunctions {
             }
         };
     }
+    
+    public static <T> Function<Maybe<JsonElement>, T> castM(final Class<T> expected) {
+        return Functionals.chain(MaybeFunctions.<JsonElement>get(), cast(expected));
+    }
+    
+    public static <T> Function<Maybe<JsonElement>, T> castM(final Class<T> expected, final T defaultValue) {
+        return new Function<Maybe<JsonElement>, T>() {
+            @Override
+            public T apply(Maybe<JsonElement> input) {
+                if (input.isAbsent()) return defaultValue;
+                return cast(expected).apply(input.get());
+            }
+        };
+    }
+
 }

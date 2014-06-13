@@ -44,4 +44,11 @@ public class TypeTokens {
         throw new IllegalStateException("Both indicators of type are null");
     }
 
+    /** gets the Class<T> object from a token; normal methods return Class<? super T> which may technically be correct 
+     * with generics but this sloppily but handily gives you Class<T> which is usually what you have anyway */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static <T> Class<T> getRawRawType(TypeToken<T> token) {
+        return (Class)token.getRawType();
+    }
+    
 }
