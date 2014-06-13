@@ -53,6 +53,32 @@ public interface CouchbaseNode extends SoftwareProcess {
     AttributeSensor<Boolean> IS_IN_CLUSTER = Sensors.newBooleanSensor("couchbase.isInCluster", "flag to determine if the current couchbase node has been added to a cluster");
     public static final AttributeSensor<String> COUCHBASE_WEB_ADMIN_URL = WebAppServiceConstants.ROOT_URL; // By using this specific sensor, the value will be shown in the summary tab
     
+    // Interesting stats
+    AttributeSensor<Integer> OPS = Sensors.newIntegerSensor("couchbase.stats.ops", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/ops");
+    AttributeSensor<Integer> COUCH_DOCS_DATA_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.docs.data.size", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/couch_docs_data_size");
+    AttributeSensor<Integer> COUCH_DOCS_ACTUAL_DISK_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.docs.actual.disk.size", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/couch_docs_actual_disk_size");
+    AttributeSensor<Integer> EP_BG_FETCHED = Sensors.newIntegerSensor("couchbase.stats.ep.bg.fetched", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/ep_bg_fetched");
+    AttributeSensor<Integer> MEM_USED = Sensors.newIntegerSensor("couchbase.stats.mem.used", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/mem_used");
+    AttributeSensor<Integer> COUCH_VIEWS_ACTUAL_DISK_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.views.actual.disk.size", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/couch_views_actual_disk_size");
+    AttributeSensor<Integer> CURR_ITEMS = Sensors.newIntegerSensor("couchbase.stats.curr.items", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/curr_items");
+    AttributeSensor<Integer> VB_REPLICA_CURR_ITEMS = Sensors.newIntegerSensor("couchbase.stats.vb.replica.curr.items", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/vb_replica_curr_items");
+    AttributeSensor<Integer> COUCH_VIEWS_DATA_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.views.data.size", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/couch_views_data_size");
+    AttributeSensor<Integer> GET_HITS = Sensors.newIntegerSensor("couchbase.stats.get.hits", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/get_hits");
+    AttributeSensor<Integer> CMD_GET = Sensors.newIntegerSensor("couchbase.stats.cmd.get", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/cmd_get");
+    AttributeSensor<Integer> CURR_ITEMS_TOT = Sensors.newIntegerSensor("couchbase.stats.curr.items.tot", 
+            "Retrieved from pools/nodes/<current node>/interestingStats/curr_items_tot");
+    
     // this class is added because the ROOT_URL relies on a static initialization which unfortunately
     // can't be added to
     // an interface.

@@ -3,11 +3,13 @@ package brooklyn.entity.nosql.couchbase;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -17,6 +19,7 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
@@ -25,7 +28,9 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class CouchbaseClusterImpl extends DynamicClusterImpl implements CouchbaseCluster {
@@ -35,6 +40,46 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     public void init() {
         log.info("Initializing the Couchbase cluster...");
         super.init();
+        
+        addEnricher(
+            Enrichers.builder()
+                .transforming(COUCHBASE_CLUSTER_UP_NODES)
+                .from(this)
+                .publishing(COUCHBASE_CLUSTER_UP_NODE_ADDRESSES)
+                .computing(new Function<Set<Entity>, List<String>>() {
+                    @Override public List<String> apply(Set<Entity> input) {
+                        List<String> addresses = Lists.newArrayList();
+                        for (Entity entity : input) {
+                            addresses.add(String.format("%s:%s", entity.getAttribute(Attributes.ADDRESS), 
+                                    entity.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT)));
+                        }
+                        return addresses;
+                }
+            }).build()
+        );
+        
+        addSummingMemberEnricher(CouchbaseNode.OPS);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_DOCS_DATA_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.EP_BG_FETCHED);
+        addSummingMemberEnricher(CouchbaseNode.MEM_USED);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_VIEWS_ACTUAL_DISK_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.CURR_ITEMS);
+        addSummingMemberEnricher(CouchbaseNode.VB_REPLICA_CURR_ITEMS);
+        addSummingMemberEnricher(CouchbaseNode.COUCH_VIEWS_DATA_SIZE);
+        addSummingMemberEnricher(CouchbaseNode.GET_HITS);
+        addSummingMemberEnricher(CouchbaseNode.CMD_GET);
+        addSummingMemberEnricher(CouchbaseNode.CURR_ITEMS_TOT);
+    }
+    
+    private void addSummingMemberEnricher(AttributeSensor<Integer> source) {
+        addEnricher(Enrichers.builder()
+            .aggregating(source)
+            .publishing(source)
+            .fromMembers()
+            .computingSum()
+            .build()
+        );
     }
 
     @Override
@@ -255,4 +300,5 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     public boolean isMemberInCluster(Entity e) {
         return Optional.fromNullable(e.getAttribute(CouchbaseNode.IS_IN_CLUSTER)).or(false);
     }
+    
 }
