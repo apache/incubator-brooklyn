@@ -35,10 +35,8 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestJavaWebAppEntity;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -272,5 +270,22 @@ public class ControlledDynamicWebAppClusterTest {
             @Override public void run() {
                 Asserts.assertEqualsIgnoringOrder(childCluster.getMembers(), cluster.getMembers());
             }});
+    }
+    
+    @Test
+    public void testStopOnChildUnmanaged() {
+        final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 1)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
+                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+        app.start(locs);
+        final DynamicWebAppCluster childCluster = cluster.getCluster();
+        LoadBalancer controller = cluster.getController();
+        
+        Entities.unmanage(childCluster);
+        Entities.unmanage(controller);
+        
+        cluster.stop();
+        EntityTestUtils.assertAttributeEquals(cluster, ControlledDynamicWebAppCluster.SERVICE_STATE, Lifecycle.STOPPED);
     }
 }

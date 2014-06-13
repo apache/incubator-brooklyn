@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.effector.Effectors;
@@ -48,7 +49,7 @@ public class StartableMethods {
         if (log.isDebugEnabled()) log.debug("Restarted entity "+e);
     }
     
-    private static Iterable<Entity> filterStartableManagedEntities(Iterable<Entity> contenders) {
+    private static <T extends Entity> Iterable<T> filterStartableManagedEntities(Iterable<T> contenders) {
         return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.managed()));
     }
 
@@ -57,6 +58,10 @@ public class StartableMethods {
         List<Startable> failedEntities = Lists.newArrayList();
         
         for (final Startable entity : entities) {
+            if (!Entities.isManaged((Entity)entity)) {
+                log.debug("Not stopping {} because it is not managed; continuing", entity);
+                continue;
+            }
             try {
                 TaskAdaptable<Void> task = TaskTags.markInessential(Effectors.invocation((Entity)entity, Startable.STOP, Collections.emptyMap()));
                 DynamicTasks.queueIfPossible(task).orSubmitAsync((Entity)entity).andWaitForSuccess();

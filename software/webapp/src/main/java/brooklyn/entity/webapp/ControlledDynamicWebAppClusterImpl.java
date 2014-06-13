@@ -141,15 +141,18 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         return getAttribute(CONTROLLER);
     }
 
+    @Override
     public synchronized ConfigurableEntityFactory<WebAppService> getFactory() {
         return (ConfigurableEntityFactory<WebAppService>) getAttribute(FACTORY);
     }
     
     // TODO convert to an entity reference which is serializable
+    @Override
     public synchronized DynamicWebAppCluster getCluster() {
         return getAttribute(CLUSTER);
     }
     
+    @Override
     public void start(Collection<? extends Location> locations) {
         setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
 
