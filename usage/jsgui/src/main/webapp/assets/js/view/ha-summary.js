@@ -8,7 +8,7 @@ define([
     var nodeRowTemplate = _.template(
         "<tr>" +
             "<td>" +
-                "<% if (nodeUri) { %><a href='<%= nodeUri %>'><%= nodeId %></a><% } else { %><%= nodeId %><%    } %>" +
+                "<% if (nodeUri && !isTerminated) { %><a href='<%= nodeUri %>'><%= nodeId %></a><% } else { %><%= nodeId %><%    } %>" +
                 "<% if (isSelf) { %><span class='pull-right badge badge-success'>this</span><% } %>" +
             "</td>" +
             "<td><%= status %></td>" +
@@ -48,6 +48,7 @@ define([
                     node.timestamp = moment(node.timestampUtc).fromNow();
                     node.isSelf = node.nodeId == self;
                     node.isMaster = self == master;
+                    node.isTerminated = node.status == "TERMINATED";
                     $target.append(nodeRowTemplate(node));
                 })
             }
