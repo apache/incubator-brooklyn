@@ -43,6 +43,10 @@ public class QuarantineGroupImpl extends AbstractGroupImpl implements Quarantine
         for (Entity member : members) {
             Entities.unmanage(member);
         }
+        Set<Entity> children = ImmutableSet.copyOf(getChildren());
+        for (Entity child : children) {
+            Entities.unmanage(child);
+        }
     }
     
     // TODO Quite like DynamicClusterImpl.waitForTasksOnEntityStart

@@ -15,9 +15,12 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.SetFromLiveMap;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 
@@ -82,6 +85,17 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 setAttribute(GROUP_SIZE, getCurrentSize());
                 setAttribute(GROUP_MEMBERS, getMembers());
 
+                if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
+                    Optional<Entity> result = Iterables.tryFind(getChildren(), Predicates.equalTo(member));
+                    if (!result.isPresent()) {
+                        String nameFormat = Optional.fromNullable(getConfig(MEMBER_DELEGATE_NAME_FORMAT)).or("%s");
+                        DelegateEntity child = addChild(EntitySpec.create(DelegateEntity.class)
+                                .configure(DelegateEntity.DELEGATE_ENTITY, member)
+                                .displayName(String.format(nameFormat, member.getDisplayName())));
+                        Entities.manage(child);
+                    }
+                }
+
                 getManagementSupport().getEntityChangeListener().onMembersChanged();
             }
             return changed;
@@ -92,7 +106,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
      * Returns {@code true} if the group was changed as a result of the call.
      */
     @Override
-    public boolean removeMember(Entity member) {
+    public boolean removeMember(final Entity member) {
         synchronized (members) {
             boolean changed = (member != null && members.remove(member));
             if (changed) {
@@ -100,6 +114,20 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 emit(MEMBER_REMOVED, member);
                 setAttribute(GROUP_SIZE, getCurrentSize());
                 setAttribute(GROUP_MEMBERS, getMembers());
+
+                if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
+                    Optional<Entity> result = Iterables.tryFind(getChildren(), new Predicate<Entity>() {
+                        @Override
+                        public boolean apply(Entity input) {
+                            return input.getConfig(DelegateEntity.DELEGATE_ENTITY).equals(member);
+                        }
+                    });
+                    if (result.isPresent()) {
+                        Entity child = result.get();
+                        removeChild(child);
+                        Entities.unmanage(child);
+                       }
+                }
 
                 getManagementSupport().getEntityChangeListener().onMembersChanged();
             }
