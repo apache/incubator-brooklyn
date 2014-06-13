@@ -24,9 +24,9 @@ public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
         super(properties, parent)
     }
     
-    @SetFromFlag int a;
-    @SetFromFlag int b;
-    @SetFromFlag int c;
+    @SetFromFlag public int a;
+    @SetFromFlag public int b;
+    @SetFromFlag public int c;
 
 	public void waitForHttpPort() { }
 
