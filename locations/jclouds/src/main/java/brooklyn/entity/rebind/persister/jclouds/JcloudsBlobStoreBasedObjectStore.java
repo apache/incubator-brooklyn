@@ -13,6 +13,11 @@ import org.jclouds.blobstore.options.ListContainerOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
@@ -21,11 +26,7 @@ import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
-
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+import brooklyn.util.text.Strings;
 
 /**
  * @author Andrea Turli
@@ -71,10 +72,11 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
             String provider = checkNotNull(location.getConfig(LocationConfigKeys.CLOUD_PROVIDER), "provider must not be null");
             String endpoint = location.getConfig(CloudLocationConfig.CLOUD_ENDPOINT);
 
-            context = ContextBuilder.newBuilder(provider)
-                .credentials(identity, credential)
-                .endpoint(endpoint)
-                .buildView(BlobStoreContext.class);
+            ContextBuilder contextBuilder = ContextBuilder.newBuilder(provider).credentials(identity, credential);
+            if (!Strings.isBlank(endpoint)) {
+                contextBuilder.endpoint(endpoint);
+            }
+            context = contextBuilder.buildView(BlobStoreContext.class);
      
             // TODO do we need to get location from region? can't see the jclouds API.
             // doesn't matter in some places because it's already in the endpoint
