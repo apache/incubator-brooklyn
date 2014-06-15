@@ -174,7 +174,7 @@ public class Exceptions {
         return t2.toString();
     }
 
-    public static RuntimeException propagate(String prefix, Collection<Exception> exceptions) {
+    public static RuntimeException propagate(String prefix, Collection<? extends Throwable> exceptions) {
         if (exceptions.size()==1)
             throw new CompoundRuntimeException(prefix + ": " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
         if (exceptions.isEmpty())
@@ -182,12 +182,17 @@ public class Exceptions {
         throw new CompoundRuntimeException(prefix + ", including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
     }
 
-    public static RuntimeException propagate(Collection<Exception> exceptions) {
+    public static RuntimeException propagate(Collection<? extends Throwable> exceptions) {
+        throw propagate(create(exceptions));
+    }
+
+    /** creates the given exception, but without propagating it, for use when caller will be wrapping */
+    public static Throwable create(Collection<? extends Throwable> exceptions) {
         if (exceptions.size()==1)
-            throw Exceptions.propagate(exceptions.iterator().next());
+            return exceptions.iterator().next();
         if (exceptions.isEmpty())
-            throw new CompoundRuntimeException("(empty compound exception)", exceptions);
-        throw new CompoundRuntimeException(exceptions.size()+" errors, including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
+            return new CompoundRuntimeException("(empty compound exception)", exceptions);
+        return new CompoundRuntimeException(exceptions.size()+" errors, including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
     }
 
 }

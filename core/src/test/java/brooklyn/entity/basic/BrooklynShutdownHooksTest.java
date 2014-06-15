@@ -10,6 +10,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.BrooklynShutdownHooks.BrooklynShutdownHookJob;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.BlockingEntity;
@@ -38,7 +39,7 @@ public class BrooklynShutdownHooksTest {
     @Test
     public void testInvokeStopEntityOnShutdown() throws Exception {
         BrooklynShutdownHooks.invokeStopOnShutdown(entity);
-        BrooklynShutdownHooks.BrooklynShutdownHookJob job = new BrooklynShutdownHooks.BrooklynShutdownHookJob();
+        BrooklynShutdownHooks.BrooklynShutdownHookJob job = BrooklynShutdownHookJob.newInstanceForTesting();
         job.run();
         
         assertTrue(entity.getCallHistory().contains("stop"));
@@ -53,7 +54,7 @@ public class BrooklynShutdownHooksTest {
         // It will timeout after shutdown-timeout
         BrooklynShutdownHooks.setShutdownTimeout(Duration.of(100, TimeUnit.MILLISECONDS));
         BrooklynShutdownHooks.invokeStopOnShutdown(blockingEntity);
-        BrooklynShutdownHooks.BrooklynShutdownHookJob job = new BrooklynShutdownHooks.BrooklynShutdownHookJob();
+        BrooklynShutdownHooks.BrooklynShutdownHookJob job = BrooklynShutdownHookJob.newInstanceForTesting();
         job.run();
         
         latch.countDown();
@@ -62,7 +63,7 @@ public class BrooklynShutdownHooksTest {
     @Test
     public void testInvokeTerminateManagementContextOnShutdown() throws Exception {
         BrooklynShutdownHooks.invokeTerminateOnShutdown(managementContext);
-        BrooklynShutdownHooks.BrooklynShutdownHookJob job = new BrooklynShutdownHooks.BrooklynShutdownHookJob();
+        BrooklynShutdownHooks.BrooklynShutdownHookJob job = BrooklynShutdownHookJob.newInstanceForTesting();
         job.run();
         
         assertFalse(managementContext.isRunning());
@@ -73,7 +74,7 @@ public class BrooklynShutdownHooksTest {
     public void testInvokeStopEntityAndTerminateManagementContextOnShutdown() throws Exception {
         BrooklynShutdownHooks.invokeTerminateOnShutdown(managementContext);
         BrooklynShutdownHooks.invokeStopOnShutdown(entity);
-        BrooklynShutdownHooks.BrooklynShutdownHookJob job = new BrooklynShutdownHooks.BrooklynShutdownHookJob();
+        BrooklynShutdownHooks.BrooklynShutdownHookJob job = BrooklynShutdownHookJob.newInstanceForTesting();
         job.run();
         
         assertTrue(entity.getCallHistory().contains("stop"));

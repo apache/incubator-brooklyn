@@ -25,6 +25,7 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.text.Strings;
 
@@ -42,7 +43,6 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     private BlobStoreContext context;
 
     private ManagementContext mgmt;
-
 
     public JcloudsBlobStoreBasedObjectStore(String locationSpec, String containerName) {
         this.locationSpec = locationSpec;
@@ -86,13 +86,16 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
         return context;
     }
 
+    @Override
+    public void prepareForContendedWrite() {
+    }
+    
     public String getContainerName() {
         return containerName;
     }
     
     @Override
     public void createSubPath(String subPath) {
-        checkPrepared();
         // not needed, and buggy on softlayer w swift w jclouds 1.7.2:
         // throws a "not found" if we're creating an empty directory from scratch
 //        context.getBlobStore().createDirectory(getContainerName(), subPath);
@@ -152,11 +155,16 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     }
     
     @Override
-    public void prepareForUse(ManagementContext mgmt, @Nullable PersistMode persistMode) {
+    public void injectManagementContext(ManagementContext mgmt) {
         if (this.mgmt!=null && !this.mgmt.equals(mgmt))
             throw new IllegalStateException("Cannot change mgmt context of "+this);
         this.mgmt = mgmt;
-
+    }
+    
+    @Override
+    public void prepareForUse(@Nullable PersistMode persistMode, HighAvailabilityMode haMode) {
+        if (mgmt==null) throw new NullPointerException("Must inject ManagementContext before preparing "+this);
+        
         getBlobStoreContext();
         
         if (persistMode==null || persistMode==PersistMode.DISABLED) {
@@ -165,23 +173,8 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
         }
         
         Boolean backups = mgmt.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED);
-        if (backups==null) backups = false;
-        if (backups) {
+        if (Boolean.TRUE.equals(backups)) {
             throw new FatalConfigurationRuntimeException("Backups not supported for object store ("+this+")");
-        }
-        
-        switch (persistMode) {
-        case CLEAN:
-            deleteCompletely();
-            break;
-        case REBIND:
-            // no op - could confirm it exists (?)
-            break;
-        case AUTO:
-            // again, no op
-            break;
-        default:
-            throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
         }
     }
 

@@ -7,6 +7,8 @@ import static org.testng.Assert.fail;
 
 import java.io.File;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -23,6 +25,8 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
@@ -31,6 +35,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 public class BrooklynLauncherHighAvailabilityTest {
+
+    private static final Logger log = LoggerFactory.getLogger(BrooklynLauncherHighAvailabilityTest.class);
     
     private static final Duration TIMEOUT = Duration.THIRTY_SECONDS;
     
@@ -48,14 +54,32 @@ public class BrooklynLauncherHighAvailabilityTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (primary != null) primary.terminate();
+        primary = null;
         if (secondary != null) secondary.terminate();
+        secondary = null;
         if (tertiary != null) tertiary.terminate();
+        tertiary = null;
         if (persistenceDir != null) RebindTestUtils.deleteMementoDir(persistenceDir);
+        persistenceDir = null;
     }
     
     @Test
     public void testStandbyTakesOverWhenPrimaryTerminatedGracefully() throws Exception {
         doTestStandbyTakesOver(true);
+    }
+
+    @Test(invocationCount=1, groups="Integration")
+    /** test issues with files not being available when standby node tries to copy the directory;
+     * standby nodes should not copy and so we shouldn't get FileNotFound errors! */
+    public void testStandbyTakesOverWhenPrimaryTerminatedGracefullyManyTimes() throws Exception {
+        try {
+            testStandbyTakesOverWhenPrimaryTerminatedGracefully();
+        } catch (Throwable e) {
+            log.warn("Error in test "+JavaClassNames.niceClassAndMethod()+" (rethrowing): "+e, e);
+            throw Exceptions.propagate(e);
+        } finally {
+            tearDown();
+        }
     }
 
     @Test(groups="Integration") // because slow waiting for timeouts to promote standbys
@@ -64,8 +88,9 @@ public class BrooklynLauncherHighAvailabilityTest {
     }
     
     protected void doTestStandbyTakesOver(boolean stopGracefully) throws Exception {
-        primary = BrooklynLauncher.newInstance()
-                .webconsole(false)
+        log.info("STARTING standby takeover test");
+        primary = BrooklynLauncher.newInstance();
+        primary.webconsole(false)
                 .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
@@ -76,13 +101,14 @@ public class BrooklynLauncherHighAvailabilityTest {
                 .application(EntitySpec.create(TestApplication.class))
                 .start();
         ManagementContext primaryManagementContext = primary.getServerDetails().getManagementContext();
+        log.info("started mgmt primary "+primaryManagementContext);
         
         assertOnlyApp(primary.getServerDetails().getManagementContext(), TestApplication.class);
         primaryManagementContext.getRebindManager().getPersister().waitForWritesCompleted(TIMEOUT);
         
         // Secondary will come up as standby
-        secondary = BrooklynLauncher.newInstance()
-                .webconsole(false)
+        secondary = BrooklynLauncher.newInstance();
+        secondary.webconsole(false)
                 .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
@@ -92,7 +118,8 @@ public class BrooklynLauncherHighAvailabilityTest {
                 .haHeartbeatTimeout(Duration.millis(1000))
                 .start();
         ManagementContext secondaryManagementContext = secondary.getServerDetails().getManagementContext();
-
+        log.info("started mgmt secondary "+secondaryManagementContext);
+        
         assertNoApps(secondary.getServerDetails().getManagementContext());
 
         // Terminate primary; expect secondary to take over
@@ -107,8 +134,8 @@ public class BrooklynLauncherHighAvailabilityTest {
         assertOnlyAppEventually(secondaryManagementContext, TestApplication.class);
         
         // Start tertiary (will come up as standby)
-        tertiary = BrooklynLauncher.newInstance()
-                .webconsole(false)
+        tertiary = BrooklynLauncher.newInstance();
+        tertiary.webconsole(false)
                 .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
@@ -118,7 +145,8 @@ public class BrooklynLauncherHighAvailabilityTest {
                 .haHeartbeatTimeout(Duration.millis(1000))
                 .start();
         ManagementContext tertiaryManagementContext = tertiary.getServerDetails().getManagementContext();
-
+        log.info("started mgmt tertiary "+primaryManagementContext);
+        
         assertNoApps(tertiary.getServerDetails().getManagementContext());
 
         // Terminate secondary; expect tertiary to take over
@@ -134,8 +162,8 @@ public class BrooklynLauncherHighAvailabilityTest {
     }
     
     public void testHighAvailabilityMasterModeFailsIfAlreadyHasMaster() throws Exception {
-        primary = BrooklynLauncher.newInstance()
-                .webconsole(false)
+        primary = BrooklynLauncher.newInstance();
+        primary.webconsole(false)
                 .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                 .highAvailabilityMode(HighAvailabilityMode.AUTO)
                 .persistMode(PersistMode.AUTO)
@@ -146,8 +174,8 @@ public class BrooklynLauncherHighAvailabilityTest {
 
         try {
             // Secondary will come up as standby
-            secondary = BrooklynLauncher.newInstance()
-                    .webconsole(false)
+            secondary = BrooklynLauncher.newInstance();
+            secondary.webconsole(false)
                     .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                     .highAvailabilityMode(HighAvailabilityMode.MASTER)
                     .persistMode(PersistMode.AUTO)
@@ -163,8 +191,8 @@ public class BrooklynLauncherHighAvailabilityTest {
     @Test
     public void testHighAvailabilityStandbyModeFailsIfNoExistingMaster() throws Exception {
         try {
-            primary = BrooklynLauncher.newInstance()
-                    .webconsole(false)
+            primary = BrooklynLauncher.newInstance();
+            primary.webconsole(false)
                     .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
                     .highAvailabilityMode(HighAvailabilityMode.STANDBY)
                     .persistMode(PersistMode.AUTO)
@@ -184,6 +212,8 @@ public class BrooklynLauncherHighAvailabilityTest {
     }
     
     private void assertNoApps(ManagementContext managementContext) {
+        if (!managementContext.getApplications().isEmpty())
+            log.warn("FAILED assertion (rethrowing), apps="+managementContext.getApplications());
         assertTrue(managementContext.getApplications().isEmpty(), "apps="+managementContext.getApplications());
     }
     

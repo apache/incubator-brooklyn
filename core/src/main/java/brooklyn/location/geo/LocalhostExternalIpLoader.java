@@ -1,11 +1,9 @@
 package brooklyn.location.geo;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,15 +11,14 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Durations;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
 public class LocalhostExternalIpLoader {
 
@@ -75,10 +72,17 @@ public class LocalhostExternalIpLoader {
     static String getIpAddressFrom(String url) {
         return new IpLoader(url).call();
     }
+    
+    /** As {@link #getLocalhostIpWithin(Duration)} but returning 127.0.0.1 if not accessible */
+    public static String getLocalhostIpQuicklyOrDefault() {
+        String result = doLoad(Duration.seconds(2));
+        if (result==null) return "127.0.0.1";
+        return result;
+    }
 
-    /** As {@link #getLocalhostIpWithin(Duration)} but without the time limit cut-off. */
-    public static String getLocalhostIp() {
-        return doLoad(Optional.<Duration>absent());
+    /** As {@link #getLocalhostIpWithin(Duration)} but without the time limit cut-off, failing if the load gives an error. */
+    public static String getLocalhostIpWaiting() {
+        return getLocalhostIpWithin(null);
     }
 
     /**
@@ -87,17 +91,19 @@ public class LocalhostExternalIpLoader {
      * @return The public IP address of localhost
      */
     public static String getLocalhostIpWithin(Duration timeout) {
-        return doLoad(Optional.of(timeout));
+        String result = doLoad(timeout);
+        if (result!=null) return null;
+        throw new IllegalStateException("Unable to retrieve external IP for localhost; network may be down or slow or remote service otherwise not responding");
     }
 
     /**
      * Requests URLs returned by {@link #getIpAddressWebsites()} until one returns an IP address.
      * The address is assumed to be the external IP address of localhost.
      * @param blockFor The maximum duration to wait for the IP address to be resolved.
-     *                 An indefinite way if absent.
+     *                 An indefinite way if null.
      * @return A string in IPv4 format, or null if no such address could be ascertained.
      */
-    private static String doLoad(Optional<Duration> blockFor) {
+    private static String doLoad(Duration blockFor) {
         if (localExternalIp != null) {
             return localExternalIp;
         }
@@ -131,9 +137,8 @@ public class LocalhostExternalIpLoader {
         }
 
         try {
-            if (blockFor.isPresent()) {
-                long millis = blockFor.get().toMilliseconds();
-                triedLocalExternalIp.await(millis, TimeUnit.MILLISECONDS);
+            if (blockFor!=null) {
+                Durations.await(triedLocalExternalIp, blockFor);
             } else {
                 triedLocalExternalIp.await();
             }
@@ -141,7 +146,7 @@ public class LocalhostExternalIpLoader {
             throw Exceptions.propagate(e);
         }
         if (localExternalIp == null) {
-            throw Throwables.propagate(new IOException("Unable to discover external IP of local machine; response to server timed out (ongoing=" + retrievingLocalExternalIp + ")"));
+            return null;
         }
         LOG.debug("Looked up external IP of this host, result is: {}", localExternalIp);
         return localExternalIp;

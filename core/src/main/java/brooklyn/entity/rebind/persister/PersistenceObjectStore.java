@@ -5,6 +5,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
@@ -39,6 +40,11 @@ public interface PersistenceObjectStore {
 
     /** human-readable name of this object store */
     public String getSummaryName();
+    
+    /** triggers any backup if this method has not been invoked; 
+     * used to allow certain non-contentious writes (e.g. node id's)
+     * without triggering backup, but then forcing backup before a contended write */
+    public void prepareForContendedWrite();
     
     /**
      * For reading/writing data to the item at the given path.
@@ -75,18 +81,21 @@ public interface PersistenceObjectStore {
     void close();
 
     /**
-     * Prepares the persistence directory for use (e.g. backing up old dir, checking is non-empty 
-     * or deleting as required, creating, etc).
+     * Allows a way for an object store to be created ahead of time, and a mgmt context injected.
+     * Currently subsequent changes are not permitted.
      * <p>
-     * Also allows a way for an object store to be created ahead of time,
-     * and a mgmt context injected.
-     * (If persistMode is null, it is ignored.)
-     * <p>
-     * currently subsequent changes are not permitted.
+     * A {@link ManagementContext} must be supplied via constructor or this method before invoking other methods.
+     */
+    @Beta
+    public void injectManagementContext(ManagementContext managementContext);
+    
+    /**
+     * Prepares the persistence directory for use 
+     * (e.g. detecting whether any backup will be necessary, deleting as required, etc) 
      */
     // although there is some commonality between the different stores it is mostly different,
     // so this method currently sits here; it may move if advanced backup strategies have commonalities
     @Beta
-    public void prepareForUse(ManagementContext managementContext, PersistMode persistMode);
+    public void prepareForUse(PersistMode persistMode, HighAvailabilityMode highAvailabilityMode);
 
 }

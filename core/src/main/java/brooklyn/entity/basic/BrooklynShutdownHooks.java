@@ -1,7 +1,8 @@
 package brooklyn.entity.basic;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -12,10 +13,13 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.javalang.Threads;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -29,9 +33,12 @@ public class BrooklynShutdownHooks {
     
     private static final AtomicBoolean isShutdownHookRegistered = new AtomicBoolean();
     private static final List<Entity> entitiesToStopOnShutdown = Lists.newArrayList();
-    private static final List<ManagementContextInternal> managementContextsToTerminateOnShutdown = Lists.newArrayList();
+    private static final List<ManagementContext> managementContextsToStopAppsOnShutdown = Lists.newArrayList();
+    private static final List<ManagementContext> managementContextsToTerminateOnShutdown = Lists.newArrayList();
+    private static final AtomicBoolean isShutDown = new AtomicBoolean(false);
 
-    private static final Object mutex = new Object();
+//    private static final Object mutex = new Object();
+    private static final Semaphore semaphore = new Semaphore(1);
     
     /**
      * Max time to wait for shutdown to complete, when stopping the entities from {@link #invokeStopOnShutdown(Entity)}.
@@ -48,70 +55,168 @@ public class BrooklynShutdownHooks {
             log.warn("Not adding entity {} for stop-on-shutdown as not an instance of {}", entity, Startable.class.getSimpleName());
             return;
         }
-        synchronized (mutex) {
+        try {
+            semaphore.acquire();
+            if (isShutDown.get()) {
+                semaphore.release();
+                try {
+                    log.warn("Call to invokeStopOnShutdown for "+entity+" while system already shutting down; invoking stop now and throwing exception");
+                    Entities.destroy(entity);
+                    throw new IllegalStateException("Call to invokeStopOnShutdown for "+entity+" while system already shutting down");
+                } catch (Exception e) {
+                    throw new IllegalStateException("Call to invokeStopOnShutdown for "+entity+" while system already shutting down, had error: "+e, e);
+                }
+            }
+            
+            // TODO should be a weak reference in case it is destroyed before shutdown
+            // (only applied to certain entities started via launcher so not a big leak)
             entitiesToStopOnShutdown.add(entity);
+            semaphore.release();
+            addShutdownHookIfNotAlready();
+            
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
-        addShutdownHookIfNotAlready();
     }
-    
-    public static void invokeTerminateOnShutdown(ManagementContext managementContext) {
-        synchronized (mutex) {
-            managementContextsToTerminateOnShutdown.add((ManagementContextInternal) managementContext);
+
+    public static void invokeStopAppsOnShutdown(ManagementContext managementContext) {
+        try {
+            semaphore.acquire();
+            if (isShutDown.get()) {
+                semaphore.release();
+                try {
+                    log.warn("Call to invokeStopAppsOnShutdown for "+managementContext+" while system already shutting down; invoking stop now and throwing exception");
+                    destroyAndWait(managementContext.getApplications(), shutdownTimeout);
+                    
+                    throw new IllegalStateException("Call to invokeStopAppsOnShutdown for "+managementContext+" while system already shutting down");
+                } catch (Exception e) {
+                    throw new IllegalStateException("Call to invokeStopAppsOnShutdown for "+managementContext+" while system already shutting down, had error: "+e, e);
+                }
+            }
+            
+            // TODO weak reference, as per above
+            managementContextsToStopAppsOnShutdown.add(managementContext);
+            semaphore.release();
+            addShutdownHookIfNotAlready();
+            
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
-        addShutdownHookIfNotAlready();
+    }
+
+    public static void invokeTerminateOnShutdown(ManagementContext managementContext) {
+        try {
+            semaphore.acquire();
+            if (isShutDown.get()) {
+                semaphore.release();
+                try {
+                    log.warn("Call to invokeStopOnShutdown for "+managementContext+" while system already shutting down; invoking stop now and throwing exception");
+                    ((ManagementContextInternal)managementContext).terminate();
+                    throw new IllegalStateException("Call to invokeTerminateOnShutdown for "+managementContext+" while system already shutting down");
+                } catch (Exception e) {
+                    throw new IllegalStateException("Call to invokeTerminateOnShutdown for "+managementContext+" while system already shutting down, had error: "+e, e);
+                }
+            }
+            
+            // TODO weak reference, as per above
+            managementContextsToTerminateOnShutdown.add(managementContext);
+            semaphore.release();
+            addShutdownHookIfNotAlready();
+            
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
     private static void addShutdownHookIfNotAlready() {
         if (isShutdownHookRegistered.compareAndSet(false, true)) {
-            Threads.addShutdownHook(new BrooklynShutdownHookJob());
+            Threads.addShutdownHook(BrooklynShutdownHookJob.newInstanceForReal());
         }
     }
     
     @VisibleForTesting
     public static class BrooklynShutdownHookJob implements Runnable {
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        
+        final boolean setStaticShutDownFlag;
+        
+        private BrooklynShutdownHookJob(boolean setStaticShutDownFlag) {
+            this.setStaticShutDownFlag = setStaticShutDownFlag;
+        }
+        
+        public static BrooklynShutdownHookJob newInstanceForReal() {
+            return new BrooklynShutdownHookJob(true);
+        }
+        
+        /** testing instance does not actually set the `isShutDown` bit */
+        public static BrooklynShutdownHookJob newInstanceForTesting() {
+            return new BrooklynShutdownHookJob(false);
+        }
+        
         @Override
         public void run() {
             // First stop entities; on interrupt, abort waiting for tasks - but let shutdown hook continue
-            synchronized (mutex) {
-                if (entitiesToStopOnShutdown.isEmpty())
-                    log.debug("Brooklyn stopOnShutdown shutdown-hook invoked: no entities to stop");
-                else
-                    log.info("Brooklyn stopOnShutdown shutdown-hook invoked: stopping entities: "+entitiesToStopOnShutdown);
-                List<Task> stops = new ArrayList<Task>();
-                for (Entity entity: entitiesToStopOnShutdown) {
-                    try {
-                        stops.add(entity.invoke(Startable.STOP, new MutableMap()));
-                    } catch (RuntimeException exc) {
-                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+entity+" returned error (continuing): "+exc, exc);
-                    }
-                }
-                long endTime = System.currentTimeMillis() + shutdownTimeout.toMilliseconds();
-                for (Task t: stops) {
-                    Duration remainingTime = Duration.max(Duration.untilUtc(endTime), Duration.ONE_MILLISECOND);
-                    try {
-                        Object result = t.getUnchecked(remainingTime);
-                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of {} completed: {}", t, result);
-                    } catch (RuntimeInterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        endTime = System.currentTimeMillis();
-                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" interrupted; (continuing with immediate timeout): "+e);
-                    } catch (RuntimeException e) {
-                        if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" returned error (continuing): "+e, e);
-                        Exceptions.propagateIfFatal(e);
-                    }
-                }
+            Set<Entity> entitiesToStop = MutableSet.of();
+            try {
+                semaphore.acquire();
+                if (setStaticShutDownFlag) 
+                    isShutDown.set(true);
+                semaphore.release();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+            for (Entity entity: entitiesToStopOnShutdown)
+                entitiesToStop.add(entity);
+            for (ManagementContext mgmt: managementContextsToStopAppsOnShutdown) {
+                entitiesToStop.addAll(mgmt.getApplications());
+            }
             
-                // Then terminate management contexts
-                log.debug("Brooklyn terminateOnShutdown shutdown-hook invoked: terminating management contexts: "+managementContextsToTerminateOnShutdown);
-                for (ManagementContextInternal managementContext: managementContextsToTerminateOnShutdown) {
-                    try {
-                        managementContext.terminate();
-                    } catch (RuntimeException e) {
-                        log.info("terminateOnShutdown of "+managementContext+" returned error (continuing): "+e, e);
-                    }
+            if (entitiesToStop.isEmpty()) {
+                log.debug("Brooklyn shutdown: no entities to stop");
+            } else {
+                log.info("Brooklyn stopdown: stopping entities "+entitiesToStop);
+                destroyAndWait(entitiesToStop, shutdownTimeout);
+            }
+
+            // Then terminate management contexts
+            log.debug("Brooklyn terminateOnShutdown shutdown-hook invoked: terminating management contexts: "+managementContextsToTerminateOnShutdown);
+            for (ManagementContext managementContext: managementContextsToTerminateOnShutdown) {
+                try {
+                    if (!managementContext.isRunning())
+                        continue;
+                    ((ManagementContextInternal)managementContext).terminate();
+                } catch (RuntimeException e) {
+                    log.info("terminateOnShutdown of "+managementContext+" returned error (continuing): "+e, e);
                 }
             }
         }
     }
+    
+    protected static void destroyAndWait(Iterable<? extends Entity> entitiesToStop, Duration timeout) {
+        MutableList<Task<?>> stops = MutableList.of();
+        for (Entity entityToStop: entitiesToStop) {
+            final Entity entity = entityToStop;
+            if (!Entities.isManaged(entity)) continue;
+            Task<Object> t = Tasks.builder().dynamic(false).name("destroying "+entity).body(new Runnable() {
+                @Override public void run() { Entities.destroy(entity); }
+            }).build();
+            stops.add( ((EntityInternal)entity).getExecutionContext().submit(t) );
+        }
+        CountdownTimer timer = CountdownTimer.newInstanceStarted(timeout);
+        for (Task<?> t: stops) {
+            try {
+                Duration durationRemaining = timer.getDurationRemaining();
+                Object result = t.getUnchecked(durationRemaining.isPositive() ? durationRemaining : Duration.ONE_MILLISECOND);
+                if (log.isDebugEnabled()) log.debug("stopOnShutdown of {} completed: {}", t, result);
+            } catch (RuntimeInterruptedException e) {
+                Thread.currentThread().interrupt();
+                if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" interrupted: "+e);
+                break;
+            } catch (RuntimeException e) {
+                Exceptions.propagateIfFatal(e);
+                log.warn("Shutdown hook "+t+" returned error (continuing): "+e);
+                if (log.isDebugEnabled()) log.debug("stopOnShutdown of "+t+" returned error (continuing to stop others): "+e, e);
+            }
+        }
+    }
+
 }

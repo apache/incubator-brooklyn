@@ -486,7 +486,7 @@ public class BrooklynWebServer {
         shutdownHook = Threads.addShutdownHook(new Runnable() {
             @Override
             public void run() {
-                log.info("BrooklynWebServer detected shut-down: stopping web-console");
+                log.debug("BrooklynWebServer detected shutdown: stopping web-console");
                 try {
                     stop();
                 } catch (Exception e) {

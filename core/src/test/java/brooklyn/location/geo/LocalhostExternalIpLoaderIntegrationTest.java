@@ -29,7 +29,7 @@ public class LocalhostExternalIpLoaderIntegrationTest {
 
     @Test(groups = "Integration")
     public void testLoadExternalIp() {
-        assertNotNull(LocalhostExternalIpLoader.getLocalhostIp());
+        assertNotNull(LocalhostExternalIpLoader.getLocalhostIpWaiting());
     }
 
 }

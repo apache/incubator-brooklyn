@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
 public class StoreObjectAccessorLocking implements PersistenceObjectStore.StoreObjectAccessorWithLock {
@@ -149,5 +150,9 @@ public class StoreObjectAccessorLocking implements PersistenceObjectStore.StoreO
     public ReadWriteLock getLockObject() {
         return lock;
     }
-    
+
+    @Override
+    public String toString() {
+        return JavaClassNames.simpleClassName(this)+":"+delegate.toString();
+    }
 }

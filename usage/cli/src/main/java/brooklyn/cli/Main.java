@@ -41,6 +41,7 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
+import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.ResourceUtils;
@@ -229,9 +230,18 @@ public class Main {
                 description = "Whether to disable security for the web console with no security (i.e. no authentication required)")
         public Boolean noConsoleSecurity = false;
 
-        @Option(name = { "-ns", "--noShutdownOnExit" },
-                description = "Whether to stop the application when the JVM exits")
-        public boolean noShutdownOnExit = false;
+        @Option(name = { "--ignoreWebStartupErrors" },
+            description = "Ignore web subsystem failures on startup (default is to abort if that fails to start)")
+        public boolean ignoreWebErrors = false;
+
+        @Option(name = { "--ignorePersistenceStartupErrors" },
+            description = "Ignore persistence/HA subsystem failures on startup (default is to abort if that fails to start)")
+        public boolean ignorePersistenceErrors = false;
+
+        @Option(name = { "--ignoreManagedAppsStartupErrors" },
+            description = "Ignore failures starting managed applications passed on the command line on startup "
+                + "(default is to abort if they fail to start)")
+        public boolean ignoreAppErrors = false;
 
         /**
          * Note that this is a temporary workaround to allow for running the
@@ -247,21 +257,47 @@ public class Main {
          */
         @Beta
         @Option(name = { "-sk", "--stopOnKeyPress" },
-                description = "After the application gets started, brooklyn will wait for a key press to stop it.")
+                description = "After startup, shutdown on user extry")
         public boolean stopOnKeyPress = false;
 
+        final static String STOP_WHICH_APPS_ON_SHUTDOWN = "--stopOnShutdown";
+        protected final static String STOP_ALL = "all";
+        protected final static String STOP_ALL_IF_NOT_PERSISTED = "allIfNotPersisted";
+        protected final static String STOP_NONE = "none";
+        protected final static String STOP_THESE = "these";        
+        protected final static String STOP_THESE_IF_NOT_PERSISTED = "theseIfNotPersisted";
+        static { Enums.checkAllEnumeratedIgnoreCase(StopWhichAppsOnShutdown.class, STOP_ALL, STOP_ALL_IF_NOT_PERSISTED, STOP_NONE, STOP_THESE, STOP_THESE_IF_NOT_PERSISTED); }
+        
+        @Option(name = { STOP_WHICH_APPS_ON_SHUTDOWN },
+            allowedValues = { STOP_ALL, STOP_ALL_IF_NOT_PERSISTED, STOP_NONE, STOP_THESE, STOP_THESE_IF_NOT_PERSISTED },
+            description = "Which managed applications to stop on shutdown. Possible values are:\n"+
+                "all: stop all apps\n"+
+                "none: leave all apps running\n"+
+                "these: stop the apps explicitly started on this command line, but leave others started subsequently running\n"+
+                "theseIfNotPersisted: stop the apps started on this command line IF persistence is not enabled, otherwise leave all running\n"+
+                "allIfNotPersisted: stop all apps IF persistence is not enabled, otherwise leave all running")
+        public String stopWhichAppsOnShutdown = STOP_THESE_IF_NOT_PERSISTED;
+
+        /** @deprecated since 0.7.0 see {@link #stopWhichAppsOnShutdown} */
+        @Deprecated
+        @Option(name = { "-ns", "--noShutdownOnExit" },
+            description = "Deprecated synonym for `--stopOnShutdown none`")
+        public boolean noShutdownOnExit = false;
+        
         final static String PERSIST_OPTION = "--persist";
         protected final static String PERSIST_OPTION_DISABLED = "disabled";
         protected final static String PERSIST_OPTION_AUTO = "auto";
         protected final static String PERSIST_OPTION_REBIND = "rebind";
         protected final static String PERSIST_OPTION_CLEAN = "clean";
+        static { Enums.checkAllEnumeratedIgnoreCase(PersistMode.class, PERSIST_OPTION_DISABLED, PERSIST_OPTION_AUTO, PERSIST_OPTION_REBIND, PERSIST_OPTION_CLEAN); }
         
         // TODO currently defaults to disabled; want it to default to on, when we're ready
         // TODO how to force a line-split per option?!
         //      Looks like java.io.airlift.airline.UsagePrinter is splitting the description by word, and
         //      wrapping it automatically.
         //      See https://github.com/airlift/airline/issues/30
-        @Option(name = { PERSIST_OPTION }, allowedValues = { PERSIST_OPTION_DISABLED, PERSIST_OPTION_AUTO, PERSIST_OPTION_REBIND, PERSIST_OPTION_CLEAN },
+        @Option(name = { PERSIST_OPTION }, 
+                allowedValues = { PERSIST_OPTION_DISABLED, PERSIST_OPTION_AUTO, PERSIST_OPTION_REBIND, PERSIST_OPTION_CLEAN },
                 title = "persistence mode",
                 description =
                         "The persistence mode. Possible values are: \n"+
@@ -318,10 +354,12 @@ public class Main {
                     }
                 }
     
-                computeLocations();
-                
                 PersistMode persistMode = computePersistMode();
                 HighAvailabilityMode highAvailabilityMode = computeHighAvailabilityMode(persistMode);
+                
+                StopWhichAppsOnShutdown stopWhichAppsOnShutdownMode = computeStopWhichAppsOnShutdown();
+                
+                computeLocations();
                 
                 ResourceUtils utils = ResourceUtils.create(this);
                 ClassLoader parent = utils.getLoader();
@@ -334,14 +372,16 @@ public class Main {
     
                 launcher = createLauncher();
     
-                launchApp(launcher, utils, loader);
-    
                 launcher.persistMode(persistMode);
                 launcher.persistenceDir(persistenceDir);
                 launcher.persistenceLocation(persistenceLocation);
                 
                 launcher.highAvailabilityMode(highAvailabilityMode);
 
+                launcher.stopWhichAppsOnShutdown(stopWhichAppsOnShutdownMode);
+                
+                computeAndSetApp(launcher, utils, loader);
+                
             } catch (FatalConfigurationRuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -355,9 +395,15 @@ public class Main {
                 // rely on caller logging this propagated exception
                 throw e;
             } catch (Exception e) {
-                // Don't terminate the JVM; leave it as-is until someone explicitly stops it
                 Exceptions.propagateIfFatal(e);
                 log.error("Error launching brooklyn: "+Exceptions.collapseText(e), e);
+                try {
+                    launcher.terminate();
+                } catch (Exception e2) {
+                    log.warn("Subsequent error during termination: "+e2);
+                    log.debug("Details of subsequent error during termination: "+e2, e2);
+                }
+                Exceptions.propagate(e);
             }
             
             BrooklynServerDetails server = launcher.getServerDetails();
@@ -373,7 +419,7 @@ public class Main {
 
             return null;
         }
-        
+
         protected void computeLocations() {
             boolean hasLocations = !Strings.isBlank(locations);
             if (app != null) {
@@ -434,6 +480,21 @@ public class Main {
             return highAvailabilityMode.get();
         }
         
+        protected StopWhichAppsOnShutdown computeStopWhichAppsOnShutdown() {
+            if (noShutdownOnExit) {
+                if (STOP_THESE_IF_NOT_PERSISTED.equals(stopWhichAppsOnShutdown)) {
+                    // the default; assume it was not explicitly specified so no error
+                    stopWhichAppsOnShutdown = STOP_NONE;
+                    // but warn of deprecation
+                    log.warn("Deprecated paramater `--noShutdownOnExit` detected; this will likely be removed in a future version; "
+                        + "replace with `"+STOP_WHICH_APPS_ON_SHUTDOWN+" "+stopWhichAppsOnShutdown+"`");
+                } else {
+                    throw new FatalConfigurationRuntimeException("Cannot specify both `--noShutdownOnExit` and `"+STOP_WHICH_APPS_ON_SHUTDOWN+"`");
+                }
+            }
+            return Enums.valueOfIgnoreCase(StopWhichAppsOnShutdown.class, stopWhichAppsOnShutdown).get();
+        }
+        
         @VisibleForTesting
         /** forces the launcher to use the given management context, when programmatically invoked;
          * mainly used when testing to inject a safe (and fast) mgmt context */
@@ -447,7 +508,9 @@ public class Main {
             launcher.localBrooklynPropertiesFile(localBrooklynProperties)
                     .webconsolePort(port)
                     .webconsole(!noConsole)
-                    .shutdownOnExit(!noShutdownOnExit)
+                    .ignorePersistenceErrors(ignorePersistenceErrors)
+                    .ignoreWebErrors(ignoreWebErrors)
+                    .ignoreAppErrors(ignoreAppErrors)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : JavaStringEscapes.unwrapJsonishListIfPossible(locations));
             if (noConsoleSecurity) {
                 launcher.installSecurityFilter(false);
@@ -483,7 +546,7 @@ public class Main {
             app = className;
         }
         
-        protected void launchApp(BrooklynLauncher launcher, ResourceUtils utils, GroovyClassLoader loader)
+        protected void computeAndSetApp(BrooklynLauncher launcher, ResourceUtils utils, GroovyClassLoader loader)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
             if (app != null) {
                 // Create the instance of the brooklyn app
@@ -618,6 +681,10 @@ public class Main {
                     .add("bindAddress", bindAddress)
                     .add("noConsole", noConsole)
                     .add("noConsoleSecurity", noConsoleSecurity)
+                    .add("ignorePersistenceErrors", ignorePersistenceErrors)
+                    .add("ignoreWebErrors", ignoreWebErrors)
+                    .add("ignoreAppErrors", ignoreAppErrors)
+                    .add("stopWhichAppsOnShutdown", stopWhichAppsOnShutdown)
                     .add("noShutdownOnExit", noShutdownOnExit)
                     .add("stopOnKeyPress", stopOnKeyPress)
                     .add("localBrooklynProperties", localBrooklynProperties)

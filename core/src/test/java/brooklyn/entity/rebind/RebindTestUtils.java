@@ -27,6 +27,7 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -153,7 +154,8 @@ public class RebindTestUtils {
                 unstarted = new LocalManagementContextForTests();
             }
             
-            objectStore.prepareForUse(unstarted, PersistMode.AUTO);
+            objectStore.injectManagementContext(unstarted);
+            objectStore.prepareForUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
             BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
             ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
             unstarted.getRebindManager().setPersister(newPersister);
@@ -204,6 +206,8 @@ public class RebindTestUtils {
 
     public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
         PersistenceObjectStore objectStore = new FileBasedObjectStore(mementoDir);
+        objectStore.injectManagementContext(newManagementContext);
+        objectStore.prepareForUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
         return rebind(newManagementContext, mementoDir, classLoader, exceptionHandler, objectStore);
     }
     public static Application rebind(ManagementContext newManagementContext, File mementoDir,

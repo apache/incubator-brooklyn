@@ -1,6 +1,5 @@
 package brooklyn.location.geo;
 
-import brooklyn.util.time.Duration;
 import groovy.util.Node;
 import groovy.util.NodeList;
 import groovy.util.XmlParser;
@@ -8,17 +7,12 @@ import groovy.util.XmlParser;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.net.Networking;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
 
@@ -62,7 +56,7 @@ Beyond this you get blacklisted and requests may time out, or return none.
      */
     @Deprecated
     public static String getLocalhostExternalIp() {
-        return LocalhostExternalIpLoader.getLocalhostIpWithin(Duration.of(2, TimeUnit.SECONDS));
+        return LocalhostExternalIpLoader.getLocalhostIpWithin(Duration.seconds(2));
     }
     
     /**
@@ -70,11 +64,11 @@ Beyond this you get blacklisted and requests may time out, or return none.
      */
     @Deprecated
     public static String getLocalhostExternalIpImpl() {
-        return LocalhostExternalIpLoader.getLocalhostIpWithin(Duration.of(2, TimeUnit.SECONDS));
+        return LocalhostExternalIpLoader.getLocalhostIpWithin(Duration.seconds(2));
     }
     
     public String getLookupUrlForLocalhost() {
-        return getLookupUrlForPublicIp(LocalhostExternalIpLoader.getLocalhostIp());
+        return getLookupUrlForPublicIp(LocalhostExternalIpLoader.getLocalhostIpQuicklyOrDefault());
     }
 
     /** returns URL to get properties for the given address (assuming localhost if address is on a subnet) */

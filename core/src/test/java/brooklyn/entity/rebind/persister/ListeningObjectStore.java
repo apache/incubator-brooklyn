@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
@@ -105,19 +106,28 @@ public class ListeningObjectStore implements PersistenceObjectStore {
         this.listener = Preconditions.checkNotNull(listener);
     }
 
+    @Override
     public String getSummaryName() {
         return delegate.getSummaryName();
     }
 
+    @Override
+    public void prepareForContendedWrite() {
+        delegate.prepareForContendedWrite();
+    }
+
+    @Override
     public StoreObjectAccessor newAccessor(String path) {
         return new ListeningAccessor(path, delegate.newAccessor(path));
     }
 
+    @Override
     public void createSubPath(String subPath) {
         listener.recordQueryOut("creating path "+subPath, 1+subPath.length());
         delegate.createSubPath(subPath);
     }
 
+    @Override
     public List<String> listContentsWithSubPath(String subPath) {
         listener.recordQueryOut("requesting list "+subPath, 1+subPath.length());
         List<String> result = delegate.listContentsWithSubPath(subPath);
@@ -125,14 +135,22 @@ public class ListeningObjectStore implements PersistenceObjectStore {
         return result;
     }
 
+    @Override
     public void close() {
         delegate.close();
     }
 
-    public void prepareForUse(ManagementContext managementContext, PersistMode persistMode) {
-        delegate.prepareForUse(managementContext, persistMode);
+    @Override
+    public void injectManagementContext(ManagementContext managementContext) {
+        delegate.injectManagementContext(managementContext);
+    }
+    
+    @Override
+    public void prepareForUse(PersistMode persistMode, HighAvailabilityMode haMode) {
+        delegate.prepareForUse(persistMode, haMode);
     }
 
+    @Override
     public void deleteCompletely() {
         listener.recordDataOut("deleting completely", 1);
         delegate.deleteCompletely();

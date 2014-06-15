@@ -17,12 +17,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
-import brooklyn.location.geo.UtraceHostGeoLookup;
+import brooklyn.location.geo.LocalhostExternalIpLoader;
 import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -360,7 +361,7 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
                 synchronized (this) {
                     local = cidr;
                     if (local == null) {
-                        String externalIp = UtraceHostGeoLookup.getLocalhostExternalIp();
+                        String externalIp = LocalhostExternalIpLoader.getLocalhostIpWithin(Duration.seconds(5));
                         cidr = local = new Cidr(externalIp + "/32");
                     }
                 }

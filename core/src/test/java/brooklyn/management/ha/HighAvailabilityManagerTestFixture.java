@@ -60,7 +60,8 @@ public abstract class HighAvailabilityManagerTestFixture {
         managementContext = newLocalManagementContext();
         ownNodeId = managementContext.getManagementNodeId();
         objectStore = newPersistenceObjectStore();
-        objectStore.prepareForUse(managementContext, PersistMode.CLEAN);
+        objectStore.injectManagementContext(managementContext);
+        objectStore.prepareForUse(PersistMode.CLEAN, HighAvailabilityMode.DISABLED);
         persister = new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext, objectStore, classLoader);
         BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
         managementContext.getRebindManager().setPersister(persisterObj);

@@ -71,7 +71,7 @@ public class DynamicMultiGroupTest {
         checkDistribution(group, dmg, childSpec, child1, child2);
     }
 
-    @Test
+    @Test(groups="Integration") // because takes 4s or so
     public void testBucketDistributionWithRescan() {
         Group group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         final DynamicMultiGroup dmg = app.createAndManageChild(

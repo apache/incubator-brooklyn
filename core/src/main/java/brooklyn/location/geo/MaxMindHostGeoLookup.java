@@ -42,7 +42,7 @@ public class MaxMindHostGeoLookup implements HostGeoLookup {
         if (ll==null) return null;
         
         InetAddress extAddress = address;
-        if (Networking.isPrivateSubnet(extAddress)) extAddress = InetAddress.getByName(UtraceHostGeoLookup.getLocalhostExternalIp());
+        if (Networking.isPrivateSubnet(extAddress)) extAddress = InetAddress.getByName(LocalhostExternalIpLoader.getLocalhostIpQuicklyOrDefault());
         
         com.maxmind.geoip.Location l = ll.getLocation(extAddress);
         if (l==null) {

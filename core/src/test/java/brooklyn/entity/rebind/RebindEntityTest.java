@@ -293,11 +293,11 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         // Serialize and rebind, but don't yet manage the app
         RebindTestUtils.waitForPersisted(origApp);
         RebindTestUtils.checkCurrentMementoSerializable(origApp);
-        newManagementContext = new LocalManagementContext();
+        newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
         Thread thread = new Thread() {
             public void run() {
                 try {
-                    RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader());
+                    newManagementContext.getRebindManager().rebind(classLoader);
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
