@@ -180,16 +180,16 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             if (nodeState == ManagementNodeState.STANDBY) {
                 String masterNodeId = getManagementPlaneSyncState().getMasterNodeId();
                 ManagementNodeSyncRecord masterNodeDetails = getManagementPlaneSyncState().getManagementNodes().get(masterNodeId);
-                LOG.info("Management node started as HA STANDBY autodetected, master is "+masterNodeId+
+                LOG.info("Management node "+ownNodeId+" started as HA STANDBY autodetected, master is "+masterNodeId+
                     (masterNodeDetails==null || masterNodeDetails.getUri()==null ? " (no further info)" : " at "+masterNodeDetails.getUri()));
             } else {
-                LOG.info("Management node started as HA MASTER autodetected");
+                LOG.info("Management node "+ownNodeId+" started as HA MASTER autodetected");
             }
             break;
         case MASTER:
             if (existingMaster == null) {
                 promoteToMaster();
-                LOG.info("Management node started as HA MASTER explicitly");
+                LOG.info("Management node "+ownNodeId+" started as HA MASTER explicitly");
             } else {
                 throw new IllegalStateException("Master already exists; cannot start as master ("+existingMaster.toVerboseString()+")");
             }
@@ -197,13 +197,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         case STANDBY:
             if (existingMaster != null) {
                 publishAndCheck(true);
-                LOG.info("Management node started as HA STANDBY explicitly, status "+nodeState);
+                LOG.info("Management node "+ownNodeId+" started as HA STANDBY explicitly, status "+nodeState);
             } else {
                 throw new IllegalStateException("No existing master; cannot start as standby");
             }
             break;
         default:
-            throw new IllegalStateException("Unexpected high availability start-mode "+startMode);
+            throw new IllegalStateException("Unexpected high availability start-mode "+startMode+" for "+this);
         }
         
         registerPollTask();
@@ -354,7 +354,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * Looks up the state of all nodes in the management plane, and checks if the master is still ok.
      * If it's not then determines which node should be promoted to master. If it is ourself, then promotes.
      */
-    protected void checkMaster(boolean initializin) {
+    protected void checkMaster(boolean initializing) {
         long now = currentTimeMillis();
         ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
         
@@ -398,7 +398,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             ownNodeMemento.toVerboseString(), 
             heartbeatTimeout
         });
-        if (!initializin) {
+        if (!initializing) {
             LOG.warn("HA subsystem detected change of master from "+masterNodeId+" to "
                 + (newMasterNodeId == null ? "<unknown>" : 
                     newMasterNodeId + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")));

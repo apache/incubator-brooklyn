@@ -46,6 +46,8 @@ import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Function;
+
 public class NonDeploymentManagementContext implements ManagementContextInternal {
 
     public enum NonDeploymentManagementContextMode {

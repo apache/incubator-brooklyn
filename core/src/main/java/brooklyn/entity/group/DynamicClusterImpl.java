@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -177,7 +178,13 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     private Location getLocation() {
         Collection<? extends Location> ll = Locations.getLocationsCheckingAncestors(getLocations(), this);
-        return Iterables.getOnlyElement(ll);
+        try {
+            return Iterables.getOnlyElement(ll);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            if (ll.isEmpty()) throw new IllegalStateException("No location available for "+this);
+            else throw new IllegalStateException("Ambiguous location for "+this+"; expected one but had "+ll);
+        }
     }
 
     protected boolean isAvailabilityZoneEnabled() {
@@ -234,20 +241,36 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
             resize(initialSize);
 
-            Maybe<Task<?>> firstFailed = Maybe.next(Tasks.failed(Tasks.children(Tasks.current())).iterator());
+            Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
+            Iterator<Task<?>> fi = failed.iterator();
+            boolean noFailed=true, severalFailed=false;
+            if (fi.hasNext()) {
+                noFailed = false;
+                fi.next();
+                if (fi.hasNext())
+                    severalFailed = true;
+            }
 
             int currentSize = getCurrentSize().intValue();
             if (currentSize < initialQuorumSize) {
                 String message;
-                if (currentSize == 0 && firstFailed.isPresent()) {
-                    message = "All nodes in cluster "+this+" failed";
+                if (currentSize == 0 && !noFailed) {
+                    if (severalFailed)
+                        message = "All nodes in cluster "+this+" failed";
+                    else
+                        message = "Node in cluster "+this+" failed";
                 } else {
                     message = "On start of cluster " + this + ", failed to get to initial size of " + initialSize
                         + "; size is " + getCurrentSize()
                         + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
                 }
-                Throwable firstError = Tasks.getError(firstFailed.orNull());
-                if (firstError!=null) message += "; first failure is: "+Exceptions.collapseText(firstError);
+                Throwable firstError = Tasks.getError(Maybe.next(failed.iterator()).orNull());
+                if (firstError!=null) {
+                    if (severalFailed)
+                        message += "; first failure is: "+Exceptions.collapseText(firstError);
+                    else
+                        message += ": "+Exceptions.collapseText(firstError);
+                }
                 throw new IllegalStateException(message, firstError);
             } else if (currentSize < initialSize) {
                 LOG.warn(

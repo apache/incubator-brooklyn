@@ -3,12 +3,11 @@ package brooklyn.entity.rebind.persister;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 
@@ -31,12 +30,16 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
     }
     
     @Override
+    public void prepareForContendedWrite() {
+    }
+
+    @Override
     public void createSubPath(String subPath) {
-        if (!prepared) throw new IllegalStateException("prepare method not yet invoked: "+this);
     }
 
     @Override
     public StoreObjectAccessor newAccessor(final String path) {
+        if (!prepared) throw new IllegalStateException("prepare method not yet invoked: "+this);
         return new StoreObjectAccessorLocking(new SingleThreadedInMemoryStoreObjectAccessor(filesByName, path));
     }
     
@@ -86,6 +89,7 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
 
     @Override
     public List<String> listContentsWithSubPath(final String parentSubPath) {
+        if (!prepared) throw new IllegalStateException("prepare method not yet invoked: "+this);
         synchronized (filesByName) {
             List<String> result = MutableList.of();
             for (String file: filesByName.keySet())
@@ -105,7 +109,11 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
     }
 
     @Override
-    public void prepareForUse(ManagementContext mgmt, @Nullable PersistMode persistMode) {
+    public void injectManagementContext(ManagementContext mgmt) {
+    }
+    
+    @Override
+    public void prepareForUse(PersistMode persistMode, HighAvailabilityMode haMode) {
         prepared = true;
     }
 

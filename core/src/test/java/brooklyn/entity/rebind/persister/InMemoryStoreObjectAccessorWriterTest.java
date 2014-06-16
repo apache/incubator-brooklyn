@@ -10,7 +10,9 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccess
 public class InMemoryStoreObjectAccessorWriterTest extends PersistenceStoreObjectAccessorWriterTestFixture {
 
     protected StoreObjectAccessorWithLock newPersistenceStoreObjectAccessor() throws IOException {
-        return new StoreObjectAccessorLocking(new InMemoryObjectStore().newAccessor("foo"));
+        InMemoryObjectStore store = new InMemoryObjectStore();
+        store.prepareForUse(null, null);
+        return new StoreObjectAccessorLocking(store.newAccessor("foo"));
     }
     
 }

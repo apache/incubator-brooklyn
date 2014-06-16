@@ -13,6 +13,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 
 public class EntityFunctions {

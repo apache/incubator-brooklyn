@@ -51,9 +51,10 @@ public interface HighAvailabilityManager {
     /**
      * Starts the monitoring of other nodes (and thus potential promotion of this node from standby to master).
      * <p>
-     * By the time this method returns, then if appropriate this node will already be {@link ManagementNodeState#MASTER}. 
-     * Otherwise it will be {@link ManagementNodeState#STANDBY}.
-     * 
+     * When this method returns, the status of this node will be set,
+     * either {@link ManagementNodeState#MASTER} if appropriate or {@link ManagementNodeState#STANDBY}.
+     *
+     * @param startMode mode to start with
      * @throws IllegalStateException if current state of the management-plane doesn't match that desired by {@code startMode} 
      */
     void start(HighAvailabilityMode startMode);

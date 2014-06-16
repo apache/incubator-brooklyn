@@ -100,7 +100,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     private final LocalAccessManager accessManager;
     private final LocalUsageManager usageManager;
     
-    private final Throwable constructionStackTrace = new Throwable("for construction stacktrace").fillInStackTrace();
+    public final Throwable constructionStackTrace = new Throwable("for construction stacktrace").fillInStackTrace();
     
     private final Map<String, Object> brooklynAdditionalProperties;
 

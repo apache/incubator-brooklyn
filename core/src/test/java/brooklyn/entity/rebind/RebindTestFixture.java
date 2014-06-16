@@ -9,10 +9,13 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
@@ -101,8 +104,11 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     }
     
     protected BrooklynMementoManifest loadMementoManifest() throws Exception {
-        BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
-            new FileBasedObjectStore(mementoDir), classLoader);
+        newManagementContext = new LocalManagementContextForTests();
+        FileBasedObjectStore objectStore = new FileBasedObjectStore(mementoDir);
+        objectStore.injectManagementContext(newManagementContext);
+        objectStore.prepareForUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
+        BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
         RebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(RebindManager.RebindFailureMode.FAIL_AT_END, RebindManager.RebindFailureMode.FAIL_AT_END);
         BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
         persister.stop();

@@ -2,6 +2,7 @@ package brooklyn.util.text;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -118,6 +119,15 @@ public class StringFunctions {
             @Override
             public String apply(String input) {
                 return input.toUpperCase();
+            }
+        };
+    }
+
+    public static Function<String, String> convertCase(final CaseFormat src, final CaseFormat target) {
+        return new Function<String, String>() {
+            @Override
+            public String apply(String input) {
+                return src.to(target, input);
             }
         };
     }

@@ -20,6 +20,7 @@ import brooklyn.entity.rebind.persister.XmlMementoSerializer;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -67,24 +68,27 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     // TODO Leak if we go through lots of managers; but tiny!
     private final ConcurrentMap<String, StoreObjectAccessorWithLock> nodeWriters = Maps.newConcurrentMap();
 
-    private final StoreObjectAccessorWithLock masterWriter;
-    private final StoreObjectAccessorWithLock changeLogWriter;
+    private StoreObjectAccessorWithLock masterWriter;
+    private StoreObjectAccessorWithLock changeLogWriter;
 
-    private final MementoSerializer<Object> serializer;
-
+    private ManagementContext mgmt;
     private final PersistenceObjectStore objectStore;
+    private final MementoSerializer<Object> serializer;
 
     private static final int MAX_SERIALIZATION_ATTEMPTS = 5;
 
+    private boolean started = false;
     private volatile boolean running = true;
 
+
     /**
-     * @param mgmt not used at present but handy to ensure we know it so that obj store is prepared
+     * @param mgmt not used much at present but handy to ensure we know it so that obj store is prepared
      * @param objectStore the objectStore use to read/write management-plane data;
      *   this must have been {@link PersistenceObjectStore#prepareForUse(ManagementContext, brooklyn.entity.rebind.persister.PersistMode)}
      * @param classLoader ClassLoader to use when deserializing data
      */
     public ManagementPlaneSyncRecordPersisterToObjectStore(ManagementContext mgmt, PersistenceObjectStore objectStore, ClassLoader classLoader) {
+        this.mgmt = mgmt;
         this.objectStore = checkNotNull(objectStore, "objectStore");
 
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(checkNotNull(classLoader, "classLoader"));
@@ -92,12 +96,17 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
 
         objectStore.createSubPath(NODES_SUB_PATH);
 
-        masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/master"));
-        changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
-
         LOG.debug("ManagementPlaneMemento-persister will use store "+objectStore);
     }
 
+    protected synchronized void init() {
+        if (!started) {
+            started = true;
+            masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/master"));
+            changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
+        }
+    }
+    
     @Override
     public void stop() {
         running = false;
@@ -124,6 +133,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         if (!running) {
             throw new IllegalStateException("Persister not running; cannot load memento from "+ objectStore.getSummaryName());
         }
+        init();
         
         // Note this is called a lot - every time we check the heartbeats
         if (LOG.isTraceEnabled()) LOG.trace("Loading management-plane memento from {}", objectStore.getSummaryName());
@@ -136,7 +146,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         // Therefore read master file first, followed by the other node-files.
         String masterNodeId = masterWriter.get();
         if (masterNodeId == null) {
-            LOG.warn("No entity-memento deserialized from file "+masterWriter+"; ignoring and continuing");
+            LOG.debug("No master-memento deserialized from file "+masterWriter+"; ignoring and continuing (normal on startup, should cause an error later in live operation)");
         } else {
             builder.masterNodeId(masterNodeId);
         }
@@ -148,11 +158,29 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
 
         for (String nodeFile : nodeFiles) {
             PersistenceObjectStore.StoreObjectAccessor objectAccessor = objectStore.newAccessor(nodeFile);
-            String nodeContents = objectAccessor.get();
-            ManagementNodeSyncRecord memento = nodeContents==null ? null : (ManagementNodeSyncRecord) serializer.fromString(nodeContents);
+            String nodeContents = null;
+            Exception problem = null;
+            try {
+                nodeContents = objectAccessor.get();
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                problem = e;
+            }
+            if (problem!=null || Strings.isBlank(nodeContents)) {
+                // happens if node has gone away, or if FileBasedObjectStore.moveFile is not atomic, 
+                // i.e. it has deleted but not updated it yet
+                if (objectAccessor.exists()) {
+                    throw Exceptions.propagate(new IllegalStateException("Node record "+nodeFile+" could not be read when "+mgmt.getManagementNodeId()+" was scanning", problem));
+                } else {
+                    LOG.warn("Node record "+nodeFile+" went away while "+mgmt.getManagementNodeId()+" was scanning, ignoring (it has probably been terminated)");
+                    // if file was deleted, silently ignore
+                    continue;
+                }
+            }
+            ManagementNodeSyncRecord memento = (ManagementNodeSyncRecord) serializer.fromString(nodeContents);
             if (memento == null) {
-                LOG.warn("No manager-memento deserialized from " + nodeFile + " (possibly just stopped?); ignoring" +
-                        " and continuing");
+                // shouldn't happen
+                throw Exceptions.propagate(new IllegalStateException("Node record "+nodeFile+" could not be deserialized when "+mgmt.getManagementNodeId()+" was scanning: "+nodeContents, problem));
             } else {
                 builder.node(memento);
             }
@@ -170,6 +198,8 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
             if (LOG.isDebugEnabled()) LOG.debug("Persister not running; ignoring checkpointed delta of manager-memento");
             return;
         }
+        init();
+        
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento; updating {}", delta);
         
         for (ManagementNodeSyncRecord m : delta.getNodes()) {

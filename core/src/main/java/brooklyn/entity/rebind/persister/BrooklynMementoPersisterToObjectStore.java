@@ -267,6 +267,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             return;
         }
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointing entire memento");
+        objectStore.prepareForContendedWrite();
         
         for (EntityMemento entity : newMemento.getEntityMementos().values()) {
             persist("entities", entity);
@@ -292,6 +293,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         		"removing {} entities, {} locations and {} policies", 
                 new Object[] {delta.entities(), delta.locations(), delta.policies(),
                 delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
+        objectStore.prepareForContendedWrite();
         
         for (EntityMemento entity : delta.entities()) {
             persist("entities", entity);

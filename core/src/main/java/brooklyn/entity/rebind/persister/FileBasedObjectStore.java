@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -20,14 +21,20 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import brooklyn.util.internal.ssh.process.ProcessTool;
 import brooklyn.util.os.Os;
 import brooklyn.util.os.Os.DeletionResult;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -41,10 +48,11 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     private static final int SHUTDOWN_TIMEOUT_MS = 10*1000;
 
     private final File basedir;
-
     private final ListeningExecutorService executor;
-
     private ManagementContext mgmt;
+    private boolean prepared = false;
+    private boolean deferredBackupNeeded = false;
+    private AtomicBoolean doneFirstContentiousWrite = new AtomicBoolean(false);
 
     /**
      * @param basedir
@@ -65,15 +73,44 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         return basedir;
     }
     
+    public void prepareForContendedWrite() {
+        if (doneFirstContentiousWrite.get())
+            return;
+        synchronized (this) {
+            if (doneFirstContentiousWrite.get())
+                return;
+            try {
+                if (deferredBackupNeeded) {
+                    // defer backup and path creation until first write
+                    // this way if node is standby or auto, the backup is not created superfluously
+
+                    File backup = backupDirByCopying(basedir);
+                    log.info("Persistence deferred backup, directory "+basedir+" backed up to "+backup.getAbsolutePath());
+
+                    deferredBackupNeeded = false;
+                }
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+            doneFirstContentiousWrite.getAndSet(true);
+        }
+    }
+    
     @Override
     public void createSubPath(String subPath) {
+        if (!prepared) throw new IllegalStateException("Not yet prepared: "+this);
+        
         File dir = new File(getBaseDir(), subPath);
-        dir.mkdir();
+        if (!dir.mkdir())
+            if (!dir.exists())
+                throw new IllegalStateException("Cannot create "+dir+"; call returned false"); 
         checkPersistenceDirAccessible(dir);
     }
 
     @Override
     public StoreObjectAccessor newAccessor(String path) {
+        if (!prepared) throw new IllegalStateException("Not yet prepared: "+this);
+        
         String tmpExt = ".tmp";
         if (mgmt!=null && mgmt.getManagementNodeId()!=null) tmpExt = "."+mgmt.getManagementNodeId()+tmpExt;
         return new FileBasedStoreObjectAccessor(new File(Os.mergePaths(getBaseDir().getAbsolutePath(), path)), tmpExt);
@@ -81,6 +118,9 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
 
     @Override
     public List<String> listContentsWithSubPath(final String parentSubPath) {
+        if (!prepared) throw new IllegalStateException("Not yet prepared: "+this);
+        
+        Preconditions.checkNotNull(parentSubPath);
         File subPathDir = new File(basedir, parentSubPath);
 
         FileFilter fileFilter = new FileFilter() {
@@ -89,6 +129,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
             }
         };
         File[] subPathDirFiles = subPathDir.listFiles(fileFilter);
+        if (subPathDirFiles==null) return ImmutableList.<String>of();
         return FluentIterable.from(Arrays.asList(subPathDirFiles))
                 .transform(new Function<File, String>() {
                     @Nullable
@@ -115,14 +156,21 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     }
 
     @Override
-    public void prepareForUse(ManagementContext mgmt, @Nullable PersistMode persistMode) {
+    public void injectManagementContext(ManagementContext mgmt) {
         if (this.mgmt!=null && !this.mgmt.equals(mgmt))
             throw new IllegalStateException("Cannot change mgmt context of "+this);
         this.mgmt = mgmt;
-
-        if (persistMode==null || persistMode==PersistMode.DISABLED)
+    }
+    
+    @Override
+    public void prepareForUse(@Nullable PersistMode persistMode, HighAvailabilityMode haMode) {
+        if (mgmt==null) throw new NullPointerException("Must inject ManagementContext before preparing "+this);
+        
+        if (persistMode==null || persistMode==PersistMode.DISABLED) {
             // is this check needed? shouldn't come here now without persistence on.
+            prepared = true;
             return;
+        }
         
         Boolean backups = mgmt.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED);
         if (backups==null) backups = true; // for file system
@@ -155,8 +203,12 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
                 checkPersistenceDirNonEmpty(dir);
                 try {
                     if (backups) {
-                        File backup = backupDirByCopying(dir);
-                        log.info("Persistence mode REBIND, directory "+persistencePath+" backed up to "+backup.getAbsolutePath());
+                        if (haMode==HighAvailabilityMode.MASTER) {
+                            File backup = backupDirByCopying(dir);
+                            log.info("Persistence mode REBIND, directory "+persistencePath+" backed up to "+backup.getAbsolutePath());                            
+                        } else {
+                            deferredBackupNeeded = true;
+                        }
                     }
                 } catch (IOException e) {
                     throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
@@ -169,8 +221,12 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
                 if (dir.exists() && !isMementoDirExistButEmpty(dir)) {
                     try {
                         if (backups) {
-                            File backup = backupDirByCopying(dir);
-                            log.info("Persistence mode REBIND, directory "+persistencePath+" backed up to "+backup.getAbsolutePath());
+                            if (haMode==HighAvailabilityMode.MASTER) {
+                                File backup = backupDirByCopying(dir);
+                                log.info("Persistence mode REBIND, directory "+persistencePath+" backed up to "+backup.getAbsolutePath());                            
+                            } else {
+                                deferredBackupNeeded = true;
+                            }
                         }
                     } catch (IOException e) {
                         throw new FatalConfigurationRuntimeException("Error backing up persistence directory "+dir.getAbsolutePath(), e);
@@ -193,32 +249,40 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
+        
+        prepared = true;        
     }
 
     protected void checkPersistenceDirAccessible(File dir) {
         if (!(dir.exists() && dir.isDirectory() && dir.canRead() && dir.canWrite())) {
-            throw new FatalConfigurationRuntimeException("Invalid persistence directory " + dir + ": " +
+            FatalConfigurationRuntimeException problem = new FatalConfigurationRuntimeException("Invalid persistence directory " + dir + ": " +
                     (!dir.exists() ? "does not exist" :
                             (!dir.isDirectory() ? "not a directory" :
                                     (!dir.canRead() ? "not readable" :
                                             (!dir.canWrite() ? "not writable" : "unknown reason")))));
+            log.debug("Invalid persistence directory "+dir+" (rethrowing): "+problem, problem);
         } else {
             log.debug("Created dir {} for {}", dir, this);
         }
     }
 
     protected void checkPersistenceDirNonEmpty(File persistenceDir) {
-        if (!persistenceDir.exists())
-            throw new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because directory does not exist");
-        if (isMementoDirExistButEmpty(persistenceDir)) {
-            throw new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because directory is empty");
+        FatalConfigurationRuntimeException problem;
+        if (!persistenceDir.exists()) {
+            problem = new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because directory does not exist");
+            log.debug("Invalid persistence directory "+persistenceDir+" (rethrowing): "+problem, problem);
+            throw problem;
+        } if (isMementoDirExistButEmpty(persistenceDir)) {
+            problem = new FatalConfigurationRuntimeException("Invalid persistence directory "+persistenceDir+" because directory is empty");
+            log.debug("Invalid persistence directory "+persistenceDir+" (rethrowing): "+problem, problem);
+            throw problem;
         }
     }
 
     protected File backupDirByCopying(File dir) throws IOException, InterruptedException {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd-hhmm-ss").format(new Date());
+        String timestamp = new SimpleDateFormat("yyyyMMdd-hhmmssSSS").format(new Date());
         File backupDir = new File(parentDir, simpleName+"-"+timestamp+".bak");
         
         copyDir(dir, backupDir);
@@ -228,13 +292,14 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     protected File backupDirByMoving(File dir) throws InterruptedException, IOException {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd-hhmm-ss").format(new Date());
+        String timestamp = new SimpleDateFormat("yyyyMMdd-hhmmssSSS").format(new Date());
         File newDir = new File(parentDir, simpleName+"-"+timestamp+".old");
 
         moveDir(dir, newDir);
         return newDir;
     }
 
+    private static boolean WARNED_ON_NON_ATOMIC_FILE_UPDATES = false; 
     /** 
      * Attempts an fs level atomic move then fall back to pure java rename.
      * Assumes files are on same mount point.
@@ -243,14 +308,38 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
      */
     static void moveFile(File srcFile, File destFile) throws IOException, InterruptedException {
         if (!Os.isMicrosoftWindows()) {
+            // this command, if it succeeds, is guaranteed to be atomic, and it will usually overwrite
+            int result;
             String cmd = "mv '"+srcFile.getAbsolutePath()+"' '"+destFile.getAbsolutePath()+"'";
-            Process proc = Runtime.getRuntime().exec(cmd);
-            proc.waitFor();
-            if (proc.exitValue() == 0) return;
+            
+            result = new ProcessTool().execCommands(MutableMap.<String,String>of(), MutableList.of(cmd), null);
+            // prefer the above to the below because it wraps it in the appropriate bash
+//            Process proc = Runtime.getRuntime().exec(cmd);
+//            result = proc.waitFor();
+            
+            log.trace("FS move of {} to {} completed, code {}", new Object[] { srcFile, destFile, result });
+            if (result == 0) return;
         }
         
+        boolean result;
+        // this is not guaranteed cross platform to succeed if the destination exists,
+        // and not guaranteed to be atomic, but it usually seems to do the right thing...
+        result = srcFile.renameTo(destFile);
+        if (result) {
+            log.trace("java rename of {} to {} completed", srcFile, destFile);
+            return;
+        }
+        
+        // finally try a delete - but explicitly warn this is not going to be atomic
+        // so if another node reads it might see no master
+        if (!WARNED_ON_NON_ATOMIC_FILE_UPDATES) {
+            WARNED_ON_NON_ATOMIC_FILE_UPDATES = true;
+            log.warn("Unable to perform atomic file update ("+srcFile+" to "+destFile+"); file system not recommended for production HA/DR");
+        }
         destFile.delete();
-        srcFile.renameTo(destFile);
+        result = srcFile.renameTo(destFile);
+        log.trace("java delete and rename of {} to {} completed, code {}", new Object[] { srcFile, destFile, result });
+        if (!result) throw new IOException("Could not rename "+destFile+" to "+srcFile);
     }
     static void moveDir(File srcDir, File destDir) throws IOException, InterruptedException {
         if (!Os.isMicrosoftWindows()) {

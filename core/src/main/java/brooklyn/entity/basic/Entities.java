@@ -510,9 +510,9 @@ public class Entities {
     }
     
     /**
-     * @deprecated since 0.7.0; instead use {@link BrooklynShutdownHooks#invokeStopOnShutdown(Entity)}
+     * Registers a {@link BrooklynShutdownHooks#invokeStopOnShutdown(Entity)} to shutdown this entity when the JVM exits.
+     * (Convenience method located in this class for easy access.)
      */
-    @Deprecated
     public static void invokeStopOnShutdown(Entity entity) {
         BrooklynShutdownHooks.invokeStopOnShutdown(entity);
     }

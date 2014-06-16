@@ -47,6 +47,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.FluentKeySigner;
 import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
@@ -116,6 +117,9 @@ public class BrooklynWebServer {
      */
     @SetFromFlag
     private Map<String, String> wars = new LinkedHashMap<String, String>();
+
+    @SetFromFlag
+    protected boolean ignoreWebappDeploymentFailures = false;
 
     @SetFromFlag
     private Map<String, Object> attributes = new LinkedHashMap<String, Object>();
@@ -449,7 +453,7 @@ public class BrooklynWebServer {
      * @return the context created and added as a handler 
      * (and possibly already started if server is started,
      * so be careful with any changes you make to it!)  */
-    public WebAppContext deploy(String pathSpec, String warUrl) {
+    public WebAppContext deploy(final String pathSpec, final String warUrl) {
         String cleanPathSpec = pathSpec;
         while (cleanPathSpec.startsWith("/"))
             cleanPathSpec = cleanPathSpec.substring(1);
@@ -466,8 +470,13 @@ public class BrooklynWebServer {
                     isRoot ? "ROOT" : ("embedded-" + cleanPathSpec), ".war");
             context.setWar(tmpWarFile.getAbsolutePath());
         } catch (Exception e) {
-            log.error("Unabled to load WAR file from "+warUrl+"; launching run without WAR: "+e);
-            log.debug("Detail on why running without WAR file: "+e, e);
+            log.warn("Failed to deploy webapp "+pathSpec+" from "+warUrl
+                + (ignoreWebappDeploymentFailures ? "; launching run without WAR" : " (rethrowing)")
+                + ": "+Exceptions.collapseText(e));
+            if (!ignoreWebappDeploymentFailures) {
+                throw new IllegalStateException("Failed to deploy webapp "+pathSpec+" from "+warUrl+": "+Exceptions.collapseText(e), e);
+            }
+            log.debug("Detail on failure to deploy webapp: "+e, e);
             context.setWar("/dev/null");
         }
 
@@ -486,7 +495,7 @@ public class BrooklynWebServer {
         shutdownHook = Threads.addShutdownHook(new Runnable() {
             @Override
             public void run() {
-                log.info("BrooklynWebServer detected shut-down: stopping web-console");
+                log.debug("BrooklynWebServer detected shutdown: stopping web-console");
                 try {
                     stop();
                 } catch (Exception e) {

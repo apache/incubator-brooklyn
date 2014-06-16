@@ -42,6 +42,7 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.entity.trait.Startable;
+import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.location.Location;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
@@ -55,9 +56,9 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
-import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
@@ -110,7 +111,13 @@ public class BrooklynLauncher {
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
     private Map<String, ?> webconsoleFlags = Maps.newLinkedHashMap();
     private Boolean skipSecurityFilter = null;
-    private boolean shutdownOnExit = true;
+    
+    private boolean ignorePersistenceErrors = false;
+    private boolean ignoreWebErrors = false;
+    private boolean ignoreAppErrors = false;
+    
+    private StopWhichAppsOnShutdown stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
+    
     private PersistMode persistMode = PersistMode.DISABLED;
     private HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
     private String persistenceDir;
@@ -217,11 +224,6 @@ public class BrooklynLauncher {
 
     public BrooklynLauncher persistenceLocation(@Nullable String persistenceLocationSpec) {
         persistenceLocation = persistenceLocationSpec;
-        return this;
-    }
-
-    public BrooklynLauncher shutdownOnExit(boolean val) {
-        shutdownOnExit = val;
         return this;
     }
 
@@ -343,7 +345,31 @@ public class BrooklynLauncher {
         webApps.put(contextPath, warUrl);
         return this;
     }
-    
+
+    public BrooklynLauncher ignorePersistenceErrors(boolean ignorePersistenceErrors) {
+        this.ignorePersistenceErrors = ignorePersistenceErrors;
+        return this;
+    }
+    public BrooklynLauncher ignoreWebErrors(boolean ignoreWebErrors) {
+        this.ignoreWebErrors = ignoreWebErrors;
+        return this;
+    }
+
+    public BrooklynLauncher ignoreAppErrors(boolean ignoreAppErrors) {
+        this.ignoreAppErrors = ignoreAppErrors;
+        return this;
+    }
+
+    public BrooklynLauncher stopWhichAppsOnShutdown(StopWhichAppsOnShutdown stopWhich) {
+        this.stopWhichAppsOnShutdown = stopWhich;
+        return this;
+    }
+    public BrooklynLauncher shutdownOnExit(boolean val) {
+        LOG.warn("Call to deprecated `shutdownOnExit`", new Throwable("source of deprecated call"));
+        stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
+        return this;
+    }
+
     public BrooklynLauncher persistMode(PersistMode persistMode) {
         this.persistMode = persistMode;
         return this;
@@ -420,17 +446,32 @@ public class BrooklynLauncher {
                 .getCampPlatform();
         // TODO start CAMP rest _server_ in the below (at /camp) ?
         
-        initPersistence();
+        try {
+            initPersistence();
+        } catch (Exception e) { handleSubsystemStartupError(ignorePersistenceErrors, "persistence", e); }
         
         // Start the web-console
         if (startWebApps) {
-            startWebApps();
+            try {
+                startWebApps();
+            } catch (Exception e) { handleSubsystemStartupError(ignoreWebErrors, "web apps", e); }
         }
         
-        createApps();
-        startApps();
+        try {
+            createApps();
+            startApps();
+        } catch (Exception e) { handleSubsystemStartupError(ignoreAppErrors, "managed apps", e); }
         
         return this;
+    }
+
+    private void handleSubsystemStartupError(boolean ignoreSuchErrors, String system, Exception e) {
+        Exceptions.propagateIfFatal(e);
+        if (ignoreSuchErrors) {
+            LOG.error("Subsystem for "+system+" had startup error (continuing with startup): "+e, e);
+        } else {
+            throw Exceptions.propagate(e);
+        }
     }
 
     protected void startWebApps() {
@@ -460,15 +501,18 @@ public class BrooklynLauncher {
             webServer.start();
             
         } catch (Exception e) {
-            LOG.warn("Failed to start Brooklyn web-console: "+e, e);
+            LOG.warn("Failed to start Brooklyn web-console (rethrowing): "+Exceptions.collapseText(e));
+            throw new FatalRuntimeException("Failed to start Brooklyn web-console: "+Exceptions.collapseText(e), e);
         }
     }
 
     protected void initPersistence() {
         // Prepare the rebind directory, and initialise the RebindManager as required
-        PersistenceObjectStore objectStore = null;
+        final PersistenceObjectStore objectStore;
         if (persistMode == PersistMode.DISABLED) {
             LOG.info("Persistence disabled");
+            objectStore = null;
+            
         } else {
             if (persistenceLocation == null) {
                 persistenceLocation = brooklynProperties.getConfig(BrooklynServerConfig.PERSISTENCE_LOCATION_SPEC);
@@ -482,13 +526,14 @@ public class BrooklynLauncher {
                 objectStore = new JcloudsBlobStoreBasedObjectStore(persistenceLocation, persistenceDir);
             }
             try {
-                objectStore.prepareForUse(managementContext, persistMode);
+                objectStore.injectManagementContext(managementContext);
+                objectStore.prepareForUse(persistMode, highAvailabilityMode);
             } catch (FatalConfigurationRuntimeException e) {
                 throw e;
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 LOG.debug("Error initializing persistence subsystem (rethrowing): "+e, e);
-                throw new FatalConfigurationRuntimeException("Error initializing persistence subsystem: "+
+                throw new FatalRuntimeException("Error initializing persistence subsystem: "+
                     Exceptions.collapseText(e), e);
             }
 
@@ -506,7 +551,6 @@ public class BrooklynLauncher {
         } else {
             if (objectStore==null)
                 throw new FatalConfigurationRuntimeException("Cannot run in HA mode when no persistence configured.");
-//            File haDir = new File(persistenceDir, "plane");
             
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
             ManagementPlaneSyncRecordPersister persister = 
@@ -522,55 +566,11 @@ public class BrooklynLauncher {
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
             haManager.disabled();
 
-            if (persistMode != PersistMode.DISABLED) {
-                boolean rebinding;
-                switch (persistMode) {
-                    case CLEAN:
-                        rebinding = false;
-                        break;
-                    case REBIND:
-                        rebinding = true;
-                        break;
-                    case AUTO:
-                        if (Strings.isNonBlank(persistenceLocation)) {
-                            rebinding = true;
-                        } else if (persistenceDir!=null && new File(persistenceDir).exists()) {
-                            String[] files = new File(persistenceDir).list();
-                            if (files==null)
-                                throw new FatalConfigurationRuntimeException("Persistence dir "+persistenceDir+" is not a directory.");
-                            rebinding = (files.length > 0);
-                        } else {
-                            rebinding = false;
-                        }
-                        break;
-                    default:
-                        throw new FatalConfigurationRuntimeException("Unexpected persist mode "+persistMode+"; modified during initialization?!");
-                };
-                
-                RebindManager rebindManager = managementContext.getRebindManager();
-                if (rebinding) {
-                    if (Strings.isNonBlank(persistenceLocation))
-                        LOG.info("Management node (no HA) rebinding to entities at "+persistenceLocation+" in "+persistenceDir);
-                    else
-                        LOG.info("Management node (no HA) rebinding to entities on file system in "+persistenceDir);
-
-                    ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
-                    try {
-                        rebindManager.rebind(classLoader);
-                    } catch (Exception e) {
-                        Exceptions.propagateIfFatal(e);
-                        LOG.debug("Error rebinding to persisted state (rethrowing): "+e, e);
-                        throw new FatalConfigurationRuntimeException("Error rebinding to persisted state: "+
-                            Exceptions.collapseText(e), e);
-                    }
-                } else {
-                    LOG.debug("Management node (no HA) skipping rebind, no existing entities in "+persistenceDir);
-                }
-                rebindManager.start();
-            }
+            if (objectStore!=null)
+                startPersistenceWithoutHA(objectStore);
         } else {
-            // Let the HA manager decide when rebind needs to be called (based on whether other nodes in plane
-            // are already running).
+            // Let the HA manager decide when objectstore.prepare and rebindmgr.rebind need to be called 
+            // (based on whether other nodes in plane are already running).
             
             HighAvailabilityMode startMode;
             switch (highAvailabilityMode) {
@@ -587,8 +587,28 @@ public class BrooklynLauncher {
             
             LOG.debug("Management node (with HA) starting");
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
+            // prepare after HA mode is known, to prevent backups happening in standby mode
             haManager.start(startMode);
         }
+    }
+
+    private void startPersistenceWithoutHA(PersistenceObjectStore objectStore) {
+        RebindManager rebindManager = managementContext.getRebindManager();
+        if (Strings.isNonBlank(persistenceLocation))
+            LOG.info("Management node (no HA) rebinding to entities at "+persistenceLocation+" in "+persistenceDir);
+        else
+            LOG.info("Management node (no HA) rebinding to entities on file system in "+persistenceDir);
+
+        ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
+        try {
+            rebindManager.rebind(classLoader);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            LOG.debug("Error rebinding to persisted state (rethrowing): "+e, e);
+            throw new FatalRuntimeException("Error rebinding to persisted state: "+
+                Exceptions.collapseText(e), e);
+        }
+        rebindManager.start();
     }
 
     protected void createApps() {
@@ -625,10 +645,19 @@ public class BrooklynLauncher {
     }
     
     protected void startApps() {
+        if ((stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL) || 
+            (stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL_IF_NOT_PERSISTED && persistMode==PersistMode.DISABLED)) {
+            BrooklynShutdownHooks.invokeStopAppsOnShutdown(managementContext);
+        }
+
         List<Throwable> appExceptions = Lists.newArrayList();
         for (Application app : apps) {
             if (app instanceof Startable) {
-                if (shutdownOnExit) BrooklynShutdownHooks.invokeStopOnShutdown(app);
+                
+                if ((stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.THESE) || 
+                    (stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED && persistMode==PersistMode.DISABLED)) {
+                    BrooklynShutdownHooks.invokeStopOnShutdown(app);
+                }
                 try {
                     LOG.info("Starting brooklyn application {} in location{} {}", new Object[] { app, locations.size()!=1?"s":"", locations });
                     ((Startable)app).start(locations);
@@ -643,8 +672,9 @@ public class BrooklynLauncher {
                 }
             }
         }
-        if (appExceptions.size() > 0) {
-            throw new CompoundRuntimeException("Error starting applications", appExceptions);
+        if (!appExceptions.isEmpty()) {
+            Throwable t = Exceptions.create(appExceptions);
+            throw new FatalRuntimeException("Error starting applications: "+Exceptions.collapseText(t), t);
         }
     }
     
@@ -676,7 +706,7 @@ public class BrooklynLauncher {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // keep going with shutdown
             } catch (TimeoutException e) {
-                LOG.warn("Timeout after 10 seconds waiting for persistance to write all data; continuing");
+                LOG.warn("Timeout after 10 seconds waiting for persistence to write all data; continuing");
             }
         }
         

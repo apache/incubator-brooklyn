@@ -21,7 +21,8 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Closer;
 
 /**
- * @deprecated since 0.7; does not return exit status, stderr, etc, so utility is of very limited use; and is not used in core brooklyn at all!
+ * @deprecated since 0.7; does not return exit status, stderr, etc, so utility is of very limited use; and is not used in core brooklyn at all!;
+ * use ProcessTool or SystemProcessTaskFactory.
  */
 @Deprecated
 public class ShellUtils {
