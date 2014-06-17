@@ -2,8 +2,7 @@ package brooklyn.event.feed.http;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
-
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
@@ -64,19 +63,19 @@ public class HttpValueFunctions {
         };
     }
     
+    /** @deprecated since 0.7.0 use {@link Functionals#chain(Function, Function)} */ @Deprecated
     public static <A,B,C> Function<A,C> chain(final Function<A,? extends B> f1, final Function<B,C> f2) {
-        return new Function<A,C>() {
-            @Override public C apply(@Nullable A input) {
-                return f2.apply(f1.apply(input));
-            }
-        };
+        return Functionals.chain(f1, f2);
     }
     
+    /** @deprecated since 0.7.0 use {@link Functionals#chain(Function, Function, Function)} */ @Deprecated
     public static <A,B,C,D> Function<A,D> chain(final Function<A,? extends B> f1, final Function<B,? extends C> f2, final Function<C,D> f3) {
-        return new Function<A,D>() {
-            @Override public D apply(@Nullable A input) {
-                return f3.apply(f2.apply(f1.apply(input)));
-            }
-        };
+        return Functionals.chain(f1, f2, f3);
     }
+
+    /** @deprecated since 0.7.0 use {@link Functionals#chain(Function, Function, Function, Function)} */ @Deprecated
+    public static <A,B,C,D,E> Function<A,E> chain(final Function<A,? extends B> f1, final Function<B,? extends C> f2, final Function<C,? extends D> f3, final Function<D,E> f4) {
+        return Functionals.chain(f1, f2, f3, f4);
+    }
+
 }

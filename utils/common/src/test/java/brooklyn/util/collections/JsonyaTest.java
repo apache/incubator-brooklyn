@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class JsonyaTest {
     
-    protected Navigator<MutableMap<Object,Object>> europeMap() {
+    public static Navigator<MutableMap<Object,Object>> europeMap() {
         return Jsonya.newInstance().at("europe", "uk", "edinburgh")
                 .put("population", 500*1000)
                 .put("weather", "wet", "lighting", "dark")
@@ -50,10 +50,10 @@ public class JsonyaTest {
         n.at("europe", "uk", "neighbours").list().add("ireland")
             .root().at("europe", "france", "neighbours").list().add("spain", "germany").add("switzerland")
             .root().at("europe", "france", "neighbours").add("lux");
-        Object l = n.root().get("europe", "france", "neighbours");
+        Object l = n.root().at("europe", "france", "neighbours").get();
         Assert.assertTrue(l instanceof List);
         Assert.assertEquals(((List)l).size(), 4);
-        // currently remembers last position; not sure that behaviour will continue however...
+        // this wants a map, so it creates a map in the list
         n.put("east", "germany", "south", "spain");
         Assert.assertEquals(((List)l).size(), 5);
         Map nd = (Map) ((List)l).get(4);
@@ -133,6 +133,41 @@ public class JsonyaTest {
         Assert.assertNotEquals(mapP, map);
         Assert.assertEquals(mapP.get('C'), foo.toString());
         Assert.assertEquals(MutableMap.copyOf(mapP).add('C', null), MutableMap.copyOf(map).add('C', null));
+    }
+
+    @Test
+    public void testJsonyaBadPathNull() {
+        Navigator<MutableMap<Object, Object>> m = europeMap();
+        // does not create (but if we 'pushed' it would)
+        Assert.assertNull( m.at("europe",  "spain", "barcelona").get() );
+        Assert.assertNull( m.root().at("europe").at("spain").at("barcelona").get() );
+    }
+    @Test
+    public void testJsonyaMaybe() {
+        Navigator<MutableMap<Object, Object>> m = europeMap();
+        Assert.assertEquals( m.at("europe",  "spain", "barcelona").getMaybe().or("norealabc"), "norealabc" );
+        Assert.assertEquals(m.root().at("europe").getFocusMap().keySet(), MutableSet.of("uk", "france"));
+    }
+    
+    @Test
+    public void testJsonyaPushPop() {
+        Navigator<MutableMap<Object, Object>> m = europeMap();
+        Assert.assertTrue(m.getFocusMap().containsKey("europe"));
+        Assert.assertFalse(m.getFocusMap().containsKey("edinburgh"));
+        m.push();
+        
+        m.at("europe", "uk");
+        Assert.assertTrue(m.getFocusMap().containsKey("edinburgh"));
+        Assert.assertFalse(m.getFocusMap().containsKey("europe"));
+        
+        m.pop();
+        Assert.assertTrue(m.getFocusMap().containsKey("europe"));
+        Assert.assertFalse(m.getFocusMap().containsKey("edinburgh"));
+
+        // also check 'get' does not change focus
+        m.get("europe", "uk");
+        Assert.assertTrue(m.getFocusMap().containsKey("europe"));
+        Assert.assertFalse(m.getFocusMap().containsKey("edinburgh"));
     }
 
 }

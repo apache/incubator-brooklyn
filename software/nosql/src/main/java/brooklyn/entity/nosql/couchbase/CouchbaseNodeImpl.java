@@ -8,6 +8,7 @@ import java.util.Set;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.http.HttpFeed;
@@ -19,6 +20,9 @@ import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Functionals;
+import brooklyn.util.guava.MaybeFunctions;
+import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
@@ -88,26 +92,35 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         getDriver().rebalance();
     }
 
+    protected final static Function<HttpToolResponse, JsonElement> GET_THIS_NODE_STATS = Functionals.chain(
+        HttpValueFunctions.jsonContents(), 
+        JsonFunctions.walk("nodes"), 
+        new Function<JsonElement, JsonElement>() {
+            @Override public JsonElement apply(JsonElement input) {
+                JsonArray nodes = input.getAsJsonArray();
+                for (JsonElement element : nodes) {
+                    JsonElement thisNode = element.getAsJsonObject().get("thisNode");
+                    if (thisNode!=null && Boolean.TRUE.equals(thisNode.getAsBoolean())) {
+                        return element.getAsJsonObject().get("interestingStats");
+                    }
+                }
+                return null;
+        }}
+    );
+    
+    protected final static <T> HttpPollConfig<T> getSensorFromNodeStat(AttributeSensor<T> sensor, String ...jsonPath) {
+        return new HttpPollConfig<T>(sensor)
+            .onSuccess(Functionals.chain(GET_THIS_NODE_STATS, 
+                MaybeFunctions.<JsonElement>wrap(), 
+                JsonFunctions.walkM(jsonPath), 
+                JsonFunctions.castM(TypeTokens.getRawRawType(sensor.getTypeToken()), null)))
+            .onFailureOrException(Functions.<T>constant(null));
+    }
 
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
-        
-        Function<HttpToolResponse, JsonElement> getThisNodesStats = HttpValueFunctions.chain(
-            HttpValueFunctions.jsonContents(), 
-            JsonFunctions.walk("nodes"), 
-            new Function<JsonElement, JsonElement>() {
-                @Override public JsonElement apply(JsonElement input) {
-                    JsonArray nodes = input.getAsJsonArray();
-                    for (JsonElement element : nodes) {
-                        if (Boolean.TRUE.equals(element.getAsJsonObject().get("thisNode").getAsBoolean())) {
-                            return element.getAsJsonObject().get("interestingStats");
-                        }
-                    }
-                    return null;
-            }}
-        );
-        
+                
         Integer rawPort = getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
         Preconditions.checkNotNull(rawPort, "HTTP_PORT sensors not set for %s; is an acceptable port available?", this);
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, rawPort);
@@ -119,42 +132,18 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             .period(1000)
             .baseUri(adminUrl + "/pools/nodes/")
             .credentialsIfNotNull(getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME), getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.OPS)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("ops"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_DOCS_DATA_SIZE)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_docs_data_size"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_docs_actual_disk_size"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.EP_BG_FETCHED)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("ep_bg_fetched"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.MEM_USED)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("mem_used"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_VIEWS_ACTUAL_DISK_SIZE)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_views_actual_disk_size"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.CURR_ITEMS)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("curr_items"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.VB_REPLICA_CURR_ITEMS)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("vb_replica_curr_items"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.COUCH_VIEWS_DATA_SIZE)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("couch_views_data_size"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.GET_HITS)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("get_hits"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.CMD_GET)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("cmd_get"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
-            .poll(new HttpPollConfig<Integer>(CouchbaseNode.CURR_ITEMS_TOT)
-                    .onSuccess(HttpValueFunctions.chain(getThisNodesStats, JsonFunctions.walk("curr_items_tot"), JsonFunctions.cast(Integer.class)))
-                    .onFailureOrException(Functions.<Integer>constant(null)))
+            .poll(getSensorFromNodeStat(CouchbaseNode.OPS, "ops"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.COUCH_DOCS_DATA_SIZE, "couch_docs_data_size"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE, "couch_docs_actual_disk_size"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.EP_BG_FETCHED, "ep_bg_fetched"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.MEM_USED, "mem_used"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.COUCH_VIEWS_ACTUAL_DISK_SIZE, "couch_views_actual_disk_size"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.CURR_ITEMS, "curr_items"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.VB_REPLICA_CURR_ITEMS, "vb_replica_curr_items"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.COUCH_VIEWS_DATA_SIZE, "couch_views_data_size"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.GET_HITS, "get_hits"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.CMD_GET, "cmd_get"))
+            .poll(getSensorFromNodeStat(CouchbaseNode.CURR_ITEMS_TOT, "curr_items_tot"))
             .build();
     }
 
