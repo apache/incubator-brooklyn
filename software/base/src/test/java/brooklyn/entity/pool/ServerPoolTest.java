@@ -1,0 +1,104 @@
+package brooklyn.entity.pool;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.entity.TestApplication;
+
+public class ServerPoolTest extends AbstractServerPoolTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServerPoolTest.class);
+
+    @Test
+    public void testAppCanBeDeployedToServerPool() {
+        TestApplication app = createAppWithChildren(1);
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertTrue(app.getAttribute(Attributes.SERVICE_UP));
+        for (Entity child : app.getChildren()) {
+            assertTrue(child.getAttribute(Attributes.SERVICE_UP));
+        }
+    }
+
+    @Test
+    public void testFailureWhenNotEnoughServersAvailable() {
+        TestApplication app = createAppWithChildren(getInitialPoolSize() + 1);
+        assertNoMachinesAvailableForApp(app);
+        // Not asserting attr = true because the sensor will probably be null
+        assertFalse(Boolean.TRUE.equals(app.getAttribute(Attributes.SERVICE_UP)));
+    }
+
+    @Test
+    public void testDeployReleaseDeploy() {
+        TestApplication app = createAppWithChildren(getInitialPoolSize());
+        TestApplication app2 = createAppWithChildren(1);
+
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertTrue(app.getAttribute(Attributes.SERVICE_UP));
+        assertAvailableCountEquals(0);
+        assertNoMachinesAvailableForApp(app2);
+
+        app.stop();
+        assertFalse(app.getAttribute(Attributes.SERVICE_UP));
+        assertAvailableCountEquals(getInitialPoolSize());
+
+        app2.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
+        assertClaimedCountEquals(1);
+        assertAvailableCountEquals(getInitialPoolSize() - 1);
+    }
+
+    @Test
+    public void testResizingPoolUp() {
+        TestApplication app = createAppWithChildren(getInitialPoolSize());
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertTrue(app.getAttribute(Attributes.SERVICE_UP));
+
+        TestApplication app2 = createAppWithChildren(1);
+        assertNoMachinesAvailableForApp(app2);
+
+        pool.resizeByDelta(1);
+
+        assertEquals((int) pool.getCurrentSize(), getInitialPoolSize() + 1);
+        app2.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
+    }
+
+    @Test
+    public void testResizePoolDownSucceedsWhenEnoughMachinesAreFree() {
+        TestApplication app = createAppWithChildren(1);
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertAvailableCountEquals(getInitialPoolSize() - 1);
+
+        pool.resize(1);
+
+        assertAvailableCountEquals(0);
+    }
+
+    @Test
+    public void testResizeDownDoesNotReleaseClaimedMachines() {
+        TestApplication app = createAppWithChildren(getInitialPoolSize() - 1);
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertAvailableCountEquals(1);
+        assertClaimedCountEquals(getInitialPoolSize() - 1);
+
+        LOG.info("Test attempting to resize to 0 members. Should only drop one machine.");
+        pool.resize(0);
+
+        assertEquals(Iterables.size(pool.getMembers()), getInitialPoolSize() - 1);
+        assertAvailableCountEquals(0);
+        assertClaimedCountEquals(getInitialPoolSize() - 1);
+    }
+
+}
