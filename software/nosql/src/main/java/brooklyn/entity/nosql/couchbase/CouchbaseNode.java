@@ -56,29 +56,29 @@ public interface CouchbaseNode extends SoftwareProcess {
     public static final AttributeSensor<String> COUCHBASE_WEB_ADMIN_URL = WebAppServiceConstants.ROOT_URL; // By using this specific sensor, the value will be shown in the summary tab
     
     // Interesting stats
-    AttributeSensor<Integer> OPS = Sensors.newIntegerSensor("couchbase.stats.ops", 
+    AttributeSensor<Long> OPS = Sensors.newLongSensor("couchbase.stats.ops", 
             "Retrieved from pools/nodes/<current node>/interestingStats/ops");
-    AttributeSensor<Integer> COUCH_DOCS_DATA_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.docs.data.size", 
+    AttributeSensor<Long> COUCH_DOCS_DATA_SIZE = Sensors.newLongSensor("couchbase.stats.couch.docs.data.size", 
             "Retrieved from pools/nodes/<current node>/interestingStats/couch_docs_data_size");
-    AttributeSensor<Integer> COUCH_DOCS_ACTUAL_DISK_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.docs.actual.disk.size", 
+    AttributeSensor<Long> COUCH_DOCS_ACTUAL_DISK_SIZE = Sensors.newLongSensor("couchbase.stats.couch.docs.actual.disk.size", 
             "Retrieved from pools/nodes/<current node>/interestingStats/couch_docs_actual_disk_size");
-    AttributeSensor<Integer> EP_BG_FETCHED = Sensors.newIntegerSensor("couchbase.stats.ep.bg.fetched", 
+    AttributeSensor<Long> EP_BG_FETCHED = Sensors.newLongSensor("couchbase.stats.ep.bg.fetched", 
             "Retrieved from pools/nodes/<current node>/interestingStats/ep_bg_fetched");
-    AttributeSensor<Integer> MEM_USED = Sensors.newIntegerSensor("couchbase.stats.mem.used", 
+    AttributeSensor<Long> MEM_USED = Sensors.newLongSensor("couchbase.stats.mem.used", 
             "Retrieved from pools/nodes/<current node>/interestingStats/mem_used");
-    AttributeSensor<Integer> COUCH_VIEWS_ACTUAL_DISK_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.views.actual.disk.size", 
+    AttributeSensor<Long> COUCH_VIEWS_ACTUAL_DISK_SIZE = Sensors.newLongSensor("couchbase.stats.couch.views.actual.disk.size", 
             "Retrieved from pools/nodes/<current node>/interestingStats/couch_views_actual_disk_size");
-    AttributeSensor<Integer> CURR_ITEMS = Sensors.newIntegerSensor("couchbase.stats.curr.items", 
+    AttributeSensor<Long> CURR_ITEMS = Sensors.newLongSensor("couchbase.stats.curr.items", 
             "Retrieved from pools/nodes/<current node>/interestingStats/curr_items");
-    AttributeSensor<Integer> VB_REPLICA_CURR_ITEMS = Sensors.newIntegerSensor("couchbase.stats.vb.replica.curr.items", 
+    AttributeSensor<Long> VB_REPLICA_CURR_ITEMS = Sensors.newLongSensor("couchbase.stats.vb.replica.curr.items", 
             "Retrieved from pools/nodes/<current node>/interestingStats/vb_replica_curr_items");
-    AttributeSensor<Integer> COUCH_VIEWS_DATA_SIZE = Sensors.newIntegerSensor("couchbase.stats.couch.views.data.size", 
+    AttributeSensor<Long> COUCH_VIEWS_DATA_SIZE = Sensors.newLongSensor("couchbase.stats.couch.views.data.size", 
             "Retrieved from pools/nodes/<current node>/interestingStats/couch_views_data_size");
-    AttributeSensor<Integer> GET_HITS = Sensors.newIntegerSensor("couchbase.stats.get.hits", 
+    AttributeSensor<Long> GET_HITS = Sensors.newLongSensor("couchbase.stats.get.hits", 
             "Retrieved from pools/nodes/<current node>/interestingStats/get_hits");
-    AttributeSensor<Integer> CMD_GET = Sensors.newIntegerSensor("couchbase.stats.cmd.get", 
+    AttributeSensor<Long> CMD_GET = Sensors.newLongSensor("couchbase.stats.cmd.get", 
             "Retrieved from pools/nodes/<current node>/interestingStats/cmd_get");
-    AttributeSensor<Integer> CURR_ITEMS_TOT = Sensors.newIntegerSensor("couchbase.stats.curr.items.tot", 
+    AttributeSensor<Long> CURR_ITEMS_TOT = Sensors.newLongSensor("couchbase.stats.curr.items.tot", 
             "Retrieved from pools/nodes/<current node>/interestingStats/curr_items_tot");
 
     

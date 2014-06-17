@@ -4,11 +4,13 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -26,10 +28,12 @@ import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -58,21 +62,40 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             }).build()
         );
         
-        addSummingMemberEnricher(CouchbaseNode.OPS);
-        addSummingMemberEnricher(CouchbaseNode.COUCH_DOCS_DATA_SIZE);
-        addSummingMemberEnricher(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE);
-        addSummingMemberEnricher(CouchbaseNode.EP_BG_FETCHED);
-        addSummingMemberEnricher(CouchbaseNode.MEM_USED);
-        addSummingMemberEnricher(CouchbaseNode.COUCH_VIEWS_ACTUAL_DISK_SIZE);
-        addSummingMemberEnricher(CouchbaseNode.CURR_ITEMS);
-        addSummingMemberEnricher(CouchbaseNode.VB_REPLICA_CURR_ITEMS);
-        addSummingMemberEnricher(CouchbaseNode.COUCH_VIEWS_DATA_SIZE);
-        addSummingMemberEnricher(CouchbaseNode.GET_HITS);
-        addSummingMemberEnricher(CouchbaseNode.CMD_GET);
-        addSummingMemberEnricher(CouchbaseNode.CURR_ITEMS_TOT);
+        Map<? extends AttributeSensor<Long>, ? extends AttributeSensor<Long>> enricherSetup = 
+            ImmutableMap.<AttributeSensor<Long>, AttributeSensor<Long>>builder()
+                .put(CouchbaseNode.OPS, CouchbaseCluster.OPS_PER_NODE)
+                .put(CouchbaseNode.COUCH_DOCS_DATA_SIZE, CouchbaseCluster.COUCH_DOCS_DATA_SIZE_PER_NODE)
+                .put(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE, CouchbaseCluster.COUCH_DOCS_ACTUAL_DISK_SIZE_PER_NODE)
+                .put(CouchbaseNode.EP_BG_FETCHED, CouchbaseCluster.EP_BG_FETCHED_PER_NODE)
+                .put(CouchbaseNode.MEM_USED, CouchbaseCluster.MEM_USED_PER_NODE)
+                .put(CouchbaseNode.COUCH_VIEWS_ACTUAL_DISK_SIZE, CouchbaseCluster.COUCH_VIEWS_ACTUAL_DISK_SIZE_PER_NODE)
+                .put(CouchbaseNode.CURR_ITEMS, CouchbaseCluster.CURR_ITEMS_PER_NODE)
+                .put(CouchbaseNode.VB_REPLICA_CURR_ITEMS, CouchbaseCluster.VB_REPLICA_CURR_ITEMS_PER_NODE)
+                .put(CouchbaseNode.COUCH_VIEWS_DATA_SIZE, CouchbaseCluster.COUCH_VIEWS_DATA_SIZE_PER_NODE)
+                .put(CouchbaseNode.GET_HITS, CouchbaseCluster.GET_HITS_PER_NODE)
+                .put(CouchbaseNode.CMD_GET, CouchbaseCluster.CMD_GET_PER_NODE)
+                .put(CouchbaseNode.CURR_ITEMS_TOT, CouchbaseCluster.CURR_ITEMS_TOT_PER_NODE)
+            .build();
+        
+        for (AttributeSensor<Long> nodeSensor : enricherSetup.keySet()) {
+            addSummingMemberEnricher(nodeSensor);
+            addAveragingMemberEnricher(nodeSensor, enricherSetup.get(nodeSensor));
+        }
+        
     }
     
-    private void addSummingMemberEnricher(AttributeSensor<Integer> source) {
+    private void addAveragingMemberEnricher(AttributeSensor<Long> fromSensor, AttributeSensor<Long> toSensor) {
+        addEnricher(Enrichers.builder()
+            .aggregating(fromSensor)
+            .publishing(toSensor)
+            .fromMembers()
+            .computingAverage()
+            .build()
+        );
+    }
+
+    private void addSummingMemberEnricher(AttributeSensor<Long> source) {
         addEnricher(Enrichers.builder()
             .aggregating(source)
             .publishing(source)
@@ -301,4 +324,11 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         return Optional.fromNullable(e.getAttribute(CouchbaseNode.IS_IN_CLUSTER)).or(false);
     }
     
+    static {
+        RendererHints.register(COUCH_DOCS_DATA_SIZE_PER_NODE, RendererHints.displayValue(ByteSizeStrings.metric()));
+        RendererHints.register(COUCH_DOCS_ACTUAL_DISK_SIZE_PER_NODE, RendererHints.displayValue(ByteSizeStrings.metric()));
+        RendererHints.register(MEM_USED_PER_NODE, RendererHints.displayValue(ByteSizeStrings.metric()));
+        RendererHints.register(COUCH_VIEWS_ACTUAL_DISK_SIZE_PER_NODE, RendererHints.displayValue(ByteSizeStrings.metric()));
+        RendererHints.register(COUCH_VIEWS_DATA_SIZE_PER_NODE, RendererHints.displayValue(ByteSizeStrings.metric()));
+    }
 }
