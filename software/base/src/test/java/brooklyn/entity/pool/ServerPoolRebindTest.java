@@ -1,0 +1,93 @@
+package brooklyn.entity.pool;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
+import java.io.File;
+import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
+
+import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.TestApplication;
+
+public class ServerPoolRebindTest extends AbstractServerPoolTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServerPoolRebindTest.class);
+    private ClassLoader classLoader = getClass().getClassLoader();
+    private File mementoDir;
+
+    @Override
+    protected ManagementContext createManagementContext() {
+        mementoDir = Files.createTempDir();
+        return RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
+    }
+
+    @Override
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws Exception {
+        super.tearDown();
+        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+    }
+
+    private Collection<Application> rebind(TestApplication app) throws Exception {
+        LOG.info("Rebind start");
+        RebindTestUtils.waitForPersisted(app);
+        ((LocalManagementContext) app.getManagementContext()).terminate();
+        Collection<Application> r = RebindTestUtils.rebindAll(mementoDir, getClass().getClassLoader());
+        LOG.info("Rebind complete");
+        return r;
+    }
+
+    @Test(enabled = false)
+    public void testRebindingToPool() throws Exception {
+        TestApplication app = createAppWithChildren(1);
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertTrue(app.getAttribute(Attributes.SERVICE_UP));
+        assertAvailableCountEquals(pool, getInitialPoolSize() - 1);
+        assertClaimedCountEquals(pool, 1);
+
+        Collection<Application> reboundApps = rebind(poolApp);
+        ServerPool reboundPool = null;
+        for (Application reboundApp : reboundApps) {
+            Optional<Entity> np = Iterables.tryFind(reboundApp.getChildren(), Predicates.instanceOf(ServerPool.class));
+            if (np.isPresent()) {
+                mgmt = reboundApp.getManagementContext();
+                reboundPool = (ServerPool) np.get();
+                break;
+            }
+        }
+
+        assertNotNull(reboundPool, "No app in rebound context has " + ServerPool.class.getName() +
+                " child. Apps: " + reboundApps);
+        assertNotNull(reboundPool.getDynamicLocation());
+        assertTrue(reboundPool.getAttribute(Attributes.SERVICE_UP));
+        assertAvailableCountEquals(reboundPool, getInitialPoolSize() - 1);
+        assertClaimedCountEquals(reboundPool, 1);
+
+        TestApplication app2 = createAppWithChildren(1);
+        app2.start(ImmutableList.of(reboundPool.getDynamicLocation()));
+        assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
+        assertAvailableCountEquals(reboundPool, getInitialPoolSize() - 2);
+        assertClaimedCountEquals(reboundPool, 2);
+
+    }
+
+}
