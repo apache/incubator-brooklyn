@@ -2,9 +2,7 @@ package brooklyn.entity.nosql.elasticsearch;
 
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -16,5 +14,5 @@ public interface ElasticSearchCluster extends DynamicCluster {
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, 
             "elasticsearch.cluster.name", "Name of the ElasticSearch cluster", "BrooklynCluster");
     
-    String getName();
+    String getClusterName();
 }

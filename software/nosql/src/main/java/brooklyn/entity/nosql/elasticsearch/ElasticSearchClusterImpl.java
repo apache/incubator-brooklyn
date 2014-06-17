@@ -1,26 +1,15 @@
 package brooklyn.entity.nosql.elasticsearch;
 
-import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.location.Location;
 
 public class ElasticSearchClusterImpl extends DynamicClusterImpl implements ElasticSearchCluster {
     
     private AtomicInteger nextMemberId = new AtomicInteger(0);
-    
-    public ElasticSearchClusterImpl() {
-        
-    }
-    
-    @Override
-    public void start(Collection<? extends Location> locations) {
-        super.start(locations);
-    }
-    
+
     @Override
     protected boolean calculateServiceUp() {
         boolean up = false;
@@ -42,7 +31,7 @@ public class ElasticSearchClusterImpl extends DynamicClusterImpl implements Elas
     }
     
     @Override
-    public String getName() {
+    public String getClusterName() {
         return getConfig(CLUSTER_NAME);
     }
     
