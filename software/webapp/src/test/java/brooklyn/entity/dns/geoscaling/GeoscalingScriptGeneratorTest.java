@@ -1,20 +1,22 @@
-package brooklyn.entity.dns.geoscaling
+package brooklyn.entity.dns.geoscaling;
 
-import static org.testng.AssertJUnit.*
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
-import java.util.LinkedHashSet
-import java.util.Set
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
-import org.testng.annotations.Test
+import org.testng.annotations.Test;
 
-import brooklyn.location.geo.HostGeoInfo
-import brooklyn.util.ResourceUtils
+import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.util.ResourceUtils;
 
 
 /**
  * {@link GeoscalingScriptGenerator} unit tests.
  */
-class GeoscalingScriptGeneratorTest {
+public class GeoscalingScriptGeneratorTest {
     
     private final static Set<HostGeoInfo> HOSTS = new LinkedHashSet<HostGeoInfo>();
     static {
@@ -29,10 +31,10 @@ class GeoscalingScriptGeneratorTest {
         String generatedScript = GeoscalingScriptGenerator.generateScriptString(generationTime, HOSTS);
         assertTrue(generatedScript.contains("1.2.3"));
         String expectedScript = ResourceUtils.create(this).getResourceAsString("brooklyn/entity/dns/geoscaling/expectedScript.php");
-        assertEquals(expectedScript, generatedScript);
+        assertEquals(generatedScript, expectedScript);
         //also make sure leading slash is allowed
         String expectedScript2 = ResourceUtils.create(this).getResourceAsString("/brooklyn/entity/dns/geoscaling/expectedScript.php");
-        assertEquals(expectedScript, generatedScript);
+        assertEquals(generatedScript, expectedScript);
     }
     
 }
