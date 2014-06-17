@@ -1,5 +1,6 @@
 package brooklyn.entity.rebind.persister;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -165,26 +166,35 @@ public class ListeningObjectStore implements PersistenceObjectStore {
             this.path = path;
             this.delegate = delegate;
         }
+        @Override
         public boolean exists() {
             return delegate.exists();
         }
+        @Override
         public void put(String val) {
             listener.recordDataOut("writing "+path, val.length());
             delegate.put(val);
         }
+        @Override
         public void append(String s) {
             listener.recordDataOut("appending "+path, s.length());
             delegate.append(s);
         }
+        @Override
         public void delete() {
             listener.recordQueryOut("deleting "+path, path.length());
             delegate.delete();
         }
+        @Override
         public String get() {
             listener.recordQueryOut("requesting "+path, path.length());
             String result = delegate.get();
             listener.recordDataIn("reading "+path, result.length());
             return result;
+        }
+        @Override
+        public Date getLastModifiedDate() {
+            return delegate.getLastModifiedDate();
         }
     }
 

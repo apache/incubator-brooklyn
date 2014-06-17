@@ -466,7 +466,7 @@ public class Os {
 
     /** creates a private temp file which will be deleted on exit;
      * either prefix or ext may be null; 
-     * if ext does not start with a . and is <= 4 chars in length, a dot will be inserted */
+     * if ext is non-empty and not > 4 chars and not starting with a ., then a dot will be inserted */
     public static File newTempFile(String prefix, String ext) {
         String baseName = (prefix!=null ? prefix + "-" : "") + Identifiers.makeRandomId(4) + 
             (ext!=null ? ext.startsWith(".") || ext.length()>4 ? ext : "."+ext : "");
@@ -489,7 +489,7 @@ public class Os {
 
     /** creates a temp dir which will be deleted on exit */
     public static File newTempDir(String prefix) {
-        String baseName = (prefix==null ? "" : prefix + "-") + "-" + Identifiers.makeRandomId(4);
+        String baseName = (prefix==null ? "" : prefix + "-") + Identifiers.makeRandomId(4);
         File tempDir = new File(tmp(), baseName);
         if (tempDir.mkdir()) {
             Os.deleteOnExitRecursively(tempDir);

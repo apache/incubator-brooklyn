@@ -283,7 +283,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
         String timestamp = new SimpleDateFormat("yyyyMMdd-hhmmssSSS").format(new Date());
-        File backupDir = new File(parentDir, simpleName+"-"+timestamp+".bak");
+        File backupDir = new File(parentDir, simpleName+"."+timestamp+".bak");
         
         copyDir(dir, backupDir);
         return backupDir;
@@ -293,7 +293,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
         String timestamp = new SimpleDateFormat("yyyyMMdd-hhmmssSSS").format(new Date());
-        File newDir = new File(parentDir, simpleName+"-"+timestamp+".old");
+        File newDir = new File(parentDir, simpleName+"."+timestamp+".bak");
 
         moveDir(dir, newDir);
         return newDir;

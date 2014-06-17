@@ -58,5 +58,10 @@ public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObject
     public void testWritesFile() throws Exception {
         super.testWritesFile();
     }
-    
+
+    @Test(groups="Integration")
+    @Override
+    public void testLastModifiedTime() throws Exception {
+        super.testLastModifiedTime();
+    }
 }

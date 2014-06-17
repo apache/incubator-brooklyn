@@ -1,5 +1,6 @@
 package brooklyn.entity.rebind.persister;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -24,6 +25,10 @@ public interface PersistenceObjectStore {
         void put(String contentsToReplaceOrCreate);
         void append(String contentsToAppendOrCreate);
         void delete();
+        // NB: creation date is available for many blobstores but 
+        // not on java.io.File and filesystems, so it is not included here 
+        /** last modified date, null if not supported or does not exist */
+        Date getLastModifiedDate();
     }
     public interface StoreObjectAccessorWithLock extends StoreObjectAccessor {
         /** waits for all currently scheduled write lock operations (puts, appends, and deletes) to complete;
@@ -53,8 +58,11 @@ public interface PersistenceObjectStore {
      * <p>
      * Clients should wrap in a dedicated {@link StoreObjectAccessorLocking} and share
      * if multiple threads may be accessing the store.
+     * This method may be changed in future to allow access to a shared locking accessor.
      */
-    // TODO this is not a nice API, better would be to do caching here probably,
+    @Beta
+    // TODO requiring clients to wrap and cache accessors is not very nice API, 
+    // better would be to do caching here probably,
     // but we've already been doing it this way above for now (Jun 2014)
     StoreObjectAccessor newAccessor(String path);
 

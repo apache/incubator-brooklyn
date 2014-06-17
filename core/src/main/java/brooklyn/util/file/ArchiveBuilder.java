@@ -32,7 +32,6 @@ import java.util.zip.ZipOutputStream;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveUtils.ArchiveType;
 import brooklyn.util.os.Os;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -317,7 +316,7 @@ public class ArchiveBuilder {
      */
     public File create() {
         if (archive == null) {
-            File temp = new File(Os.tmp(), "brooklyn-archive-" + Identifiers.makeRandomId(6));
+            File temp = Os.newTempFile("brooklyn-archive", "");
             temp.deleteOnExit();
             named(temp);
         }

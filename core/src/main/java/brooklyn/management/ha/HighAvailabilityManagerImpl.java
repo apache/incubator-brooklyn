@@ -29,6 +29,7 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Ticker;
 import com.google.common.collect.Iterables;
@@ -84,20 +85,20 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private static final Logger LOG = LoggerFactory.getLogger(HighAvailabilityManagerImpl.class);
 
     private final ManagementContextInternal managementContext;
-    private final Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> detectNodesGoneAwolFunction = new DetectNodesGoneAwol();
     private volatile String ownNodeId;
     private volatile ManagementPlaneSyncRecordPersister persister;
     private volatile PromotionListener promotionListener;
     private volatile MasterChooser masterChooser = new AlphabeticMasterChooser();
     private volatile Duration pollPeriod = Duration.of(5, TimeUnit.SECONDS);
     private volatile Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
-    private volatile Ticker tickerUtc = new Ticker() {
+    private volatile Ticker localTickerUtc = new Ticker() {
         // strictly not a ticker because returns millis UTC, but it works fine even so
         @Override
         public long read() {
             return System.currentTimeMillis();
         }
     };
+    private volatile Ticker optionalRemoteTickerUtc = null;
     
     private volatile Task<?> pollingTask;
     private volatile boolean disabled;
@@ -138,9 +139,21 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return this;
     }
 
-    /** A ticker that reads in milliseconds */
-    public HighAvailabilityManagerImpl setTicker(Ticker val) {
-        this.tickerUtc = checkNotNull(val, "ticker");
+    /** A ticker that reads in milliseconds, for populating local timestamps.
+     * Defaults to System.currentTimeMillis(); may be overridden e.g. for testing. */
+    public HighAvailabilityManagerImpl setLocalTicker(Ticker val) {
+        this.localTickerUtc = checkNotNull(val);
+        return this;
+    }
+
+    /** A ticker that reads in milliseconds, for overriding remote timestamps.
+     * Defaults to null which means to use the remote timestamp. 
+     * Only for testing as this records the remote timestamp in the object.
+     * <p>
+     * If this is supplied, one must also set {@link ManagementPlaneSyncRecordPersisterToObjectStore#allowRemoteTimestampInMemento()}. */
+    @VisibleForTesting
+    public HighAvailabilityManagerImpl setRemoteTicker(Ticker val) {
+        this.optionalRemoteTickerUtc = val;
         return this;
     }
 
@@ -277,7 +290,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         
-        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord();
+        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord(false);
         Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder().node(memento).build();
         persister.delta(delta);
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
@@ -294,7 +307,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         
-        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord();
+        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord(false);
         Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder()
                 .node(memento)
                 .clearMaster(ownNodeId)
@@ -314,7 +327,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         
-        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord();
+        ManagementNodeSyncRecord memento = createManagementNodeSyncRecord(false);
         Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder()
                 .node(memento)
                 .setMaster(ownNodeId)
@@ -329,25 +342,27 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return nodeState;
     }
     
-    protected boolean isHeartbeatOk(ManagementNodeSyncRecord memento, long now) {
-        long timestamp = memento.getTimestampUtc();
-        return (now - timestamp) <= heartbeatTimeout.toMilliseconds();
+    protected boolean isHeartbeatOk(ManagementNodeSyncRecord masterNode, ManagementNodeSyncRecord meNode) {
+        if (masterNode==null || meNode==null) return false;
+        Long timestampMaster = masterNode.getRemoteTimestamp();
+        Long timestampMe = meNode.getRemoteTimestamp();
+        if (timestampMaster==null || timestampMe==null) return false;
+        return (timestampMe - timestampMaster) <= heartbeatTimeout.toMilliseconds();
     }
     
     protected ManagementNodeSyncRecord hasHealthyMaster() {
-        long now = currentTimeMillis();
         ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
         
         String nodeId = memento.getMasterNodeId();
-        ManagementNodeSyncRecord nodeMemento = (nodeId == null) ? null : memento.getManagementNodes().get(nodeId);
+        ManagementNodeSyncRecord masterMemento = (nodeId == null) ? null : memento.getManagementNodes().get(nodeId);
         
-        boolean result = nodeMemento != null && nodeMemento.getStatus() == ManagementNodeState.MASTER
-                && isHeartbeatOk(nodeMemento, now);
+        boolean result = masterMemento != null && masterMemento.getStatus() == ManagementNodeState.MASTER
+                && isHeartbeatOk(masterMemento, memento.getManagementNodes().get(ownNodeId));
         
         if (LOG.isDebugEnabled()) LOG.debug("Healthy-master check result={}; masterId={}; memento=",
-                new Object[] {result, nodeId, (nodeMemento == null ? "<none>" : nodeMemento.toVerboseString())});
+                new Object[] {result, nodeId, (masterMemento == null ? "<none>" : masterMemento.toVerboseString())});
         
-        return (result ? nodeMemento : null);
+        return (result ? masterMemento : null);
     }
     
     /**
@@ -355,21 +370,20 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * If it's not then determines which node should be promoted to master. If it is ourself, then promotes.
      */
     protected void checkMaster(boolean initializing) {
-        long now = currentTimeMillis();
         ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
         
         String masterNodeId = memento.getMasterNodeId();
         ManagementNodeSyncRecord masterNodeMemento = memento.getManagementNodes().get(masterNodeId);
         ManagementNodeSyncRecord ownNodeMemento = memento.getManagementNodes().get(ownNodeId);
         
-        if (masterNodeMemento != null && masterNodeMemento.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(masterNodeMemento, now)) {
+        if (masterNodeMemento != null && masterNodeMemento.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(masterNodeMemento, ownNodeMemento)) {
             // master still seems healthy
             if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy: master={}", masterNodeMemento.toVerboseString());
             return;
-        } else if (ownNodeMemento == null || !isHeartbeatOk(ownNodeMemento, now)) {
+        } else if (ownNodeMemento == null || !isHeartbeatOk(ownNodeMemento, ownNodeMemento)) {
             // our heartbeats are also out-of-date! perhaps something wrong with persistence? just log, and don't over-react!
             if (ownNodeMemento == null) {
-                LOG.error("No management node memento for self ("+ownNodeId+"); perhaps perister unwritable? "
+                LOG.error("No management node memento for self ("+ownNodeId+"); perhaps persister unwritable? "
                         + "Master ("+masterNodeId+") reported failed but no-op as cannot tell conclusively");
             } else {
                 LOG.error("This management node ("+ownNodeId+") memento heartbeats out-of-date; perhaps perister unwritable? "
@@ -385,23 +399,28 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
         
         // Need to choose a new master
-        ManagementNodeSyncRecord newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId, now);
+        ManagementNodeSyncRecord newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId);
         String newMasterNodeId = (newMasterRecord == null) ? null : newMasterRecord.getNodeId();
         URI newMasterNodeUri = (newMasterRecord == null) ? null : newMasterRecord.getUri();
         boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
         
-        LOG.debug("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
-            new Object[] {
-            (newMasterRecord == null ? "<none>" : newMasterRecord.toVerboseString()),
-            (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()),
-            memento,
-            ownNodeMemento.toVerboseString(), 
-            heartbeatTimeout
-        });
+        if (LOG.isDebugEnabled())
+            LOG.debug("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
+                new Object[] {
+                    (newMasterRecord == null ? "<none>" : newMasterRecord.toVerboseString()),
+                    (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()),
+                    memento,
+                    ownNodeMemento.toVerboseString(), 
+                    heartbeatTimeout
+                });
         if (!initializing) {
-            LOG.warn("HA subsystem detected change of master from "+masterNodeId+" to "
-                + (newMasterNodeId == null ? "<unknown>" : 
-                    newMasterNodeId + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")));
+            LOG.warn("HA subsystem detected change of master from " 
+                + masterNodeId + " (" + (masterNodeMemento==null ? "?" : masterNodeMemento.getRemoteTimestamp()) + ")"
+                + " to "
+                + (newMasterNodeId == null ? "<none>" :
+                    newMasterNodeId + " (" + newMasterRecord.getRemoteTimestamp() + ")" 
+                    + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "") 
+                + (newMasterIsSelf ? " [this]" : "") ));
         }
 
         // New master is ourself: promote
@@ -439,15 +458,15 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     /**
      * @param reportCleanedState - if true, the record for this mgmt node will be replaced with the
-     * actual current status known in this JVM (may be more recent than what is on disk);
-     * normally there is no reason to care because data is persisted to disk immediately
-     * after any significant change, but for fringe cases this is perhaps more accurate (perhaps remove in time?)
+     * actual current status known in this JVM (may be more recent than what is persisted);
+     * for most purposes there is little difference but in some cases the local node being updated
+     * may be explicitly wanted or not wanted
      */
     protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean reportCleanedState) {
         if (disabled) {
             // if HA is disabled, then we are the only node - no persistence; just load a memento to describe this node
             Builder builder = ManagementPlaneSyncRecordImpl.builder()
-                .node(createManagementNodeSyncRecord());
+                .node(createManagementNodeSyncRecord(true));
             if (getNodeState() == ManagementNodeState.MASTER) {
                 builder.masterNodeId(ownNodeId);
             }
@@ -466,11 +485,18 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 ManagementPlaneSyncRecord result = persister.loadSyncRecord();
                 
                 if (reportCleanedState) {
-                    // Report this  nodes most recent state, and detect AWOL nodes
+                    // Report this node's most recent state, and detect AWOL nodes
+                    ManagementNodeSyncRecord me = BasicManagementNodeSyncRecord.builder()
+                        .from(result.getManagementNodes().get(ownNodeId), true)
+                        .from(createManagementNodeSyncRecord(false), true)
+                        .build();
+                    Iterable<ManagementNodeSyncRecord> allNodes = result.getManagementNodes().values();
+                    if (me.getRemoteTimestamp()!=null)
+                        allNodes = Iterables.transform(allNodes, new MarkAwolNodes(me));
                     Builder builder = ManagementPlaneSyncRecordImpl.builder()
                         .masterNodeId(result.getMasterNodeId())
-                        .nodes(Iterables.transform(result.getManagementNodes().values(), detectNodesGoneAwolFunction))
-                        .node(createManagementNodeSyncRecord());
+                        .nodes(allNodes);
+                    builder.node(me);
                     if (getNodeState() == ManagementNodeState.MASTER) {
                         builder.masterNodeId(ownNodeId);
                     }
@@ -487,14 +513,20 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         throw new IllegalStateException("Failed to load mangement-plane memento "+maxLoadAttempts+" consecutive times", lastException);
     }
 
-    protected ManagementNodeSyncRecord createManagementNodeSyncRecord() {
-        return BasicManagementNodeSyncRecord.builder()
+    protected ManagementNodeSyncRecord createManagementNodeSyncRecord(boolean useLocalTimestampAsRemoteTimestamp) {
+        long timestamp = currentTimeMillis();
+        brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord.Builder builder = BasicManagementNodeSyncRecord.builder()
                 .brooklynVersion(BrooklynVersion.get())
                 .nodeId(ownNodeId)
                 .status(toNodeStateForPersistence(getNodeState()))
-                .timestampUtc(currentTimeMillis())
-                .uri(managementContext.getManagementNodeUri().orNull())
-                .build();
+                .localTimestamp(timestamp)
+                .uri(managementContext.getManagementNodeUri().orNull());
+        if (useLocalTimestampAsRemoteTimestamp)
+            builder.remoteTimestamp(timestamp);
+        else if (optionalRemoteTickerUtc!=null) {
+            builder.remoteTimestamp(optionalRemoteTickerUtc.read());
+        }
+        return builder.build();
     }
     
     /**
@@ -503,20 +535,24 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * specific timing scenarios.
      */
     protected long currentTimeMillis() {
-        return tickerUtc.read();
+        return localTickerUtc.read();
     }
 
     /**
      * Infers the health of a node - if it last reported itself as healthy (standby or master), but we haven't heard 
      * from it in a long time then report that node as failed; otherwise report its health as-is.
      */
-    private class DetectNodesGoneAwol implements Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> {
+    private class MarkAwolNodes implements Function<ManagementNodeSyncRecord, ManagementNodeSyncRecord> {
+        private final ManagementNodeSyncRecord referenceNode;
+        private MarkAwolNodes(ManagementNodeSyncRecord referenceNode) {
+            this.referenceNode = referenceNode;
+        }
         @Nullable
         @Override
         public ManagementNodeSyncRecord apply(@Nullable ManagementNodeSyncRecord input) {
             if (input == null) return null;
             if (!(input.getStatus() == ManagementNodeState.STANDBY || input.getStatus() == ManagementNodeState.MASTER)) return input;
-            if (isHeartbeatOk(input, currentTimeMillis())) return input;
+            if (isHeartbeatOk(input, referenceNode)) return input;
             return BasicManagementNodeSyncRecord.builder()
                     .from(input)
                     .status(ManagementNodeState.FAILED)

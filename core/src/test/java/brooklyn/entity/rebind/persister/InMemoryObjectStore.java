@@ -1,5 +1,6 @@
 package brooklyn.entity.rebind.persister;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,8 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryObjectStore.class);
 
-    Map<String,String> filesByName = MutableMap.<String,String>of();
+    Map<String,String> filesByName = MutableMap.of();
+    Map<String, Date> fileModTimesByName = MutableMap.of();
     boolean prepared = false;
     
     public InMemoryObjectStore() {
@@ -40,15 +42,17 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
     @Override
     public StoreObjectAccessor newAccessor(final String path) {
         if (!prepared) throw new IllegalStateException("prepare method not yet invoked: "+this);
-        return new StoreObjectAccessorLocking(new SingleThreadedInMemoryStoreObjectAccessor(filesByName, path));
+        return new StoreObjectAccessorLocking(new SingleThreadedInMemoryStoreObjectAccessor(filesByName, fileModTimesByName, path));
     }
     
     public static class SingleThreadedInMemoryStoreObjectAccessor implements StoreObjectAccessor {
         private final Map<String, String> map;
+        private final Map<String, Date> mapModTime;
         private final String key;
 
-        public SingleThreadedInMemoryStoreObjectAccessor(Map<String,String> map, String key) {
+        public SingleThreadedInMemoryStoreObjectAccessor(Map<String,String> map, Map<String, Date> mapModTime, String key) {
             this.map = map;
+            this.mapModTime = mapModTime;
             this.key = key;
         }
         @Override
@@ -67,6 +71,7 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
         public void put(String val) {
             synchronized (map) {
                 map.put(key, val);
+                mapModTime.put(key, new Date());
             }
         }
         @Override
@@ -77,12 +82,20 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
                 else val2 = val2 + val;
 
                 map.put(key, val);
+                mapModTime.put(key, new Date());
             }
         }
         @Override
         public void delete() {
             synchronized (map) {
                 map.remove(key);
+                mapModTime.remove(key);
+            }
+        }
+        @Override
+        public Date getLastModifiedDate() {
+            synchronized (map) {
+                return mapModTime.get(key);
             }
         }
     }

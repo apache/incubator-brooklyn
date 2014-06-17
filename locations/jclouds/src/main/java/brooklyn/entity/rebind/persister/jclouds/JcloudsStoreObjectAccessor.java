@@ -1,6 +1,7 @@
 package brooklyn.entity.rebind.persister.jclouds;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.commons.io.Charsets;
 import org.jclouds.blobstore.BlobStore;
@@ -76,4 +77,12 @@ public class JcloudsStoreObjectAccessor implements PersistenceObjectStore.StoreO
             throw new IllegalStateException("Error reading blobstore "+containerName+" "+blobName+": "+e, e);
         }
     }
+
+    @Override
+    public Date getLastModifiedDate() {
+        Blob blob = blobStore.getBlob(containerName, blobName);
+        if (blob==null) return null;
+        return blob.getMetadata().getLastModified();
+    }
+    
 }

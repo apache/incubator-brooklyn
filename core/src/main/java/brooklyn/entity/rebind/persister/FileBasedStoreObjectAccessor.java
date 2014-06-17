@@ -2,6 +2,7 @@ package brooklyn.entity.rebind.persister;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
@@ -77,6 +78,13 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
         tmpFile.delete();
     }
 
+    @Override
+    public Date getLastModifiedDate() {
+        long result = file.lastModified();
+        if (result==0) return null;
+        return new Date(result);
+    }
+    
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("file", file).toString();
