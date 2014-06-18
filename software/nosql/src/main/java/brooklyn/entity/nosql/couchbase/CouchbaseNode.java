@@ -56,7 +56,7 @@ public interface CouchbaseNode extends SoftwareProcess {
     public static final AttributeSensor<String> COUCHBASE_WEB_ADMIN_URL = WebAppServiceConstants.ROOT_URL; // By using this specific sensor, the value will be shown in the summary tab
     
     // Interesting stats
-    AttributeSensor<Long> OPS = Sensors.newLongSensor("couchbase.stats.ops", 
+    AttributeSensor<Double> OPS = Sensors.newDoubleSensor("couchbase.stats.ops", 
             "Retrieved from pools/nodes/<current node>/interestingStats/ops");
     AttributeSensor<Long> COUCH_DOCS_DATA_SIZE = Sensors.newLongSensor("couchbase.stats.couch.docs.data.size", 
             "Retrieved from pools/nodes/<current node>/interestingStats/couch_docs_data_size");
@@ -76,7 +76,7 @@ public interface CouchbaseNode extends SoftwareProcess {
             "Retrieved from pools/nodes/<current node>/interestingStats/couch_views_data_size");
     AttributeSensor<Long> GET_HITS = Sensors.newLongSensor("couchbase.stats.get.hits", 
             "Retrieved from pools/nodes/<current node>/interestingStats/get_hits");
-    AttributeSensor<Long> CMD_GET = Sensors.newLongSensor("couchbase.stats.cmd.get", 
+    AttributeSensor<Double> CMD_GET = Sensors.newDoubleSensor("couchbase.stats.cmd.get", 
             "Retrieved from pools/nodes/<current node>/interestingStats/cmd_get");
     AttributeSensor<Long> CURR_ITEMS_TOT = Sensors.newLongSensor("couchbase.stats.curr.items.tot", 
             "Retrieved from pools/nodes/<current node>/interestingStats/curr_items_tot");

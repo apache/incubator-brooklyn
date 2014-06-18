@@ -47,28 +47,29 @@ public interface CouchbaseCluster extends DynamicCluster {
         "couchbase.cluster.node.addresses", "List of host:port of all active nodes in the cluster (http admin port, and public hostname/IP)");
     
     // Interesting stats
-    AttributeSensor<Long> OPS_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.ops", 
+    AttributeSensor<Double> OPS_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.ops", 
             "Average across cluster for pools/nodes/<current node>/interestingStats/ops");
+    AttributeSensor<Double> EP_BG_FETCHED_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.ep.bg.fetched", 
+            "Average across cluster for pools/nodes/<current node>/interestingStats/ep_bg_fetched");
+    AttributeSensor<Double> CURR_ITEMS_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.curr.items", 
+            "Average across cluster for pools/nodes/<current node>/interestingStats/curr_items");
+    AttributeSensor<Double> VB_REPLICA_CURR_ITEMS_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.vb.replica.curr.items", 
+            "Average across cluster for pools/nodes/<current node>/interestingStats/vb_replica_curr_items");
+    AttributeSensor<Double> GET_HITS_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.get.hits", 
+            "Average across cluster for pools/nodes/<current node>/interestingStats/get_hits");
+    AttributeSensor<Double> CMD_GET_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.cmd.get", 
+            "Average across cluster for pools/nodes/<current node>/interestingStats/cmd_get");
+    AttributeSensor<Double> CURR_ITEMS_TOT_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.curr.items.tot", 
+            "Average across cluster for pools/nodes/<current node>/interestingStats/curr_items_tot");
+    // Although these are Double (after aggregation), they need to be coerced to Long for ByteSizeStrings rendering
     AttributeSensor<Long> COUCH_DOCS_DATA_SIZE_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.couch.docs.data.size", 
             "Average across cluster for pools/nodes/<current node>/interestingStats/couch_docs_data_size");
-    AttributeSensor<Long> COUCH_DOCS_ACTUAL_DISK_SIZE_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.couch.docs.actual.disk.size", 
-            "Average across cluster for pools/nodes/<current node>/interestingStats/couch_docs_actual_disk_size");
-    AttributeSensor<Long> EP_BG_FETCHED_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.ep.bg.fetched", 
-            "Average across cluster for pools/nodes/<current node>/interestingStats/ep_bg_fetched");
     AttributeSensor<Long> MEM_USED_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.mem.used", 
             "Average across cluster for pools/nodes/<current node>/interestingStats/mem_used");
     AttributeSensor<Long> COUCH_VIEWS_ACTUAL_DISK_SIZE_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.couch.views.actual.disk.size", 
             "Average across cluster for pools/nodes/<current node>/interestingStats/couch_views_actual_disk_size");
-    AttributeSensor<Long> CURR_ITEMS_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.curr.items", 
-            "Average across cluster for pools/nodes/<current node>/interestingStats/curr_items");
-    AttributeSensor<Long> VB_REPLICA_CURR_ITEMS_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.vb.replica.curr.items", 
-            "Average across cluster for pools/nodes/<current node>/interestingStats/vb_replica_curr_items");
+    AttributeSensor<Long> COUCH_DOCS_ACTUAL_DISK_SIZE_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.couch.docs.actual.disk.size", 
+            "Average across cluster for pools/nodes/<current node>/interestingStats/couch_docs_actual_disk_size");
     AttributeSensor<Long> COUCH_VIEWS_DATA_SIZE_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.couch.views.data.size", 
             "Average across cluster for pools/nodes/<current node>/interestingStats/couch_views_data_size");
-    AttributeSensor<Long> GET_HITS_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.get.hits", 
-            "Average across cluster for pools/nodes/<current node>/interestingStats/get_hits");
-    AttributeSensor<Long> CMD_GET_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.cmd.get", 
-            "Average across cluster for pools/nodes/<current node>/interestingStats/cmd_get");
-    AttributeSensor<Long> CURR_ITEMS_TOT_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.curr.items.tot", 
-            "Average across cluster for pools/nodes/<current node>/interestingStats/curr_items_tot");
 }

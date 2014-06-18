@@ -62,8 +62,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             }).build()
         );
         
-        Map<? extends AttributeSensor<Long>, ? extends AttributeSensor<Long>> enricherSetup = 
-            ImmutableMap.<AttributeSensor<Long>, AttributeSensor<Long>>builder()
+        Map<? extends AttributeSensor<? extends Number>, ? extends AttributeSensor<? extends Number>> enricherSetup = 
+            ImmutableMap.<AttributeSensor<? extends Number>, AttributeSensor<? extends Number>>builder()
                 .put(CouchbaseNode.OPS, CouchbaseCluster.OPS_PER_NODE)
                 .put(CouchbaseNode.COUCH_DOCS_DATA_SIZE, CouchbaseCluster.COUCH_DOCS_DATA_SIZE_PER_NODE)
                 .put(CouchbaseNode.COUCH_DOCS_ACTUAL_DISK_SIZE, CouchbaseCluster.COUCH_DOCS_ACTUAL_DISK_SIZE_PER_NODE)
@@ -78,14 +78,14 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 .put(CouchbaseNode.CURR_ITEMS_TOT, CouchbaseCluster.CURR_ITEMS_TOT_PER_NODE)
             .build();
         
-        for (AttributeSensor<Long> nodeSensor : enricherSetup.keySet()) {
+        for (AttributeSensor<? extends Number> nodeSensor : enricherSetup.keySet()) {
             addSummingMemberEnricher(nodeSensor);
             addAveragingMemberEnricher(nodeSensor, enricherSetup.get(nodeSensor));
         }
         
     }
     
-    private void addAveragingMemberEnricher(AttributeSensor<Long> fromSensor, AttributeSensor<Long> toSensor) {
+    private void addAveragingMemberEnricher(AttributeSensor<? extends Number> fromSensor, AttributeSensor<? extends Number> toSensor) {
         addEnricher(Enrichers.builder()
             .aggregating(fromSensor)
             .publishing(toSensor)
@@ -95,7 +95,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         );
     }
 
-    private void addSummingMemberEnricher(AttributeSensor<Long> source) {
+    private void addSummingMemberEnricher(AttributeSensor<? extends Number> source) {
         addEnricher(Enrichers.builder()
             .aggregating(source)
             .publishing(source)
