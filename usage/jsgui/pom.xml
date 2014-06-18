@@ -28,8 +28,7 @@
 -->
         <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
 
-        <!-- The maven-war-plugin 2.1+ and the replacer plugin don't work well together. -->
-        <maven-war-plugin.version>2.0.2</maven-war-plugin.version>
+        <maven-war-plugin.version>2.4</maven-war-plugin.version>
         <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
 
         <project.build.webapp>
@@ -161,6 +160,14 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>${maven-war-plugin.version}</version>
+                <configuration>
+                    <useCache>true</useCache> <!-- to prevent replaced files being overwritten -->
+                </configuration>
             </plugin>
         </plugins>
     </build>
