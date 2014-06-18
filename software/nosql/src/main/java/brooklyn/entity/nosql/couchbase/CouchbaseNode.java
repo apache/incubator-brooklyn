@@ -80,7 +80,8 @@ public interface CouchbaseNode extends SoftwareProcess {
             "Retrieved from pools/nodes/<current node>/interestingStats/cmd_get");
     AttributeSensor<Long> CURR_ITEMS_TOT = Sensors.newLongSensor("couchbase.stats.curr.items.tot", 
             "Retrieved from pools/nodes/<current node>/interestingStats/curr_items_tot");
-
+    AttributeSensor<String> REBALANCE_STATUS = Sensors.newStringSensor("couchbase.rebalance.status", 
+            "Displays the current rebalance status from pools/nodes/rebalanceStatus");
     
     class RootUrl {
         public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
@@ -101,10 +102,14 @@ public interface CouchbaseNode extends SoftwareProcess {
     AttributeSensor<String> ROOT_URL = RootUrl.ROOT_URL;
 
     MethodEffector<Void> SERVER_ADD = new MethodEffector<Void>(CouchbaseNode.class, "serverAdd");
+    MethodEffector<Void> SERVER_ADD_AND_REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "serverAddAndRebalance");
     MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
 
     @Effector(description = "add a server to a cluster")
     public void serverAdd(@EffectorParam(name = "serverHostname") String serverToAdd, @EffectorParam(name = "username") String username, @EffectorParam(name = "password") String password);
+    
+    @Effector(description = "add a server to a cluster, and immediately rebalances")
+    public void serverAddAndRebalance(@EffectorParam(name = "serverHostname") String serverToAdd, @EffectorParam(name = "username") String username, @EffectorParam(name = "password") String password);
 
     @Effector(description = "rebalance the couchbase cluster")
     public void rebalance();
