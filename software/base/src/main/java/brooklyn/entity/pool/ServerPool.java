@@ -4,7 +4,6 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -41,7 +40,7 @@ public interface ServerPool extends DynamicCluster, LocationOwner<ServerPoolLoca
             "pool.claimed", "The number of locations in the pool that are in use");
 
     ConfigKey<EntitySpec<?>> MEMBER_SPEC = ConfigKeys.newConfigKeyWithDefault(DynamicCluster.MEMBER_SPEC,
-            EntitySpec.create(EmptySoftwareProcess.class));
+            EntitySpec.create(MachineEntity.class));
 
     public MachineLocation claimMachine(Map<?, ?> flags) throws NoMachinesAvailableException;
 
