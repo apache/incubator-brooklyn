@@ -33,6 +33,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -206,8 +207,6 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                         if (isClusterInitialized()) {
                             addServer(member);
                         }
-                    } else {
-                        log.warn("Node already in cluster up nodes {}: {};", this, member);
                     }
                 } else {
                     Set<Entity> newNodes = Sets.newHashSet();
@@ -283,34 +282,26 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
 
     protected void addServers(Set<Entity> serversToAdd) {
-        //FIXME: disambiguate between method names to differentiate between the stage phase and commit phase.
-        log.info("adding the SERVICE_UP couchbase nodes to the cluster..");
-
-        if (!serversToAdd.isEmpty()) {
-            for (Entity e : serversToAdd) {
-                if (!isMemberInCluster(e)) {
-                    String hostname = e.getAttribute(Attributes.HOSTNAME) + ":" + e.getConfig(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).iterator().next();
-                    String username = e.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
-                    String password = e.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
-
-                    Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, hostname, username, password);
-                    //FIXME check feedback of whether the server was added.
-                    ((EntityInternal) e).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
-                }
+        Preconditions.checkNotNull(serversToAdd);
+        for (Entity e : serversToAdd) {
+            if (!isMemberInCluster(e)) {
+                addServer(e);
             }
-        } else {
-            log.warn("no servers to be added on the cluster: {}", this);
         }
     }
 
     protected void addServer(Entity serverToAdd) {
-
+        Preconditions.checkNotNull(serverToAdd);
         if (!isMemberInCluster(serverToAdd)) {
             String hostname = serverToAdd.getAttribute(Attributes.HOSTNAME) + ":" + serverToAdd.getConfig(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).iterator().next();
             String username = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
             String password = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
 
-            Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, hostname, username, password);
+            if (isClusterInitialized()) {
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD_AND_REBALANCE, hostname, username, password);
+            } else {
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, hostname, username, password);
+            }
             //FIXME check feedback of whether the server was added.
             ((EntityInternal) serverToAdd).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
         }

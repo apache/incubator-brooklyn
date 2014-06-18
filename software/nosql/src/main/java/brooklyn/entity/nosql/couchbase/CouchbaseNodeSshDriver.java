@@ -174,6 +174,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                         getCouchbaseHostnameAndCredentials())
                 .failOnNonZeroResultCode()
                 .execute();
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
     }
 
     @Override
@@ -187,6 +188,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 .execute();
     }
 
+    @Override
     public void serverAddAndRebalance(String serverToAdd, String username, String password) {
         newScript("serverAddAndRebalance").body.append(couchbaseCli("rebalance")
                 + getCouchbaseHostnameAndCredentials() +
@@ -195,6 +197,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 " --server-add-password=" + password)
                 .failOnNonZeroResultCode()
                 .execute();
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
     }
 
 }

@@ -9,4 +9,6 @@ public interface CouchbaseNodeDriver extends SoftwareProcessDriver {
 
     public void rebalance();
 
+    public void serverAddAndRebalance(String serverToAdd, String username, String password);
+
 }

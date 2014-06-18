@@ -88,6 +88,11 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     }
 
     @Override
+    public void serverAddAndRebalance(String serverToAdd, String username, String password) {
+        getDriver().serverAddAndRebalance(serverToAdd, username, password);
+    }
+
+    @Override
     public void rebalance() {
         getDriver().rebalance();
     }
@@ -144,6 +149,9 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             .poll(getSensorFromNodeStat(CouchbaseNode.GET_HITS, "get_hits"))
             .poll(getSensorFromNodeStat(CouchbaseNode.CMD_GET, "cmd_get"))
             .poll(getSensorFromNodeStat(CouchbaseNode.CURR_ITEMS_TOT, "curr_items_tot"))
+            .poll(new HttpPollConfig<String>(CouchbaseNode.REBALANCE_STATUS)
+                        .onSuccess(HttpValueFunctions.jsonContents("rebalanceStatus", String.class))
+                        .onFailureOrException(Functions.constant("Could not retrieve")))
             .build();
     }
 
@@ -154,6 +162,5 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             httpFeed.stop();
         }
     }
-
 
 }
