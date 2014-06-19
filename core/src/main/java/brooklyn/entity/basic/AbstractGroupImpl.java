@@ -77,6 +77,13 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     @Override
     public boolean addMember(Entity member) {
         synchronized (members) {
+            if (Entities.isNoLongerManaged(member)) {
+                // Don't add dead entities, as they could never be removed (because addMember could be called in
+                // concurrent thread as removeMember triggered by the unmanage).
+                // Not using Entities.isManaged here, as could be called in entity.init()
+                log.debug("Group {} ignoring new member {}, because it is no longer managed", this, member);
+                return false;
+            }
             member.addGroup((Group)getProxyIfAvailable());
             boolean changed = members.add(member);
             if (changed) {

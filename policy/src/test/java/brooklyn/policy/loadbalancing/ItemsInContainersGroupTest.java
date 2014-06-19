@@ -113,10 +113,14 @@ public class ItemsInContainersGroupTest {
         assertItemsEventually();
     }
 
-    // Failed in build #2197 on cloudbees; 
-    // possible just a timeout, time was set at 5s there, ran for 19 iterations;
-    // since it only takes 5 *millis* locally I'm (Alex) slightly concerned there may
-    // be a real problem of racing on startup, but see if we see it again, with timeout 15s...
+    /*
+     * Previously could fail if...
+     * ItemsInContainersGroupImpl listener got notified of Movable.CONTAINER after entity was unmanaged
+     * (because being done in concurrent threads).
+     * This called ItemsInContainersGroupImpl.onItemMoved, which called addMember to add it back in again.
+     * In AbstractGroup.addMember, we now check if the entity is still managed, to 
+     * ensure there is synchronization for concurrent calls to add/remove member.
+     */
     @Test
     public void testItemUnmanagedIsRemoved() throws Exception {
         MockContainerEntity containerIn = newContainer(app, "A", "ingroup");
