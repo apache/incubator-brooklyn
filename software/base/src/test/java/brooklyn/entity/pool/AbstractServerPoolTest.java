@@ -43,7 +43,8 @@ public abstract class AbstractServerPoolTest {
         location = createLocation();
         poolApp = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
         pool = poolApp.createAndManageChild(EntitySpec.create(ServerPool.class)
-                .configure(ServerPool.INITIAL_SIZE, getInitialPoolSize()));
+                .configure(ServerPool.INITIAL_SIZE, getInitialPoolSize())
+                .configure(ServerPool.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
         poolApp.start(ImmutableList.of(location));
         assertTrue(pool.getAttribute(Attributes.SERVICE_UP));
     }
