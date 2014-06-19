@@ -46,7 +46,7 @@ import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Function;
+import com.google.common.base.Objects;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
 
@@ -110,7 +110,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
     @Override
     public String toString() {
-        return super.toString()+"["+entity+";"+mode+"]";
+        return Objects.toStringHelper(this).add("entity", entity.getId()).add("mode", mode).toString();
     }
     
     public void setMode(NonDeploymentManagementContextMode mode) {
