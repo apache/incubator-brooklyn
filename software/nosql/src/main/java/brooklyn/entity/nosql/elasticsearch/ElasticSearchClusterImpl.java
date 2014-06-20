@@ -21,8 +21,7 @@ public class ElasticSearchClusterImpl extends DynamicClusterImpl implements Elas
     
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        @SuppressWarnings("unchecked")
-        EntitySpec<ElasticSearchNode> spec = (EntitySpec<ElasticSearchNode>)getConfig(MEMBER_SPEC, EntitySpec.create(ElasticSearchNode.class));
+        EntitySpec<?> spec = EntitySpec.create(getConfig(MEMBER_SPEC, EntitySpec.create(ElasticSearchNode.class)));
         
         spec.configure(ElasticSearchNode.CLUSTER_NAME, getConfig(ElasticSearchClusterImpl.CLUSTER_NAME))
             .configure(ElasticSearchNode.NODE_NAME, "elasticsearch-" + nextMemberId.incrementAndGet());

@@ -67,12 +67,12 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
         if (entity.getConfig(ElasticSearchNode.TEMPLATE_CONFIGURATION_URL) != null) {
             commandBuilder.append(" -Des.config=" + Os.mergePaths(getRunDir(), getConfigFile()));
         }
-        appendConfigIfPresent(commandBuilder, ElasticSearchNode.DATA_DIR, "es.path.data", Os.mergePaths(getRunDir(), "data"));
-        appendConfigIfPresent(commandBuilder, ElasticSearchNode.LOG_DIR, "es.path.logs", Os.mergePaths(getRunDir(), "logs"));
-        appendConfigIfPresent(commandBuilder, ElasticSearchNode.NODE_NAME.getConfigKey(), "es.node.name");
-        appendConfigIfPresent(commandBuilder, ElasticSearchNode.CLUSTER_NAME.getConfigKey(), "es.cluster.name");
-        appendConfigIfPresent(commandBuilder, ElasticSearchNode.MULTICAST_ENABLED, "es.discovery.zen.ping.multicast.enabled");
-        appendConfigIfPresent(commandBuilder, ElasticSearchNode.UNICAST_ENABLED, "es.discovery.zen.ping.unicast.enabled");
+        appendConfigIfPresent(commandBuilder, "es.path.data", ElasticSearchNode.DATA_DIR, Os.mergePaths(getRunDir(), "data"));
+        appendConfigIfPresent(commandBuilder, "es.path.logs", ElasticSearchNode.LOG_DIR, Os.mergePaths(getRunDir(), "logs"));
+        appendConfigIfPresent(commandBuilder, "es.node.name", ElasticSearchNode.NODE_NAME.getConfigKey());
+        appendConfigIfPresent(commandBuilder, "es.cluster.name", ElasticSearchNode.CLUSTER_NAME.getConfigKey());
+        appendConfigIfPresent(commandBuilder, "es.discovery.zen.ping.multicast.enabled", ElasticSearchNode.MULTICAST_ENABLED);
+        appendConfigIfPresent(commandBuilder, "es.discovery.zen.ping.unicast.enabled", ElasticSearchNode.UNICAST_ENABLED);
         commandBuilder.append(" > out.log 2> err.log < /dev/null");
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
@@ -80,11 +80,11 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
             .execute();
     }
     
-    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<?> configKey, String parameter) {
-        appendConfigIfPresent(builder, configKey, parameter, null);
+    private void appendConfigIfPresent(StringBuilder builder, String parameter, ConfigKey<?> configKey) {
+        appendConfigIfPresent(builder, parameter, configKey, null);
     }
     
-    private void appendConfigIfPresent(StringBuilder builder, ConfigKey<?> configKey, String parameter, String defaultValue) {
+    private void appendConfigIfPresent(StringBuilder builder, String parameter, ConfigKey<?> configKey, String defaultValue) {
         String config = null;
         if (entity.getConfig(configKey) != null) {
             config = String.valueOf(entity.getConfig(configKey));
