@@ -86,7 +86,7 @@ public class ByonLocationResolverTest {
     }
 
     @Test
-    public void testPropertyScopePrescedence() throws Exception {
+    public void testPropertyScopePrecedence() throws Exception {
         brooklynProperties.put("brooklyn.location.named.mynamed", "byon:(hosts=\"1.1.1.1\")");
         
         // prefer those in "named" over everything else

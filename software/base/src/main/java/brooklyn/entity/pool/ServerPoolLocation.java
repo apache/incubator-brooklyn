@@ -1,5 +1,7 @@
 package brooklyn.entity.pool;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -28,7 +30,7 @@ public class ServerPoolLocation extends AbstractLocation implements MachineProvi
 
     @Override
     public void init() {
-        LOG.debug("Initialising. Owner is: {}", getConfig(OWNER));
+        LOG.debug("Initialising. Owner is: {}", checkNotNull(getConfig(OWNER), OWNER.getName()));
         super.init();
     }
 

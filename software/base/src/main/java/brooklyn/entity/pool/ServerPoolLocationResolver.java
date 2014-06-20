@@ -15,6 +15,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver.EnableableLocationResolver;
@@ -70,7 +71,7 @@ public class ServerPoolLocationResolver implements EnableableLocationResolver {
 
         Matcher matcher = PATTERN.matcher(spec);
         if (!matcher.matches()) {
-            String m = String.format("Invalid location '%s'; must specify either %s:entityId or %s:entityId:(name=abc)",
+            String m = String.format("Invalid location '%s'; must specify either %s:entityId or %s:entityId:(key=argument)",
                     spec, PREFIX, PREFIX);
             throw new IllegalArgumentException(m);
         }
@@ -80,7 +81,6 @@ public class ServerPoolLocationResolver implements EnableableLocationResolver {
         String displayNamePart = argsMap.get("displayName");
         String namePart = argsMap.get("name");
 
-        // TODO: Could include existing servers here?
         if (!ACCEPTABLE_ARGS.containsAll(argsMap.keySet())) {
             Set<String> illegalArgs = Sets.difference(argsMap.keySet(), ACCEPTABLE_ARGS);
             throw new IllegalArgumentException("Invalid location '"+spec+"'; illegal args "+illegalArgs+"; acceptable args are "+ACCEPTABLE_ARGS);
@@ -107,7 +107,7 @@ public class ServerPoolLocationResolver implements EnableableLocationResolver {
         final String displayName = displayNamePart != null ? displayNamePart : "Server Pool " + poolId;
         final String locationName = namePart != null ? namePart : "serverpool-" + poolId;
 
-        ServerPool pool = (ServerPool) managementContext.getEntityManager().getEntity(poolId);
+        Entity pool = managementContext.getEntityManager().getEntity(poolId);
         LocationSpec<ServerPoolLocation> locationSpec = LocationSpec.create(ServerPoolLocation.class)
                 .configure(flags)
                 .configure(DynamicLocation.OWNER, pool)

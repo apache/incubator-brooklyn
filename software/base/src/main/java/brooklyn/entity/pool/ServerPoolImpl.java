@@ -21,6 +21,7 @@ import com.google.common.reflect.TypeToken;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
@@ -32,6 +33,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.Machines;
+import brooklyn.location.dynamic.DynamicLocation;
 import brooklyn.management.LocationManager;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
@@ -68,13 +70,10 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     @Override
     public void init() {
         super.init();
-
         setAttribute(AVAILABLE_COUNT, 0);
         setAttribute(CLAIMED_COUNT, 0);
         setAttribute(ENTITY_MACHINE, Maps.<Entity, MachineLocation>newHashMap());
         setAttribute(MACHINE_ENTITY, Maps.<MachineLocation, Entity>newHashMap());
-
-        // addPolicy(new AutoScalerPolicy(...));
     }
 
     @Override
@@ -115,7 +114,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     protected ServerPoolLocation createLocation() {
         return createLocation(MutableMap.<String, Object>builder()
                 .putAll(getConfig(LOCATION_FLAGS))
-                .put("owner", this)
+                .put(DynamicLocation.OWNER.getName(), this)
                 .build());
     }
 
@@ -187,14 +186,25 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     public void releaseMachine(MachineLocation machine) {
         synchronized (mutex) {
             Entity entity = getMachineEntityMap().get(machine);
-            setEntityStatus(entity, MachinePoolMemberStatus.AVAILABLE);
-            updateCountSensors();
-            LOG.debug("{} has been released in {}", machine, this);
+            if (entity == null) {
+                LOG.warn("{} releasing machine {} but its owning entity is not known!", this, machine);
+            } else {
+                setEntityStatus(entity, MachinePoolMemberStatus.AVAILABLE);
+                updateCountSensors();
+                LOG.debug("{} has been released in {}", machine, this);
+            }
         }
     }
 
-    /** Overrides to modify the delta to the maximum of the argument and the sum of
-     * the sizes of the immediateRemovals and availableMachines collections. */
+    /**
+     * Overrides to restrict delta to the number of machines that can be <em>safely</em>
+     * removed (i.e. those that are {@link MachinePoolMemberStatus#UNUSABLE unusable} or
+     * {@link MachinePoolMemberStatus#AVAILABLE available}).
+     * <p/>
+     * Does not modify delta if the pool is stopping.
+     * @param delta Requested number of members to remove
+     * @return The entities that were removed
+     */
     @Override
     protected Collection<Entity> shrink(int delta) {
         synchronized (mutex) {
@@ -230,7 +240,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     }
 
     private final Function<Collection<Entity>, Entity> UNCLAIMED_REMOVAL_STRATEGY = new Function<Collection<Entity>, Entity>() {
-        // Semantics of superclass mean that mutex should already be held when appy is called
+        // Semantics of superclass mean that mutex should already be held when apply is called
         @Override
         public Entity apply(Collection<Entity> input) {
             synchronized (mutex) {
@@ -277,23 +287,17 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     }
 
     private void setEntityStatus(Entity entity, MachinePoolMemberStatus status) {
-        checkNotNull(entity, "What?");
         ((EntityInternal) entity).setAttribute(SERVER_STATUS, status);
     }
 
-    private Predicate<Entity> statusPredicate(final MachinePoolMemberStatus status) {
-        return new Predicate<Entity>() {
-                @Override public boolean apply(Entity input) {
-                    return status.equals(input.getAttribute(SERVER_STATUS));
-                }};
-    }
-
     private Optional<Entity> getMemberWithStatus(MachinePoolMemberStatus status) {
-        return Iterables.tryFind(getMembers(), statusPredicate(status));
+        return Iterables.tryFind(getMembers(),
+                EntityPredicates.attributeEqualTo(SERVER_STATUS, status));
     }
 
     private Iterable<Entity> getMembersWithStatus(MachinePoolMemberStatus status) {
-        return Iterables.filter(getMembers(), statusPredicate(status));
+        return Iterables.filter(getMembers(),
+                EntityPredicates.attributeEqualTo(SERVER_STATUS, status));
     }
 
     private void updateCountSensors() {

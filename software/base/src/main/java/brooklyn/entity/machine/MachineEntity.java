@@ -1,4 +1,4 @@
-package brooklyn.entity.pool;
+package brooklyn.entity.machine;
 
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
