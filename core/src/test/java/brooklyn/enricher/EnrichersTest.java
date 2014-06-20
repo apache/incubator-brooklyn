@@ -3,11 +3,10 @@ package brooklyn.enricher;
 import java.util.Collection;
 import java.util.Set;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -15,7 +14,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.TypeTokens;
@@ -29,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
-public class EnrichersTest {
+public class EnrichersTest extends BrooklynAppUnitTestSupport {
 
     public static final AttributeSensor<Integer> NUM1 = Sensors.newIntegerSensor("test.num1");
     public static final AttributeSensor<Integer> NUM2 = Sensors.newIntegerSensor("test.num2");
@@ -39,24 +37,19 @@ public class EnrichersTest {
     public static final AttributeSensor<Set<Object>> SET1 = Sensors.newSensor(new TypeToken<Set<Object>>() {}, "test.set1", "set1 descr");
     public static final AttributeSensor<Long> LONG1 = Sensors.newLongSensor("test.long1");
     
-    private TestApplication app;
     private TestEntity entity;
     private TestEntity entity2;
     private BasicGroup group;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
     }
     
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-
     @Test
     public void testAdding() {
         entity.addEnricher(Enrichers.builder()

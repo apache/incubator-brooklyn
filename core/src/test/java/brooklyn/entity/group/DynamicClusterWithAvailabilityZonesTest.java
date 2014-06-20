@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
@@ -27,7 +27,6 @@ import brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.time.Duration;
 
@@ -38,24 +37,22 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class DynamicClusterWithAvailabilityZonesTest {
+public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTestSupport {
     
-    private ManagementContext managementContext;
-    private TestApplication app;
     private DynamicCluster cluster;
     private SimulatedLocation loc;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
+        super.setUp();
         cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.ENABLE_AVAILABILITY_ZONES, true)
                 .configure(DynamicCluster.INITIAL_SIZE, 0)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
         
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
-        loc.addExtension(AvailabilityZoneExtension.class, new SimulatedAvailabilityZoneExtension(managementContext, loc, ImmutableList.of("zone1", "zone2", "zone3", "zone4")));
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        loc.addExtension(AvailabilityZoneExtension.class, new SimulatedAvailabilityZoneExtension(mgmt, loc, ImmutableList.of("zone1", "zone2", "zone3", "zone4")));
     }
 
     @Test

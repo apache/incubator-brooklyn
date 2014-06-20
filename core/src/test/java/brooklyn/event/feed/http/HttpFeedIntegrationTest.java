@@ -9,8 +9,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
@@ -21,13 +20,12 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpService;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 
-public class HttpFeedIntegrationTest {
+public class HttpFeedIntegrationTest extends BrooklynAppUnitTestSupport {
 
     final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
     final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor("aLong", "");
@@ -35,23 +33,24 @@ public class HttpFeedIntegrationTest {
     private HttpService httpService;
 
     private Location loc;
-    private TestApplication app;
     private EntityLocal entity;
     private HttpFeed feed;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         loc = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (httpService != null) httpService.shutdown();
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        super.tearDown();
     }
 
     @Test(groups = {"Integration"})

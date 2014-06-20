@@ -8,16 +8,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -28,7 +24,7 @@ import com.google.common.util.concurrent.Callables;
 /**
  * Test that configuration properties are usable and inherited correctly.
  */
-public class PolicyConfigMapUsageTest {
+public class PolicyConfigMapUsageTest extends BrooklynAppUnitTestSupport {
     private static final int EARLY_RETURN_GRACE = 10;
 
     public static class MyPolicy extends AbstractPolicy {
@@ -51,18 +47,6 @@ public class PolicyConfigMapUsageTest {
     
     private BasicConfigKey<String> differentKey = new BasicConfigKey<String>(String.class, "differentkey", "diffval");
 
-    private TestApplication app;
-    
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-    
     @Test
     public void testConfigFlagsPassedInAtConstructionIsAvailable() throws Exception {
         MyPolicy policy = new MyPolicy(MutableMap.builder()

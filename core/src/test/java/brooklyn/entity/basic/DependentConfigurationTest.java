@@ -12,15 +12,14 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.task.BasicTask;
@@ -39,25 +38,20 @@ import com.google.common.util.concurrent.Callables;
 /** Tests the standalone routines in dependent configuration.
  * See e.g. LocalEntitiesTest for tests of attributeWhenReady etc.
  */
-public class DependentConfigurationTest {
+public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
     public static final int SHORT_WAIT_MS = 100;
     public static final int TIMEOUT_MS = 30*1000;
     
-    private TestApplication app;
     private TestEntity entity;
     private TestEntity entity2;
 
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

@@ -6,45 +6,33 @@ import static org.testng.Assert.assertTrue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Ticker;
 
-public class ProportionalZoneFailureDetectorTest {
+public class ProportionalZoneFailureDetectorTest extends BrooklynAppUnitTestSupport {
 
-    private ManagementContext managementContext;
-    private TestApplication app;
     private TestEntity entity1;
     private SimulatedLocation loc1;
     private SimulatedLocation loc2;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
-        loc1 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
-        loc2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        super.setUp();
+        loc1 = mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        loc2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         entity1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
     }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (managementContext != null) Entities.destroyAll(managementContext);
-    }
-    
     @Test
     public void testRespectsMin() throws Exception {
         ProportionalZoneFailureDetector detector = new ProportionalZoneFailureDetector(2, Duration.ONE_HOUR, 0.9);

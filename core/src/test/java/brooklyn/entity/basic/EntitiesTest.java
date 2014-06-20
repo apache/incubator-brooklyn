@@ -8,40 +8,34 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.Assert;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class EntitiesTest {
+public class EntitiesTest extends BrooklynAppUnitTestSupport {
 
     private static final int TIMEOUT_MS = 10*1000;
     
     private SimulatedLocation loc;
-    private TestApplication app;
     private TestEntity entity;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        super.setUp();
         loc = app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

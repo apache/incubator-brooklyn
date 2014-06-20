@@ -3,30 +3,24 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
-public class EntityFunctionsTest {
+public class EntityFunctionsTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
     private TestEntity entity;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("mydisplayname"));
     }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-    
     @Test
     public void testAttribute() throws Exception {
         entity.setAttribute(TestEntity.NAME, "myname");

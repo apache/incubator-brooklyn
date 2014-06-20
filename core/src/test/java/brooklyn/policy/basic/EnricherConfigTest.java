@@ -5,23 +5,19 @@ import static org.testng.Assert.fail;
 
 import java.util.Map;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Test that configuration properties are usable and inherited correctly.
  */
-public class EnricherConfigTest {
+public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
     
     // TODO These tests are a copy of PolicyConfigMapUsageTest, which is a code smell.
     // However, the src/main/java code does not contain as much duplication.
@@ -46,18 +42,6 @@ public class EnricherConfigTest {
     
     private BasicConfigKey<String> differentKey = new BasicConfigKey<String>(String.class, "differentkey", "diffval");
 
-    private TestApplication app;
-    
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-    
     @Test
     public void testConfigFlagsPassedInAtConstructionIsAvailable() throws Exception {
         MyEnricher enricher = new MyEnricher(MutableMap.builder()

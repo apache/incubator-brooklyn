@@ -3,43 +3,36 @@ package brooklyn.entity.group;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 
 
-public class QuarantineGroupTest {
+public class QuarantineGroupTest extends BrooklynAppUnitTestSupport {
 
     private static final int TIMEOUT_MS = 2000;
 
     SimulatedLocation loc;
-    TestApplication app;
     private TestEntity e1;
     private TestEntity e2;
     private QuarantineGroup group;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        super.setUp();
+        mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         group = app.createAndManageChild(EntitySpec.create(QuarantineGroup.class));
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

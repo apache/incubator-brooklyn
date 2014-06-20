@@ -7,14 +7,12 @@ import static org.testng.Assert.fail;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
@@ -30,23 +28,11 @@ import com.google.common.util.concurrent.Callables;
  * 
  * Uses legacy mechanism of calling entity constructors.
  */
-public class EntityConfigMapUsageLegacyTest {
+public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     private ConfigKey<Integer> intKey = ConfigKeys.newIntegerConfigKey("bkey", "b key");
     private ConfigKey<String> strKey = ConfigKeys.newStringConfigKey("akey", "a key");
     private ConfigKey<Integer> intKeyWithDefault = ConfigKeys.newIntegerConfigKey("ckey", "c key", 1);
     private ConfigKey<String> strKeyWithDefault = ConfigKeys.newStringConfigKey("strKey", "str key", "str key default");
-    
-    private TestApplication app;
-    
-    @BeforeMethod
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
     
     @Test
     public void testConfigPassedInAtConstructorIsAvailable() throws Exception {

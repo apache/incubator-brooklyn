@@ -10,25 +10,19 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicTask;
 
@@ -41,27 +35,20 @@ import com.google.common.collect.Maps;
  *
  * TODO clarify test purpose
  */
-public class EffectorSayHiTest {
+public class EffectorSayHiTest extends BrooklynAppUnitTestSupport {
     
     //TODO test edge/error conditions
     //(missing parameters, wrong number of params, etc)
 
     private static final Logger log = LoggerFactory.getLogger(EffectorSayHiTest.class);
 
-    private TestApplication app;
     private MyEntity e;
-    private ManagementContext managementContext;
 
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         e = app.createAndManageChild(EntitySpec.create(MyEntity.class));
-        managementContext = ((EntityInternal)e).getManagementContext();
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test
@@ -94,7 +81,7 @@ public class EffectorSayHiTest {
     public void testCanRetrieveTaskForEffector() {
         e.sayHi1("Bob", "hi");
 
-        Set<Task<?>> tasks = managementContext.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
+        Set<Task<?>> tasks = mgmt.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
                 BrooklynTaskTags.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
         assertEquals(tasks.size(), 1);
         assertTrue(tasks.iterator().next().getDescription().contains("sayHi1"));
@@ -104,7 +91,7 @@ public class EffectorSayHiTest {
     public void testDelegatedNestedEffectorNotRepresentedAsTask() {
         e.delegateSayHi1("Bob", "hi");
 
-        Set<Task<?>> tasks = managementContext.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
+        Set<Task<?>> tasks = mgmt.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
                 BrooklynTaskTags.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
         assertEquals(tasks.size(), 1);
         assertTrue(tasks.iterator().next().getDescription().contains("delegateSayHi1"));
@@ -113,10 +100,10 @@ public class EffectorSayHiTest {
 
     @Test
     public void testCanExcludeNonEffectorTasks() throws Exception {
-        ExecutionContext executionContext = managementContext.getExecutionContext(e);
+        ExecutionContext executionContext = mgmt.getExecutionContext(e);
         executionContext.submit(new BasicTask<Void>(new Runnable() { public void run() {} }));
 
-        Set<Task<?>> effectTasks = managementContext.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
+        Set<Task<?>> effectTasks = mgmt.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
                 BrooklynTaskTags.tagForContextEntity(e),ManagementContextInternal.EFFECTOR_TAG));
         assertEquals(effectTasks.size(), 0);
     }

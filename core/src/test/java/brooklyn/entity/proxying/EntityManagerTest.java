@@ -4,14 +4,12 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 import brooklyn.management.EntityManager;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -21,24 +19,17 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 
-public class EntityManagerTest {
+public class EntityManagerTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
-    private ManagementContext mgmt;
     private EntityManager entityManager;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        mgmt = app.getManagementContext();
+        super.setUp();
         entityManager = mgmt.getEntityManager();
     }
     
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (mgmt != null) Entities.destroyAll(mgmt);
-    }
-
     @Test
     public void testCreateEntityUsingSpec() {
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));

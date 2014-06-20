@@ -4,12 +4,11 @@ import java.util.Collection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -18,7 +17,6 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
@@ -27,14 +25,13 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class CustomAggregatingEnricherTest {
+public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
     public static final Logger log = LoggerFactory.getLogger(CustomAggregatingEnricherTest.class);
             
     private static final long TIMEOUT_MS = 10*1000;
     private static final long SHORT_WAIT_MS = 250;
     
-    TestApplication app;
     TestEntity entity;
     SimulatedLocation loc;
     
@@ -43,19 +40,15 @@ public class CustomAggregatingEnricherTest {
     AttributeSensor<Integer> target;
 
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor");
         doubleSensor = new BasicAttributeSensor<Double>(Double.class, "double sensor");
         target = new BasicAttributeSensor<Integer>(Integer.class, "target sensor");
-        loc = app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         app.start(ImmutableList.of(loc));
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app!=null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

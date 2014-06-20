@@ -2,32 +2,23 @@ package brooklyn.entity.group.zoneaware;
 
 import java.util.List;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.group.zoneaware.BalancingNodePlacementStrategy;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 
-public class BalancingNodePlacementStrategyTest {
+public class BalancingNodePlacementStrategyTest extends BrooklynAppUnitTestSupport {
 
-    // TODO Should move BrooklynMgmtContext*TestSupport to core, from software/base
-    
-    private ManagementContext managementContext;
-    private TestApplication app;
     private TestEntity entity1;
     private TestEntity entity2;
     private TestEntity entity3;
@@ -36,11 +27,11 @@ public class BalancingNodePlacementStrategyTest {
     private BalancingNodePlacementStrategy placementStrategy;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
-        loc1 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
-        loc2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        super.setUp();
+        loc1 = mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        loc2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         entity1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         Thread.sleep(10); // tiny sleep is to ensure creation time is different for each entity
         entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -49,11 +40,6 @@ public class BalancingNodePlacementStrategyTest {
         placementStrategy = new BalancingNodePlacementStrategy();
     }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (managementContext != null) Entities.destroyAll(managementContext);
-    }
-    
     @Test
     public void testAddsBalancedWhenEmpty() throws Exception {
         LinkedHashMultimap<Location, Entity> currentMembers = LinkedHashMultimap.<Location,Entity>create();

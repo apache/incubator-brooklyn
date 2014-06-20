@@ -2,13 +2,11 @@ package brooklyn.enricher;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -16,7 +14,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.javalang.AtomicReferences;
@@ -24,20 +21,15 @@ import brooklyn.util.javalang.AtomicReferences;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 
-public class SensorPropagatingEnricherDeprecatedTest {
+public class SensorPropagatingEnricherDeprecatedTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
     private TestEntity entity;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test
