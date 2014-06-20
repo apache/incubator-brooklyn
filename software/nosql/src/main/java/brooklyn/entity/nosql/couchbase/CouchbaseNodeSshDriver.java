@@ -218,4 +218,16 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
     }
 
+    @Override
+        public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
+            newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
+                + getCouchbaseHostnameAndCredentials() +
+                " --bucket=" + bucketName +
+                " --bucket-type=" + bucketType +
+                " --bucket-port=" + bucketPort +
+                " --bucket-ramsize=" + bucketRamSize +
+                " --bucket-replica=" + bucketReplica)
+                .failOnNonZeroResultCode()
+                .execute();
+        }
 }

@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,16 +44,24 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.feed.http.HttpFeed;
+import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -59,6 +69,7 @@ import com.google.common.collect.Sets;
 public class CouchbaseClusterImpl extends DynamicClusterImpl implements CouchbaseCluster {
     private static final Logger log = LoggerFactory.getLogger(CouchbaseClusterImpl.class);
     private final Object mutex = new Object[0];
+    private final HttpFeed[] resetBucketCreation = new HttpFeed[]{null};
 
     public void init() {
         log.info("Initializing the Couchbase cluster...");
@@ -146,7 +157,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             serversToAdd.remove(getPrimaryNode());
 
             if (getUpNodes().size() >= getQuorumSize() && getUpNodes().size() > 1) {
-                log.info("number of SERVICE_UP nodes:{} in cluster:{} did reached Quorum:{}, adding the servers", new Object[]{getUpNodes().size(), getId(), getQuorumSize()});
+                log.info("number of SERVICE_UP nodes:{} in cluster:{} reached Quorum:{}, adding the servers", new Object[]{getUpNodes().size(), getId(), getQuorumSize()});
                 addServers(serversToAdd);
 
                 //wait for servers to be added to the couchbase server
@@ -157,6 +168,10 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                     Tasks.resetBlockingDetails();
                 }
                 Entities.invokeEffector(this, getPrimaryNode(), CouchbaseNode.REBALANCE);
+                
+                if (Optional.fromNullable(CREATE_BUCKETS).isPresent()) {
+                    createBuckets();
+                }
 
                 setAttribute(IS_CLUSTER_INITIALIZED, true);
             } else {
@@ -331,6 +346,57 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
     public boolean isMemberInCluster(Entity e) {
         return Optional.fromNullable(e.getAttribute(CouchbaseNode.IS_IN_CLUSTER)).or(false);
+    }
+    
+    public void createBuckets() {
+        //FIXME: multiple buckets require synchronization/wait time (checks for port conflicts and exceeding ram size)
+        //TODO: check for multiple bucket conflicts with port
+        List<Map<String, Object>> bucketsToCreate = getConfig(CREATE_BUCKETS);
+        Entity primaryNode = getPrimaryNode();
+
+        for (Map<String, Object> bucketMap : bucketsToCreate) {
+            String bucketName = bucketMap.containsKey("bucket") ? (String) bucketMap.get("bucket") : "default";
+            String bucketType = bucketMap.containsKey("bucket-type") ? (String) bucketMap.get("bucket-type") : "couchbase";
+            Integer bucketPort = bucketMap.containsKey("bucket-port") ? (Integer) bucketMap.get("bucket-port") : 11222;
+            Integer bucketRamSize = bucketMap.containsKey("bucket-ramsize") ? (Integer) bucketMap.get("bucket-ramsize") : 200;
+            Integer bucketReplica = bucketMap.containsKey("bucket-replica") ? (Integer) bucketMap.get("bucket-replica") : 1;
+
+            log.info("adding bucket: {} to primary node: {}", bucketName, primaryNode.getId());
+            createBucket(primaryNode, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
+            //TODO: add if bucket has been created.
+        }
+    }
+
+    public void createBucket(final Entity primaryNode, final String bucketName, final String bucketType, final Integer bucketPort, final Integer bucketRamSize, final Integer bucketReplica) {
+        DynamicTasks.queueIfPossible(TaskBuilder.<Void>builder().name("Creating bucket " + bucketName).body(
+                new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        DependentConfiguration.waitInTaskForAttributeReady(CouchbaseClusterImpl.this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
+                        if (CouchbaseClusterImpl.this.resetBucketCreation[0] != null) {
+                            CouchbaseClusterImpl.this.resetBucketCreation[0].stop();
+                        }
+                        setAttribute(CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, true);
+
+                        CouchbaseClusterImpl.this.resetBucketCreation[0] = HttpFeed.builder()
+                                .entity(CouchbaseClusterImpl.this)
+                                .period(500, TimeUnit.MILLISECONDS)
+                                .baseUri(String.format("%s/pools/default/buckets/%s", primaryNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), bucketName))
+                                .credentials(primaryNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME), primaryNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD))
+                                .poll(new HttpPollConfig<Boolean>(BUCKET_CREATION_IN_PROGRESS)
+                                        .onSuccess(HttpValueFunctions.responseCodeEquals(404))
+                                        .onFailureOrException(Functions.constant(false)))
+                                .build();
+
+                        Entities.invokeEffectorWithArgs(CouchbaseClusterImpl.this, primaryNode, CouchbaseNode.BUCKET_CREATE, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
+                        DependentConfiguration.waitInTaskForAttributeReady(CouchbaseClusterImpl.this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
+                        if (CouchbaseClusterImpl.this.resetBucketCreation[0] != null) {
+                            CouchbaseClusterImpl.this.resetBucketCreation[0].stop();
+                        }
+                        return null;
+                    }
+                }
+        ).build()).orSubmitAndBlock();
     }
     
     static {

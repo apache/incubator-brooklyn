@@ -1,0 +1,147 @@
+package brooklyn.entity.nosql.couchbase;
+
+import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.sudo;
+import static java.lang.String.format;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.location.OsDetails;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.time.Duration;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
+public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDriver implements CouchbaseSyncGatewayDriver {
+    public CouchbaseSyncGatewaySshDriver(EntityLocal entity, SshMachineLocation machine) {
+        super(entity, machine);
+    }
+
+    @Override
+    public boolean isRunning() {
+        return Boolean.TRUE.equals(entity.getAttribute(Attributes.SERVICE_UP));
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public void install() {
+        //reference http://docs.couchbase.com/sync-gateway/#getting-started-with-sync-gateway
+        DownloadResolver resolver = Entities.newDownloader(this);
+        List<String> urls = resolver.getTargets();
+        String saveAs = resolver.getFilename();
+
+        OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
+
+        log.info("Installing couchbase-sync-gateway version: {}", getVersion());
+        if (osDetails.isLinux()) {
+            List<String> commands = installLinux(urls, saveAs);
+            newScript(INSTALLING)
+                    .body.append(commands).execute();
+        }
+    }
+
+    @Override
+    public void customize() {
+
+    }
+
+    @Override
+    public void launch() {
+        Entity cbNode = entity.getConfig(CouchbaseSyncGateway.COUCHBASE_SERVER);
+        Entities.waitForServiceUp(cbNode, Duration.ONE_HOUR);
+
+
+        if (cbNode instanceof CouchbaseCluster) {
+            Optional<Entity> cbClusterNode = Iterables.tryFind(cbNode.getAttribute(CouchbaseCluster.GROUP_MEMBERS), new Predicate<Entity>() {
+
+                @Override
+                public boolean apply(@Nullable Entity entity) {
+                    if (entity instanceof CouchbaseNode && Boolean.TRUE.equals(entity.getAttribute(CouchbaseNode.IS_IN_CLUSTER))) {
+                        return true;
+                    }
+                    return false;
+                }
+            });
+            if (cbClusterNode.isPresent()) {
+                cbNode = cbClusterNode.get();
+            } else {
+                throw new IllegalArgumentException(format("The cluster %s does not contain any suitable Couchbase nodes to connect to..", cbNode.getId()));
+            }
+
+        }
+        String hostname = cbNode.getAttribute(CouchbaseNode.HOSTNAME);
+        String webPort = cbNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).toString();
+
+
+        String username = cbNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
+        String password = cbNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
+
+        String bucketName = entity.getConfig(CouchbaseSyncGateway.COUCHBASE_SERVER_BUCKET);
+        String pool = entity.getConfig(CouchbaseSyncGateway.COUCHBASE_SERVER_POOL);
+        String pretty = entity.getConfig(CouchbaseSyncGateway.PRETTY) ? "-pretty" : "";
+        String verbose = entity.getConfig(CouchbaseSyncGateway.VERBOSE) ? "-verbose" : "";
+
+        String adminRestApiPort = entity.getConfig(CouchbaseSyncGateway.ADMIN_REST_API_PORT).iterator().next().toString();
+        String syncRestApiPort = entity.getConfig(CouchbaseSyncGateway.SYNC_REST_API_PORT).iterator().next().toString();
+
+        String serverWebAdminUrl = format("http://%s:%s@%s:%s", username, password, hostname, webPort);
+        String options = format("-url %s -bucket %s -adminInterface 0.0.0.0:%s -interface 0.0.0.0:%s -pool %s %s %s",
+                serverWebAdminUrl, bucketName, adminRestApiPort, syncRestApiPort, pool, pretty, verbose);
+
+        newScript(LAUNCHING)
+                .body.append(format("/opt/couchbase-sync-gateway/bin/sync_gateway %s &", options))
+                .execute();
+    }
+
+    private List<String> installLinux(List<String> urls, String saveAs) {
+
+        String apt = chainGroup(
+                "which apt-get",
+                sudo("apt-get update"),
+                sudo(format("dpkg -i %s", saveAs)));
+
+        String yum = chainGroup(
+                "which yum",
+                sudo(format("rpm --install %s", saveAs)));
+
+        return ImmutableList.<String>builder()
+                .add(INSTALL_CURL)
+                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
+                .add(alternatives(apt, yum))
+                .build();
+    }
+
+    @Override
+    public String getOsTag() {
+        OsDetails os = getLocation().getOsDetails();
+        if (os == null) {
+            // Default to generic linux
+            return "x86_64.rpm";
+        } else {
+            //FIXME should be a better way to check for OS name and version
+            String osName = os.getName().toLowerCase();
+            String fileExtension = osName.contains("deb") || osName.contains("ubuntu") ? ".deb" : ".rpm";
+            String arch = os.is64bit() ? "x86_64" : "x86";
+            return arch + fileExtension;
+        }
+    }
+
+}

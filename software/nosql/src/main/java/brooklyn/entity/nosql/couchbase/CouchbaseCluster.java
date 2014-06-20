@@ -19,9 +19,8 @@
 package brooklyn.entity.nosql.couchbase;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -32,6 +31,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
+
+import com.google.common.reflect.TypeToken;
 
 @ImplementedBy(CouchbaseClusterImpl.class)
 public interface CouchbaseCluster extends DynamicCluster {
@@ -90,4 +91,22 @@ public interface CouchbaseCluster extends DynamicCluster {
             "Average across cluster for pools/nodes/<current node>/interestingStats/couch_docs_actual_disk_size");
     AttributeSensor<Long> COUCH_VIEWS_DATA_SIZE_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.couch.views.data.size", 
             "Average across cluster for pools/nodes/<current node>/interestingStats/couch_views_data_size");
+    
+    AttributeSensor<Boolean> BUCKET_CREATION_IN_PROGRESS = Sensors.newBooleanSensor("couchbase.cluster.bucketCreationInProgress", "Indicates that a bucket is currently being created, and" +
+            "further bucket creation should be deferred");
+
+    /**
+     * createBuckets is a list of all the buckets to be created on the couchbase cluster
+     * the buckets will be created on the primary node of the cluster
+     * each map entry for a bucket should contain the following parameters:
+     * - <"bucket",(String) name of the bucket (default: default)>
+     * - <"bucket-type",(String) name of bucket type (default: couchbase)>
+     * - <"bucket-port",(Integer) the bucket port to connect to (default: 11222)>
+     * - <"bucket-ramsize",(Integer) ram size allowed for bucket (default: 200)>
+     * - <"bucket-replica",(Integer) number of replicas for the bucket (default: 1)>
+     */
+    @SuppressWarnings("serial")
+    @SetFromFlag("createBuckets")
+    ConfigKey<List<Map<String, Object>>> CREATE_BUCKETS = ConfigKeys.newConfigKey(new TypeToken<List<Map<String, Object>>>() {}, 
+            "couchbase.cluster.createBuckets", "a list of all dedicated port buckets to be created on the couchbase cluster");
 }

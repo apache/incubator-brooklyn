@@ -26,6 +26,8 @@ public interface CouchbaseNodeDriver extends SoftwareProcessDriver {
     public void serverAdd(String serverToAdd, String username, String password);
 
     public void rebalance();
+    
+    public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica);
 
     public void serverAddAndRebalance(String serverToAdd, String username, String password);
 

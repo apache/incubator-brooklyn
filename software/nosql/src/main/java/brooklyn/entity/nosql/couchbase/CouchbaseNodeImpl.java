@@ -181,4 +181,8 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         }
     }
 
+    @Override
+    public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
+        getDriver().bucketCreate(bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
+    }
 }
