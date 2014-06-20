@@ -80,8 +80,9 @@ public abstract class AbstractServerPoolTest {
             fail("Expected exception when starting app with too many entities for pool");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, NoMachinesAvailableException.class);
-            assertTrue(t != null,
-                    "expected " + NoMachinesAvailableException.class.getName() + " to be thrown, not found in " + e);
+            if (t == null) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

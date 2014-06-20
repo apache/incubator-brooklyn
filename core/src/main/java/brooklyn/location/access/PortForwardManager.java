@@ -18,7 +18,7 @@ import com.google.common.net.HostAndPort;
  * an unused port on a firewall / public IP address. It may then go on actually to talk to that firewall/IP to
  * provision the forwarding rule.
  * <p>
- * Subseequently the other side can use this class {@link #lookup(Location, int)} if it knows the
+ * Subsequently the other side can use this class {@link #lookup(Location, int)} if it knows the
  * location and private port it wishes to talk to.
  * <p>
  * Implementations typically will not know anything about what the firewall/IP actually is, they just handle a

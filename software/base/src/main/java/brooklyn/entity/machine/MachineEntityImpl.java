@@ -1,4 +1,4 @@
-package brooklyn.entity.pool;
+package brooklyn.entity.machine;
 
 import java.util.List;
 import java.util.concurrent.TimeoutException;

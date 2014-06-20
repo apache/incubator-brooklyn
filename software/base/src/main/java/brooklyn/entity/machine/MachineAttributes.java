@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package brooklyn.entity.pool;
+package brooklyn.entity.machine;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
