@@ -21,6 +21,8 @@ package brooklyn.entity.webapp;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
@@ -57,7 +59,7 @@ import brooklyn.util.flags.SetFromFlag;
  * members has no effect on the members of the underlying DynamicCluster - treat this as a read-only view.
  */
 @ImplementedBy(ControlledDynamicWebAppClusterImpl.class)
-public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, Startable, Resizable, MemberReplaceable, Group, ElasticJavaWebAppService {
+public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, Startable, Resizable, MemberReplaceable, Group, ElasticJavaWebAppService, JavaWebAppSoftwareProcess {
 
     @SetFromFlag("initialSize")
     public static ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 1);
@@ -96,4 +98,19 @@ public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, St
     public ConfigurableEntityFactory<WebAppService> getFactory();
     
     public DynamicWebAppCluster getCluster();
+    
+    @Effector(description="Deploys the given artifact, from a source URL, to a given deployment filename/context")
+    public void deploy(
+            @EffectorParam(name="url", description="URL of WAR file") String url, 
+            @EffectorParam(name="targetName", description="context path where WAR should be deployed (/ for ROOT)") String targetName);
+
+    @Effector(description="Undeploys the given context/artifact")
+    public void undeploy(
+            @EffectorParam(name="targetName") String targetName); 
+    
+    @Effector(description="Updates the given context/artifact")
+    public void update(
+    		@EffectorParam(name="url", description="URL of NEW WAR file") String url,
+            @EffectorParam(name="targetName") String targetName);    
+    
 }

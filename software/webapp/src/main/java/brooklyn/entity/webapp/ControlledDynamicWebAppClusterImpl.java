@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.DynamicGroupImpl;
@@ -50,12 +53,19 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+import brooklyn.entity.webapp.FilenameToWebContextMapper;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl implements ControlledDynamicWebAppCluster {
 
     public static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterImpl.class);
+    private FilenameToWebContextMapper filenameToWebContextMapper = new FilenameToWebContextMapper();
 
     public ControlledDynamicWebAppClusterImpl() {
         this(MutableMap.of(), null);
@@ -313,4 +323,90 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         }
         return null;
     }
+    /**
+     * Deploys the given artifact, from a source URL, to all members of the cluster
+     * See {@link FileNameToContextMappingTest} for definitive examples!
+     * 
+     * @param url  where to get the war, as a URL, either classpath://xxx or file:///home/xxx or http(s)...
+     * @param targetName  where to tell the server to serve the WAR, see above
+     */
+    @Effector(description="Deploys the given artifact, from a source URL, to a given deployment filename/context")
+    public void deploy(
+            @EffectorParam(name="url", description="URL of WAR file") String url, 
+            @EffectorParam(name="targetName", description="context path where WAR should be deployed (/ for ROOT)") String targetName) {
+        try {
+            checkNotNull(url, "url");
+            checkNotNull(targetName, "targetName");
+            // actually deploy
+            List <Entity> cluster_members = Lists.newArrayList();
+//            cluster_members.addAll((Collection<? extends Entity>) Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class)); 
+            for (JavaWebAppSoftwareProcess member : Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class)) {
+            	Lifecycle serviceState = member.getAttribute(SERVICE_STATE);
+            	if (serviceState == Lifecycle.RUNNING) {
+            	  cluster_members.add(member);
+            	}
+            }            
+            Entities.invokeEffectorListWithArgs(this, cluster_members, DEPLOY, url, targetName).get();            
+            
+            // Update attribute
+            Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
+            if (deployedWars == null) {
+                deployedWars = Sets.newLinkedHashSet();
+            }
+            deployedWars.add(targetName);
+            setAttribute(DEPLOYED_WARS, deployedWars);
+        } catch (RuntimeException e) {
+            // Log and propagate, so that log says which entity had problems...
+            log.warn("Error deploying '"+url+"' to "+targetName+" on "+toString()+"; rethrowing...", e);
+            throw Throwables.propagate(e);
+        } catch (Throwable th) {
+            // Log and propagate, so that log says which entity had problems...
+            log.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", th);
+            throw Throwables.propagate(th);
+        }
+    }
+    /** For the DEPLOYED_WARS to be updated, the input must match the result of the call to deploy */
+    @Effector(description="Undeploys the given context/artifact")
+    public void undeploy(
+            @EffectorParam(name="targetName") String targetName) {
+    	
+        try {
+
+            List <Entity> cluster_members = Lists.newArrayList();
+//            cluster_members.addAll((Collection<? extends Entity>) Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class));
+            for (JavaWebAppSoftwareProcess member : Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class)) {
+            	Lifecycle serviceState = member.getAttribute(SERVICE_STATE);
+            	if (serviceState == Lifecycle.RUNNING) {
+            	  cluster_members.add(member);
+            	}
+            }             
+            Entities.invokeEffectorListWithArgs(this, cluster_members, UNDEPLOY, targetName).get(); 
+            
+       	
+            // Update attribute
+            Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
+            if (deployedWars == null) {
+                deployedWars = Sets.newLinkedHashSet();
+            }
+            deployedWars.remove( filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName) );
+            setAttribute(DEPLOYED_WARS, deployedWars);
+        } catch (RuntimeException e) {
+            // Log and propagate, so that log says which entity had problems...
+            log.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", e);
+            throw Throwables.propagate(e);
+        } catch (Throwable th) {
+            // Log and propagate, so that log says which entity had problems...
+            log.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", th);
+            throw Throwables.propagate(th);
+        }
+    }  
+    @Effector(description="Updates the given context/artifact")
+    public void update(
+    		@EffectorParam(name="url", description="URL of NEW WAR file") String url,
+            @EffectorParam(name="targetName") String targetName) {
+    	// simple for now
+    	undeploy(targetName);
+    	deploy(url, targetName);
+    
+    }    
 }
