@@ -1,3 +1,18 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor
+ * license agreements.  See the NOTICE file distributed with this work for
+ * additional information regarding copyright ownership.  The ASF licenses this
+ * file to you under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.  You may obtain a copy of
+ * the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed
+ * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package brooklyn.entity.machine;
 
 import java.util.List;
@@ -29,7 +44,7 @@ public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEnt
     private static final Logger LOG = LoggerFactory.getLogger(MachineEntityImpl.class);
 
     static {
-    	MachineAttributes.init();
+        MachineAttributes.init();
     }
 
     private transient SshFeed sensorFeed;
@@ -51,7 +66,7 @@ public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEnt
                 .entity(this)
                 .period(Duration.THIRTY_SECONDS)
                 .poll(new SshPollConfig<Double>(LOAD_AVERAGE)
-                		.command("uptime")
+                        .command("uptime")
                         .onFailureOrException(Functions.constant(-1d))
                         .onSuccess(new Function<SshPollValue, Double>() {
                             @Override
@@ -74,7 +89,7 @@ public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEnt
                             }
                         }))
                 .poll(new SshPollConfig<Long>(USED_MEMORY)
-                		.command("free | grep Mem:")
+                        .command("free | grep Mem:")
                         .onFailureOrException(Functions.constant(-1L))
                         .onSuccess(new Function<SshPollValue, Long>() {
                             @Override
@@ -84,7 +99,7 @@ public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEnt
                             }
                         }))
                 .poll(new SshPollConfig<Long>(FREE_MEMORY)
-                		.command("free | grep Mem:")
+                        .command("free | grep Mem:")
                         .onFailureOrException(Functions.constant(-1L))
                         .onSuccess(new Function<SshPollValue, Long>() {
                             @Override
@@ -94,7 +109,7 @@ public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEnt
                             }
                         }))
                 .poll(new SshPollConfig<Long>(TOTAL_MEMORY)
-                		.command("free | grep Mem:")
+                        .command("free | grep Mem:")
                         .onFailureOrException(Functions.constant(-1L))
                         .onSuccess(new Function<SshPollValue, Long>() {
                             @Override
@@ -114,13 +129,13 @@ public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEnt
         super.disconnectSensors();
     }
 
-	@Override
-	public Class<?> getDriverInterface() {
-		return EmptySoftwareProcessDriver.class;
-	}
+    @Override
+    public Class<?> getDriverInterface() {
+        return EmptySoftwareProcessDriver.class;
+    }
 
     public SshMachineLocation getMachine() {
-    	return Machines.findUniqueSshMachineLocation(getLocations()).get();
+        return Machines.findUniqueSshMachineLocation(getLocations()).get();
     }
 
     @Override
