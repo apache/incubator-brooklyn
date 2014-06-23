@@ -378,21 +378,31 @@ public class ResourceUtils {
         Class<?> cc = contextObject instanceof Class ? (Class<?>)contextObject : contextObject.getClass();
         return getClassLoaderDir(cc.getCanonicalName().replace('.', '/')+".class");
     }
+    
     public String getClassLoaderDir(String resourceInThatDir) {
         resourceInThatDir = Strings.removeFromStart(resourceInThatDir, "/");
         URL url = getLoader().getResource(resourceInThatDir);
         if (url==null) throw new NoSuchElementException("Resource ("+resourceInThatDir+") not found");
 
+        //Switching from manual parsing of jar: and file: URLs to java provided functionality.
+        //The old code was breaking on any Windows path and instead of fixing it, using
+        //the provided Java APIs seemed like the better option since they are already tested
+        //on multiple platforms.
         boolean isJar = "jar".equals(url.getProtocol());
         if(isJar) {
             try {
-                //let java handle the parsing of jar url, no network connection is established.
+                //let java handle the parsing of jar URL, no network connection is established.
+                //Strips the jar protocol:
+                //  jar:file:/<path to jar>!<resourceInThatDir>
+                //  becomes
+                //  file:/<path to jar>
                 JarURLConnection connection = (JarURLConnection) url.openConnection();
                 url = connection.getJarFileURL();
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
         } else {
+            //Remove the trailing resouceInThatDir path from the URL, thus getting the parent folder.
             String path = url.toString();
             int i = path.indexOf(resourceInThatDir);
             if (i==-1) throw new IllegalStateException("Resource path ("+resourceInThatDir+") not in url substring ("+url+")");
@@ -406,6 +416,7 @@ public class ResourceUtils {
         
         if (!"file".equals(url.getProtocol())) throw new IllegalStateException("Resource ("+resourceInThatDir+") not on file system (at "+url+")");
 
+        //convert from file: URL to File
         File file;
         try {
             file = new File(url.toURI());
