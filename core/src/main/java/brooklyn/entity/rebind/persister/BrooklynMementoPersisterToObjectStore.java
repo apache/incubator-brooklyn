@@ -266,9 +266,10 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
             return;
         }
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointing entire memento");
         objectStore.prepareForMasterUse();
         
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
         for (EntityMemento entity : newMemento.getEntityMementos().values()) {
             persist("entities", entity);
         }
@@ -281,6 +282,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         for (EnricherMemento enricher : newMemento.getEnricherMementos().values()) {
             persist("enrichers", enricher);
         }
+        
+        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed entire memento in {}", Time.makeTimeStringRounded(stopwatch));
     }
     
     @Override
@@ -289,11 +292,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointed delta of memento, because not running");
             return;
         }
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento; updating {} entities, {} locations and {} policies; " +
-        		"removing {} entities, {} locations and {} policies", 
-                new Object[] {delta.entities(), delta.locations(), delta.policies(),
-                delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
         objectStore.prepareForMasterUse();
+        
+        Stopwatch stopwatch = Stopwatch.createStarted();
         
         for (EntityMemento entity : delta.entities()) {
             persist("entities", entity);
@@ -320,6 +321,11 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         for (String id : delta.removedEnricherIds()) {
             delete("enrichers", id);
         }
+        
+        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}; updated {} entities, {} locations and {} policies; " +
+                "removing {} entities, {} locations and {} policies", 
+                new Object[] {Time.makeTimeStringRounded(stopwatch), delta.entities(), delta.locations(), delta.policies(),
+                delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
     }
 
     @Override

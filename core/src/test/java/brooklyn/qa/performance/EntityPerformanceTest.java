@@ -34,7 +34,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
 
     @BeforeMethod(alwaysRun=true)
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
         
         entities = Lists.newArrayList();

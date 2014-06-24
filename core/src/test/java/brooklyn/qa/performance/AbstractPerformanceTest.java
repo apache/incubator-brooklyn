@@ -50,14 +50,14 @@ public class AbstractPerformanceTest {
     protected SimulatedLocation loc;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
+    public void setUp() throws Exception {
         for (int i = 0; i < 5; i++) System.gc();
         loc = new SimulatedLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
     
     @AfterMethod(alwaysRun=true)
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
@@ -87,8 +87,7 @@ public class AbstractPerformanceTest {
         long nextLogTime = logInterval;
         
         // Give it some warm-up cycles
-        Stopwatch warmupWatch = new Stopwatch();
-        warmupWatch.start();
+        Stopwatch warmupWatch = Stopwatch.createStarted();
         for (int i = 0; i < (numIterations/10); i++) {
             if (warmupWatch.elapsed(TimeUnit.MILLISECONDS) >= nextLogTime) {
                 LOG.info("Warm-up "+prefix+" iteration="+i+" at "+warmupWatch.elapsed(TimeUnit.MILLISECONDS)+"ms");
@@ -97,8 +96,7 @@ public class AbstractPerformanceTest {
             r.run();
         }
         
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         nextLogTime = 0;
         for (int i = 0; i < numIterations; i++) {
             if (stopwatch.elapsed(TimeUnit.MILLISECONDS) >= nextLogTime) {

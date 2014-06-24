@@ -1,15 +1,11 @@
 package brooklyn.location.basic;
 
 import java.io.ByteArrayOutputStream;
-import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +13,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.qa.performance.PerformanceTestUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;
@@ -125,9 +122,7 @@ public class SshMachineLocationPerformanceTest {
     }
     
     private void runMany(final Runnable task, final String context, int concurrentRuns, int iterations) throws Exception {
-        MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-        ObjectName osMBeanName = ObjectName.getInstance(ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME);
-        long preCpuTime = (Long) mbeanServer.getAttribute(osMBeanName, "ProcessCpuTime");
+        long preCpuTime = PerformanceTestUtils.getProcessCpuTime();
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         for (int i = 0; i < iterations; i++) {
@@ -145,7 +140,7 @@ public class SshMachineLocationPerformanceTest {
             }
             Futures.allAsList(futures).get();
             
-            long postCpuTime = (Long) mbeanServer.getAttribute(osMBeanName, "ProcessCpuTime");
+            long postCpuTime = PerformanceTestUtils.getProcessCpuTime();
             long elapsedTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             double fractionCpu = (elapsedTime > 0) ? ((double)postCpuTime-preCpuTime) / TimeUnit.MILLISECONDS.toNanos(elapsedTime) : -1;
             LOG.info("Executing {}; completed {}; took {}; fraction cpu {}",

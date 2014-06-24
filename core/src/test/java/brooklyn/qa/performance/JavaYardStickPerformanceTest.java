@@ -23,13 +23,13 @@ public class JavaYardStickPerformanceTest extends AbstractPerformanceTest {
     private ExecutorService executor;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
         executor = Executors.newCachedThreadPool();
     }
     
     @AfterMethod(alwaysRun=true)
-    public void tearDown() {
+    public void tearDown() throws Exception {
         super.tearDown();
         if (executor != null) executor.shutdownNow();
     }
