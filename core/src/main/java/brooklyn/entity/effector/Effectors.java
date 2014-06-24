@@ -117,17 +117,17 @@ public class Effectors {
                 " on entity " + entity+" "+
                 (eff2==eff ? "" : " (actually "+eff2+"/"+
                         (eff2 instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>)eff2).getBody() : "bodyless")+")"));
-        if (eff2!=null) {
-            if (eff2!=eff) {
+        if (eff2 != null) {
+            if (eff2 != eff) {
                 if (eff2 instanceof EffectorWithBody) {
                     log.debug("Replacing invocation of {} on {} with {} which is the impl defined at that entity", new Object[] { eff, entity, eff2 });
                     return ((EffectorWithBody<T>)eff2).getBody().newTask(entity, eff2, ConfigBag.newInstance().putAll(parameters));
                 } else {
                     log.warn("Effector {} defined on {} has no body; invoking caller-supplied {} instead", new Object[] { eff2, entity, eff });
                 }
-            } else {
-                log.debug("Effector {} does not exist on {}; attempting to invoke anyway", new Object[] { eff, entity });
             }
+        } else {
+            log.debug("Effector {} does not exist on {}; attempting to invoke anyway", new Object[] { eff, entity });
         }
         
         if (eff instanceof EffectorWithBody) {
