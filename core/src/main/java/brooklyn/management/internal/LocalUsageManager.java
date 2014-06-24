@@ -91,9 +91,10 @@ public class LocalUsageManager implements UsageManager {
         }
         
         Object callerContext = loc.getConfig(LocationConfigKeys.CALLER_CONTEXT);
-        log.debug("Storing location lifecycle event: location {} in state {}; caller context {}", new Object[] {loc, state, callerContext});
         
         if (callerContext != null && callerContext instanceof Entity) {
+            log.debug("Storing location lifecycle event: location {} in state {}; caller context {}", new Object[] {loc, state, callerContext});
+            
             Entity caller = (Entity) callerContext;
             String entityTypeName = caller.getEntityType().getName();
             String appId = caller.getApplicationId();
