@@ -19,6 +19,7 @@ import groovy.lang.Closure;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -43,7 +44,11 @@ public interface DynamicGroup extends AbstractGroup {
      * <p>
      * Does not stop any of its members. De-activates the filter and unsubscribes to
      * entity-updates, so the membership of the group will not change.
+     * 
+     * @deprecated since 0.7; no longer supported (was only used in tests, and by classes that
+     *             also implemented {@link Startable#stop()}!)
      */
+    @Deprecated
     void stop();
 
     /** Rescans <em>all</em> entities to determine whether they match the filter. */
