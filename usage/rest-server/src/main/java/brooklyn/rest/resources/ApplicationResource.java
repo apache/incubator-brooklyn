@@ -4,14 +4,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
-
-import brooklyn.util.ResourceUtils;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
@@ -25,7 +22,6 @@ import java.util.Map;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.codehaus.jackson.JsonNode;
@@ -58,6 +54,7 @@ import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -229,12 +226,11 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
           uri = null;
       }
       if (uri != null) {
-          log.debug("Input to createFromYaml might be a URL: " + uri);
+          log.debug("Create app called with URI; retrieving contents: {}", uri);
           yaml = ResourceUtils.create(mgmt()).getResourceAsString(uri.toString());
-          log.debug("Continuing using the contents of the URL: {}", yaml);
       }
 
-      log.debug("Creating app from yaml");
+      log.debug("Creating app from yaml:\n{}", yaml);
       Reader input = new StringReader(yaml);
       AssemblyTemplate at = camp().pdp().registerDeploymentPlan(input);
       return launch(at);
