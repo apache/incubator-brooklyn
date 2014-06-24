@@ -20,8 +20,10 @@ import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.location.Location;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
@@ -158,11 +160,9 @@ public class SshFeed extends AbstractFeed {
     private final SetMultimap<SshPollIdentifier, SshPollConfig<?>> polls = HashMultimap.<SshPollIdentifier,SshPollConfig<?>>create();
     
     public static SshMachineLocation getMachineOfEntity(Entity entity) {
-        if (entity.getLocations()==null || entity.getLocations().size()!=1)
-            return null;
-        Location l = Iterables.getOnlyElement( entity.getLocations() );
-        if (l instanceof SshMachineLocation) return (SshMachineLocation)l;
-        return null;
+        Maybe<SshMachineLocation> maybe = Machines.findUniqueSshMachineLocation(entity.getLocations());
+        if (maybe.isAbsentOrNull()) return null;
+        return maybe.get();
     }
 
     protected SshFeed(Builder builder) {
