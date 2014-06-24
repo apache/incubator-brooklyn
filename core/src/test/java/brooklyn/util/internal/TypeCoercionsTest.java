@@ -5,6 +5,7 @@ import static org.testng.Assert.assertEquals;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.runtime.GStringImpl;
@@ -16,6 +17,7 @@ import brooklyn.util.flags.ClassCoercionException;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 
@@ -137,6 +139,18 @@ public class TypeCoercionsTest {
     public void testStringToListCoercion() {
         List<?> s = TypeCoercions.coerce("a,b,c", List.class);
         Assert.assertEquals(s, ImmutableList.of("a", "b", "c"));
+    }
+
+    @Test
+    public void testStringToMapCoercion() {
+        Map s = TypeCoercions.coerce("a=1,b=2,c=3", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", "2", "c", "3"));
+    }
+
+    @Test
+    public void testJsonStringToMapCoercion() {
+        Map s = TypeCoercions.coerce("{ \"a\" : \"1\", \"b\" : \"2\", \"c\" : \"3\" }", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", "2", "c", "3"));
     }
 
     @Test
