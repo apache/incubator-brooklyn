@@ -29,6 +29,7 @@ public class QuarantineGroupImpl extends AbstractGroupImpl implements Quarantine
     @Override
     public void expungeMembers(boolean stopFirst) {
         Set<Entity> members = ImmutableSet.copyOf(getMembers());
+        RuntimeException exception = null;
         if (stopFirst) {
             Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
             for (Entity member : members) {
@@ -38,14 +39,20 @@ public class QuarantineGroupImpl extends AbstractGroupImpl implements Quarantine
                 }
             }
             DynamicTasks.queueIfPossible(Tasks.parallel("stopping "+tasks.size()+" member"+Strings.s(tasks.size())+" (parallel)", tasks.values())).orSubmitAsync(this);
-            waitForTasksOnExpungeMembers(tasks);
+            try {
+                waitForTasksOnExpungeMembers(tasks);
+            } catch (RuntimeException e) {
+                Exceptions.propagateIfFatal(e);
+                exception = e;
+                LOG.warn("Problem stopping members of quarantine group "+this+" (rethrowing after unmanaging members): "+e);
+            }
         }
         for (Entity member : members) {
+            removeMember(member);
             Entities.unmanage(member);
         }
-        Set<Entity> children = ImmutableSet.copyOf(getChildren());
-        for (Entity child : children) {
-            Entities.unmanage(child);
+        if (exception != null) {
+            throw exception;
         }
     }
     
