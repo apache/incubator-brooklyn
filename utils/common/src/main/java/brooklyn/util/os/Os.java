@@ -38,8 +38,8 @@ public class Os {
 
     private static final Logger log = LoggerFactory.getLogger(Os.class);
     
-    private static final String SEPARATOR_UNIX = "/";
-    private static final String SEPARATOR_WIN = "\\";
+    private static final char SEPARATOR_UNIX = '/';
+    private static final char SEPARATOR_WIN = '\\';
     
     /** returns the best tmp dir to use; see {@link TmpDirFinder} for the logic
      * (and the explanation why this is needed!) */
@@ -450,21 +450,31 @@ public class Os {
         return result;
     }
 
-    public static boolean isAbsoluteLocal(String path) {
-        if (Os.isMicrosoftWindows()) {
-            return isAbsoluteWin(path);
-        } else {
-            return isAbsoluteUnix(path);
-        }
+    /**
+     * Checks whether a file system path is absolute in a platform neutral way.
+     * <p>
+     * As a consequence of the platform neutrality some edge cases are
+     * not handled correctly:
+     * <ul>
+     *  <li>On Windows relative paths starting with slash (either forward or backward) or ~ are treated as absolute.
+     *  <li>On UNIX relative paths starting with X:/ are treated as absolute.
+     * </ul>
+     *
+     * @param path A string representing a file system path.
+     * @return whether the path is absolute under the above constraints.
+     */
+    public static boolean isAbsolutish(String path) {
+        return
+            path.codePointAt(0) == SEPARATOR_UNIX ||
+            path.equals("~") || path.startsWith("~" + SEPARATOR_UNIX) ||
+            path.length()>=3 && path.codePointAt(1) == ':' &&
+                                isSeparator(path.codePointAt(2));
     }
 
-    public static boolean isAbsoluteUnix(String path) {
-        return path.startsWith(SEPARATOR_UNIX) ||
-                (path.equals("~") || path.startsWith("~/"));
+    private static boolean isSeparator(int sep) {
+        return sep == SEPARATOR_UNIX ||
+               sep == SEPARATOR_WIN;
     }
-
-    public static boolean isAbsoluteWin(String path) {
-        return path.length()>=3 && path.substring(1).startsWith(":\\");
     }
 
     public static boolean isMicrosoftWindows() {

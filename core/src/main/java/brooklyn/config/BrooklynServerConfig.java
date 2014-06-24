@@ -75,7 +75,7 @@ public class BrooklynServerConfig {
     }
     
     protected static String resolveAgainstBaseDir(StringConfigMap brooklynProperties, String path) {
-        if (!Os.isAbsoluteLocal(path)) path = Os.mergePaths(getMgmtBaseDir(brooklynProperties), path);
+        if (!Os.isAbsolutish(path)) path = Os.mergePaths(getMgmtBaseDir(brooklynProperties), path);
         return Os.tidyPath(path);
     }
     
