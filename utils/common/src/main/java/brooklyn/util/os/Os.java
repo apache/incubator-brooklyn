@@ -476,6 +476,10 @@ public class Os {
                sep == SEPARATOR_WIN;
     }
     
+    public static String fromHome(String path) {
+        return new File(Os.home(), path).getAbsolutePath();
+    }
+    
     public static String nativePath(String path) {
         return new File(path).getPath();
     }
