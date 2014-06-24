@@ -5,8 +5,6 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -25,8 +23,6 @@ import com.google.common.collect.Lists;
 
 public class EntityPerformanceTest extends AbstractPerformanceTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EntityPerformanceTest.class);
-    
     private static final long TIMEOUT_MS = 10*1000;
     
     TestEntity entity;
@@ -50,19 +46,6 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         return 1000;
     }
     
-    @Test(groups={"Integration", "Acceptance"})
-    public void testGroovyNoopToEnsureTestFrameworkIsVeryFast() {
-        int numIterations = numIterations();
-        double minRatePerSec = 100000 * PERFORMANCE_EXPECTATION;
-        final AtomicInteger i = new AtomicInteger();
-        
-        measureAndAssert("noop-groovy", numIterations, minRatePerSec, new Runnable() {
-            public void run() {
-                i.incrementAndGet();
-            }});
-        assertTrue(i.get() >= numIterations, "i="+i);
-    }
-
     @Test(groups={"Integration", "Acceptance"})
     public void testUpdateAttributeWhenNoListeners() {
         int numIterations = numIterations();

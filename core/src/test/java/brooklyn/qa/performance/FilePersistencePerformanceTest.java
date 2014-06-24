@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -23,8 +21,6 @@ import com.google.common.io.Files;
 
 public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FilePersistencePerformanceTest.class);
-    
     File file;
     FileBasedStoreObjectAccessor fileAccessor;
     
