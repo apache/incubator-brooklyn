@@ -148,7 +148,7 @@ public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEnt
         try {
             ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh(command)
                     .machine(getMachine())
-                    .summary(Strings.getFirstWord(command))
+                    .summary(command)
                     .newTask();
             Integer result = DynamicTasks.queueIfPossible(task)
                     .executionContext(this)
