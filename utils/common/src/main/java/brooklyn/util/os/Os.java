@@ -475,6 +475,9 @@ public class Os {
         return sep == SEPARATOR_UNIX ||
                sep == SEPARATOR_WIN;
     }
+    
+    public static String nativePath(String path) {
+        return new File(path).getPath();
     }
 
     public static boolean isMicrosoftWindows() {
