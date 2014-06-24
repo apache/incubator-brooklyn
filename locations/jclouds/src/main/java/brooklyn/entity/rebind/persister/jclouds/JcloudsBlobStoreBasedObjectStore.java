@@ -87,7 +87,9 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     }
 
     @Override
-    public void prepareForContendedWrite() {
+    public void prepareForMasterUse() {
+        // TODO currently backups not supported here, that is all which is needed for master use
+        // (we have already thrown in prepareForSharedUse if backups have been specified as required)
     }
     
     public String getContainerName() {
@@ -162,7 +164,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     }
     
     @Override
-    public void prepareForUse(@Nullable PersistMode persistMode, HighAvailabilityMode haMode) {
+    public void prepareForSharedUse(@Nullable PersistMode persistMode, HighAvailabilityMode haMode) {
         if (mgmt==null) throw new NullPointerException("Must inject ManagementContext before preparing "+this);
         
         getBlobStoreContext();

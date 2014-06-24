@@ -68,10 +68,13 @@ public class BrooklynShutdownHooks {
                 }
             }
             
-            // TODO should be a weak reference in case it is destroyed before shutdown
-            // (only applied to certain entities started via launcher so not a big leak)
-            entitiesToStopOnShutdown.add(entity);
-            semaphore.release();
+            try {
+                // TODO should be a weak reference in case it is destroyed before shutdown
+                // (only applied to certain entities started via launcher so not a big leak)
+                entitiesToStopOnShutdown.add(entity);
+            } finally {
+                semaphore.release();
+            }
             addShutdownHookIfNotAlready();
             
         } catch (Exception e) {
@@ -164,8 +167,7 @@ public class BrooklynShutdownHooks {
             } catch (Exception e) {
                 throw Exceptions.propagate(e);
             }
-            for (Entity entity: entitiesToStopOnShutdown)
-                entitiesToStop.add(entity);
+            entitiesToStop.addAll(entitiesToStopOnShutdown);
             for (ManagementContext mgmt: managementContextsToStopAppsOnShutdown) {
                 entitiesToStop.addAll(mgmt.getApplications());
             }

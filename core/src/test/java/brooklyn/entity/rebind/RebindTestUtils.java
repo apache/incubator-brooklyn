@@ -155,7 +155,7 @@ public class RebindTestUtils {
             }
             
             objectStore.injectManagementContext(unstarted);
-            objectStore.prepareForUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
+            objectStore.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
             BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
             ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
             unstarted.getRebindManager().setPersister(newPersister);
@@ -207,7 +207,7 @@ public class RebindTestUtils {
     public static Application rebind(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
         PersistenceObjectStore objectStore = new FileBasedObjectStore(mementoDir);
         objectStore.injectManagementContext(newManagementContext);
-        objectStore.prepareForUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
+        objectStore.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
         return rebind(newManagementContext, mementoDir, classLoader, exceptionHandler, objectStore);
     }
     public static Application rebind(ManagementContext newManagementContext, File mementoDir,

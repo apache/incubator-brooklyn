@@ -113,8 +113,8 @@ public class ListeningObjectStore implements PersistenceObjectStore {
     }
 
     @Override
-    public void prepareForContendedWrite() {
-        delegate.prepareForContendedWrite();
+    public void prepareForMasterUse() {
+        delegate.prepareForMasterUse();
     }
 
     @Override
@@ -147,8 +147,8 @@ public class ListeningObjectStore implements PersistenceObjectStore {
     }
     
     @Override
-    public void prepareForUse(PersistMode persistMode, HighAvailabilityMode haMode) {
-        delegate.prepareForUse(persistMode, haMode);
+    public void prepareForSharedUse(PersistMode persistMode, HighAvailabilityMode haMode) {
+        delegate.prepareForSharedUse(persistMode, haMode);
     }
 
     @Override

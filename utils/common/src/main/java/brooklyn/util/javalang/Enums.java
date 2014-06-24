@@ -77,9 +77,9 @@ public class Enums {
      **/
     public static <T extends Enum<?>> Maybe<T> valueOfIgnoreCase(String contextMessage, T[] enumValues, String givenValue) {
         if (givenValue==null) 
-            return Maybe.absent(new IllegalStateException("Value for "+contextMessage+" cannot be null"));
+            return Maybe.absent(new IllegalStateException("Value for "+contextMessage+" must not be null"));
         if (Strings.isBlank(givenValue)) 
-            return Maybe.absent(new IllegalStateException("Value for "+contextMessage+" cannot be blank"));
+            return Maybe.absent(new IllegalStateException("Value for "+contextMessage+" must not be blank"));
         
         for (T v: enumValues)
             if (v.name().equals(givenValue)) 

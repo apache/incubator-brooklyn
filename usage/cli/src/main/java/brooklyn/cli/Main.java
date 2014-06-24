@@ -244,21 +244,12 @@ public class Main {
                 + "(default is to abort if they fail to start)")
         public boolean ignoreAppErrors = false;
 
-        /**
-         * Note that this is a temporary workaround to allow for running the
-         * brooklyn-whirr example.
-         * 
-         * This will be replaced by more powerful CLI control for running
-         * processes, to send shutdown and other commands to brooklyn.
-         * 
-         * Without using this flag you get a
-         * java.util.concurrent.RejectedExecutionException because the brooklyn
-         * and whirr shutdown hooks get executed in parallel. This is how it
-         * looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
-         */
+        // Note in some cases, you can get java.util.concurrent.RejectedExecutionException 
+        // if shutdown is not co-ordinated, e.g. with Whirr:
+        // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
         @Option(name = { "-sk", "--stopOnKeyPress" },
-                description = "After startup, shutdown on user extry")
+                description = "After startup, shutdown on user text entry")
         public boolean stopOnKeyPress = false;
 
         final static String STOP_WHICH_APPS_ON_SHUTDOWN = "--stopOnShutdown";

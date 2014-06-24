@@ -32,7 +32,7 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
     }
     
     @Override
-    public void prepareForContendedWrite() {
+    public void prepareForMasterUse() {
     }
 
     @Override
@@ -126,7 +126,7 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
     }
     
     @Override
-    public void prepareForUse(PersistMode persistMode, HighAvailabilityMode haMode) {
+    public void prepareForSharedUse(PersistMode persistMode, HighAvailabilityMode haMode) {
         prepared = true;
     }
 

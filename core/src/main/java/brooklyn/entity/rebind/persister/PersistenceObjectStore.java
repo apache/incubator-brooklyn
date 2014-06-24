@@ -46,10 +46,42 @@ public interface PersistenceObjectStore {
     /** human-readable name of this object store */
     public String getSummaryName();
     
-    /** triggers any backup if this method has not been invoked; 
-     * used to allow certain non-contentious writes (e.g. node id's)
-     * without triggering backup, but then forcing backup before a contended write */
-    public void prepareForContendedWrite();
+    /**
+     * Allows a way for an object store to be created ahead of time, and a mgmt context injected.
+     * Currently subsequent changes are not permitted.
+     * <p>
+     * A {@link ManagementContext} must be supplied via constructor or this method before invoking other methods.
+     */
+    @Beta
+    public void injectManagementContext(ManagementContext managementContext);
+    
+    /**
+     * Prepares the persistence store for read use and non-contentious write use,
+     * in particular detecting whether we should clean or register a need for backup etc.
+     * Typically called early in the setup lifecycle, after {@link #injectManagementContext(ManagementContext)},
+     * but before {@link #prepareForMasterUse()}.
+     * <p>
+     * See {@link #prepareForMasterUse()} for discussion of "contentious writes".
+     */
+    @Beta
+    public void prepareForSharedUse(PersistMode persistMode, HighAvailabilityMode highAvailabilityMode);
+
+    /** 
+     * Prepares the persistence store for "contentious writes".
+     * These are defined as those writes which might overwrite important information.
+     * Implementations usually perform backup/versioning of the store if required.
+     * <p>
+     * Caller must call {@link #prepareForSharedUse(PersistMode, HighAvailabilityMode)} first
+     * (and {@link #injectManagementContext(ManagementContext)} before that).
+     * <p>
+     * This is typically invoked "at the last moment" e.g. before the any such write,
+     * mainly in order to prevent backups being made unnecessarily (e.g. if a node is standby,
+     * or if it tries to become master but is not capable),
+     * but also to prevent simultaneous backups which can cause problems with some stores
+     * (only a mgmt who knows he is the master should invoke this).
+     **/
+    @Beta
+    public void prepareForMasterUse();
     
     /**
      * For reading/writing data to the item at the given path.
@@ -87,23 +119,5 @@ public interface PersistenceObjectStore {
      * behaviour of such calls is undefined but likely to throw exceptions.
      */
     void close();
-
-    /**
-     * Allows a way for an object store to be created ahead of time, and a mgmt context injected.
-     * Currently subsequent changes are not permitted.
-     * <p>
-     * A {@link ManagementContext} must be supplied via constructor or this method before invoking other methods.
-     */
-    @Beta
-    public void injectManagementContext(ManagementContext managementContext);
-    
-    /**
-     * Prepares the persistence directory for use 
-     * (e.g. detecting whether any backup will be necessary, deleting as required, etc) 
-     */
-    // although there is some commonality between the different stores it is mostly different,
-    // so this method currently sits here; it may move if advanced backup strategies have commonalities
-    @Beta
-    public void prepareForUse(PersistMode persistMode, HighAvailabilityMode highAvailabilityMode);
 
 }

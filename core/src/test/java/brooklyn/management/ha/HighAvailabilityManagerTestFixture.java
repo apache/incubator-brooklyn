@@ -64,7 +64,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         ownNodeId = managementContext.getManagementNodeId();
         objectStore = newPersistenceObjectStore();
         objectStore.injectManagementContext(managementContext);
-        objectStore.prepareForUse(PersistMode.CLEAN, HighAvailabilityMode.DISABLED);
+        objectStore.prepareForSharedUse(PersistMode.CLEAN, HighAvailabilityMode.DISABLED);
         persister = new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext, objectStore, classLoader);
         ((ManagementPlaneSyncRecordPersisterToObjectStore)persister).allowRemoteTimestampInMemento();
         BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
