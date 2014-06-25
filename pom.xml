@@ -124,7 +124,7 @@
         <hazelcast.version>3.0</hazelcast.version>
 
         <includedTestGroups />
-        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
+        <excludedTestGroups>Integration,Acceptance,Live,WIP,UNIX</excludedTestGroups>
 
         <!-- no passphrase by default, so we can do automated deploy builds;
              you can still supply your own passphrase with -Dgpg.passphrase=XXX -->
