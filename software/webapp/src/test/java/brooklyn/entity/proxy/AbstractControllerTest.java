@@ -243,6 +243,28 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         }
     }
 
+    // Manual visual inspection test. Previously it repeatedly logged:
+    //     Unable to construct hostname:port representation for TestEntityImpl{id=jzwSBRQ2} (null:null); skipping in TrackingAbstractControllerImpl{id=tOn4k5BA}
+    // every time the service-up was set to true again.
+    @Test
+    public void testMemberWithoutHostAndPortDoesNotLogErrorRepeatedly() throws Exception {
+        controller = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class)
+                .configure("serverPool", cluster) 
+                .configure("domain", "mydomain"));
+        controller.start(ImmutableList.of(loc));
+        
+        TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        cluster.addMember(child);
+
+        for (int i = 0; i < 100; i++) {
+            child.setAttribute(Attributes.SERVICE_UP, true);
+        }
+        
+        Thread.sleep(100);
+        List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());
+        assertTrue(u.isEmpty(), "expected no updates, but got "+u);
+    }
+
     private void assertEventuallyAddressesMatchCluster() {
         assertEventuallyAddressesMatch(cluster.getMembers());
     }
