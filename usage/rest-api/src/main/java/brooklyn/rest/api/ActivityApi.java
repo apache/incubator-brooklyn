@@ -1,7 +1,10 @@
 package brooklyn.rest.api;
 
+import java.util.List;
+
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.TaskSummary;
+
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
@@ -33,7 +36,7 @@ public interface ActivityApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find task")
   })
-  public Iterable<TaskSummary> children(
+  public List<TaskSummary> children(
           @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId);
 
   @GET

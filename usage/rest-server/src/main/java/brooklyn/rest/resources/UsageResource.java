@@ -47,7 +47,7 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     };
     
     @Override
-    public Iterable<UsageStatistics> listApplicationsUsage(@Nullable String start, @Nullable String end) {
+    public List<UsageStatistics> listApplicationsUsage(@Nullable String start, @Nullable String end) {
         log.debug("REST call to get application usage for all applications: dates {} -> {}", new Object[] {start, end});
         
         List<UsageStatistics> response = Lists.newArrayList();
@@ -127,7 +127,7 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     }
 
     @Override
-    public Iterable<UsageStatistics> listMachinesUsage(final String application, final String start, final String end) {
+    public List<UsageStatistics> listMachinesUsage(final String application, final String start, final String end) {
         log.debug("REST call to get machine usage for application {}: dates {} -> {}", new Object[] {application, start, end});
         
         final Date startDate = parseDate(start, new Date(0));
