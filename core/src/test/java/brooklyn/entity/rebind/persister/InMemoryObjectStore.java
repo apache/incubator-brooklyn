@@ -18,11 +18,17 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryObjectStore.class);
 
-    Map<String,String> filesByName = MutableMap.of();
-    Map<String, Date> fileModTimesByName = MutableMap.of();
+    final Map<String,String> filesByName;
+    final Map<String, Date> fileModTimesByName;
     boolean prepared = false;
     
     public InMemoryObjectStore() {
+        this(MutableMap.<String,String>of(), MutableMap.<String,Date>of());
+    }
+    
+    public InMemoryObjectStore(Map<String,String> map, Map<String, Date> fileModTimesByName) {
+        filesByName = map;
+        this.fileModTimesByName = fileModTimesByName;
         log.info("Using memory-based objectStore");
     }
     

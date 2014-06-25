@@ -279,7 +279,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     /** invoked manually when initializing, and periodically thereafter */
-    protected synchronized void publishAndCheck(boolean initializing) {
+    @VisibleForTesting
+    public synchronized void publishAndCheck(boolean initializing) {
         publishHealth();
         checkMaster(initializing);
     }
@@ -404,7 +405,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         URI newMasterNodeUri = (newMasterRecord == null) ? null : newMasterRecord.getUri();
         boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
         
-        if (LOG.isDebugEnabled())
+        if (LOG.isDebugEnabled()) {
             LOG.debug("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
                 new Object[] {
                     (newMasterRecord == null ? "<none>" : newMasterRecord.toVerboseString()),
@@ -413,6 +414,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     ownNodeMemento.toVerboseString(), 
                     heartbeatTimeout
                 });
+        }
         if (!initializing) {
             LOG.warn("HA subsystem detected change of master from " 
                 + masterNodeId + " (" + (masterNodeMemento==null ? "?" : masterNodeMemento.getRemoteTimestamp()) + ")"

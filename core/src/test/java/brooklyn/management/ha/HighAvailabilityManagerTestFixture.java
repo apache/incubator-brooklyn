@@ -163,7 +163,7 @@ public abstract class HighAvailabilityManagerTestFixture {
                 .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
                 .node(newManagerMemento("zzzzzzz_node1", ManagementNodeState.STANDBY))
                 .build());
-        ManagementPlaneSyncRecord record = persister.loadSyncRecord();
+        persister.loadSyncRecord();
         long zzzTime = tickerCurrentMillis();
         tickerAdvance(Duration.FIVE_SECONDS);
         
