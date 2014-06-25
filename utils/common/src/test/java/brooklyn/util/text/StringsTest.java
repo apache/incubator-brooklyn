@@ -12,10 +12,11 @@ import java.util.Arrays;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.test.FixedLocaleTest;
 import brooklyn.util.collections.MutableMap;
 
 @Test
-public class StringsTest {
+public class StringsTest extends FixedLocaleTest {
 
     public void isBlankOrEmpty() {
         assertTrue(Strings.isEmpty(null));
