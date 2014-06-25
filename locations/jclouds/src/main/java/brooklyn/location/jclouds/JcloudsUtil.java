@@ -6,7 +6,10 @@ import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUE
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
 import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
-import static org.jclouds.scriptbuilder.domain.Statements.*;
+import static org.jclouds.scriptbuilder.domain.Statements.appendFile;
+import static org.jclouds.scriptbuilder.domain.Statements.exec;
+import static org.jclouds.scriptbuilder.domain.Statements.interpret;
+import static org.jclouds.scriptbuilder.domain.Statements.newStatementList;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,9 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
+
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.aws.ec2.AWSEC2Api;
+import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.RunScriptOnNodesException;
@@ -47,7 +53,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.jclouds.config.AlwaysRetryOnRenew;
 import brooklyn.location.jclouds.config.BrooklynStandardJcloudsGuiceModule;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.Protocol;
@@ -55,6 +63,7 @@ import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -239,11 +248,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));
         }
 
-        Iterable<Module> modules = ImmutableSet.<Module> of(
-                new SshjSshClientModule(), 
-                new SLF4JLoggingModule(),
-                new BouncyCastleCryptoModule(),
-                new BrooklynStandardJcloudsGuiceModule());
+        Iterable<Module> modules = getCommonModules();
 
         // Synchronizing to avoid deadlock from sun.reflect.annotation.AnnotationType.
         // See https://github.com/brooklyncentral/brooklyn/issues/974
@@ -271,7 +276,45 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         }
         return computeService;
      }
+
+    /** returns the jclouds modules we typically install */ 
+    public static ImmutableSet<Module> getCommonModules() {
+        return ImmutableSet.<Module> of(
+                new SshjSshClientModule(), 
+                new SLF4JLoggingModule(),
+                new BouncyCastleCryptoModule(),
+                new BrooklynStandardJcloudsGuiceModule());
+    }
      
+    /** 
+     *  Temporary constructor to address https://issues.apache.org/jira/browse/JCLOUDS-615.
+     *  <p>
+     *  See https://issues.apache.org/jira/browse/BROOKLYN-6 .
+     *  When https://issues.apache.org/jira/browse/JCLOUDS-615 is fixed in the jclouds we use,
+     *  we can remove the useSoftlayerFix argument. 
+     *  <p>
+     *  (Marked Beta as that argument will likely be removed.)
+     *  
+     *  @since 1.7.0 */
+    @Beta
+    public static BlobStoreContext newBlobstoreContext(String provider, @Nullable String endpoint, String identity, String credential, boolean useSoftlayerFix) {
+        AlwaysRetryOnRenew.InterceptRetryOnRenewModule fix = 
+            useSoftlayerFix ? new AlwaysRetryOnRenew.InterceptRetryOnRenewModule() : null;
+            
+        ContextBuilder contextBuilder = ContextBuilder.newBuilder(provider).credentials(identity, credential);
+        contextBuilder.modules(MutableList.copyOf(JcloudsUtil.getCommonModules())
+            .appendIfNotNull(fix));
+        if (!brooklyn.util.text.Strings.isBlank(endpoint)) {
+            contextBuilder.endpoint(endpoint);
+        }
+        BlobStoreContext context = contextBuilder.buildView(BlobStoreContext.class);
+
+        if (useSoftlayerFix)
+            fix.inject(context.utils().injector());
+        
+        return context;
+    }
+
      protected static String getDeprecatedProperty(ConfigBag conf, String key) {
         if (conf.containsKey(key)) {
             LOG.warn("Jclouds using deprecated brooklyn-jclouds property "+key+": "+Entities.sanitize(conf.getAllConfig()));
@@ -332,7 +375,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         };
         
         LOG.info("Waiting for password, for "+node.getProviderId()+":"+node.getId());
-        Predicate passwordReadyRetryable = Predicates2.retry(passwordReady, timeUnit.toMillis(timeout), 10*1000, TimeUnit.MILLISECONDS);
+        Predicate<String> passwordReadyRetryable = Predicates2.retry(passwordReady, timeUnit.toMillis(timeout), 10*1000, TimeUnit.MILLISECONDS);
         boolean ready = passwordReadyRetryable.apply(node.getProviderId());
         if (!ready) throw new TimeoutException("Password not available for "+node+" in region "+region+" after "+timeout+" "+timeUnit.name());
 
@@ -398,4 +441,5 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             }
         }
     }
+
 }
