@@ -48,23 +48,27 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.ByteSizeStrings;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 public class CouchbaseClusterImpl extends DynamicClusterImpl implements CouchbaseCluster {
     private static final Logger log = LoggerFactory.getLogger(CouchbaseClusterImpl.class);
@@ -141,6 +145,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
         connectSensors();
         connectEnrichers();
+        
+        setAttribute(BUCKET_CREATION_IN_PROGRESS, false);
 
         //start timeout before adding the servers
         Time.sleep(getConfig(SERVICE_UP_TIME_OUT));
@@ -167,10 +173,12 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 } finally {
                     Tasks.resetBlockingDetails();
                 }
-                Entities.invokeEffector(this, getPrimaryNode(), CouchbaseNode.REBALANCE);
+                
+                ((CouchbaseNode)getPrimaryNode()).rebalance();
                 
                 if (Optional.fromNullable(CREATE_BUCKETS).isPresent()) {
                     createBuckets();
+                    DependentConfiguration.waitInTaskForAttributeReady(this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
                 }
 
                 setAttribute(IS_CLUSTER_INITIALIZED, true);
@@ -187,6 +195,9 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
     @Override
     public void stop() {
+        if (resetBucketCreation[0] != null) {
+            resetBucketCreation[0].stop();
+        }
         super.stop();
     }
 
@@ -205,7 +216,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 .displayName("Controller targets tracker")
                 .configure("group", this));
     }
-
+    
     public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
         @Override protected void onEntityChange(Entity member) {
             ((CouchbaseClusterImpl)entity).onServerPoolMemberChanged(member);
@@ -377,17 +388,41 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                             CouchbaseClusterImpl.this.resetBucketCreation[0].stop();
                         }
                         setAttribute(CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, true);
-
+                        
                         CouchbaseClusterImpl.this.resetBucketCreation[0] = HttpFeed.builder()
                                 .entity(CouchbaseClusterImpl.this)
                                 .period(500, TimeUnit.MILLISECONDS)
                                 .baseUri(String.format("%s/pools/default/buckets/%s", primaryNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), bucketName))
                                 .credentials(primaryNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME), primaryNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD))
                                 .poll(new HttpPollConfig<Boolean>(BUCKET_CREATION_IN_PROGRESS)
-                                        .onSuccess(HttpValueFunctions.responseCodeEquals(404))
-                                        .onFailureOrException(Functions.constant(false)))
+                                        .onSuccess(Functionals.chain(HttpValueFunctions.jsonContents(), JsonFunctions.walkN("nodes"), new Function<JsonElement, Boolean>() {
+                                            @Override public Boolean apply(JsonElement input) {
+                                                // Wait until bucket has been created on all nodes and the couchApiBase element has been published (indicating that the bucket is useable)
+                                                JsonArray servers = input.getAsJsonArray();
+                                                if (servers.size() != CouchbaseClusterImpl.this.getMembers().size()) {
+                                                    return true;
+                                                }
+                                                for (JsonElement server : servers) {
+                                                    Object api = server.getAsJsonObject().get("couchApiBase");
+                                                    if (api == null || Strings.isEmpty(String.valueOf(api))) {
+                                                        return true;
+                                                    }
+                                                }
+                                                return false;
+                                            }
+                                        }))
+                                        .onFailureOrException(new Function<Object, Boolean>() {
+                                            @Override
+                                            public Boolean apply(Object input) {
+                                                if (((brooklyn.util.http.HttpToolResponse) input).getResponseCode() == 404) {
+                                                    return true;
+                                                }
+                                                throw new IllegalStateException("Unexpected response when creating bucket:" + input);
+                                            }
+                                        }))
                                 .build();
 
+                        // TODO: Bail out if bucket creation fails, to allow next bucket to proceed
                         Entities.invokeEffectorWithArgs(CouchbaseClusterImpl.this, primaryNode, CouchbaseNode.BUCKET_CREATE, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
                         DependentConfiguration.waitInTaskForAttributeReady(CouchbaseClusterImpl.this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
                         if (CouchbaseClusterImpl.this.resetBucketCreation[0] != null) {

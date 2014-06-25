@@ -1,6 +1,7 @@
 package brooklyn.entity.nosql.couchbase;
 
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
@@ -57,5 +58,9 @@ public class CouchbaseSyncGatewayImpl extends SoftwareProcessImpl implements Cou
         if (httpFeed != null) {
             httpFeed.stop();
         }
+    }
+    
+    static {
+        RendererHints.register(MANAGEMENT_URL, new RendererHints.NamedActionWithUrl("Open"));
     }
 }

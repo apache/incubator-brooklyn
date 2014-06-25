@@ -24,19 +24,38 @@ import static brooklyn.util.ssh.BashCommands.chainGroup;
 import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.guava.Functionals;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver implements CouchbaseNodeDriver {
 
@@ -193,8 +212,83 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 .failOnNonZeroResultCode()
                 .execute();
         entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
+        // wait until the re-balance is complete
+        Repeater.create()
+            .every(Duration.millis(500))
+            .limitTimeTo(Duration.THIRTY_SECONDS)
+            .until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    for (String nodeHostName : CouchbaseNodeSshDriver.this.getNodeHostNames()) {
+                        if (isNodeRebalancing(nodeHostName)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            })
+            .run();
+        Repeater.create()
+            .every(Duration.FIVE_SECONDS)
+            .limitTimeTo(Duration.FIVE_MINUTES)
+            .until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    for (String nodeHostName : CouchbaseNodeSshDriver.this.getNodeHostNames()) {
+                        if (isNodeRebalancing(nodeHostName)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            })
+            .run();
+        log.info("rebalanced cluster via primary node {}", getEntity());
     }
 
+    private Iterable<String> getNodeHostNames() throws URISyntaxException {
+        Function<JsonElement, Iterable<String>> getNodesAsList = new Function<JsonElement, Iterable<String>>() {
+            @Override public Iterable<String> apply(JsonElement input) {
+                if (input == null) {
+                    return Collections.emptyList();
+                }
+                Collection<String> names = Lists.newArrayList();
+                JsonArray nodes = input.getAsJsonArray();
+                for (JsonElement element : nodes) {
+                    // NOTE: the 'hostname' element also includes the port
+                    names.add(element.getAsJsonObject().get("hostname").toString().replace("\"", ""));
+                }
+                return names;
+            }
+        };
+        HttpToolResponse nodesResponse = getAPIResponse(String.format("http://%s:%s/pools/nodes", getHostname(), getWebPort()));
+        return Functionals.chain(
+            HttpValueFunctions.jsonContents(),
+            JsonFunctions.walkN("nodes"),
+            getNodesAsList
+        ).apply(nodesResponse);
+    }
+    
+    private boolean isNodeRebalancing(String nodeHostName) throws URISyntaxException {
+        HttpToolResponse response = getAPIResponse("http://" + nodeHostName + "/pools/nodes/rebalanceProgress");
+        if (response.getResponseCode() != 200) {
+            throw new IllegalStateException("failed to rebalance cluster: " + response);
+        }
+        return !HttpValueFunctions.jsonContents("status", String.class).apply(response).equals("none");
+    }
+    
+    private HttpToolResponse getAPIResponse(String path) throws URISyntaxException {
+        URI uri = new URI(path);
+        Credentials credentials = new UsernamePasswordCredentials(getUsername(), getPassword());
+        return HttpTool.httpGet(HttpTool.httpClientBuilder()
+                // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
+                .uri(uri)
+                .credentials(credentials)
+                .build(), 
+            uri, 
+            ImmutableMap.<String, String>of());
+    }
+    
     @Override
     public void serverAdd(String serverToAdd, String username, String password) {
         newScript("serverAdd").body.append(couchbaseCli("server-add")
@@ -219,15 +313,15 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     }
 
     @Override
-        public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
-            newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
-                + getCouchbaseHostnameAndCredentials() +
-                " --bucket=" + bucketName +
-                " --bucket-type=" + bucketType +
-                " --bucket-port=" + bucketPort +
-                " --bucket-ramsize=" + bucketRamSize +
-                " --bucket-replica=" + bucketReplica)
-                .failOnNonZeroResultCode()
-                .execute();
-        }
+    public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
+        newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
+            + getCouchbaseHostnameAndCredentials() +
+            " --bucket=" + bucketName +
+            " --bucket-type=" + bucketType +
+            " --bucket-port=" + bucketPort +
+            " --bucket-ramsize=" + bucketRamSize +
+            " --bucket-replica=" + bucketReplica)
+            .failOnNonZeroResultCode()
+            .execute();
+    }
 }

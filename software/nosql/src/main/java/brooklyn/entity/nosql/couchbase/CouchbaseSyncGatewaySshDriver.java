@@ -12,28 +12,26 @@ import javax.annotation.Nullable;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDriver implements CouchbaseSyncGatewayDriver {
     public CouchbaseSyncGatewaySshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
-    }
-
-    @Override
-    public boolean isRunning() {
-        return Boolean.TRUE.equals(entity.getAttribute(Attributes.SERVICE_UP));
     }
 
     @Override
@@ -67,8 +65,13 @@ public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDri
     public void launch() {
         Entity cbNode = entity.getConfig(CouchbaseSyncGateway.COUCHBASE_SERVER);
         Entities.waitForServiceUp(cbNode, Duration.ONE_HOUR);
-
-
+        DependentConfiguration.waitInTaskForAttributeReady(cbNode, CouchbaseCluster.IS_CLUSTER_INITIALIZED, Predicates.equalTo(true));
+        try {
+            // Even once the bucket has published its API URL, it can still take a couple of seconds for it to become available
+            Thread.sleep(10 * 1000);
+        } catch (InterruptedException e) {
+            // no-op
+        }
         if (cbNode instanceof CouchbaseCluster) {
             Optional<Entity> cbClusterNode = Iterables.tryFind(cbNode.getAttribute(CouchbaseCluster.GROUP_MEMBERS), new Predicate<Entity>() {
 
@@ -106,9 +109,20 @@ public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDri
         String options = format("-url %s -bucket %s -adminInterface 0.0.0.0:%s -interface 0.0.0.0:%s -pool %s %s %s",
                 serverWebAdminUrl, bucketName, adminRestApiPort, syncRestApiPort, pool, pretty, verbose);
 
-        newScript(LAUNCHING)
-                .body.append(format("/opt/couchbase-sync-gateway/bin/sync_gateway %s &", options))
+        newScript(ImmutableMap.of("usePidFile", true), LAUNCHING)
+                .body.append(format("/opt/couchbase-sync-gateway/bin/sync_gateway %s ", options) + "> out.log 2> err.log < /dev/null &")
+                .failOnNonZeroResultCode()
                 .execute();
+    }
+    
+    @Override
+    public boolean isRunning() {
+        return newScript(MutableMap.of("usePidFile", true), CHECK_RUNNING).execute() == 0;
+    }
+    
+    @Override
+    public void kill() {
+        newScript(MutableMap.of("usePidFile", true), KILLING).execute();
     }
 
     private List<String> installLinux(List<String> urls, String saveAs) {
