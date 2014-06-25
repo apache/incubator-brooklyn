@@ -2,6 +2,8 @@ package brooklyn.util.os;
 
 import static org.testng.Assert.assertEquals;
 
+import java.io.File;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -59,10 +61,10 @@ public class OsTest {
     
     public void testMergePaths() throws Exception {
         assertEquals(Os.mergePaths("a"), "a"); 
-        assertEquals(Os.mergePaths("a", "b"), "a/b"); 
+        assertEquals(Os.mergePaths("a", "b"), "a" + File.separator + "b"); 
         assertEquals(Os.mergePaths("a/", "b"), "a/b");
-        assertEquals(Os.mergePaths("a", "b/"), "a/b/");
-        assertEquals(Os.mergePaths("/a", "b"), "/a/b");
+        assertEquals(Os.mergePaths("a", "b/"), "a" + File.separator + "b/");
+        assertEquals(Os.mergePaths("/a", "b"), "/a" + File.separator + "b");
     }
 
 }

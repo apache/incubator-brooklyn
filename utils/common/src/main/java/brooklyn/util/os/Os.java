@@ -41,6 +41,8 @@ public class Os {
     private static final char SEPARATOR_UNIX = '/';
     private static final char SEPARATOR_WIN = '\\';
     
+    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
     /** returns the best tmp dir to use; see {@link TmpDirFinder} for the logic
      * (and the explanation why this is needed!) */
     public static String tmp() {
@@ -183,7 +185,7 @@ public class Os {
         StringBuilder result = new StringBuilder();
         for (String item: items) {
             if (Strings.isEmpty(item)) continue;
-            if (result.length() > 0 && result.charAt(result.length()-1) != separatorChar) result.append(separatorChar);
+            if (result.length() > 0 && !isSeparator(result.codePointAt(result.length()-1))) result.append(separatorChar);
             result.append(item);
         }
         return result.toString();
