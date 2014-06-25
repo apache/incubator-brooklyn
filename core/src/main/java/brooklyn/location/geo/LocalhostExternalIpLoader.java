@@ -92,8 +92,10 @@ public class LocalhostExternalIpLoader {
      */
     public static String getLocalhostIpWithin(Duration timeout) {
         String result = doLoad(timeout);
-        if (result!=null) return null;
-        throw new IllegalStateException("Unable to retrieve external IP for localhost; network may be down or slow or remote service otherwise not responding");
+        if (result == null) {
+            throw new IllegalStateException("Unable to retrieve external IP for localhost; network may be down or slow or remote service otherwise not responding");
+        }
+        return result;
     }
 
     /**
