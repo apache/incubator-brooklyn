@@ -774,7 +774,7 @@ public class Strings {
     }
     
     public static char getDefaultDecimalSeparator() {
-        return getDecimalSeparator(Locale.getDefault(Locale.Category.FORMAT));
+        return getDecimalSeparator(Locale.getDefault());
     }
 
 }
