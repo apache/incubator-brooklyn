@@ -21,14 +21,16 @@ import java.util.Arrays;
 
 import org.testng.annotations.Test;
 
+import brooklyn.test.FixedLocaleTest;
+
 import com.google.common.collect.Iterables;
 
 /**
  * Test the different {@link ByteSizeStrings} formatting options using a list of byte sizes.
  */
 @Test
-public class ByteSizeStringsTest {
-
+public class ByteSizeStringsTest extends FixedLocaleTest {
+    
     public void testSizeString() {
         assertEquals(Strings.makeSizeString(-1), "-1 B");
         assertEquals(Strings.makeSizeString(0), "0 B");

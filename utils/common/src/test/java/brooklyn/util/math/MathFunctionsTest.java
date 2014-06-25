@@ -3,7 +3,9 @@ package brooklyn.util.math;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class MathFunctionsTest {
+import brooklyn.test.FixedLocaleTest;
+
+public class MathFunctionsTest extends FixedLocaleTest {
 
     @Test
     public void testAdd() {

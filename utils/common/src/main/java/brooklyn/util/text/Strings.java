@@ -4,10 +4,12 @@
 package brooklyn.util.text;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -380,7 +382,7 @@ public class Strings {
 			if (maxlen>0 && s.length()>maxlen) {
 				//too long:
 				double signif = x/Math.pow(10,log);
-				if (s.indexOf('.')>=0) {
+				if (s.indexOf(getDefaultDecimalSeparator())>=0) {
 					//have a decimal point; either we are very small 0.000001
 					//or prec is larger than maxlen
 					if (Math.abs(x)<1 && useEForSmallNumbers) {
@@ -764,6 +766,15 @@ public class Strings {
             return new QuotedStringTokenizer(phrase).remainderAsList().size();
         else
             return Collections.list(new StringTokenizer(phrase)).size();
+    }
+    
+    public static char getDecimalSeparator(Locale locale) {
+        DecimalFormatSymbols dfs = new DecimalFormatSymbols(locale);
+        return dfs.getDecimalSeparator();
+    }
+    
+    public static char getDefaultDecimalSeparator() {
+        return getDecimalSeparator(Locale.getDefault(Locale.Category.FORMAT));
     }
 
 }
