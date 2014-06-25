@@ -618,6 +618,10 @@ public class Entities {
         return ((EntityInternal)e).getManagementSupport().isDeployed() && ((EntityInternal)e).getManagementContext().isRunning();
     }
 
+    public static boolean isNoLongerManaged(Entity e) {
+        return ((EntityInternal)e).getManagementSupport().isNoLongerManaged();
+    }
+
     /** brings this entity under management iff its ancestor is managed, returns true in that case;
      * otherwise returns false in the expectation that the ancestor will become managed,
      * or throws exception if it has no parent or a non-application root

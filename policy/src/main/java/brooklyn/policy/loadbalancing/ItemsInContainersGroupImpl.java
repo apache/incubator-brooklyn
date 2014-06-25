@@ -40,7 +40,7 @@ public class ItemsInContainersGroupImpl extends DynamicGroupImpl implements Item
             Sensor sensor = event.getSensor();
             
             if (sensor.equals(AbstractGroup.MEMBER_ADDED)) {
-                    onContainerAdded((Entity) value);
+                onContainerAdded((Entity) value);
             } else if (sensor.equals(AbstractGroup.MEMBER_REMOVED)) {
                 onContainerRemoved((Entity) value);
             } else if (sensor.equals(Movable.CONTAINER)) {
