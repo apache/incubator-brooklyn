@@ -281,8 +281,8 @@ public class HighAvailabilityManagerSplitBrainTest {
             spawned.add(t);
             t.start();
         }
-        
-        Assert.assertTrue(Repeater.create().every(Duration.millis(1)).limitTimeTo(Duration.TEN_SECONDS).until(new Callable<Boolean>() {
+
+        Assert.assertTrue(Repeater.create().every(Duration.millis(1)).limitTimeTo(Duration.THIRTY_SECONDS).until(new Callable<Boolean>() {
             @Override public Boolean call() throws Exception {
                 ManagementPlaneSyncRecord memento = nodes.get(0).ha.getManagementPlaneSyncState();
                 int masters=0, standbys=0, savedMasters=0, savedStandbys=0;
@@ -304,7 +304,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         }).run());
         
         for (Thread t: spawned)
-            t.join(Duration.FIVE_SECONDS.toMilliseconds());
+            t.join(Duration.THIRTY_SECONDS.toMilliseconds());
     }
     
 
