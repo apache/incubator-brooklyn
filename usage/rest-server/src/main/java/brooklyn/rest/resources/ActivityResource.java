@@ -33,7 +33,7 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
           throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
       if (!(t instanceof HasTaskChildren))
           return Collections.emptyList();
-      return new LinkedList<>(Collections2.transform(Lists.newArrayList(((HasTaskChildren)t).getChildren()), 
+      return new LinkedList<TaskSummary>(Collections2.transform(Lists.newArrayList(((HasTaskChildren)t).getChildren()), 
               TaskTransformer.FROM_TASK));
   }
 

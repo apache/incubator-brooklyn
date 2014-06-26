@@ -55,7 +55,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   public List<TaskSummary> listTasks(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
       Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
-      return new LinkedList<>(Collections2.transform(tasks, TaskTransformer.FROM_TASK));
+      return new LinkedList<TaskSummary>(Collections2.transform(tasks, TaskTransformer.FROM_TASK));
   }
 
   @Override
