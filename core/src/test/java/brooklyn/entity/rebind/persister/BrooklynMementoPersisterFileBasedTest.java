@@ -19,6 +19,7 @@ public class BrooklynMementoPersisterFileBasedTest extends BrooklynMementoPersis
 
     protected File mementoDir;
     
+    @Override
     protected ManagementContext newPersistingManagementContext() {
         mementoDir = Os.newTempDir(JavaClassNames.cleanSimpleClassName(this));
         Os.deleteOnExitRecursively(mementoDir);
@@ -26,6 +27,7 @@ public class BrooklynMementoPersisterFileBasedTest extends BrooklynMementoPersis
             .persistPeriod(Duration.millis(10)).buildStarted();
     }
 
+    @Override
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();

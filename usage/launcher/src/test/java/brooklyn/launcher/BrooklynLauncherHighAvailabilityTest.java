@@ -25,8 +25,6 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
@@ -68,18 +66,12 @@ public class BrooklynLauncherHighAvailabilityTest {
         doTestStandbyTakesOver(true);
     }
 
-    @Test(invocationCount=1, groups="Integration")
-    /** test issues with files not being available when standby node tries to copy the directory;
-     * standby nodes should not copy and so we shouldn't get FileNotFound errors! */
+    @Test(invocationCount=10, groups="Integration")
+    /** test issues with termination and promotion; 
+     * previously we got FileNotFound errors, though these should be fixed with
+     * the various PersistenceObjectStore prepare methods */
     public void testStandbyTakesOverWhenPrimaryTerminatedGracefullyManyTimes() throws Exception {
-        try {
-            testStandbyTakesOverWhenPrimaryTerminatedGracefully();
-        } catch (Throwable e) {
-            log.warn("Error in test "+JavaClassNames.niceClassAndMethod()+" (rethrowing): "+e, e);
-            throw Exceptions.propagate(e);
-        } finally {
-            tearDown();
-        }
+        testStandbyTakesOverWhenPrimaryTerminatedGracefully();
     }
 
     @Test(groups="Integration") // because slow waiting for timeouts to promote standbys

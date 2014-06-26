@@ -527,7 +527,7 @@ public class BrooklynLauncher {
             }
             try {
                 objectStore.injectManagementContext(managementContext);
-                objectStore.prepareForUse(persistMode, highAvailabilityMode);
+                objectStore.prepareForSharedUse(persistMode, highAvailabilityMode);
             } catch (FatalConfigurationRuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -703,8 +703,10 @@ public class BrooklynLauncher {
                 LOG.info("Finished waiting for persist; took "+Time.makeTimeStringRounded(stopwatch));
             } catch (RuntimeInterruptedException e) {
                 Thread.currentThread().interrupt(); // keep going with shutdown
+                LOG.warn("Persistence interrupted during shutdown: "+e, e);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // keep going with shutdown
+                LOG.warn("Persistence interrupted during shutdown: "+e, e);
             } catch (TimeoutException e) {
                 LOG.warn("Timeout after 10 seconds waiting for persistence to write all data; continuing");
             }

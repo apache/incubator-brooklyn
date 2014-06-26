@@ -46,6 +46,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         // Note by default management context from super is started without HA enabled.
         // Therefore can only assert a minimal amount of stuff.
         HighAvailabilitySummary summary = client().resource("/v1/server/highAvailability").get(HighAvailabilitySummary.class);
+        log.info("HA summary is: "+summary);
         
         String ownNodeId = getManagementContext().getManagementNodeId();
         assertEquals(summary.getOwnId(), ownNodeId);
@@ -53,7 +54,10 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         assertEquals(summary.getNodes().keySet(), ImmutableSet.of(ownNodeId));
         assertEquals(summary.getNodes().get(ownNodeId).getNodeId(), ownNodeId);
         assertEquals(summary.getNodes().get(ownNodeId).getStatus(), "MASTER");
-        assertNotNull(summary.getNodes().get(ownNodeId).getTimestampUtc());
+        assertNotNull(summary.getNodes().get(ownNodeId).getLocalTimestamp());
+        // remote will also be non-null if there is no remote backend (local is re-used)
+        assertNotNull(summary.getNodes().get(ownNodeId).getRemoteTimestamp());
+        assertEquals(summary.getNodes().get(ownNodeId).getLocalTimestamp(), summary.getNodes().get(ownNodeId).getRemoteTimestamp());
     }
 
     @Test

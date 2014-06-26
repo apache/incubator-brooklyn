@@ -60,6 +60,11 @@ public interface RebindManager {
     @VisibleForTesting
     @Deprecated
     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
+    /** waits for any needed or pending writes to complete */
     @VisibleForTesting
     public void waitForPendingComplete(Duration duration) throws InterruptedException, TimeoutException;
+    /** forcibly performs persistence, in the foreground */
+    @VisibleForTesting
+    public void forcePersistNow();
+    
 }

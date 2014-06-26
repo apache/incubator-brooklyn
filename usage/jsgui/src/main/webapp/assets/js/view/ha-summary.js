@@ -12,7 +12,7 @@ define([
                 "<% if (isSelf) { %><span class='pull-right badge badge-success'>this</span><% } %>" +
             "</td>" +
             "<td><%= status %></td>" +
-            "<td class='timestamp' data-timestamp='<%= timestampUtc %>'><%= timestamp %></td>" +
+            "<td><span class='timestamp' data-timestamp='<%= timestamp %>'><%= timestampDisplay %><span></td>" +
         "</tr>");
     var noServers = "<tr><td colspan='3'><i>Failed to load servers!</i></td></tr>";
 
@@ -45,7 +45,13 @@ define([
             } else {
                 _.each(nodes, function (n) {
                     var node = _.clone(n);
-                    node.timestamp = moment(node.timestampUtc).fromNow();
+                    if (node['remoteTimestamp']) {
+                        node.timestamp = node.remoteTimestamp;
+                        node.timestampDisplay = moment(node.remoteTimestamp).fromNow();
+                    } else {
+                        node.timestamp = node.localTimestamp;
+                        node.timestampDisplay = moment(node.localTimestamp).fromNow()+" (local)";
+                    }
                     node.isSelf = node.nodeId == self;
                     node.isMaster = self == master;
                     node.isTerminated = node.status == "TERMINATED";

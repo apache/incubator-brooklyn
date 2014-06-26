@@ -1,16 +1,29 @@
 package brooklyn.entity.rebind.persister;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
+/** Wraps access to an object (the delegate {@link StoreObjectAccessor} 
+ * in a guarded read-write context such that callers will be blocked if another thread
+ * is accessing the object in an incompatible way (e.g. trying to read when someone is writing).
+ * See {@link ReadWriteLock}.
+ * <p>
+ * This has no visibility or control over other access to the delegate or underlying object, of course.
+ * It can only affect callers coming through this wrapper instance.  Thus callers must share instances
+ * of this class for a given item.
+ * <p>
+ * No locking is done with respect to {@link #getLastModifiedDate()}. 
+ **/
 public class StoreObjectAccessorLocking implements PersistenceObjectStore.StoreObjectAccessorWithLock {
 
     protected static class ThreadComparator implements Comparator<Thread> {
@@ -144,6 +157,11 @@ public class StoreObjectAccessorLocking implements PersistenceObjectStore.StoreO
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
+    }
+    
+    @Override
+    public Date getLastModifiedDate() {
+        return delegate.getLastModifiedDate();
     }
 
     @Override

@@ -27,7 +27,7 @@ public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObject
         store = new JcloudsBlobStoreBasedObjectStore(
             BlobStoreTest.PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC, BlobStoreTest.CONTAINER_PREFIX+"-"+Identifiers.makeRandomId(4));
         store.injectManagementContext(mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault()));
-        store.prepareForUse(PersistMode.CLEAN, HighAvailabilityMode.DISABLED);
+        store.prepareForSharedUse(PersistMode.CLEAN, HighAvailabilityMode.DISABLED);
         super.setUp();
     }
 
@@ -58,5 +58,10 @@ public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObject
     public void testWritesFile() throws Exception {
         super.testWritesFile();
     }
-    
+
+    @Test(groups="Integration")
+    @Override
+    public void testLastModifiedTime() throws Exception {
+        super.testLastModifiedTime();
+    }
 }

@@ -13,18 +13,21 @@ public class HighAvailabilitySummary {
         private final String nodeId;
         private final URI nodeUri;
         private final String status;
-        private final Long timestampUtc;
+        private final Long localTimestamp;
+        private final Long remoteTimestamp;
         
         public HaNodeSummary(
                 @JsonProperty("nodeId") String nodeId,
                 @JsonProperty("nodeUri") URI nodeUri,
                 @JsonProperty("status") String status,
-                @JsonProperty("timestampUtc") Long timestampUtc
+                @JsonProperty("localTimestamp") Long localTimestamp,
+                @JsonProperty("remoteTimestamp") Long remoteTimestamp
             ) {
               this.nodeId = nodeId;
               this.nodeUri = nodeUri;
               this.status = status;
-              this.timestampUtc = timestampUtc;
+              this.localTimestamp = localTimestamp;
+              this.remoteTimestamp = remoteTimestamp;
             }
 
             public String getNodeId() {
@@ -39,8 +42,12 @@ public class HighAvailabilitySummary {
               return status;
             }
             
-            public Long getTimestampUtc() {
-              return timestampUtc;
+            public Long getLocalTimestamp() {
+                return localTimestamp;
+            }
+            
+            public Long getRemoteTimestamp() {
+                return remoteTimestamp;
             }
             
             @Override

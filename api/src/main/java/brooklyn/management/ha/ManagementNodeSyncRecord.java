@@ -28,7 +28,15 @@ public interface ManagementNodeSyncRecord {
     
     ManagementNodeState getStatus();
 
-    long getTimestampUtc();
+    /** timestamp set by the originating management machine */
+    long getLocalTimestamp();
+
+    /** timestamp set by shared persistent store, if available
+     * <p>
+     * this will not be set on records originating at this machine, nor will it be persisted,
+     * but it will be populated for records being read */
+    Long getRemoteTimestamp();
     
     String toVerboseString();
+
 }

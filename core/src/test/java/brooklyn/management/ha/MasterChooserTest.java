@@ -33,14 +33,14 @@ public class MasterChooserTest {
         memento.addNode(newManagerMemento("node3",  ManagementNodeState.STANDBY, now));
         Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
         String ownNodeId = "node2";
-        assertEquals(chooser.choose(memento, heartbeatTimeout, ownNodeId, now).getNodeId(), "node1");
+        assertEquals(chooser.choose(memento, heartbeatTimeout, ownNodeId).getNodeId(), "node1");
     }
     
     @Test
     public void testReturnsNullIfNoValid() throws Exception {
         memento.addNode(newManagerMemento("node1", ManagementNodeState.STANDBY, now - 31*1000));
         Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
-        assertNull(chooser.choose(memento, heartbeatTimeout, "node2", now));
+        assertNull(chooser.choose(memento, heartbeatTimeout, "node2"));
     }
     
     @Test
@@ -64,6 +64,6 @@ public class MasterChooserTest {
     }
     
     private ManagementNodeSyncRecord newManagerMemento(String nodeId, ManagementNodeState status, long timestamp) {
-        return BasicManagementNodeSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).timestampUtc(timestamp).build();
+        return BasicManagementNodeSyncRecord.builder().brooklynVersion(BrooklynVersion.get()).nodeId(nodeId).status(status).localTimestamp(timestamp).remoteTimestamp(timestamp).build();
     }
 }

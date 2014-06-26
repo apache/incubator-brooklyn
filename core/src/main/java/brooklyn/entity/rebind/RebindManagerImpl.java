@@ -188,6 +188,11 @@ public class RebindManagerImpl implements RebindManager {
         realChangeListener.waitForPendingComplete(timeout);
         persister.waitForWritesCompleted(timeout);
     }
+    @Override
+    @VisibleForTesting
+    public void forcePersistNow() {
+        realChangeListener.persistNow();
+    }
     
     @Override
     public ChangeListener getChangeListener() {

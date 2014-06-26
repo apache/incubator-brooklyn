@@ -32,7 +32,8 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         protected String nodeId;
         protected URI uri;
         protected ManagementNodeState status;
-        protected long timestampUtc;
+        protected long localTimestamp;
+        protected Long remoteTimestamp;
 
         protected Builder self() {
             return (Builder) this;
@@ -49,15 +50,23 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         public Builder status(ManagementNodeState val) {
             status = val; return self();
         }
-        public Builder timestampUtc(long val) {
-            timestampUtc = val; return self();
+        public Builder localTimestamp(long val) {
+            localTimestamp = val; return self();
+        }
+        public Builder remoteTimestamp(Long val) {
+            remoteTimestamp = val; return self();
         }
         public Builder from(ManagementNodeSyncRecord other) {
-            nodeId = other.getNodeId();
-            brooklynVersion = other.getBrooklynVersion();
-            timestampUtc = other.getTimestampUtc();
-            uri = other.getUri();
-            status = other.getStatus();
+            return from(other, false);
+        }
+        public Builder from(ManagementNodeSyncRecord other, boolean ignoreNulls) {
+            if (ignoreNulls && other==null) return this;
+            if (other.getNodeId()!=null) nodeId = other.getNodeId();
+            if (other.getBrooklynVersion()!=null) brooklynVersion = other.getBrooklynVersion();
+            if (other.getLocalTimestamp()>0) localTimestamp = other.getLocalTimestamp();
+            if (other.getRemoteTimestamp()!=null) remoteTimestamp = other.getRemoteTimestamp();
+            if (other.getUri()!=null) uri = other.getUri();
+            if (other.getStatus()!=null) status = other.getStatus();
             return this;
         }
         public ManagementNodeSyncRecord build() {
@@ -69,7 +78,8 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
     private String nodeId;
     private URI uri;
     private ManagementNodeState status;
-    private long timestampUtc;
+    private long localTimestamp;
+    private Long remoteTimestamp;
 
     // for de-serialization
     @SuppressWarnings("unused")
@@ -82,7 +92,8 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         nodeId = builder.nodeId;
         uri = builder.uri;
         status = builder.status;
-        timestampUtc = builder.timestampUtc;
+        localTimestamp = builder.localTimestamp;
+        remoteTimestamp = builder.remoteTimestamp;
     }
 
     @Override
@@ -106,8 +117,13 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
     }
     
     @Override
-    public long getTimestampUtc() {
-        return timestampUtc;
+    public long getLocalTimestamp() {
+        return localTimestamp;
+    }
+    
+    @Override
+    public Long getRemoteTimestamp() {
+        return remoteTimestamp;
     }
     
     @Override
@@ -125,7 +141,15 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
                 .add("nodeId", getNodeId())
                 .add("uri", getUri())
                 .add("status", getStatus())
-                .add("timestamp", getTimestampUtc()+"="+Time.makeDateString(getTimestampUtc()))
+                .add("localTimestamp", getLocalTimestamp()+"="+Time.makeDateString(getLocalTimestamp()))
+                .add("remoteTimestamp", getRemoteTimestamp()+(getRemoteTimestamp()==null ? "" : 
+                    "="+Time.makeDateString(getRemoteTimestamp())))
                 .toString();
     }
+
+    /** used here for store to inject remote timestamp */
+    public void setRemoteTimestamp(Long remoteTimestamp) {
+        this.remoteTimestamp = remoteTimestamp;
+    }
+    
 }

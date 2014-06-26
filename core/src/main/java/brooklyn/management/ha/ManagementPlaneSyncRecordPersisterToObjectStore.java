@@ -3,6 +3,7 @@ package brooklyn.management.ha;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,7 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccess
 import brooklyn.entity.rebind.persister.RetryingMementoSerializer;
 import brooklyn.entity.rebind.persister.StoreObjectAccessorLocking;
 import brooklyn.entity.rebind.persister.XmlMementoSerializer;
+import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
@@ -79,12 +81,15 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
 
     private boolean started = false;
     private volatile boolean running = true;
-
+    
+    @VisibleForTesting
+    /** allows, when testing, to be able to override file times / blobstore times with time from the ticker */
+    private boolean allowRemoteTimestampInMemento = false;
 
     /**
      * @param mgmt not used much at present but handy to ensure we know it so that obj store is prepared
      * @param objectStore the objectStore use to read/write management-plane data;
-     *   this must have been {@link PersistenceObjectStore#prepareForUse(ManagementContext, brooklyn.entity.rebind.persister.PersistMode)}
+     *   this must have been {@link PersistenceObjectStore#prepareForSharedUse(ManagementContext, brooklyn.entity.rebind.persister.PersistMode)}
      * @param classLoader ClassLoader to use when deserializing data
      */
     public ManagementPlaneSyncRecordPersisterToObjectStore(ManagementContext mgmt, PersistenceObjectStore objectStore, ClassLoader classLoader) {
@@ -105,6 +110,11 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
             masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/master"));
             changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
         }
+    }
+
+    @VisibleForTesting
+    public void allowRemoteTimestampInMemento() {
+        allowRemoteTimestampInMemento = true;
     }
     
     @Override
@@ -182,6 +192,14 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
                 // shouldn't happen
                 throw Exceptions.propagate(new IllegalStateException("Node record "+nodeFile+" could not be deserialized when "+mgmt.getManagementNodeId()+" was scanning: "+nodeContents, problem));
             } else {
+                if (memento.getRemoteTimestamp()!=null) {
+                    // in test mode, the remote timestamp is stored in the file
+                    if (!allowRemoteTimestampInMemento)
+                        throw new IllegalStateException("Remote timestamps not allowed in memento: "+nodeContents);
+                } else {
+                    Date lastModifiedDate = objectAccessor.getLastModifiedDate();
+                    ((BasicManagementNodeSyncRecord)memento).setRemoteTimestamp(lastModifiedDate!=null ? lastModifiedDate.getTime() : null);
+                }
                 builder.node(memento);
             }
         }

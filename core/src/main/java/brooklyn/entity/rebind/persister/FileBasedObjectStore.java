@@ -35,6 +35,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -73,7 +74,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         return basedir;
     }
     
-    public void prepareForContendedWrite() {
+    public void prepareForMasterUse() {
         if (doneFirstContentiousWrite.get())
             return;
         synchronized (this) {
@@ -163,11 +164,11 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     }
     
     @Override
-    public void prepareForUse(@Nullable PersistMode persistMode, HighAvailabilityMode haMode) {
+    public void prepareForSharedUse(@Nullable PersistMode persistMode, HighAvailabilityMode haMode) {
         if (mgmt==null) throw new NullPointerException("Must inject ManagementContext before preparing "+this);
         
         if (persistMode==null || persistMode==PersistMode.DISABLED) {
-            // is this check needed? shouldn't come here now without persistence on.
+            // TODO is this check needed? shouldn't come here now without persistence on.
             prepared = true;
             return;
         }
@@ -283,7 +284,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
         String timestamp = new SimpleDateFormat("yyyyMMdd-hhmmssSSS").format(new Date());
-        File backupDir = new File(parentDir, simpleName+"-"+timestamp+".bak");
+        File backupDir = new File(parentDir, simpleName+"."+timestamp+".bak");
         
         copyDir(dir, backupDir);
         return backupDir;
@@ -293,7 +294,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         File parentDir = dir.getParentFile();
         String simpleName = dir.getName();
         String timestamp = new SimpleDateFormat("yyyyMMdd-hhmmssSSS").format(new Date());
-        File newDir = new File(parentDir, simpleName+"-"+timestamp+".old");
+        File newDir = new File(parentDir, simpleName+"."+timestamp+".bak");
 
         moveDir(dir, newDir);
         return newDir;
@@ -339,7 +340,11 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         destFile.delete();
         result = srcFile.renameTo(destFile);
         log.trace("java delete and rename of {} to {} completed, code {}", new Object[] { srcFile, destFile, result });
-        if (!result) throw new IOException("Could not rename "+destFile+" to "+srcFile);
+        if (result) 
+            return;
+        Files.copy(srcFile, destFile);
+        srcFile.delete();
+        throw new IOException("Could not move "+destFile+" to "+srcFile);
     }
     static void moveDir(File srcDir, File destDir) throws IOException, InterruptedException {
         if (!Os.isMicrosoftWindows()) {

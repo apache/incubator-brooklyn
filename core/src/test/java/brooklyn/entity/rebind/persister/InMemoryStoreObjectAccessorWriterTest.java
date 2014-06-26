@@ -11,7 +11,7 @@ public class InMemoryStoreObjectAccessorWriterTest extends PersistenceStoreObjec
 
     protected StoreObjectAccessorWithLock newPersistenceStoreObjectAccessor() throws IOException {
         InMemoryObjectStore store = new InMemoryObjectStore();
-        store.prepareForUse(null, null);
+        store.prepareForSharedUse(null, null);
         return new StoreObjectAccessorLocking(store.newAccessor("foo"));
     }
     

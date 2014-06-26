@@ -417,7 +417,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
+        @Override
         public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void forcePersistNow() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }

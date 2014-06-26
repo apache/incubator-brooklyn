@@ -1,5 +1,6 @@
 package brooklyn.entity.rebind.persister;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
@@ -19,7 +21,8 @@ import com.google.common.base.Preconditions;
 public class ListeningObjectStore implements PersistenceObjectStore {
 
     protected final PersistenceObjectStore delegate;
-    protected final ObjectStoreTransactionListener listener;
+    protected final List<ObjectStoreTransactionListener> listeners = MutableList.of();
+    private boolean writesFailSilently = false;
 
     public static interface ObjectStoreTransactionListener {
         public void recordQueryOut(String summary, int size);
@@ -101,9 +104,10 @@ public class ListeningObjectStore implements PersistenceObjectStore {
         }
     }
 
-    public ListeningObjectStore(PersistenceObjectStore delegate, ObjectStoreTransactionListener listener) {
+    public ListeningObjectStore(PersistenceObjectStore delegate, ObjectStoreTransactionListener ...listeners) {
         this.delegate = Preconditions.checkNotNull(delegate);
-        this.listener = Preconditions.checkNotNull(listener);
+        for (ObjectStoreTransactionListener listener: listeners)
+            this.listeners.add(listener);
     }
 
     @Override
@@ -112,8 +116,8 @@ public class ListeningObjectStore implements PersistenceObjectStore {
     }
 
     @Override
-    public void prepareForContendedWrite() {
-        delegate.prepareForContendedWrite();
+    public void prepareForMasterUse() {
+        delegate.prepareForMasterUse();
     }
 
     @Override
@@ -123,15 +127,23 @@ public class ListeningObjectStore implements PersistenceObjectStore {
 
     @Override
     public void createSubPath(String subPath) {
-        listener.recordQueryOut("creating path "+subPath, 1+subPath.length());
+        if (writesFailSilently)
+            return;
+        
+        for (ObjectStoreTransactionListener listener: listeners)
+            listener.recordQueryOut("creating path "+subPath, 1+subPath.length());
         delegate.createSubPath(subPath);
     }
 
     @Override
     public List<String> listContentsWithSubPath(String subPath) {
-        listener.recordQueryOut("requesting list "+subPath, 1+subPath.length());
+        for (ObjectStoreTransactionListener listener: listeners)
+            listener.recordQueryOut("requesting list "+subPath, 1+subPath.length());
+        
         List<String> result = delegate.listContentsWithSubPath(subPath);
-        listener.recordDataIn("receiving list "+subPath, result.toString().length());
+        
+        for (ObjectStoreTransactionListener listener: listeners)
+            listener.recordDataIn("receiving list "+subPath, result.toString().length());
         return result;
     }
 
@@ -146,13 +158,14 @@ public class ListeningObjectStore implements PersistenceObjectStore {
     }
     
     @Override
-    public void prepareForUse(PersistMode persistMode, HighAvailabilityMode haMode) {
-        delegate.prepareForUse(persistMode, haMode);
+    public void prepareForSharedUse(PersistMode persistMode, HighAvailabilityMode haMode) {
+        delegate.prepareForSharedUse(persistMode, haMode);
     }
 
     @Override
     public void deleteCompletely() {
-        listener.recordDataOut("deleting completely", 1);
+        for (ObjectStoreTransactionListener listener: listeners)
+            listener.recordDataOut("deleting completely", 1);
         delegate.deleteCompletely();
     }
 
@@ -165,27 +178,54 @@ public class ListeningObjectStore implements PersistenceObjectStore {
             this.path = path;
             this.delegate = delegate;
         }
+        @Override
         public boolean exists() {
             return delegate.exists();
         }
+        @Override
         public void put(String val) {
-            listener.recordDataOut("writing "+path, val.length());
+            if (writesFailSilently)
+                return;
+
+            for (ObjectStoreTransactionListener listener: listeners)
+                listener.recordDataOut("writing "+path, val.length());
             delegate.put(val);
         }
+        @Override
         public void append(String s) {
-            listener.recordDataOut("appending "+path, s.length());
+            if (writesFailSilently)
+                return;
+
+            for (ObjectStoreTransactionListener listener: listeners)
+                listener.recordDataOut("appending "+path, s.length());
             delegate.append(s);
         }
+        @Override
         public void delete() {
-            listener.recordQueryOut("deleting "+path, path.length());
+            if (writesFailSilently)
+                return;
+
+            for (ObjectStoreTransactionListener listener: listeners)
+                listener.recordQueryOut("deleting "+path, path.length());
             delegate.delete();
         }
+        @Override
         public String get() {
-            listener.recordQueryOut("requesting "+path, path.length());
+            for (ObjectStoreTransactionListener listener: listeners)
+                listener.recordQueryOut("requesting "+path, path.length());
             String result = delegate.get();
-            listener.recordDataIn("reading "+path, result.length());
+            
+            for (ObjectStoreTransactionListener listener: listeners)
+                listener.recordDataIn("reading "+path, (result==null ? 0 : result.length()));
             return result;
+        }
+        @Override
+        public Date getLastModifiedDate() {
+            return delegate.getLastModifiedDate();
         }
     }
 
+    public void setWritesFailSilently(boolean writesFailSilently) {
+        this.writesFailSilently = writesFailSilently;
+    }
 }

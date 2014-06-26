@@ -11,5 +11,5 @@ public class HighAvailabilityManagerInMemoryTest extends HighAvailabilityManager
     protected PersistenceObjectStore newPersistenceObjectStore() {
         return new InMemoryObjectStore();
     }
-    
+
 }
