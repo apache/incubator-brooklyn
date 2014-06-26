@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 
-import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.PageSet;
@@ -20,6 +19,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.location.jclouds.JcloudsUtil;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.stream.Streams;
@@ -64,10 +64,7 @@ public class BlobStoreTest {
             String provider = checkNotNull(location.getConfig(LocationConfigKeys.CLOUD_PROVIDER), "provider must not be null");
             String endpoint = location.getConfig(CloudLocationConfig.CLOUD_ENDPOINT);
 
-            context = ContextBuilder.newBuilder(provider)
-                .credentials(identity, credential)
-                .endpoint(endpoint)
-                .buildView(BlobStoreContext.class);
+            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential, true);
         }
         return context;
     }
@@ -83,7 +80,6 @@ public class BlobStoreTest {
     public void teardown() {
         Entities.destroyAll(mgmt);
     }
-    
     
     public void testCreateListDestroyContainer() throws IOException {
         context.getBlobStore().createContainerInLocation(null, testContainerName);
@@ -123,10 +119,15 @@ public class BlobStoreTest {
         context.getBlobStore().deleteContainer(testContainerName);
     }
 
-    private void assertHasItemNamed(PageSet<? extends StorageMetadata> ps, String name) {
+    static void assertHasItemNamed(PageSet<? extends StorageMetadata> ps, String name) {
+        if (!hasItemNamed(ps, name))
+            Assert.fail("No item named '"+name+"' in "+ps);
+    }
+
+    static boolean hasItemNamed(PageSet<? extends StorageMetadata> ps, String name) {
         for (StorageMetadata sm: ps)
-            if (name==null || name.equals(sm.getName())) return;
-        Assert.fail("No item named '"+name+"' in "+ps);
+            if (name==null || name.equals(sm.getName())) return true;
+        return false;
     }
 
 }

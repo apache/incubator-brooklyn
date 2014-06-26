@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.event.feed.http.HttpPollValue;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Time;
 
@@ -142,6 +143,10 @@ public class HttpToolResponse implements HttpPollValue {
 
     public String getContentAsString() {
         return new String(getContent());
+    }
+    
+    public Maybe<HttpResponse> getResponse() {
+        return Maybe.fromNullable(response);
     }
 
     @Override
