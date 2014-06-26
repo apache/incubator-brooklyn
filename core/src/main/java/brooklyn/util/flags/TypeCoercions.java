@@ -3,6 +3,7 @@ package brooklyn.util.flags;
 import groovy.lang.Closure;
 import groovy.time.TimeDuration;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -23,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -580,7 +582,19 @@ public class TypeCoercions {
         });
         registerAdapter(String.class, Map.class, new Function<String,Map>() {
             @Override
-            public Map<String, String> apply(final String input) {
+            public Map apply(final String input) {
+                // Auto-detect JSON. This allows complex data structures to be received over the REST API.
+                try {
+                    if (!input.isEmpty() && input.charAt(0) == '{') {
+                        return new ObjectMapper().readValue(input, Map.class);
+                    }
+                } catch (IOException e) {
+                    // just fall through to the map parsing
+                }
+                
+                // TODO would be nice to accept YAML for complex data structures too, but it's not as simple as JSON to auto-detect.
+                
+                // Simple map parsing - supports "key1=value1,key2=value2" style input
                 // TODO we should respect quoted strings etc
                 return ImmutableMap.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().withKeyValueSeparator("=").split(input));
             }
