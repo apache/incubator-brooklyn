@@ -1,5 +1,6 @@
 package brooklyn.launcher.config;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.util.os.Os;
 
 public class BrooklynDevelopmentModes {
 
@@ -59,8 +61,9 @@ public class BrooklynDevelopmentModes {
     
     private static boolean computeAutodectectedDevelopmentMode() {
         String cp = System.getProperty("java.class.path");
+        String platformSegment = Os.nativePath(segment);
         if (cp==null) return false;
-        if (cp.endsWith(segment) || cp.contains(segment+":") || cp.contains(segment+";")) {
+        if (cp.endsWith(platformSegment) || cp.contains(platformSegment+File.pathSeparator)) {
             log.debug("Brooklyn developmentMode autodetected (based on presence of '"+segment+"' in classpath)");
             return true;
         }

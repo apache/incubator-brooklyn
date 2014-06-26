@@ -9,6 +9,7 @@ import java.util.TimeZone;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
 public class GeoscalingScriptGenerator {
@@ -35,18 +36,18 @@ public class GeoscalingScriptGenerator {
     
     private static String getHostsDeclaration(Collection<HostGeoInfo> hosts) {
         StringBuffer sb = new StringBuffer();
-        sb.append("$hosts = array(\n");
+        sb.append("$hosts = array(").append(Os.LINE_SEPARATOR);
         Iterator<HostGeoInfo> iServer = hosts.iterator();
         while (iServer.hasNext()) {
             HostGeoInfo server = iServer.next();
-            sb.append("    array('name'      => '").append(escape(server.displayName)).append("',\n");
-            sb.append("          'latitude'  => ").append(server.latitude).append(",\n");
-            sb.append("          'longitude' => ").append(server.longitude).append(",\n");
+            sb.append("    array('name'      => '").append(escape(server.displayName)).append("',").append(Os.LINE_SEPARATOR);
+            sb.append("          'latitude'  => ").append(server.latitude).append(",").append(Os.LINE_SEPARATOR);
+            sb.append("          'longitude' => ").append(server.longitude).append(",").append(Os.LINE_SEPARATOR);
             sb.append("          'ip'        => '").append(escape(server.address)).append("')");
-            if (iServer.hasNext()) sb.append(",\n");
-            sb.append("\n");
+            if (iServer.hasNext()) sb.append(",").append(Os.LINE_SEPARATOR);
+            sb.append(Os.LINE_SEPARATOR);
         }
-        sb.append(");\n");
+        sb.append(");").append(Os.LINE_SEPARATOR);
         return sb.toString();
     }
     

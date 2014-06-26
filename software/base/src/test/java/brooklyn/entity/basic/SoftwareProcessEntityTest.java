@@ -99,8 +99,10 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
 
         entity.start(ImmutableList.of(loc));
 
-        Assert.assertEquals(entity.getAttribute(SoftwareProcess.INSTALL_DIR), Os.mergePaths(resolvedDataDir, "installs/MyService"));
-        Assert.assertEquals(entity.getAttribute(SoftwareProcess.RUN_DIR), Os.mergePaths(resolvedDataDir, "apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId()));
+        Assert.assertEquals(Os.nativePath(entity.getAttribute(SoftwareProcess.INSTALL_DIR)),
+                            Os.nativePath(Os.mergePaths(resolvedDataDir, "installs/MyService")));
+        Assert.assertEquals(Os.nativePath(entity.getAttribute(SoftwareProcess.RUN_DIR)),
+                            Os.nativePath(Os.mergePaths(resolvedDataDir, "apps/"+entity.getApplicationId()+"/entities/MyService_"+entity.getId())));
     }
 
     protected <T extends MyService> void doStartAndCheckVersion(Class<T> type, String expectedLabel, ConfigBag config) {

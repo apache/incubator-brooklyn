@@ -23,7 +23,7 @@ public class BrooklynServerConfig {
     /** provided for setting; consumers should use {@link #getMgmtBaseDir(ManagementContext)} */ 
     public static final ConfigKey<String> MGMT_BASE_DIR = newStringConfigKey(
             "brooklyn.base.dir", "Directory for reading and writing all brooklyn server data", 
-            Os.mergePaths("~", ".brooklyn"));
+            Os.fromHome(".brooklyn"));
     
     @Deprecated /** @deprecated since 0.7.0 use BrooklynServerConfig routines */
     // copied here so we don't have back-ref to BrooklynConfigKeys
@@ -75,7 +75,7 @@ public class BrooklynServerConfig {
     }
     
     protected static String resolveAgainstBaseDir(StringConfigMap brooklynProperties, String path) {
-        if (!Os.isAbsolute(path)) path = Os.mergePaths(getMgmtBaseDir(brooklynProperties), path);
+        if (!Os.isAbsolutish(path)) path = Os.mergePaths(getMgmtBaseDir(brooklynProperties), path);
         return Os.tidyPath(path);
     }
     
@@ -128,6 +128,7 @@ public class BrooklynServerConfig {
 
     public static final ConfigKey<String> BROOKLYN_CATALOG_URL = ConfigKeys.newStringConfigKey("brooklyn.catalog.url",
         "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
-        "or empty for no URL (use default scanner)", "file://~/.brooklyn/catalog.xml");
+        "or empty for no URL (use default scanner)", 
+        new File(Os.fromHome(".brooklyn/catalog.xml")).toURI().toString());
     
 }

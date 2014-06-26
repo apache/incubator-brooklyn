@@ -3,6 +3,7 @@ package brooklyn.util.stream;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.util.os.Os;
 import brooklyn.util.stream.ThreadLocalPrintStream.OutputCapturingContext;
 
 public class ThreadLocalStdoutStderrTest {
@@ -65,7 +66,7 @@ public class ThreadLocalStdoutStderrTest {
         
         System.out.println("4 - not captured, restored normal output");
         Assert.assertEquals(TWO, out2.trim());
-        Assert.assertEquals(TWO+"\n"+THREE, out1.trim());
+        Assert.assertEquals(TWO+Os.LINE_SEPARATOR+THREE, out1.trim());
     }
 
 }

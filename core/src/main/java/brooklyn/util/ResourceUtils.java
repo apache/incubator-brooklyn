@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -377,29 +378,55 @@ public class ResourceUtils {
         Class<?> cc = contextObject instanceof Class ? (Class<?>)contextObject : contextObject.getClass();
         return getClassLoaderDir(cc.getCanonicalName().replace('.', '/')+".class");
     }
+    
     public String getClassLoaderDir(String resourceInThatDir) {
         resourceInThatDir = Strings.removeFromStart(resourceInThatDir, "/");
         URL url = getLoader().getResource(resourceInThatDir);
         if (url==null) throw new NoSuchElementException("Resource ("+resourceInThatDir+") not found");
-        String urls = url.toString();
 
-        boolean isJar = urls.startsWith("jar:");
-        urls = Strings.removeFromStart(urls, "jar:");
-        if (!urls.startsWith("file:")) throw new IllegalStateException("Resource ("+resourceInThatDir+") not on file system (at "+urls+")");
-        urls = Strings.removeFromStart(urls, "file:");
-        urls = Strings.removeFromStart(urls, "//");
-        
-        int i = urls.indexOf(resourceInThatDir);
-        if (i==-1) throw new IllegalStateException("Resource path ("+resourceInThatDir+") not in url substring ("+urls+")");
-        urls = urls.substring(0, i);
-        
-        if (isJar) {
-            urls = Strings.removeFromEnd(urls, "/");
-            if (!urls.endsWith("!")) throw new IllegalStateException("Context class url mismatch, is jar but does not have ! separator ("+urls+")");
-            urls = Strings.removeFromEnd(urls, "!");
-            if (!new File(urls).exists()) throw new IllegalStateException("Context class url substring ("+urls+") not found on filesystem");
+        //Switching from manual parsing of jar: and file: URLs to java provided functionality.
+        //The old code was breaking on any Windows path and instead of fixing it, using
+        //the provided Java APIs seemed like the better option since they are already tested
+        //on multiple platforms.
+        boolean isJar = "jar".equals(url.getProtocol());
+        if(isJar) {
+            try {
+                //let java handle the parsing of jar URL, no network connection is established.
+                //Strips the jar protocol:
+                //  jar:file:/<path to jar>!<resourceInThatDir>
+                //  becomes
+                //  file:/<path to jar>
+                JarURLConnection connection = (JarURLConnection) url.openConnection();
+                url = connection.getJarFileURL();
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            //Remove the trailing resouceInThatDir path from the URL, thus getting the parent folder.
+            String path = url.toString();
+            int i = path.indexOf(resourceInThatDir);
+            if (i==-1) throw new IllegalStateException("Resource path ("+resourceInThatDir+") not in url substring ("+url+")");
+            String parent = path.substring(0, i);
+            try {
+                url = new URL(parent);
+            } catch (MalformedURLException e) {
+                throw new IllegalStateException("Resource ("+resourceInThatDir+") found at invalid URL parent (" + parent + ")", e);
+            }
         }
-        return urls;
+        
+        if (!"file".equals(url.getProtocol())) throw new IllegalStateException("Resource ("+resourceInThatDir+") not on file system (at "+url+")");
+
+        //convert from file: URL to File
+        File file;
+        try {
+            file = new File(url.toURI());
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("Resource ("+resourceInThatDir+") found at invalid URI (" + url + ")", e);
+        }
+        
+        if (!file.exists()) throw new IllegalStateException("Context class url substring ("+url+") not found on filesystem");
+        return file.getPath();
+        
     }
     
     /** @deprecated since 0.7.0 use {@link Streams#readFullyString(InputStream) */ @Deprecated

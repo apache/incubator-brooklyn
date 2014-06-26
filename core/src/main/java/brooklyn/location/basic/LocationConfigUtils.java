@@ -41,7 +41,7 @@ public class LocationConfigUtils {
         
         String privateKeyFile = config.get(LocationConfigKeys.PRIVATE_KEY_FILE);
         if (groovyTruth(privateKeyFile)) {
-            List<String> privateKeyFiles = Arrays.asList(privateKeyFile.split(":"));
+            List<String> privateKeyFiles = Arrays.asList(privateKeyFile.split(File.pathSeparator));
             List<String> publicKeyFiles = ImmutableList.copyOf(Iterables.transform(privateKeyFiles, StringFunctions.append(".pub")));
             List<String> publicKeyFilesTidied = tidyFilePaths(publicKeyFiles);
             
@@ -67,7 +67,7 @@ public class LocationConfigUtils {
         
         String file = config.get(fileKey);
         if (groovyTruth(file)) {
-            List<String> files = Arrays.asList(file.split(":"));
+            List<String> files = Arrays.asList(file.split(File.pathSeparator));
             List<String> filesTidied = tidyFilePaths(files);
             String fileData = getFileContents(filesTidied);
             if (fileData == null) {

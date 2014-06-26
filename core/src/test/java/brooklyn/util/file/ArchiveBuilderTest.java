@@ -98,7 +98,7 @@ public class ArchiveBuilderTest {
         assertTrue(Iterables.isEmpty(directories));
         assertEquals(Iterables.size(files), 3);
         for (ZipEntry file : files) {
-            assertTrue(file.getName().startsWith(Os.mergePaths(".", "data")));
+            assertTrue(file.getName().startsWith(Os.mergePathsUnix(".", "data")));
         }
         input.close();
     }
@@ -126,7 +126,7 @@ public class ArchiveBuilderTest {
         assertTrue(Iterables.isEmpty(directories));
         assertEquals(Iterables.size(files), 3);
         for (ZipEntry file : files) {
-            assertTrue(file.getName().startsWith(Os.mergePaths(".", baseDir)));
+            assertTrue(file.getName().startsWith(Os.mergePathsUnix(".", baseDir)));
         }
         input.close();
     }

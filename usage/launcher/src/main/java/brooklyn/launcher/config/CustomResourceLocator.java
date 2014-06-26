@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.os.Os;
 
 /** class which allows non-standard locators to be registered for URL's being loaded */
 public class CustomResourceLocator {
@@ -79,7 +80,7 @@ public class CustomResourceLocator {
 
         public SearchingClassPathInDevMode(String urlToSearchFor, String classpathSuffixToSearchFor, String classpathSuffixToUse) {
             this.urlToSearchFor = urlToSearchFor;
-            this.classpathSuffixToSearchFor = classpathSuffixToSearchFor;
+            this.classpathSuffixToSearchFor = Os.nativePath(classpathSuffixToSearchFor);
             this.classpathSuffixToUse = classpathSuffixToUse;
         }
         
