@@ -27,11 +27,11 @@ import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Preconditions;
 
-@Test(groups="Integration")
+@Test(groups={"Live", "Live-sanity"})
 public class BlobStoreTest {
 
     /**
-     * Integration tests as written require a location defined as follows:
+     * Live tests as written require a location defined as follows:
      * 
      * <code>
      * brooklyn.location.named.brooklyn-jclouds-objstore-test-1==jclouds:swift:https://ams01.objectstorage.softlayer.net/auth/v1.0

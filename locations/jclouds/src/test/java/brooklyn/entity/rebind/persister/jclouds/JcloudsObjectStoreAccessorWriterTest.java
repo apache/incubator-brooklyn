@@ -16,7 +16,7 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.Identifiers;
 
-@Test(groups="Integration")
+@Test(groups={"Live", "Live-sanity"})
 public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObjectAccessorWriterTestFixture {
 
     private JcloudsBlobStoreBasedObjectStore store;
@@ -47,19 +47,19 @@ public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObject
         return 10000;
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testWriteBacklogThenDeleteWillLeaveFileDeleted() throws Exception {
         super.testWriteBacklogThenDeleteWillLeaveFileDeleted();
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testWritesFile() throws Exception {
         super.testWritesFile();
     }
 
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testLastModifiedTime() throws Exception {
         super.testLastModifiedTime();

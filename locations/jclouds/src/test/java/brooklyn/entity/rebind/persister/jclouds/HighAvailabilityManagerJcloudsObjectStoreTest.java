@@ -10,7 +10,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.Identifiers;
 
-@Test(groups="Integration")
+@Test(groups={"Live", "Live-sanity"})
 public class HighAvailabilityManagerJcloudsObjectStoreTest extends HighAvailabilityManagerTestFixture {
 
     protected ManagementContextInternal newLocalManagementContext() {
@@ -25,36 +25,36 @@ public class HighAvailabilityManagerJcloudsObjectStoreTest extends HighAvailabil
             BlobStoreTest.PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC, BlobStoreTest.CONTAINER_PREFIX+"-"+Identifiers.makeRandomId(4));
     }
 
-    @Test(groups="Integration", invocationCount=5) //run fewer times w softlayer... 
+    @Test(groups="Live", invocationCount=5) //run fewer times w softlayer... 
     public void testGetManagementPlaneStatusManyTimes() throws Exception {
         testGetManagementPlaneStatus();
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testDoesNotPromoteIfMasterTimeoutNotExpired() throws Exception {
         super.testDoesNotPromoteIfMasterTimeoutNotExpired();
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testGetManagementPlaneStatus() throws Exception {
         super.testGetManagementPlaneStatus();
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testPromotes() throws Exception {
         super.testPromotes();
     }
 
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testGetManagementPlaneSyncStateInfersTimedOutNodeAsFailed() throws Exception {
         super.testGetManagementPlaneSyncStateInfersTimedOutNodeAsFailed();
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testGetManagementPlaneSyncStateDoesNotThrowNpeBeforePersisterSet() throws Exception {
         super.testGetManagementPlaneSyncStateDoesNotThrowNpeBeforePersisterSet();
