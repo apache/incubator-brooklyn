@@ -2,6 +2,7 @@ package brooklyn.entity.rebind;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -80,6 +81,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     private final boolean persistPoliciesEnabled;
     private final boolean persistEnrichersEnabled;
     
+    private final Semaphore persistingMutex = new Semaphore(1);
+    
     public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, long periodMillis) {
         this.executionManager = executionManager;
         this.persister = persister;
@@ -89,6 +92,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
     }
     
+    @SuppressWarnings("unchecked")
     public void start() {
         running = true;
         
@@ -172,77 +176,80 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         return stopped || executionManager.isShutdown();
     }
     
-    private void persistNow() {
-        if (isActive()) {
-            try {
-                // Atomically switch the delta, so subsequent modifications will be done in the
-                // next scheduled persist
-                DeltaCollector prevDeltaCollector;
-                synchronized (this) {
-                    prevDeltaCollector = deltaCollector;
-                    deltaCollector = new DeltaCollector();
-                }
-                
-                // Generate mementos for everything that has changed in this time period
-                if (prevDeltaCollector.isEmpty()) {
-                    if (LOG.isTraceEnabled()) LOG.trace("No changes to persist since last delta");
-                } else {
-                    PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
-                    for (Location location : prevDeltaCollector.locations) {
-                        try {
-                            persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
-                        } catch (Exception e) {
-                            handleGenerateMementoException(e, "location "+location.getClass().getSimpleName()+"("+location.getId()+")");
-                        }
-                    }
-                    for (Entity entity : prevDeltaCollector.entities) {
-                        try {
-                            persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
-                        } catch (Exception e) {
-                            handleGenerateMementoException(e, "entity "+entity.getEntityType().getSimpleName()+"("+entity.getId()+")");
-                        }
-                    }
-                    for (Policy policy : prevDeltaCollector.policies) {
-                        try {
-                            persisterDelta.policies.add(policy.getRebindSupport().getMemento());
-                        } catch (Exception e) {
-                            handleGenerateMementoException(e, "policy "+policy.getClass().getSimpleName()+"("+policy.getId()+")");
-                        }
-                    }
-                    for (Enricher enricher : prevDeltaCollector.enrichers) {
-                        try {
-                            persisterDelta.enrichers.add(enricher.getRebindSupport().getMemento());
-                        } catch (Exception e) {
-                            handleGenerateMementoException(e, "enricher "+enricher.getClass().getSimpleName()+"("+enricher.getId()+")");
-                        }
-                    }
-                    persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
-                    persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
-                    persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
-                    persisterDelta.removedEnricherIds = prevDeltaCollector.removedEnricherIds;
-                    
-                    /*
-                     * Need to guarantee "happens before", with any thread that subsequently reads
-                     * the mementos.
-                     * 
-                     * See MementoFileWriter.writeNow for the corresponding synchronization,
-                     * that guarantees its thread has values visible for reads.
-                     */
-                    synchronized (new Object()) {}
-
-                    // Tell the persister to persist it
-                    persister.delta(persisterDelta);
-                }
-            } catch (Exception e) {
-                if (isActive()) {
-                    throw Exceptions.propagate(e);
-                } else {
-                    Exceptions.propagateIfFatal(e);
-                    LOG.debug("Problem persisting, but no longer active (ignoring)", e);
-                }
-            } finally {
-                writeCount.incrementAndGet();
+    @VisibleForTesting
+    public void persistNow() {
+        if (!isActive()) return;
+        try {
+            persistingMutex.acquire();
+            if (!isActive()) return;
+            // Atomically switch the delta, so subsequent modifications will be done in the
+            // next scheduled persist
+            DeltaCollector prevDeltaCollector;
+            synchronized (this) {
+                prevDeltaCollector = deltaCollector;
+                deltaCollector = new DeltaCollector();
             }
+
+            // Generate mementos for everything that has changed in this time period
+            if (prevDeltaCollector.isEmpty()) {
+                if (LOG.isTraceEnabled()) LOG.trace("No changes to persist since last delta");
+            } else {
+                PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
+                for (Location location : prevDeltaCollector.locations) {
+                    try {
+                        persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
+                    } catch (Exception e) {
+                        handleGenerateMementoException(e, "location "+location.getClass().getSimpleName()+"("+location.getId()+")");
+                    }
+                }
+                for (Entity entity : prevDeltaCollector.entities) {
+                    try {
+                        persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
+                    } catch (Exception e) {
+                        handleGenerateMementoException(e, "entity "+entity.getEntityType().getSimpleName()+"("+entity.getId()+")");
+                    }
+                }
+                for (Policy policy : prevDeltaCollector.policies) {
+                    try {
+                        persisterDelta.policies.add(policy.getRebindSupport().getMemento());
+                    } catch (Exception e) {
+                        handleGenerateMementoException(e, "policy "+policy.getClass().getSimpleName()+"("+policy.getId()+")");
+                    }
+                }
+                for (Enricher enricher : prevDeltaCollector.enrichers) {
+                    try {
+                        persisterDelta.enrichers.add(enricher.getRebindSupport().getMemento());
+                    } catch (Exception e) {
+                        handleGenerateMementoException(e, "enricher "+enricher.getClass().getSimpleName()+"("+enricher.getId()+")");
+                    }
+                }
+                persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
+                persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
+                persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
+                persisterDelta.removedEnricherIds = prevDeltaCollector.removedEnricherIds;
+
+                /*
+                 * Need to guarantee "happens before", with any thread that subsequently reads
+                 * the mementos.
+                 * 
+                 * See MementoFileWriter.writeNow for the corresponding synchronization,
+                 * that guarantees its thread has values visible for reads.
+                 */
+                synchronized (new Object()) {}
+
+                // Tell the persister to persist it
+                persister.delta(persisterDelta);
+            }
+        } catch (Exception e) {
+            if (isActive()) {
+                throw Exceptions.propagate(e);
+            } else {
+                Exceptions.propagateIfFatal(e);
+                LOG.debug("Problem persisting, but no longer active (ignoring)", e);
+            }
+        } finally {
+            writeCount.incrementAndGet();
+            persistingMutex.release();
         }
     }
     

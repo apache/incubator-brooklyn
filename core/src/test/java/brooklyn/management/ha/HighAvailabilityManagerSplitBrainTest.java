@@ -5,28 +5,36 @@ import static org.testng.Assert.assertEquals;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.ListeningObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.management.ha.HighAvailabilityManagerTestFixture.RecordingPromotionListener;
+import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Ticker;
+import com.google.common.collect.ImmutableList;
 
 @Test
 public class HighAvailabilityManagerSplitBrainTest {
@@ -37,19 +45,18 @@ public class HighAvailabilityManagerSplitBrainTest {
     Map<String,String> sharedBackingStore = MutableMap.of();
     Map<String,Date> sharedBackingStoreDates = MutableMap.of();
     private AtomicLong sharedTime; // used to set the ticker's return value
+    private ClassLoader classLoader = getClass().getClassLoader();
     
     public class HaMgmtNode {
         
-        private ManagementPlaneSyncRecordPersister persister;
-        private ManagementContextInternal managementContext;
+        private ManagementContextInternal mgmt;
         private String ownNodeId;
-        private HighAvailabilityManagerImpl manager;
+        private String nodeName;
+        private ListeningObjectStore objectStore;
+        private ManagementPlaneSyncRecordPersister persister;
+        private HighAvailabilityManagerImpl ha;
         private Ticker ticker;
         private AtomicLong currentTime; // used to set the ticker's return value
-        private RecordingPromotionListener promotionListener;
-        private ClassLoader classLoader = getClass().getClassLoader();
-        private ListeningObjectStore objectStore;
-        private String nodeName;
 
         @BeforeMethod(alwaysRun=true)
         public void setUp() throws Exception {
@@ -65,20 +72,18 @@ public class HighAvailabilityManagerSplitBrainTest {
             };
             
             nodeName = "node "+nodes.size();
-            promotionListener = new RecordingPromotionListener();
-            managementContext = newLocalManagementContext();
-            ownNodeId = managementContext.getManagementNodeId();
+            mgmt = newLocalManagementContext();
+            ownNodeId = mgmt.getManagementNodeId();
             objectStore = new ListeningObjectStore(newPersistenceObjectStore());
-            objectStore.injectManagementContext(managementContext);
+            objectStore.injectManagementContext(mgmt);
             objectStore.prepareForSharedUse(PersistMode.CLEAN, HighAvailabilityMode.DISABLED);
-            persister = new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext, objectStore, classLoader);
+            persister = new ManagementPlaneSyncRecordPersisterToObjectStore(mgmt, objectStore, classLoader);
             ((ManagementPlaneSyncRecordPersisterToObjectStore)persister).allowRemoteTimestampInMemento();
             BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
-            managementContext.getRebindManager().setPersister(persisterObj);
-            manager = new HighAvailabilityManagerImpl(managementContext)
+            mgmt.getRebindManager().setPersister(persisterObj);
+            ha = new HighAvailabilityManagerImpl(mgmt)
                 .setPollPeriod(Duration.PRACTICALLY_FOREVER)
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
-                .setPromotionListener(promotionListener)
                 .setLocalTicker(ticker)
                 .setRemoteTicker(ticker)
                 .setPersister(persister);
@@ -86,8 +91,8 @@ public class HighAvailabilityManagerSplitBrainTest {
         }
         
         public void tearDown() throws Exception {
-            if (manager != null) manager.stop();
-            if (managementContext != null) Entities.destroyAll(managementContext);
+            if (ha != null) ha.stop();
+            if (mgmt != null) Entities.destroyAll(mgmt);
             if (objectStore != null) objectStore.deleteCompletely();
         }
         
@@ -155,13 +160,13 @@ public class HighAvailabilityManagerSplitBrainTest {
     }
     
     @Test
-    public void testTwoNodes() throws Exception {
+    public void testIfNodeStopsBeingAbleToWrite() throws Exception {
         useSharedTime();
         HaMgmtNode n1 = newNode();
         HaMgmtNode n2 = newNode();
         
-        n1.manager.start(HighAvailabilityMode.AUTO);
-        ManagementPlaneSyncRecord memento1 = n1.manager.getManagementPlaneSyncState();
+        n1.ha.start(HighAvailabilityMode.AUTO);
+        ManagementPlaneSyncRecord memento1 = n1.ha.getManagementPlaneSyncState();
         
         log.info(n1+" HA: "+memento1);
         assertEquals(memento1.getMasterNodeId(), n1.ownNodeId);
@@ -169,8 +174,8 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento1.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time0);
         assertEquals(memento1.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
 
-        n2.manager.start(HighAvailabilityMode.AUTO);
-        ManagementPlaneSyncRecord memento2 = n2.manager.getManagementPlaneSyncState();
+        n2.ha.start(HighAvailabilityMode.AUTO);
+        ManagementPlaneSyncRecord memento2 = n2.ha.getManagementPlaneSyncState();
         
         log.info(n2+" HA: "+memento2);
         assertEquals(memento2.getMasterNodeId(), n1.ownNodeId);
@@ -179,12 +184,25 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento2.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time0);
         assertEquals(memento2.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time0);
         
+        // and no entities at either
+        assertEquals(n1.mgmt.getApplications().size(), 0);
+        assertEquals(n2.mgmt.getApplications().size(), 0);
+
+        // create
+        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), n1.mgmt);
+        app.start(ImmutableList.<Location>of());
+        app.setAttribute(TestApplication.MY_ATTRIBUTE, "hello");
+        
+        assertEquals(n1.mgmt.getApplications().size(), 1);
+        assertEquals(n2.mgmt.getApplications().size(), 0);
+        n1.mgmt.getRebindManager().forcePersistNow();
+        
         n1.objectStore.setWritesFailSilently(true);
         log.info(n1+" writes off");
         sharedTickerAdvance(Duration.ONE_MINUTE);
         
-        n2.manager.publishAndCheck(false);
-        ManagementPlaneSyncRecord memento2b = n2.manager.getManagementPlaneSyncState();
+        n2.ha.publishAndCheck(false);
+        ManagementPlaneSyncRecord memento2b = n2.ha.getManagementPlaneSyncState();
         log.info(n2+" HA now: "+memento2b);
         Long time1 = sharedTickerCurrentMillis();
         
@@ -195,33 +213,19 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento2b.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time0);
         assertEquals(memento2b.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time1);
         
+        assertEquals(n1.mgmt.getApplications().size(), 1);
+        assertEquals(n2.mgmt.getApplications().size(), 1);
+        assertEquals(n1.mgmt.getApplications().iterator().next().getAttribute(TestApplication.MY_ATTRIBUTE), "hello");
+        
         n1.objectStore.setWritesFailSilently(false);
         log.info(n1+" writes on");
         
         sharedTickerAdvance(Duration.ONE_SECOND);
         Long time2 = sharedTickerCurrentMillis();
         
-        n1.manager.publishAndCheck(false);
-        ManagementPlaneSyncRecord memento1b = n1.manager.getManagementPlaneSyncState();
+        n1.ha.publishAndCheck(false);
+        ManagementPlaneSyncRecord memento1b = n1.ha.getManagementPlaneSyncState();
         log.info(n1+" HA now: "+memento1b);
-        
-//        // n1 comes back and sees himself as master, but with both masters 
-//        assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
-//        assertEquals(memento1b.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
-//        assertEquals(memento1b.getMasterNodeId(), n1.ownNodeId);
-//        assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);
-//        assertEquals(memento1b.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time1);
-//        
-//        // n2 sees itself as master, but again with both masters
-//        ManagementPlaneSyncRecord memento2c = n2.manager.getManagementPlaneSyncState();
-//        log.info(n2+" HA now: "+memento2c);
-//        assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
-//        assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
-//        assertEquals(memento2c.getMasterNodeId(), n2.ownNodeId);
-//        assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);
-//        assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time2);
-
-        // current (unwanted) state is above, desired state below
         
         // n1 comes back and demotes himself 
         assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.STANDBY);
@@ -231,7 +235,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento1b.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time1);
         
         // n2 now sees itself as master, with n1 in standby again
-        ManagementPlaneSyncRecord memento2c = n2.manager.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento2c = n2.ha.getManagementPlaneSyncState();
         log.info(n2+" HA now: "+memento2c);
         assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.STANDBY);
         assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
@@ -239,6 +243,69 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);
         assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time2);
 
+        // and no entities at n1
+        assertEquals(n1.mgmt.getApplications().size(), 0);
+        assertEquals(n2.mgmt.getApplications().size(), 1);
     }
     
+    @Test(invocationCount=50)
+    public void testIfNodeStopsBeingAbleToWriteManyTimes() throws Exception {
+        testIfNodeStopsBeingAbleToWrite();
+    }
+    
+    @Test
+    public void testSimultaneousStartup() throws Exception {
+        doTestConcurrentStartup(5, null);
+    }
+
+    @Test
+    public void testNearSimultaneousStartup() throws Exception {
+        doTestConcurrentStartup(20, Duration.millis(20));
+    }
+
+    @Test(invocationCount=50, groups="Integration")
+    public void testNearSimultaneousStartupManyTimes() throws Exception {
+        doTestConcurrentStartup(20, Duration.millis(20));
+    }
+
+    protected void doTestConcurrentStartup(int size, final Duration staggerStart) throws Exception {
+        useSharedTime();
+        
+        List<Thread> spawned = MutableList.of();
+        for (int i=0; i<size; i++) {
+            final HaMgmtNode n = newNode();
+            Thread t = new Thread() { public void run() {
+                if (staggerStart!=null) Time.sleep(staggerStart.multiply(Math.random()));
+                n.ha.start(HighAvailabilityMode.AUTO);
+            } };
+            spawned.add(t);
+            t.start();
+        }
+        
+        Assert.assertTrue(Repeater.create().every(Duration.millis(1)).limitTimeTo(Duration.TEN_SECONDS).until(new Callable<Boolean>() {
+            @Override public Boolean call() throws Exception {
+                ManagementPlaneSyncRecord memento = nodes.get(0).ha.getManagementPlaneSyncState();
+                int masters=0, standbys=0, savedMasters=0, savedStandbys=0;
+                for (HaMgmtNode n: nodes) {
+                    if (n.ha.getNodeState()==ManagementNodeState.MASTER) masters++;
+                    if (n.ha.getNodeState()==ManagementNodeState.STANDBY) standbys++;
+                    ManagementNodeSyncRecord m = memento.getManagementNodes().get(n.ownNodeId);
+                    if (m!=null) {
+                        if (m.getStatus()==ManagementNodeState.MASTER) savedMasters++;
+                        if (m.getStatus()==ManagementNodeState.STANDBY) savedStandbys++;
+                    }
+                }
+                log.info("starting "+nodes.size()+" nodes: "+masters+" M + "+standbys+" zzz; "
+                    + memento.getManagementNodes().size()+" saved, "
+                        + memento.getMasterNodeId()+" master, "+savedMasters+" M + "+savedStandbys+" zzz");
+                
+                return masters==1 && standbys==nodes.size()-1 && savedMasters==1 && savedStandbys==nodes.size()-1;
+            }
+        }).run());
+        
+        for (Thread t: spawned)
+            t.join(Duration.FIVE_SECONDS.toMilliseconds());
+    }
+    
+
 }

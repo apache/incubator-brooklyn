@@ -29,7 +29,7 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
     public InMemoryObjectStore(Map<String,String> map, Map<String, Date> fileModTimesByName) {
         filesByName = map;
         this.fileModTimesByName = fileModTimesByName;
-        log.info("Using memory-based objectStore");
+        log.debug("Using memory-based objectStore");
     }
     
     @Override

@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.entity.Application;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
@@ -71,11 +73,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     
     // TODO There is a race if you start multiple nodes simultaneously.
     // They may not have seen each other's heartbeats yet, so will all claim mastery!
+    // But this should be resolved shortly afterwards.
 
-    // TODO Should detect if multiple active nodes believe that they are master (possibly in MasterChooser?),
-    // and respond accordingly.
-    // Could support "demotingFromMaster" (e.g. restart management context?!).
-    
     // TODO Should we pass in a classloader on construction, so it can be passed to {@link RebindManager#rebind(ClassLoader)} 
     
     public static interface PromotionListener {
@@ -194,7 +193,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 String masterNodeId = getManagementPlaneSyncState().getMasterNodeId();
                 ManagementNodeSyncRecord masterNodeDetails = getManagementPlaneSyncState().getManagementNodes().get(masterNodeId);
                 LOG.info("Management node "+ownNodeId+" started as HA STANDBY autodetected, master is "+masterNodeId+
-                    (masterNodeDetails==null || masterNodeDetails.getUri()==null ? " (no further info)" : " at "+masterNodeDetails.getUri()));
+                    (masterNodeDetails==null || masterNodeDetails.getUri()==null ? " (no url)" : " at "+masterNodeDetails.getUri()));
             } else {
                 LOG.info("Management node "+ownNodeId+" started as HA MASTER autodetected");
             }
@@ -302,6 +301,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      */
     protected synchronized void publishDemotionFromMasterOnFailure() {
         checkState(getNodeState() == ManagementNodeState.FAILED, "node status must be failed on publish, but is %s", getNodeState());
+        publishDemotionFromMaster(true);
+    }
+    
+    protected synchronized void publishDemotionFromMaster(boolean clearMaster) {
+        checkState(getNodeState() != ManagementNodeState.MASTER, "node status must not be master when demoting", getNodeState());
         
         if (persister == null) {
             LOG.info("Cannot publish management-node health as no persister");
@@ -309,10 +313,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
         
         ManagementNodeSyncRecord memento = createManagementNodeSyncRecord(false);
-        Delta delta = ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(memento)
-                .clearMaster(ownNodeId)
-                .build();
+        ManagementPlaneSyncRecordDeltaImpl.Builder deltaBuilder = ManagementPlaneSyncRecordDeltaImpl.builder()
+                .node(memento);
+        if (clearMaster) deltaBuilder.clearMaster(ownNodeId);
+        
+        Delta delta = deltaBuilder.build();
         persister.delta(delta);
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
     }
@@ -377,10 +382,24 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         ManagementNodeSyncRecord masterNodeMemento = memento.getManagementNodes().get(masterNodeId);
         ManagementNodeSyncRecord ownNodeMemento = memento.getManagementNodes().get(ownNodeId);
         
+        ManagementNodeSyncRecord newMasterRecord = null;
+        boolean demotingSelfInFavourOfOtherMaster = false;
+        
         if (masterNodeMemento != null && masterNodeMemento.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(masterNodeMemento, ownNodeMemento)) {
-            // master still seems healthy
-            if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy: master={}", masterNodeMemento.toVerboseString());
-            return;
+            // master seems healthy
+            if (ownNodeId.equals(masterNodeId)) {
+                if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy (us): master={}", masterNodeMemento.toVerboseString());
+                return;
+            } else {
+                if (ownNodeMemento!=null && ownNodeMemento.getStatus() == ManagementNodeState.MASTER) {
+                    LOG.error("HA subsystem detected change of master, stolen from us ("+ownNodeId+"), deferring to "+masterNodeId);
+                    newMasterRecord = masterNodeMemento;
+                    demotingSelfInFavourOfOtherMaster = true;
+                } else {
+                    if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy (remote): master={}", masterNodeMemento.toVerboseString());
+                    return;
+                }
+            }
         } else if (ownNodeMemento == null || !isHeartbeatOk(ownNodeMemento, ownNodeMemento)) {
             // our heartbeats are also out-of-date! perhaps something wrong with persistence? just log, and don't over-react!
             if (ownNodeMemento == null) {
@@ -399,14 +418,21 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         
+        if (demotingSelfInFavourOfOtherMaster) {
+            LOG.debug("Master-change for this node only, demoting "+ownNodeMemento.toVerboseString()+" in favour of official master "+newMasterRecord);
+            demoteToStandby();
+            return;
+        }
+        
         // Need to choose a new master
-        ManagementNodeSyncRecord newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId);
+        newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId);
+        
         String newMasterNodeId = (newMasterRecord == null) ? null : newMasterRecord.getNodeId();
         URI newMasterNodeUri = (newMasterRecord == null) ? null : newMasterRecord.getUri();
         boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
         
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Management node master-promotion required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
+            LOG.debug("Management node master-change required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
                 new Object[] {
                     (newMasterRecord == null ? "<none>" : newMasterRecord.toVerboseString()),
                     (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()),
@@ -416,13 +442,15 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 });
         }
         if (!initializing) {
-            LOG.warn("HA subsystem detected change of master from " 
-                + masterNodeId + " (" + (masterNodeMemento==null ? "?" : masterNodeMemento.getRemoteTimestamp()) + ")"
-                + " to "
-                + (newMasterNodeId == null ? "<none>" :
-                    newMasterNodeId + " (" + newMasterRecord.getRemoteTimestamp() + ")" 
-                    + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "") 
-                + (newMasterIsSelf ? " [this]" : "") ));
+            if (!demotingSelfInFavourOfOtherMaster) {
+                LOG.warn("HA subsystem detected change of master, from " 
+                    + masterNodeId + " (" + (masterNodeMemento==null ? "?" : masterNodeMemento.getRemoteTimestamp()) + ")"
+                    + " to "
+                    + (newMasterNodeId == null ? "<none>" :
+                        (newMasterIsSelf ? "us " : "")
+                        + newMasterNodeId + " (" + newMasterRecord.getRemoteTimestamp() + ")" 
+                        + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  ));
+            }
         }
 
         // New master is ourself: promote
@@ -456,6 +484,19 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             throw Exceptions.propagate(e);
         }
         managementContext.getRebindManager().start();
+    }
+
+    protected void demoteToStandby() {
+        if (!running) {
+            LOG.warn("Ignoring demote-from-master request, as HighAvailabilityManager is no longer running");
+            return;
+        }
+
+        nodeState = ManagementNodeState.STANDBY;
+        managementContext.getRebindManager().stop();
+        for (Application app: managementContext.getApplications())
+            Entities.unmanage(app);
+        publishDemotionFromMaster(false);
     }
 
     /**
