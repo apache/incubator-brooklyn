@@ -580,7 +580,7 @@ public class TypeCoercions {
         });
         registerAdapter(String.class, Map.class, new Function<String,Map>() {
             @Override
-            public Map<String, String> apply(final String input) {
+            public Map apply(final String input) {
                 // TODO we should respect quoted strings etc
                 return ImmutableMap.copyOf(Splitter.on(",").trimResults().omitEmptyStrings().withKeyValueSeparator("=").split(input));
             }
