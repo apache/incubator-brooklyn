@@ -38,9 +38,9 @@ public class AddEffector implements EntityInitializer {
         ((EntityInternal)entity).getMutableEntityType().addEffector(effector);
     }
     
-    public static EffectorBuilder<String> newEffectorBuilder(ConfigBag params) {
-        String name = Preconditions.checkNotNull(params.get(EFFECTOR_NAME), "name must be supplied when defining an effector");
-        EffectorBuilder<String> eff = Effectors.effector(String.class, name);
+    public static <T> EffectorBuilder<T> newEffectorBuilder(Class<T> type, ConfigBag params) {
+        String name = Preconditions.checkNotNull(params.get(EFFECTOR_NAME), "name must be supplied when defining an effector: %s", params);
+        EffectorBuilder<T> eff = Effectors.effector(type, name);
         eff.description(params.get(EFFECTOR_DESCRIPTION));
         
         Map<String, Object> paramDefs = params.get(EFFECTOR_PARAMETER_DEFS);

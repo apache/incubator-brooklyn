@@ -1,7 +1,5 @@
 package brooklyn.event.feed.ssh;
 
-import static org.testng.Assert.assertTrue;
-
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +20,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
@@ -30,6 +27,8 @@ import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.StringFunctions;
+import brooklyn.util.text.StringPredicates;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -82,12 +81,7 @@ public class SshFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity2.getAttribute(SENSOR_STRING);
-                assertTrue(val != null);
-            }});
-        
+        EntityTestUtils.assertAttributeEventuallyNonNull(entity2, SENSOR_STRING);
         String val = entity2.getAttribute(SENSOR_STRING);
         Assert.assertTrue(val.contains("hello"), "val="+val);
         Assert.assertEquals(val.trim(), "hello");
@@ -117,11 +111,8 @@ public class SshFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains("hello"), "val="+val);
-            }});
+        EntityTestUtils.assertAttributeEventually(entity, SENSOR_STRING, 
+            Predicates.compose(Predicates.equalTo("hello"), StringFunctions.trim()));
     }
 
     @Test(groups="Integration")
@@ -136,11 +127,7 @@ public class SshFeedIntegrationTest {
                         .onFailure(SshValueFunctions.stderr()))
                 .build();
         
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains(cmd), "val="+val);
-            }});
+        EntityTestUtils.assertAttributeEventually(entity, SENSOR_STRING, StringPredicates.containsLiteral(cmd));
     }
     
     @Test(groups="Integration")
@@ -157,11 +144,7 @@ public class SshFeedIntegrationTest {
                             }}))
                 .build();
         
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains("Exit status 123"), "val=" + val);
-            }});
+        EntityTestUtils.assertAttributeEventually(entity, SENSOR_STRING, StringPredicates.containsLiteral("Exit status 123"));
     }
     
     @Test(groups="Integration")
@@ -188,11 +171,7 @@ public class SshFeedIntegrationTest {
         Assert.assertEquals(entity2.getAttribute(SENSOR_STRING), null);
         entity2.setAttribute(Attributes.SERVICE_UP, true);
     
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity2.getAttribute(SENSOR_STRING);
-                assertTrue(val != null && val.contains("hello"), "val="+val);
-            }});
+        EntityTestUtils.assertAttributeEventually(entity2, SENSOR_STRING, StringPredicates.containsLiteral("hello"));
     }
 
     
@@ -222,20 +201,10 @@ public class SshFeedIntegrationTest {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity2.getAttribute(SENSOR_STRING);
-                assertTrue(val!=null);
-            }});
-        
+        EntityTestUtils.assertAttributeEventuallyNonNull(entity, SENSOR_STRING);        
         final String val1 = assertDifferentOneInOutput(entity2);
         
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity2.getAttribute(SENSOR_STRING);
-                Assert.assertFalse(val1.equals(val));
-            }});
-        
+        EntityTestUtils.assertAttributeEventually(entity2, SENSOR_STRING, Predicates.not(Predicates.equalTo(val1)));        
         final String val2 = assertDifferentOneInOutput(entity2);
         log.info("vals from dynamic sensors are: "+val1.trim()+" and "+val2.trim());
     }

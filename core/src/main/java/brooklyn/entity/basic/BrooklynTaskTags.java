@@ -238,11 +238,13 @@ public class BrooklynTaskTags extends TaskTags {
         while (t!=null) {
             Set<Object> tags = t.getTags();
             if (tags.contains(EFFECTOR_TAG)) {
+                boolean match = true;
                 if (entity!=null && !entity.equals(getTargetOrContextEntity(t)))
-                    return false;
+                    match = false;
                 if (effector!=null && !tags.contains(tagForEffectorName(effector.getName())))
-                    return false;
-                return true;
+                    match = false;
+                if (match) return true;
+                if (!allowNestedEffectorCalls) return false;
             }
             t = t.getSubmittedByTask();
         }

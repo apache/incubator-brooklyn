@@ -32,7 +32,7 @@ public final class SshCommandEffector extends AddEffector {
     }
 
     public static EffectorBuilder<String> newEffectorBuilder(ConfigBag params) {
-        EffectorBuilder<String> eff = AddEffector.newEffectorBuilder(params);
+        EffectorBuilder<String> eff = AddEffector.newEffectorBuilder(String.class, params);
         eff.impl(new Body(eff.buildAbstract(), params));
         return eff;
     }

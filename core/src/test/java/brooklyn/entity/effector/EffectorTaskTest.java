@@ -26,6 +26,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -123,6 +124,50 @@ public class EffectorTaskTest {
         t.get();
         checkTags(t, app, DOUBLE_2, true);
     }
+
+    public static final Effector<Integer> DOUBLE_CALL_ABSTRACT = Effectors.effector(Integer.class, "double_call")
+        .description("doubles the given number")
+        .parameter(Integer.class, "numberToDouble")
+        .buildAbstract();
+    public static final Effector<Integer> DOUBLE_CALL = Effectors.effector(DOUBLE_CALL_ABSTRACT)
+        .impl(new EffectorBody<Integer>() {
+            @Override
+            public Integer call(ConfigBag parameters) {
+                final Entity parent = entity();
+                final Entity child = Iterables.getOnlyElement(entity().getChildren());
+                
+                final Effector<Integer> DOUBLE_CHECK_ABSTRACT = Effectors.effector(Integer.class, "double_check")
+                    .description("doubles the given number and checks tags, assuming double exists as an effector here")
+                    .parameter(Integer.class, "numberToDouble")
+                    .buildAbstract();
+                Effector<Integer> DOUBLE_CHECK = Effectors.effector(DOUBLE_CHECK_ABSTRACT)
+                    .impl(new EffectorBody<Integer>() {
+                        @Override
+                        public Integer call(ConfigBag parameters) {
+                            Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(Tasks.current(), child, null, false));
+                            Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(Tasks.current(), child, DOUBLE_CHECK_ABSTRACT, false));
+                            Assert.assertFalse(BrooklynTaskTags.isInEffectorTask(Tasks.current(), child, DOUBLE_1, false));
+                            Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(Tasks.current(), parent, null, true));
+                            Assert.assertFalse(BrooklynTaskTags.isInEffectorTask(Tasks.current(), parent, null, false));
+                            Assert.assertTrue(BrooklynTaskTags.isInEffectorTask(Tasks.current(), parent, DOUBLE_CALL_ABSTRACT, true));
+                            Assert.assertFalse(BrooklynTaskTags.isInEffectorTask(Tasks.current(), parent, DOUBLE_1, true));
+                            
+                            return entity().invoke(DOUBLE_1, parameters.getAllConfig()).getUnchecked();
+                        }
+                    }).build();
+
+                return child.invoke(DOUBLE_CHECK, parameters.getAllConfig()).getUnchecked();
+            }
+        }).build();
+
+
+    @Test
+    // also assert it works when the effector is defined on an entity
+    public void testNestedEffectorTag() throws Exception {
+        app.createAndManageChild(EntitySpec.create(Entity.class, DoublingEntity.class));
+        Assert.assertEquals(app.invoke(DOUBLE_CALL, MutableMap.of("numberToDouble", 3)).get(), (Integer)6);
+    }
+
 
     private void checkTags(Task<Integer> t, Entity entity, Effector<?> eff, boolean shouldHaveChild) {
         Assert.assertEquals(BrooklynTaskTags.getContextEntity(t), app);

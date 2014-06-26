@@ -219,7 +219,7 @@ public class ConfigKeys {
         public static ConfigKey<?> newNamedInstance(String name, Map<?,?> keyDefs) {
             ConfigBag defs = ConfigBag.newInstance(keyDefs);
             String oldName = defs.put(NAME, name);
-            if (!Strings.isBlank(oldName) && !oldName.equals(name))
+            if (oldName!=null && !oldName.equals(name))
                 log.warn("Dynamic key '"+oldName+"' being overridden as key '"+name+"' in "+keyDefs);
             return newInstance(defs);
         }

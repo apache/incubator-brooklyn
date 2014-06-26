@@ -81,8 +81,14 @@ public class EffectorTasks {
         }
     }
     
-    /** wrapper for {@link EffectorTaskFactory} which ensures effector task tags are applied */
-    public static class EffectorMarkingTaskFactory<T> implements EffectorTaskFactory<T> {
+    /** wrapper for {@link EffectorTaskFactory} which ensures effector task tags are applied to it if needed
+     * (wrapping in a task if needed); without this, {@link EffectorBody}-based effectors get it by
+     * virtue of the call to {@link #getFlagsForTaskInvocationAt(Entity, Effector)} therein
+     * but {@link EffectorTaskFactory}-based effectors generate a task without the right tags
+     * to be able to tell using {@link BrooklynTaskTags} the effector-context of the task 
+     * <p>
+     * this gets applied automatically so marked as package-private */
+    static class EffectorMarkingTaskFactory<T> implements EffectorTaskFactory<T> {
         private final EffectorTaskFactory<T> effectorTaskFactory;
         public EffectorMarkingTaskFactory(EffectorTaskFactory<T> effectorTaskFactory) {
             this.effectorTaskFactory = effectorTaskFactory;

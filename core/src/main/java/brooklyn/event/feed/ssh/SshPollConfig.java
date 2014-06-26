@@ -11,6 +11,7 @@ import brooklyn.event.feed.PollConfig;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -83,8 +84,12 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
         return env(Collections.singletonMap(key, val));
     }
     
-    /** add the given env params; sequence is as per {@link #env(Supplier)} */
+    /** add the given env params; sequence is as per {@link #env(Supplier)}.
+     * behaviour is undefined if the map supplied here is subsequently changed.
+     * <p>
+     * if a map's contents might change, use {@link #env(Supplier)} */
     public SshPollConfig<T> env(Map<String,String> val) {
+        if (val==null) return this;
         return env(Suppliers.ofInstance(val));
     }
 
@@ -99,6 +104,7 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
      * in which they are computed and applied. 
      **/
     public SshPollConfig<T> env(Supplier<Map<String,String>> val) {
+        Preconditions.checkNotNull(val);
         dynamicEnvironmentSupplier.add(val);
         return this;
     }
