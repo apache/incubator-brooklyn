@@ -83,6 +83,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     private volatile boolean running = true;
     
     @VisibleForTesting
+    /** allows, when testing, to be able to override file times / blobstore times with time from the ticker */
     private boolean allowRemoteTimestampInMemento = false;
 
     /**
