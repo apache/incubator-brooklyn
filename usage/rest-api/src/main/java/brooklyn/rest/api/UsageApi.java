@@ -1,5 +1,7 @@
 package brooklyn.rest.api;
 
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -33,7 +35,7 @@ public interface UsageApi {
             responseClass = "brooklyn.rest.domain.UsageStatistics"
     )
     @ApiErrors(value = {})
-    public Iterable<UsageStatistics> listApplicationsUsage(
+    public List<UsageStatistics> listApplicationsUsage(
             @ApiParam(
                     name = "start",
                     value = "timestamp of start marker for usage reporting, in format UTC millis or yyyy-MM-dd'T'HH:mm:ssZ",
@@ -85,7 +87,7 @@ public interface UsageApi {
     @ApiErrors(value = {
             @ApiError(code = 404, reason = "Application not found")
     })
-    public Iterable<UsageStatistics> listMachinesUsage(
+    public List<UsageStatistics> listMachinesUsage(
             @ApiParam(
                     name = "application",
                     value = "Application id",

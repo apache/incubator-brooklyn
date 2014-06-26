@@ -1,6 +1,8 @@
 package brooklyn.rest.resources;
 
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
@@ -25,14 +27,14 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
   }
 
   @Override
-  public Iterable<TaskSummary> children(String taskId) {
+  public List<TaskSummary> children(String taskId) {
       Task<?> t = mgmt().getExecutionManager().getTask(taskId);
       if (t==null)
           throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
       if (!(t instanceof HasTaskChildren))
           return Collections.emptyList();
-      return Collections2.transform(Lists.newArrayList(((HasTaskChildren)t).getChildren()), 
-              TaskTransformer.FROM_TASK);
+      return new LinkedList<TaskSummary>(Collections2.transform(Lists.newArrayList(((HasTaskChildren)t).getChildren()), 
+              TaskTransformer.FROM_TASK));
   }
 
   public String stream(String taskId, String streamId) {

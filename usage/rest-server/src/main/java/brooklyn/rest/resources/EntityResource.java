@@ -5,6 +5,7 @@ import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,15 +47,15 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   }
 
   @Override
-  public Iterable<EntitySummary> getChildren( final String application, final String entity) {
+  public List<EntitySummary> getChildren( final String application, final String entity) {
     return EntityTransformer.entitySummaries(brooklyn().getEntity(application, entity).getChildren());
   }
 
   @Override
-  public Iterable<TaskSummary> listTasks(String applicationId, String entityId) {
+  public List<TaskSummary> listTasks(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
       Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
-      return Collections2.transform(tasks, TaskTransformer.FROM_TASK);
+      return new LinkedList<TaskSummary>(Collections2.transform(tasks, TaskTransformer.FROM_TASK));
   }
 
   @Override
@@ -95,7 +96,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
     }
 
   @Override
-  public Iterable<EntitySummary> getDescendants(String application, String entity, String typeRegex) {
+  public List<EntitySummary> getDescendants(String application, String entity, String typeRegex) {
       return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, entity, typeRegex));
   }
 
@@ -106,8 +107,8 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   }
 
   @Override
-  public Iterable<LocationSummary> getLocations(String application, String entity) {
-      Collection<LocationSummary> result = Lists.newArrayList();
+  public List<LocationSummary> getLocations(String application, String entity) {
+      List<LocationSummary> result = Lists.newArrayList();
       EntityLocal e = brooklyn().getEntity(application, entity);
       for (Location l: e.getLocations()) {
           result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE));

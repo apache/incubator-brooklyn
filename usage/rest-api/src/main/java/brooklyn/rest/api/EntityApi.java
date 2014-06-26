@@ -53,7 +53,7 @@ public interface EntityApi {
   @ApiOperation(value = "Fetch details about a specific application entity's children",
           responseClass = "brooklyn.rest.domain.EntitySummary")
   @Path("/{entity}/entities")
-  public Iterable<EntitySummary> getChildren(
+  public List<EntitySummary> getChildren(
       @PathParam("application") final String application,
       @PathParam("entity") final String entity
   ) ;
@@ -64,7 +64,7 @@ public interface EntityApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application or entity")
   })
-  public Iterable<TaskSummary> listTasks(
+  public List<TaskSummary> listTasks(
           @ApiParam(value = "Entity ID or name", required = true) @PathParam("application") String applicationId,
           @ApiParam(value = "Application ID or name", required = true) @PathParam("entity") String entityId);
 
@@ -107,7 +107,7 @@ public interface EntityApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application or entity missing")
   })
-  public Iterable<EntitySummary> getDescendants(
+  public List<EntitySummary> getDescendants(
       @ApiParam(value = "Application ID or name", required = true)
       @PathParam("application") String application,
       @ApiParam(value = "Entity ID or name", required = true)
@@ -141,7 +141,7 @@ public interface EntityApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Application or entity missing")
   })
-  public Iterable<LocationSummary> getLocations(
+  public List<LocationSummary> getLocations(
       @ApiParam(value = "Application ID or name", required = true)
       @PathParam("application") String application,
       @ApiParam(value = "Entity ID or name", required = true)
