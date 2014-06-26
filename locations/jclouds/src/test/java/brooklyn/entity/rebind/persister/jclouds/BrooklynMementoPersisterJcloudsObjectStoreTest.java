@@ -17,7 +17,7 @@ import brooklyn.util.time.Duration;
 /**
  * @author Andrea Turli
  */
-@Test(groups="Integration")
+@Test(groups={"Live", "Live-sanity"})
 public class BrooklynMementoPersisterJcloudsObjectStoreTest extends BrooklynMementoPersisterTestFixture {
 
     @Override @BeforeMethod
@@ -32,13 +32,13 @@ public class BrooklynMementoPersisterJcloudsObjectStoreTest extends BrooklynMeme
             .buildStarted();
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testCheckPointAndLoadMemento() throws IOException, TimeoutException, InterruptedException {
         super.testCheckPointAndLoadMemento();
     }
     
-    @Test(groups="Integration")
+    @Test(groups={"Live", "Live-sanity"})
     @Override
     public void testDeleteAndLoadMemento() throws TimeoutException, InterruptedException, IOException {
         super.testDeleteAndLoadMemento();

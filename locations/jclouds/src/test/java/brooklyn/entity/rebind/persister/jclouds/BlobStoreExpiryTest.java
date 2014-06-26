@@ -45,13 +45,13 @@ import com.google.common.collect.ImmutableMap.Builder;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 
-@Test(groups="Integration")
+@Test(groups={"Live", "Live-sanity"})
 public class BlobStoreExpiryTest {
 
     private static final Logger log = LoggerFactory.getLogger(BlobStoreExpiryTest.class);
     
     /**
-     * Integration tests as written require a location defined as follows:
+     * Live tests as written require a location defined as follows:
      * 
      * <code>
      * brooklyn.location.named.brooklyn-jclouds-objstore-test-1==jclouds:swift:https://ams01.objectstorage.softlayer.net/auth/v1.0

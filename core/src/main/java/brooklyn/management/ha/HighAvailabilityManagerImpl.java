@@ -378,83 +378,81 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     protected void checkMaster(boolean initializing) {
         ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
         
-        String masterNodeId = memento.getMasterNodeId();
-        ManagementNodeSyncRecord masterNodeMemento = memento.getManagementNodes().get(masterNodeId);
-        ManagementNodeSyncRecord ownNodeMemento = memento.getManagementNodes().get(ownNodeId);
+        String currMasterNodeId = memento.getMasterNodeId();
+        ManagementNodeSyncRecord currMasterNodeRecord = memento.getManagementNodes().get(currMasterNodeId);
+        ManagementNodeSyncRecord ownNodeRecord = memento.getManagementNodes().get(ownNodeId);
         
-        ManagementNodeSyncRecord newMasterRecord = null;
+        ManagementNodeSyncRecord newMasterNodeRecord = null;
         boolean demotingSelfInFavourOfOtherMaster = false;
         
-        if (masterNodeMemento != null && masterNodeMemento.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(masterNodeMemento, ownNodeMemento)) {
+        if (currMasterNodeRecord != null && currMasterNodeRecord.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(currMasterNodeRecord, ownNodeRecord)) {
             // master seems healthy
-            if (ownNodeId.equals(masterNodeId)) {
-                if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy (us): master={}", masterNodeMemento.toVerboseString());
+            if (ownNodeId.equals(currMasterNodeId)) {
+                if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy (us): master={}", currMasterNodeRecord.toVerboseString());
                 return;
             } else {
-                if (ownNodeMemento!=null && ownNodeMemento.getStatus() == ManagementNodeState.MASTER) {
-                    LOG.error("HA subsystem detected change of master, stolen from us ("+ownNodeId+"), deferring to "+masterNodeId);
-                    newMasterRecord = masterNodeMemento;
+                if (ownNodeRecord!=null && ownNodeRecord.getStatus() == ManagementNodeState.MASTER) {
+                    LOG.error("HA subsystem detected change of master, stolen from us ("+ownNodeId+"), deferring to "+currMasterNodeId);
+                    newMasterNodeRecord = currMasterNodeRecord;
                     demotingSelfInFavourOfOtherMaster = true;
                 } else {
-                    if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy (remote): master={}", masterNodeMemento.toVerboseString());
+                    if (LOG.isTraceEnabled()) LOG.trace("Existing master healthy (remote): master={}", currMasterNodeRecord.toVerboseString());
                     return;
                 }
             }
-        } else if (ownNodeMemento == null || !isHeartbeatOk(ownNodeMemento, ownNodeMemento)) {
+        } else if (ownNodeRecord == null || !isHeartbeatOk(ownNodeRecord, ownNodeRecord)) {
             // our heartbeats are also out-of-date! perhaps something wrong with persistence? just log, and don't over-react!
-            if (ownNodeMemento == null) {
+            if (ownNodeRecord == null) {
                 LOG.error("No management node memento for self ("+ownNodeId+"); perhaps persister unwritable? "
-                        + "Master ("+masterNodeId+") reported failed but no-op as cannot tell conclusively");
+                        + "Master ("+currMasterNodeId+") reported failed but no-op as cannot tell conclusively");
             } else {
                 LOG.error("This management node ("+ownNodeId+") memento heartbeats out-of-date; perhaps perister unwritable? "
-                        + "Master ("+masterNodeId+") reported failed but no-op as cannot tell conclusively"
-                        + ": self="+ownNodeMemento.toVerboseString());
+                        + "Master ("+currMasterNodeId+") reported failed but no-op as cannot tell conclusively"
+                        + ": self="+ownNodeRecord.toVerboseString());
             }
             return;
-        } else if (ownNodeId.equals(masterNodeId)) {
+        } else if (ownNodeId.equals(currMasterNodeId)) {
             // we are supposed to be the master, but seem to be unhealthy!
             LOG.warn("This management node ("+ownNodeId+") supposed to be master but reportedly unhealthy? "
-                    + "no-op as expect other node to fix: self="+ownNodeMemento.toVerboseString());
+                    + "no-op as expect other node to fix: self="+ownNodeRecord.toVerboseString());
             return;
         }
         
         if (demotingSelfInFavourOfOtherMaster) {
-            LOG.debug("Master-change for this node only, demoting "+ownNodeMemento.toVerboseString()+" in favour of official master "+newMasterRecord);
+            LOG.debug("Master-change for this node only, demoting "+ownNodeRecord.toVerboseString()+" in favour of official master "+newMasterNodeRecord.toVerboseString());
             demoteToStandby();
             return;
         }
         
         // Need to choose a new master
-        newMasterRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId);
+        newMasterNodeRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId);
         
-        String newMasterNodeId = (newMasterRecord == null) ? null : newMasterRecord.getNodeId();
-        URI newMasterNodeUri = (newMasterRecord == null) ? null : newMasterRecord.getUri();
-        boolean newMasterIsSelf = ownNodeId.equals(newMasterNodeId);
+        String newMasterNodeId = (newMasterNodeRecord == null) ? null : newMasterNodeRecord.getNodeId();
+        URI newMasterNodeUri = (newMasterNodeRecord == null) ? null : newMasterNodeRecord.getUri();
+        boolean weAreNewMaster = ownNodeId.equals(newMasterNodeId);
         
         if (LOG.isDebugEnabled()) {
             LOG.debug("Management node master-change required: newMaster={}; oldMaster={}; plane={}, self={}; heartbeatTimeout={}", 
                 new Object[] {
-                    (newMasterRecord == null ? "<none>" : newMasterRecord.toVerboseString()),
-                    (masterNodeMemento == null ? masterNodeId+" (no memento)": masterNodeMemento.toVerboseString()),
+                    (newMasterNodeRecord == null ? "<none>" : newMasterNodeRecord.toVerboseString()),
+                    (currMasterNodeRecord == null ? currMasterNodeId+" (no memento)": currMasterNodeRecord.toVerboseString()),
                     memento,
-                    ownNodeMemento.toVerboseString(), 
+                    ownNodeRecord.toVerboseString(), 
                     heartbeatTimeout
                 });
         }
         if (!initializing) {
-            if (!demotingSelfInFavourOfOtherMaster) {
-                LOG.warn("HA subsystem detected change of master, from " 
-                    + masterNodeId + " (" + (masterNodeMemento==null ? "?" : masterNodeMemento.getRemoteTimestamp()) + ")"
-                    + " to "
-                    + (newMasterNodeId == null ? "<none>" :
-                        (newMasterIsSelf ? "us " : "")
-                        + newMasterNodeId + " (" + newMasterRecord.getRemoteTimestamp() + ")" 
-                        + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  ));
-            }
+            LOG.warn("HA subsystem detected change of master, from " 
+                + currMasterNodeId + " (" + (currMasterNodeRecord==null ? "?" : currMasterNodeRecord.getRemoteTimestamp()) + ")"
+                + " to "
+                + (newMasterNodeId == null ? "<none>" :
+                    (weAreNewMaster ? "us " : "")
+                    + newMasterNodeId + " (" + newMasterNodeRecord.getRemoteTimestamp() + ")" 
+                    + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  ));
         }
 
         // New master is ourself: promote
-        if (newMasterIsSelf) {
+        if (weAreNewMaster) {
             promoteToMaster();
         }
     }
