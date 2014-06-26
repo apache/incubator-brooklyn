@@ -36,6 +36,7 @@ import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Strings;
@@ -255,9 +256,9 @@ public class LocalManagementContext extends AbstractManagementContext {
     }
     
     @Override
-    public synchronized OsgiManager getOsgiManager() {
+    public synchronized Maybe<OsgiManager> getOsgiManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
-        return osgiManager;        
+        return Maybe.of(osgiManager);
     }
 
     @Override

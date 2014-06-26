@@ -13,6 +13,8 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
@@ -33,13 +35,13 @@ import com.google.common.base.Predicates;
 @Beta
 public class Osgis {
 
+    private static final Logger LOG = LoggerFactory.getLogger(Osgis.class);
+
     public static List<Bundle> getBundlesByName(Framework framework, String symbolicName, Predicate<Version> versionMatcher) {
         List<Bundle> result = MutableList.of();
         for (Bundle b: framework.getBundleContext().getBundles()) {
-            if (symbolicName.equals(b.getSymbolicName())) {
-                if (versionMatcher.apply(b.getVersion())) {
-                    result.add(b);
-                }
+            if (symbolicName.equals(b.getSymbolicName()) && versionMatcher.apply(b.getVersion())) {
+                result.add(b);
             }
         }
         return result;
@@ -115,7 +117,7 @@ public class Osgis {
         try {
             framework.init();
             // nothing needs auto-loading, currently (and this needs a new dependency)
-//            AutoProcessor.process(configProps, m_fwk.getBundleContext());
+            // AutoProcessor.process(configProps, m_fwk.getBundleContext());
             framework.start();
         } catch (Exception e) {
             // framework bundle start exceptions are not interesting to caller...
@@ -128,12 +130,11 @@ public class Osgis {
      * using the {@link ResourceUtils} loader for this project (brooklyn core) */
     public static Bundle install(Framework framework, String url) throws BundleException {
         Bundle bundle = framework.getBundleContext().getBundle(url);
-        if (bundle!=null) return bundle;
+        if (bundle != null) return bundle;
         
         // use our URL resolution so we get classpath items
         InputStream stream = ResourceUtils.create(Osgis.class).getResourceFromUrl(url);
         return framework.getBundleContext().installBundle(url, stream);
     }
-    
 
 }

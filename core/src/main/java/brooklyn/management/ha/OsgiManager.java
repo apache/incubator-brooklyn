@@ -9,6 +9,7 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 
@@ -45,4 +46,19 @@ public class OsgiManager {
         framework = null;
     }
 
+    // TODO: throws BundleException appropriate?
+    public void registerBundle(String bundleUrl) throws BundleException {
+        Osgis.install(framework, bundleUrl);
+    }
+
+    // TODO: Handle .get failing
+    public <T> Maybe<Class<T>> tryResolveClass(String bundleUrl, String type) {
+        try {
+            Class<T> clazz = (Class<T>) Osgis.getBundle(framework, bundleUrl).get().loadClass(type);
+            return Maybe.of(clazz);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            return Maybe.absent(e);
+        }
+    }
 }

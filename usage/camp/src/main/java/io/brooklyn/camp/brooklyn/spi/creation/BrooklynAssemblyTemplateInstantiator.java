@@ -53,7 +53,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         Application app = create(template, platform);
         Task<?> task = start(app, platform);
         log.info("CAMP created "+app+"; starting in "+task);
-        return ((BrooklynCampPlatform)platform).assemblies().get(app.getApplicationId());
+        return platform.assemblies().get(app.getApplicationId());
     }
 
     // note: based on BrooklynRestResourceUtils, but modified to not allow child entities (yet)
@@ -64,6 +64,18 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
         CatalogItem<?> item = catalog.getCatalogItem(template.getId());
+
+        if (item == null) {
+            // This doesn't seem the most appropriate way to do this!
+            // Especially since YAML will only reach here if a services section was given (so that
+            // PdpProcessor calls into BrooklynEntityMatcher [via applyMatchers] which sets the
+            // instantiator to BrooklynAssemblyTemplateInstantiator). So services must be given
+            // but will be disregarded.
+            Object customId = template.getCustomAttributes().get("id");
+            if (customId != null) {
+                item = catalog.getCatalogItem(customId.toString());
+            }
+        }
 
         if (item==null) {
             return createApplicationFromNonCatalogCampTemplate(template, platform);
@@ -139,8 +151,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     }
 
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
-        ManagementContext mgmt = ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
-        return mgmt;
+        return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
     }
     
     public Task<?> start(Application app, CampPlatform platform) {

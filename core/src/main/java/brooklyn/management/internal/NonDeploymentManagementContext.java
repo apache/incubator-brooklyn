@@ -178,8 +178,8 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
     
     @Override
-    public OsgiManager getOsgiManager() {
-        return null;
+    public Maybe<OsgiManager> getOsgiManager() {
+        return Maybe.absent();
     }
 
     @Override

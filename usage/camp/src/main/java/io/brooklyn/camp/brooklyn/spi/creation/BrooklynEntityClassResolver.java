@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.OsgiManager;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.guava.Maybe;
 
 /**
@@ -20,7 +22,7 @@ public class BrooklynEntityClassResolver {
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynEntityClassResolver.class);
 
     /**
-     * Loads the class represented by {@link #entityType} with the given management context.
+     * Loads the class represented by entityTypeName with the given management context.
      * Tries the context's catalogue first, then from its root classloader.
      * @throws java.lang.IllegalStateException if no class extending {@link Entity} is found
      */
@@ -36,7 +38,22 @@ public class BrooklynEntityClassResolver {
             LOG.warn("Found class {} on classpath but it is not assignable to {}", entityTypeName, Entity.class);
             throw new IllegalStateException("Unable to load class "+ entityTypeName +" (extending Entity) from catalogue or classpath: wrong type "+entityClazz.get());
         }
-        return (Class<T>) entityClazz.get();
+        return entityClazz.get();
+    }
+
+    /** Tries to load the entity with the given class name from the given bundle. */
+    public static <T extends Entity> Maybe<Class<T>> tryLoadEntityFromBundle(String entityTypeName, String bundleUrl, ManagementContext mgmt) {
+        Maybe<OsgiManager> osgiManager = ((ManagementContextInternal) mgmt).getOsgiManager();
+        if (!osgiManager.isPresentAndNonNull()) {
+            LOG.debug("Asked to resolve class {} from bundle {} but osgi manager is unavailable in context {}",
+                    new Object[]{entityTypeName, bundleUrl, mgmt});
+            return Maybe.absent();
+        }
+        Maybe<Class<T>> clazz = osgiManager.get().tryResolveClass(bundleUrl, entityTypeName);
+        if (!clazz.isPresent() || !Entity.class.isAssignableFrom(clazz.get())) {
+            return Maybe.absent();
+        }
+        return clazz;
     }
 
     @SuppressWarnings("unchecked")
@@ -59,6 +76,6 @@ public class BrooklynEntityClassResolver {
             return Maybe.absent(new Throwable("Could not find "+typeName+" on classpath"));
         }
 
-        return Maybe.<Class<T>>of(clazz);
+        return Maybe.of(clazz);
     }
 }
