@@ -1,7 +1,8 @@
-name: Simple Netcat Server with Restart
+name: Simple Netcat Example with Restarter Policy
 location: localhost
 services:
 - type: brooklyn.entity.basic.VanillaSoftwareProcess
+  id: netcat-server
   name: Simple Netcat Server
   launch.command: |
     echo hello | nc -l 4321 &

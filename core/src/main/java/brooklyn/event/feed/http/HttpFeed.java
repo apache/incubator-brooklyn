@@ -92,6 +92,7 @@ public class HttpFeed extends AbstractFeed {
     
     public static class Builder {
         private EntityLocal entity;
+        private boolean onlyIfServiceUp = false;
         private Supplier<URI> baseUriProvider;
         private Duration period = Duration.millis(500);
         private List<HttpPollConfig<?>> polls = Lists.newArrayList();
@@ -105,6 +106,11 @@ public class HttpFeed extends AbstractFeed {
         public Builder entity(EntityLocal val) {
             this.entity = val;
             return this;
+        }
+        public Builder onlyIfServiceUp() { return onlyIfServiceUp(true); }
+        public Builder onlyIfServiceUp(boolean onlyIfServiceUp) { 
+            this.onlyIfServiceUp = onlyIfServiceUp; 
+            return this; 
         }
         public Builder baseUri(Supplier<URI> val) {
             if (baseUri!=null && val!=null)
@@ -233,7 +239,7 @@ public class HttpFeed extends AbstractFeed {
     private final SetMultimap<HttpPollIdentifier, HttpPollConfig<?>> polls = HashMultimap.<HttpPollIdentifier,HttpPollConfig<?>>create();
     
     protected HttpFeed(Builder builder) {
-        super(builder.entity);
+        super(builder.entity, builder.onlyIfServiceUp);
         Map<String,String> baseHeaders = ImmutableMap.copyOf(checkNotNull(builder.headers, "headers"));
         
         for (HttpPollConfig<?> config : builder.polls) {

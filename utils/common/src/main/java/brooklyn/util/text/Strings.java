@@ -713,6 +713,7 @@ public class Strings {
 
     /** converts a map of any objects to a map of strings, preserving nulls and invoking toString where needed */
     public static Map<String, String> toStringMap(Map<?,?> map) {
+        if (map==null) return null;
         Map<String,String> result = MutableMap.<String, String>of();
         for (Map.Entry<?,?> e: map.entrySet()) {
             result.put(String.valueOf(e.getKey()), String.valueOf(e.getValue()));

@@ -16,10 +16,12 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.BasicParameterType;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
+import brooklyn.entity.effector.EffectorTasks.EffectorMarkingTaskFactory;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
@@ -59,11 +61,8 @@ public class Effectors {
         public <V> EffectorBuilder<T> parameter(Class<V> paramType, String paramName, String paramDescription, V defaultValue) {
             return parameter(new BasicParameterType<V>(paramName, paramType, paramDescription, defaultValue));
         }
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public <V> EffectorBuilder<T> parameter(ConfigKey<V> key) {
-            return parameter(key.hasDefaultValue()
-                ? new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription(), key.getDefaultValue())
-                : new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription()) );
+            return parameter(asParameterType(key));
         }
         public EffectorBuilder<T> parameter(ParameterType<?> p) {
             // allow redeclaring, e.g. for the case where we are overriding an existing effector
@@ -71,7 +70,7 @@ public class Effectors {
             return this;
         }
         public EffectorBuilder<T> impl(EffectorTaskFactory<T> taskFactory) {
-            this.impl = taskFactory;
+            this.impl = new EffectorMarkingTaskFactory<T>(taskFactory);
             return this;
         }
         public EffectorBuilder<T> impl(EffectorBody<T> effectorBody) {
@@ -80,7 +79,7 @@ public class Effectors {
         }
         /** returns the effector, with an implementation (required); @see {@link #buildAbstract()} */
         public Effector<T> build() {
-             Preconditions.checkNotNull(impl, "Cannot create effector {} with no impl (did you forget impl? or did you mean to buildAbstract?)", effectorName);
+             Preconditions.checkNotNull(impl, "Cannot create effector %s with no impl (did you forget impl? or did you mean to buildAbstract?)", effectorName);
              return new EffectorAndBody<T>(effectorName, returnType, ImmutableList.copyOf(parameters.values()), description, impl);
         }
         
@@ -137,6 +136,17 @@ public class Effectors {
         
         throw new UnsupportedOperationException("No implementation registered for effector "+eff+" on "+entity);
     }    
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <V> ParameterType<V> asParameterType(ConfigKey<V> key) {
+        return key.hasDefaultValue()
+            ? new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription(), key.getDefaultValue())
+            : new BasicParameterType<V>(key.getName(), (Class)key.getType(), key.getDescription());
+    }
+    
+    public static <V> ConfigKey<V> asConfigKey(ParameterType<V> paramType) {
+        return ConfigKeys.newConfigKey(paramType.getParameterClass(), paramType.getName(), paramType.getDescription(), paramType.getDefaultValue());
+    }
 
     /** returns an unsubmitted task which will invoke the given effector on the given entities;
      * return type is Task<List<T>> (but haven't put in the blood sweat toil and tears to make the generics work) */

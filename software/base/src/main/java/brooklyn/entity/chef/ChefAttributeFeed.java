@@ -83,6 +83,7 @@ public class ChefAttributeFeed extends AbstractFeed {
     @SuppressWarnings("rawtypes")
     public static class Builder {
         private EntityLocal entity;
+        private boolean onlyIfServiceUp = false;
         private String nodeName;
         private Map<String, AttributeSensor<?>> sensors = Maps.newHashMap();
         private long period = 30;
@@ -92,6 +93,11 @@ public class ChefAttributeFeed extends AbstractFeed {
         public Builder entity(EntityLocal val) {
             this.entity = checkNotNull(val, "entity");
             return this;
+        }
+        public Builder onlyIfServiceUp() { return onlyIfServiceUp(true); }
+        public Builder onlyIfServiceUp(boolean onlyIfServiceUp) { 
+            this.onlyIfServiceUp = onlyIfServiceUp; 
+            return this; 
         }
         public Builder nodeName(String nodeName) {
             this.nodeName = checkNotNull(nodeName, "nodeName");
@@ -147,7 +153,7 @@ public class ChefAttributeFeed extends AbstractFeed {
     private final KnifeTaskFactory<String> knifeTaskFactory;
 
     protected ChefAttributeFeed(Builder builder) {
-        super(checkNotNull(builder.entity, "builder.entity"));
+        super(checkNotNull(builder.entity, "builder.entity"), builder.onlyIfServiceUp);
         entity = builder.entity;
         nodeName = checkNotNull(builder.nodeName, "builder.nodeName");
         period = builder.period;

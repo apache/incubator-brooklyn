@@ -68,6 +68,7 @@ public class FunctionFeed extends AbstractFeed {
     
     public static class Builder {
         private EntityLocal entity;
+        private boolean onlyIfServiceUp = false;
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<FunctionPollConfig<?,?>> polls = Lists.newArrayList();
@@ -76,6 +77,11 @@ public class FunctionFeed extends AbstractFeed {
         public Builder entity(EntityLocal val) {
             this.entity = val;
             return this;
+        }
+        public Builder onlyIfServiceUp() { return onlyIfServiceUp(true); }
+        public Builder onlyIfServiceUp(boolean onlyIfServiceUp) { 
+            this.onlyIfServiceUp = onlyIfServiceUp; 
+            return this; 
         }
         public Builder period(Duration d) {
             return period(d.toMilliseconds(), TimeUnit.MILLISECONDS);
@@ -126,9 +132,10 @@ public class FunctionFeed extends AbstractFeed {
     private final SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>> polls = HashMultimap.<FunctionPollIdentifier,FunctionPollConfig<?,?>>create();
     
     protected FunctionFeed(Builder builder) {
-        super(builder.entity);
+        super(builder.entity, builder.onlyIfServiceUp);
         
         for (FunctionPollConfig<?,?> config : builder.polls) {
+            @SuppressWarnings({ "rawtypes", "unchecked" })
             FunctionPollConfig<?,?> configCopy = new FunctionPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             Callable<?> job = config.getCallable();
@@ -136,7 +143,7 @@ public class FunctionFeed extends AbstractFeed {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected void preStart() {
         for (final FunctionPollIdentifier pollInfo : polls.keySet()) {

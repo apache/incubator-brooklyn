@@ -149,11 +149,13 @@ public class JmxFeed extends AbstractFeed {
         this.jmxConnectionTimeout = builder.jmxConnectionTimeout;
         
         for (JmxAttributePollConfig<?> config : builder.attributePolls) {
+            @SuppressWarnings({ "rawtypes", "unchecked" })
             JmxAttributePollConfig<?> configCopy = new JmxAttributePollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             attributePolls.put(configCopy.getObjectName().getCanonicalName() + configCopy.getAttributeName(), configCopy);
         }
         for (JmxOperationPollConfig<?> config : builder.operationPolls) {
+            @SuppressWarnings({ "rawtypes", "unchecked" })
             JmxOperationPollConfig<?> configCopy = new JmxOperationPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             operationPolls.put(configCopy.buildOperationIdentity(), configCopy);
@@ -252,7 +254,7 @@ public class JmxFeed extends AbstractFeed {
      * Registers to poll a jmx-operation for an ObjectName, where all the given configs are for the same ObjectName + operation + parameters.
      */
     private void registerOperationPoller(Set<JmxOperationPollConfig<?>> configs) {
-        Set<AttributePollHandler<Object>> handlers = Sets.newLinkedHashSet();
+        Set<AttributePollHandler<? super Object>> handlers = Sets.newLinkedHashSet();
         long minPeriod = Integer.MAX_VALUE;
         
         final ObjectName objectName = Iterables.get(configs, 0).getObjectName();
@@ -276,14 +278,14 @@ public class JmxFeed extends AbstractFeed {
                         }
                     }
                 }, 
-                new DelegatingPollHandler(handlers), minPeriod);
+                new DelegatingPollHandler<Object>(handlers), minPeriod);
     }
 
     /**
      * Registers to poll a jmx-attribute for an ObjectName, where all the given configs are for that same ObjectName + attribute.
      */
     private void registerAttributePoller(Set<JmxAttributePollConfig<?>> configs) {
-        Set<AttributePollHandler<Object>> handlers = Sets.newLinkedHashSet();
+        Set<AttributePollHandler<? super Object>> handlers = Sets.newLinkedHashSet();
         long minPeriod = Integer.MAX_VALUE;
         
         final ObjectName objectName = Iterables.get(configs, 0).getObjectName();
@@ -302,14 +304,14 @@ public class JmxFeed extends AbstractFeed {
                         return helper.getAttribute(objectName, jmxAttributeName);
                     }
                 }, 
-                new DelegatingPollHandler(handlers), minPeriod);
+                new DelegatingPollHandler<Object>(handlers), minPeriod);
     }
 
     /**
      * Registers to subscribe to notifications for an ObjectName, where all the given configs are for that same ObjectName + filter.
      */
     private NotificationListener registerNotificationListener(Set<JmxNotificationSubscriptionConfig<?>> configs) {
-        final List<AttributePollHandler<javax.management.Notification>> handlers = Lists.newArrayList();
+        final List<AttributePollHandler<? super javax.management.Notification>> handlers = Lists.newArrayList();
 
         final ObjectName objectName = Iterables.get(configs, 0).getObjectName();
         final NotificationFilter filter = Iterables.get(configs, 0).getNotificationFilter();
@@ -329,7 +331,7 @@ public class JmxFeed extends AbstractFeed {
             };
             handlers.add(handler);
         }
-        final PollHandler<javax.management.Notification> compoundHandler = new DelegatingPollHandler(handlers);
+        final PollHandler<javax.management.Notification> compoundHandler = new DelegatingPollHandler<javax.management.Notification>(handlers);
         
         NotificationListener listener = new NotificationListener() {
             @Override public void handleNotification(Notification notification, Object handback) {

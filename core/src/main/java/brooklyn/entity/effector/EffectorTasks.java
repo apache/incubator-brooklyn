@@ -41,6 +41,8 @@ public class EffectorTasks {
         public abstract TaskAdaptable<T> newTask(Entity entity, Effector<T> effector, ConfigBag parameters);
     }
     
+    /** wrapper for {@link EffectorBody} which simply runs that body on each invocation;
+     * the body must be thread safe and ideally stateless */
     public static class EffectorBodyTaskFactory<T> implements EffectorTaskFactory<T> {
         private final EffectorBody<T> effectorBody;
         public EffectorBodyTaskFactory(EffectorBody<T> effectorBody) {
@@ -76,6 +78,37 @@ public class EffectorTasks {
          * unless there is very good reason not to; default impl returns a MutableMap */
         protected Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity, Effector<?> effector) {
             return EffectorUtils.getTaskFlagsForEffectorInvocation(entity, effector);
+        }
+    }
+    
+    /** wrapper for {@link EffectorTaskFactory} which ensures effector task tags are applied to it if needed
+     * (wrapping in a task if needed); without this, {@link EffectorBody}-based effectors get it by
+     * virtue of the call to {@link #getFlagsForTaskInvocationAt(Entity, Effector)} therein
+     * but {@link EffectorTaskFactory}-based effectors generate a task without the right tags
+     * to be able to tell using {@link BrooklynTaskTags} the effector-context of the task 
+     * <p>
+     * this gets applied automatically so marked as package-private */
+    static class EffectorMarkingTaskFactory<T> implements EffectorTaskFactory<T> {
+        private final EffectorTaskFactory<T> effectorTaskFactory;
+        public EffectorMarkingTaskFactory(EffectorTaskFactory<T> effectorTaskFactory) {
+            this.effectorTaskFactory = effectorTaskFactory;
+        }
+        
+        @Override
+        public Task<T> newTask(final Entity entity, final brooklyn.entity.Effector<T> effector, final ConfigBag parameters) {
+            if (effectorTaskFactory instanceof EffectorBodyTaskFactory)
+                return effectorTaskFactory.newTask(entity, effector, parameters).asTask();
+            // if we're in an effector context for this effector already, then also pass through
+            if (BrooklynTaskTags.isInEffectorTask(Tasks.current(), entity, effector, false))
+                return effectorTaskFactory.newTask(entity, effector, parameters).asTask();
+            // otherwise, create the task inside an appropriate effector body so tags, name, etc are set correctly
+            return new EffectorBodyTaskFactory<T>(new EffectorBody<T>() {
+                @Override
+                public T call(ConfigBag parameters) {
+                    TaskAdaptable<T> t = DynamicTasks.queue(effectorTaskFactory.newTask(entity, effector, parameters));
+                    return t.asTask().getUnchecked();
+                }
+            }).newTask(entity, effector, parameters);
         }
     }
     

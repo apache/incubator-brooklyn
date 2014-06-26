@@ -302,7 +302,9 @@ public class EffectorUtils {
         return MutableMap.builder()
                 .put("description", "Invoking effector "+effector.getName()+" on "+entity.getDisplayName())
                 .put("displayName", effector.getName())
-                .put("tags", MutableList.of(ManagementContextInternal.EFFECTOR_TAG, 
+                .put("tags", MutableList.of(
+                        BrooklynTaskTags.EFFECTOR_TAG, 
+                        BrooklynTaskTags.tagForEffectorName(effector.getName()), 
                         BrooklynTaskTags.tagForTargetEntity(entity)))
                 .build();
     }

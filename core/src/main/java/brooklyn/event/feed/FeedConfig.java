@@ -82,6 +82,15 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
         this.checkSuccess = checkNotNull(val, "checkSuccess");
         return self();
     }
+    /** as {@link #checkSuccess(Predicate)} */
+    public F checkSuccess(final Function<? super V,Boolean> val) {
+        return checkSuccess(new Predicate<V>() {
+            @Override
+            public boolean apply(V input) {
+                return val.apply(input);
+            }
+        });
+    }
 
     public F onSuccess(Function<? super V,T> val) {
         this.onsuccess = checkNotNull(val, "onSuccess");

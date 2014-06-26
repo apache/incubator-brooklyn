@@ -3,11 +3,13 @@ package brooklyn.entity.basic;
 import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
@@ -15,6 +17,7 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -161,6 +164,8 @@ public class BrooklynTaskTags extends TaskTags {
     public static final String STREAM_STDIN = "stdin";
     public static final String STREAM_STDOUT = "stdout";
     public static final String STREAM_STDERR = "stderr";
+    /** not a stream, but inserted with the same mechanism */
+    public static final String STREAM_ENV = "env";
     
     /** creates a tag suitable for marking a stream available on a task */
     public static WrappedStream tagForStream(String streamType, ByteArrayOutputStream stream) {
@@ -170,6 +175,18 @@ public class BrooklynTaskTags extends TaskTags {
     /** creates a tag suitable for marking a stream available on a task */
     public static WrappedStream tagForStream(String streamType, Supplier<String> contents, Supplier<Integer> size) {
         return new WrappedStream(streamType, contents, size);
+    }
+    
+    /** creates a tag suitable for attaching a snapshot of an environment var map as a "stream" on a task;
+     * mainly for use with STREAM_ENV */ 
+    public static WrappedStream tagForEnvStream(String streamEnv, Map<?, ?> env) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<?,?> kv: env.entrySet()) {
+            Object val = kv.getValue();
+            sb.append(kv.getKey()+"=" +
+                (val!=null ? BashStringEscapes.wrapBash(val.toString()) : "") + "\n");
+        }
+        return BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_ENV, Streams.byteArrayOfString(sb.toString()));
     }
 
     /** returns the set of tags indicating the streams available on a task */
@@ -199,6 +216,51 @@ public class BrooklynTaskTags extends TaskTags {
     
     public static void setInessential(Task<?> task) {
         addTagDynamically(task, INESSENTIAL_TASK);
+    }
+
+    // ------ effector tags
+    
+    public static String tagForEffectorName(String name) {
+        return EFFECTOR_TAG+":"+name;
+    }
+    
+    /**
+     * checks if the given task is part of the given effector call on the given entity;
+     * @param task  the task to check (false if null)
+     * @param entity  the entity where this effector task should be running, or any entity if null
+     * @param effector  the effector (matching name) where this task should be running, or any effector if null
+     * @param allowNestedEffectorCalls  whether to match ancestor effector calls, e.g. if eff1 calls eff2,
+     *   and we are checking eff2, whether to match eff1
+     * @return whether the given task is part of the given effector
+     */
+    public static boolean isInEffectorTask(Task<?> task, Entity entity, Effector<?> effector, boolean allowNestedEffectorCalls) {
+        Task<?> t = task;
+        while (t!=null) {
+            Set<Object> tags = t.getTags();
+            if (tags.contains(EFFECTOR_TAG)) {
+                boolean match = true;
+                if (entity!=null && !entity.equals(getTargetOrContextEntity(t)))
+                    match = false;
+                if (effector!=null && !tags.contains(tagForEffectorName(effector.getName())))
+                    match = false;
+                if (match) return true;
+                if (!allowNestedEffectorCalls) return false;
+            }
+            t = t.getSubmittedByTask();
+        }
+        return false;
+    }
+    
+    public static String getEffectorName(Task<?> task) {
+        Task<?> t = task;
+        while (t!=null) {
+            for (Object tag: task.getTags()) {
+                if (tag instanceof String && ((String)tag).startsWith(EFFECTOR_TAG+":"))
+                    return Strings.removeFromStart((String)tag, EFFECTOR_TAG+":");
+            }
+            t = t.getSubmittedByTask();
+        }
+        return null;
     }
 
 }

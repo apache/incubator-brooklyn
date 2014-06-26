@@ -34,7 +34,7 @@ public class PollerTest {
     public void setUp() throws Exception {
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        poller = new Poller<Integer>(entity);
+        poller = new Poller<Integer>(entity, false);
     }
     
     @AfterMethod(alwaysRun=true)

@@ -252,6 +252,14 @@ public class ScriptHelper {
         } catch (IOException e) {
             log.warn("Error registering stream "+BrooklynTaskTags.STREAM_STDIN+" on "+tb+": "+e, e);
         }
+        
+        Map<?,?> env = (Map<?,?>) flags.get("env");
+        if (env!=null) {
+            // if not explicitly set, env will come from getShellEnv in AbstractSoftwareProcessSshDriver.execute,
+            // which will also update this tag appropriately
+            tb.tag(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, env));
+        }
+        
         if (gatherOutput) {
             stdout = new ByteArrayOutputStream();
             tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDOUT, stdout));
