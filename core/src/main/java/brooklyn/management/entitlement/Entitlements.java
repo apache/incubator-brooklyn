@@ -15,10 +15,6 @@
  */
 package brooklyn.management.entitlement;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +26,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
+
+import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.reflect.TypeToken;
 
 public class Entitlements {
 
@@ -55,6 +56,31 @@ public class Entitlements {
      * secondary check required for any operation which could potentially grant root-level access */ 
     public static EntitlementClass<Void> ROOT = new BasicEntitlementClassDefinition<Void>("root", Void.class);
 
+    public static enum EntitlementClassesEnum {
+        ENTITLEMENT_SEE_ENTITY(SEE_ENTITY),
+        ENTITLEMENT_SEE_SENSOR(SEE_SENSOR),
+        ENTITLEMENT_INVOKE_EFFECTOR(INVOKE_EFFECTOR),
+        ENTITLEMENT_DEPLOY_APPLICATION(DEPLOY_APPLICATION),
+        ENTITLEMENT_SEE_ALL_SERVER_INFO(SEE_ALL_SERVER_INFO),
+        ENTITLEMENT_ROOT(ROOT),
+        ;
+        
+        private EntitlementClass<?> entitlementClass;
+
+        private EntitlementClassesEnum(EntitlementClass<?> specificClass) {
+            this.entitlementClass = specificClass;
+        }
+        public EntitlementClass<?> getEntitlementClass() {
+            return entitlementClass;
+        }
+        
+        public static EntitlementClassesEnum of(EntitlementClass<?> entitlementClass) {
+            for (EntitlementClassesEnum x: values()) {
+                if (entitlementClass.equals(x.getEntitlementClass())) return x;
+            }
+            return null;
+        }
+    }
     
     public static class EntityAndItem<T> {
         final Entity entity;
@@ -207,13 +233,14 @@ public class Entitlements {
     // ----------------- initialization ----------------
 
     public static ConfigKey<String> GLOBAL_ENTITLEMENT_MANAGER = ConfigKeys.newStringConfigKey("brooklyn.entitlements.global", 
-        "Class for entitlements in effect globally; many instances accept further per user entitlements; "
-        + "short names 'minimal', 'readonly', or 'root' are permitted here, with the default 'root' giving full access to all declared users",
+        "Class for entitlements in effect globally; "
+        + "short names 'minimal', 'readonly', or 'root' are permitted here, with the default 'root' giving full access to all declared users; "
+        + "or supply the name of an "+EntitlementManager.class+" class to instantiate, taking a 1-arg BrooklynProperties constructor or a 0-arg constructor",
         "root");
     
     public static EntitlementManager newManager(ResourceUtils loader, BrooklynProperties brooklynProperties) {
         EntitlementManager result = newGlobalManager(loader, brooklynProperties);
-        // TODO per user settings
+        // TODO read per user settings from brooklyn.properties, if set there ?
         return result;
     }
     private static EntitlementManager newGlobalManager(ResourceUtils loader, BrooklynProperties brooklynProperties) {
@@ -223,7 +250,12 @@ public class Entitlements {
         if ("minimal".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(minimal());
         if (Strings.isNonBlank(type)) {
             try {
-                return (EntitlementManager) loader.getLoader().loadClass(type).newInstance();
+                Class<?> clazz = loader.getLoader().loadClass(type);
+                if (clazz.getConstructor(BrooklynProperties.class)!=null) {
+                    return (EntitlementManager) clazz.getConstructor(BrooklynProperties.class).newInstance(brooklynProperties);
+                } else {
+                    return (EntitlementManager) clazz.newInstance();
+                }
             } catch (Exception e) { throw Exceptions.propagate(e); }
         }
         throw new IllegalStateException("Invalid entitlement manager specified: '"+type+"'");
