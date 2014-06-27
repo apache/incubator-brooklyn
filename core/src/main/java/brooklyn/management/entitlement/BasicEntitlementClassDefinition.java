@@ -24,7 +24,7 @@ public class BasicEntitlementClassDefinition<T> implements EntitlementClass<T> {
     }
 
     @Override
-    public TypeToken<T> aentitlementClassArgumentType() {
+    public TypeToken<T> entitlementClassArgumentType() {
         return argumentType;
     }
 

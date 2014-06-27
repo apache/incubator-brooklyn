@@ -188,7 +188,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     public List<ApplicationSummary> list() {
         return FluentIterable
                 .from(mgmt().getApplications())
-                .filter(EntitlementPredicates.hasEntitlementClass(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+                .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
                 .transform(ApplicationTransformer.FROM_APPLICATION)
                 .toList();
     }

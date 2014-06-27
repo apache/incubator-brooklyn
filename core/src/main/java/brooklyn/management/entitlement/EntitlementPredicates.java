@@ -6,7 +6,8 @@ import com.google.common.base.Predicate;
 
 public class EntitlementPredicates {
 
-    public static <T> Predicate<T> hasEntitlementClass(final EntitlementManager entitlementManager, final EntitlementClass<T> entitlementClass) {
+    public static <T> Predicate<T> isEntitled(final EntitlementManager entitlementManager, final EntitlementClass<T> entitlementClass) {
+
         return new Predicate<T>() {
             @Override
             public boolean apply(@Nullable T t) {

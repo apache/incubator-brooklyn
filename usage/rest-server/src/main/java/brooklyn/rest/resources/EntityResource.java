@@ -42,7 +42,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   public List<EntitySummary> list(final String application) {
       return FluentIterable
               .from(brooklyn().getApplication(application).getChildren())
-              .filter(EntitlementPredicates.hasEntitlementClass(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+              .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
               .transform(EntityTransformer.FROM_ENTITY)
               .toList();
   }
@@ -61,7 +61,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   public List<EntitySummary> getChildren( final String application, final String entity) {
       return FluentIterable
               .from(brooklyn().getEntity(application, entity).getChildren())
-              .filter(EntitlementPredicates.hasEntitlementClass(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+              .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
               .transform(EntityTransformer.FROM_ENTITY)
               .toList();
   }
