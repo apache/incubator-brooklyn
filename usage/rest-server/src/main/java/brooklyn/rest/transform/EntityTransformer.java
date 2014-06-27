@@ -7,6 +7,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
@@ -15,14 +19,17 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySummary;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-
 /**
  * @author Adam Lowe
  */
 public class EntityTransformer {
+
+    public static final Function<? super Entity, EntitySummary> FROM_ENTITY = new Function<Entity, EntitySummary>() {
+        @Override
+        public EntitySummary apply(Entity entity) {
+            return EntityTransformer.entitySummary(entity);
+        }
+    };
 
     public static EntitySummary entitySummary(Entity entity) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();

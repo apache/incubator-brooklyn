@@ -19,6 +19,9 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
+import brooklyn.management.entitlement.EntitlementManager;
+import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -293,6 +296,9 @@ public class EntityManagementSupport {
         }
         return nonDeploymentManagementContext.getSubscriptionContext(entity);
     }
+    public synchronized EntitlementManager getEntitlementManager() {
+        return getManagementContext().getEntitlementManager();
+    }
 
     public synchronized void attemptLegacyAutodeployment(String effectorName) {
         if (managementContext!=null) {
@@ -373,7 +379,7 @@ public class EntityManagementSupport {
         }
         @Override
         public void onEffectorStarting(Effector<?> effector) {
-            // ignore
+            Entitlements.requireEntitled(getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(null, effector.getName()));
         }
         @Override
         public void onEffectorCompleted(Effector<?> effector) {

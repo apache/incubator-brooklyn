@@ -22,6 +22,7 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
@@ -177,6 +178,11 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
 
     public BrooklynProperties addSystemProperties() {
         putAll(System.getProperties());
+        return this;
+    }
+
+    public BrooklynProperties addFrom(ConfigBag cfg) {
+        putAll(cfg.getAllConfig());
         return this;
     }
 

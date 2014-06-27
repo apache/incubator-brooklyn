@@ -37,6 +37,8 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.LocationManager;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
+import brooklyn.management.entitlement.EntitlementManager;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
@@ -73,6 +75,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     private NonDeploymentLocationManager locationManager;
     private NonDeploymentAccessManager accessManager;
     private NonDeploymentUsageManager usageManager;
+    private EntitlementManager entitlementManager;;
 
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
         this.entity = checkNotNull(entity, "entity");
@@ -83,6 +86,10 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         locationManager = new NonDeploymentLocationManager(null);
         accessManager = new NonDeploymentAccessManager(null);
         usageManager = new NonDeploymentUsageManager(null);
+        
+        // TODO might need to be some kind of "system" which can see that the system is running at this point
+        // though quite possibly we are entirely behind the auth-wall at this point
+        entitlementManager = Entitlements.minimal();
     }
 
     @Override
@@ -262,6 +269,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public BrooklynCatalog getCatalog() {
         checkInitialManagementContextReal();
         return initialManagementContext.getCatalog();
+    }
+    
+    @Override
+    public EntitlementManager getEntitlementManager() {
+        return entitlementManager;
     }
     
     @Override

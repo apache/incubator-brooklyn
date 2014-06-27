@@ -2,6 +2,8 @@ package brooklyn.rest.util;
 
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
+
+import brooklyn.management.entitlement.Entitlements;
 import groovy.lang.GroovyClassLoader;
 
 import java.lang.reflect.Constructor;
@@ -148,12 +150,16 @@ public class BrooklynRestResourceUtils {
      */
     public Application getApplication(String application) {
         Entity e = mgmt.getEntityManager().getEntity(application);
-        if (e!=null && e instanceof Application) return (Application)e;
-        for (Application app: mgmt.getApplications()) {
-            if (app.getId().equals(application)) return app;
-            if (application.equalsIgnoreCase(app.getDisplayName())) return app;
+        if (Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, e)) {
+            if (e != null && e instanceof Application) return (Application) e;
+            for (Application app : mgmt.getApplications()) {
+                if (app.getId().equals(application)) return app;
+                if (application.equalsIgnoreCase(app.getDisplayName())) return app;
+            }
+            throw notFound("Application '%s' not found", application);
         }
-        throw notFound("Application '%s' not found", application);
+        throw WebResourceUtils.unauthorized("User '%s' is not authorized to get application '%s'",
+                    Entitlements.getEntitlementContext().user(), e);
     }
 
     /** walks the hierarchy (depth-first) at root (often an Application) looking for
@@ -198,60 +204,66 @@ public class BrooklynRestResourceUtils {
             }
             clazz = tempclazz;
         }
-        
-        try {
-            if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
-                Constructor<?> constructor = clazz.getConstructor();
-                ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
-                if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
-                if (entities.size() > 0) log.warn("Cannot supply additional entities when using an ApplicationBuilder; ignoring in spec {}", spec);
-                
-                log.info("REST placing '{}' under management", spec.getName());
-                appBuilder.configure( convertFlagsToKeys(appBuilder.getType(), configO) );
-                configureRenderingMetadata(spec, appBuilder);
-                instance = appBuilder.manage(mgmt);
-                
-            } else if (Application.class.isAssignableFrom(clazz)) {
-                brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
-                configureRenderingMetadata(spec, coreSpec);
-                instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
-                for (EntitySpec entitySpec : entities) {
-                    log.info("REST creating instance for entity {}", entitySpec.getType());
-                    instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(entitySpec)));
+        if (Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, null)) {
+
+            try {
+                if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
+                    Constructor<?> constructor = clazz.getConstructor();
+                    ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
+                    if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
+                    if (entities.size() > 0)
+                        log.warn("Cannot supply additional entities when using an ApplicationBuilder; ignoring in spec {}", spec);
+
+                    log.info("REST placing '{}' under management", spec.getName());
+                    appBuilder.configure(convertFlagsToKeys(appBuilder.getType(), configO));
+                    configureRenderingMetadata(spec, appBuilder);
+                    instance = appBuilder.manage(mgmt);
+
+                } else if (Application.class.isAssignableFrom(clazz)) {
+                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
+                    configureRenderingMetadata(spec, coreSpec);
+                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
+                    for (EntitySpec entitySpec : entities) {
+                        log.info("REST creating instance for entity {}", entitySpec.getType());
+                        instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(entitySpec)));
+                    }
+
+                    log.info("REST placing '{}' under management", spec.getName() != null ? spec.getName() : spec);
+                    Entities.startManagement(instance, mgmt);
+
+                } else if (Entity.class.isAssignableFrom(clazz)) {
+                    if (entities.size() > 0)
+                        log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
+
+                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO);
+                    configureRenderingMetadata(spec, coreSpec);
+
+                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
+
+                    final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
+                    Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO));
+                    instance.addChild(soleChild);
+                    instance.addEnricher(Enrichers.builder()
+                            .propagatingAll()
+                            .from(soleChild)
+                            .build());
+
+                    log.info("REST placing '{}' under management", spec.getName());
+                    Entities.startManagement(instance, mgmt);
+
+                } else {
+                    throw new IllegalArgumentException("Class " + clazz + " must extend one of ApplicationBuilder, Application or Entity");
                 }
-                
-                log.info("REST placing '{}' under management", spec.getName()!=null ? spec.getName() : spec);
-                Entities.startManagement(instance, mgmt);
-                
-            } else if (Entity.class.isAssignableFrom(clazz)) {
-                if (entities.size() > 0) log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
-                
-                brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO);
-                configureRenderingMetadata(spec, coreSpec);
-                
-                instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
-                
-                final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
-                Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO));
-                instance.addChild(soleChild);
-                instance.addEnricher(Enrichers.builder()
-                        .propagatingAll()
-                        .from(soleChild)
-                        .build());
-                
-                log.info("REST placing '{}' under management", spec.getName());
-                Entities.startManagement(instance, mgmt);
-                
-            } else {
-                throw new IllegalArgumentException("Class "+clazz+" must extend one of ApplicationBuilder, Application or Entity");
+
+                return instance;
+
+            } catch (Exception e) {
+                log.error("REST failed to create application: " + e, e);
+                throw Exceptions.propagate(e);
             }
-            
-            return instance;
-            
-        } catch (Exception e) {
-            log.error("REST failed to create application: "+e, e);
-            throw Exceptions.propagate(e);
         }
+        throw WebResourceUtils.unauthorized("User '%s' is not authorized to create application from applicationSpec %s",
+                Entitlements.getEntitlementContext().user(), spec);
     }
     
     public Task<?> start(Application app, ApplicationSpec spec) {
@@ -380,18 +392,24 @@ public class BrooklynRestResourceUtils {
     }
     
     public Task<?> expunge(final Entity entity, final boolean release) {
-        return mgmt.getExecutionManager().submit(
-                MutableMap.of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
-                        + entity.getDisplayName() + " (" + entity + ")"), new Runnable() {
-                    @Override
-                    public void run() {
-                        if (release)
-                            Entities.destroyCatching(entity);
-                        else
-                            mgmt.getEntityManager().unmanage(entity);
-                    }
-                });
+        if (mgmt.getEntitlementManager().isEntitled(Entitlements.getEntitlementContext(),
+                Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(entity, "expunge"))) {
+            return mgmt.getExecutionManager().submit(
+                    MutableMap.of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
+                            + entity.getDisplayName() + " (" + entity + ")"), new Runnable() {
+                        @Override
+                        public void run() {
+                            if (release)
+                                Entities.destroyCatching(entity);
+                            else
+                                mgmt.getEntityManager().unmanage(entity);
+                        }
+                    });
+        }
+        throw WebResourceUtils.unauthorized("User '%s' is not authorized to expunge entity %s",
+                    Entitlements.getEntitlementContext().user(), entity);
     }
+
 
     @SuppressWarnings({ "rawtypes" })
     public Response createCatalogEntryFromGroovyCode(String groovyCode) {

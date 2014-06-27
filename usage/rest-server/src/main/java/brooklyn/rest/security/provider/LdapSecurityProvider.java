@@ -10,6 +10,8 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
+
 import brooklyn.config.StringConfigMap;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynWebConfig;
@@ -35,7 +37,8 @@ public class LdapSecurityProvider implements SecurityProvider {
         StringConfigMap properties = mgmt.getConfig();
         ldapUrl = properties.getConfig(BrooklynWebConfig.LDAP_URL);
         Strings.checkNonEmpty(ldapUrl, "LDAP security provider configuration missing required property "+BrooklynWebConfig.LDAP_URL);
-        ldapRealm = properties.getConfig(BrooklynWebConfig.LDAP_REALM);
+        ldapRealm = CharMatcher.isNot('"').retainFrom(properties.getConfig
+                (BrooklynWebConfig.LDAP_REALM));
         Strings.checkNonEmpty(ldapRealm, "LDAP security provider configuration missing required property "+BrooklynWebConfig.LDAP_REALM);
     }
 

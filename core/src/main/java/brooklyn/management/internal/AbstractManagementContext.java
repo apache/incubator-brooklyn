@@ -42,6 +42,8 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
+import brooklyn.management.entitlement.EntitlementManager;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.util.GroovyJavaMethods;
@@ -119,9 +121,10 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected volatile BrooklynGarbageCollector gc;
 
     private final EntityDriverManager entityDriverManager;
-    
     protected DownloadResolverManager downloadsManager;
 
+    protected EntitlementManager entitlementManager;
+    
     private final BrooklynStorage storage;
 
     private volatile boolean running = true;
@@ -144,6 +147,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         this.storage = new BrooklynStorageImpl(datagrid);
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
+        
+        this.entitlementManager = Entitlements.newManager(ResourceUtils.create(getBaseClassLoader()), brooklynProperties);
     }
 
     @Override
@@ -202,6 +207,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     @Override
     public DownloadResolverManager getEntityDownloadsManager() {
         return downloadsManager;
+    }
+    
+    @Override
+    public EntitlementManager getEntitlementManager() {
+        return entitlementManager;
     }
     
     protected abstract void manageIfNecessary(Entity entity, Object context);
