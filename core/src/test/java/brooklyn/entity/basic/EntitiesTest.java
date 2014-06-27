@@ -18,6 +18,7 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -91,4 +92,24 @@ public class EntitiesTest {
         // And now that it's set, the attribute-when-ready should return immediately
         assertEquals(Entities.attributeSupplierWhenReady(entity, TestEntity.NAME).get(), "myname");
     }
+    
+    @Test
+    public void testCreateGetContainsAndRemoveTags() throws Exception {
+        entity.addTag("foo");
+        entity.addTag(app);
+        
+        Assert.assertTrue(entity.containsTag("foo"));
+        Assert.assertFalse(entity.containsTag("bar"));
+        
+        Assert.assertEquals(entity.getTags(), MutableSet.of(app, "foo"));
+        
+        entity.removeTag("foo");
+        Assert.assertFalse(entity.containsTag("foo"));
+        
+        Assert.assertTrue(entity.containsTag(entity.getParent()));
+        Assert.assertFalse(entity.containsTag(entity));
+        
+        Assert.assertEquals(entity.getTags(), MutableSet.of(app));
+    }
+
 }

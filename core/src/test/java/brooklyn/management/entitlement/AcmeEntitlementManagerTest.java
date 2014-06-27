@@ -48,31 +48,56 @@ public class AcmeEntitlementManagerTest {
     }
 
     @Test
-    public void testUserWithMinimalAllows() {
+    public void testUserWithMinimal() {
         setup(configBag);
-        WebEntitlementContext entitlementContext = new WebEntitlementContext("bob", "127.0.0.1", URI.create("/applications").toString());
+        WebEntitlementContext entitlementContext = new WebEntitlementContext("hacker", "127.0.0.1", URI.create("/applications").toString());
         Entitlements.setEntitlementContext(entitlementContext);
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
-        // and can invoke methods, without any user/login registered
+        // and can invoke methods
         confirmEffectorEntitlement(false);
     }
 
     @Test
-    public void testUserWithReadOnlyAllows() {
+    public void testUserWithReadOnly() {
         setup(configBag);
-        WebEntitlementContext entitlementContext = new WebEntitlementContext("alice", "127.0.0.1", URI.create("/applications").toString());
+        WebEntitlementContext entitlementContext = new WebEntitlementContext("bob", "127.0.0.1", URI.create("/applications").toString());
         Entitlements.setEntitlementContext(entitlementContext);
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
-        // and can invoke methods, without any user/login registered
+        // and cannot invoke methods
         confirmEffectorEntitlement(false);
     }
 
+    @Test
+    public void testUserWithAllPermissions() {
+        setup(configBag);
+        WebEntitlementContext entitlementContext = new WebEntitlementContext("alice", "127.0.0.1", URI.create("/applications").toString());
+        Entitlements.setEntitlementContext(entitlementContext);
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
+        // and can invoke methods
+        confirmEffectorEntitlement(true);
+    }
+
+    @Test
+    public void testNullHasAllPermissions() {
+        setup(configBag);
+        WebEntitlementContext entitlementContext = new WebEntitlementContext(null, "127.0.0.1", URI.create("/applications").toString());
+        Entitlements.setEntitlementContext(entitlementContext);
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
+        Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
+        // and can invoke methods
+        confirmEffectorEntitlement(true);
+    }
 
     protected void confirmEffectorEntitlement(boolean shouldSucceed) {
         try {

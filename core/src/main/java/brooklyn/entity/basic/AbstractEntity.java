@@ -70,6 +70,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -156,6 +157,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
     Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
     Collection<AbstractEnricher> enrichers = Lists.newCopyOnWriteArrayList();
+    Set<Object> tags = Sets.newLinkedHashSet();
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
     // orphaning (i.e. removing ownership). This flag notes if the entity has previously had a parent, and if an attempt is made to
@@ -1260,6 +1262,34 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return new BasicEntityRebindSupport(this);
     }
 
+    @Override
+    public Set<Object> getTags() {
+        synchronized (tags) {
+            return ImmutableSet.copyOf(tags);
+        }
+    }
+
+    @Override
+    public boolean addTag(Object tag) {
+        synchronized (tags) {
+            return tags.add(tag);
+        }
+    }    
+
+    @Override
+    public boolean removeTag(Object tag) {
+        synchronized (tags) {
+            return tags.remove(tag);
+        }
+    }    
+
+    @Override
+    public boolean containsTag(Object tag) {
+        synchronized (tags) {
+            return tags.contains(tag);
+        }
+    }    
+    
     @Override
     protected void finalize() throws Throwable {
         super.finalize();

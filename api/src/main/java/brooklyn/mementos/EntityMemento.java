@@ -54,5 +54,7 @@ public interface EntityMemento extends Memento, TreeNode {
      * The ids of the enrichers of this entity.
      */
     public Collection<String> getEnrichers();
-    
+
+    public Collection<Object> getTags();
+
 }

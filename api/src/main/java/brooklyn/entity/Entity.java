@@ -2,8 +2,12 @@ package brooklyn.entity;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.google.common.collect.ImmutableMap;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
@@ -209,4 +213,18 @@ public interface Entity extends Identifiable {
      * @return True if the policy enricher at this entity; false otherwise
      */
     boolean removeEnricher(Enricher enricher);
+    
+    /** 
+     * Tags are arbitrary objects which can be attached to an entity for subsequent reference.
+     * They must not be null (as {@link ImmutableMap} may be used under the covers; also there is little point!);
+     * and they should be amenable to our persistence (on-disk serialization) and our JSON serialization in the REST API.
+     * 
+     * @return An immutable copy of the set of tags on this entity. 
+     * Note {@link #containsTag(Object)} will be more efficient,
+     * and {@link #addTag(Object)} and {@link #removeTag(Object)} will not work. */
+    Set<Object> getTags();
+    boolean addTag(@Nonnull Object tag);
+    boolean removeTag(@Nonnull Object tag);
+    boolean containsTag(@Nonnull Object tag);
+
 }
