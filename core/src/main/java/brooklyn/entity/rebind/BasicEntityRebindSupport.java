@@ -91,6 +91,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         addPolicies(rebindContext, memento);
         addEnrichers(rebindContext, memento);
         addMembers(rebindContext, memento);
+        addTags(rebindContext, memento);
         addLocations(rebindContext, memento);
 
         doReconstruct(rebindContext, memento);
@@ -119,6 +120,12 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
             } else {
                 throw new UnsupportedOperationException("Entity with members should be a group: entity="+entity+"; type="+entity.getClass()+"; members="+memento.getMembers());
             }
+        }
+    }
+    
+    protected void addTags(RebindContext rebindContext, EntityMemento memento) {
+        for (Object tag : memento.getTags()) {
+            entity.addTag(tag);
         }
     }
     

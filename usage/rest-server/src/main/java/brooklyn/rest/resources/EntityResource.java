@@ -35,6 +35,7 @@ import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
 
@@ -80,6 +81,12 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       if (t==null)
           throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
       return TaskTransformer.FROM_TASK.apply(t);
+  }
+
+  @Override
+  public List<Object> listTags(String applicationId, String entityId) {
+      Entity entity = brooklyn().getEntity(applicationId, entityId);
+      return MutableList.copyOf(entity.getTags());
   }
 
   @Override

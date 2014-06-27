@@ -47,6 +47,7 @@ public class EntityTransformer {
                 .put("policies", URI.create(entityUri + "/policies"))
                 .put("activities", URI.create(entityUri + "/activities"))
                 .put("locations", URI.create(entityUri + "/locations"))
+                .put("tags", URI.create(entityUri + "/tags"))
                 .put("catalog", URI.create("/v1/catalog/entities/" + type))
                 .put("expunge", URI.create(entityUri + "/expunge")
             );

@@ -139,6 +139,10 @@ public class MementosGenerators {
             builder.enrichers.add(enricher.getId()); 
         }
         
+        for (Object tag : entity.getTags()) {
+            builder.tags.add(tag); 
+        }
+        
         Entity parentEntity = entity.getParent();
         builder.parent = (parentEntity != null) ? parentEntity.getId() : null;
 

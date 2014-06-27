@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 by Cloudsoft Corporation Limited
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package brooklyn.rest.resources;
 
 import static org.testng.Assert.assertEquals;
@@ -39,12 +24,12 @@ import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.util.text.StringFunctions;
 
-import com.sun.jersey.api.client.ClientResponse;
-
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 
 /**
  * Test the {@link SensorApi} implementation.
@@ -107,7 +92,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
         ClientResponse response = client().resource(sensorsEndpoint + "/current-state")
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
-        Map<String, ?> currentState = response.getEntity(Map.class);
+        Map<String, ?> currentState = response.getEntity(new GenericType<Map<String,?>>(Map.class) {});
 
         for (String sensor : currentState.keySet()) {
             if (sensor.equals(sensorName)) {
@@ -123,7 +108,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .queryParam("raw", "true")
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
-        Map<String, ?> currentState = response.getEntity(Map.class);
+        Map<String, ?> currentState = response.getEntity(new GenericType<Map<String,?>>(Map.class) {});
 
         for (String sensor : currentState.keySet()) {
             if (sensor.equals(sensorName)) {

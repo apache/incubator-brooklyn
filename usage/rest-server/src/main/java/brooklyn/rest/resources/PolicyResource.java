@@ -1,28 +1,28 @@
 package brooklyn.rest.resources;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.Policies;
 import brooklyn.rest.api.PolicyApi;
-import brooklyn.rest.transform.ApplicationTransformer;
-import brooklyn.rest.transform.PolicyTransformer;
 import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.domain.Status;
+import brooklyn.rest.transform.ApplicationTransformer;
+import brooklyn.rest.transform.PolicyTransformer;
 import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.core.Response;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-
-import static com.google.common.collect.Iterables.transform;
 
 public class PolicyResource extends AbstractBrooklynRestResource implements PolicyApi {
 

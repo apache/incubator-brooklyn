@@ -51,6 +51,7 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Durations;
@@ -249,6 +250,22 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         assertEquals(newReffer.resizable, newE);
     }
     
+    @Test
+    public void testEntityTags() throws Exception {
+        MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
+        origE.addTag("foo");
+        origE.addTag(origApp);
+
+        newApp = rebind(false);
+        MyEntity newE = Iterables.getOnlyElement( Entities.descendants(newApp, MyEntity.class) );
+
+        assertTrue(newE.containsTag("foo"), "tags are "+newE.getTags());
+        assertFalse(newE.containsTag("bar"));
+        assertTrue(newE.containsTag(newE.getParent()));
+        assertTrue(newE.containsTag(origApp));
+        assertEquals(newE.getTags(), MutableSet.of("foo", newE.getParent()));
+    }
+
     public static class ReffingEntity {
         public Group group;
         public Resizable resizable;

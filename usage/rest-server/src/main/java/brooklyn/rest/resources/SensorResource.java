@@ -43,6 +43,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
 
     private static final Logger log = LoggerFactory.getLogger(SensorResource.class);
 
+    @SuppressWarnings("rawtypes")
     @Override
     public List<SensorSummary> list(final String application, final String entityToken) {
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
@@ -60,6 +61,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
     public Map<String, Object> batchSensorRead(final String application, final String entityToken, final Boolean raw) {
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
         Map<String, Object> sensorMap = Maps.newHashMap();
+        @SuppressWarnings("rawtypes")
         Iterable<AttributeSensor> sensors = filter(entity.getEntityType().getSensors(), AttributeSensor.class);
 
         for (AttributeSensor<?> sensor : sensors) {

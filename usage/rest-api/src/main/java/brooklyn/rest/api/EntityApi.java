@@ -88,7 +88,17 @@ public interface EntityApi {
           @PathParam("application") final String application,
           @PathParam("entity") final String entity
   );
-  
+
+  @GET
+  @Path("/{entity}/tags")
+  @ApiOperation(value = "Fetch list of tags on this entity")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application or entity")
+  })
+  public List<Object> listTags(
+          @ApiParam(value = "Entity ID or name", required = true) @PathParam("application") String applicationId,
+          @ApiParam(value = "Application ID or name", required = true) @PathParam("entity") String entityId);
+
   @POST
   @ApiOperation(
       value = "Expunge an entity",
