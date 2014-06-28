@@ -55,7 +55,12 @@ public class CatalogItemDo<T> implements CatalogItem<T> {
     public String getIconUrl() {
         return itemDto.getIconUrl();
     }
-    
+
+    @Override
+    public CatalogItemContext getContext() {
+        return itemDto.getContext();
+    }
+
     public Class<T> getJavaClass() {
         if (javaClass==null) loadJavaClass();
         return javaClass;

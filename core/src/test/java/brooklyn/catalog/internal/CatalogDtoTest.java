@@ -47,7 +47,7 @@ public class CatalogDtoTest {
     }
 
     protected void checkHadoopsExample(CatalogDto root) {
-        Assert.assertEquals(root.catalogs.size(), 4);
+        Assert.assertEquals(root.catalogs.size(), 5);
         CatalogDo loader = new CatalogDo(root).load(managementContext, null);
         
         CatalogItemDo<?> worker = loader.getCache().get("io.brooklyn.mapr.m3.WorkerNode");
@@ -82,6 +82,15 @@ public class CatalogDtoTest {
                 "io.brooklyn.cloudera.ClouderaForHadoopWithManager",
                 "RECOMMENDED: CDH Hadoop Application with Cloudera Manager"));
         root.addCatalog(cdhCatalog.dto);
+
+        CatalogDo osgiCatalog = new CatalogDo(CatalogDto.newNamedInstance("OSGi",
+                "A catalog whose entries define their context as a list of OSGi bundles"));
+        osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
+        CatalogContextDto m3Context = new CatalogContextDto();
+        m3Context.addBundle("file://~/.m2/repository/io/cloudsoft/brooklyn-mapr/1.0.0-SNAPSHOT/brooklyn-mapr.jar");
+        osgiCatalog.addEntry(CatalogItemDtoAbstract.newTemplate("M3App", "io.brooklyn.mapr.M3App", "M3 Application",
+                "Description", m3Context));
+        root.addCatalog(osgiCatalog.dto);
 
         root.addCatalog(CatalogDto.newLinkedInstance("http://cloudsoftcorp.com/amp-brooklyn-catalog.xml"));
         root.addCatalog(CatalogDto.newLinkedInstance("http://microsoot.com/oofice-catalog.xml"));
