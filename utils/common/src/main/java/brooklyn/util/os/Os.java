@@ -473,6 +473,12 @@ public class Os {
                                 isSeparator(path.codePointAt(2));
     }
 
+    /** @deprecated since 0.7.0, use {@link #isAbsolutish(String)} */
+    @Deprecated
+    public static boolean isAbsolute(String path) {
+        return isAbsolutish(path);
+    }
+    
     private static boolean isSeparator(int sep) {
         return sep == SEPARATOR_UNIX ||
                sep == SEPARATOR_WIN;
