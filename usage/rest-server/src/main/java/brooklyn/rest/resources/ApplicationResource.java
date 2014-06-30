@@ -140,26 +140,32 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     private ArrayNode childEntitiesRecursiveAsArray(Entity entity) {
         ArrayNode node = mapper().createArrayNode();
         for (Entity e : entity.getChildren()) {
-            node.add(recursiveTreeFromEntity(e));
+            if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
+                node.add(recursiveTreeFromEntity(e));
+            }
         }
         return node;
     }
 
     private ArrayNode entitiesIdAndNameAsArray(Collection<? extends Entity> entities) {
         ArrayNode node = mapper().createArrayNode();
-        for (Entity e : entities) {
-            ObjectNode holder = mapper().createObjectNode();
-            holder.put("id", e.getId());
-            holder.put("name", e.getDisplayName());
-            node.add(holder);
+        for (Entity entity : entities) {
+            if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
+                ObjectNode holder = mapper().createObjectNode();
+                holder.put("id", entity.getId());
+                holder.put("name", entity.getDisplayName());
+                node.add(holder);
+            }
         }
         return node;
     }
 
     private ArrayNode entitiesIdAsArray(Collection<? extends Entity> entities) {
         ArrayNode node = mapper().createArrayNode();
-        for (Entity e : entities) {
-            node.add(e.getId());
+        for (Entity entity : entities) {
+            if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
+                node.add(entity.getId());
+            }
         }
         return node;
     }
@@ -173,7 +179,9 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             for (String entityId: entityIds.split(",")) {
                 Entity entity = mgmt().getEntityManager().getEntity(entityId.trim());
                 while (entity != null && entity.getParent() != null) {
-                    jsonEntitiesById.put(entity.getId(), fromEntity(entity));
+                    if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
+                        jsonEntitiesById.put(entity.getId(), fromEntity(entity));
+                    }
                     entity = entity.getParent();
                 }
             }
