@@ -21,6 +21,7 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
     String name;
     String description;
     String iconUrl;
+    String version;
     CatalogItemContext context;
     
     public String getId() {
@@ -42,6 +43,10 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
     
     public String getIconUrl() {
         return iconUrl;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     @Nonnull
