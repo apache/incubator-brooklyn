@@ -15,7 +15,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
 /** Like Guava Optional but permitting null and permitting errors to be thrown. */
-public abstract class Maybe<T> implements Serializable {
+public abstract class Maybe<T> implements Serializable, Supplier<T> {
 
     private static final long serialVersionUID = -6372099069863179019L;
 

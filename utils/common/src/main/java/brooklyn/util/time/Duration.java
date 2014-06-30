@@ -117,7 +117,13 @@ public class Duration implements Comparable<Duration>, Serializable {
 
     /** see {@link #of(Object)} and {@link Time#parseTimeString(String)} */
     public static Duration parse(String textualDescription) {
+        if (textualDescription==null) return null;
         if ("null".equalsIgnoreCase(textualDescription)) return null;
+        
+        if ("forever".equalsIgnoreCase(textualDescription)) return Duration.PRACTICALLY_FOREVER;
+        if ("practicallyforever".equalsIgnoreCase(textualDescription)) return Duration.PRACTICALLY_FOREVER;
+        if ("practically_forever".equalsIgnoreCase(textualDescription)) return Duration.PRACTICALLY_FOREVER;
+        
         return new Duration(Time.parseTimeString(textualDescription), TimeUnit.MILLISECONDS);
     }
 

@@ -2,7 +2,6 @@ package brooklyn.rest.util;
 
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
-
 import brooklyn.management.entitlement.Entitlements;
 import groovy.lang.GroovyClassLoader;
 
@@ -118,13 +117,19 @@ public class BrooklynRestResourceUtils {
         if (entity==null) return null;
         Application app = application!=null ? getApplication(application) : null;
         EntityLocal e = (EntityLocal) mgmt.getEntityManager().getEntity(entity);
+        
         if (e!=null) {
+            if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, e)) {
+                throw WebResourceUtils.notFound("Cannot find entity '%s': no known ID and application not supplied for searching", entity);
+            }
+            
             if (app==null || app.equals(findTopLevelApplication(e))) return e;
             throw WebResourceUtils.preconditionFailed("Application '%s' specified does not match application '%s' to which entity '%s' (%s) is associated", 
                     application, e.getApplication().getId(), entity, e);
         }
         if (application==null)
             throw WebResourceUtils.notFound("Cannot find entity '%s': no known ID and application not supplied for searching", entity);
+        
         assert app!=null : "null app should not be returned from getApplication";
         e = searchForEntityNamed(app, entity);
         if (e!=null) return e;
@@ -146,20 +151,21 @@ public class BrooklynRestResourceUtils {
 
     /** looks for the given application instance, first by ID then by name
      * 
-     * @throws 404 if not found
+     * @throws 404 if not found, or not entitled
      */
     public Application getApplication(String application) {
         Entity e = mgmt.getEntityManager().getEntity(application);
-        if (Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, e)) {
-            if (e != null && e instanceof Application) return (Application) e;
-            for (Application app : mgmt.getApplications()) {
-                if (app.getId().equals(application)) return app;
-                if (application.equalsIgnoreCase(app.getDisplayName())) return app;
-            }
+        if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, e)) {
             throw notFound("Application '%s' not found", application);
         }
-        throw WebResourceUtils.unauthorized("User '%s' is not authorized to get application '%s'",
-                    Entitlements.getEntitlementContext().user(), e);
+        
+        if (e != null && e instanceof Application) return (Application) e;
+        for (Application app : mgmt.getApplications()) {
+            if (app.getId().equals(application)) return app;
+            if (application.equalsIgnoreCase(app.getDisplayName())) return app;
+        }
+        
+        throw notFound("Application '%s' not found", application);
     }
 
     /** walks the hierarchy (depth-first) at root (often an Application) looking for
@@ -177,6 +183,11 @@ public class BrooklynRestResourceUtils {
     @SuppressWarnings("unchecked")
     public Application create(ApplicationSpec spec) {
         log.debug("REST creating application instance for {}", spec);
+        
+        if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, spec)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to deploy application %s",
+                Entitlements.getEntitlementContext().user(), spec);
+        }
         
         final String type = spec.getType();
         final String name = spec.getName();
