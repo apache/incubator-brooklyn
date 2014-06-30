@@ -29,11 +29,13 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -219,19 +221,20 @@ public class DynamicGroupTest {
     public void testGroupAddsAndRemovesManagedAndUnmanagedEntitiesExactlyOnce() throws Exception {
         final int NUM_CYCLES = 100;
         group.setEntityFilter(Predicates.instanceOf(TestEntity.class));
-        final Set<TestEntity> entitiesNotified = Sets.newLinkedHashSet();
-        final AtomicInteger notificationCount = new AtomicInteger(0);
+
+        final Set<TestEntity> entitiesNotified = Sets.newConcurrentHashSet();
+        final AtomicInteger addedNotifications = new AtomicInteger(0);
+        final AtomicInteger removedNotifications = new AtomicInteger(0);
         final List<Exception> exceptions = new CopyOnWriteArrayList<Exception>();
         
         app.subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             public void onEvent(SensorEvent<Entity> event) {
                 try {
-                    LOG.debug("Notified of member added: member={}, thread={}", event.getValue(), Thread.currentThread().getName());
-                    Entity source = event.getSource();
-                    Object val = event.getValue();
+                    TestEntity val = (TestEntity) event.getValue();
+                    LOG.debug("Notified of member added: member={}, thread={}", val.getId(), Thread.currentThread().getName());
                     assertEquals(group, event.getSource());
-                    assertTrue(entitiesNotified.add((TestEntity)val));
-                    notificationCount.incrementAndGet();
+                    assertTrue(entitiesNotified.add(val));
+                    addedNotifications.incrementAndGet();
                 } catch (Throwable t) {
                     LOG.error("Error on event $event", t);
                     exceptions.add(new Exception("Error on event $event", t));
@@ -241,37 +244,49 @@ public class DynamicGroupTest {
         app.subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             public void onEvent(SensorEvent<Entity> event) {
                 try {
-                    LOG.debug("Notified of member removed: member={}, thread={}", event.getValue(), Thread.currentThread().getName());
-                    Entity source = event.getSource();
-                    Object val = event.getValue();
+                    TestEntity val = (TestEntity) event.getValue();
+                    LOG.debug("Notified of member removed: member={}, thread={}", val.getId(), Thread.currentThread().getName());
                     assertEquals(group, event.getSource());
                     assertTrue(entitiesNotified.remove(val));
-                    notificationCount.incrementAndGet();
+                    removedNotifications.incrementAndGet();
                 } catch (Throwable t) {
                     LOG.error("Error on event $event", t);
                     exceptions.add(new Exception("Error on event $event", t));
                 }
-            }});
+            }
+        });
 
         for (int i = 0; i < NUM_CYCLES; i++) {
-            final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+            final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).id("entity-" + i));
+            LOG.debug("Created: entity {}", i);
             Asserts.succeedsEventually(new Runnable() {
                 public void run() {
-                    entitiesNotified.contains(entity);
-                }});
+                    assertTrue(entitiesNotified.contains(entity));
+                }
+            });
+            LOG.debug("Contained in entitiesNotified: entity {}", i);
             Entities.unmanage(entity);
+            LOG.debug("Unmanaged: entity {}", i);
         }
 
-        Asserts.succeedsEventually(new Runnable() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.of(10, TimeUnit.SECONDS)), new Runnable() {
             public void run() {
-                assertTrue(notificationCount.get() == (NUM_CYCLES*2) || exceptions.size() > 0);
-            }});
+                int added = addedNotifications.get(),
+                    removed = removedNotifications.get(),
+                    notifications = added + removed;
+                assertTrue(notifications == (NUM_CYCLES * 2) || exceptions.size() > 0,
+                        "addedNotifications=" + added +
+                        ", removedNotifications=" + removed +
+                        ", cycles=" + NUM_CYCLES * 2 +
+                        ", exceptions.size=" + exceptions.size());
+            }
+        });
 
-        if (exceptions.size() > 0) {
+        if (!exceptions.isEmpty()) {
             throw exceptions.get(0);
         }
         
-        assertEquals(notificationCount.get(), NUM_CYCLES*2);
+        assertEquals(removedNotifications.get() + addedNotifications.get(), NUM_CYCLES*2);
     }
     
     // The entityAdded/entityRemoved is now async for when member-entity is managed/unmanaged,
