@@ -9,7 +9,7 @@ public interface CatalogItem<T> {
         TEMPLATE, ENTITY, POLICY, CONFIGURATION
     }
 
-    public static interface CatalogItemContext {
+    public static interface CatalogItemLibraries {
         List<String> getBundles();
     }
 
@@ -24,7 +24,7 @@ public interface CatalogItem<T> {
     public String getVersion();
 
     @Nonnull
-    public CatalogItemContext getContext();
+    public CatalogItemLibraries getLibraries();
 
     public String toXmlString();
 

@@ -5,7 +5,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import brooklyn.catalog.CatalogItem;
 
-public class CatalogContextDto implements CatalogItem.CatalogItemContext {
+public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
 
     List<String> bundles = new CopyOnWriteArrayList<String>();
 

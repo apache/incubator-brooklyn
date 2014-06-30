@@ -65,8 +65,8 @@ public class CatalogItemDo<T> implements CatalogItem<T> {
 
     @Nonnull
     @Override
-    public CatalogItemContext getContext() {
-        return itemDto.getContext();
+    public CatalogItemLibraries getLibraries() {
+        return itemDto.getLibraries();
     }
 
     public Class<T> getJavaClass() {

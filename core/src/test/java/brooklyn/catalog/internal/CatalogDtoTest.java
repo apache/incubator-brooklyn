@@ -84,9 +84,9 @@ public class CatalogDtoTest {
         root.addCatalog(cdhCatalog.dto);
 
         CatalogDo osgiCatalog = new CatalogDo(CatalogDto.newNamedInstance("OSGi",
-                "A catalog whose entries define their context as a list of OSGi bundles"));
+                "A catalog whose entries define their libraries as a list of OSGi bundles"));
         osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
-        CatalogContextDto m3Context = new CatalogContextDto();
+        CatalogLibrariesDto m3Context = new CatalogLibrariesDto();
         m3Context.addBundle("file://~/.m2/repository/io/cloudsoft/brooklyn-mapr/1.0.0-SNAPSHOT/brooklyn-mapr.jar");
         osgiCatalog.addEntry(CatalogItemDtoAbstract.newTemplate("M3App", "io.brooklyn.mapr.M3App", "M3 Application",
                 "Description", m3Context));

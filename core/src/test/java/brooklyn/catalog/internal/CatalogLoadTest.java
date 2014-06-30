@@ -37,9 +37,9 @@ public class CatalogLoadTest {
         assertEquals(template.getName(), "Entity name");
         assertEquals(template.getVersion(), "9.1.3");
         assertEquals(template.getJavaType(), "com.example.ExampleApp");
-        assertEquals(template.getContext().getBundles().size(), 2,
-                "Template bundles=" + Joiner.on(", ").join(template.getContext().getBundles()));
-        assertEquals(Sets.newHashSet(template.getContext().getBundles()),
+        assertEquals(template.getLibraries().getBundles().size(), 2,
+                "Template bundles=" + Joiner.on(", ").join(template.getLibraries().getBundles()));
+        assertEquals(Sets.newHashSet(template.getLibraries().getBundles()),
                 Sets.newHashSet("file://path/to/bundle.jar", "http://www.url.com/for/bundle.jar"));
     }
 

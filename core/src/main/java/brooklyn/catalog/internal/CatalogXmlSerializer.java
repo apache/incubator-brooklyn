@@ -34,8 +34,8 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
         xstream.addImplicitCollection(CatalogClasspathDto.class, "entries", "entry", String.class);
         xstream.registerConverter(new EnumCaseForgivingSingleValueConverter(CatalogScanningModes.class));
 
-        xstream.aliasType("context", CatalogContextDto.class);
-        xstream.addImplicitCollection(CatalogContextDto.class, "bundles", "bundle", String.class);
+        xstream.aliasType("libraries", CatalogLibrariesDto.class);
+        xstream.addImplicitCollection(CatalogLibrariesDto.class, "bundles", "bundle", String.class);
     }
 
 }

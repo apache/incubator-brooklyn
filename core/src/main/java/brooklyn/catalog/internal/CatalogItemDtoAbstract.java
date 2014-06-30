@@ -1,20 +1,10 @@
 package brooklyn.catalog.internal;
 
-import java.util.Collections;
-import java.util.List;
-
 import javax.annotation.Nonnull;
 
 import brooklyn.catalog.CatalogItem;
 
 public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
-
-    private static final CatalogItemContext EMPTY_CONTEXT = new CatalogItemContext() {
-        @Override
-        public List<String> getBundles() {
-            return Collections.emptyList();
-        }
-    };
 
     String id;
     String type;
@@ -22,7 +12,7 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
     String description;
     String iconUrl;
     String version;
-    CatalogItemContext context;
+    CatalogLibrariesDto libraries;
     
     public String getId() {
         if (id!=null) return id;
@@ -51,48 +41,48 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
 
     @Nonnull
     @Override
-    public CatalogItemContext getContext() {
-        return context;
+    public CatalogItemLibraries getLibraries() {
+        return libraries;
     }
 
     public static CatalogTemplateItemDto newTemplate(String type, String name) {
         return newTemplate(null, type, name, null);
     }
-    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description){
+    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description) {
         return newTemplate(id, type, name, description, null);
     }
-    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description, CatalogContextDto context){
-        return set(new CatalogTemplateItemDto(), id, type, name, description, context);
+    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogTemplateItemDto(), id, type, name, description, libraries);
     }
 
     public static CatalogEntityItemDto newEntity(String type, String name) {
         return newEntity(null, type, name, null);
     }
-    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description){
+    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description) {
         return newEntity(id, type, name, description, null);
     }
-    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description, CatalogContextDto context){
-        return set(new CatalogEntityItemDto(), id, type, name, description, context);
+    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogEntityItemDto(), id, type, name, description, libraries);
     }
 
     public static CatalogPolicyItemDto newPolicy(String type, String name) {
         return newPolicy(null, type, name, null);
     }
-    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description){
+    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description) {
         return newPolicy(id, type, name, description, null);
     }
-    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description, CatalogContextDto context){
-        return set(new CatalogPolicyItemDto(), id, type, name, description, context);
+    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogPolicyItemDto(), id, type, name, description, libraries);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static <T extends CatalogItemDtoAbstract> T set(T target, String id, String type, String name,
-            String description, CatalogContextDto context) {
+            String description, CatalogLibrariesDto libraries) {
         target.id = id;
         target.type = type;
         target.name = name;
         target.description = description;
-        target.context = context != null ? context : EMPTY_CONTEXT;
+        target.libraries = libraries != null ? libraries : new CatalogLibrariesDto();
         return target;
     }
 
