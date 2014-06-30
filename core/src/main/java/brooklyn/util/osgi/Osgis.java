@@ -23,6 +23,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
@@ -50,19 +51,24 @@ public class Osgis {
     public static List<Bundle> getBundlesByName(Framework framework, String symbolicName) {
         return getBundlesByName(framework, symbolicName, Predicates.<Version>alwaysTrue());
     }
-    
+
+    /**
+     * Tries to find a bundle in the given framework with name matching either `name' or `name:version'.
+     */
     public static Maybe<Bundle> getBundle(Framework framework, String symbolicNameOptionallyWithVersion) {
         String[] parts = symbolicNameOptionallyWithVersion.split(":");
-        List<Bundle> matches;
-        if (parts.length==2) {
-            return getBundle(framework, symbolicNameOptionallyWithVersion);
-        } else if (parts.length==1) {
-            matches = getBundlesByName(framework, symbolicNameOptionallyWithVersion);
-            if (matches.isEmpty()) return Maybe.absent("no bundles matching "+symbolicNameOptionallyWithVersion);
-            return Maybe.of(matches.iterator().next());
+        Maybe<Bundle> result = Maybe.absent("No bundles matching "+symbolicNameOptionallyWithVersion);
+        if (parts.length == 2) {
+            result = getBundle(framework, parts[0], parts[1]);
+        } else if (parts.length == 1) {
+            List<Bundle> matches = getBundlesByName(framework, symbolicNameOptionallyWithVersion);
+            if (!matches.isEmpty()) {
+                result = Maybe.of(matches.iterator().next());
+            }
         } else {
             throw new IllegalArgumentException("Cannot parse symbolic-name:version string '"+symbolicNameOptionallyWithVersion+"'");
         }
+        return result;
     }
     
     public static Maybe<Bundle> getBundle(Framework framework, String symbolicName, String version) {
@@ -70,8 +76,13 @@ public class Osgis {
     }
 
     public static Maybe<Bundle> getBundle(Framework framework, String symbolicName, Version version) {
-        List<Bundle> matches = getBundlesByName(framework, symbolicName, Predicates.<Version>equalTo(version));
-        if (matches.isEmpty()) return Maybe.absent("no bundles matching "+symbolicName+":"+version);
+        List<Bundle> matches = getBundlesByName(framework, symbolicName, Predicates.equalTo(version));
+        if (matches.isEmpty()) {
+            return Maybe.absent("No bundles matching name=" + symbolicName + " version=" + version);
+        } else if (matches.size() > 1) {
+            LOG.warn("More than one bundle in framework={} matched name={}, version={}! Returning first of matches={}",
+                    new Object[]{framework, symbolicName, version, Joiner.on(", ").join(matches)});
+        }
         return Maybe.of(matches.iterator().next());
     }
 
