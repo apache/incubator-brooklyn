@@ -181,7 +181,7 @@ public class Os {
 
     /** merges paths using the local file separator */
     public static String mergePaths(String ...items) {
-        char separatorChar = File.separatorChar;
+        char separatorChar = '/';
         StringBuilder result = new StringBuilder();
         for (String item: items) {
             if (Strings.isEmpty(item)) continue;

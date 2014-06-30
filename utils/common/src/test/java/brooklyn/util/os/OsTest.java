@@ -61,10 +61,10 @@ public class OsTest {
     
     public void testMergePaths() throws Exception {
         assertEquals(Os.mergePaths("a"), "a"); 
-        assertEquals(Os.mergePaths("a", "b"), "a" + File.separator + "b"); 
+        assertEquals(Os.mergePaths("a", "b"), "a/b"); 
         assertEquals(Os.mergePaths("a/", "b"), "a/b");
-        assertEquals(Os.mergePaths("a", "b/"), "a" + File.separator + "b/");
-        assertEquals(Os.mergePaths("/a", "b"), "/a" + File.separator + "b");
+        assertEquals(Os.mergePaths("a", "b/"), "a/b/");
+        assertEquals(Os.mergePaths("/a", "b"), "/a/b");
     }
 
 }
