@@ -27,6 +27,8 @@ public class BrooklynFeatureEnablement {
         // that can be turned off via system properties. One might want to do that because
         // the feature is deemed risky!
         //   e.g. setDefault(ENABLE_POLICY_PERSISTENCE_PROPERTY, true);
+        setDefault(FEATURE_POLICY_PERSISTENCE_PROPERTY, true);
+        setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
     }
     
     public static boolean isEnabled(String property) {
