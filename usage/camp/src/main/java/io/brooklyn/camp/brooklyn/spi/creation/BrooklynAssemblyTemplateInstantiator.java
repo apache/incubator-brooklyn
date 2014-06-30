@@ -1,7 +1,6 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -63,19 +62,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
+        // TODO: item is always null because template.id is a random String, so
+        // createApplicationFromCatalog branch below is never taken.  If `id'
+        // key is given in blueprint it is available with:
+        // Object customId = template.getCustomAttributes().get("id");
         CatalogItem<?> item = catalog.getCatalogItem(template.getId());
-
-        if (item == null) {
-            // This doesn't seem the most appropriate way to do this!
-            // Especially since YAML will only reach here if a services section was given (so that
-            // PdpProcessor calls into BrooklynEntityMatcher [via applyMatchers] which sets the
-            // instantiator to BrooklynAssemblyTemplateInstantiator). So services must be given
-            // but will be disregarded.
-            Object customId = template.getCustomAttributes().get("id");
-            if (customId != null) {
-                item = catalog.getCatalogItem(customId.toString());
-            }
-        }
 
         if (item==null) {
             return createApplicationFromNonCatalogCampTemplate(template, platform);
