@@ -257,14 +257,17 @@ public class DynamicGroupTest {
             final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
             Asserts.succeedsEventually(new Runnable() {
                 public void run() {
-                    entitiesNotified.contains(entity);
+                    // must wait for notification; if manage+unmanage in rapid succession, then might never
+                    // become a member (because was unmanaged by the time that async thread checked if new
+                    // entity was a valid member).
+                    assertTrue(entitiesNotified.contains(entity), "entity="+entity);
                 }});
             Entities.unmanage(entity);
         }
 
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
-                assertTrue(notificationCount.get() == (NUM_CYCLES*2) || exceptions.size() > 0);
+                assertTrue(notificationCount.get() == (NUM_CYCLES*2) || exceptions.size() > 0, "count="+notificationCount.get());
             }});
 
         if (exceptions.size() > 0) {
