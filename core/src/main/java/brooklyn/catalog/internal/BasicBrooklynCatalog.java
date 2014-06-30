@@ -1,7 +1,5 @@
 package brooklyn.catalog.internal;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
@@ -134,23 +132,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         manualAdditionsClasses.addClass(type);
         return manualAdditionsCatalog.classpath.addCatalogEntry(type);
     }
-    
-    @Override
-    public void addToClasspath(ClassLoader loader) {
-        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
-        manualAdditionsCatalog.classpath.addToClasspath(loader);
-    }
-    
-    @Override
-    public void addToClasspath(String url) {
-        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
-        try {
-            manualAdditionsCatalog.classpath.addToClasspath(new URL(url), true);
-        } catch (MalformedURLException e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-    
+
+    @Deprecated
     private synchronized void loadManualAdditionsCatalog() {
         if (manualAdditionsCatalog!=null) return;
         CatalogDto manualAdditionsCatalogDto = CatalogDto.newNamedInstance(
