@@ -74,9 +74,9 @@ public class MachineAttributes {
         RendererHints.register(CPU_USAGE, RendererHints.displayValue(MathFunctions.percent(2)));
         RendererHints.register(AVERAGE_CPU_USAGE, RendererHints.displayValue(MathFunctions.percent(2)));
 
-        RendererHints.register(FREE_MEMORY, RendererHints.displayValue(ByteSizeStrings.metric()));
-        RendererHints.register(TOTAL_MEMORY, RendererHints.displayValue(ByteSizeStrings.metric()));
-        RendererHints.register(USED_MEMORY, RendererHints.displayValue(ByteSizeStrings.metric()));
+        RendererHints.register(FREE_MEMORY, RendererHints.displayValue(Functionals.chain(MathFunctions.times(1000L), ByteSizeStrings.metric())));
+        RendererHints.register(TOTAL_MEMORY, RendererHints.displayValue(Functionals.chain(MathFunctions.times(1000L), ByteSizeStrings.metric())));
+        RendererHints.register(USED_MEMORY, RendererHints.displayValue(Functionals.chain(MathFunctions.times(1000L), ByteSizeStrings.metric())));
         RendererHints.register(USED_MEMORY_DELTA_PER_SECOND_LAST, RendererHints.displayValue(Functionals.chain(longValue, ByteSizeStrings.metric())));
         RendererHints.register(USED_MEMORY_DELTA_PER_SECOND_IN_WINDOW, RendererHints.displayValue(Functionals.chain(longValue, ByteSizeStrings.metric())));
     }

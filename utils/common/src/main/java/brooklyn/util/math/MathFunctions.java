@@ -17,6 +17,15 @@ public class MathFunctions {
         };
     }
 
+    public static Function<Number, Long> plus(final long addend) {
+        return new Function<Number, Long>() {
+            public Long apply(@Nullable Number input) {
+                if (input==null) return null;
+                return input.longValue() + addend;
+            }
+        };
+    }
+
     public static Function<Number, Double> plus(final double addend) {
         return new Function<Number, Double>() {
             public Double apply(@Nullable Number input) {
@@ -31,6 +40,15 @@ public class MathFunctions {
             public Integer apply(@Nullable Number input) {
                 if (input==null) return null;
                 return input.intValue() * multiplicand;
+            }
+        };
+    }
+
+    public static Function<Number, Long> times(final long multiplicand) {
+        return new Function<Number, Long>() {
+            public Long apply(@Nullable Number input) {
+                if (input==null) return null;
+                return input.longValue() * multiplicand;
             }
         };
     }
