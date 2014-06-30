@@ -25,6 +25,7 @@ import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.ChangeListener;
+import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.internal.storage.BrooklynStorage;
@@ -380,6 +381,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
         @Override
         public void setPersister(BrooklynMementoPersister persister) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public void setPersister(BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
 

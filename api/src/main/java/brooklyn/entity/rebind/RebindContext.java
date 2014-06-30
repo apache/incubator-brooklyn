@@ -25,5 +25,6 @@ public interface RebindContext {
     Enricher getEnricher(String id);
 
     Class<?> loadClass(String typeName) throws ClassNotFoundException;
-
+    
+    RebindExceptionHandler getExceptionHandler();
 }

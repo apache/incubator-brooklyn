@@ -14,14 +14,8 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Stopwatch;
-import com.google.common.io.Files;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.mementos.BrooklynMemento;
@@ -35,6 +29,13 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 import brooklyn.util.xstream.XmlUtil;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
+import com.google.common.io.Files;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * @deprecated since 0.7.0 use {@link BrooklynMementoPersisterToObjectStore} instead;
@@ -286,7 +287,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
     
     @Override
-    public void checkpoint(BrooklynMemento newMemento) {
+    public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
         if (!running) {
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
             return;
@@ -308,7 +309,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
     
     @Override
-    public void delta(Delta delta) {
+    public void delta(Delta delta, PersistenceExceptionHandler exceptionHandler) {
         if (!running) {
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointed delta of memento, because not running");
             return;

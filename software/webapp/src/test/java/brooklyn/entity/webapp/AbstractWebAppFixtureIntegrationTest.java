@@ -31,6 +31,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
 import brooklyn.entity.trait.Startable;
@@ -201,12 +202,12 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
             BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
             
             BrooklynMementoPersisterToMultiFile oldPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            oldPersister.checkpoint(brooklynMemento);
+            oldPersister.checkpoint(brooklynMemento, PersistenceExceptionHandlerImpl.builder().build());
             oldPersister.waitForWritesCompleted(30*1000, TimeUnit.MILLISECONDS);
 
             BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
             newManagementContext = new LocalManagementContextForTests();
-            newManagementContext.getRebindManager().setPersister(newPersister);
+            newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
             newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
             newManagementContext.getRebindManager().start();
             SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(tokill.getId());

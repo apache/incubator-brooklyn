@@ -12,6 +12,8 @@ import java.util.Set;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigMap;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityFunctions;
@@ -23,11 +25,17 @@ import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherSpec;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.os.Os;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -155,10 +163,80 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         assertEquals(exceptionHandler.loadMementoFailures.size(), 2, "exceptions="+exceptionHandler.loadMementoFailures);
     }
 
+    @Test
+    public void testRebindWithFailingPolicyContinuesWithoutPolicy() throws Exception {
+        origApp.addPolicy(PolicySpec.create(MyPolicyFailingImpl.class)
+                .configure(MyPolicyFailingImpl.FAIL_ON_REBIND, true));
+        
+        newApp = rebind(false);
+        
+        Optional<Policy> newPolicy = Iterables.tryFind(newApp.getPolicies(), Predicates.instanceOf(MyPolicyFailingImpl.class));
+        assertFalse(newPolicy.isPresent(), "policy="+newPolicy);
+    }
+
+    @Test
+    public void testRebindWithFailingEnricherContinuesWithoutEnricher() throws Exception {
+        origApp.addEnricher(EnricherSpec.create(MyEnricherFailingImpl.class)
+                .configure(MyEnricherFailingImpl.FAIL_ON_REBIND, true));
+        
+        newApp = rebind(false);
+        
+        Optional<Enricher> newEnricher = Iterables.tryFind(newApp.getEnrichers(), Predicates.instanceOf(MyEnricherFailingImpl.class));
+        assertFalse(newEnricher.isPresent(), "enricher="+newEnricher);
+    }
+
     private Set<String> toEntityIds(Iterable<? extends Entity> entities) {
         return ImmutableSet.copyOf(Iterables.transform(entities, EntityFunctions.id()));
     }
     
+    public static class MyPolicyFailingImpl extends AbstractPolicy {
+        @SetFromFlag("failOnGenerateMemento")
+        public static final ConfigKey<Boolean> FAIL_ON_GENERATE_MEMENTO = ConfigKeys.newBooleanConfigKey("failOnGenerateMemento", "Whether to throw exception when generating memento", false);
+        
+        @SetFromFlag("failOnRebind")
+        public static final ConfigKey<Boolean> FAIL_ON_REBIND = ConfigKeys.newBooleanConfigKey("failOnRebind", "Whether to throw exception when rebinding", false);
+        
+        @Override
+        public ConfigMap getConfigMap() {
+            if (Boolean.TRUE.equals(getConfig(FAIL_ON_GENERATE_MEMENTO))) {
+                throw new RuntimeException("Simulating failure in "+this+", which will cause memento-generation to fail");
+            } else {
+                return super.getConfigMap();
+            }
+        }
+        
+        @Override
+        public void rebind() {
+            if (Boolean.TRUE.equals(getConfig(FAIL_ON_REBIND))) {
+                throw new RuntimeException("Simulating failure in "+this+", which will cause rebind to fail");
+            }
+        }
+    }
+
+    public static class MyEnricherFailingImpl extends AbstractEnricher {
+        @SetFromFlag("failOnGenerateMemento")
+        public static final ConfigKey<Boolean> FAIL_ON_GENERATE_MEMENTO = ConfigKeys.newBooleanConfigKey("failOnGenerateMemento", "Whether to throw exception when generating memento", false);
+        
+        @SetFromFlag("failOnRebind")
+        public static final ConfigKey<Boolean> FAIL_ON_REBIND = ConfigKeys.newBooleanConfigKey("failOnRebind", "Whether to throw exception when rebinding", false);
+        
+        @Override
+        public ConfigMap getConfigMap() {
+            if (Boolean.TRUE.equals(getConfig(FAIL_ON_GENERATE_MEMENTO))) {
+                throw new RuntimeException("Simulating failure in "+this+", which will cause memento-generation to fail");
+            } else {
+                return super.getConfigMap();
+            }
+        }
+        
+        @Override
+        public void rebind() {
+            if (Boolean.TRUE.equals(getConfig(FAIL_ON_REBIND))) {
+                throw new RuntimeException("Simulating failure in "+this+", which will cause rebind to fail");
+            }
+        }
+    }
+
     public static class MyEntityFailingImpl extends MyEntityImpl implements MyEntity {
         @SetFromFlag("failOnGenerateMemento")
         public static final ConfigKey<Boolean> FAIL_ON_GENERATE_MEMENTO = ConfigKeys.newBooleanConfigKey("failOnGenerateMemento", "Whether to throw exception when generating memento", false);

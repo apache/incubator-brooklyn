@@ -4,6 +4,7 @@ import java.io.File;
 
 import org.testng.annotations.AfterMethod;
 
+import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -27,7 +28,7 @@ public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPers
         LocalManagementContext mgmt = new LocalManagementContextForTests();
         ((RebindManagerImpl) mgmt.getRebindManager()).setPeriodicPersistPeriod(Duration.millis(100));
         persister = new BrooklynMementoPersisterToMultiFile(mementoDir, BrooklynMementoPersisterToMultiFileTest.class.getClassLoader());
-        mgmt.getRebindManager().setPersister(persister);
+        mgmt.getRebindManager().setPersister(persister, PersistenceExceptionHandlerImpl.builder().build());
         mgmt.getHighAvailabilityManager().disabled();
         mgmt.getRebindManager().start();
         return mgmt;
