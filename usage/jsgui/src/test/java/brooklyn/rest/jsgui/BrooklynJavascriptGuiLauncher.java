@@ -11,7 +11,19 @@ import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.util.net.Networking;
 
 /** launches Javascript GUI programmatically. and used for tests.
- * see {@link BrooklynRestApiLauncher} for more information. */
+ * see {@link BrooklynRestApiLauncher} for more information.
+ *
+ * WINDOWS tips:
+ * On Windows Jetty will lock all static files preventing any changes on them.
+ * To work around the problem and tell Jetty not to lock files:
+ * <ul>
+ *   <li>find jetty-webapp-&lt;ver&gt;.jar from your classpath
+ *   <li>extract the file webdefault.xml from folder org/eclipse/jetty/webapp (On Eclipse
+ *      just expanding the jar from the dependencies, right click/copy on the file.)
+ *   <li>in this project create a java package org.eclipse.jetty.webapp and put the webdefault.html file in it
+ *   <li>edit the file and change the property useFileMappedBuffer to false
+ * </ul> 
+ **/
 public class BrooklynJavascriptGuiLauncher {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynJavascriptGuiLauncher.class);
