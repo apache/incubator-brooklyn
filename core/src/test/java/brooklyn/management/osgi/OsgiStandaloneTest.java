@@ -110,6 +110,7 @@ public class OsgiStandaloneTest {
         Object result = aClass.getMethod("times", int.class).invoke(aInst, input);
         Assert.assertEquals(result, output);
     }
+
     protected void setAMultiplier(Bundle bundle, int newMultiplier) throws Exception {
         Assert.assertNotNull(bundle);
         Class<?> aClass = bundle.loadClass("brooklyn.test.osgi.TestA");

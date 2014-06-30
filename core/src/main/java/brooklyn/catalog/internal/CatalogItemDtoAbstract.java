@@ -1,11 +1,21 @@
 package brooklyn.catalog.internal;
 
-import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.Nonnull;
 
 import brooklyn.catalog.CatalogItem;
 
 public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
-    
+
+    private static final CatalogItemContext EMPTY_CONTEXT = new CatalogItemContext() {
+        @Override
+        public List<String> getBundles() {
+            return Collections.emptyList();
+        }
+    };
+
     String id;
     String type;
     String name;
@@ -34,6 +44,7 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
         return iconUrl;
     }
 
+    @Nonnull
     @Override
     public CatalogItemContext getContext() {
         return context;
@@ -76,7 +87,7 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
         target.type = type;
         target.name = name;
         target.description = description;
-        target.context = context;
+        target.context = context != null ? context : EMPTY_CONTEXT;
         return target;
     }
 

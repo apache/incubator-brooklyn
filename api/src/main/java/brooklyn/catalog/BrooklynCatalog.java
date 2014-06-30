@@ -13,6 +13,7 @@ public interface BrooklynCatalog {
     
     /** returns all items in the catalog */
     <T> Iterable<CatalogItem<T>> getCatalogItems();
+
     /** convenience for filtering items in the catalog; see CatalogPredicates for useful filters */
     <T> Iterable<CatalogItem<T>> getCatalogItems(Predicate<? super CatalogItem<T>> filter);
 
@@ -42,6 +43,7 @@ public interface BrooklynCatalog {
 
     /** adds a classpath entry which will be used by the 'manual' catalog */
     void addToClasspath(ClassLoader loader);
+
     /** adds a classpath entry which will be used by the 'manual' catalog */
     void addToClasspath(String url);
     
