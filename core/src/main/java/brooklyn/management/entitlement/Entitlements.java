@@ -18,7 +18,9 @@ package brooklyn.management.entitlement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
@@ -30,8 +32,11 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Strings;
 
+/** @since 0.7.0 */
+@Beta
 public class Entitlements {
 
     private static final Logger log = LoggerFactory.getLogger(Entitlements.class);
@@ -42,10 +47,10 @@ public class Entitlements {
     
     public static EntitlementClass<EntityAndItem<String>> SEE_SENSOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("sensor.see", EntityAndItem. typeToken(String.class));
     
-    public static EntitlementClass<EntityAndItem<String>> INVOKE_EFFECTOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("effector.invoke", EntityAndItem. typeToken(String.class));
+    public static EntitlementClass<EntityAndItem<String>> INVOKE_EFFECTOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("effector.invoke", EntityAndItem.typeToken(String.class));
     
     /** the permission to deploy an application, where parameter is some representation of the app to be deployed (spec instance or yaml plan) */
-    public static EntitlementClass<EntityAndItem<Object>> DEPLOY_APPLICATION = new BasicEntitlementClassDefinition<EntityAndItem<Object>>("app.deploy", EntityAndItem. typeToken(Object.class));
+    public static EntitlementClass<Object> DEPLOY_APPLICATION = new BasicEntitlementClassDefinition<Object>("app.deploy", Object.class);
 
     /** catch-all for catalog, locations, scripting, usage, etc; 
      * NB1: all users can see HA status;
@@ -105,6 +110,14 @@ public class Entitlements {
         }
     }
 
+    /** 
+     * These lifecycle operations are currently treated as effectors. This may change in the future.
+     * @since 0.7.0 */
+    @Beta
+    public static class LifecycleEffectors {
+        public static final String DELETE = "delete";
+    }
+    
     // ------------- permission sets -------------
     
     /** always ALLOW access to everything */
@@ -129,7 +142,7 @@ public class Entitlements {
 
     public static class FineGrainedEntitlements {
     
-        public static EntitlementManager anyOf(final EntitlementManager ...checkers) {
+        public static EntitlementManager anyOf(final EntitlementManager... checkers) {
             return new EntitlementManager() {
                 @Override
                 public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> permission, T typeArgument) {
@@ -141,7 +154,7 @@ public class Entitlements {
             };
         }
         
-        public static EntitlementManager allOf(final EntitlementManager ...checkers) {
+        public static EntitlementManager allOf(final EntitlementManager... checkers) {
             return new EntitlementManager() {
                 @Override
                 public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> permission, T typeArgument) {
@@ -224,12 +237,20 @@ public class Entitlements {
         return checker.isEntitled(getEntitlementContext(), permission, typeArgument);
     }
 
-    public static <T> void requireEntitled(EntitlementManager checker, EntitlementClass<T> permission, T typeArgument) {
+    /** throws {@link NotEntitledException} if entitlement not available for current {@link #getEntitlementContext()} */
+    public static <T> void checkEntitled(EntitlementManager checker, EntitlementClass<T> permission, T typeArgument) {
         if (!isEntitled(checker, permission, typeArgument)) {
             throw new NotEntitledException(getEntitlementContext(), permission, typeArgument);
         }
     }
-
+    /** throws {@link NotEntitledException} if entitlement not available for current {@link #getEntitlementContext()} 
+     * @since 0.7.0
+     * @deprecated since 0.7.0, use {@link #checkEntitled(EntitlementManager, EntitlementClass, Object)};
+     * kept briefly because there is some downstream usage*/
+    public static <T> void requireEntitled(EntitlementManager checker, EntitlementClass<T> permission, T typeArgument) {
+        checkEntitled(checker, permission, typeArgument);
+    }
+    
     // ----------------- initialization ----------------
 
     public static ConfigKey<String> GLOBAL_ENTITLEMENT_MANAGER = ConfigKeys.newStringConfigKey("brooklyn.entitlements.global", 
@@ -251,11 +272,9 @@ public class Entitlements {
         if (Strings.isNonBlank(type)) {
             try {
                 Class<?> clazz = loader.getLoader().loadClass(type);
-                if (clazz.getConstructor(BrooklynProperties.class)!=null) {
-                    return (EntitlementManager) clazz.getConstructor(BrooklynProperties.class).newInstance(brooklynProperties);
-                } else {
-                    return (EntitlementManager) clazz.newInstance();
-                }
+                Optional<?> result = Reflections.invokeConstructorWithArgs(clazz, brooklynProperties);
+                if (result.isPresent()) return (EntitlementManager) result.get();
+                return (EntitlementManager) clazz.newInstance();
             } catch (Exception e) { throw Exceptions.propagate(e); }
         }
         throw new IllegalStateException("Invalid entitlement manager specified: '"+type+"'");

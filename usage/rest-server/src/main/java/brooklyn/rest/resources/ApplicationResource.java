@@ -1,9 +1,13 @@
 package brooklyn.rest.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static javax.ws.rs.core.Response.Status.ACCEPTED;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.ACCEPTED;
+import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+import io.brooklyn.camp.spi.Assembly;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -26,10 +30,6 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Iterables;
-
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -45,6 +45,7 @@ import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
@@ -60,10 +61,10 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 
 
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
@@ -212,6 +213,11 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
     /** @deprecated since 0.7.0 see #create */ @Deprecated
     protected Response createFromAppSpec(ApplicationSpec applicationSpec) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, applicationSpec)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
+                Entitlements.getEntitlementContext().user(), applicationSpec);
+        }
+
         checkApplicationTypesAreValid(applicationSpec);
         checkLocationsAreValid(applicationSpec);
         // TODO duplicate prevention
@@ -244,6 +250,12 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         log.debug("Creating app from yaml:\n{}", yaml);
         Reader input = new StringReader(yaml);
         AssemblyTemplate at = camp().pdp().registerDeploymentPlan(input);
+        
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, at)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
+                Entitlements.getEntitlementContext().user(), yaml);
+        }
+
         return launch(at);
     }
 
@@ -264,17 +276,19 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
                 assembly = instantiator.instantiate(at, camp());
             }
             Entity app = mgmt().getEntityManager().getEntity(assembly.getId());
-            if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, "createFromAppSpec"))) {
-                log.info("Launched from YAML: " + assembly + " (" + task + ")");
-
-                URI ref = URI.create(app.getApplicationId());
-                ResponseBuilder response = created(ref);
-                if (task != null)
-                    response.entity(TaskTransformer.FROM_TASK.apply(task));
-                return response.build();
-            }
-            throw WebResourceUtils.unauthorized("User '%s' is not authorized to launch application from %s",
+            
+            if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, Startable.START.getName()))) {
+                throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
                     Entitlements.getEntitlementContext().user(), at.getType());
+            }
+
+            log.info("Launched from YAML: " + assembly + " (" + task + ")");
+
+            URI ref = URI.create(app.getApplicationId());
+            ResponseBuilder response = created(ref);
+            if (task != null)
+                response.entity(TaskTransformer.FROM_TASK.apply(task));
+            return response.build();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
@@ -340,13 +354,13 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     @Override
     public Response delete(String application) {
         Application app = brooklyn().getApplication(application);
-        if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, "delete"))) {
-            Task<?> t = brooklyn().destroy(app);
-            TaskSummary ts = TaskTransformer.FROM_TASK.apply(t);
-            return status(ACCEPTED).entity(ts).build();
-        }
-        throw WebResourceUtils.unauthorized("User '%s' is not authorized to delete application %s",
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, Entitlements.LifecycleEffectors.DELETE))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to delete application %s",
                 Entitlements.getEntitlementContext().user(), app);
+        }
+        Task<?> t = brooklyn().destroy(app);
+        TaskSummary ts = TaskTransformer.FROM_TASK.apply(t);
+        return status(ACCEPTED).entity(ts).build();
     }
 
     private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {

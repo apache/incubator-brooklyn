@@ -379,7 +379,7 @@ public class EntityManagementSupport {
         }
         @Override
         public void onEffectorStarting(Effector<?> effector) {
-            Entitlements.requireEntitled(getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(null, effector.getName()));
+            Entitlements.checkEntitled(getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(entity, effector.getName()));
         }
         @Override
         public void onEffectorCompleted(Effector<?> effector) {
