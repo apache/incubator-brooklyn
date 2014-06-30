@@ -18,6 +18,11 @@ package brooklyn.management.entitlement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -26,11 +31,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.reflect.TypeToken;
 
 public class Entitlements {
 
