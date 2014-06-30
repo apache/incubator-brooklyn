@@ -7,7 +7,7 @@
     <name>Brooklyn Launcher</name>
     <description>
         This project contains a brooklyn.launcher.Main class
-        for command-line invocation, and includes the 
+        for command-line invocation, and includes the
         Brooklyn WAR in its JAR for classpath-based starting.
     </description>
 
@@ -56,7 +56,7 @@
             <!-- optional so that this project has logging; dependencies may redeclare or supply their own -->
             <optional>true</optional>
         </dependency>
-        
+
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
@@ -69,7 +69,7 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-    	<dependency>
+        <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-webapp</artifactId>
             <version>${project.version}</version>
@@ -78,18 +78,18 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
-            <version>${project.version}</version>
+            <version>${project.version}</version><!--$NO-MVN-MAN-VER$-->
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-        
-    	<dependency>
+
+        <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-software-nosql</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-    	
+
 
         <dependency>
             <groupId>org.osgi</groupId>
@@ -128,7 +128,7 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-        
+
     </dependencies>
 
     <build>
@@ -172,12 +172,12 @@
                     </instructions>
                 </configuration>
             </plugin>
-            <plugin> 
-                <artifactId>maven-site-plugin</artifactId> 
-                <configuration> 
-                    <generateReports>false</generateReports> 
-                </configuration> 
+            <plugin>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <generateReports>false</generateReports>
+                </configuration>
             </plugin>
-		</plugins>
-	</build>
+        </plugins>
+    </build>
 </project>

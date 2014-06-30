@@ -3,6 +3,11 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>14</version>
+    </parent>
 
     <groupId>io.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
@@ -10,25 +15,25 @@
 
     <name>Brooklyn Parent Project</name>
     <description>
-        Brooklyn parent / project root, 
+        Brooklyn parent / project root,
         serving as the ancestor POM for all projects --
         declaring versions, profiles, and the modules to build
     </description>
     <url>http://brooklyn.io/</url>
+    <inceptionYear>2012</inceptionYear>
 
     <!-- useful custom properties/defines to specify to control the build:
 
       brooklyn.explicitModules :: only builds explicit modules (instead of default modules)
 
-      brooklyn.deployTo={cloudsoftFilesystem,cloudsoftArtifactory,sonatype} :: 
+      brooklyn.deployTo={cloudsoftFilesystem,cloudsoftArtifactory,sonatype,apache} ::
             :: required when deploying; specify the deployment target
 
       javadoc :: build javadoc (adds a minute or two; enabled automatically for target deploy)
-      
-      skipSources :: don't make the -sources.jar (saves a second or two, not much)
-      
-      skipTests :: does the usual thing (saves a lot of time, but at some cost of build quality!)
 
+      skipSources :: don't make the -sources.jar (saves a second or two, not much)
+
+      skipTests :: does the usual thing (saves a lot of time, but at some cost of build quality!)
 
       simply activate with -Dbrooklyn.theCustomProperty on the mvn build line
       (some of these are used to trigger profile selection, since maven activeByDefault
@@ -36,25 +41,34 @@
       http://stackoverflow.com/questions/5309379/how-to-keep-maven-profiles-which-are-activebydefault-active-even-if-another-prof )
     -->
 
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
     <developers>
-        <developer>
-            <name>Brooklyn Committers</name>
-        </developer>
+        <!-- TODO update with PMC members and committers -->
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/brooklyncentral/brooklyn.git</connection>
-        <developerConnection>scm:git:git@github.com:brooklyncentral/brooklyn.git</developerConnection>
-        <url>http://github.com/brooklyncentral/brooklyn</url>
+        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</connection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</developerConnection>
+        <url>https://git-wip-us.apache.org/repos/asf?p=incubator-brooklyn.git</url>
     </scm>
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://issues.apache.org/jira/browse/BROOKLYN</url>
+    </issueManagement>
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>https://builds.apache.org/job/incubator-brooklyn-master-build/</url>
+    </ciManagement>
+    <mailingLists>
+        <mailingList>
+            <name>Brooklyn Incubator Developer List</name>
+            <subscribe>dev-subscribe@brooklyn.incubator.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@brooklyn.incubator.apache.org</unsubscribe>
+            <post>dev@brooklyn.incubator.apache.org</post>
+            <archive>
+                http://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/
+            </archive>
+        </mailingList>
+    </mailingLists>
 
     <repositories>
         <!-- enable sonatype snapshots repo (only for snapshots) -->
@@ -108,10 +122,10 @@
         <osgi-core.version>4.3.0</osgi-core.version>
         <commons-io.version>2.4</commons-io.version>
         <hazelcast.version>3.0</hazelcast.version>
-     
+
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
-        
+
         <!-- no passphrase by default, so we can do automated deploy builds;
              you can still supply your own passphrase with -Dgpg.passphrase=XXX -->
         <gpg.passphrase></gpg.passphrase>
@@ -280,7 +294,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <!-- NB: if this version is changed, update the MavenArtifactTest. 
+                    <!-- NB: if this version is changed, update the MavenArtifactTest.
                          v2.4+ seems to break eclipse integration as per https://github.com/tesla/m2eclipse-extras/issues/10 -->
                     <version>2.3.2</version>
                 </plugin>
@@ -349,7 +363,7 @@
                 </plugin>
                 <plugin>
                     <!-- 'release' is not used; easier just to checkout, tag, `mvn deploy` manually
-                         with -Dbrooklyn.deployTo=TARGET ... and note we need to update docs and examples, 
+                         with -Dbrooklyn.deployTo=TARGET ... and note we need to update docs and examples,
                          which is a non-maven task!) -->
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
@@ -610,7 +624,7 @@
                 </dependencies>
             </plugin>
             <!--  workaround for src/main/resources excluding all in eclipse, as per
-                  https://issues.sonatype.org/browse/MNGECLIPSE-864 
+                  https://issues.sonatype.org/browse/MNGECLIPSE-864
             -->
             <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -806,35 +820,35 @@
                         <groupId>org.apache.felix</groupId>
                         <artifactId>maven-bundle-plugin</artifactId>
                         <extensions>true</extensions>
-                        <!-- configure plugin to generate MANIFEST.MF 
+                        <!-- configure plugin to generate MANIFEST.MF
                              adapted from http://blog.knowhowlab.org/2010/06/osgi-tutorial-from-project-structure-to.html -->
-                        <executions>  
-                            <execution>  
-                                <id>bundle-manifest</id>  
-                                <phase>process-classes</phase>  
-                                <goals>  
-                                    <goal>manifest</goal>  
-                                </goals>  
-                            </execution>  
-                        </executions>  
-                        <configuration>  
-                            <supportedProjectTypes>  
-                                <supportedProjectType>jar</supportedProjectType>  
-                            </supportedProjectTypes>  
-                            <instructions>  
-                                <!-- OSGi specific instruction -->  
-                            </instructions>  
-                        </configuration>  
-                    </plugin>
-                    <plugin>  
-                        <groupId>org.apache.maven.plugins</groupId>  
-                        <artifactId>maven-jar-plugin</artifactId>  
+                        <executions>
+                            <execution>
+                                <id>bundle-manifest</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>manifest</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                         <configuration>
-                            <archive> 
+                            <supportedProjectTypes>
+                                <supportedProjectType>jar</supportedProjectType>
+                            </supportedProjectTypes>
+                            <instructions>
+                                <!-- OSGi specific instruction -->
+                            </instructions>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <archive>
                                 <manifestFile> ${project.build.outputDirectory}/META-INF/MANIFEST.MF </manifestFile>
                             </archive>
                         </configuration>
-                    </plugin>  
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -1261,20 +1275,20 @@
                 <artifactId>maven-source-plugin</artifactId>
             </plugin></plugins></build>
         </profile>
-        
+
         <!-- only build javadoc if asked, or if deploying (it's slow) -->
         <profile>
             <id>make-javadoc-jar</id>
-            <activation> <property><name>javadoc</name></property> </activation>            
+            <activation> <property><name>javadoc</name></property> </activation>
             <build><plugins><plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin></plugins></build>
         </profile>
-        
+
         <!-- sign and make javadoc when deploying; note, this means you'll need gpg set up to deploy -->
         <profile>
             <id>make-more-things-when-deploying</id>
-            <activation> <property><name>brooklyn.deployTo</name></property> </activation>            
+            <activation> <property><name>brooklyn.deployTo</name></property> </activation>
             <build><plugins>
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
@@ -1335,6 +1349,11 @@
                     <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
                 </snapshotRepository>
             </distributionManagement>
+        </profile>
+        <profile>
+            <id>apache-repo</id>
+            <activation> <property><name>brooklyn.deployTo</name><value>apache</value></property> </activation>
+            <!-- distributionManagement configured by the parent Apache POM -->
         </profile>
         <profile>
             <id>rat-check</id>
