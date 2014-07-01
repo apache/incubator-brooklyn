@@ -61,6 +61,7 @@ public class Osgis {
         if (parts.length == 2) {
             result = getBundle(framework, parts[0], parts[1]);
         } else if (parts.length == 1) {
+            // TODO: Select latest version rather than first result
             List<Bundle> matches = getBundlesByName(framework, symbolicNameOptionallyWithVersion);
             if (!matches.isEmpty()) {
                 result = Maybe.of(matches.iterator().next());

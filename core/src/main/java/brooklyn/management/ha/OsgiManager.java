@@ -2,8 +2,11 @@ package brooklyn.management.ha;
 
 import java.io.File;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
+
+import com.google.common.base.Throwables;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
@@ -54,11 +57,16 @@ public class OsgiManager {
     // TODO: Handle .get failing
     public <T> Maybe<Class<T>> tryResolveClass(String bundleUrl, String type) {
         try {
-            Class<T> clazz = (Class<T>) Osgis.getBundle(framework, bundleUrl).get().loadClass(type);
-            return Maybe.of(clazz);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
+            Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleUrl);
+            if (bundle.isPresent()) {
+                Class<T> clazz = (Class<T>) bundle.get().loadClass(type);
+                return Maybe.of(clazz);
+            } else {
+                return Maybe.absent("No bundle found in " + framework + " at URL: " + bundleUrl);
+            }
+        } catch (ClassNotFoundException e) {
             return Maybe.absent(e);
         }
     }
+
 }
