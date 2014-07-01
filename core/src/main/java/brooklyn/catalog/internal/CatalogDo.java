@@ -66,19 +66,17 @@ public class CatalogDo {
         if (isLoaded()) return;
         if (this.parent!=null && !this.parent.equals(parent))
             log.warn("Catalog "+this+" being initialised with different parent "+parent+" when already parented by "+this.parent, new Throwable("source of reparented "+this));
-        this.parent = parent;
         if (this.mgmt!=null && !this.mgmt.equals(mgmt))
             log.warn("Catalog "+this+" being initialised with different mgmt "+mgmt+" when already managed by "+this.mgmt, new Throwable("source of reparented "+this));
+        this.parent = parent;
         this.mgmt = mgmt;
         try {
-            if (dto.url!=null)
-                CatalogDtoUtils.populateFromUrl(dto, dto.url);
+            dto.populateFromUrl();
             classpath = new CatalogClasspathDo(this);
             classpath.load();
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             log.error("Unable to load catalog "+this+" (ignoring): "+e);
-//            log.debug("Trace for failure to load "+this+": "+e, e);
             log.info("Trace for failure to load "+this+": "+e, e);
         }
         isLoaded = true;

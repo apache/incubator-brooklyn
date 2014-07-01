@@ -24,7 +24,7 @@ public class CatalogItemDo<T> implements CatalogItem<T> {
     }
 
     @Override
-    public brooklyn.catalog.CatalogItem.CatalogItemType getCatalogItemType() {
+    public CatalogItemType getCatalogItemType() {
         return itemDto.getCatalogItemType();
     }
 

@@ -66,7 +66,6 @@ public class CatalogClasspathDo {
         TYPES
     }
     
-
     private static final Logger log = LoggerFactory.getLogger(CatalogClasspathDo.class);
     
     private final CatalogDo catalog;
