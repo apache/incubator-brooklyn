@@ -12,6 +12,7 @@ import org.testng.annotations.BeforeMethod;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.internal.DoubleSystemProperty;
 
@@ -48,12 +49,14 @@ public class AbstractPerformanceTest {
     
     protected TestApplication app;
     protected SimulatedLocation loc;
+    protected ManagementContext mgmt;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         for (int i = 0; i < 5; i++) System.gc();
         loc = new SimulatedLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        mgmt = app.getManagementContext();
     }
     
     @AfterMethod(alwaysRun=true)

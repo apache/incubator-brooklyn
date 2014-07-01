@@ -38,10 +38,14 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         mementoDir = Os.newTempDir(getClass());
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, getPersistPeriodMillis());
+        origManagementContext = createOrigManagementContext();
         origApp = createApp();
         
         LOG.info("Test "+getClass()+" persisting to "+mementoDir);
+    }
+
+    protected LocalManagementContext createOrigManagementContext() {
+        return RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, getPersistPeriodMillis());
     }
     
     protected int getPersistPeriodMillis() {
