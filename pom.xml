@@ -124,7 +124,7 @@
         <hazelcast.version>3.0</hazelcast.version>
 
         <includedTestGroups />
-        <excludedTestGroups>Integration,Acceptance,Live,WIP,UNIX</excludedTestGroups>
+        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
 
         <!-- no passphrase by default, so we can do automated deploy builds;
              you can still supply your own passphrase with -Dgpg.passphrase=XXX -->
@@ -868,7 +868,7 @@
                             <properties>
                                 <property>
                                     <name>listener</name>
-                                    <value>brooklyn.test.LoggingVerboseReporter,brooklyn.test.BrooklynLeakListener</value>
+                                    <value>brooklyn.test.LoggingVerboseReporter,brooklyn.test.BrooklynLeakListener,brooklyn.test.PlatformTestSelectorListener</value>
                                 </property>
                             </properties>
                             <enableAssertions>true</enableAssertions>
