@@ -308,27 +308,27 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
      * TODO Java 7 gives an atomic Files.move() which would be preferred.
      */
     static void moveFile(File srcFile, File destFile) throws IOException, InterruptedException {
+        // Try rename first - it is a *much* cheaper call than invoking a system call in Java. 
+        // However, rename is not guaranteed cross platform to succeed if the destination exists,
+        // and not guaranteed to be atomic, but it usually seems to do the right thing...
+        boolean result;
+        result = srcFile.renameTo(destFile);
+        if (result) {
+            if (log.isTraceEnabled()) log.trace("java rename of {} to {} completed", srcFile, destFile);
+            return;
+        }
+        
         if (!Os.isMicrosoftWindows()) {
             // this command, if it succeeds, is guaranteed to be atomic, and it will usually overwrite
-            int result;
             String cmd = "mv '"+srcFile.getAbsolutePath()+"' '"+destFile.getAbsolutePath()+"'";
             
-            result = new ProcessTool().execCommands(MutableMap.<String,String>of(), MutableList.of(cmd), null);
+            int exitStatus = new ProcessTool().execCommands(MutableMap.<String,String>of(), MutableList.of(cmd), null);
             // prefer the above to the below because it wraps it in the appropriate bash
 //            Process proc = Runtime.getRuntime().exec(cmd);
 //            result = proc.waitFor();
             
-            log.trace("FS move of {} to {} completed, code {}", new Object[] { srcFile, destFile, result });
-            if (result == 0) return;
-        }
-        
-        boolean result;
-        // this is not guaranteed cross platform to succeed if the destination exists,
-        // and not guaranteed to be atomic, but it usually seems to do the right thing...
-        result = srcFile.renameTo(destFile);
-        if (result) {
-            log.trace("java rename of {} to {} completed", srcFile, destFile);
-            return;
+            if (log.isTraceEnabled()) log.trace("FS move of {} to {} completed, code {}", new Object[] { srcFile, destFile, exitStatus });
+            if (exitStatus == 0) return;
         }
         
         // finally try a delete - but explicitly warn this is not going to be atomic
@@ -339,7 +339,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         }
         destFile.delete();
         result = srcFile.renameTo(destFile);
-        log.trace("java delete and rename of {} to {} completed, code {}", new Object[] { srcFile, destFile, result });
+        if (log.isTraceEnabled()) log.trace("java delete and rename of {} to {} completed, code {}", new Object[] { srcFile, destFile, result });
         if (result) 
             return;
         Files.copy(srcFile, destFile);
