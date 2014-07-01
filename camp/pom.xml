@@ -1,0 +1,1060 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <groupId>io.brooklyn.camp</groupId>
+    <artifactId>camp-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>  <!-- CAMP_IMPL_VERSION -->
+
+    <name>CAMP Server Parent Project</name>
+    <description>
+        Parent/Root Project for Oasis CAMP Server modules
+    </description>
+    <url>http://brooklyn.io/</url>
+
+    <!-- useful custom properties/defines to specify to control the build:
+
+      camp.explicitModules :: only builds explicit modules (instead of default modules)
+
+      camp.deployTo={cloudsoftFilesystem,cloudsoftArtifactory,sonatype} :: 
+            :: required when deploying; specify the deployment target
+
+      javadoc :: build javadoc (adds a minute or two; enabled automatically for target deploy)
+      
+      skipSources :: don't make the -sources.jar (saves a second or two, not much)
+      
+      skipTests :: does the usual thing (saves a lot of time, but at some cost of build quality!)
+
+
+      simply activate with -Dcamp.theCustomProperty on the mvn build line
+      (some of these are used to trigger profile selection, since maven activeByDefault
+      only works if _no_ profiles are triggered, see suggestion/background at:
+      http://stackoverflow.com/questions/5309379/how-to-keep-maven-profiles-which-are-activebydefault-active-even-if-another-prof )
+    -->
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Brooklyn Committers</name>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/brooklyncentral/camp.git</connection>
+        <developerConnection>scm:git:git@github.com:brooklyncentral/camp.git</developerConnection>
+        <url>http://github.com/brooklyncentral/camp</url>
+    </scm>
+
+    <repositories>
+        <!-- enable sonatype snapshots repo (only for snapshots) -->
+        <repository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases> <enabled>false</enabled> </releases>
+            <snapshots> <enabled>true</enabled> </snapshots>
+        </repository>
+    </repositories>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <camp-impl.version>0.1.0-SNAPSHOT</camp-impl.version>  <!-- CAMP_IMPL_VERSION -->
+
+        <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+        <fasterxml.jackson.version>2.2.0</fasterxml.jackson.version>
+        <commons-lang3.version>3.1</commons-lang3.version>
+        <commons-compress.version>1.4</commons-compress.version>
+
+        <surefire.version>2.13</surefire.version>
+        <testng.version>6.8</testng.version>
+        <logback.version>1.0.7</logback.version>
+        <slf4j.version>1.6.6</slf4j.version>
+        <gson.version>2.2.2</gson.version>
+        <commons-io.version>2.4</commons-io.version>
+     
+        <includedTestGroups />
+        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
+        
+        <!-- no passphrase by default, so we can do automated deploy builds;
+             you can still supply your own passphrase with -Dgpg.passphrase=XXX -->
+        <gpg.passphrase></gpg.passphrase>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- include version numbers for common dependencies 
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
+            </dependency>
+            -->
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.3</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.6</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>2.4.1</version>
+                    <configuration>
+                        <filesets>
+                            <fileset>
+                                <directory>.</directory>
+                                <includes>
+                                    <include>camp*.log</include>
+                                    <include>camp*.log.*</include>
+                                    <include>stacktrace.log</include>
+                                    <include>test-output</include>
+                                    <include>prodDb.*</include>
+                                </includes>
+                            </fileset>
+                        </filesets>
+                    </configuration>
+                </plugin>
+<!--
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
+                    <configuration>
+                        <source>1.6</source>
+                        <target>1.6</target>
+                    </configuration>
+                </plugin>
+-->
+<!-- use the groovy-eclipse-compiler (below) instead of the stack maven/java one (above)
+     because we use an inner-class builder pattern which references private outer class
+     members which gives "has private access" errors with some javac's (fixed in java7?) -->
+                <plugin>
+                  <artifactId>maven-compiler-plugin</artifactId>
+                  <configuration>
+                    <compilerId>groovy-eclipse-compiler</compilerId>
+                    <fork>true</fork>
+                    <verbose>false</verbose>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                  </configuration>
+                  <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-compiler</artifactId>
+                        <version>2.7.0-01</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-eclipse-batch</artifactId>
+                        <version>1.8.6-01</version>
+                    </dependency>
+                  </dependencies>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>1.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.9</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.2</version>
+                    <inherited>true</inherited>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.8</version>
+                    <inherited>true</inherited>
+                    <configuration>
+                        <links>
+                            <link>http://download.oracle.com/javaee/6/api</link>
+                        </links>
+                        <keywords>true</keywords>
+                        <author>false</author>
+                        <quiet>true</quiet>
+                        <aggregate>false</aggregate>
+                        <detectLinks />
+                        <tags>
+                            <tag>
+                                <name>todo</name>
+                                <placement>a</placement>
+                                <head>To-do:</head>
+                            </tag>
+                        </tags>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.1</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <!-- 'release' is not used; easier just to checkout, tag, `mvn deploy` manually
+                         with -Dcamp.deployTo=TARGET ... and note we need to update docs and examples, 
+                         which is a non-maven task!) -->
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.1</version>
+                    <configuration>
+                        <mavenExecutorId>forked-path</mavenExecutorId>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <arguments>-Dcamp.deployTo=sonatype</arguments>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.4.1</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>1.5</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                            <configuration>
+                                <shadedArtifactAttached>true</shadedArtifactAttached>
+                                <shadedClassifierName>with-dependencies</shadedClassifierName>
+                                <filters>
+                                    <filter>
+                                        <artifact>*:*</artifact>
+                                        <excludes>
+                                            <exclude>META-INF/*.SF</exclude>
+                                            <exclude>META-INF/*.DSA</exclude>
+                                            <exclude>META-INF/*.RSA</exclude>
+                                        </excludes>
+                                    </filter>
+                                </filters>
+                                <transformers>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                                </transformers>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                     <artifactId>maven-surefire-plugin</artifactId>
+                     <version>${surefire.version}</version>
+                     <configuration>
+                         <argLine>-Xms256m -Xmx512m -XX:MaxPermSize=512m -verbose:gc</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-eclipse-plugin</artifactId>
+                    <version>2.8</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.3.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>findbugs-maven-plugin</artifactId>
+                    <version>2.3.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>net.sourceforge.cobertura</groupId>
+                    <artifactId>cobertura</artifactId>
+                    <version>${cobertura.version}</version>
+                </plugin>
+                <plugin>
+                    <!-- This configuration is used for Eclipse settings only. -->
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-dependency-plugin</artifactId>
+                                        <versionRange>[2.1,)</versionRange>
+                                        <goals>
+                                            <goal>copy</goal>
+                                            <goal>copy-dependencies</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.felix</groupId>
+                                        <artifactId>maven-bundle-plugin</artifactId>
+                                        <versionRange>[2.3.4,)</versionRange>
+                                        <goals>
+                                            <goal>manifest</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-javadoc-plugin</artifactId>
+                                        <versionRange>[2.7,3)</versionRange>
+                                        <goals>
+                                            <goal>jar</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-enforcer-plugin</artifactId>
+                                        <versionRange>[1.0,)</versionRange>
+                                        <goals>
+                                            <goal>enforce</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>custom-build-req</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>1.6.0</version>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>[3.0.0,)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <!--  workaround for src/main/resources excluding all in eclipse, as per
+                  https://issues.sonatype.org/browse/MNGECLIPSE-864 -->
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>maven-replacer-plugin</artifactId>
+                <version>1.4.0</version>
+                <executions>
+                    <execution>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <ignoreMissingFile>true</ignoreMissingFile>
+                    <file>.classpath</file>
+                    <regex>false</regex>
+                    <replacements>
+                        <replacement>
+                            <xpath>/classpath/classpathentry[@path='src/main/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
+                            <token>**</token>
+                            <value></value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
+        </plugins>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>1.0</version>
+            </extension>
+        </extensions>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>Essentials</id>
+            <activation> <property><name> !camp.explicitModules </name></property> </activation>
+            <modules>
+                <module>camp-base</module>
+                <module>camp-server</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>Documentation</id>
+            <reporting>
+                <excludeDefaults>true</excludeDefaults>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                        <version>2.4</version>
+                        <reportSets>
+                            <reportSet>
+                                <reports>
+                                    <report>index</report>
+                                    <report>modules</report>
+                                </reports>
+                            </reportSet>
+                        </reportSets>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.8</version>
+                        <configuration>
+                            <links>
+                                <link>http://download.oracle.com/javaee/6/api</link>
+                            </links>
+                            <keywords>true</keywords>
+                            <author>false</author>
+                            <quiet>true</quiet>
+                            <aggregate>false</aggregate>
+                            <detectLinks />
+                            <tags>
+                                <tag>
+                                    <name>todo</name>
+                                    <placement>a</placement>
+                                    <head>To-do:</head>
+                                </tag>
+                            </tags>
+                        </configuration>
+                        <reportSets>
+                            <reportSet>
+                                <id>javadoc</id>
+                                <reports>
+                                    <report>javadoc</report>
+                                </reports>
+                            </reportSet>
+                        </reportSets>
+                    </plugin>
+                </plugins>
+            </reporting>
+        </profile>
+        <profile>
+            <id>Bundle</id>
+            <activation>
+                <file>
+                    <exists>${basedir}/src</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>maven-bundle-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>create-bundle-manifest</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>manifest</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>Tests</id>
+            <activation>
+                <file> <exists>${basedir}/src/test</exists> </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.version}</version>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>listener</name>
+                                    <value>brooklyn.test.LoggingVerboseReporter</value>
+                                </property>
+                            </properties>
+                            <enableAssertions>true</enableAssertions>
+                            <groups>${includedTestGroups}</groups>
+                            <excludedGroups>${excludedTestGroups}</excludedGroups>
+                            <testFailureIgnore>false</testFailureIgnore>
+                            <systemPropertyVariables>
+                                <verbose>-1</verbose>
+                                <net.sourceforge.cobertura.datafile>${project.build.directory}/cobertura/cobertura.ser</net.sourceforge.cobertura.datafile>
+                                <cobertura.user.java.nio>false</cobertura.user.java.nio>
+                            </systemPropertyVariables>
+                            <printSummary>true</printSummary>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <goals>
+                                    <goal>test-jar</goal>
+                                </goals>
+                                <configuration>
+                                    <forceCreation>true</forceCreation>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Integration</id>
+            <properties>
+                <includedTestGroups>Integration</includedTestGroups>
+                <excludedTestGroups>Acceptance,Live,WIP</excludedTestGroups>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <executions>
+                            <execution>
+                                <id>run-tests</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>integration-test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Acceptance</id>
+            <properties>
+                <includedTestGroups>Acceptance</includedTestGroups>
+                <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <executions>
+                            <execution>
+                                <id>run-tests</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>integration-test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Live</id>
+            <properties>
+                <includedTestGroups>Live</includedTestGroups>
+                <excludedTestGroups>Acceptance,WIP</excludedTestGroups>
+            </properties>
+            <build>
+                <plugins>
+                <!-- 
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <executions>
+                            <execution>
+                                <id>run-tests</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>integration-test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                 -->
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>CI</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>findbugs-maven-plugin</artifactId>
+                        <configuration>
+                            <xmlOutput>true</xmlOutput>
+                            <xmlOutputDirectory>target/site</xmlOutputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>findbugs</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>2.5</version>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <failOnViolation>false</failOnViolation>
+                            <linkXref>true</linkXref>
+                            <sourceEncoding>utf-8</sourceEncoding>
+                            <minimumTokens>100</minimumTokens>
+                            <targetJdk>1.6</targetJdk>
+                            <excludes>
+                                <exclude>**/*Test.java</exclude>
+                                <exclude>**/tests/**/*.java</exclude>
+                                <!-- add any more generated source code directories here -->
+                            </excludes>
+                            <excludeRoots>
+                                <excludeRoot>
+                                    ${pom.basedir}/target/generated-sources/groovy-stubs/main
+                                </excludeRoot>
+                            </excludeRoots>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                    <goal>cpd-check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Coverage</id>
+            <dependencies>
+                <dependency>
+                    <groupId>net.sourceforge.cobertura</groupId>
+                    <artifactId>cobertura</artifactId>
+                    <version>${cobertura.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <executions>
+                            <execution>
+                                <id>run-tests</id>
+                            </execution>
+                            <execution>
+                                <id>instrument classes</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>process-test-classes</phase>
+                                <configuration>
+                                    <target>
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
+                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
+                                        <if>
+                                            <available property="gogocobertura" file="target/test-classes" />
+                                            <then>
+                                                <echo message="INSTRUMENTING CLASSES FOR COBERTURA" />
+                                                <!-- Ensure any and all bits of our project are copied in first -->
+                                                <copy todir="target/cobertura/coverage-classes">
+                                                    <fileset erroronmissingdir="false" dir="target/classes" />
+                                                </copy>
+                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser"
+                                                    todir="target/test-classes">
+                                                    <fileset erroronmissingdir="false" dir="target/classes">
+                                                        <include name="**/*.class" />
+                                                        <exclude name="**/*Test.class" />
+                                                    </fileset>
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-classes">
+                                                        <include name="**/*.class" />
+                                                        <exclude name="**/*Test.class" />
+                                                    </fileset>
+                                                </cobertura-instrument>
+                                            </then>
+                                        </if>
+                                    </target>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>coverage report</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>post-integration-test</phase>
+                                <configuration>
+                                    <target>
+                                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath" />
+                                        <taskdef resource="tasks.properties" classpathref="maven.plugin.classpath" />
+                                        <if>
+                                            <available property="gogocobertura" file="target/cobertura/cobertura.ser" />
+                                            <then>
+                                                <echo message="GENERATING COBERTURA COVERAGE REPORT" />
+                                                <cobertura-report format="xml" destdir="target/site/cobertura"
+                                                    datafile="target/cobertura/cobertura.ser">
+                                                    <fileset erroronmissingdir="false" dir="src/java" />
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
+                                                </cobertura-report>
+                                            </then>
+                                        </if>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>ant-contrib</groupId>
+                                <artifactId>ant-contrib</artifactId>
+                                <version>1.0b3</version>
+                                <exclusions>
+                                    <exclusion>
+                                        <groupId>ant</groupId>
+                                        <artifactId>ant</artifactId>
+                                    </exclusion>
+                                </exclusions>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant-launcher</artifactId>
+                                <version>${ant.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant</artifactId>
+                                <version>${ant.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.testng</groupId>
+                                <artifactId>testng</artifactId>
+                                <version>${testng.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>net.sourceforge.cobertura</groupId>
+                                <artifactId>cobertura</artifactId>
+                                <version>${cobertura.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>unpack-coverage-sources</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>unpack-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>sources</classifier>
+                                    <includeScope>compile</includeScope>
+                                    <includeGroupIds>io.brooklyn.camp</includeGroupIds>
+                                    <outputDirectory>
+                                        ${project.build.directory}/cobertura/dependency-sources
+                                    </outputDirectory>
+                                    <failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>unpack-coverage-classes</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>unpack-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <type>jar</type>
+                                    <includeScope>compile</includeScope>
+                                    <includeGroupIds>io.brooklyn.camp</includeGroupIds>
+                                    <outputDirectory>
+                                        ${project.build.directory}/cobertura/dependency-classes
+                                    </outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.version}</version>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <reportFormat>xml</reportFormat>
+                            <classesDirectory>${project.build.directory}/cobertura/coverage-classes</classesDirectory>
+                            <systemProperties>
+                                <property>
+                                    <name>net.sourceforge.cobertura.datafile</name>
+                                    <value>${project.build.directory}/cobertura/cobertura.ser
+                                    </value>
+                                </property>
+                                <property>
+                                    <name>cobertura.user.java.nio</name>
+                                    <value>false</value>
+                                </property>
+                            </systemProperties>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>test-jar-creation</id>
+                                <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- build sources jars by default, it's quick -->
+        <profile>
+            <id>make-sources-jar</id>
+            <activation> <property><name>!skipSources</name></property> </activation>
+            <build><plugins><plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin></plugins></build>
+        </profile>
+        
+        <!-- only build javadoc if asked, or if deploying (it's slow) -->
+        <profile>
+            <id>make-javadoc-jar</id>
+            <activation> <property><name>javadoc</name></property> </activation>            
+            <build><plugins><plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin></plugins></build>
+        </profile>
+        
+        <!-- sign and make javadoc when deploying; note, this means you'll need gpg set up to deploy -->
+        <profile>
+            <id>make-more-things-when-deploying</id>
+            <activation> <property><name>camp.deployTo</name></property> </activation>            
+            <build><plugins>
+                <plugin>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                </plugin>
+            </plugins></build>
+        </profile>
+
+        <!-- different properties used to deploy to different locations depending on profiles;
+             default is cloudsoft filesystem repo, but some sources still use cloudsoft artifactory as source
+             (and soon we will support artifactory) -->
+        <profile>
+            <id>cloudsoft-filesystem-repo</id>
+            <activation> <property><name>camp.deployTo</name><value>cloudsoftFilesystem</value></property> </activation>
+            <distributionManagement>
+                <repository>
+                    <id>cloudsoft-deploy-cloudfront-origin-releases</id>
+                    <name>Cloudsoft Release Filesystem repo (used as origin for cloudfront)</name>
+                    <url>scpexe://root@developers-origin.cloudsoftcorp.com/var/www/developers/maven/releases/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>cloudsoft-deploy-cloudfront-origin-snapshots</id>
+                    <name>Cloudsoft Snapshot Filesystem repo (used as origin for cloudfront)</name>
+                    <url>scpexe://root@developers-origin.cloudsoftcorp.com/var/www/developers/maven/snapshots/</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>cloudsoft-artifactory-repo</id>
+            <activation> <property><name>camp.deployTo</name><value>cloudsoftArtifactory</value></property> </activation>
+            <distributionManagement>
+                <repository>
+                    <id>cloudsoft-deploy-artifactory-release</id>
+                    <name>Cloudsoft Artifactory libs-release-local repo</name>
+                    <url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>cloudsoft-deploy-artifactory-snapshot</id>
+                    <name>Cloudsoft Artifactory libs-snapshot-local repo</name>
+                    <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>sonatype-nexus-repo</id>
+            <activation> <property><name>camp.deployTo</name><value>sonatype</value></property> </activation>
+            <distributionManagement>
+                <repository>
+                    <id>sonatype-nexus-staging</id>
+                    <name>Nexus Release Repository</name>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>sonatype-nexus-snapshots</id>
+                    <name>Sonatype Nexus Snapshots</name>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
+</project>

@@ -1,0 +1,9 @@
+<included>
+
+    <!-- include everything in this project at debug level -->
+    <logger name="io.cloudsoft.cloudera" level="DEBUG"/>    
+    
+    <!-- log to simple-web-cluster.log -->
+    <property name="logging.basename" scope="context" value="brooklyn-camp" />
+
+</included>
