@@ -10,7 +10,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -21,8 +21,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -37,7 +35,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
-public class SshFeedIntegrationTest {
+public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(SshFeedIntegrationTest.class);
     
@@ -46,13 +44,13 @@ public class SshFeedIntegrationTest {
 
     private LocalhostMachineProvisioningLocation loc;
     private SshMachineLocation machine;
-    private TestApplication app;
     private EntityLocal entity;
     private SshFeed feed;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, new LocalManagementContextForTests());
+        super.setUp();
         loc = app.newLocalhostProvisioningLocation();
         machine = loc.obtain();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -60,9 +58,10 @@ public class SshFeedIntegrationTest {
     }
 
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        super.tearDown();
         if (loc != null) Streams.closeQuietly(loc);
     }
     

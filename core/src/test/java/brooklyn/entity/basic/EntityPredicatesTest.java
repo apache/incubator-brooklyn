@@ -3,37 +3,31 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 
-public class EntityPredicatesTest {
+public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
     private TestEntity entity;
     private BasicGroup group;
     private Location loc;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("mydisplayname"));
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         loc = app.getManagementContext().getLocationRegistry().resolve("localhost");
     }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-    
     @Test
     public void testApplicationIdEqualTo() throws Exception {
         assertTrue(EntityPredicates.applicationIdEqualTo(app.getId()).apply(entity));

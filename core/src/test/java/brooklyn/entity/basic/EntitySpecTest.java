@@ -3,46 +3,36 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.util.Map;
-
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.EnricherType;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.Iterables;
 
-public class EntitySpecTest {
+public class EntitySpecTest extends BrooklynAppUnitTestSupport {
 
     private static final int TIMEOUT_MS = 10*1000;
     
     private SimulatedLocation loc;
-    private TestApplication app;
     private TestEntity entity;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

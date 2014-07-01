@@ -4,13 +4,12 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -22,30 +21,22 @@ import com.google.common.collect.ImmutableMap;
  * 
  * @author aled
  */
-public class AbstractApplicationLegacyTest {
+public class AbstractApplicationLegacyTest extends BrooklynAppUnitTestSupport {
 
     private List<SimulatedLocation> locs;
-    private TestApplication app;
-    private ManagementContext managementContext;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         locs = ImmutableList.of(new SimulatedLocation());
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-        if (managementContext != null) Entities.destroyAll(managementContext);
     }
     
     // App and its children will be implicitly managed on first effector call on app
     @Test
     public void testStartAndStopCallsChildren() throws Exception {
         // deliberately unmanaged
-        TestApplication app2 = managementContext.getEntityManager().createEntity(EntitySpec.create(TestApplication.class));
+        TestApplication app2 = mgmt.getEntityManager().createEntity(EntitySpec.create(TestApplication.class));
         TestEntity child = app2.addChild(EntitySpec.create(TestEntity.class));
         
         app2.invoke(AbstractApplication.START, ImmutableMap.of("locations", locs)).get();

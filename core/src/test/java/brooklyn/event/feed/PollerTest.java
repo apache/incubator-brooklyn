@@ -12,35 +12,34 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.time.Duration;
 
-public class PollerTest {
+public class PollerTest extends BrooklynAppUnitTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(PollerTest.class);
 
-    private TestApplication app;
     private TestEntity entity;
     private Poller<Integer> poller;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         poller = new Poller<Integer>(entity, false);
     }
     
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
         if (poller != null) poller.stop();
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        super.tearDown();
     }
     
     @Test(groups={"Integration", "WIP"}) // because takes > 1 second

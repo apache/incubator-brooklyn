@@ -1,13 +1,12 @@
 package brooklyn.entity.group;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -20,7 +19,6 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.javalang.Boxing;
 
@@ -30,22 +28,17 @@ import com.google.common.collect.ImmutableList;
 /**
  * tests that a group's membership gets updated using subscriptions
  */
-public class GroupPickUpEntitiesTest {
+public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
     private BasicGroup group;
 
     @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception{
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         
         group.addPolicy(PolicySpec.create(FindUpServicesWithNameBob.class));
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

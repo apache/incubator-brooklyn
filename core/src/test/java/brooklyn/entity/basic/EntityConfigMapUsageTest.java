@@ -8,16 +8,15 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -29,7 +28,7 @@ import com.google.common.util.concurrent.Callables;
 /**
  * Test that configuration properties are usable and inherited correctly.
  */
-public class EntityConfigMapUsageTest {
+public class EntityConfigMapUsageTest extends BrooklynAppUnitTestSupport {
     private static final int EARLY_RETURN_GRACE = 10;
     
     private BasicConfigKey<Integer> intKey = new BasicConfigKey<Integer>(Integer.class, "bkey", "b key");
@@ -37,18 +36,13 @@ public class EntityConfigMapUsageTest {
     private ConfigKey<Integer> intKeyWithDefault = new BasicConfigKey<Integer>(Integer.class, "ckey", "c key", 1);
     private ConfigKey<String> strKeyWithDefault = new BasicConfigKey<String>(String.class, "strKey", "str key", "str key default");
     
-    private TestApplication app;
     private List<SimulatedLocation> locs;
     
-    @BeforeMethod
-    public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    @BeforeMethod(alwaysRun=true)
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         locs = ImmutableList.of(new SimulatedLocation());
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

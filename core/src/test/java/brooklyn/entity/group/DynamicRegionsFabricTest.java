@@ -6,17 +6,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
@@ -27,28 +24,23 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class DynamicRegionsFabricTest {
+public class DynamicRegionsFabricTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
     DynamicRegionsFabric fabric;
     private Location loc1;
     private Location loc2;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         loc1 = new SimulatedLocation();
         loc2 = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         
         fabric = app.createAndManageChild(EntitySpec.create(DynamicRegionsFabric.class)
                 .configure("memberSpec", EntitySpec.create(TestEntity.class)));
     }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-    
     @Test
     public void testUsesInitialLocations() throws Exception {
         app.start(ImmutableList.of(loc1, loc2));

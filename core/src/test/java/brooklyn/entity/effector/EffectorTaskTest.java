@@ -3,23 +3,19 @@ package brooklyn.entity.effector;
 import java.util.concurrent.Callable;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -31,18 +27,7 @@ import brooklyn.util.task.Tasks;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
-public class EffectorTaskTest {
-
-    TestApplication app;
-    @BeforeMethod(alwaysRun=true)
-    public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
+public class EffectorTaskTest extends BrooklynAppUnitTestSupport {
 
     // ----------- syntax 1 -- effector with body in a class
     

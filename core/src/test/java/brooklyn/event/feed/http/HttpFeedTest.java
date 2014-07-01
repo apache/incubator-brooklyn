@@ -14,7 +14,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityInternal;
@@ -26,7 +26,6 @@ import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -43,7 +42,7 @@ import com.google.common.collect.Lists;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.SocketPolicy;
 
-public class HttpFeedTest {
+public class HttpFeedTest extends BrooklynAppUnitTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(HttpFeedTest.class);
     
@@ -56,12 +55,13 @@ public class HttpFeedTest {
     private URL baseUrl;
     
     private Location loc;
-    private TestApplication app;
     private EntityLocal entity;
     private HttpFeed feed;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         server = BetterMockWebServer.newInstanceLocalhost();
         for (int i = 0; i < 100; i++) {
             server.enqueue(new MockResponse().setResponseCode(200).addHeader("content-type: application/json").setBody("{\"foo\":\"myfoo\"}"));
@@ -69,18 +69,18 @@ public class HttpFeedTest {
         server.play();
         baseUrl = server.getUrl("/");
 
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         loc = app.newLocalhostProvisioningLocation();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
         if (feed != null) feed.stop();
         if (server != null) server.shutdown();
-        if (app != null) Entities.destroyAll(app.getManagementContext());
         feed = null;
+        super.tearDown();
     }
     
     @Test

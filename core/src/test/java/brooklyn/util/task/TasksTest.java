@@ -6,12 +6,10 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 import java.util.Set;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.management.ExecutionContext;
 import brooklyn.test.entity.TestApplication;
 
@@ -21,20 +19,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 
-public class TasksTest {
+public class TasksTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
     private ExecutionContext executionContext;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        super.setUp();
         executionContext = app.getExecutionContext();
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

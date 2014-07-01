@@ -5,44 +5,36 @@ import static org.testng.Assert.fail;
 
 import java.util.Map;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class DownloadSubstitutersTest {
+public class DownloadSubstitutersTest extends BrooklynAppUnitTestSupport {
 
     private Location loc;
-    private TestApplication app;
     private TestEntity entity;
     private MyEntityDriver driver;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         driver = new MyEntityDriver(entity, loc);
     }
     
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-
     @Test
     public void testSimpleSubstitution() throws Exception {
         entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");

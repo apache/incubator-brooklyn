@@ -15,13 +15,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
@@ -35,7 +34,6 @@ import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.BlockingEntity;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.repeat.Repeater;
@@ -47,27 +45,22 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class DynamicFabricTest {
+public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
     private static final Logger log = LoggerFactory.getLogger(DynamicFabricTest.class);
 
     private static final int TIMEOUT_MS = 5*1000;
 
-    private TestApplication app;
     private Location loc1;
     private Location loc2;
     private Location loc3;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         loc1 = new SimulatedLocation();
         loc2 = new SimulatedLocation();
         loc3 = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test

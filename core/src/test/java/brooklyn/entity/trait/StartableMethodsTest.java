@@ -3,40 +3,33 @@ package brooklyn.entity.trait;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity.RecordingEventListener;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.ImmutableList;
 
-public class StartableMethodsTest {
+public class StartableMethodsTest extends BrooklynAppUnitTestSupport {
 
     private SimulatedLocation loc;
-    private TestApplication app;
     private TestEntity entity;
     private TestEntity entity2;
     private RecordingEventListener listener;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         listener = new RecordingEventListener();
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     @Test

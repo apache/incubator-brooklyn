@@ -7,12 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -22,7 +21,6 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.EntityManager;
 import brooklyn.policy.PolicySpec;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
@@ -31,20 +29,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class MembershipTrackingPolicyTest {
+public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
 
     private static final long TIMEOUT_MS = 10*1000;
 
     SimulatedLocation loc;
     EntityManager entityManager;
-    TestApplication app;
     private BasicGroup group;
     private RecordingMembershipTrackingPolicy policy;
 
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         entityManager = app.getManagementContext().getEntityManager();
         
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
@@ -53,11 +51,6 @@ public class MembershipTrackingPolicyTest {
                 .configure("group", group));
 
         app.start(ImmutableList.of(loc));
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     private TestEntity createAndManageChildOf(Entity parent) {

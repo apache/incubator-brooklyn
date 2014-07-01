@@ -17,12 +17,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
@@ -33,7 +32,6 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.EntityManager;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Time;
 
@@ -45,25 +43,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
-public class LocalEntitiesTest {
+public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
 	
 	public static final Logger log = LoggerFactory.getLogger(LocalEntitiesTest.class);
 	
     private SimulatedLocation loc;
-    private TestApplication app;
     private EntityManager entityManager;
 			
-	@BeforeMethod(alwaysRun=true)
+    @BeforeMethod(alwaysRun=true)
+	@Override
 	public void setUp() throws Exception {
+	    super.setUp();
 	    loc = new SimulatedLocation();
-	    app = ApplicationBuilder.newManagedApp(TestApplication.class);
-	    entityManager = app.getManagementContext().getEntityManager();
+	    entityManager = mgmt.getEntityManager();
 	}
-
-    @AfterMethod
-    public void tearDown(){
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
 
     @Test
     public void testEffectorUpdatesAttributeSensor() {
