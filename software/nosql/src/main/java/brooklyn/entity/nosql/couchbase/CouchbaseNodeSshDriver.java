@@ -21,6 +21,7 @@ package brooklyn.entity.nosql.couchbase;
 import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
 import static brooklyn.util.ssh.BashCommands.alternatives;
 import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.ok;
 import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
@@ -48,7 +49,6 @@ import brooklyn.util.repeat.Repeater;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -102,10 +102,13 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
         String yum = chainGroup(
                 "which yum",
-                sudo("yum check-update"),
+                // The following prevents failure on RHEL AWS nodes:
+                // https://forums.aws.amazon.com/thread.jspa?threadID=100509
+                ok(sudo("sed -i.bk s/^enabled=1$/enabled=0/ /etc/yum/pluginconf.d/subscription-manager.conf")),
+                ok(sudo("yum check-update")),
                 sudo("yum install -y pkgconfig"),
                 // RHEL requires openssl version 098
-                sudo("[ -f /etc/redhat-release ] && (grep -i \"red hat\" /etc/redhat-release && yum install -y openssl098e) || :"),
+                sudo("[ -f /etc/redhat-release ] && (grep -i \"red hat\" /etc/redhat-release && sudo yum install -y openssl098e) || :"),
                 sudo(format("rpm --install %s", saveAs)));
 
         return ImmutableList.<String>builder()
@@ -130,11 +133,15 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public void launch() {
-        //FIXME needs time for http server to initialize
-        Time.sleep(Duration.TEN_SECONDS);
         newScript(LAUNCHING)
                 .body.append(
                 sudo("/etc/init.d/couchbase-server start"),
+                "for i in {0..120}\n" +
+                "do\n" +
+                "    if [ $i -eq 120 ]; then echo REST API unavailable after 120 seconds, failing; exit 1; fi;\n" +
+                "    curl -s " + String.format("http://%s:%s", getHostname(), getWebPort()) + " > /dev/null && echo REST API available after $i seconds && break\n" +
+                "    sleep 1\n" +
+                "done\n" +
                 couchbaseCli("cluster-init") +
                         getCouchbaseHostnameAndPort() +
                         " --cluster-init-username=" + getUsername() +

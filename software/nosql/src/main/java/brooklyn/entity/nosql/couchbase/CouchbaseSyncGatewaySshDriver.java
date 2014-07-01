@@ -21,6 +21,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -66,12 +67,8 @@ public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDri
         Entity cbNode = entity.getConfig(CouchbaseSyncGateway.COUCHBASE_SERVER);
         Entities.waitForServiceUp(cbNode, Duration.ONE_HOUR);
         DependentConfiguration.waitInTaskForAttributeReady(cbNode, CouchbaseCluster.IS_CLUSTER_INITIALIZED, Predicates.equalTo(true));
-        try {
-            // Even once the bucket has published its API URL, it can still take a couple of seconds for it to become available
-            Thread.sleep(10 * 1000);
-        } catch (InterruptedException e) {
-            // no-op
-        }
+        // Even once the bucket has published its API URL, it can still take a couple of seconds for it to become available
+        Time.sleep(10 * 1000);
         if (cbNode instanceof CouchbaseCluster) {
             Optional<Entity> cbClusterNode = Iterables.tryFind(cbNode.getAttribute(CouchbaseCluster.GROUP_MEMBERS), new Predicate<Entity>() {
 
