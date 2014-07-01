@@ -243,16 +243,23 @@ public class RebindManagerImpl implements RebindManager {
             final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
             LookupContext realLookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
             
-            // Two-phase deserialization.
-            // First we deserialize just the "manifest" to find all instances (and their types).
-            // Then we deserialize so that inter-entity references can be set.
-            //
+            // Four-phase deserialization.
+            //  1. deserialize just the "manifest" to find all instances (and their types).
+            //  2. deserialize so that inter-entity references can be set (and entity config/state is set).
+            //  3. add policies+enrichers to all the entities.
+            //  4. manage the entities
+            
             // TODO if underlying data-store is changed between first and second phase (e.g. to add an
             // entity), then second phase might try to reconstitute an entity that has not been put in
             // the rebindContext. This should not affect normal production usage, because rebind is run
             // against a data-store that is not being written to by other brooklyn instance(s).
-            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
             
+            //
+            // PHASE ONE
+            //
+            
+            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
+
             // Instantiate locations
             LOG.debug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
             for (Map.Entry<String, String> entry : mementoManifest.getLocationIdToType().entrySet()) {
@@ -318,6 +325,10 @@ public class RebindManagerImpl implements RebindManager {
             } else {
                 LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
             } 
+            
+            //
+            // PHASE TWO
+            //
             
             // Reconstruct locations
             LOG.debug("RebindManager reconstructing locations");
@@ -385,7 +396,35 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             }
+
+            //
+            // PHASE THREE
+            //
             
+            // Associate policies+enrichers with entities
+            LOG.debug("RebindManager reconstructing entities");
+            for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
+                Entity entity = rebindContext.getEntity(entityMemento.getId());
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
+    
+                if (entity == null) {
+                    // usually because of creation-failure, when not using fail-fast
+                    exceptionHandler.onEntityNotFound(entityMemento.getId());
+                } else {
+                    try {
+                        entityMemento.injectTypeClass(entity.getClass());
+                        ((EntityInternal)entity).getRebindSupport().addPolicies(rebindContext, entityMemento);
+                        ((EntityInternal)entity).getRebindSupport().addEnrichers(rebindContext, entityMemento);
+                    } catch (Exception e) {
+                        exceptionHandler.onRebindEntityFailed(entity, e);
+                    }
+                }
+            }
+            
+            //
+            // PHASE FOUR
+            //
+
             LOG.debug("RebindManager managing locations");
             for (Location location: locations.values()) {
                 if (location.getParent()==null) {
