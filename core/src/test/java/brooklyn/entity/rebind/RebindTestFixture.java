@@ -2,6 +2,8 @@ package brooklyn.entity.rebind;
 
 import java.io.File;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
@@ -20,6 +22,8 @@ import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
 public abstract class RebindTestFixture<T extends StartableApplication> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RebindTestFixture.class);
 
     protected static final Duration TIMEOUT_MS = Duration.TEN_SECONDS;
 
@@ -40,8 +44,14 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         origEnricherPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
         
         mementoDir = Os.newTempDir(getClass());
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
+        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, getPersistPeriodMillis());
         origApp = createApp();
+        
+        LOG.info("Test "+getClass()+" persisting to "+mementoDir);
+    }
+    
+    protected int getPersistPeriodMillis() {
+        return 1;
     }
     
     /** optionally, create the app as part of every test; can be no-op if tests wish to set origApp themselves */

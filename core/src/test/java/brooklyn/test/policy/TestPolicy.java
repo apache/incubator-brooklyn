@@ -35,4 +35,9 @@ public class TestPolicy extends AbstractPolicy {
     public Map<?, ?> getLeftoverProperties() {
         return Collections.unmodifiableMap(leftoverProperties);
     }
+
+    @Override
+    protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
+        // no-op
+    }
 }
