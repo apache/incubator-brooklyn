@@ -174,12 +174,15 @@ public class Os {
         return System.getProperty("user.home");
     }
 
-    /** merges paths using forward slash (unix way); see {@link Urls#mergePaths(String...)} */
+    /** merges paths using forward slash (unix way); 
+     * now identical to {@link Os#mergePaths(String...)} but kept for contexts
+     * where caller wants to indicate the target system should definitely be unix */
     public static String mergePathsUnix(String ...items) {
         return Urls.mergePaths(items);
     }
 
-    /** merges paths using the local file separator */
+    /** merges paths using forward slash as the "local OS file separator", because it is recognised on windows,
+     * making paths more consistent and avoiding problems with backslashes being escaped */
     public static String mergePaths(String ...items) {
         char separatorChar = '/';
         StringBuilder result = new StringBuilder();
