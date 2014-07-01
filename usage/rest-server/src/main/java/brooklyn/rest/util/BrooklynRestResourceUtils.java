@@ -2,7 +2,6 @@ package brooklyn.rest.util;
 
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
-
 import brooklyn.management.entitlement.Entitlements;
 import groovy.lang.GroovyClassLoader;
 
@@ -24,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Application;
@@ -411,6 +411,7 @@ public class BrooklynRestResourceUtils {
     }
 
 
+    @Deprecated
     @SuppressWarnings({ "rawtypes" })
     public Response createCatalogEntryFromGroovyCode(String groovyCode) {
         ClassLoader parent = getCatalog().getRootClassLoader();
