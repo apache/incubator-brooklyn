@@ -19,6 +19,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
 import brooklyn.rest.api.CatalogApi;
+import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.transform.CatalogTransformer;
@@ -51,12 +52,31 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public Response createFromMultipart(InputStream uploadedInputStream, FormDataContentDisposition fileDetail) throws IOException {
-      return brooklyn().createCatalogEntryFromGroovyCode(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
+      return create(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
     }
 
     @Override
-    public Response create(String groovyCode ) {
-        return brooklyn().createCatalogEntryFromGroovyCode(groovyCode);
+    public Response create(String yaml) {
+        CatalogItem<?> item;
+        try {
+            item = brooklyn().getCatalog().addItem(yaml);
+        } catch (IllegalArgumentException e) {
+            return Response.status(Status.BAD_REQUEST)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(ApiError.of(e))
+                    .build();
+        }
+        String itemId = item.getId();
+        log.info("REST created catalog item: "+item);
+        
+        // FIXME configurations/ not supported
+        switch (item.getCatalogItemType()) {
+        case TEMPLATE: return Response.created(URI.create("applications/" + itemId)).build();
+        case ENTITY: return Response.created(URI.create("entities/" + itemId)).build();
+        case POLICY: return Response.created(URI.create("policies/" + itemId)).build();
+        case CONFIGURATION: return Response.created(URI.create("configurations/" + itemId)).build();
+        default: throw new IllegalStateException("Unsupported catalog item type "+item.getCatalogItemType()+": "+item);
+        }
     }
 
     @Override

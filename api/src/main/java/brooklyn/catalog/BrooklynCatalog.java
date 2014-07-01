@@ -26,6 +26,14 @@ public interface BrooklynCatalog {
     <T> Class<? extends T> loadClass(CatalogItem<T> item);
     <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass);
 
+    
+    /**
+     * Adds an item (represented in yaml) to the catalog.
+     * 
+     * @throws IllegalArgumentException if the yaml was invalid
+     */
+    CatalogItem<?> addItem(String yaml);
+    
     /**
      * adds an item to the 'manual' catalog;
      * this does not update the classpath or have a record to the java Class
