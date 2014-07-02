@@ -87,10 +87,11 @@ public class CatalogClasspathDo {
     /** causes all scanning-based classpaths to scan the classpaths
     * (but does _not_ load all JARs) */
     synchronized void load() {
-        if (classpath==null) return;
+        if (classpath == null || isLoaded) return;
 
-        if (classpath.getEntries()==null) urls = new URL[0];
-        else {
+        if (classpath.getEntries() == null) {
+            urls = new URL[0];
+        } else {
             urls = new URL[classpath.getEntries().size()];
             for (int i=0; i<urls.length; i++) {
                 try {
@@ -114,34 +115,29 @@ public class CatalogClasspathDo {
         ReflectionScanner scanner = null;
         if (!catalog.isLocal()) {
             log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
-        } else if (classpath.getEntries()==null || classpath.getEntries().isEmpty()) {
-            // no entries; check if we are local, and if so scan the default classpath
-            if (!catalog.isLocal()) {
-                log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
-            } else {                
-                // scan default classpath:
-                ClassLoader baseCL = null;
-                Iterable<URL> baseCP = null;
-                if (catalog.mgmt instanceof ManagementContextInternal) {
-                    baseCL = ((ManagementContextInternal)catalog.mgmt).getBaseClassLoader();
+        } else if (classpath.getEntries() == null || classpath.getEntries().isEmpty()) {
+            // scan default classpath:
+            ClassLoader baseCL = null;
+            Iterable<URL> baseCP = null;
+            if (catalog.mgmt instanceof ManagementContextInternal) {
+                baseCL = ((ManagementContextInternal)catalog.mgmt).getBaseClassLoader();
+                baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
+            }
+            scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
+            if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
+                try {
+                    ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+                    log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
                     baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
-                }
-                scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
-                if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
-                    try {
-                        ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
-                        log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
-                        baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
-                        scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
-                    } catch (Exception e) {
-                        log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
-                        Exceptions.propagateIfFatal(e);
-                    }
+                    scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
+                } catch (Exception e) {
+                    log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
+                    Exceptions.propagateIfFatal(e);
                 }
             }
         } else {
             // scan specified jars:
-            scanner = new ReflectionScanner(urls==null || urls.length==0 ? null : Arrays.asList(urls), prefix, getLocalClassLoader()); 
+            scanner = new ReflectionScanner(urls==null || urls.length==0 ? null : Arrays.asList(urls), prefix, getLocalClassLoader());
         }
         
         if (scanner!=null) {

@@ -41,17 +41,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public BasicBrooklynCatalog(final ManagementContext mgmt, final CatalogDto dto) {
         this.mgmt = Preconditions.checkNotNull(mgmt, "managementContext");
         this.catalog = new CatalogDo(mgmt, dto);
-        
-        mgmt.getExecutionManager().submit(MutableMap.of("name", "loading catalog"), new Runnable() {
-            public void run() {
-                log.debug("Loading catalog for "+mgmt);
-                catalog.load(mgmt, null);
-                if (log.isDebugEnabled())
-                    log.debug("Loaded catalog for "+mgmt+": "+catalog+"; search classpath is "+catalog.getRootClassLoader());
-            }
-        });
     }
-    
+
     public boolean blockIfNotLoaded(Duration timeout) {
         try {
             return getCatalog().blockIfNotLoaded(timeout);
@@ -89,7 +80,18 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public ClassLoader getRootClassLoader() {
         return catalog.getRootClassLoader();
     }
-    
+
+    /**
+     * Loads this catalog
+     */
+    public void load() {
+        log.debug("Loading catalog for " + mgmt);
+        getCatalog().load(mgmt, null);
+        if (log.isDebugEnabled()) {
+            log.debug("Loaded catalog for " + mgmt + ": " + catalog + "; search classpath is " + catalog.getRootClassLoader());
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T> Class<? extends T> loadClass(CatalogItem<T> item) {

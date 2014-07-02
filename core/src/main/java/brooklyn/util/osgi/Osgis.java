@@ -91,7 +91,7 @@ public class Osgis {
     
     /*
      * loading framework factory and starting framework based on:
-     * http://felix.apache.org/documentation/subprojects/apache-felix-framework/apache-felix-framework-launching-and-embedding.html :
+     * http://felix.apache.org/documentation/subprojects/apache-felix-framework/apache-felix-framework-launching-and-embedding.html
      */
     
     public static FrameworkFactory newFrameworkFactory() {
@@ -138,13 +138,18 @@ public class Osgis {
         return framework;
     }
 
-    /** install a bundle from the given URL, doing a check if already installed, and
-     * using the {@link ResourceUtils} loader for this project (brooklyn core) */
+    /**
+     * Installs a bundle from the given URL, doing a check if already installed, and
+     * using the {@link ResourceUtils} loader for this project (brooklyn core)
+     */
     public static Bundle install(Framework framework, String url) throws BundleException {
         Bundle bundle = framework.getBundleContext().getBundle(url);
-        if (bundle != null) return bundle;
-        
+        if (bundle != null) {
+            return bundle;
+        }
+
         // use our URL resolution so we get classpath items
+        LOG.debug("Installing bundle into {} from url: {}", framework, url);
         InputStream stream = ResourceUtils.create(Osgis.class).getResourceFromUrl(url);
         return framework.getBundleContext().installBundle(url, stream);
     }

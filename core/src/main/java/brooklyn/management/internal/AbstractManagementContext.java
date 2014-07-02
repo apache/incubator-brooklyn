@@ -334,7 +334,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             if (log.isDebugEnabled())
                 log.debug("Loaded default (local classpath) catalog: "+catalog);
         }
-        catalog.getCatalog().load(this, null);
+        catalog.load();
         
         this.catalog = catalog;
     }
