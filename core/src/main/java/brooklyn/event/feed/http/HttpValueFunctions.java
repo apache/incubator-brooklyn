@@ -42,7 +42,7 @@ public class HttpValueFunctions {
     }
 
     public static Function<HttpToolResponse, Boolean> responseCodeEquals(final int expected) {
-        return chain(HttpValueFunctions.responseCode(), Functions.forPredicate(Predicates.equalTo(expected)));
+        return Functionals.chain(HttpValueFunctions.responseCode(), Functions.forPredicate(Predicates.equalTo(expected)));
     }
     
     public static Function<HttpToolResponse, Boolean> responseCodeEquals(final int... expected) {
@@ -50,7 +50,7 @@ public class HttpValueFunctions {
         for (int e : expected) {
             expectedList.add((Integer)e);
         }
-        return chain(HttpValueFunctions.responseCode(), Functions.forPredicate(Predicates.in(expectedList)));
+        return Functionals.chain(HttpValueFunctions.responseCode(), Functions.forPredicate(Predicates.in(expectedList)));
     }
     
     public static Function<HttpToolResponse, String> stringContentsFunction() {
@@ -62,7 +62,7 @@ public class HttpValueFunctions {
     }
     
     public static Function<HttpToolResponse, JsonElement> jsonContents() {
-        return chain(stringContentsFunction(), JsonFunctions.asJson());
+        return Functionals.chain(stringContentsFunction(), JsonFunctions.asJson());
     }
     
     public static <T> Function<HttpToolResponse, T> jsonContents(String element, Class<T> expected) {
@@ -70,7 +70,7 @@ public class HttpValueFunctions {
     }
     
     public static <T> Function<HttpToolResponse, T> jsonContents(String[] elements, Class<T> expected) {
-        return chain(jsonContents(), JsonFunctions.walk(elements), JsonFunctions.cast(expected));
+        return Functionals.chain(jsonContents(), JsonFunctions.walk(elements), JsonFunctions.cast(expected));
     }
     
     public static Function<HttpToolResponse, Long> latency() {
