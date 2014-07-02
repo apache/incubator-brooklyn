@@ -162,6 +162,8 @@ public class HighAvailabilityManagerSplitBrainTest {
     @Test
     public void testIfNodeStopsBeingAbleToWrite() throws Exception {
         useSharedTime();
+        log.info("time at start "+sharedTickerCurrentMillis());
+        
         HaMgmtNode n1 = newNode();
         HaMgmtNode n2 = newNode();
         
@@ -195,16 +197,19 @@ public class HighAvailabilityManagerSplitBrainTest {
         
         assertEquals(n1.mgmt.getApplications().size(), 1);
         assertEquals(n2.mgmt.getApplications().size(), 0);
+        log.info("persisting "+n1.ownNodeId);
         n1.mgmt.getRebindManager().forcePersistNow();
         
         n1.objectStore.setWritesFailSilently(true);
         log.info(n1+" writes off");
         sharedTickerAdvance(Duration.ONE_MINUTE);
+        log.info("time now "+sharedTickerCurrentMillis());
+        Long time1 = sharedTickerCurrentMillis();
         
+        log.info("publish "+n2.ownNodeId);
         n2.ha.publishAndCheck(false);
         ManagementPlaneSyncRecord memento2b = n2.ha.getManagementPlaneSyncState();
         log.info(n2+" HA now: "+memento2b);
-        Long time1 = sharedTickerCurrentMillis();
         
         // n2 infers n1 as failed 
         assertEquals(memento2b.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.FAILED);
@@ -221,8 +226,10 @@ public class HighAvailabilityManagerSplitBrainTest {
         log.info(n1+" writes on");
         
         sharedTickerAdvance(Duration.ONE_SECOND);
+        log.info("time now "+sharedTickerCurrentMillis());
         Long time2 = sharedTickerCurrentMillis();
         
+        log.info("publish "+n1.ownNodeId);
         n1.ha.publishAndCheck(false);
         ManagementPlaneSyncRecord memento1b = n1.ha.getManagementPlaneSyncState();
         log.info(n1+" HA now: "+memento1b);
