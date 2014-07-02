@@ -261,6 +261,16 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getDisplayName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
     }
+    
+    @Override
+    public void runPreLaunchCommand(String command) {
+        execute(ImmutableList.of(command), "running pre-launch commands");
+    }
+    
+    @Override
+    public void runPostLaunchCommand(String command) {
+        execute(ImmutableList.of(command), "running post-launch commands");
+    }
 
     /**
      * The environment variables to be set when executing the commands (for install, run, check running, etc).

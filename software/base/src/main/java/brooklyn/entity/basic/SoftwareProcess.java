@@ -33,6 +33,12 @@ public interface SoftwareProcess extends Entity, Startable {
 
     @SetFromFlag("customizeLatch")
     public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
+    
+    @SetFromFlag("preLaunchCommand")
+    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = BrooklynConfigKeys.PRE_LAUNCH_COMMAND;
+    
+    @SetFromFlag("postLaunchCommand")
+    public static final ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
 
     @SetFromFlag("launchLatch")
     public static final ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;

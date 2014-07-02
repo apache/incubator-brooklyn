@@ -1,13 +1,15 @@
 package brooklyn.entity.basic;
 
-import static brooklyn.entity.basic.ConfigKeys.*;
+import static brooklyn.entity.basic.ConfigKeys.newBooleanConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.newConfigKeyWithPrefix;
+import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
@@ -38,6 +40,13 @@ public class BrooklynConfigKeys {
         "Provides a label which uniquely identifies an installation, used in the computation of the install dir; "
         + "this should include something readable, and must include a hash of all data which differentiates an installation "
         + "(e.g. version, plugins, etc), but should be the same where install dirs can be shared to allow for re-use");
+    
+    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("pre.launch.command",
+            "Command to be run prior to the launch method being called on the driver");
+    
+    public static final ConfigKey<String> POST_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("post.launch.command",
+            "Command to be run after the launch method being called on the driver. The implementation in AbstractSoftwareSshDriver "
+            + "runs this comamnd as an SSH command");
         
     public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
             "${"

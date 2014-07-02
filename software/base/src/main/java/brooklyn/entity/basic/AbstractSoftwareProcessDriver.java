@@ -17,6 +17,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -69,10 +70,22 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             customize();
         }});
 
+        if (!Strings.isNullOrEmpty(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
+            DynamicTasks.queue("pre-launch command", new Runnable() { public void run() {
+                runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
+            }});
+        };
+        
         DynamicTasks.queue("launch", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
             launch();
         }});
+        
+        if (!Strings.isNullOrEmpty(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
+            DynamicTasks.queue("post-launch command", new Runnable() { public void run() {
+                runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
+            }});
+        };
 
         DynamicTasks.queue("post-launch", new Runnable() { public void run() {
             postLaunch();
@@ -84,7 +97,10 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
     public abstract void install();
     public abstract void customize();
+    public abstract void runPreLaunchCommand(String command);
     public abstract void launch();
+    public abstract void runPostLaunchCommand(String command);
+    
 
     @Override
     public void kill() {
