@@ -1,6 +1,3 @@
-/*
- * Copyright (c) 2009-2013 Cloudsoft Corporation Ltd.
- */
 package brooklyn.util.text;
 
 import java.text.DecimalFormat;
