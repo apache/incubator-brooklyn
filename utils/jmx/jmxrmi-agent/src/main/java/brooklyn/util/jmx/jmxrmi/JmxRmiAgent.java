@@ -1,7 +1,3 @@
-/*
- * Copyright 2013 by Cloudsoft Corp.
- * Copyright 2007 by Sun Microsystems, Inc.
- */
 package brooklyn.util.jmx.jmxrmi;
 
 import java.lang.management.ManagementFactory;

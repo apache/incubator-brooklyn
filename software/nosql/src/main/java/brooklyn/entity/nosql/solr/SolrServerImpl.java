@@ -1,6 +1,3 @@
-/*
- * Copyright 2012-2014 by Cloudsoft Corp.
- */
 package brooklyn.entity.nosql.solr;
 
 import java.util.concurrent.TimeUnit;
