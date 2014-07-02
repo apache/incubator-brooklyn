@@ -273,8 +273,15 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         };
         
-        ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollPeriod), taskFactory);
-        pollingTask = managementContext.getExecutionManager().submit(task);
+        if (pollPeriod==null || pollPeriod.equals(Duration.PRACTICALLY_FOREVER)) {
+            // don't schedule - used for tests
+            // (scheduling fires off one initial task in the background before the delay, 
+            // which affects tests that want to know exactly when publishing happens;
+            // TODO would be nice if scheduled task had a "no initial submission" flag )
+        } else {
+            ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollPeriod), taskFactory);
+            pollingTask = managementContext.getExecutionManager().submit(task);
+        }
     }
     
     /** invoked manually when initializing, and periodically thereafter */
