@@ -541,7 +541,9 @@ public class BrooklynLauncher {
 
             RebindManager rebindManager = managementContext.getRebindManager();
 
-            BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(objectStore,
+            BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
+                    objectStore,
+                    ((ManagementContextInternal)managementContext).getBrooklynProperties(),
                     managementContext.getCatalog().getRootClassLoader());
             PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
             ((RebindManagerImpl) rebindManager).setPeriodicPersistPeriod(persistPeriod);

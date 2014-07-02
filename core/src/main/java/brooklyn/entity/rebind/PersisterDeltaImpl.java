@@ -10,7 +10,52 @@ import brooklyn.mementos.PolicyMemento;
 
 import com.google.common.collect.Sets;
 
-class PersisterDeltaImpl implements Delta {
+public class PersisterDeltaImpl implements Delta {
+    
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static class Builder {
+        private final PersisterDeltaImpl delta = new PersisterDeltaImpl();
+
+        public Builder locations(Collection<? extends LocationMemento> vals) {
+            delta.locations.addAll(vals);
+            return this;
+        }
+        public Builder entities(Collection<? extends EntityMemento> vals) {
+            delta.entities.addAll(vals);
+            return this;
+        }
+        public Builder policies(Collection<? extends PolicyMemento> vals) {
+            delta.policies.addAll(vals);
+            return this;
+        }
+        public Builder enrichers(Collection<? extends EnricherMemento> vals) {
+            delta.enrichers.addAll(vals);
+            return this;
+        }
+        public Builder removedLocationIds(Collection<String> vals) {
+            delta.removedLocationIds.addAll(vals);
+            return this;
+        }
+        public Builder removedEntityIds(Collection<String> vals) {
+            delta.removedEntityIds.addAll(vals);
+            return this;
+        }
+        public Builder removedPolicyIds(Collection<String> vals) {
+            delta.removedPolicyIds.addAll(vals);
+            return this;
+        }
+        public Builder removedEnricherIds(Collection<String> vals) {
+            delta.removedEnricherIds.addAll(vals);
+            return this;
+        }
+        public Delta build() {
+            return delta;
+        }
+    }
+    
     Collection<LocationMemento> locations = Sets.newLinkedHashSet();
     Collection<EntityMemento> entities = Sets.newLinkedHashSet();
     Collection<PolicyMemento> policies = Sets.newLinkedHashSet();

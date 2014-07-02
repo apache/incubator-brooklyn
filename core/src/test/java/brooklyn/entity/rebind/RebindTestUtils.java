@@ -27,6 +27,7 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.javalang.Serializers;
@@ -170,7 +171,10 @@ public class RebindTestUtils {
             
             objectStore.injectManagementContext(unstarted);
             objectStore.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
-            BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
+            BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(
+                    objectStore, 
+                    unstarted.getBrooklynProperties(), 
+                    classLoader);
             ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
             unstarted.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
             return unstarted;
@@ -235,7 +239,10 @@ public class RebindTestUtils {
     public static Collection<Application> rebindAll(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler, PersistenceObjectStore objectStore) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
 
-        BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
+        BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(
+                objectStore,
+                ((ManagementContextInternal)newManagementContext).getBrooklynProperties(),
+                classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
         List<Application> newApps;
         if (exceptionHandler == null) {
