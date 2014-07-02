@@ -15,10 +15,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <camp-impl.version>0.1.0-SNAPSHOT</camp-impl.version>
-    </properties>
-
     <dependencies>
         
         <dependency>
@@ -30,7 +26,7 @@
         <dependency>
             <groupId>io.brooklyn.camp</groupId>
             <artifactId>camp-base</artifactId>
-            <version>${camp-impl.version}</version>
+            <version>${brooklyn.version}</version>
         </dependency>
         
         <!-- TODO not enamoured of including software-base here, but it allows us to reference chef and vanilla for short names;

@@ -122,6 +122,8 @@
         <osgi-core.version>4.3.0</osgi-core.version>
         <commons-io.version>2.4</commons-io.version>
         <hazelcast.version>3.0</hazelcast.version>
+        <commons-lang3.version>3.1</commons-lang3.version>
+        <commons-compress.version>1.4</commons-compress.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
@@ -681,6 +683,7 @@
                 <module>utils/groovy</module>
                 <module>api</module>
                 <module>usage/test-support</module>
+                <module>camp</module>
                 <module>core</module>
                 <module>policy</module>
                 <module>storage/hazelcast</module>
