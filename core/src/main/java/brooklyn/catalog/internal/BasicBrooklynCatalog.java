@@ -1,5 +1,8 @@
 package brooklyn.catalog.internal;
 
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.spi.pdp.DeploymentPlan;
+
 import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
@@ -10,11 +13,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -115,6 +119,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return (Class<? extends T>) loadClass(resultI);
     }
 
+    @Deprecated
     private <T> CatalogItemDtoAbstract<T> getAbstractCatalogItem(CatalogItem<T> item) {
         while (item instanceof CatalogItemDo) item = ((CatalogItemDo<T>)item).itemDto;
         if (item==null) return null;
@@ -123,7 +128,19 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     private <T> CatalogItemDtoAbstract<T> getAbstractCatalogItem(String yaml) {
-        // FIXME Need to parse yaml to extract CatalogItem info
+        CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
+        
+        DeploymentPlan plan = camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
+        
+        // TODO #2 parse brooklyn.catalog metadata, bundles etc.
+        // for now take the name from the plan or from a single service type therein
+        
+        // TODO #3 version info
+        
+        // TODO #1 build the catalog item from the plan (as CatalogItem<Entity> ?)
+//        plan.getName()
+        // TODO #2 then support instantiating from the item, replacing 
+        
         throw new UnsupportedOperationException();
     }
 
@@ -137,7 +154,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDto;
     }
 
-    @Override
+    @Override @Deprecated
     public void addItem(CatalogItem<?> item) {
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
         Preconditions.checkNotNull(item, "item");
@@ -145,7 +162,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         manualAdditionsCatalog.addEntry(getAbstractCatalogItem(item));
     }
 
-    @Override
+    @Override @Deprecated
     public CatalogItem<?> addItem(Class<?> type) {
         log.debug("Adding manual catalog item to "+mgmt+": "+type);
         Preconditions.checkNotNull(type, "type");
