@@ -60,8 +60,10 @@ public interface ManagementContextInternal extends ManagementContext {
 
     UsageManager getUsageManager();
     
-    /** returns OSGi manager, if available; may be absent if OSGi not supported, e.g. in test contexts
-     * (but major contexts will support this) */
+    /**
+     * @return The OSGi manager, if available; may be absent if OSGi is not supported,
+     * e.g. in test contexts (but will be supported in all major contexts).
+     */
     Maybe<OsgiManager> getOsgiManager();
 
     InternalEntityFactory getEntityFactory();

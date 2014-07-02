@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,7 @@ import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class CatalogDo {
 
@@ -61,29 +61,41 @@ public class CatalogDo {
         getCache();
         return this;
     }
-    
+
     protected synchronized void loadThisCatalog(ManagementContext mgmt, CatalogDo parent) {
         if (isLoaded()) return;
         if (this.parent!=null && !this.parent.equals(parent))
             log.warn("Catalog "+this+" being initialised with different parent "+parent+" when already parented by "+this.parent, new Throwable("source of reparented "+this));
-        this.parent = parent;
         if (this.mgmt!=null && !this.mgmt.equals(mgmt))
             log.warn("Catalog "+this+" being initialised with different mgmt "+mgmt+" when already managed by "+this.mgmt, new Throwable("source of reparented "+this));
+        this.parent = parent;
         this.mgmt = mgmt;
+        dto.populateFromUrl();
+        loadCatalogClasspath();
+        loadCatalogItems();
+        isLoaded = true;
+        synchronized (this) {
+            notifyAll();
+        }
+    }
+
+    private void loadCatalogClasspath() {
         try {
-            if (dto.url!=null)
-                CatalogDtoUtils.populateFromUrl(dto, dto.url);
             classpath = new CatalogClasspathDo(this);
             classpath.load();
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             log.error("Unable to load catalog "+this+" (ignoring): "+e);
-//            log.debug("Trace for failure to load "+this+": "+e, e);
             log.info("Trace for failure to load "+this+": "+e, e);
         }
-        isLoaded = true;
-        synchronized (this) {
-            notifyAll();
+    }
+
+    private void loadCatalogItems() {
+        List<CatalogLibrariesDo> loadedLibraries = Lists.newLinkedList();
+        for (CatalogItemDtoAbstract entry : dto.entries) {
+            CatalogLibrariesDo library = new CatalogLibrariesDo(entry.getLibrariesDto());
+            library.load(mgmt);
+            loadedLibraries.add(library);
         }
     }
 

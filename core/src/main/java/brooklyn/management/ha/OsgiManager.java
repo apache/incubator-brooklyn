@@ -49,12 +49,14 @@ public class OsgiManager {
         framework = null;
     }
 
-    // TODO: throws BundleException appropriate?
-    public void registerBundle(String bundleUrl) throws BundleException {
-        Osgis.install(framework, bundleUrl);
+    public void registerBundle(String bundleUrl) {
+        try {
+            Osgis.install(framework, bundleUrl);
+        } catch (BundleException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
-    // TODO: Handle .get failing
     public <T> Maybe<Class<T>> tryResolveClass(String bundleUrl, String type) {
         try {
             Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleUrl);

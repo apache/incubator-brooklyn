@@ -42,6 +42,10 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
     @Nonnull
     @Override
     public CatalogItemLibraries getLibraries() {
+        return getLibrariesDto();
+    }
+
+    public CatalogLibrariesDto getLibrariesDto() {
         return libraries;
     }
 

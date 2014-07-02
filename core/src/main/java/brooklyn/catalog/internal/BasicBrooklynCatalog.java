@@ -33,21 +33,16 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private final CatalogDo catalog;
     private volatile CatalogDo manualAdditionsCatalog;
     private volatile LoadedClassLoader manualAdditionsClasses;
-    
+
+    public BasicBrooklynCatalog(ManagementContext mgmt, String catalogUrl) {
+        this(mgmt, CatalogDto.newDtoFromUrl(catalogUrl));
+    }
+
     public BasicBrooklynCatalog(final ManagementContext mgmt, final CatalogDto dto) {
         this.mgmt = Preconditions.checkNotNull(mgmt, "managementContext");
         this.catalog = new CatalogDo(mgmt, dto);
-        
-        mgmt.getExecutionManager().submit(MutableMap.of("name", "loading catalog"), new Runnable() {
-            public void run() {
-                log.debug("Loading catalog for "+mgmt);
-                catalog.load(mgmt, null);
-                if (log.isDebugEnabled())
-                    log.debug("Loaded catalog for "+mgmt+": "+catalog+"; search classpath is "+catalog.getRootClassLoader());
-            }
-        });
     }
-    
+
     public boolean blockIfNotLoaded(Duration timeout) {
         try {
             return getCatalog().blockIfNotLoaded(timeout);
@@ -85,12 +80,23 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public ClassLoader getRootClassLoader() {
         return catalog.getRootClassLoader();
     }
-    
+
+    /**
+     * Loads this catalog
+     */
+    public void load() {
+        log.debug("Loading catalog for " + mgmt);
+        getCatalog().load(mgmt, null);
+        if (log.isDebugEnabled()) {
+            log.debug("Loaded catalog for " + mgmt + ": " + catalog + "; search classpath is " + catalog.getRootClassLoader());
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T> Class<? extends T> loadClass(CatalogItem<T> item) {
         if (log.isDebugEnabled())
-            log.debug("Loading class for catalog item "+item);
+            log.debug("Loading class for catalog item " + item);
         Preconditions.checkNotNull(item);
         CatalogItemDo<?> loadedItem = getCatalogItemDo(item.getId());
         if (loadedItem==null) throw new NoSuchElementException("Unable to load '"+item.getId()+"' to instantiate it");
