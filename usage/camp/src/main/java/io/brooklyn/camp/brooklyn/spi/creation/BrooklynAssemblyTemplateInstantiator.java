@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -213,39 +214,76 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
-        Map<Entity, EntitySpec<?>> entitySpecs = Maps.newLinkedHashMap();
-
-        BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
-        EntitySpec<StartableApplication> appSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
-        Application app = appResolver.newEntity(appSpec);
-        entitySpecs.put(app, appSpec);
+        Map<Entity, EntitySpec<?>> rootEntities = Maps.newLinkedHashMap();
+        Map<Entity, EntitySpec<?>> allEntities = Maps.newLinkedHashMap();
+        buildEntities(template, rootEntities, allEntities, mgmt);
         
-        for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
-            PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
-            BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
-            EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
-
-            spec.parent(app);
-            Entity entity = entityResolver.newEntity(spec);
-            entitySpecs.put(entity, spec);
-            buildEntityHierarchy(mgmt, entitySpecs, entity, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
+        EntitySpec<StartableApplication> appSpec;
+        StartableApplication app;
+        if(shouldWrapInApp(template, rootEntities)) {
+            BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
+            appSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
+            app = appResolver.newEntity(appSpec);
+            setEntitiesParent(rootEntities, app);
+            allEntities.put(app, appSpec);
+        } else {
+            Entry<Entity, EntitySpec<?>> entry = rootEntities.entrySet().iterator().next();
+            app = (StartableApplication)entry.getKey();
+            appSpec = (EntitySpec<StartableApplication>)entry.getValue();
         }
-
-        for (final Entity entity : entitySpecs.keySet()) {
-            final EntitySpec<?> spec = entitySpecs.get(entity);
-            
-            ((EntityInternal) entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
-                @Override
-                public void run() {
-                    initEntity(mgmt, entity, (EntitySpec<Entity>)spec);
-                }
-            }).getUnchecked();
-        }
+        
+        initEntities(mgmt, allEntities);
         
         log.info("CAMP placing '{}' under management", appSpec);
         Entities.startManagement(app, mgmt);
 
         return app;
+    }
+
+    private void setEntitiesParent(Map<Entity, EntitySpec<?>> entities, Application parentApp) {
+        for(Entry<Entity, EntitySpec<?>> entry : entities.entrySet()) {
+            entry.getValue().parent(parentApp);
+            entry.getKey().setParent(parentApp);
+        }
+    }
+
+    private void initEntities(final ManagementContext mgmt, Map<Entity, EntitySpec<?>> entities) {
+        for (Entry<Entity, EntitySpec<?>> entry : entities.entrySet()) {
+            final Entity entity = entry.getKey();
+            
+            @SuppressWarnings("unchecked")
+            final EntitySpec<Entity> spec = (EntitySpec<Entity>)entry.getValue();
+            
+            ((EntityInternal) entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
+                @Override
+                public void run() {
+                    initEntity(mgmt, entity, spec);
+                }
+            }).getUnchecked();
+        }
+    }
+
+    private boolean shouldWrapInApp(AssemblyTemplate template, Map<Entity, EntitySpec<?>> rootEntities) {
+        return isWrapAppRequested(template) ||
+                rootEntities.size() != 1 ||
+                !(rootEntities.keySet().iterator().next() instanceof StartableApplication);
+    }
+
+    private boolean isWrapAppRequested(AssemblyTemplate template) {
+        return Boolean.TRUE.equals(template.getCustomAttributes().get("wrappedApp"));
+    }
+
+    private void buildEntities(AssemblyTemplate template, Map<Entity, EntitySpec<?>> parentEntities, 
+            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt) {
+        for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
+            PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
+            BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
+            EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
+            Entity entity = entityResolver.newEntity(spec);
+            parentEntities.put(entity, spec);
+            allEntities.put(entity, spec);
+            buildEntityHierarchy(mgmt, allEntities, entity, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
+        }
     }
 
     protected <T extends Entity> void initEntity(ManagementContext mgmt, T entity, EntitySpec<T> spec) {
