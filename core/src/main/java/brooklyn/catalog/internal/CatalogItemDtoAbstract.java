@@ -1,14 +1,18 @@
 package brooklyn.catalog.internal;
 
+import javax.annotation.Nonnull;
+
 import brooklyn.catalog.CatalogItem;
 
 public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
-    
+
     String id;
     String type;
     String name;
     String description;
     String iconUrl;
+    String version;
+    CatalogLibrariesDto libraries;
     
     public String getId() {
         if (id!=null) return id;
@@ -30,34 +34,55 @@ public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
     public String getIconUrl() {
         return iconUrl;
     }
-    
+
+    public String getVersion() {
+        return version;
+    }
+
+    @Nonnull
+    @Override
+    public CatalogItemLibraries getLibraries() {
+        return libraries;
+    }
+
     public static CatalogTemplateItemDto newTemplate(String type, String name) {
         return newTemplate(null, type, name, null);
     }
-    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description){
-        return set(new CatalogTemplateItemDto(), id, type, name, description);
+    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description) {
+        return newTemplate(id, type, name, description, null);
+    }
+    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogTemplateItemDto(), id, type, name, description, libraries);
     }
 
     public static CatalogEntityItemDto newEntity(String type, String name) {
         return newEntity(null, type, name, null);
     }
-    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description){
-        return set(new CatalogEntityItemDto(), id, type, name, description);
+    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description) {
+        return newEntity(id, type, name, description, null);
+    }
+    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogEntityItemDto(), id, type, name, description, libraries);
     }
 
     public static CatalogPolicyItemDto newPolicy(String type, String name) {
         return newPolicy(null, type, name, null);
     }
-    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description){
-        return set(new CatalogPolicyItemDto(), id, type, name, description);
+    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description) {
+        return newPolicy(id, type, name, description, null);
+    }
+    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogPolicyItemDto(), id, type, name, description, libraries);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static <T extends CatalogItemDtoAbstract> T set(T target, String id, String type, String name, String description) {
+    private static <T extends CatalogItemDtoAbstract> T set(T target, String id, String type, String name,
+            String description, CatalogLibrariesDto libraries) {
         target.id = id;
         target.type = type;
         target.name = name;
         target.description = description;
+        target.libraries = libraries != null ? libraries : new CatalogLibrariesDto();
         return target;
     }
 

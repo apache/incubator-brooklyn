@@ -44,34 +44,33 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     addResource(new CatalogResource());
   }
 
-  @Test
+  @Test(enabled=false, groups="WIP") // FIXME broken until BasicBrooklynCatalog can parse the yaml
   public void testRegisterCustomEntity() {
-    String groovyScript = "package brooklyn.rest.entities.custom\n" +
-        "" +
-        "import brooklyn.entity.basic.AbstractEntity\n" +
-        "import brooklyn.entity.Entity\n" +
-        "import brooklyn.event.basic.BasicConfigKey\n" +
-        "" +
-        "class DummyEntity extends AbstractEntity {\n" +
-        "  public static final BasicConfigKey<String> DUMMY_CFG = [ String, \"dummy.config\", \"Dummy Config\", \"xxx\" ]\n" +
-        "  public DummyEntity(Map properties=[:], Entity parent=null) {\n" +
-        "        super(properties, parent)" +
-        "  }" +
-        "}\n";
+    String yaml =
+        "brooklyn.catalog:\n"+
+        "- id: my.catalog.app.id\n"+
+        "- name: My Catalog App\n"+
+        "- description: My description\n"+
+        "- icon_url: classpath://path/to/myicon.jpg\n"+
+        "- version: 0.1.2\n"+
+        "- bundles:\n"+
+        "- url: http://myurl/my.jar\n"+
+        "\n"+
+        "services:\n"+
+        "- type: brooklyn.test.entity.TestEntity\n";
 
     ClientResponse response = client().resource("/v1/catalog")
-        .post(ClientResponse.class, groovyScript);
+        .post(ClientResponse.class, yaml);
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
-    Set<String> entities = client().resource("/v1/catalog/entities?name=dummy")
-        .get(new GenericType<Set<String>>() {
-        });
-    assertTrue(entities.contains("brooklyn.rest.entities.custom.DummyEntity"));
-
-    CatalogEntitySummary entity = client().resource(response.getLocation())
-        .get(CatalogEntitySummary.class);
-    assertTrue(entity.toString().contains("dummy.config"), "ENTITY was: "+entity);
+    CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/my.catalog.app.id")
+            .get(CatalogEntitySummary.class);
+    assertEquals(entityItem.getId(), "my.catalog.app.id");
+    assertEquals(entityItem.getName(), "My Catalog App");
+    assertEquals(entityItem.getDescription(), "My description");
+    assertEquals(entityItem.getIconUrl(), "classpath://path/to/myicon.jpg");
+    assertEquals(entityItem.getType(), "brooklyn.test.entity.TestEntity");
   }
 
   @Test

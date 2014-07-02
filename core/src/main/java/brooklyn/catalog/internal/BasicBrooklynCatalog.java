@@ -1,7 +1,5 @@
 package brooklyn.catalog.internal;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
@@ -118,6 +116,21 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         throw new IllegalStateException("Cannot unwrap catalog item '"+item+"' (type "+item.getClass()+") to restore DTO");
     }
 
+    private <T> CatalogItemDtoAbstract<T> getAbstractCatalogItem(String yaml) {
+        // FIXME Need to parse yaml to extract CatalogItem info
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CatalogItem<?> addItem(String yaml) {
+        log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
+        Preconditions.checkNotNull(yaml, "yaml");
+        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
+        CatalogItemDtoAbstract<Object> itemDto = getAbstractCatalogItem(yaml);
+        manualAdditionsCatalog.addEntry(itemDto);
+        return itemDto;
+    }
+
     @Override
     public void addItem(CatalogItem<?> item) {
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
@@ -134,23 +147,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         manualAdditionsClasses.addClass(type);
         return manualAdditionsCatalog.classpath.addCatalogEntry(type);
     }
-    
-    @Override
-    public void addToClasspath(ClassLoader loader) {
-        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
-        manualAdditionsCatalog.classpath.addToClasspath(loader);
-    }
-    
-    @Override
-    public void addToClasspath(String url) {
-        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
-        try {
-            manualAdditionsCatalog.classpath.addToClasspath(new URL(url), true);
-        } catch (MalformedURLException e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-    
+
+    @Deprecated
     private synchronized void loadManualAdditionsCatalog() {
         if (manualAdditionsCatalog!=null) return;
         CatalogDto manualAdditionsCatalogDto = CatalogDto.newNamedInstance(

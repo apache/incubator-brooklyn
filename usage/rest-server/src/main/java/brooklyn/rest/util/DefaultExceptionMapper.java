@@ -43,7 +43,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
             return wae.getResponse();
         }
 
-        // Assume ClassCoercionExceptions are caused by TypeCoercions from input paramters gone wrong.
+        // Assume ClassCoercionExceptions are caused by TypeCoercions from input parameters gone wrong.
         if (throwable instanceof ClassCoercionException)
             return responseBadRequestJson(ApiError.of(throwable));
 

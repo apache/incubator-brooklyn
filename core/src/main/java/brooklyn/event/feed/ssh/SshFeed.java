@@ -168,7 +168,7 @@ public class SshFeed extends AbstractFeed {
     
     // Treat as immutable once built
     private final SetMultimap<SshPollIdentifier, SshPollConfig<?>> polls = HashMultimap.<SshPollIdentifier,SshPollConfig<?>>create();
-    
+
     /** @deprecated since 0.7.0, use static convenience on {@link Locations} */
     @Deprecated
     public static SshMachineLocation getMachineOfEntity(Entity entity) {

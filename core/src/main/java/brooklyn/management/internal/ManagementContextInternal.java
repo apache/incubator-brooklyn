@@ -18,6 +18,8 @@ import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.ha.OsgiManager;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.TaskTags;
 
 public interface ManagementContextInternal extends ManagementContext {
@@ -57,6 +59,10 @@ public interface ManagementContextInternal extends ManagementContext {
     AccessManager getAccessManager();
 
     UsageManager getUsageManager();
+    
+    /** returns OSGi manager, if available; may be absent if OSGi not supported, e.g. in test contexts
+     * (but major contexts will support this) */
+    Maybe<OsgiManager> getOsgiManager();
 
     InternalEntityFactory getEntityFactory();
     

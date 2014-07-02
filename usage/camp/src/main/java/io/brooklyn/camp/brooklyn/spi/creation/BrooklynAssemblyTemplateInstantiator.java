@@ -1,7 +1,6 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -53,7 +52,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         Application app = create(template, platform);
         Task<?> task = start(app, platform);
         log.info("CAMP created "+app+"; starting in "+task);
-        return ((BrooklynCampPlatform)platform).assemblies().get(app.getApplicationId());
+        return platform.assemblies().get(app.getApplicationId());
     }
 
     // note: based on BrooklynRestResourceUtils, but modified to not allow child entities (yet)
@@ -63,6 +62,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
+        // TODO: item is always null because template.id is a random String, so
+        // createApplicationFromCatalog branch below is never taken.  If `id'
+        // key is given in blueprint it is available with:
+        // Object customId = template.getCustomAttributes().get("id");
         CatalogItem<?> item = catalog.getCatalogItem(template.getId());
 
         if (item==null) {
@@ -139,8 +142,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
     }
 
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
-        ManagementContext mgmt = ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
-        return mgmt;
+        return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
     }
     
     public Task<?> start(Application app, CampPlatform platform) {

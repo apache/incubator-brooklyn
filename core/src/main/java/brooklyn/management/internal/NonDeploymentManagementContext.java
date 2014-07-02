@@ -44,6 +44,7 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+import brooklyn.management.ha.OsgiManager;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
@@ -174,6 +175,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     @Override
     public UsageManager getUsageManager() {
         return usageManager;
+    }
+    
+    @Override
+    public Maybe<OsgiManager> getOsgiManager() {
+        return Maybe.absent();
     }
 
     @Override

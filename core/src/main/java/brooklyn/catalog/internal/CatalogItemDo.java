@@ -1,5 +1,7 @@
 package brooklyn.catalog.internal;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.base.Preconditions;
 
 import brooklyn.catalog.CatalogItem;
@@ -55,7 +57,18 @@ public class CatalogItemDo<T> implements CatalogItem<T> {
     public String getIconUrl() {
         return itemDto.getIconUrl();
     }
-    
+
+    @Override
+    public String getVersion() {
+        return itemDto.getVersion();
+    }
+
+    @Nonnull
+    @Override
+    public CatalogItemLibraries getLibraries() {
+        return itemDto.getLibraries();
+    }
+
     public Class<T> getJavaClass() {
         if (javaClass==null) loadJavaClass();
         return javaClass;

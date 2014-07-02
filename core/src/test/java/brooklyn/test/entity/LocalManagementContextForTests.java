@@ -2,7 +2,6 @@ package brooklyn.test.entity;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 
 /** management context which forces an empty catalog to prevent scanning / interacting with local filesystem.
@@ -21,7 +20,13 @@ public class LocalManagementContextForTests extends LocalManagementContext {
 
     public static BrooklynProperties setEmptyCatalogAsDefault(BrooklynProperties brooklynProperties) {
         if (brooklynProperties==null) return null;
-        brooklynProperties.putIfAbsent(AbstractManagementContext.BROOKLYN_CATALOG_URL, "classpath://brooklyn-catalog-empty.xml");
+        brooklynProperties.putIfAbsent(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn-catalog-empty.xml");
+        return brooklynProperties;
+    }
+    
+    public static BrooklynProperties disableOsgi(BrooklynProperties brooklynProperties) {
+        if (brooklynProperties==null) return null;
+        brooklynProperties.putIfAbsent(BrooklynServerConfig.USE_OSGI, false);
         return brooklynProperties;
     }
     
