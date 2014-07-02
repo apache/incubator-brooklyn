@@ -18,9 +18,9 @@
  */
 package brooklyn.entity.rebind;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -61,13 +61,13 @@ public interface RebindExceptionHandler {
 
     void onNotFound(BrooklynObjectType type, String id);
 
-    void onRebindFailed(BrooklynObjectType type, Identifiable instance, Exception e);
+    void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
 
     void onAddPolicyFailed(EntityLocal entity, Policy policy, Exception e);
 
     void onAddEnricherFailed(EntityLocal entity, Enricher enricher, Exception e);
 
-    void onManageFailed(BrooklynObjectType type, Identifiable instance, Exception e);
+    void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
 
     void onDone();
     

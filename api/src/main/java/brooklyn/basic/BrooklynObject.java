@@ -16,26 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.basic;
 
-import brooklyn.basic.BrooklynObject;
-import brooklyn.mementos.Memento;
-
-import com.google.common.annotations.Beta;
+import brooklyn.entity.trait.Identifiable;
 
 /**
- * Handler called on all exceptions to do with persistence.
- * 
- * @author aled
+ * Super-type of entity, location, policy and enricher.
  */
-@Beta
-public interface PersistenceExceptionHandler {
-
-    void stop();
-
-    void onGenerateMementoFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
-    
-    void onPersistMementoFailed(Memento memento, Exception e);
-    
-    void onDeleteMementoFailed(String id, Exception e);
+public interface BrooklynObject extends Identifiable {
+    /**
+     * A display name; recommended to be a concise single-line description.
+     */
+    String getDisplayName();
 }

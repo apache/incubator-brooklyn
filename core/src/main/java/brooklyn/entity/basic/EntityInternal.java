@@ -21,6 +21,7 @@ package brooklyn.entity.basic;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.rebind.RebindSupport;
@@ -41,7 +42,7 @@ import com.google.common.annotations.Beta;
  * for the brooklyn framework only).
  */
 @Beta
-public interface EntityInternal extends EntityLocal, Rebindable {
+public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Rebindable {
     
     void addLocations(Collection<? extends Location> locations);
 

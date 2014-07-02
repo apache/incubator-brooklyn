@@ -20,6 +20,7 @@ package brooklyn.location.basic;
 
 import java.util.Map;
 
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.RebindSupport;
@@ -34,7 +35,7 @@ import com.google.common.annotations.Beta;
 /**
  * Information about locations private to Brooklyn.
  */
-public interface LocationInternal extends Location, Rebindable {
+public interface LocationInternal extends BrooklynObjectInternal, Location {
 
     @Beta
     public static final ConfigKey<String> ORIGINAL_SPEC = ConfigKeys.newStringConfigKey("spec.original", "The original spec used to instantiate a location");

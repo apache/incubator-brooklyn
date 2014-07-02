@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.trait.Identifiable;
+import brooklyn.basic.BrooklynObject;
 import brooklyn.mementos.Memento;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -59,7 +59,7 @@ public class PersistenceExceptionHandlerImpl implements PersistenceExceptionHand
     }
     
     @Override
-    public void onGenerateMementoFailed(BrooklynObjectType type, Identifiable instance, Exception e) {
+    public void onGenerateMementoFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         String errmsg = "generate memento for "+type+" "+instance.getClass().getName()+"("+instance.getId()+")";
         onErrorImpl(errmsg, e, prevFailedMementoGenerators.add(instance.getId()));
     }

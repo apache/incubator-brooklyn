@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.AbstractBrooklynObject;
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.entity.Entity;
@@ -53,7 +55,6 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
@@ -64,7 +65,7 @@ import com.google.common.collect.Maps;
 /**
  * Common functionality for policies and enrichers
  */
-public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurable {
+public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject implements BrooklynObjectInternal, EntityAdjunct, Configurable {
     private static final Logger log = LoggerFactory.getLogger(AbstractEntityAdjunct.class);
 
     private volatile ManagementContext managementContext;
@@ -87,9 +88,6 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
 
     protected final AdjunctType adjunctType = new AdjunctType(this);
 
-    @SetFromFlag
-    protected String id = Identifiers.makeRandomId(8);
-    
     @SetFromFlag
     protected String name;
     
@@ -292,11 +290,6 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     @Deprecated
     public void setName(String name) { setDisplayName(name); }
 
-    @Override
-    public String getId() { return id; }
-    
-    public void setId(String id) { this.id = id; }
- 
     public void setEntity(EntityLocal entity) {
         if (destroyed.get()) throw new IllegalStateException("Cannot set entity on a destroyed entity adjunct");
         this.entity = entity;

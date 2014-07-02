@@ -27,10 +27,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
-import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -188,7 +188,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
     
     @Override
-    public void onRebindFailed(BrooklynObjectType type, Identifiable instance, Exception e) {
+    public void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem rebinding "+type+" "+instance.getId()+" ("+instance+")";
         
@@ -255,7 +255,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
 
     @Override
-    public void onManageFailed(BrooklynObjectType type, Identifiable instance, Exception e) {
+    public void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem managing "+type+" "+instance.getId()+" ("+instance+")";
         

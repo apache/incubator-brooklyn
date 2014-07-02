@@ -21,8 +21,8 @@ package brooklyn.entity.rebind;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
-import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
 
 import com.google.common.collect.Lists;
@@ -32,8 +32,8 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
 
     protected final List<Exception> loadMementoFailures = Lists.newArrayList();
     protected final Map<String, Exception> createFailures = Maps.newLinkedHashMap();
-    protected final Map<Identifiable, Exception> rebindFailures = Maps.newLinkedHashMap();
-    protected final Map<Identifiable, Exception> manageFailures = Maps.newLinkedHashMap();
+    protected final Map<BrooklynObject, Exception> rebindFailures = Maps.newLinkedHashMap();
+    protected final Map<BrooklynObject, Exception> manageFailures = Maps.newLinkedHashMap();
     protected final Map<String, Exception> notFoundFailures = Maps.newLinkedHashMap();
     protected Exception failed;
     
@@ -70,13 +70,13 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
     }
     
     @Override
-    public void onRebindFailed(BrooklynObjectType type, Identifiable instance, Exception e) {
+    public void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         rebindFailures.put(instance, new IllegalStateException("problem rebinding "+type+" "+instance.getId()+" ("+instance+")", e));
         super.onRebindFailed(type, instance, e);
     }
 
     @Override
-    public void onManageFailed(BrooklynObjectType type, Identifiable instance, Exception e) {
+    public void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         manageFailures.put(instance, new IllegalStateException("problem managing "+type+" "+instance.getId()+" ("+instance+")", e));
         super.onManageFailed(type, instance, e);
     }

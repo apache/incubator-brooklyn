@@ -22,9 +22,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.trait.Identifiable;
 
 /**
  * A location that an entity can be in. Examples of locations include a single machine
@@ -34,7 +34,7 @@ import brooklyn.entity.trait.Identifiable;
  * 
  * Locations may not be {@link Serializable} in subsequent releases!
  */
-public interface Location extends Serializable, Identifiable {
+public interface Location extends Serializable, BrooklynObject {
 
     /**
      * A unique id for this location.
@@ -48,6 +48,7 @@ public interface Location extends Serializable, Identifiable {
      * @return the name assigned to the location.
      * @since 0.6 (previously getName())
      */
+    @Override
     String getDisplayName();
 
     /**
