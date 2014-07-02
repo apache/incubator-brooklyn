@@ -1,12 +1,15 @@
 package io.brooklyn.camp.test.mock.web;
 
+import brooklyn.util.guava.Maybe;
 import io.brooklyn.camp.BasicCampPlatform;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.collection.BasicResourceLookup;
+import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.pdp.Artifact;
 import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
+import io.brooklyn.camp.spi.pdp.Service;
 import io.brooklyn.camp.spi.resolve.PdpMatcher;
 
 public class MockWebPlatform {
@@ -53,6 +56,35 @@ public class MockWebPlatform {
             return true;
         }
     };
+
+    public static final PdpMatcher newLiteralServiceTypeToPlatformComponentTemplateMatcher(final BasicCampPlatform platform) {
+        return new PdpMatcher() {
+            public boolean apply(Object item, AssemblyTemplateConstructor atc) {
+                if (!(item instanceof Service)) return false;
+                Service svc = (Service)item;
+                String type = svc.getServiceType();
+                
+                for (ResolvableLink<PlatformComponentTemplate> t: platform.platformComponentTemplates().links()) {
+                    if (type.equals(t.getName())) {
+                        PlatformComponentTemplate pct = PlatformComponentTemplate.builder()
+                            .name(svc.getName())
+                            .customAttribute("serviceType", type)
+                            .description(Maybe.fromNullable(svc.getDescription()).or(t.resolve().getDescription()))
+                            .build();
+                        if (atc!=null)
+                            atc.add(pct);
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public boolean accepts(Object deploymentPlanItem) {
+                return apply(deploymentPlanItem, null);
+            }
+        };
+    }
     
     public static <T extends BasicCampPlatform> T populate(T platform) {
         platform.platformComponentTemplates().addAll(APPSERVER, DATABASE);
@@ -60,6 +92,7 @@ public class MockWebPlatform {
         platform.assemblyTemplates().add(ASSEMBLY1);
         
         platform.pdp().addMatcher(WAR_GETS_WAR_MATCHER);
+        platform.pdp().addMatcher(newLiteralServiceTypeToPlatformComponentTemplateMatcher(platform));
         
         return platform;
     }
