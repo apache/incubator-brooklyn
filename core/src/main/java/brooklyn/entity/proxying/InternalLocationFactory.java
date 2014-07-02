@@ -18,8 +18,6 @@
  */
 package brooklyn.entity.proxying;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,13 +30,10 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.javalang.Reflections;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -49,33 +44,7 @@ import com.google.common.collect.ImmutableMap;
  * 
  * @author aled
  */
-public class InternalLocationFactory {
-
-    private final ManagementContextInternal managementContext;
-
-    /**
-     * For tracking if AbstractLocation constructor has been called by framework, or in legacy way (i.e. directly).
-     * 
-     * To be deleted once we delete support for constructing locations directly (and expecting configure() to be
-     * called inside the constructor, etc).
-     * 
-     * @author aled
-     */
-    public static class FactoryConstructionTracker {
-        private static ThreadLocal<Boolean> constructing = new ThreadLocal<Boolean>();
-        
-        public static boolean isConstructing() {
-            return (constructing.get() == Boolean.TRUE);
-        }
-        
-        static void reset() {
-            constructing.set(Boolean.FALSE);
-        }
-        
-        static void setConstructing() {
-            constructing.set(Boolean.TRUE);
-        }
-    }
+public class InternalLocationFactory extends InternalFactory {
 
     /**
      * Returns true if this is a "new-style" location (i.e. where not expected to call the constructor to instantiate it).
@@ -96,16 +65,11 @@ public class InternalLocationFactory {
             throw new IllegalArgumentException("Class "+clazz+" is not an location");
         }
         
-        try {
-            clazz.getConstructor(new Class[0]);
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
+        return InternalFactory.isNewStyle(clazz);
     }
     
     public InternalLocationFactory(ManagementContextInternal managementContext) {
-        this.managementContext = checkNotNull(managementContext, "managementContext");
+        super(managementContext);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -123,12 +87,7 @@ public class InternalLocationFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            T loc;
-            if (isNewStyleLocation(clazz)) {
-                loc = constructLocation(clazz);
-            } else {
-                loc = constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
-            }
+            T loc = constructLocation(clazz, spec);
 
             if (spec.getId() != null) {
                 FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", spec.getId()), loc);
@@ -163,34 +122,24 @@ public class InternalLocationFactory {
     }
     
     /**
-     * Constructs a new-style location (fails if no no-arg constructor).
+     * Constructs an entity (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
+     */
+    public <T extends Location> T constructLocation(Class<? extends T> clazz, LocationSpec<T> spec) {
+        return super.construct(clazz, spec.getFlags());
+    }
+
+    /**
+     * Constructs a new-style entity (fails if no no-arg constructor).
      */
     public <T extends Location> T constructLocation(Class<T> clazz) {
-        try {
-            FactoryConstructionTracker.setConstructing();
-            try {
-                if (isNewStyleLocation(clazz)) {
-                    return clazz.newInstance();
-                } else {
-                    throw new IllegalStateException("Location class "+clazz+" must have a no-arg constructor");
-                }
-            } finally {
-                FactoryConstructionTracker.reset();
-            }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
+        return super.constructNewStyle(clazz);
     }
     
-    private <T extends Location> T constructOldStyle(Class<? extends T> clazz, Map<String,?> flags) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (flags.containsKey("parentLocation")) {
+    @Override
+    protected <T> T constructOldStyle(Class<T> clazz, Map<String,?> flags) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        if (flags.containsKey("parent") || flags.containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+clazz);
         }
-        Optional<? extends T> v = Reflections.invokeConstructorWithArgs(clazz, new Object[] {MutableMap.copyOf(flags)}, true);
-        if (v.isPresent()) {
-            return v.get();
-        } else {
-            throw new IllegalStateException("No valid constructor defined for "+clazz+" (expected no-arg or single java.util.Map argument)");
-        }
+        return super.constructOldStyle(clazz, flags);
     }
 }

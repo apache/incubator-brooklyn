@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.entity.proxying.InternalLocationFactory;
+import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
@@ -144,7 +144,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
      */
     public AbstractLocation(Map properties) {
         inConstruction = true;
-        _legacyConstruction = !InternalLocationFactory.FactoryConstructionTracker.isConstructing();
+        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
         if (!_legacyConstruction && properties!=null && !properties.isEmpty()) {
             LOG.warn("Forcing use of deprecated old-style location construction for "+getClass().getName()+" because properties were specified ("+properties+")");
             _legacyConstruction = true;

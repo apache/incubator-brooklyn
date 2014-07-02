@@ -18,9 +18,6 @@
  */
 package brooklyn.entity.proxying;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
@@ -35,9 +32,6 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.Reflections;
-
-import com.google.common.base.Optional;
 
 /**
  * Creates policies of required types.
@@ -50,33 +44,7 @@ import com.google.common.base.Optional;
  * 
  * @author aled
  */
-public class InternalPolicyFactory {
-
-    private final ManagementContextInternal managementContext;
-
-    /**
-     * For tracking if AbstractPolicy constructor has been called by framework, or in legacy way (i.e. directly).
-     * 
-     * To be deleted once we delete support for constructing policies directly (and expecting configure() to be
-     * called inside the constructor, etc).
-     * 
-     * @author aled
-     */
-    public static class FactoryConstructionTracker {
-        private static ThreadLocal<Boolean> constructing = new ThreadLocal<Boolean>();
-        
-        public static boolean isConstructing() {
-            return (constructing.get() == Boolean.TRUE);
-        }
-        
-        static void reset() {
-            constructing.set(Boolean.FALSE);
-        }
-        
-        static void setConstructing() {
-            constructing.set(Boolean.TRUE);
-        }
-    }
+public class InternalPolicyFactory extends InternalFactory {
 
     /**
      * Returns true if this is a "new-style" policy (i.e. where not expected to call the constructor to instantiate it).
@@ -96,13 +64,8 @@ public class InternalPolicyFactory {
         if (!Policy.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Class "+clazz+" is not a policy");
         }
-        
-        try {
-            clazz.getConstructor(new Class[0]);
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
+
+        return InternalFactory.isNewStyle(clazz);
     }
     
     public static boolean isNewStyleEnricher(Class<?> clazz) {
@@ -110,16 +73,11 @@ public class InternalPolicyFactory {
             throw new IllegalArgumentException("Class "+clazz+" is not an enricher");
         }
         
-        try {
-            clazz.getConstructor(new Class[0]);
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
+        return InternalFactory.isNewStyle(clazz);
     }
     
     public InternalPolicyFactory(ManagementContextInternal managementContext) {
-        this.managementContext = checkNotNull(managementContext, "managementContext");
+        super(managementContext);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -131,12 +89,7 @@ public class InternalPolicyFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            T pol;
-            if (isNewStylePolicy(clazz)) {
-                pol = constructPolicy(clazz);
-            } else {
-                pol = constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
-            }
+            T pol = constructPolicy(clazz, spec);
 
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setName(spec.getDisplayName());
@@ -171,12 +124,7 @@ public class InternalPolicyFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            T enricher;
-            if (isNewStyleEnricher(clazz)) {
-                enricher = constructEnricher(clazz);
-            } else {
-                enricher = constructOldStyle(clazz, MutableMap.copyOf(spec.getFlags()));
-            }
+            T enricher = constructEnricher(clazz, spec);
             
             if (spec.getDisplayName()!=null)
                 ((AbstractEnricher)enricher).setName(spec.getDisplayName());
@@ -203,51 +151,30 @@ public class InternalPolicyFactory {
     }
     
     /**
+     * Constructs a policy (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
+     */
+    public <T extends Policy> T constructPolicy(Class<? extends T> clazz, PolicySpec<T> spec) {
+        return super.construct(clazz, spec.getFlags());
+    }
+
+    /**
+     * Constructs an enricher (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
+     */
+    public <T extends Enricher> T constructEnricher(Class<? extends T> clazz, EnricherSpec<T> spec) {
+        return super.construct(clazz, spec.getFlags());
+    }
+
+    /**
      * Constructs a new-style policy (fails if no no-arg constructor).
      */
     public <T extends Policy> T constructPolicy(Class<T> clazz) {
-        try {
-            FactoryConstructionTracker.setConstructing();
-            try {
-                if (isNewStylePolicy(clazz)) {
-                    return clazz.newInstance();
-                } else {
-                    throw new IllegalStateException("Policy class "+clazz+" must have a no-arg constructor");
-                }
-            } finally {
-                FactoryConstructionTracker.reset();
-            }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
+        return super.constructNewStyle(clazz);
     }
     
     /**
      * Constructs a new-style enricher (fails if no no-arg constructor).
      */
     public <T extends Enricher> T constructEnricher(Class<T> clazz) {
-        try {
-            FactoryConstructionTracker.setConstructing();
-            try {
-                if (isNewStyleEnricher(clazz)) {
-                    return clazz.newInstance();
-                } else {
-                    throw new IllegalStateException("Enricher class "+clazz+" must have a no-arg constructor");
-                }
-            } finally {
-                FactoryConstructionTracker.reset();
-            }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-    
-    private <T> T constructOldStyle(Class<T> clazz, Map<String,?> flags) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        Optional<T> v = Reflections.invokeConstructorWithArgs(clazz, new Object[] {MutableMap.copyOf(flags)}, true);
-        if (v.isPresent()) {
-            return v.get();
-        } else {
-            throw new IllegalStateException("No valid constructor defined for "+clazz+" (expected no-arg or single java.util.Map argument)");
-        }
+        return super.constructNewStyle(clazz);
     }
 }

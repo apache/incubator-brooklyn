@@ -38,7 +38,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.Group;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
@@ -268,7 +268,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         // TODO Don't let `this` reference escape during construction
         entityType = new EntityDynamicType(this);
         
-        _legacyConstruction = !InternalEntityFactory.FactoryConstructionTracker.isConstructing();
+        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
         
         if (_legacyConstruction) {
             LOG.warn("Deprecated use of old-style entity construction for "+getClass().getName()+"; instead use EntityManager().createEntity(spec)");

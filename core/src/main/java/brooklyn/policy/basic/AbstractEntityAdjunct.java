@@ -37,7 +37,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.AttributeSensor;
@@ -106,7 +106,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     
     public AbstractEntityAdjunct(@SuppressWarnings("rawtypes") Map flags) {
         inConstruction = true;
-        _legacyConstruction = !InternalPolicyFactory.FactoryConstructionTracker.isConstructing();
+        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
         _legacyNoConstructionInit = (flags != null) && Boolean.TRUE.equals(flags.get("noConstructionInit"));
         
         if (!_legacyConstruction && flags!=null && !flags.isEmpty()) {
