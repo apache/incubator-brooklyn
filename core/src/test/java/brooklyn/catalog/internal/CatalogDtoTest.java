@@ -50,7 +50,7 @@ public class CatalogDtoTest {
         Assert.assertEquals(root.catalogs.size(), 5);
         CatalogDo loader = new CatalogDo(root).load(managementContext, null);
         
-        CatalogItemDo<?> worker = loader.getCache().get("io.brooklyn.mapr.m3.WorkerNode");
+        CatalogItemDo<?,?> worker = loader.getCache().get("io.brooklyn.mapr.m3.WorkerNode");
         Assert.assertNotNull(worker);
         Assert.assertEquals(worker.getName(), "M3 Worker Node");
     }

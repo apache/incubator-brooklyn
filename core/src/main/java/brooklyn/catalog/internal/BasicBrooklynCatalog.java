@@ -59,25 +59,25 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return catalog;
     }
 
-    protected CatalogItemDo<?> getCatalogItemDo(String id) {
+    protected CatalogItemDo<?,?> getCatalogItemDo(String id) {
         return catalog.getCache().get(id);
     }
     
     @Override
-    public CatalogItem<?> getCatalogItem(String id) {
+    public CatalogItem<?,?> getCatalogItem(String id) {
         if (id==null) return null;
-        CatalogItemDo<?> itemDo = getCatalogItemDo(id);
+        CatalogItemDo<?,?> itemDo = getCatalogItemDo(id);
         if (itemDo==null) return null;
         return itemDo.getDto();
     }
     
     @SuppressWarnings("unchecked")
     @Override
-    public <T> CatalogItem<T> getCatalogItem(Class<T> type, String id) {
+    public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
         if (id==null) return null;
-        CatalogItem<?> result = getCatalogItem(id);
+        CatalogItem<?,?> result = getCatalogItem(id);
         if (type==null || type.isAssignableFrom(result.getCatalogItemJavaType())) 
-            return (CatalogItem<T>)result;
+            return (CatalogItem<T,SpecT>)result;
         return null;
     }
     
@@ -96,13 +96,19 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
     }
 
+    @Override
+    public <T, SpecT> SpecT createSpec(CatalogItem<T, SpecT> item) {
+        // TODO #2
+        throw new UnsupportedOperationException();
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
-    public <T> Class<? extends T> loadClass(CatalogItem<T> item) {
+    public <T,SpecT> Class<? extends T> loadClass(CatalogItem<T,SpecT> item) {
         if (log.isDebugEnabled())
             log.debug("Loading class for catalog item " + item);
         Preconditions.checkNotNull(item);
-        CatalogItemDo<?> loadedItem = getCatalogItemDo(item.getId());
+        CatalogItemDo<?,?> loadedItem = getCatalogItemDo(item.getId());
         if (loadedItem==null) throw new NoSuchElementException("Unable to load '"+item.getId()+"' to instantiate it");
         return (Class<? extends T>) loadedItem.getJavaClass();
     }
@@ -110,9 +116,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @SuppressWarnings("unchecked")
     @Override
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
-        Iterable<CatalogItem<Object>> resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
+        Iterable<CatalogItem<Object,Object>> resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
         if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
-        CatalogItem<Object> resultI = resultL.iterator().next();
+        CatalogItem<?,?> resultI = resultL.iterator().next();
         if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
             log.debug("Found "+Iterables.size(resultL)+" matches in catalog for type "+typeName+"; returning the first, "+resultI);
         }
@@ -120,14 +126,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @Deprecated
-    private <T> CatalogItemDtoAbstract<T> getAbstractCatalogItem(CatalogItem<T> item) {
-        while (item instanceof CatalogItemDo) item = ((CatalogItemDo<T>)item).itemDto;
+    private <T,SpecT> CatalogItemDtoAbstract<T,SpecT> getAbstractCatalogItem(CatalogItem<T,SpecT> item) {
+        while (item instanceof CatalogItemDo) item = ((CatalogItemDo<T,SpecT>)item).itemDto;
         if (item==null) return null;
-        if (item instanceof CatalogItemDtoAbstract) return (CatalogItemDtoAbstract<T>) item;
+        if (item instanceof CatalogItemDtoAbstract) return (CatalogItemDtoAbstract<T,SpecT>) item;
         throw new IllegalStateException("Cannot unwrap catalog item '"+item+"' (type "+item.getClass()+") to restore DTO");
     }
 
-    private <T> CatalogItemDtoAbstract<T> getAbstractCatalogItem(String yaml) {
+    private <T,SpecT> CatalogItemDtoAbstract<T,SpecT> getAbstractCatalogItem(String yaml) {
         CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
         
         DeploymentPlan plan = camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
@@ -145,17 +151,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @Override
-    public CatalogItem<?> addItem(String yaml) {
+    public CatalogItem<?,?> addItem(String yaml) {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         Preconditions.checkNotNull(yaml, "yaml");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
-        CatalogItemDtoAbstract<Object> itemDto = getAbstractCatalogItem(yaml);
+        CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
         manualAdditionsCatalog.addEntry(itemDto);
         return itemDto;
     }
 
     @Override @Deprecated
-    public void addItem(CatalogItem<?> item) {
+    public void addItem(CatalogItem<?,?> item) {
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
         Preconditions.checkNotNull(item, "item");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
@@ -163,7 +169,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @Override @Deprecated
-    public CatalogItem<?> addItem(Class<?> type) {
+    public CatalogItem<?,?> addItem(Class<?> type) {
         log.debug("Adding manual catalog item to "+mgmt+": "+type);
         Preconditions.checkNotNull(type, "type");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
@@ -201,23 +207,23 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T> Iterable<CatalogItem<T>> getCatalogItems() {
+    public <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems() {
         return ImmutableList.copyOf((Iterable)catalog.getCache().values());
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T> Iterable<CatalogItem<T>> getCatalogItems(Predicate<? super CatalogItem<T>> filter) {
-        Iterable<CatalogItemDo<T>> filtered = Iterables.filter((Iterable)catalog.getCache().values(), (Predicate<CatalogItem<T>>)(Predicate) filter);
-        return Iterables.transform(filtered, BasicBrooklynCatalog.<T,T>itemDoToDto());
+    public <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems(Predicate<? super CatalogItem<T,SpecT>> filter) {
+        Iterable<CatalogItemDo<T,SpecT>> filtered = Iterables.filter((Iterable)catalog.getCache().values(), (Predicate<CatalogItem<T,SpecT>>)(Predicate) filter);
+        return Iterables.transform(filtered, BasicBrooklynCatalog.<T,SpecT>itemDoToDto());
     }
 
     @SuppressWarnings({ "unchecked" })
-    private static <T2,T> Function<CatalogItemDo<T2>, CatalogItem<T>> itemDoToDto() {
-        return new Function<CatalogItemDo<T2>, CatalogItem<T>>() {
+    private static <T,SpecT> Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>> itemDoToDto() {
+        return new Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>>() {
             @Override
-            public CatalogItem<T> apply(@Nullable CatalogItemDo<T2> item) {
-                return (CatalogItem<T>) item.getDto();
+            public CatalogItem<T,SpecT> apply(@Nullable CatalogItemDo<T,SpecT> item) {
+                return item.getDto();
             }
         };
     }

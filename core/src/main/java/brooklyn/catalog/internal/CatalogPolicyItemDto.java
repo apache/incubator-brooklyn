@@ -1,9 +1,10 @@
 package brooklyn.catalog.internal;
 
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 
 
-public class CatalogPolicyItemDto extends CatalogItemDtoAbstract<Policy> {
+public class CatalogPolicyItemDto extends CatalogItemDtoAbstract<Policy,PolicySpec<?>> {
     
     @Override
     public CatalogItemType getCatalogItemType() {

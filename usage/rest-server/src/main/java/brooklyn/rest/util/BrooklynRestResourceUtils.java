@@ -2,7 +2,6 @@ package brooklyn.rest.util;
 
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
-import brooklyn.management.entitlement.Entitlements;
 import groovy.lang.GroovyClassLoader;
 
 import java.lang.reflect.Constructor;
@@ -23,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Application;
@@ -40,6 +38,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
@@ -346,7 +345,7 @@ public class BrooklynRestResourceUtils {
 
     protected Map<?, ?> getRenderingConfigurationFor(String catalogId) {
         MutableMap<Object, Object> result = MutableMap.of();
-        CatalogItem<?> item = mgmt.getCatalog().getCatalogItem(catalogId);
+        CatalogItem<?,?> item = mgmt.getCatalog().getCatalogItem(catalogId);
         if (item==null) return result;
         
         result.addIfNotNull("iconUrl", item.getIconUrl());
@@ -432,12 +431,12 @@ public class BrooklynRestResourceUtils {
         Class clazz = loader.parseClass(groovyCode);
 
         if (AbstractEntity.class.isAssignableFrom(clazz)) {
-            CatalogItem<?> item = getCatalog().addItem(clazz);
+            CatalogItem<?,?> item = getCatalog().addItem(clazz);
             log.info("REST created "+item);
             return Response.created(URI.create("entities/" + clazz.getName())).build();
 
         } else if (AbstractPolicy.class.isAssignableFrom(clazz)) {
-            CatalogItem<?> item = getCatalog().addItem(clazz);
+            CatalogItem<?,?> item = getCatalog().addItem(clazz);
             log.info("REST created "+item);
             return Response.created(URI.create("policies/" + clazz.getName())).build();
         }

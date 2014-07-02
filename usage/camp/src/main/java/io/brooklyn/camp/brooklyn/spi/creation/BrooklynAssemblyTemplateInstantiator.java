@@ -67,7 +67,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         // createApplicationFromCatalog branch below is never taken.  If `id'
         // key is given in blueprint it is available with:
         // Object customId = template.getCustomAttributes().get("id");
-        CatalogItem<?> item = catalog.getCatalogItem(template.getId());
+        CatalogItem<?,?> item = catalog.getCatalogItem(template.getId());
 
         if (item==null) {
             return createApplicationFromNonCatalogCampTemplate(template, platform);
@@ -76,7 +76,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
     }
 
-    protected Application createApplicationFromCatalog(CampPlatform platform, CatalogItem<?> item, AssemblyTemplate template) {
+    protected Application createApplicationFromCatalog(CampPlatform platform, CatalogItem<?,?> item, AssemblyTemplate template) {
         ManagementContext mgmt = getBrooklynManagementContext(platform);
 
         if (!template.getApplicationComponentTemplates().isEmpty() ||

@@ -146,7 +146,7 @@ public class CatalogClasspathDo {
                 Set<Class<?>> catalogClasses = scanner.getTypesAnnotatedWith(Catalog.class);
                 for (Class<?> c: catalogClasses) {
                     try {
-                        CatalogItem<?> item = addCatalogEntry(c);
+                        CatalogItem<?,?> item = addCatalogEntry(c);
                         count++;
                         if (CatalogTemplateItemDto.class.isInstance(item)) countApps++;
                     } catch (Exception e) {
@@ -208,7 +208,7 @@ public class CatalogClasspathDo {
     }
 
     /** augments the given item with annotations and class data for the given class, then adds to catalog */
-    public CatalogItem<?> addCatalogEntry(Class<?> c) {
+    public CatalogItem<?,?> addCatalogEntry(Class<?> c) {
         if (Application.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
         if (ApplicationBuilder.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
         if (Entity.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogEntityItemDto(), c);
@@ -218,7 +218,7 @@ public class CatalogClasspathDo {
     
     /** augments the given item with annotations and class data for the given class, then adds to catalog 
      */
-    public CatalogItem<?> addCatalogEntry(CatalogItemDtoAbstract<?> item, Class<?> c) {
+    public CatalogItem<?,?> addCatalogEntry(CatalogItemDtoAbstract<?,?> item, Class<?> c) {
         Catalog annotations = c.getAnnotation(Catalog.class);
         item.type = c.getName();
         item.name = firstNonEmpty(c.getSimpleName(), c.getName());

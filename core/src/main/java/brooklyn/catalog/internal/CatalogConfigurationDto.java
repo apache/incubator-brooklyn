@@ -4,7 +4,7 @@ import brooklyn.config.ConfigKey;
 
 
 @SuppressWarnings("rawtypes")
-public class CatalogConfigurationDto extends CatalogItemDtoAbstract<ConfigKey> {
+public class CatalogConfigurationDto extends CatalogItemDtoAbstract<ConfigKey,Void> {
     
     @Override
     public CatalogItemType getCatalogItemType() {

@@ -4,7 +4,7 @@ import javax.annotation.Nonnull;
 
 import brooklyn.catalog.CatalogItem;
 
-public abstract class CatalogItemDtoAbstract<T> implements CatalogItem<T> {
+public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,SpecT> {
 
     String id;
     String type;

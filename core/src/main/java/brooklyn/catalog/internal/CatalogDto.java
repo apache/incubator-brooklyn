@@ -21,7 +21,7 @@ public class CatalogDto {
     String name;
     String description;
     CatalogClasspathDto classpath;
-    List<CatalogItemDtoAbstract<?>> entries = null;
+    List<CatalogItemDtoAbstract<?,?>> entries = null;
     
     // for thread-safety, any dynamic additions to this should be handled by a method 
     // in this class which does copy-on-write

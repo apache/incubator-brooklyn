@@ -32,7 +32,7 @@ public class CatalogDo {
     
     List<CatalogDo> childrenCatalogs = new ArrayList<CatalogDo>();
     CatalogClasspathDo classpath;
-    Map<String, CatalogItemDo<?>> cache;
+    Map<String, CatalogItemDo<?,?>> cache;
     
     AggregateClassLoader childrenClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
     ClassLoader recursiveClassLoader;
@@ -92,7 +92,7 @@ public class CatalogDo {
 
     private void loadCatalogItems() {
         List<CatalogLibrariesDo> loadedLibraries = Lists.newLinkedList();
-        for (CatalogItemDtoAbstract entry : dto.entries) {
+        for (CatalogItemDtoAbstract<?,?> entry : dto.entries) {
             CatalogLibrariesDo library = new CatalogLibrariesDo(entry.getLibrariesDto());
             library.load(mgmt);
             loadedLibraries.add(library);
@@ -128,20 +128,20 @@ public class CatalogDo {
         return childL;
     }
 
-    protected Map<String, CatalogItemDo<?>> getCache() {
-        Map<String, CatalogItemDo<?>> cache = this.cache;
+    protected Map<String, CatalogItemDo<?,?>> getCache() {
+        Map<String, CatalogItemDo<?,?>> cache = this.cache;
         if (cache==null) cache = buildCache();
         return cache;
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected synchronized Map<String, CatalogItemDo<?>> buildCache() {
+    protected synchronized Map<String, CatalogItemDo<?,?>> buildCache() {
         if (cache!=null) return cache;
         log.debug("Building cache for "+this);
         if (!isLoaded()) 
             log.debug("Catalog not fully loaded when loading cache of "+this);
         
-        Map<String, CatalogItemDo<?>> cache = new LinkedHashMap<String, CatalogItemDo<?>>();
+        Map<String, CatalogItemDo<?,?>> cache = new LinkedHashMap<String, CatalogItemDo<?,?>>();
         
         // build the cache; first from children catalogs, then from local entities
         // so that root and near-root takes precedence over deeper items;
@@ -155,9 +155,9 @@ public class CatalogDo {
                 cache.putAll(child.getCache());
         }
         if (dto.entries!=null) {
-            List<CatalogItemDtoAbstract<?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?>>(dto.entries);
+            List<CatalogItemDtoAbstract<?,?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?,?>>(dto.entries);
             Collections.reverse(entriesReversed);
-            for (CatalogItemDtoAbstract<?> entry: entriesReversed)
+            for (CatalogItemDtoAbstract<?,?> entry: entriesReversed)
                 cache.put(entry.getId(), new CatalogItemDo(this, entry));
         }
         
@@ -175,9 +175,9 @@ public class CatalogDo {
      * callers may prefer {@link CatalogClasspathDo#addCatalogEntry(CatalogItemDtoAbstract, Class)}
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public synchronized void addEntry(CatalogItemDtoAbstract<?> entry) {
+    public synchronized void addEntry(CatalogItemDtoAbstract<?,?> entry) {
         if (dto.entries==null) 
-            dto.entries = new ArrayList<CatalogItemDtoAbstract<?>>();
+            dto.entries = new ArrayList<CatalogItemDtoAbstract<?,?>>();
         dto.entries.add(entry);
         if (cache!=null)
             cache.put(entry.getId(), new CatalogItemDo(this, entry));

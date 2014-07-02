@@ -3,7 +3,7 @@ package brooklyn.catalog;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-public interface CatalogItem<T> {
+public interface CatalogItem<T,SpecT> {
     
     public static enum CatalogItemType {
         TEMPLATE, ENTITY, POLICY, CONFIGURATION

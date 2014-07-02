@@ -1,8 +1,9 @@
 package brooklyn.catalog.internal;
 
 import brooklyn.entity.Application;
+import brooklyn.entity.proxying.EntitySpec;
 
-public class CatalogTemplateItemDto extends CatalogItemDtoAbstract<Application> {
+public class CatalogTemplateItemDto extends CatalogItemDtoAbstract<Application,EntitySpec<?>> {
 
     @Override
     public CatalogItemType getCatalogItemType() {
