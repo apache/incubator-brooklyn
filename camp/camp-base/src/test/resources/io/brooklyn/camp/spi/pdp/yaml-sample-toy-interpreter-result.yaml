@@ -1,0 +1,4 @@
+keep: 1
+mess:
+  a: bar
+  b: [ c, D ]

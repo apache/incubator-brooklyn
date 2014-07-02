@@ -32,6 +32,18 @@
             <artifactId>brooklyn-utils-groovy</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn.camp</groupId>
+            <artifactId>camp-base</artifactId>
+            <version>${brooklyn.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn.camp</groupId>
+            <artifactId>camp-base</artifactId>
+            <version>${brooklyn.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>net.schmizz</groupId>

@@ -1,0 +1,64 @@
+
+DONE
+
+SOME of these (for PCT's and ACT's)
+* dto classes and endpoints (jersey resources) to have a rest server
+* impl classes (abstract or composable?) which can make dto's
+* connect impl classes to brooklyn
+
+TODO
+
+* remaining classes
+* PDP formation
+
+
+
+
+
+
+THOUGHTS
+
+* get camp.io
+* project for camp-ops, camp-samp-le-server
+
+
+
+
+
+
+COMPARISON
+
+CAMP
+*   platform offers PlatformComponentTemplates (e.g. elasttic AppServer cluster) which a user can
+    stitch together in an AssemblyTemplate to create an Assembly which is their application;
+    user can also supply ApplicationComponentTemplate and ApplicationComponent instances
+    (e.g. WAR files) for use in assemblies;
+    and Requirements and Capabilities can be defined to e.g. indicate that a 3-tier app
+    Template requires a WAR file and a schema (from the user) and PlatformComponents
+    where these will run (from the platform) which get resolved at real-time 
+    with as little or as much guidance from the user as desired;
+    relies on conventions on types and tags (ie not specified in spec, yet) to facilitate re-use;
+*   defines REST API for interacting with these, and uploading assemblies and app components
+    (not platform components)
+*   example
+
+TOSCA
+    ServiceTemplate is the basic idea
+    Types
+        NodeType
+        RelationshipType
+    TopologyTemplate
+        NodeTemplate
+        RelationshipTemplate
+        GroupTemplate
+    internal elements
+        Artifacts:
+            "deployment artifacts" for creating nodes, 
+            "implementation artifacts" for operations)
+        Container capabilities / requirements
+        Properties, operations, scripts, constraints
+        Policies
+    Plans
+        Plan
+
+END
