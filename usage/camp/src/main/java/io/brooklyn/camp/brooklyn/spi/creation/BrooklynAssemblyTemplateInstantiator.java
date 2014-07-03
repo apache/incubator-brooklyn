@@ -216,52 +216,121 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
     }
     
-    @SuppressWarnings("unchecked")
     protected Application createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform) {
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
-        Map<Entity, EntitySpec<?>> rootEntities = Maps.newLinkedHashMap();
         Map<Entity, EntitySpec<?>> allEntities = Maps.newLinkedHashMap();
-        /* FIXME there is a subtlety here, and tests failing;
-         * OT1H we might not want/need the wrapper application if we are creating a single one,   
-         * but OTOH we might need a guarantee of an app at root, if we are creating certain nested entities
-         * 
-         * i (alex) think the solution is to use the new createSpec(...) and interrogate it
-         * to see if we need the wrapper or not
-         */
-        buildEntities(template, rootEntities, allEntities, mgmt);
-        
-        EntitySpec<StartableApplication> appSpec;
-        StartableApplication app;
-        if(shouldWrapInApp(template, rootEntities)) {
-            BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
-            appSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
-            app = appResolver.newEntity(appSpec);
-            setEntitiesParent(rootEntities, app);
-            allEntities.put(app, appSpec);
-        } else {
-            Entry<Entity, EntitySpec<?>> entry = rootEntities.entrySet().iterator().next();
-            app = (StartableApplication)entry.getKey();
-            appSpec = (EntitySpec<StartableApplication>)entry.getValue();
-            applyLocations(mgmt, template, app);
-        }
-        
+//<<<<<<< HEAD
+//        /* FIXME there is a subtlety here, and tests failing;
+//         * OT1H we might not want/need the wrapper application if we are creating a single one,   
+//         * but OTOH we might need a guarantee of an app at root, if we are creating certain nested entities
+//         * 
+//         * i (alex) think the solution is to use the new createSpec(...) and interrogate it
+//         * to see if we need the wrapper or not
+//         */
+//        buildEntities(template, rootEntities, allEntities, mgmt);
+//        
+//        EntitySpec<StartableApplication> appSpec;
+//        StartableApplication app;
+//        if(shouldWrapInApp(template, rootEntities)) {
+//            BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
+//            appSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
+//            app = appResolver.newEntity(appSpec);
+//            setEntitiesParent(rootEntities, app);
+//            allEntities.put(app, appSpec);
+//        } else {
+//            Entry<Entity, EntitySpec<?>> entry = rootEntities.entrySet().iterator().next();
+//            app = (StartableApplication)entry.getKey();
+//            appSpec = (EntitySpec<StartableApplication>)entry.getValue();
+//            applyLocations(mgmt, template, app);
+//=======
+        StartableApplication rootApp = buildRootApp(template, platform, allEntities);
         initEntities(mgmt, allEntities);
-        
-        log.info("CAMP placing '{}' under`` management", appSpec);
-        Entities.startManagement(app, mgmt);
+        log.info("CAMP placing '{}' under management", allEntities.get(rootApp));
+        Entities.startManagement(rootApp, mgmt);
+        return rootApp;
+    }
 
+    private StartableApplication buildRootApp(AssemblyTemplate template, CampPlatform platform, Map<Entity, EntitySpec<?>> allEntities) {
+        if (shouldWrapInApp(template, platform)) {
+            return buildWrappedApp(template, platform, allEntities);
+        } else {
+            return buildPromotedApp(template, platform, allEntities);
+        }
+    }
+
+    private StartableApplication buildWrappedApp(AssemblyTemplate template, CampPlatform platform, Map<Entity, EntitySpec<?>> allEntities) {
+        final ManagementContext mgmt = getBrooklynManagementContext(platform);
+        
+        BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
+        EntitySpec<StartableApplication> wrapAppSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
+        StartableApplication wrapApp = appResolver.newEntity(wrapAppSpec);
+        allEntities.put(wrapApp, wrapAppSpec);
+        
+        buildEntities(template, wrapApp, wrapAppSpec, allEntities, mgmt);
+        
+        return wrapApp;
+    }
+
+    private StartableApplication buildPromotedApp(AssemblyTemplate template, CampPlatform platform, Map<Entity, EntitySpec<?>> allEntities) {
+        final ManagementContext mgmt = getBrooklynManagementContext(platform);
+        
+        ResolvableLink<PlatformComponentTemplate> promotedAppTemplate = template.getPlatformComponentTemplates().links().get(0);
+        StartableApplication app = (StartableApplication)buildEntity(null, promotedAppTemplate, allEntities, mgmt);
+        
+        // TODO i (alex) think we need this because locations defined at the root of the template could have been lost otherwise?
+        applyLocations(mgmt, template, app);
+        
         return app;
     }
 
-    private void setEntitiesParent(Map<Entity, EntitySpec<?>> entities, Application parentApp) {
-        for(Entry<Entity, EntitySpec<?>> entry : entities.entrySet()) {
-            entry.getValue().parent(parentApp);
-            entry.getKey().setParent(parentApp);
+    private void buildEntities(AssemblyTemplate template, StartableApplication app, EntitySpec<StartableApplication> appSpec,
+            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt) {
+        for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
+            buildEntity(app, ctl, allEntities, mgmt);
         }
     }
 
+    private Entity buildEntity(StartableApplication parent, ResolvableLink<PlatformComponentTemplate> ctl,
+            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt) {
+        PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
+        BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
+        EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
+        if(parent != null) {
+            spec.parent(parent);
+        }
+        Entity entity = entityResolver.newEntity(spec);
+        allEntities.put(entity, spec);
+        buildEntityHierarchy(mgmt, allEntities, entity, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
+        return entity;
+    }
+
+    private boolean shouldWrapInApp(AssemblyTemplate template, CampPlatform platform) {
+        return isWrapAppRequested(template) ||
+                !isSingleApp(template, platform);
+    }
+
+    private boolean isWrapAppRequested(AssemblyTemplate template) {
+        return Boolean.TRUE.equals(template.getCustomAttributes().get("wrappedApp"));
+    }
+
+    protected boolean isSingleApp(AssemblyTemplate template, CampPlatform platform) {
+        // AssemblyTemplates created via PDP, _specifying_ then entities to put in
+        final ManagementContext mgmt = getBrooklynManagementContext(platform);
+
+        List<ResolvableLink<PlatformComponentTemplate>> pct = template.getPlatformComponentTemplates().links();
+        if(pct.size() == 1) {
+            ResolvableLink<PlatformComponentTemplate> res = pct.get(0);
+            PlatformComponentTemplate templ = res.resolve();
+            Class<Entity> entity = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, templ).loadEntityClass();
+            if(StartableApplication.class.isAssignableFrom(entity)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private void initEntities(final ManagementContext mgmt, Map<Entity, EntitySpec<?>> entities) {
         for (Entry<Entity, EntitySpec<?>> entry : entities.entrySet()) {
             final Entity entity = entry.getKey();
@@ -275,29 +344,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                     initEntity(mgmt, entity, spec);
                 }
             }).getUnchecked();
-        }
-    }
-
-    private boolean shouldWrapInApp(AssemblyTemplate template, Map<Entity, EntitySpec<?>> rootEntities) {
-        return isWrapAppRequested(template) ||
-                rootEntities.size() != 1 ||
-                !(rootEntities.keySet().iterator().next() instanceof StartableApplication);
-    }
-
-    private boolean isWrapAppRequested(AssemblyTemplate template) {
-        return Boolean.TRUE.equals(template.getCustomAttributes().get("wrappedApp"));
-    }
-
-    private void buildEntities(AssemblyTemplate template, Map<Entity, EntitySpec<?>> parentEntities, 
-            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt) {
-        for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
-            PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
-            BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
-            EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
-            Entity entity = entityResolver.newEntity(spec);
-            parentEntities.put(entity, spec);
-            allEntities.put(entity, spec);
-            buildEntityHierarchy(mgmt, allEntities, entity, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
         }
     }
 
