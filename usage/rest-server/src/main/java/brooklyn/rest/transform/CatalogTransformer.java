@@ -36,8 +36,8 @@ public class CatalogTransformer {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(CatalogTransformer.class);
     
     public static CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Entity,EntitySpec<?>> item) {
-        Class<? extends Entity> clazz = b.getCatalog().loadClass(item);
-        EntityDynamicType typeMap = EntityTypes.getDefinedEntityType(clazz);
+        EntitySpec<?> spec = b.getCatalog().createSpec(item);
+        EntityDynamicType typeMap = EntityTypes.getDefinedEntityType(spec.getType());
         EntityType type = typeMap.getSnapshot();
 
         Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
@@ -48,14 +48,20 @@ public class CatalogTransformer {
         for (Sensor<?> x: type.getSensors()) sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
         for (Effector<?> x: type.getEffectors()) effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
 
-        return new CatalogEntitySummary(item.getId(), item.getName(), item.getJavaType(),
+        return new CatalogEntitySummary(item.getId(), item.getName(), 
+            item.getRegisteredTypeName(), item.getJavaType(), 
+            item.getRegisteredTypeName()!=null ? item.getRegisteredTypeName() : item.getJavaType(),
+            item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
                 config, sensors, effectors,
                 makeLinks(item));
     }
 
     public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?,?> item) {
-        return new CatalogItemSummary(item.getId(), item.getName(), item.getJavaType(),
+        return new CatalogItemSummary(item.getId(), item.getName(), 
+                item.getRegisteredTypeName(), item.getJavaType(), 
+                item.getRegisteredTypeName()!=null ? item.getRegisteredTypeName() : item.getJavaType(),
+                item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), makeLinks(item));
     }
 

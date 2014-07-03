@@ -19,6 +19,8 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
     String version;
     CatalogLibrariesDto libraries;
     
+    String planYaml;
+    
     /** @deprecated since 0.7.0.
      * used for backwards compatibility when deserializing.
      * when catalogs are converted to new yaml format, this can be removed. */
@@ -66,6 +68,11 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
 
     public CatalogLibrariesDto getLibrariesDto() {
         return libraries;
+    }
+
+    @Override
+    public String getPlanYaml() {
+        return planYaml;
     }
 
     public static CatalogTemplateItemDto newTemplateFromJava(String javaType, String name) {

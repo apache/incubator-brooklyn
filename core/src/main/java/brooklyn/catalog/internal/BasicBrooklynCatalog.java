@@ -110,7 +110,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         Class<SpecT> specType = loadedItem.getSpecType();
         if (specType==null) return null;
             
-        String yaml = loadedItem.getYaml();
+        String yaml = loadedItem.getPlanYaml();
         SpecT spec = null;
             
         if (yaml!=null) {

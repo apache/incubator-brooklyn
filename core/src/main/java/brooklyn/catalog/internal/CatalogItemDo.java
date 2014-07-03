@@ -75,14 +75,6 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
         return itemDto.getLibraries();
     }
 
-    @Nullable
-    public String getYaml() {
-        if (itemDto instanceof CatalogEntityItemDto) {
-            return ((CatalogEntityItemDto)itemDto).getPlanYaml();
-        }
-        return null;
-    }
-    
     /** @deprecated since 0.7.0 this is the legacy mechanism; still needed for policies and apps, but being phased out.
      * new items should use {@link #getYaml()} */
     @Deprecated
@@ -116,6 +108,11 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
 
     public Class<SpecT> getSpecType() {
         return itemDto.getSpecType();
+    }
+
+    @Nullable @Override
+    public String getPlanYaml() {
+        return itemDto.getPlanYaml();
     }
     
 }

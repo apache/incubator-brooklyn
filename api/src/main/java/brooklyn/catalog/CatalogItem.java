@@ -36,12 +36,13 @@ public interface CatalogItem<T,SpecT> {
     public String getIconUrl();
     public String getVersion();
 
-    // FIXME many of the static methods in CatalogItemAbstractDto which create CatalogItems set this as null
-    // I (alex) suggest removing the annotation, here, and in subclasses where the method is defined
     @Nonnull
     public CatalogItemLibraries getLibraries();
 
     public String toXmlString();
+    
+    /** return underlying YAML for this item, if known */ 
+    @Nullable public String getPlanYaml();
 
 }
 

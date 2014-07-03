@@ -44,17 +44,20 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     addResource(new CatalogResource());
   }
 
-  @Test(enabled=false, groups="WIP") // FIXME broken until BasicBrooklynCatalog can parse the yaml
+  @Test(enabled=false, groups="WIP")
   public void testRegisterCustomEntity() {
+    String registeredTypeName = "my.catalog.app.id";
     String yaml =
+        "name: "+registeredTypeName+"\n"+
+        // TODO name above should be unnecessary when brooklyn.catalog below is working
         "brooklyn.catalog:\n"+
-        "- id: my.catalog.app.id\n"+
+        "- id: " + registeredTypeName + "\n"+
         "- name: My Catalog App\n"+
         "- description: My description\n"+
         "- icon_url: classpath://path/to/myicon.jpg\n"+
         "- version: 0.1.2\n"+
-        "- bundles:\n"+
-        "- url: http://myurl/my.jar\n"+
+        "- brooklyn.libraries:\n"+
+        "  - url: http://myurl/my.jar\n"+
         "\n"+
         "services:\n"+
         "- type: brooklyn.test.entity.TestEntity\n";
@@ -64,13 +67,15 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
-    CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/my.catalog.app.id")
+    CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+registeredTypeName)
             .get(CatalogEntitySummary.class);
-    assertEquals(entityItem.getId(), "my.catalog.app.id");
-    assertEquals(entityItem.getName(), "My Catalog App");
-    assertEquals(entityItem.getDescription(), "My description");
-    assertEquals(entityItem.getIconUrl(), "classpath://path/to/myicon.jpg");
-    assertEquals(entityItem.getType(), "brooklyn.test.entity.TestEntity");
+    // TODO more checks, when  brooklyn.catalog  working
+//    assertEquals(entityItem.getId(), registeredTypeName);
+//    assertEquals(entityItem.getName(), "My Catalog App");
+//    assertEquals(entityItem.getDescription(), "My description");
+//    assertEquals(entityItem.getIconUrl(), "classpath://path/to/myicon.jpg");
+    assertEquals(entityItem.getRegisteredType(), registeredTypeName);
+    assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
   }
 
   @Test
