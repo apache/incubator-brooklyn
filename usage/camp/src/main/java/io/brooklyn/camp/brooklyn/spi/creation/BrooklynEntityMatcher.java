@@ -22,6 +22,7 @@ import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class BrooklynEntityMatcher implements PdpMatcher {
 
@@ -115,6 +116,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.enrichers");
         addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.initializers");
         addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.children");
+        addCustomMapAttributeIfNonNull(builder, attrs, "brooklyn.catalog");
 
         if (!attrs.isEmpty()) {
             log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);
@@ -142,6 +144,23 @@ public class BrooklynEntityMatcher implements PdpMatcher {
                 throw new IllegalArgumentException(key + " must be a list, is: " + items.getClass().getName());
             }
         }
+    }
+
+    /**
+     * Looks for the given key in the map of attributes and adds it to the given builder
+     * as a custom attribute with type Map.
+     * @throws java.lang.IllegalArgumentException if map[key] is not an instance of Map
+     */
+    private void addCustomMapAttributeIfNonNull(Builder<? extends PlatformComponentTemplate> builder, Map attrs, String key) {
+        Object items = attrs.remove(key);
+        if (items != null) {
+            if (items instanceof Map) {
+                Map<?, ?> itemMap = (Map<?, ?>) items;
+                if (!itemMap.isEmpty()) {
+                    builder.customAttribute(key, Maps.newHashMap(itemMap));
+                }
+            } else {
+                throw new IllegalArgumentException(key + " must be a map, is: " + items.getClass().getName());
             }
         }
     }

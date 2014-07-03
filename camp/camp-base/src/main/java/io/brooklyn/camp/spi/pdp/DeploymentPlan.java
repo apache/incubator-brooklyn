@@ -7,6 +7,7 @@ import java.util.Map;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,22 +70,46 @@ public class DeploymentPlan {
     public String getName() {
         return name;
     }
+
     public String getDescription() {
         return description;
     }
+
     public String getOrigin() {
         return origin;
     }
+
     public List<Artifact> getArtifacts() {
         return ImmutableList.copyOf(artifacts);
     }
+
     public List<Service> getServices() {
         return ImmutableList.copyOf(services);
     }
+
     public Map<String, Object> getCustomAttributes() {
         return ImmutableMap.copyOf(customAttributes);
     }
-    
+
+    /**
+     * Returns a present {@link Maybe} of the custom attribute with the given name if the attribute is
+     * non-null and is an instance of the given type. Otherwise returns absent.
+     * <p/>
+     * Does not remove the attribute from the custom attribute map.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> Maybe<T> getCustomAttribute(String attributeName, Class<T> type) {
+        Object attribute = customAttributes.get(attributeName);
+        if (attribute == null) {
+            return Maybe.absent("Custom attributes does not contain " + attributeName);
+        } else if (!type.isAssignableFrom(attribute.getClass())) {
+            return Maybe.absent("Custom attribute " + attributeName + " is not of expected type: " +
+                    "expected=" + type.getName() + " actual=" + attribute.getClass().getName());
+        } else {
+            return Maybe.of((T) attribute);
+        }
+    }
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
