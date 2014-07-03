@@ -19,15 +19,21 @@ import com.google.common.collect.Maps;
  * (for any serializing / file-based persister implementation).
  * 
  * @author aled
+ * 
+ * @deprecated since 0.7; unused code
  */
+@Deprecated
 public class ImmediateDeltaChangeListener implements ChangeListener {
 
     private final BrooklynMementoPersister persister;
+    private final PersistenceExceptionHandler exceptionHandler;
     
     private volatile boolean running = true;
 
     public ImmediateDeltaChangeListener(BrooklynMementoPersister persister) {
         this.persister = persister;
+        exceptionHandler = PersistenceExceptionHandlerImpl.builder()
+                .build();
     }
     
     @Override
@@ -94,7 +100,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
              */
             synchronized (new Object()) {}
 
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
     
@@ -103,7 +109,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.removedEntityIds.add(entity.getId());
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
 
@@ -112,7 +118,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.removedLocationIds.add(location.getId());
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
 
@@ -121,7 +127,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.removedPolicyIds.add(policy.getId());
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
 
@@ -130,7 +136,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.removedEnricherIds.add(enricher.getId());
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
 
@@ -139,7 +145,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
     
@@ -148,7 +154,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.policies.add(policy.getRebindSupport().getMemento());
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
     
@@ -157,7 +163,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             delta.enrichers.add(enricher.getRebindSupport().getMemento());
-            persister.delta(delta);
+            persister.delta(delta, exceptionHandler);
         }
     }
 }

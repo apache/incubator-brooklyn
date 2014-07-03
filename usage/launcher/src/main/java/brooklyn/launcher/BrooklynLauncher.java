@@ -35,6 +35,8 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.PersistenceExceptionHandler;
+import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
@@ -542,8 +544,9 @@ public class BrooklynLauncher {
 
             BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(objectStore,
                     managementContext.getCatalog().getRootClassLoader());
+            PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
             ((RebindManagerImpl) rebindManager).setPeriodicPersistPeriod(persistPeriod);
-            rebindManager.setPersister(persister);
+            rebindManager.setPersister(persister, persistenceExceptionHandler);
         }
         
         // Initialise the HA manager as required

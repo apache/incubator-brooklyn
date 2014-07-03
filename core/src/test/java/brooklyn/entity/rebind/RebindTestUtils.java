@@ -13,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.collections.Maps;
 
-import com.google.common.collect.Iterables;
-
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -34,6 +32,8 @@ import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.javalang.Serializers;
 import brooklyn.util.javalang.Serializers.ObjectReplacer;
 import brooklyn.util.time.Duration;
+
+import com.google.common.collect.Iterables;
 
 public class RebindTestUtils {
 
@@ -158,7 +158,7 @@ public class RebindTestUtils {
             objectStore.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
             BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
             ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
-            unstarted.getRebindManager().setPersister(newPersister);
+            unstarted.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
             return unstarted;
         }
 
@@ -222,7 +222,7 @@ public class RebindTestUtils {
         LOG.info("Rebinding app, using directory "+mementoDir);
 
         BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
-        newManagementContext.getRebindManager().setPersister(newPersister);
+        newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
         List<Application> newApps;
         if (exceptionHandler == null) {
             newApps = newManagementContext.getRebindManager().rebind(classLoader);

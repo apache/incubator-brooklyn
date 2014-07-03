@@ -40,14 +40,24 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
         FlagUtils.setFieldsFromFlags(policy, configBag);
         FlagUtils.setAllConfigKeys(policy, configBag, false);
         
-        doReconsruct(rebindContext, memento);
+        doReconstruct(rebindContext, memento);
         ((AbstractPolicy)policy).rebind();
+    }
+
+    @Override
+    public void addPolicies(RebindContext rebindContext, PolicyMemento Memento) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addEnrichers(RebindContext rebindContext, PolicyMemento Memento) {
+        throw new UnsupportedOperationException();
     }
 
     /**
      * For overriding, to give custom reconsruct behaviour.
      */
-    protected void doReconsruct(RebindContext rebindContext, PolicyMemento memento) {
+    protected void doReconstruct(RebindContext rebindContext, PolicyMemento memento) {
         // default is no-op
     }
 }

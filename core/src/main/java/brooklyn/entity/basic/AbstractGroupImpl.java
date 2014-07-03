@@ -115,6 +115,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     @Override
     public boolean removeMember(final Entity member) {
         synchronized (members) {
+            member.removeGroup((Group)getProxyIfAvailable());
             boolean changed = (member != null && members.remove(member));
             if (changed) {
                 log.debug("Group {} lost member {}", this, member);

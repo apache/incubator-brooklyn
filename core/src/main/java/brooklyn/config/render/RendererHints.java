@@ -170,4 +170,14 @@ public class RendererHints {
     public static RendererHints.DisplayValue displayValue(Function<?, String> transform) {
         return new RendererHints.DisplayValue(transform);
     }
+
+    @Beta
+    public static RendererHints.NamedActionWithUrl namedActionWithUrl(String actionName, Function<Object, String> transform) {
+        return new RendererHints.NamedActionWithUrl(actionName, transform);
+    }
+
+    @Beta
+    public static RendererHints.NamedActionWithUrl openWithUrl(Function<Object, String> transform) {
+        return new RendererHints.NamedActionWithUrl("Open", transform);
+    }
 }

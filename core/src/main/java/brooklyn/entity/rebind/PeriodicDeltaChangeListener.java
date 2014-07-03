@@ -66,6 +66,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final BrooklynMementoPersister persister;
 
+    private final PersistenceExceptionHandler exceptionHandler;
+    
     private final Duration period;
     
     private final AtomicLong writeCount = new AtomicLong();
@@ -83,9 +85,10 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final Semaphore persistingMutex = new Semaphore(1);
     
-    public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, long periodMillis) {
+    public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, long periodMillis) {
         this.executionManager = executionManager;
         this.persister = persister;
+        this.exceptionHandler = exceptionHandler;
         this.period = Duration.of(periodMillis, TimeUnit.MILLISECONDS);
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
@@ -199,28 +202,28 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     try {
                         persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        handleGenerateMementoException(e, "location "+location.getClass().getSimpleName()+"("+location.getId()+")");
+                        exceptionHandler.onGenerateLocationMementoFailed(location, e);
                     }
                 }
                 for (Entity entity : prevDeltaCollector.entities) {
                     try {
                         persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        handleGenerateMementoException(e, "entity "+entity.getEntityType().getSimpleName()+"("+entity.getId()+")");
+                        exceptionHandler.onGenerateEntityMementoFailed(entity, e);
                     }
                 }
                 for (Policy policy : prevDeltaCollector.policies) {
                     try {
                         persisterDelta.policies.add(policy.getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        handleGenerateMementoException(e, "policy "+policy.getClass().getSimpleName()+"("+policy.getId()+")");
+                        exceptionHandler.onGeneratePolicyMementoFailed(policy, e);
                     }
                 }
                 for (Enricher enricher : prevDeltaCollector.enrichers) {
                     try {
                         persisterDelta.enrichers.add(enricher.getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        handleGenerateMementoException(e, "enricher "+enricher.getClass().getSimpleName()+"("+enricher.getId()+")");
+                        exceptionHandler.onGenerateEnricherMementoFailed(enricher, e);
                     }
                 }
                 persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
@@ -238,7 +241,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 synchronized (new Object()) {}
 
                 // Tell the persister to persist it
-                persister.delta(persisterDelta);
+                persister.delta(persisterDelta, exceptionHandler);
             }
         } catch (Exception e) {
             if (isActive()) {
@@ -250,15 +253,6 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         } finally {
             writeCount.incrementAndGet();
             persistingMutex.release();
-        }
-    }
-    
-    protected void handleGenerateMementoException(Exception e, String context) {
-        Exceptions.propagateIfFatal(e);
-        if (isActive()) {
-            LOG.warn("Problem generating memento for "+context, e);
-        } else {
-            LOG.debug("Problem generating memento for "+context+", but no longer active (ignoring)", e);
         }
     }
     

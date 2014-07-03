@@ -74,6 +74,12 @@ public class RebindManagerImpl implements RebindManager {
     public static final ConfigKey<RebindFailureMode> REBIND_FAILURE_MODE =
             ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.rebind",
                     "Action to take if a failure occurs during rebind", RebindFailureMode.FAIL_AT_END);
+    public static final ConfigKey<RebindFailureMode> ADD_POLICY_FAILURE_MODE =
+            ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.addPolicy",
+                    "Action to take if a failure occurs when adding a policy or enricher", RebindFailureMode.CONTINUE);
+    public static final ConfigKey<RebindFailureMode> LOAD_POLICY_FAILURE_MODE =
+            ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.loadPolicy",
+                    "Action to take if a failure occurs when loading a policy or enricher", RebindFailureMode.CONTINUE);
     
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
@@ -92,6 +98,8 @@ public class RebindManagerImpl implements RebindManager {
     private final boolean persistEnrichersEnabled;
     private RebindFailureMode danglingRefFailureMode;
     private RebindFailureMode rebindFailureMode;
+    private RebindFailureMode addPolicyFailureMode;
+    private RebindFailureMode loadPolicyFailureMode;
 
     /**
      * For tracking if rebinding, for {@link AbstractEnricher#isRebinding()} etc.
@@ -125,6 +133,8 @@ public class RebindManagerImpl implements RebindManager {
 
         danglingRefFailureMode = managementContext.getConfig().getConfig(DANGLING_REFERENCE_FAILURE_MODE);
         rebindFailureMode = managementContext.getConfig().getConfig(REBIND_FAILURE_MODE);
+        addPolicyFailureMode = managementContext.getConfig().getConfig(ADD_POLICY_FAILURE_MODE);
+        loadPolicyFailureMode = managementContext.getConfig().getConfig(LOAD_POLICY_FAILURE_MODE);
     }
 
     /**
@@ -144,12 +154,19 @@ public class RebindManagerImpl implements RebindManager {
 
     @Override
     public void setPersister(BrooklynMementoPersister val) {
+        PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder()
+                .build();
+        setPersister(val, exceptionHandler);
+    }
+
+    @Override
+    public void setPersister(BrooklynMementoPersister val, PersistenceExceptionHandler exceptionHandler) {
         if (persister != null && persister != val) {
             throw new IllegalStateException("Dynamically changing persister is not supported: old="+persister+"; new="+val);
         }
         this.persister = checkNotNull(val, "persister");
         
-        this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, periodicPersistPeriod.toMilliseconds());
+        this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, exceptionHandler, periodicPersistPeriod.toMilliseconds());
         this.changeListener = new SafeChangeListener(realChangeListener);
         
         if (running) {
@@ -206,7 +223,12 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public List<Application> rebind(final ClassLoader classLoader) throws IOException {
-        RebindExceptionHandler exceptionHandler = new RebindExceptionHandlerImpl(danglingRefFailureMode, rebindFailureMode);
+        RebindExceptionHandler exceptionHandler = RebindExceptionHandlerImpl.builder()
+                .danglingRefFailureMode(danglingRefFailureMode)
+                .rebindFailureMode(rebindFailureMode)
+                .addPolicyFailureMode(addPolicyFailureMode)
+                .loadPolicyFailureMode(loadPolicyFailureMode)
+                .build();
         return rebind(classLoader, exceptionHandler);
     }
 
@@ -240,19 +262,26 @@ public class RebindManagerImpl implements RebindManager {
             Map<String,Policy> policies = Maps.newLinkedHashMap();
             Map<String,Enricher> enrichers = Maps.newLinkedHashMap();
             
-            final RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
+            final RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
             LookupContext realLookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
             
-            // Two-phase deserialization.
-            // First we deserialize just the "manifest" to find all instances (and their types).
-            // Then we deserialize so that inter-entity references can be set.
-            //
+            // Four-phase deserialization.
+            //  1. deserialize just the "manifest" to find all instances (and their types).
+            //  2. deserialize so that inter-entity references can be set (and entity config/state is set).
+            //  3. add policies+enrichers to all the entities.
+            //  4. manage the entities
+            
             // TODO if underlying data-store is changed between first and second phase (e.g. to add an
             // entity), then second phase might try to reconstitute an entity that has not been put in
             // the rebindContext. This should not affect normal production usage, because rebind is run
             // against a data-store that is not being written to by other brooklyn instance(s).
-            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
             
+            //
+            // PHASE ONE
+            //
+            
+            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
+
             // Instantiate locations
             LOG.debug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
             for (Map.Entry<String, String> entry : mementoManifest.getLocationIdToType().entrySet()) {
@@ -310,14 +339,22 @@ public class RebindManagerImpl implements RebindManager {
                 LOG.debug("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
                 for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating enricher {}", enricherMemento);
-                    
-                    Enricher enricher = newEnricher(enricherMemento, reflections);
-                    enrichers.put(enricherMemento.getId(), enricher);
-                    rebindContext.registerEnricher(enricherMemento.getId(), enricher);
+
+                    try {
+                        Enricher enricher = newEnricher(enricherMemento, reflections);
+                        enrichers.put(enricherMemento.getId(), enricher);
+                        rebindContext.registerEnricher(enricherMemento.getId(), enricher);
+                    } catch (Exception e) {
+                        exceptionHandler.onCreateEnricherFailed(enricherMemento.getId(), enricherMemento.getType(), e);
+                    }
                 }
             } else {
                 LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
             } 
+            
+            //
+            // PHASE TWO
+            //
             
             // Reconstruct locations
             LOG.debug("RebindManager reconstructing locations");
@@ -351,6 +388,7 @@ public class RebindManagerImpl implements RebindManager {
                             policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
                         } catch (Exception e) {
                             exceptionHandler.onRebindPolicyFailed(policy, e);
+                            rebindContext.unregisterPolicy(policy);
                         }
                     }
                 }
@@ -363,7 +401,18 @@ public class RebindManagerImpl implements RebindManager {
                     Enricher enricher = rebindContext.getEnricher(enricherMemento.getId());
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing enricher {}", enricherMemento);
         
-                    enricher.getRebindSupport().reconstruct(rebindContext, enricherMemento);
+                    if (enricher == null) {
+                        // usually because of creation-failure, when not using fail-fast
+                        exceptionHandler.onEnricherNotFound(enricherMemento.getId());
+                    } else {
+                        try {
+                            enricher.getRebindSupport().reconstruct(rebindContext, enricherMemento);
+                        } catch (Exception e) {
+                            exceptionHandler.onRebindEnricherFailed(enricher, e);
+                            rebindContext.unregisterEnricher(enricher);
+                        }
+                    }
+
                 }
             }
     
@@ -385,7 +434,35 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             }
+
+            //
+            // PHASE THREE
+            //
             
+            // Associate policies+enrichers with entities
+            LOG.debug("RebindManager reconstructing entities");
+            for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
+                Entity entity = rebindContext.getEntity(entityMemento.getId());
+                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
+    
+                if (entity == null) {
+                    // usually because of creation-failure, when not using fail-fast
+                    exceptionHandler.onEntityNotFound(entityMemento.getId());
+                } else {
+                    try {
+                        entityMemento.injectTypeClass(entity.getClass());
+                        ((EntityInternal)entity).getRebindSupport().addPolicies(rebindContext, entityMemento);
+                        ((EntityInternal)entity).getRebindSupport().addEnrichers(rebindContext, entityMemento);
+                    } catch (Exception e) {
+                        exceptionHandler.onRebindEntityFailed(entity, e);
+                    }
+                }
+            }
+            
+            //
+            // PHASE FOUR
+            //
+
             LOG.debug("RebindManager managing locations");
             for (Location location: locations.values()) {
                 if (location.getParent()==null) {

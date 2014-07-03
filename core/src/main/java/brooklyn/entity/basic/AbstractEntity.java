@@ -643,12 +643,15 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
         return changed;
     }
 
-    /**
-     * Adds this as a member of the given group, registers with application if necessary
-     */
     @Override
     public void addGroup(Group e) {
         groups.add(e);
+        getApplication();
+    }
+
+    @Override
+    public void removeGroup(Group e) {
+        groups.remove(e);
         getApplication();
     }
 

@@ -85,7 +85,7 @@ public abstract class BrooklynMementoPersisterTestFixture {
         RebindTestUtils.waitForPersisted(localManagementContext);
         
         RecordingRebindExceptionHandler failFast = new RecordingRebindExceptionHandler(RebindFailureMode.FAIL_FAST, RebindFailureMode.FAIL_FAST);
-        RebindContextImpl rebindContext = new RebindContextImpl(classLoader);
+        RebindContextImpl rebindContext = new RebindContextImpl(failFast, classLoader);
         RebindContextLookupContext lookupContext = new RebindContextLookupContext(localManagementContext, rebindContext, failFast);
         // here we force these two to be reegistered in order to resolve the enricher and policy
         // (normally rebind will do that after loading the manifests, but in this test we are just looking at persistence/manifest)

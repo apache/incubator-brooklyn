@@ -19,6 +19,7 @@ import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
@@ -68,7 +69,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         persister = new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext, objectStore, classLoader);
         ((ManagementPlaneSyncRecordPersisterToObjectStore)persister).allowRemoteTimestampInMemento();
         BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
-        managementContext.getRebindManager().setPersister(persisterObj);
+        managementContext.getRebindManager().setPersister(persisterObj, PersistenceExceptionHandlerImpl.builder().build());
         manager = new HighAvailabilityManagerImpl(managementContext)
                 .setPollPeriod(getPollPeriod())
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)

@@ -728,6 +728,15 @@ public class Entities {
         return internal.getManagementContext().getEntityDownloadsManager().newDownloader(driver, properties);
     }
 
+    public static DownloadResolver newDownloader(EntityDriver driver, String addon) {
+        return newDownloader(driver, addon, ImmutableMap.<String,Object>of());
+    }
+
+    public static DownloadResolver newDownloader(EntityDriver driver, String addon, Map<String,?> properties) {
+        EntityInternal internal = (EntityInternal) driver.getEntity();
+        return internal.getManagementContext().getEntityDownloadsManager().newDownloader(driver, addon, properties);
+    }
+
     public static <T> Supplier<T> attributeSupplier(final Entity entity, final AttributeSensor<T> sensor) {
         return new Supplier<T>() {
             public T get() { return entity.getAttribute(sensor); }

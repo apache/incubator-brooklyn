@@ -10,8 +10,12 @@ import java.util.Map;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEnricherTest.MyEnricher;
 import brooklyn.location.Location;
@@ -25,6 +29,7 @@ import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 public class RebindPolicyTest extends RebindTestFixtureWithApp {
@@ -161,6 +166,56 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
 
         assertTrue(newPolicy.isRebindingValWhenRebinding());
         assertFalse(newPolicy.isRebinding());
+    }
+    
+    // Previously, policy+enricher was added to entity as part of entity.reconstitute, so other entities might not
+    // have been initialised and the relationships not set. If a policy immediately looked at entity's children or
+    // at another entity, then it might find those entities' state uninitialised.
+    //
+    // Longer term, we may want to force policies+enrichers to be inactive until the entity really is managed.
+    // However, currently some policies inject an onEvent message during their `setEntity` method (because 
+    // their subscription does not give them the current value - only changed values. Doing that sudo-onEvent is
+    // a bad idea because even on normal startup the entity might still be in its init method, so we shouldn't be
+    // kicking off actions at that point.
+    @Test
+    public void testPolicyAddedWhenEntityRelationshipsSet() throws Exception {
+        BasicGroup origGroup = origApp.createAndManageChild(EntitySpec.create(BasicGroup.class));
+        TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
+        origGroup.addMember(origEntity);
+        
+        EnricherChecksEntityHierarchy origEnricher = origApp.addEnricher(EnricherSpec.create(EnricherChecksEntityHierarchy.class));
+        PolicyChecksEntityHierarchy origPolicy = origApp.addPolicy(PolicySpec.create(PolicyChecksEntityHierarchy.class));
+        assertTrue(origEnricher.success);
+        assertTrue(origPolicy.success);
+        
+        newApp = (TestApplication) rebind();
+        EnricherChecksEntityHierarchy newEnricher = (EnricherChecksEntityHierarchy) Iterables.getOnlyElement(newApp.getEnrichers());
+        PolicyChecksEntityHierarchy newPolicy = (PolicyChecksEntityHierarchy) Iterables.getOnlyElement(newApp.getPolicies());
+
+        assertTrue(newEnricher.success);
+        assertTrue(newPolicy.success);
+    }
+    public static class PolicyChecksEntityHierarchy extends AbstractPolicy {
+        transient volatile boolean success;
+        @Override
+        public void setEntity(EntityLocal entity) {
+            super.setEntity(entity);
+            assertTrue(entity instanceof TestApplication);
+            assertEquals(entity.getChildren().size(), 2);
+            assertEquals(((Group)Iterables.find(entity.getChildren(), Predicates.instanceOf(Group.class))).getMembers().size(), 1);
+            success = true;
+        }
+    }
+    public static class EnricherChecksEntityHierarchy extends AbstractEnricher {
+        transient volatile boolean success;
+        @Override
+        public void setEntity(EntityLocal entity) {
+            super.setEntity(entity);
+            assertTrue(entity instanceof TestApplication);
+            assertEquals(entity.getChildren().size(), 2);
+            assertEquals(((Group)Iterables.find(entity.getChildren(), Predicates.instanceOf(Group.class))).getMembers().size(), 1);
+            success = true;
+        }
     }
     
     public static class PolicyChecksIsRebinding extends AbstractPolicy {
