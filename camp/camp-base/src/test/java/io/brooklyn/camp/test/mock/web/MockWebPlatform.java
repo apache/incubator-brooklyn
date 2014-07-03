@@ -1,5 +1,7 @@
 package io.brooklyn.camp.test.mock.web;
 
+import javax.annotation.Nullable;
+
 import brooklyn.util.guava.Maybe;
 import io.brooklyn.camp.BasicCampPlatform;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
@@ -7,6 +9,7 @@ import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.collection.BasicResourceLookup;
 import io.brooklyn.camp.spi.collection.ResolvableLink;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.Artifact;
 import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
 import io.brooklyn.camp.spi.pdp.Service;
@@ -57,7 +60,7 @@ public class MockWebPlatform {
         }
     };
 
-    public static final PdpMatcher newLiteralServiceTypeToPlatformComponentTemplateMatcher(final BasicCampPlatform platform) {
+    public static final PdpMatcher newLiteralServiceTypeToPlatformComponentTemplateMatcher(final BasicCampPlatform platform, @Nullable final Class<? extends AssemblyTemplateInstantiator> instantiator) {
         return new PdpMatcher() {
             public boolean apply(Object item, AssemblyTemplateConstructor atc) {
                 if (!(item instanceof Service)) return false;
@@ -71,8 +74,11 @@ public class MockWebPlatform {
                             .customAttribute("serviceType", type)
                             .description(Maybe.fromNullable(svc.getDescription()).or(t.resolve().getDescription()))
                             .build();
-                        if (atc!=null)
+                        if (atc!=null) {
                             atc.add(pct);
+                            if (instantiator!=null)
+                                atc.instantiator(instantiator);
+                        }
                         return true;
                     }
                 }
@@ -87,12 +93,15 @@ public class MockWebPlatform {
     }
     
     public static <T extends BasicCampPlatform> T populate(T platform) {
+        return populate(platform, null);
+    }
+    public static <T extends BasicCampPlatform> T populate(T platform, @Nullable Class<? extends AssemblyTemplateInstantiator> instantiator) {
         platform.platformComponentTemplates().addAll(APPSERVER, DATABASE);
         platform.applicationComponentTemplates().add(WAR);
         platform.assemblyTemplates().add(ASSEMBLY1);
         
         platform.pdp().addMatcher(WAR_GETS_WAR_MATCHER);
-        platform.pdp().addMatcher(newLiteralServiceTypeToPlatformComponentTemplateMatcher(platform));
+        platform.pdp().addMatcher(newLiteralServiceTypeToPlatformComponentTemplateMatcher(platform, instantiator));
         
         return platform;
     }

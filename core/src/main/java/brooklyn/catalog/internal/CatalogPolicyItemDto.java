@@ -16,4 +16,10 @@ public class CatalogPolicyItemDto extends CatalogItemDtoAbstract<Policy,PolicySp
         return Policy.class;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public Class<PolicySpec<?>> getSpecType() {
+        return (Class)PolicySpec.class;
+    }
+
 }

@@ -402,7 +402,13 @@ public class Main {
             BrooklynServerDetails server = launcher.getServerDetails();
             ManagementContext ctx = server.getManagementContext();
             
-            populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
+            try {
+                populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                // don't fail to start just because catalog is not available
+                log.error("Error populating catalog: "+e, e);
+            }
 
             if (verbose) {
                 Entities.dumpInfo(launcher.getApplications());

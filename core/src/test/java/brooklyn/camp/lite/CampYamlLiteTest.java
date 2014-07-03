@@ -1,12 +1,10 @@
 package brooklyn.camp.lite;
 
-import io.brooklyn.camp.BasicCampPlatform;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.pdp.PdpYamlTest;
 import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Map;
@@ -18,12 +16,17 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.stream.Streams;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 /** Tests of lightweight CAMP integration. Since the "real" integration is in brooklyn-camp project,
@@ -33,10 +36,12 @@ public class CampYamlLiteTest {
     private static final Logger log = LoggerFactory.getLogger(CampYamlLiteTest.class);
     
     protected LocalManagementContext mgmt;
+    protected CampPlatformWithJustBrooklynMgmt platform;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        mgmt = new LocalManagementContextForTests();        
+        mgmt = new LocalManagementContextForTests();
+        platform = new CampPlatformWithJustBrooklynMgmt(mgmt);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -47,8 +52,9 @@ public class CampYamlLiteTest {
     /** based on {@link PdpYamlTest} for parsing,
      * then creating a {@link TestAppAssembly} */
     @Test
-    public void testYamlServiceMatchAndBrooklynInstantiate() throws IOException {
-        BasicCampPlatform platform = MockWebPlatform.populate(new BasicCampPlatform());
+    public void testYamlServiceMatchAndBrooklynInstantiate() throws Exception {
+        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
+        
         Reader input = new InputStreamReader(getClass().getResourceAsStream("test-app-service-blueprint.yaml"));
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
         log.info("AT is:\n"+at.toString());
@@ -56,7 +62,7 @@ public class CampYamlLiteTest {
         Assert.assertEquals(at.getPlatformComponentTemplates().links().size(), 1);
         
         // now use brooklyn to instantiate
-        Assembly assembly = new TestAppAssemblyInstantiator(mgmt).instantiate(at, platform);
+        Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
         
         TestApplication app = ((TestAppAssembly)assembly).getBrooklynApp();
         Assert.assertEquals( app.getConfig(TestEntity.CONF_NAME), "sample" );
@@ -71,5 +77,22 @@ public class CampYamlLiteTest {
         // desc ensures we got the information from the matcher, as this value is NOT in the yaml
         Assert.assertEquals( map.get("desc"), MockWebPlatform.APPSERVER.getDescription() );
     }
-    
+
+    @Test(groups="WIP")
+    public void testYamlServiceForCatalog() {
+        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
+        
+        CatalogItem<?, ?> realItem = mgmt.getCatalog().addItem(Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml")));
+        Iterable<CatalogItem<Object, Object>> retrievedItems = mgmt.getCatalog().getCatalogItems(CatalogPredicates.registeredType(Predicates.equalTo("sample")));
+        
+        Assert.assertEquals(Iterables.size(retrievedItems), 1, "Wrong retrieved items: "+retrievedItems);
+        CatalogItem<Object, Object> retrievedItem = Iterables.getOnlyElement(retrievedItems);
+        Assert.assertEquals(retrievedItem, realItem);
+        
+        EntitySpec<?> spec1 = (EntitySpec<?>) mgmt.getCatalog().createSpec(retrievedItem);
+        Assert.assertNotNull(spec1);
+        Assert.assertEquals(spec1.getConfig().get(TestEntity.CONF_NAME), "sample");
+        
+        // TODO other assertions, about children
+    }
 }

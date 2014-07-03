@@ -5,17 +5,16 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-
 import brooklyn.catalog.CatalogItem;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 
 public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
 

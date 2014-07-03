@@ -55,14 +55,14 @@ public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
 
     @Test
     // for issue #1377
-    // currently provisions in the loopback-on-app location, rather surprisingly;
-    // but not sure that's the desired behaviour
     public void testWithAppAndEntityLocations() throws Exception {
         Entity app = createAndStartApplication(Streams.newReaderWithContents("services:\n"+
             "- serviceType: "+EmptySoftwareProcess.class.getName()+"\n"+
             "  location: localhost:(name=localhost on entity)"+"\n"+
             "location: byon:(hosts=\"127.0.0.1\", name=loopback on app)"));
         waitForApplicationTasks(app);
+        Entities.dumpInfo(app);
+        
         Assert.assertEquals(app.getLocations().size(), 1);
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
@@ -75,6 +75,7 @@ public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
         Assert.assertEquals(entityLocationIterator.next().getDisplayName(), "localhost on entity");
         Location actualMachine = entityLocationIterator.next();
         Assert.assertTrue(actualMachine instanceof SshMachineLocation, "wrong location: "+actualMachine);
+        // TODO this, below, probably should be 'localhost on entity', see #1377
         Assert.assertEquals(actualMachine.getParent().getDisplayName(), "loopback on app");
     }
 

@@ -78,8 +78,14 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
     private String nodeId;
     private URI uri;
     private ManagementNodeState status;
-    private long localTimestamp;
+    private Long localTimestamp;
     private Long remoteTimestamp;
+    
+    /** @deprecated since 0.7.0, use {@link #localTimestamp} or {@link #remoteTimestamp},
+     * but kept (or rather added back in) to support deserializing previous instances */
+    @Deprecated
+    private Long timestampUtc;
+
 
     // for de-serialization
     @SuppressWarnings("unused")
@@ -118,7 +124,9 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
     
     @Override
     public long getLocalTimestamp() {
-        return localTimestamp;
+        if (localTimestamp!=null) return localTimestamp;
+        if (timestampUtc!=null) return timestampUtc;
+        throw new NullPointerException("localTimestamp not known for "+getNodeId());
     }
     
     @Override

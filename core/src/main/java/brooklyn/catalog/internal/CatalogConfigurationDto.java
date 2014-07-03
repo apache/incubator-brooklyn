@@ -12,4 +12,15 @@ public class CatalogConfigurationDto extends CatalogItemDtoAbstract<ConfigKey,Vo
     }
 
     public Class<ConfigKey> getCatalogItemJavaType() { return ConfigKey.class; }
+
+    @Override
+    public String getRegisteredTypeName() {
+        return getJavaType();
+    }
+    
+    @Override
+    public Class<Void> getSpecType() {
+        return null;
+    }
+    
 }

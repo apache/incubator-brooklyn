@@ -207,7 +207,9 @@ public class CatalogClasspathDo {
         return Iterables.filter(input, f);
     }
 
-    /** augments the given item with annotations and class data for the given class, then adds to catalog */
+    /** augments the given item with annotations and class data for the given class, then adds to catalog
+     * @deprecated since 0.7.0 the classpath DO is replaced by libraries */
+    @Deprecated
     public CatalogItem<?,?> addCatalogEntry(Class<?> c) {
         if (Application.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
         if (ApplicationBuilder.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
@@ -217,10 +219,12 @@ public class CatalogClasspathDo {
     }
     
     /** augments the given item with annotations and class data for the given class, then adds to catalog 
-     */
+     * @deprecated since 0.7.0 the classpath DO is replaced by libraries */
+    @Deprecated
     public CatalogItem<?,?> addCatalogEntry(CatalogItemDtoAbstract<?,?> item, Class<?> c) {
         Catalog annotations = c.getAnnotation(Catalog.class);
-        item.type = c.getName();
+        item.registeredType = c.getName();
+        item.javaType = c.getName();
         item.name = firstNonEmpty(c.getSimpleName(), c.getName());
         if (annotations!=null) {
             item.name = firstNonEmpty(annotations.name(), item.name);

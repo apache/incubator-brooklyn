@@ -1,22 +1,23 @@
 package brooklyn.catalog.internal;
 
 import javax.annotation.Nonnull;
-
-import com.google.common.base.Preconditions;
+import javax.annotation.Nullable;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.base.Preconditions;
+
 public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
 
     protected final CatalogDo catalog;
-    protected final CatalogItem<T,SpecT> itemDto;
+    protected final CatalogItemDtoAbstract<T,SpecT> itemDto;
 
     protected volatile Class<T> javaClass; 
     
     public CatalogItemDo(CatalogDo catalog, CatalogItem<T,SpecT> itemDto) {
         this.catalog = Preconditions.checkNotNull(catalog, "catalog");
-        this.itemDto = Preconditions.checkNotNull(itemDto, "itemDto");
+        this.itemDto = (CatalogItemDtoAbstract<T, SpecT>) Preconditions.checkNotNull(itemDto, "itemDto");
     }
 
     public CatalogItem<T,SpecT> getDto() {
@@ -38,6 +39,11 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
         return itemDto.getId();
     }
 
+    @Override
+    public String getRegisteredTypeName() {
+        return itemDto.getRegisteredTypeName();
+    }
+    
     @Override
     public String getJavaType() {
         return itemDto.getJavaType();
@@ -69,6 +75,17 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
         return itemDto.getLibraries();
     }
 
+    @Nullable
+    public String getYaml() {
+        if (itemDto instanceof CatalogEntityItemDto) {
+            return ((CatalogEntityItemDto)itemDto).getPlanYaml();
+        }
+        return null;
+    }
+    
+    /** @deprecated since 0.7.0 this is the legacy mechanism; still needed for policies and apps, but being phased out.
+     * new items should use {@link #getYaml()} */
+    @Deprecated
     public Class<T> getJavaClass() {
         if (javaClass==null) loadJavaClass();
         return javaClass;
@@ -78,6 +95,9 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     protected Class<? extends T> loadJavaClass() {
         try {
             if (javaClass!=null) return javaClass;
+            
+            // TODO use OSGi
+            
             javaClass = (Class<T>) catalog.getRootClassLoader().loadClass(getJavaType());
             return javaClass;
         } catch (ClassNotFoundException e) {
@@ -92,6 +112,10 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
 
     public String toXmlString() {
         return itemDto.toXmlString();
+    }
+
+    public Class<SpecT> getSpecType() {
+        return itemDto.getSpecType();
     }
     
 }

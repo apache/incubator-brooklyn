@@ -32,6 +32,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindManager;
@@ -628,9 +629,8 @@ public class BrooklynLauncher {
     }
 
     protected Application getAppFromYaml(String input) {
-        AssemblyTemplate at = campPlatform.pdp()
-                .registerDeploymentPlan(new StringReader(input));
-         BrooklynAssemblyTemplateInstantiator instantiator;
+        AssemblyTemplate at = campPlatform.pdp().registerDeploymentPlan(new StringReader(input));
+        BrooklynAssemblyTemplateInstantiator instantiator;
         try {
             AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
             if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
@@ -641,7 +641,9 @@ public class BrooklynLauncher {
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
-        return instantiator.create(at, campPlatform);
+        Application app = instantiator.create(at, campPlatform);
+//        ((EntityInternal)app).addLocations(XXX);
+        return app;
     }
     
     protected void startApps() {

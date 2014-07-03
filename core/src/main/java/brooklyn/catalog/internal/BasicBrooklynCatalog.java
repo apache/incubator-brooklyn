@@ -1,7 +1,10 @@
 package brooklyn.catalog.internal;
 
 import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
+import io.brooklyn.camp.spi.pdp.Service;
 
 import java.util.NoSuchElementException;
 
@@ -10,6 +13,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
@@ -18,7 +22,9 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -96,14 +102,57 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T, SpecT> SpecT createSpec(CatalogItem<T, SpecT> item) {
-        // TODO #2
-        throw new UnsupportedOperationException();
+        CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getId());
+        
+        Class<SpecT> specType = loadedItem.getSpecType();
+        if (specType==null) return null;
+            
+        String yaml = loadedItem.getYaml();
+        SpecT spec = null;
+            
+        if (yaml!=null) {
+            DeploymentPlan plan = makePlanFromYaml(yaml);
+            CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
+            
+            // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
+            AssemblyTemplate at = camp.pdp().registerDeploymentPlan(plan);
+            
+            try {
+                AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
+                if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
+                    return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createSpec(at, camp);
+                }
+                throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+            
+        // revert to legacy mechanism
+        try {
+            if (loadedItem.getJavaType()!=null) {
+                @SuppressWarnings({ "deprecation" })
+                SpecT specT = (SpecT) Reflections.findMethod(specType, "create", Class.class).invoke(null, loadedItem.getJavaClass());
+                spec = specT;
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalStateException("Unsupported creation of spec type "+specType+"; it must have a public static create(Class) method", e);
+        }
+
+        if (spec==null) 
+            throw new IllegalStateException("Unknown how to create instance of "+this);
+
+        return spec;
     }
     
     @SuppressWarnings("unchecked")
     @Override
+    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
+    @Deprecated
     public <T,SpecT> Class<? extends T> loadClass(CatalogItem<T,SpecT> item) {
         if (log.isDebugEnabled())
             log.debug("Loading class for catalog item " + item);
@@ -115,6 +164,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     @SuppressWarnings("unchecked")
     @Override
+    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
+    @Deprecated
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
         Iterable<CatalogItem<Object,Object>> resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
         if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
@@ -125,7 +176,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return (Class<? extends T>) loadClass(resultI);
     }
 
-    @Deprecated
+    @Deprecated /** @deprecated since 0.7.0 only used by other deprecated items */ 
     private <T,SpecT> CatalogItemDtoAbstract<T,SpecT> getAbstractCatalogItem(CatalogItem<T,SpecT> item) {
         while (item instanceof CatalogItemDo) item = ((CatalogItemDo<T,SpecT>)item).itemDto;
         if (item==null) return null;
@@ -133,21 +184,37 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         throw new IllegalStateException("Cannot unwrap catalog item '"+item+"' (type "+item.getClass()+") to restore DTO");
     }
 
-    private <T,SpecT> CatalogItemDtoAbstract<T,SpecT> getAbstractCatalogItem(String yaml) {
+    private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
+        DeploymentPlan plan = makePlanFromYaml(yaml);
+        
+        // TODO #2 parse brooklyn.catalog for metadata - name, bundles/libraries, etc
+        // (for now we default to taking the name from the plan or from a single service type therein, below)
+        String name = null;
+        CatalogLibrariesDto libraries = null;
+        
+        // TODO #3 support version info
+        
+        // take name from plan if not specified in brooklyn.catalog section not supplied
+        if (Strings.isBlank(name)) {
+            name = plan.getName();
+            if (Strings.isBlank(name)) {
+                if (plan.getServices().size()==1) {
+                    Service svc = Iterables.getOnlyElement(plan.getServices());
+                    name = svc.getServiceType();
+                }
+            }
+        }
+        
+        // build the catalog item from the plan (as CatalogItem<Entity> for now)
+        // TODO applications / templates
+        // TODO long-term support policies etc
+        
+        return CatalogItemDtoAbstract.newEntityFromPlan(name, libraries, plan, yaml);
+    }
+
+    private DeploymentPlan makePlanFromYaml(String yaml) {
         CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
-        
-        DeploymentPlan plan = camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
-        
-        // TODO #2 parse brooklyn.catalog metadata, bundles etc.
-        // for now take the name from the plan or from a single service type therein
-        
-        // TODO #3 version info
-        
-        // TODO #1 build the catalog item from the plan (as CatalogItem<Entity> ?)
-//        plan.getName()
-        // TODO #2 then support instantiating from the item, replacing 
-        
-        throw new UnsupportedOperationException();
+        return camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
     }
 
     @Override
@@ -160,7 +227,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDto;
     }
 
-    @Override @Deprecated
+    @Override @Deprecated /** @deprecated see super */
     public void addItem(CatalogItem<?,?> item) {
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
         Preconditions.checkNotNull(item, "item");
@@ -168,7 +235,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         manualAdditionsCatalog.addEntry(getAbstractCatalogItem(item));
     }
 
-    @Override @Deprecated
+    @Override @Deprecated /** @deprecated see super */
     public CatalogItem<?,?> addItem(Class<?> type) {
         log.debug("Adding manual catalog item to "+mgmt+": "+type);
         Preconditions.checkNotNull(type, "type");
@@ -177,7 +244,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return manualAdditionsCatalog.classpath.addCatalogEntry(type);
     }
 
-    @Deprecated
     private synchronized void loadManualAdditionsCatalog() {
         if (manualAdditionsCatalog!=null) return;
         CatalogDto manualAdditionsCatalogDto = CatalogDto.newNamedInstance(
@@ -218,7 +284,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return Iterables.transform(filtered, BasicBrooklynCatalog.<T,SpecT>itemDoToDto());
     }
 
-    @SuppressWarnings({ "unchecked" })
     private static <T,SpecT> Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>> itemDoToDto() {
         return new Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>>() {
             @Override

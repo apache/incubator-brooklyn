@@ -47,6 +47,15 @@ public class CatalogPredicates {
         };
     }
 
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> registeredType(final Predicate<? super String> filter) {
+        return new Predicate<CatalogItem<T,SpecT>>() {
+            @Override
+            public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+                return (item != null) && filter.apply(item.getRegisteredTypeName());
+            }
+        };
+    }
+
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> javaType(final Predicate<? super String> filter) {
         return new Predicate<CatalogItem<T,SpecT>>() {
             @Override

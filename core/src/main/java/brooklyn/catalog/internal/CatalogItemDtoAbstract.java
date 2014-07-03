@@ -1,26 +1,45 @@
 package brooklyn.catalog.internal;
 
+import io.brooklyn.camp.spi.pdp.DeploymentPlan;
+
 import javax.annotation.Nonnull;
 
 import brooklyn.catalog.CatalogItem;
 
 public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,SpecT> {
 
+    // TODO are ID and registeredType the same?
     String id;
-    String type;
+    String registeredType;
+    
+    String javaType;
     String name;
     String description;
     String iconUrl;
     String version;
     CatalogLibrariesDto libraries;
     
+    /** @deprecated since 0.7.0.
+     * used for backwards compatibility when deserializing.
+     * when catalogs are converted to new yaml format, this can be removed. */
+    @Deprecated
+    String type;
+    
     public String getId() {
         if (id!=null) return id;
-        return type;
+        return getRegisteredTypeName();
+    }
+    
+    @Override
+    public String getRegisteredTypeName() {
+        if (registeredType!=null) return registeredType;
+        return getJavaType();
     }
     
     public String getJavaType() {
-        return type;
+        if (javaType!=null) return javaType;
+        if (type!=null) return type;
+        return null;
     }
     
     public String getName() {
@@ -49,41 +68,48 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
         return libraries;
     }
 
-    public static CatalogTemplateItemDto newTemplate(String type, String name) {
-        return newTemplate(null, type, name, null);
+    public static CatalogTemplateItemDto newTemplateFromJava(String javaType, String name) {
+        return newTemplateFromJava(null, javaType, name, null);
     }
-    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description) {
-        return newTemplate(id, type, name, description, null);
+    public static CatalogTemplateItemDto newTemplateFromJava(String id, String javaType, String name, String description) {
+        return newTemplateFromJava(id, javaType, name, description, null);
     }
-    public static CatalogTemplateItemDto newTemplate(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
-        return set(new CatalogTemplateItemDto(), id, type, name, description, libraries);
-    }
-
-    public static CatalogEntityItemDto newEntity(String type, String name) {
-        return newEntity(null, type, name, null);
-    }
-    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description) {
-        return newEntity(id, type, name, description, null);
-    }
-    public static CatalogEntityItemDto newEntity(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
-        return set(new CatalogEntityItemDto(), id, type, name, description, libraries);
+    public static CatalogTemplateItemDto newTemplateFromJava(String id, String javaType, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogTemplateItemDto(), id, javaType, javaType, name, description, libraries);
     }
 
-    public static CatalogPolicyItemDto newPolicy(String type, String name) {
-        return newPolicy(null, type, name, null);
+    public static CatalogEntityItemDto newEntityFromPlan(String registeredTypeName, CatalogLibrariesDto libraries, DeploymentPlan plan, String underlyingPlanYaml) {
+        CatalogEntityItemDto target = set(new CatalogEntityItemDto(), null, registeredTypeName, null, plan.getName(), plan.getDescription(), libraries);
+        target.planYaml = underlyingPlanYaml;
+        return target;
     }
-    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description) {
-        return newPolicy(id, type, name, description, null);
+    
+    public static CatalogEntityItemDto newEntityFromJava(String javaType, String name) {
+        return newEntityFromJava(null, javaType, name, null);
     }
-    public static CatalogPolicyItemDto newPolicy(String id, String type, String name, String description, CatalogLibrariesDto libraries) {
-        return set(new CatalogPolicyItemDto(), id, type, name, description, libraries);
+    public static CatalogEntityItemDto newEntityFromJava(String id, String javaType, String name, String description) {
+        return newEntityFromJava(id, javaType, name, description, null);
+    }
+    public static CatalogEntityItemDto newEntityFromJava(String id, String javaType, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogEntityItemDto(), id, javaType, javaType, name, description, libraries);
+    }
+
+    public static CatalogPolicyItemDto newPolicyFromJava(String javaType, String name) {
+        return newPolicyFromJava(null, javaType, name, null);
+    }
+    public static CatalogPolicyItemDto newPolicyFromJava(String id, String javaType, String name, String description) {
+        return newPolicyFromJava(id, javaType, name, description, null);
+    }
+    public static CatalogPolicyItemDto newPolicyFromJava(String id, String javaType, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogPolicyItemDto(), id, javaType, javaType, name, description, libraries);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static <T extends CatalogItemDtoAbstract> T set(T target, String id, String type, String name,
+    private static <T extends CatalogItemDtoAbstract> T set(T target, String id, String registeredType, String javaType, String name,
             String description, CatalogLibrariesDto libraries) {
         target.id = id;
-        target.type = type;
+        target.registeredType = registeredType;
+        target.javaType = javaType;
         target.name = name;
         target.description = description;
         target.libraries = libraries != null ? libraries : new CatalogLibrariesDto();
@@ -106,5 +132,7 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
         if (serializer==null) 
             serializer = new CatalogXmlSerializer();
     }
+
+    public abstract Class<SpecT> getSpecType();
     
 }

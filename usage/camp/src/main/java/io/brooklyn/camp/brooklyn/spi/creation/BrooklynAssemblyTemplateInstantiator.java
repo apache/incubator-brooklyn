@@ -1,12 +1,10 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.spi.platform.HasBrooklynManagementContext;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.collection.ResolvableLink;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
@@ -17,6 +15,8 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
+import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
@@ -44,7 +44,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Maps;
 
-public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateInstantiator {
+public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynAssemblyTemplateInstantiator.class);
     
@@ -76,6 +76,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
         }
     }
 
+    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform) {
+        // TODO rewrite this class so everything below returns a spec, then rewrite above just to instantiate (and start?) the spec
+        throw new UnsupportedOperationException();
+    }
+    
     protected Application createApplicationFromCatalog(CampPlatform platform, CatalogItem<?,?> item, AssemblyTemplate template) {
         ManagementContext mgmt = getBrooklynManagementContext(platform);
 
@@ -112,9 +117,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 appBuilder.configure( convertFlagsToKeys(appBuilder.getType(), configO) );
                 instance = appBuilder.manage(mgmt);
                 
-                List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
-                if (locations!=null)
-                    ((EntityInternal)instance).addLocations(locations);
+                applyLocations(mgmt, template, instance);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
                 // TODO use resolver's configureEntitySpec instead
@@ -126,9 +129,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
                 log.info("CAMP placing '{}' under management", instance);
                 Entities.startManagement(instance, mgmt);
                 
-                List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
-                if (locations!=null)
-                    ((EntityInternal)instance).addLocations(locations);
+                applyLocations(mgmt, template, instance);
                 
             } else {
                 throw new IllegalArgumentException("Class "+clazz+" must extend one of ApplicationBuilder or Application");
@@ -140,6 +141,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             log.error("CAMP failed to create application: "+e, e);
             throw Exceptions.propagate(e);
         }
+    }
+
+    private void applyLocations(ManagementContext mgmt, AssemblyTemplate template, final Application instance) {
+        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
+        if (locations!=null)
+            ((EntityInternal)instance).addLocations(locations);
     }
 
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
@@ -216,6 +223,13 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
 
         Map<Entity, EntitySpec<?>> rootEntities = Maps.newLinkedHashMap();
         Map<Entity, EntitySpec<?>> allEntities = Maps.newLinkedHashMap();
+        /* FIXME there is a subtlety here, and tests failing;
+         * OT1H we might not want/need the wrapper application if we are creating a single one,   
+         * but OTOH we might need a guarantee of an app at root, if we are creating certain nested entities
+         * 
+         * i (alex) think the solution is to use the new createSpec(...) and interrogate it
+         * to see if we need the wrapper or not
+         */
         buildEntities(template, rootEntities, allEntities, mgmt);
         
         EntitySpec<StartableApplication> appSpec;
@@ -230,11 +244,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateIns
             Entry<Entity, EntitySpec<?>> entry = rootEntities.entrySet().iterator().next();
             app = (StartableApplication)entry.getKey();
             appSpec = (EntitySpec<StartableApplication>)entry.getValue();
+            applyLocations(mgmt, template, app);
         }
         
         initEntities(mgmt, allEntities);
         
-        log.info("CAMP placing '{}' under management", appSpec);
+        log.info("CAMP placing '{}' under`` management", appSpec);
         Entities.startManagement(app, mgmt);
 
         return app;

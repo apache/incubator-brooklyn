@@ -11,6 +11,10 @@ import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestEntity;
+import brooklyn.util.BrooklynMavenArtifacts;
+import brooklyn.util.maven.MavenRetriever;
 
 public class CatalogDtoTest {
 
@@ -31,28 +35,31 @@ public class CatalogDtoTest {
     @Test(groups="Integration")
     public void testCatalogLookup() {
         CatalogDto root = buildExampleCatalog();
-        checkHadoopsExample(root);
+        checkCatalogHealthy(root);
     }
     
     @Test(groups="Integration")
     public void testCatalogSerializeAndLookup() {
         CatalogDto root = buildExampleCatalog();
-        CatalogXmlSerializer seriailizer = new CatalogXmlSerializer();
+        CatalogXmlSerializer serializer = new CatalogXmlSerializer();
         
-        String xml = seriailizer.toString(root);
-        log.info("Hadoops example catalog serialized as:\n"+xml);
+        String xml = serializer.toString(root);
+        log.info("Example catalog serialized as:\n"+xml);
         
-        CatalogDto root2 = (CatalogDto) seriailizer.fromString(xml);
-        checkHadoopsExample(root2);
+        CatalogDto root2 = (CatalogDto) serializer.fromString(xml);
+        checkCatalogHealthy(root2);
     }
 
-    protected void checkHadoopsExample(CatalogDto root) {
-        Assert.assertEquals(root.catalogs.size(), 5);
+    protected void checkCatalogHealthy(CatalogDto root) {
+        Assert.assertEquals(root.catalogs.size(), 4);
         CatalogDo loader = new CatalogDo(root).load(managementContext, null);
         
-        CatalogItemDo<?,?> worker = loader.getCache().get("io.brooklyn.mapr.m3.WorkerNode");
+        // test app comes from jar, by default
+        CatalogItemDo<?,?> worker = loader.getCache().get(TestApplication.class.getCanonicalName());
         Assert.assertNotNull(worker);
-        Assert.assertEquals(worker.getName(), "M3 Worker Node");
+        Assert.assertEquals(worker.getName(), "Test App from JAR");
+        
+        // TODO can test scanned elements, links to other catalogs, etc
     }
 
     public static CatalogDto buildExampleCatalog() {
@@ -61,39 +68,30 @@ public class CatalogDtoTest {
         		"intended partly as a teaching example for what can be expressed, and how"));
         root.setClasspathScanForEntities(CatalogScanningModes.NONE);
         
-        CatalogDo m3Catalog = new CatalogDo(CatalogDto.newNamedInstance("MapR M3", null));
-        m3Catalog.addToClasspath("file://~/.m2/repository/io/cloudsoft/brooklyn-mapr/1.0.0-SNAPSHOT/brooklyn-mapr.jar");
-        m3Catalog.addEntry(CatalogItemDtoAbstract.newTemplate(
-                "io.brooklyn.mapr.M3App", "M3 Application"));
-        m3Catalog.addEntry(CatalogItemDtoAbstract.newEntity(
-                "io.brooklyn.mapr.m3.ZookeperWorkerNode", "M3 Zookeeper+Worker Node"));
-        m3Catalog.addEntry(CatalogItemDtoAbstract.newEntity(
-                "io.brooklyn.mapr.m3.WorkerNode", "M3 Worker Node"));
-        root.addCatalog(m3Catalog.dto);
-        
-        CatalogDo cdhCatalog = new CatalogDo(CatalogDto.newNamedInstance("Cloudera", 
-                "CDH catalog, pointing to JARs as I have them installed on my machine already, "+
-                "tweaked for my preferences (overriding templates scanned from these JARs)"));
-        cdhCatalog.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
-        cdhCatalog.addToClasspath(
-                "file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/brooklyn-cdh.jar",
-                "file://~/.m2/repository/io/cloudsoft/brooklyn-cdh/1.0.0-SNAPSHOT/whirr-cm.jar");
-        cdhCatalog.addEntry(CatalogItemDtoAbstract.newTemplate(
-                "io.brooklyn.cloudera.ClouderaForHadoopWithManager",
-                "RECOMMENDED: CDH Hadoop Application with Cloudera Manager"));
-        root.addCatalog(cdhCatalog.dto);
+        CatalogDo testEntitiesJavaCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java", null));
+        testEntitiesJavaCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
+        testEntitiesJavaCatalog.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
+        testEntitiesJavaCatalog.addEntry(CatalogItemDtoAbstract.newTemplateFromJava(
+                TestApplication.class.getCanonicalName(), "Test App from JAR"));
+        testEntitiesJavaCatalog.addEntry(CatalogItemDtoAbstract.newEntityFromJava(
+                TestEntity.class.getCanonicalName(), "Test Entity from JAR"));
+        root.addCatalog(testEntitiesJavaCatalog.dto);
 
-        CatalogDo osgiCatalog = new CatalogDo(CatalogDto.newNamedInstance("OSGi",
+        CatalogDo testEntitiesJavaCatalogScanning = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java Scanning", null));
+        testEntitiesJavaCatalogScanning.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
+        testEntitiesJavaCatalogScanning.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
+        root.addCatalog(testEntitiesJavaCatalogScanning.dto);
+        
+        CatalogDo osgiCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from OSGi",
                 "A catalog whose entries define their libraries as a list of OSGi bundles"));
         osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
-        CatalogLibrariesDto m3Context = new CatalogLibrariesDto();
-        m3Context.addBundle("file://~/.m2/repository/io/cloudsoft/brooklyn-mapr/1.0.0-SNAPSHOT/brooklyn-mapr.jar");
-        osgiCatalog.addEntry(CatalogItemDtoAbstract.newTemplate("M3App", "io.brooklyn.mapr.M3App", "M3 Application",
-                "Description", m3Context));
+        CatalogEntityItemDto osgiEntity = CatalogItemDtoAbstract.newEntityFromJava(TestEntity.class.getCanonicalName(), "Test Entity from OSGi");
+        // NB: this is not actually an OSGi bundle, but it's okay as we don't instantiate the bundles ahead of time (currently)
+        osgiEntity.libraries.addBundle(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
+        testEntitiesJavaCatalog.addEntry(osgiEntity);
         root.addCatalog(osgiCatalog.dto);
 
-        root.addCatalog(CatalogDto.newLinkedInstance("http://cloudsoftcorp.com/amp-brooklyn-catalog.xml"));
-        root.addCatalog(CatalogDto.newLinkedInstance("http://microsoot.com/oofice-catalog.xml"));
+        root.addCatalog(CatalogDto.newLinkedInstance("classpath://brooklyn-catalog-empty.xml"));
         return root.dto;
     }
 

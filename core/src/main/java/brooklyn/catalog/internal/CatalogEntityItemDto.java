@@ -6,6 +6,8 @@ import brooklyn.entity.proxying.EntitySpec;
 
 public class CatalogEntityItemDto extends CatalogItemDtoAbstract<Entity,EntitySpec<?>> {
     
+    String planYaml;
+
     @Override
     public CatalogItemType getCatalogItemType() {
         return CatalogItemType.ENTITY;
@@ -16,4 +18,14 @@ public class CatalogEntityItemDto extends CatalogItemDtoAbstract<Entity,EntitySp
         return Entity.class;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public Class<EntitySpec<?>> getSpecType() {
+        return (Class)EntitySpec.class;
+    }
+
+    public String getPlanYaml() {
+        return planYaml;
+    }
+    
 }

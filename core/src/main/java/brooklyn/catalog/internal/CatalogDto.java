@@ -7,10 +7,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
-
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
+
+import com.google.common.base.Objects;
 
 public class CatalogDto {
 
@@ -42,8 +43,8 @@ public class CatalogDto {
             if (LOG.isDebugEnabled()) LOG.debug("Retrieved catalog from: {}", url);
             return result;
         } catch (Throwable t) {
-            LOG.debug("Unable to retrieve catalog from: " + url + " (" + t + ")");
-            throw Exceptions.propagate(t);
+            Exceptions.propagateIfFatal(t);
+            throw new PropagatedRuntimeException("Unable to retrieve catalog from " + url + ": " + t, t);
         }
     }
 

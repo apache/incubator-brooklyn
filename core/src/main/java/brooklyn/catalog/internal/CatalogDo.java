@@ -92,10 +92,15 @@ public class CatalogDo {
 
     private void loadCatalogItems() {
         List<CatalogLibrariesDo> loadedLibraries = Lists.newLinkedList();
-        for (CatalogItemDtoAbstract<?,?> entry : dto.entries) {
-            CatalogLibrariesDo library = new CatalogLibrariesDo(entry.getLibrariesDto());
-            library.load(mgmt);
-            loadedLibraries.add(library);
+        List<CatalogItemDtoAbstract<?, ?>> entries = dto.entries;
+        if (entries!=null) {
+            for (CatalogItemDtoAbstract<?,?> entry : entries) {
+                if (entry.getLibrariesDto()!=null) {
+                    CatalogLibrariesDo library = new CatalogLibrariesDo(entry.getLibrariesDto());
+                    library.load(mgmt);
+                    loadedLibraries.add(library);
+                }
+            }
         }
     }
 
