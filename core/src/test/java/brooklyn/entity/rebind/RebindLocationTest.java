@@ -344,8 +344,8 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
                     return getMementoWithProperties(MutableMap.<String,Object>of("myfield", myfield));
                 }
                 @Override
-                protected void doReconsruct(RebindContext rebindContext, LocationMemento memento) {
-                    super.doReconsruct(rebindContext, memento);
+                protected void doReconstruct(RebindContext rebindContext, LocationMemento memento) {
+                    super.doReconstruct(rebindContext, memento);
                     myfield = (String) memento.getCustomField("myfield");
                     rebound = true;
                 }

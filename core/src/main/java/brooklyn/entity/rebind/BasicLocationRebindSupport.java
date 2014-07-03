@@ -89,7 +89,17 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         location.init(); // TODO deprecated calling init; will be deleted
         location.rebind();
         
-        doReconsruct(rebindContext, memento);
+        doReconstruct(rebindContext, memento);
+    }
+
+    @Override
+    public void addPolicies(RebindContext rebindContext, LocationMemento Memento) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addEnrichers(RebindContext rebindContext, LocationMemento Memento) {
+        throw new UnsupportedOperationException();
     }
 
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
@@ -115,7 +125,7 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     /**
      * For overriding, to give custom reconsruct behaviour.
      */
-    protected void doReconsruct(RebindContext rebindContext, LocationMemento memento) {
+    protected void doReconstruct(RebindContext rebindContext, LocationMemento memento) {
         // default is no-op
     }
 }

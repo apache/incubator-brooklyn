@@ -88,14 +88,38 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
-        addPolicies(rebindContext, memento);
-        addEnrichers(rebindContext, memento);
         addMembers(rebindContext, memento);
         addTags(rebindContext, memento);
         addLocations(rebindContext, memento);
 
         doReconstruct(rebindContext, memento);
         ((AbstractEntity)entity).rebind();
+    }
+    
+    @Override
+    public void addPolicies(RebindContext rebindContext, EntityMemento memento) {
+        for (String policyId : memento.getPolicies()) {
+            AbstractPolicy policy = (AbstractPolicy) rebindContext.getPolicy(policyId);
+            if (policy != null) {
+                entity.addPolicy(policy);
+            } else {
+                LOG.warn("Policy not found; discarding policy {} of entity {}({})",
+                        new Object[] {policyId, memento.getType(), memento.getId()});
+            }
+        }
+    }
+    
+    @Override
+    public void addEnrichers(RebindContext rebindContext, EntityMemento memento) {
+        for (String enricherId : memento.getEnrichers()) {
+            AbstractEnricher enricher = (AbstractEnricher) rebindContext.getEnricher(enricherId);
+            if (enricher != null) {
+                entity.addEnricher(enricher);
+            } else {
+                LOG.warn("Enricher not found; discarding enricher {} of entity {}({})",
+                        new Object[] {enricherId, memento.getType(), memento.getId()});
+            }
+        }
     }
     
     /**
@@ -159,36 +183,6 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
             } else {
                 LOG.warn("Location not found; discarding location {} of entity {}({})",
                         new Object[] {id, memento.getType(), memento.getId()});
-            }
-        }
-    }
-    
-    protected void addPolicies(RebindContext rebindContext, EntityMemento memento) {
-        for (String policyId : memento.getPolicies()) {
-            AbstractPolicy policy = (AbstractPolicy) rebindContext.getPolicy(policyId);
-            if (policy != null) {
-                try {
-                    entity.addPolicy(policy);
-                } catch (Exception e) {
-                    rebindContext.getExceptionHandler().onAddPolicyFailed(entity, policy, e);
-                }
-            } else {
-                rebindContext.getExceptionHandler().onPolicyNotFound(policyId, "of entity "+entity);
-            }
-        }
-    }
-    
-    protected void addEnrichers(RebindContext rebindContext, EntityMemento memento) {
-        for (String enricherId : memento.getEnrichers()) {
-            AbstractEnricher enricher = (AbstractEnricher) rebindContext.getEnricher(enricherId);
-            if (enricher != null) {
-                try {
-                    entity.addEnricher(enricher);
-                } catch (Exception e) {
-                    rebindContext.getExceptionHandler().onAddEnricherFailed(entity, enricher, e);
-                }
-            } else {
-                rebindContext.getExceptionHandler().onEnricherNotFound(enricherId, "of entity "+entity);
             }
         }
     }

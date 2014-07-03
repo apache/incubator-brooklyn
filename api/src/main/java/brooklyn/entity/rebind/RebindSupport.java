@@ -18,7 +18,7 @@ public interface RebindSupport<T extends Memento> {
     /**
      * Creates a memento representing this entity's current state. This is useful for when restarting brooklyn.
      */
-    public T getMemento();
+    T getMemento();
 
     /**
      * Reconstructs this entity, given a memento of its state. Sets the internal state 
@@ -29,5 +29,9 @@ public interface RebindSupport<T extends Memento> {
      * 
      * Called before rebind.
      */
-    public void reconstruct(RebindContext rebindContext, T memento);
+    void reconstruct(RebindContext rebindContext, T memento);
+
+    void addPolicies(RebindContext rebindContext, T Memento);
+    
+    void addEnrichers(RebindContext rebindContext, T Memento);
 }

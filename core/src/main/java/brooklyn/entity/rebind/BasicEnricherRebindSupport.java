@@ -40,15 +40,24 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
         FlagUtils.setFieldsFromFlags(enricher, configBag);
         FlagUtils.setAllConfigKeys(enricher, configBag, false);
         
-        doReconsruct(rebindContext, memento);
+        doReconstruct(rebindContext, memento);
         ((AbstractEnricher)enricher).rebind();
     }
 
+    @Override
+    public void addPolicies(RebindContext rebindContext, EnricherMemento Memento) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addEnrichers(RebindContext rebindContext, EnricherMemento Memento) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * For overriding, to give custom reconsruct behaviour.
      */
-    protected void doReconsruct(RebindContext rebindContext, EnricherMemento memento) {
+    protected void doReconstruct(RebindContext rebindContext, EnricherMemento memento) {
         // default is no-op
     }
 }
