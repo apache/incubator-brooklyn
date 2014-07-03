@@ -9,3 +9,12 @@ services:
         /: hello.war
     controller.spec:
         port: 80
+
+brooklyn.catalog:
+  name: catalog-name
+  type: io.camp.mock.MyApplication
+  version: 0.9
+  libraries:
+  - name: lib1
+    version: v1
+    url: http://www.example.com/bundle.jar

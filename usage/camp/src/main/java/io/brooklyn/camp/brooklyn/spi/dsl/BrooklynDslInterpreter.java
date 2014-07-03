@@ -76,7 +76,7 @@ public class BrooklynDslInterpreter extends PlanInterpreterAdapter {
     
     @Override
     public boolean applyMapEntry(PlanInterpretationNode node, Map<Object, Object> mapIn, Map<Object, Object> mapOut,
-                            PlanInterpretationNode key, PlanInterpretationNode value) {
+            PlanInterpretationNode key, PlanInterpretationNode value) {
         if (key.getNewValue() instanceof FunctionWithArgs) {
             try {
                 currentNode.set(node);

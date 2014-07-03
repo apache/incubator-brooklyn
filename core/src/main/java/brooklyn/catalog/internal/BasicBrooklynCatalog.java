@@ -1,11 +1,14 @@
 package brooklyn.catalog.internal;
 
+import brooklyn.util.guava.Maybe;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 import io.brooklyn.camp.spi.pdp.Service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
@@ -186,13 +189,26 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
         DeploymentPlan plan = makePlanFromYaml(yaml);
         
-        // TODO #2 parse brooklyn.catalog for metadata - name, bundles/libraries, etc
-        // (for now we default to taking the name from the plan or from a single service type therein, below)
         String name = null;
         CatalogLibrariesDto libraries = null;
-        
+
+        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class);
+        if (possibleCatalog.isPresent()) {
+            Map catalog = possibleCatalog.get();
+            Map<String, Object> cast = (Map<String, Object>) possibleCatalog.get();
+            if (catalog.containsKey("name") && catalog.get("name") != null) {
+                name = String.valueOf(catalog.get("name"));
+            }
+            Object possibleLibraries = catalog.get("libraries");
+            if (possibleLibraries != null) {
+                if (possibleLibraries instanceof List) {
+                    libraries = CatalogLibrariesDto.fromList((List<?>) possibleLibraries);
+                }
+            }
+        }
+
         // TODO #3 support version info
-        
+
         // take name from plan if not specified in brooklyn.catalog section not supplied
         if (Strings.isBlank(name)) {
             name = plan.getName();

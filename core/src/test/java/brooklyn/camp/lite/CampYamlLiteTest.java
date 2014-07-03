@@ -8,6 +8,7 @@ import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 /** Tests of lightweight CAMP integration. Since the "real" integration is in brooklyn-camp project,
  * but some aspects of CAMP we want to be able to test here. */
@@ -83,16 +85,23 @@ public class CampYamlLiteTest {
         MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
         
         CatalogItem<?, ?> realItem = mgmt.getCatalog().addItem(Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml")));
-        Iterable<CatalogItem<Object, Object>> retrievedItems = mgmt.getCatalog().getCatalogItems(CatalogPredicates.registeredType(Predicates.equalTo("sample")));
+        Iterable<CatalogItem<Object, Object>> retrievedItems = mgmt.getCatalog()
+                .getCatalogItems(CatalogPredicates.registeredType(Predicates.equalTo("catalog-name")));
         
         Assert.assertEquals(Iterables.size(retrievedItems), 1, "Wrong retrieved items: "+retrievedItems);
         CatalogItem<Object, Object> retrievedItem = Iterables.getOnlyElement(retrievedItems);
         Assert.assertEquals(retrievedItem, realItem);
-        
+
+        Set<String> expectedBundles = Sets.newHashSet("http://www.example.com/bundle.jar");
+        Assert.assertEquals(retrievedItem.getLibraries().getBundles(), expectedBundles);
+        // Assert.assertEquals(retrievedItem.getVersion(), "0.9");
+
+
         EntitySpec<?> spec1 = (EntitySpec<?>) mgmt.getCatalog().createSpec(retrievedItem);
         Assert.assertNotNull(spec1);
         Assert.assertEquals(spec1.getConfig().get(TestEntity.CONF_NAME), "sample");
         
         // TODO other assertions, about children
     }
+
 }
