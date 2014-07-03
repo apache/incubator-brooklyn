@@ -110,48 +110,12 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         // (any other brooklyn config goes here)
         if (!brooklynConfig.isEmpty())
             builder.customAttribute("brooklyn.config", brooklynConfig);
-        
-        List<Object> brooklynPolicies = Lists.newArrayList();
-        Object origBrooklynPolicies = attrs.remove("brooklyn.policies");
-        if (origBrooklynPolicies != null) {
-            if (!(origBrooklynPolicies instanceof List))
-                throw new IllegalArgumentException("brooklyn.policies must be a list of brooklyn policy definitions");
-            brooklynPolicies.addAll((List<?>)origBrooklynPolicies);
-        }
-        if (!brooklynPolicies.isEmpty())
-            builder.customAttribute("brooklyn.policies", brooklynPolicies);
-        
-        List<Object> brooklynEnrichers = Lists.newArrayList();
-        Object origBrooklynEnrichers = attrs.remove("brooklyn.enrichers");
-        if (origBrooklynEnrichers != null) {
-            if (!(origBrooklynEnrichers instanceof List))
-                throw new IllegalArgumentException("brooklyn.enrichers must be a list of brooklyn enricher definitions");
-            brooklynEnrichers.addAll((List<?>)origBrooklynEnrichers);
-        }
-        if (!brooklynEnrichers.isEmpty())
-            builder.customAttribute("brooklyn.enrichers", brooklynEnrichers);
 
-        List<Object> brooklynInitializers = Lists.newArrayList();
-        Object origBrooklynInitializers = attrs.remove("brooklyn.initializers");
-        if (origBrooklynInitializers != null) {
-            if (!(origBrooklynInitializers instanceof List))
-                throw new IllegalArgumentException("brooklyn.initializers must be a list of brooklyn initializer definitions");
-            brooklynInitializers.addAll((List<?>)origBrooklynInitializers);
-        }
-        if (!brooklynInitializers.isEmpty())
-            builder.customAttribute("brooklyn.initializers", brooklynInitializers);
+        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.policies");
+        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.enrichers");
+        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.initializers");
+        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.children");
 
-        List<Object> brooklynChildren = Lists.newArrayList();
-        Object origBrooklynChildren = attrs.remove("brooklyn.children");
-        if (origBrooklynChildren != null) {
-            if (!(origBrooklynChildren instanceof List))
-                throw new IllegalArgumentException("brooklyn.children must be a list of brooklyn entity definitions");
-            brooklynChildren.addAll((List<?>)origBrooklynChildren);
-        }
-        
-        if (!brooklynChildren.isEmpty())
-            builder.customAttribute("brooklyn.children",  brooklynChildren);
-        
         if (!attrs.isEmpty()) {
             log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);
         }
@@ -159,6 +123,27 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         atc.add(builder.build());
         
         return true;
+    }
+
+    /**
+     * Looks for the given key in the map of attributes and adds it to the given builder
+     * as a custom attribute with type List.
+     * @throws java.lang.IllegalArgumentException if map[key] is not an instance of List
+     */
+    private void addCustomListAttributeIfNonNull(Builder<? extends PlatformComponentTemplate> builder, Map attrs, String key) {
+        Object items = attrs.remove(key);
+        if (items != null) {
+            if (items instanceof List) {
+                List<?> itemList = (List<?>) items;
+                if (!itemList.isEmpty()) {
+                    builder.customAttribute(key, Lists.newArrayList(itemList));
+                }
+            } else {
+                throw new IllegalArgumentException(key + " must be a list, is: " + items.getClass().getName());
+            }
+        }
+            }
+        }
     }
 
     /** finds flags and keys on the given typeName which are present in the given map;
