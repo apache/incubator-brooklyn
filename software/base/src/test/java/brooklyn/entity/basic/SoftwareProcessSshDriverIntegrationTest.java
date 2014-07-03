@@ -6,6 +6,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -204,6 +205,24 @@ public class SoftwareProcessSshDriverIntegrationTest {
         }
     }
 
+    @Test(groups="Integration")
+    public void testPreAndPostLaunchCommands() throws IOException {
+        File tempPreLaunchFile = new File(tempDataDir, "prelaunch.txt");
+        File tempPostLaunchFile = new File(tempDataDir, "postlaunch.txt");
+        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        app.createAndManageChild(EntitySpec.create(MyService.class)
+                .configure(SoftwareProcess.PRE_LAUNCH_COMMAND, String.format("echo foo > %s", tempPreLaunchFile.getAbsoluteFile()))
+                .configure(SoftwareProcess.POST_LAUNCH_COMMAND, String.format("echo bar > %s", tempPostLaunchFile.getAbsoluteFile())));
+        app.start(ImmutableList.of(localhost));
+        List<String> prelaunch = Files.readLines(tempPreLaunchFile, Charsets.UTF_8);
+        List<String> postlaunch = Files.readLines(tempPostLaunchFile, Charsets.UTF_8);
+        assertEquals(prelaunch.size(), 1);
+        assertEquals(postlaunch.size(), 1);
+        assertEquals(postlaunch.get(0), "bar");
+        assertEquals(prelaunch.get(0), "foo");
+        tempPreLaunchFile.delete();
+        tempPostLaunchFile.delete();
+    }
 
     @ImplementedBy(MyServiceImpl.class)
     public interface MyService extends SoftwareProcess {
