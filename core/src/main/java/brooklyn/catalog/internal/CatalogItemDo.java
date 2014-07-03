@@ -1,10 +1,16 @@
 package brooklyn.catalog.internal;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.OsgiManager;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Preconditions;
 
@@ -79,20 +85,38 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
      * new items should use {@link #getYaml()} */
     @Deprecated
     public Class<T> getJavaClass() {
-        if (javaClass==null) loadJavaClass();
+        if (javaClass==null) loadJavaClass(null);
         return javaClass;
     }
     
     @SuppressWarnings("unchecked")
-    protected Class<? extends T> loadJavaClass() {
+    protected Class<? extends T> loadJavaClass(ManagementContext mgmt) {
+        Maybe<Class<Object>> clazz = null;
         try {
             if (javaClass!=null) return javaClass;
-            
-            // TODO use OSGi
+
+            if (mgmt!=null) {
+                Maybe<OsgiManager> osgi = ((ManagementContextInternal)mgmt).getOsgiManager();
+                if (osgi.isPresent()) {
+                    List<String> bundles = getLibraries().getBundles();
+                    if (bundles!=null && !bundles.isEmpty()) {
+                        clazz = osgi.get().tryResolveClass(getJavaType(), bundles);
+                        if (clazz.isPresent()) {
+                            return (Class<? extends T>) clazz.get();
+                        }
+                    }
+                }
+            }
             
             javaClass = (Class<T>) catalog.getRootClassLoader().loadClass(getJavaType());
             return javaClass;
-        } catch (ClassNotFoundException e) {
+        } catch (Throwable e) {
+            Exceptions.propagateIfFatal(e);
+            if (clazz!=null) {
+                // if OSGi bundles were defined and failed, then prefer to throw its error message
+                clazz.get();
+            }
+            // else throw the java error
             throw Exceptions.propagate(e);
         }
     }

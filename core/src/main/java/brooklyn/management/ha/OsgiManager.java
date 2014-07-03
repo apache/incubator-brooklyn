@@ -1,12 +1,14 @@
 package brooklyn.management.ha;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
-
-import com.google.common.base.Throwables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
@@ -16,14 +18,19 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 
+import com.google.common.base.Throwables;
+
 public class OsgiManager {
 
+    private static final Logger log = LoggerFactory.getLogger(OsgiManager.class);
+    
     public static final ConfigKey<Boolean> USE_OSGI = BrooklynServerConfig.USE_OSGI;
     
     /* see Osgis for info on starting framework etc */
     
     protected Framework framework;
     protected File osgiTempDir;
+    protected Map<String,String> bundleUrlToNameVersionString = MutableMap.of();
     
     public void start() {
         try {
@@ -51,24 +58,48 @@ public class OsgiManager {
 
     public void registerBundle(String bundleUrl) {
         try {
-            Osgis.install(framework, bundleUrl);
+            String nv = bundleUrlToNameVersionString.get(bundleUrl);
+            if (nv!=null) {
+                if (Osgis.getBundle(framework, nv).isPresent()) {
+                    log.debug("Bundle from "+bundleUrl+" already installed as "+nv+"; not re-registering");
+                    return;
+                }
+            }
+            Bundle b = Osgis.install(framework, bundleUrl);
+            log.debug("Bundle from "+bundleUrl+" successfully installed as "+nv);
+            bundleUrlToNameVersionString.put(bundleUrl, b.getSymbolicName()+":"+b.getVersion().toString());
         } catch (BundleException e) {
+            log.debug("Bundle from "+bundleUrl+" failed to install (rethrowing): "+e);
             throw Throwables.propagate(e);
         }
     }
 
-    public <T> Maybe<Class<T>> tryResolveClass(String bundleUrl, String type) {
-        try {
-            Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleUrl);
-            if (bundle.isPresent()) {
-                Class<T> clazz = (Class<T>) bundle.get().loadClass(type);
-                return Maybe.of(clazz);
-            } else {
-                return Maybe.absent("No bundle found in " + framework + " at URL: " + bundleUrl);
+    public <T> Maybe<Class<T>> tryResolveClass(String type, String... bundleUrlsOrNameVersionString) {
+        return tryResolveClass(type, Arrays.asList(bundleUrlsOrNameVersionString));
+    }
+    public <T> Maybe<Class<T>> tryResolveClass(String type, Iterable<String> bundleUrlsOrNameVersionString) {
+        Map<String,Throwable> bundleProblems = MutableMap.of();
+        for (String bundleUrlOrNameVersionString: bundleUrlsOrNameVersionString) {
+            try {
+                String bundleNameVersion = bundleUrlToNameVersionString.get(bundleUrlOrNameVersionString);
+                if (bundleNameVersion==null) {
+                    bundleNameVersion = bundleUrlOrNameVersionString;
+                }
+                
+                Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleNameVersion);
+                if (bundle.isPresent()) {
+                    @SuppressWarnings("unchecked")
+                    Class<T> clazz = (Class<T>) bundle.get().loadClass(type);
+                    return Maybe.of(clazz);
+                } else {
+                    bundleProblems.put(bundleUrlOrNameVersionString, new IllegalStateException("Unable to find bundle "+bundleUrlOrNameVersionString));
+                }
+            } catch (Throwable e) {
+                Exceptions.propagateIfFatal(e);
+                bundleProblems.put(bundleUrlOrNameVersionString, e);
             }
-        } catch (ClassNotFoundException e) {
-            return Maybe.absent(e);
         }
+        return Maybe.absent("Unable to resolve class "+type+": "+bundleProblems);
     }
 
 }

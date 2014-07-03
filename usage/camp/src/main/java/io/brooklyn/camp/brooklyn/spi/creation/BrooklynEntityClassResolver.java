@@ -2,6 +2,7 @@ package io.brooklyn.camp.brooklyn.spi.creation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -39,16 +40,18 @@ public class BrooklynEntityClassResolver {
      */
     public static <T extends Entity> Class<T> resolveEntity(String entityTypeName, ManagementContext mgmt, List<String> context) {
         checkNotNull(mgmt, "management context");
-        Maybe<Class<T>> entityClazz = Maybe.absent();
-        // TODO: What if context not empty but class not found? Throw?
-        if (context != null) {
-            for (String bundleUrl : context) {
-                entityClazz = tryLoadEntityFromBundle(entityTypeName, bundleUrl, mgmt);
-                if (entityClazz.isPresent()) {
-                    break;
-                }
+        Maybe<Class<T>> entityClazz = Maybe.absent("No bundles defined");
+        Maybe<Class<T>> bestError = null;
+        
+        if (context!=null && !context.isEmpty()) {
+            entityClazz = tryLoadEntityFromBundle(entityTypeName, mgmt, context);
+            if (!entityClazz.isPresent()) {
+                LOG.warn("Unable to find class "+entityTypeName+" in suggested bundles "+context+"; continuing other mechanisms");
+                // we should prefer the error message from above if context is non-empty but class can't be found
+                bestError = entityClazz;
             }
         }
+        
 
         if (!entityClazz.isPresent()) {
             entityClazz = tryLoadEntityFromCatalogue(entityTypeName, mgmt);
@@ -64,19 +67,29 @@ public class BrooklynEntityClassResolver {
             LOG.warn("Found class {} on classpath but it is not assignable to {}", entityTypeName, Entity.class);
             throw new IllegalStateException("Unable to load class "+ entityTypeName +" (extending Entity) from catalogue or classpath: wrong type "+entityClazz.get());
         }
+        if (!entityClazz.isPresent() && bestError!=null) {
+            // prefer best error if not found
+            bestError.get();
+        }
         return entityClazz.get();
     }
 
+    // TODO deprecate the ones below, make them protected or private
+    
     /** Tries to load the entity with the given class name from the given bundle. */
-    public static <T extends Entity> Maybe<Class<T>> tryLoadEntityFromBundle(String entityTypeName, String bundleUrl, ManagementContext mgmt) {
-        LOG.debug("Trying to resolve class {} from bundle {}", entityTypeName, bundleUrl);
+    public static <T extends Entity> Maybe<Class<T>> tryLoadEntityFromBundle(String entityTypeName, ManagementContext mgmt, String... bundleUrls) {
+        return tryLoadEntityFromBundle(entityTypeName, mgmt, Arrays.asList(bundleUrls));
+    }
+    public static <T extends Entity> Maybe<Class<T>> tryLoadEntityFromBundle(String entityTypeName, ManagementContext mgmt, Iterable<String> bundleUrls) {
+        LOG.debug("Trying to resolve class {} from bundle {}", entityTypeName, bundleUrls);
         Maybe<OsgiManager> osgiManager = ((ManagementContextInternal) mgmt).getOsgiManager();
         if (!osgiManager.isPresentAndNonNull()) {
-            LOG.debug("Asked to resolve class {} from bundle {} but osgi manager is unavailable in context {}",
-                    new Object[]{entityTypeName, bundleUrl, mgmt});
+            if (LOG.isDebugEnabled())
+                LOG.debug("Asked to resolve class {} from bundles {} but osgi manager is unavailable in context {}",
+                    new Object[]{entityTypeName, bundleUrls, mgmt});
             return Maybe.absent();
         }
-        Maybe<Class<T>> clazz = osgiManager.get().tryResolveClass(bundleUrl, entityTypeName);
+        Maybe<Class<T>> clazz = osgiManager.get().tryResolveClass(entityTypeName, bundleUrls);
         if (!clazz.isPresent() || !Entity.class.isAssignableFrom(clazz.get())) {
             return Maybe.absent();
         }

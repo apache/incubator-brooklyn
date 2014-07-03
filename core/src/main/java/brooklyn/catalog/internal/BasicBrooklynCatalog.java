@@ -134,8 +134,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         // revert to legacy mechanism
         try {
             if (loadedItem.getJavaType()!=null) {
-                @SuppressWarnings({ "deprecation" })
-                SpecT specT = (SpecT) Reflections.findMethod(specType, "create", Class.class).invoke(null, loadedItem.getJavaClass());
+                SpecT specT = (SpecT) Reflections.findMethod(specType, "create", Class.class).invoke(null, loadedItem.loadJavaClass(mgmt));
                 spec = specT;
             }
         } catch (Exception e) {
