@@ -49,7 +49,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     String registeredTypeName = "my.catalog.app.id";
     String yaml =
         "name: "+registeredTypeName+"\n"+
-        // TODO name above should be unnecessary when brooklyn.catalog below is working
+        // FIXME name above should be unnecessary when brooklyn.catalog below is working
         "brooklyn.catalog:\n"+
         "- id: " + registeredTypeName + "\n"+
         "- name: My Catalog App\n"+

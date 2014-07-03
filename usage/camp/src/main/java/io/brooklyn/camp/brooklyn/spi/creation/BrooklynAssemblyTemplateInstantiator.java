@@ -221,30 +221,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
         Map<Entity, EntitySpec<?>> allEntities = Maps.newLinkedHashMap();
-//<<<<<<< HEAD
-//        /* FIXME there is a subtlety here, and tests failing;
-//         * OT1H we might not want/need the wrapper application if we are creating a single one,   
-//         * but OTOH we might need a guarantee of an app at root, if we are creating certain nested entities
-//         * 
-//         * i (alex) think the solution is to use the new createSpec(...) and interrogate it
-//         * to see if we need the wrapper or not
-//         */
-//        buildEntities(template, rootEntities, allEntities, mgmt);
-//        
-//        EntitySpec<StartableApplication> appSpec;
-//        StartableApplication app;
-//        if(shouldWrapInApp(template, rootEntities)) {
-//            BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
-//            appSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
-//            app = appResolver.newEntity(appSpec);
-//            setEntitiesParent(rootEntities, app);
-//            allEntities.put(app, appSpec);
-//        } else {
-//            Entry<Entity, EntitySpec<?>> entry = rootEntities.entrySet().iterator().next();
-//            app = (StartableApplication)entry.getKey();
-//            appSpec = (EntitySpec<StartableApplication>)entry.getValue();
-//            applyLocations(mgmt, template, app);
-//=======
         StartableApplication rootApp = buildRootApp(template, platform, allEntities);
         initEntities(mgmt, allEntities);
         log.info("CAMP placing '{}' under management", allEntities.get(rootApp));
@@ -277,7 +253,16 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
         
         ResolvableLink<PlatformComponentTemplate> promotedAppTemplate = template.getPlatformComponentTemplates().links().get(0);
-        StartableApplication app = (StartableApplication)buildEntity(null, promotedAppTemplate, allEntities, mgmt);
+        
+        PlatformComponentTemplate appChildComponentTemplate = promotedAppTemplate.resolve();
+        BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
+        EntitySpec<?> spec = buildEntitySpecNonHierarchical(null, appChildComponentTemplate, allEntities, mgmt, entityResolver);
+
+        // and this is needed in case 'name' was set at template level (eg ApplicationResourceTest.testDeployApplicationYaml)
+        if (spec.getDisplayName()==null && template.getName()!=null)
+            spec.displayName(template.getName());
+            
+        StartableApplication app = (StartableApplication) buildEntityHierarchical(spec, appChildComponentTemplate, allEntities, mgmt, entityResolver);
         
         // TODO i (alex) think we need this because locations defined at the root of the template could have been lost otherwise?
         applyLocations(mgmt, template, app);
@@ -296,10 +281,19 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt) {
         PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
         BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
+        EntitySpec<?> spec = buildEntitySpecNonHierarchical(parent, appChildComponentTemplate, allEntities, mgmt, entityResolver);
+        return buildEntityHierarchical(spec, appChildComponentTemplate, allEntities, mgmt, entityResolver);
+    }
+    private EntitySpec<?> buildEntitySpecNonHierarchical(StartableApplication parent, PlatformComponentTemplate appChildComponentTemplate,
+            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt, BrooklynComponentTemplateResolver entityResolver) {
         EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
         if(parent != null) {
             spec.parent(parent);
         }
+        return spec;
+    }
+    private Entity buildEntityHierarchical(EntitySpec<?> spec, PlatformComponentTemplate appChildComponentTemplate,
+            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt, BrooklynComponentTemplateResolver entityResolver) {
         Entity entity = entityResolver.newEntity(spec);
         allEntities.put(entity, spec);
         buildEntityHierarchy(mgmt, allEntities, entity, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));

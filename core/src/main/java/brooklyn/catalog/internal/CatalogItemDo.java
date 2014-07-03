@@ -75,7 +75,7 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
         return itemDto.getVersion();
     }
 
-    @Nonnull
+    @Nonnull  // but it is still null sometimes, see in CatalogDo.loadJavaClass
     @Override
     public CatalogItemLibraries getLibraries() {
         return itemDto.getLibraries();
@@ -97,7 +97,9 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
 
             if (mgmt!=null) {
                 Maybe<OsgiManager> osgi = ((ManagementContextInternal)mgmt).getOsgiManager();
-                if (osgi.isPresent()) {
+                if (osgi.isPresent() && getLibraries()!=null) {
+                    // TODO getLibraries() should never be null but sometimes it is still
+                    // e.g. run CatalogResourceTest without the above check
                     List<String> bundles = getLibraries().getBundles();
                     if (bundles!=null && !bundles.isEmpty()) {
                         clazz = osgi.get().tryResolveClass(getJavaType(), bundles);

@@ -14,7 +14,7 @@ public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
     private List<String> bundles = new CopyOnWriteArrayList<String>();
 
     public void addBundle(String url) {
-        Preconditions.checkNotNull(url, "Cannot add a bundle to a deserialized DTO");
+        Preconditions.checkNotNull(bundles, "Cannot add a bundle to a deserialized DTO");
         bundles.add( Preconditions.checkNotNull(url) );
     }
 

@@ -32,7 +32,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
@@ -645,7 +644,6 @@ public class BrooklynLauncher {
             throw Exceptions.propagate(e);
         }
         Application app = instantiator.create(at, campPlatform);
-//        ((EntityInternal)app).addLocations(XXX);
         return app;
     }
     

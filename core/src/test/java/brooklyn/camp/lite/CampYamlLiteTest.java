@@ -78,7 +78,7 @@ public class CampYamlLiteTest {
         Assert.assertEquals( map.get("desc"), MockWebPlatform.APPSERVER.getDescription() );
     }
 
-    @Test(groups="WIP")
+    @Test
     public void testYamlServiceForCatalog() {
         MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
         

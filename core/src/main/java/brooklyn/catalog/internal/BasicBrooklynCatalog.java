@@ -208,7 +208,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         // TODO applications / templates
         // TODO long-term support policies etc
         
-        return CatalogItemDtoAbstract.newEntityFromPlan(name, libraries, plan, yaml);
+        return CatalogItems.newEntityFromPlan(name, libraries, plan, yaml);
     }
 
     private DeploymentPlan makePlanFromYaml(String yaml) {

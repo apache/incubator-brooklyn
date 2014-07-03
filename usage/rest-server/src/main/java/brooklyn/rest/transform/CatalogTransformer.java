@@ -50,7 +50,7 @@ public class CatalogTransformer {
 
         return new CatalogEntitySummary(item.getId(), item.getName(), 
             item.getRegisteredTypeName(), item.getJavaType(), 
-            item.getRegisteredTypeName()!=null ? item.getRegisteredTypeName() : item.getJavaType(),
+            item.getRegisteredTypeName(),
             item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
                 config, sensors, effectors,
@@ -60,7 +60,7 @@ public class CatalogTransformer {
     public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?,?> item) {
         return new CatalogItemSummary(item.getId(), item.getName(), 
                 item.getRegisteredTypeName(), item.getJavaType(), 
-                item.getRegisteredTypeName()!=null ? item.getRegisteredTypeName() : item.getJavaType(),
+                item.getRegisteredTypeName(),
                 item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), makeLinks(item));
     }

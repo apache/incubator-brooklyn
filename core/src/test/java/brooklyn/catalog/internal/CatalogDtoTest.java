@@ -71,9 +71,9 @@ public class CatalogDtoTest {
         CatalogDo testEntitiesJavaCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java", null));
         testEntitiesJavaCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
         testEntitiesJavaCatalog.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
-        testEntitiesJavaCatalog.addEntry(CatalogItemDtoAbstract.newTemplateFromJava(
+        testEntitiesJavaCatalog.addEntry(CatalogItems.newTemplateFromJava(
                 TestApplication.class.getCanonicalName(), "Test App from JAR"));
-        testEntitiesJavaCatalog.addEntry(CatalogItemDtoAbstract.newEntityFromJava(
+        testEntitiesJavaCatalog.addEntry(CatalogItems.newEntityFromJava(
                 TestEntity.class.getCanonicalName(), "Test Entity from JAR"));
         root.addCatalog(testEntitiesJavaCatalog.dto);
 
@@ -85,7 +85,7 @@ public class CatalogDtoTest {
         CatalogDo osgiCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from OSGi",
                 "A catalog whose entries define their libraries as a list of OSGi bundles"));
         osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
-        CatalogEntityItemDto osgiEntity = CatalogItemDtoAbstract.newEntityFromJava(TestEntity.class.getCanonicalName(), "Test Entity from OSGi");
+        CatalogEntityItemDto osgiEntity = CatalogItems.newEntityFromJava(TestEntity.class.getCanonicalName(), "Test Entity from OSGi");
         // NB: this is not actually an OSGi bundle, but it's okay as we don't instantiate the bundles ahead of time (currently)
         osgiEntity.libraries.addBundle(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
         testEntitiesJavaCatalog.addEntry(osgiEntity);

@@ -5,6 +5,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.Beta;
+
+@Beta
 public interface CatalogItem<T,SpecT> {
     
     public static enum CatalogItemType {
@@ -24,7 +27,8 @@ public interface CatalogItem<T,SpecT> {
     /** the explicit ID of this item, or the type if not supplied */
     public String getId();
     
-    /** the type name registered in the catalog for this item */ 
+    /** the type name registered in the catalog for this item */
+    @Nonnull
     public String getRegisteredTypeName();
     
     /** the underlying java type of the item represented, or null if not known (e.g. if it comes from yaml) */
