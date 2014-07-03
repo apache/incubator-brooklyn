@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -21,19 +20,16 @@ import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 
@@ -77,9 +73,9 @@ public class BasicMachineDetails implements MachineDetails {
      * #taskForSshMachineLocation(SshMachineLocation)} instead.
      */
     static BasicMachineDetails forSshMachineLocation(SshMachineLocation location) {
-        return DynamicTasks.queueIfPossible(taskForSshMachineLocation(location))
+        return TaskTags.markInessential(DynamicTasks.queueIfPossible(taskForSshMachineLocation(location))
                 .orSubmitAsync()
-                .asTask()
+                .asTask())
                 .getUnchecked();
     }
 

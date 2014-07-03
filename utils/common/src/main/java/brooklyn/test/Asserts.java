@@ -2,6 +2,7 @@ package brooklyn.test;
 
 import groovy.lang.Closure;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -9,12 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
@@ -57,6 +62,16 @@ public class Asserts {
      */
     public static void assertTrue(boolean condition, String message) {
         if (!condition) fail(message);
+    }
+
+    /**
+     * Asserts that a condition is false. If it isn't,
+     * an AssertionError, with the given message, is thrown.
+     * @param condition the condition to evaluate
+     * @param message the assertion error message
+     */
+    public static void assertFalse(boolean condition, String message) {
+        if (condition) fail(message);
     }
 
     /**
@@ -358,6 +373,36 @@ public class Asserts {
         if (!failed) fail("Test code should have thrown exception but did not");
     }
 
+    public static void assertReturnsEventually(final Runnable r, Duration timeout) throws InterruptedException, ExecutionException, TimeoutException {
+        final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
+        Runnable wrappedR = new Runnable() {
+            @Override public void run() {
+                try {
+                    r.run();
+                } catch (Throwable t) {
+                    throwable.set(t);
+                    throw Exceptions.propagate(t);
+                }
+            }
+        };
+        Thread thread = new Thread(wrappedR, "assertReturnsEventually("+r+")");
+        try {
+            thread.start();
+            thread.join(timeout.toMilliseconds());
+            if (thread.isAlive()) {
+                throw new TimeoutException("Still running: r="+r+"; thread="+Arrays.toString(thread.getStackTrace()));
+            }
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            thread.interrupt();
+        }
+        
+        if (throwable.get() !=  null) {
+            throw new ExecutionException(throwable.get());
+        }
+    }
+    
     @SuppressWarnings("rawtypes")
     private static boolean groovyTruth(Object o) {
         // TODO Doesn't handle matchers (see http://docs.codehaus.org/display/GROOVY/Groovy+Truth)
