@@ -24,9 +24,9 @@ public class BrooklynFeatureEnablement {
     
     static {
         // Idea is here one can put experimental features that are *enabled* by default, but 
-        // that can be turned off via system properties. One might want to do that because
-        // the feature is deemed risky!
-        //   e.g. setDefault(ENABLE_POLICY_PERSISTENCE_PROPERTY, true);
+        // that can be turned off via system properties, or vice versa.
+        // Typically this is useful where a feature is deemed risky!
+        
         setDefault(FEATURE_POLICY_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
     }

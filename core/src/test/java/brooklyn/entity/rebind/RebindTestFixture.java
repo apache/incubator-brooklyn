@@ -35,14 +35,8 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     protected T newApp;
     protected ManagementContext newManagementContext;
 
-    private boolean origPolicyPersistenceEnabled;
-    private boolean origEnricherPersistenceEnabled;
-    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        origPolicyPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
-        origEnricherPersistenceEnabled = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
-        
         mementoDir = Os.newTempDir(getClass());
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, getPersistPeriodMillis());
         origApp = createApp();
@@ -59,21 +53,16 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        try {
-            if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
-            if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
-            if (newManagementContext != null) Entities.destroyAll(newManagementContext);
-            origApp = null;
-            newApp = null;
-            newManagementContext = null;
-    
-            if (origManagementContext != null) Entities.destroyAll(origManagementContext);
-            if (mementoDir != null) FileBasedObjectStore.deleteCompletely(mementoDir);
-            origManagementContext = null;
-        } finally {
-            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY, origPolicyPersistenceEnabled);
-            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY, origEnricherPersistenceEnabled);
-        }
+        if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
+        if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
+        if (newManagementContext != null) Entities.destroyAll(newManagementContext);
+        origApp = null;
+        newApp = null;
+        newManagementContext = null;
+
+        if (origManagementContext != null) Entities.destroyAll(origManagementContext);
+        if (mementoDir != null) FileBasedObjectStore.deleteCompletely(mementoDir);
+        origManagementContext = null;
     }
 
     /** rebinds, and sets newApp */

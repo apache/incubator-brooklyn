@@ -50,7 +50,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     private volatile boolean running = true;
 
 
-    // FIXME Delete
     public BrooklynMementoPersisterToObjectStore(PersistenceObjectStore objectStore, ClassLoader classLoader) {
         this.objectStore = checkNotNull(objectStore, "objectStore");
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
