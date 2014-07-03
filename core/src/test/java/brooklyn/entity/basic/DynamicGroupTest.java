@@ -190,6 +190,10 @@ public class DynamicGroupTest {
             }});
     }
     
+    // TODO Previously did Entities.unmanage(e1), but that now causes the group to be told
+    //      (to preserve referential integrity). Now doing Entities.unmanage(e3) instead.
+    //      Note that group.stop is now deprecated, so can delete this test when the method 
+    //      is deleted!
     @Test
     public void testStoppedGroupIgnoresComingAndGoingsOfEntities() throws Exception {
         Entity e3 = new AbstractEntity() {};
@@ -204,13 +208,27 @@ public class DynamicGroupTest {
                 assertEquals(ImmutableSet.copyOf(group.getMembers()), ImmutableSet.of(e1, e2));
             }});
                 
-        Entities.unmanage(e1);
+        Entities.unmanage(e3);
         Asserts.succeedsContinually(MutableMap.of("timeout", VERY_SHORT_WAIT_MS), new Runnable() {
             public void run() {
                 assertEqualsIgnoringOrder(ImmutableSet.copyOf(group.getMembers()), ImmutableSet.of(e1, e2));
             }});
     }
     
+    @Test
+    public void testUnmanagedGroupIgnoresComingAndGoingsOfEntities() {
+        Entity e3 = new AbstractEntity() {};
+        group.setEntityFilter(Predicates.instanceOf(TestEntity.class));
+        assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of(e1, e2));
+        Entities.unmanage(group);
+        
+        e3.setParent(app);
+        Entities.manage(e3);
+        Asserts.succeedsContinually(MutableMap.of("timeout", VERY_SHORT_WAIT_MS), new Runnable() {
+            public void run() {
+                assertEqualsIgnoringOrder(ImmutableSet.copyOf(group.getMembers()), ImmutableSet.of(e1, e2));
+            }});
+    }
 
     // Motivated by strange behavior observed testing load-balancing policy, but this passed...
     //
