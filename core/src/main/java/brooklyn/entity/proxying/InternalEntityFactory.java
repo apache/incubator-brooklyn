@@ -171,7 +171,12 @@ public class InternalEntityFactory {
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
-            
+
+            for (EntitySpec<?> childSpec : spec.getChildren()) {
+                Entity child = createEntity(childSpec);
+                ((EntityLocal)entity).addChild(child);
+            }
+
             /* Marked transient so that the task is not needlessly kept around at the highest level.
              * Note that the task is not normally visible in the GUI, because 
              * (a) while it is running, the entity is parentless (and so not in the tree);

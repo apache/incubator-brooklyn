@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SimulatedLocation;
@@ -42,6 +43,21 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
                 .configure(TestEntity.CONF_NAME, "myname"));
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "myname");
     }
+
+    @Test
+    public void testAddsChidlren() throws Exception {
+        entity = app.createAndManageChild( EntitySpec.create(TestEntity.class)
+            .displayName("child")
+            .child(EntitySpec.create(TestEntity.class)
+                .displayName("grandchild")) );
+        
+        Entity child = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(child, entity);
+        assertEquals(child.getDisplayName(), "child");
+        Entity grandchild = Iterables.getOnlyElement(child.getChildren());
+        assertEquals(grandchild.getDisplayName(), "grandchild");
+    }
+    
 
     @Test
     public void testAddsPolicySpec() throws Exception {
