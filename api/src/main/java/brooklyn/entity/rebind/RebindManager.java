@@ -32,6 +32,8 @@ public interface RebindManager {
     
     public void setPersister(BrooklynMementoPersister persister);
 
+    public void setPersister(BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler);
+
     @VisibleForTesting
     public BrooklynMementoPersister getPersister();
 

@@ -1,5 +1,7 @@
 package brooklyn.entity.rebind;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 
 import brooklyn.entity.Entity;
@@ -16,9 +18,11 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, Policy> policies = Maps.newLinkedHashMap();
     private final Map<String, Enricher> enrichers = Maps.newLinkedHashMap();
     private final ClassLoader classLoader;
+    private final RebindExceptionHandler exceptionHandler;
     
-    public RebindContextImpl(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+    public RebindContextImpl(RebindExceptionHandler exceptionHandler, ClassLoader classLoader) {
+        this.exceptionHandler = checkNotNull(exceptionHandler, "exceptionHandler");
+        this.classLoader = checkNotNull(classLoader, "classLoader");
     }
 
     public void registerEntity(String id, Entity entity) {
@@ -37,6 +41,14 @@ public class RebindContextImpl implements RebindContext {
         enrichers.put(id, enricher);
     }
     
+    public void unregisterPolicy(Policy policy) {
+        policies.remove(policy.getId());
+    }
+
+    public void unregisterEnricher(Enricher enricher) {
+        enrichers.remove(enricher.getId());
+    }
+
     @Override
     public Entity getEntity(String id) {
         return entities.get(id);
@@ -60,5 +72,10 @@ public class RebindContextImpl implements RebindContext {
     @Override
     public Class<?> loadClass(String className) throws ClassNotFoundException {
         return classLoader.loadClass(className);
+    }
+
+    @Override
+    public RebindExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
     }
 }

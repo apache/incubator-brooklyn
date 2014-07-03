@@ -1,6 +1,7 @@
 package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
@@ -51,12 +52,12 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     }
     
     @Override
-    public void checkpoint(BrooklynMemento newMemento) {
+    public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
         memento.reset(checkNotNull(newMemento, "memento"));
     }
 
     @Override
-    public void delta(Delta delta) {
+    public void delta(Delta delta, PersistenceExceptionHandler exceptionHanlder) {
         memento.removeEntities(delta.removedEntityIds());
         memento.removeLocations(delta.removedLocationIds());
         memento.removePolicies(delta.removedPolicyIds());

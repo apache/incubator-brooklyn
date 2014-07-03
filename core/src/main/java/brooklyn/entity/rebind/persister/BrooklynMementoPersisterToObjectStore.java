@@ -12,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
@@ -48,11 +49,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     private volatile boolean running = true;
 
+
+    // FIXME Delete
     public BrooklynMementoPersisterToObjectStore(PersistenceObjectStore objectStore, ClassLoader classLoader) {
         this.objectStore = checkNotNull(objectStore, "objectStore");
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
         this.serializer = new RetryingMementoSerializer<Object>(rawSerializer, MAX_SERIALIZATION_ATTEMPTS);
-
+        
         // TODO it's 95% the same code for each of these, throughout, so refactor to avoid repetition
         objectStore.createSubPath("entities");
         objectStore.createSubPath("locations");
@@ -261,7 +264,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     }
     
     @Override
-    public void checkpoint(BrooklynMemento newMemento) {
+    public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
         if (!running) {
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
             return;
@@ -271,23 +274,23 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         for (EntityMemento entity : newMemento.getEntityMementos().values()) {
-            persist("entities", entity);
+            persist("entities", entity, exceptionHandler);
         }
         for (LocationMemento location : newMemento.getLocationMementos().values()) {
-            persist("locations", location);
+            persist("locations", location, exceptionHandler);
         }
         for (PolicyMemento policy : newMemento.getPolicyMementos().values()) {
-            persist("policies", policy);
+            persist("policies", policy, exceptionHandler);
         }
         for (EnricherMemento enricher : newMemento.getEnricherMementos().values()) {
-            persist("enrichers", enricher);
+            persist("enrichers", enricher, exceptionHandler);
         }
         
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed entire memento in {}", Time.makeTimeStringRounded(stopwatch));
     }
     
     @Override
-    public void delta(Delta delta) {
+    public void delta(Delta delta, PersistenceExceptionHandler exceptionHandler) {
         if (!running) {
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointed delta of memento, because not running");
             return;
@@ -297,29 +300,29 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         for (EntityMemento entity : delta.entities()) {
-            persist("entities", entity);
+            persist("entities", entity, exceptionHandler);
         }
         for (LocationMemento location : delta.locations()) {
-            persist("locations", location);
+            persist("locations", location, exceptionHandler);
         }
         for (PolicyMemento policy : delta.policies()) {
-            persist("policies", policy);
+            persist("policies", policy, exceptionHandler);
         }
         for (EnricherMemento enricher : delta.enrichers()) {
-            persist("enrichers", enricher);
+            persist("enrichers", enricher, exceptionHandler);
         }
         
         for (String id : delta.removedEntityIds()) {
-            delete("entities", id);
+            delete("entities", id, exceptionHandler);
         }
         for (String id : delta.removedLocationIds()) {
-            delete("locations", id);
+            delete("locations", id, exceptionHandler);
         }
         for (String id : delta.removedPolicyIds()) {
-            delete("policies", id);
+            delete("policies", id, exceptionHandler);
         }
         for (String id : delta.removedEnricherIds()) {
-            delete("enrichers", id);
+            delete("enrichers", id, exceptionHandler);
         }
         
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}; updated {} entities, {} locations and {} policies; " +
@@ -339,15 +342,23 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             writer.waitForCurrentWrites(timeout);
     }
 
-    private void persist(String subPath, Memento entity) {
-        getWriter(getPath(subPath, entity.getId())).put(serializer.toString(entity));
+    private void persist(String subPath, Memento memento, PersistenceExceptionHandler exceptionHandler) {
+        try {
+            getWriter(getPath(subPath, memento.getId())).put(serializer.toString(memento));
+        } catch (Exception e) {
+            exceptionHandler.onPersistMementoFailed(memento, e);
+        }
     }
 
-    private void delete(String subPath, String id) {
-        StoreObjectAccessorWithLock w = getWriter(getPath(subPath, id));
-        w.delete();
-        synchronized (writers) {
-            writers.remove(id);
+    private void delete(String subPath, String id, PersistenceExceptionHandler exceptionHandler) {
+        try {
+            StoreObjectAccessorWithLock w = getWriter(getPath(subPath, id));
+            w.delete();
+            synchronized (writers) {
+                writers.remove(id);
+            }
+        } catch (Exception e) {
+            exceptionHandler.onDeleteMementoFailed(id, e);
         }
     }
 

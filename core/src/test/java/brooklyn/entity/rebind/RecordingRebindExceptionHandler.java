@@ -27,7 +27,7 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
     protected Exception failed;
     
     public RecordingRebindExceptionHandler(RebindManager.RebindFailureMode danglingRefFailureMode, RebindManager.RebindFailureMode rebindFailureMode) {
-        super(danglingRefFailureMode, rebindFailureMode);
+        super(builder().danglingRefFailureMode(danglingRefFailureMode).rebindFailureMode(rebindFailureMode));
     }
 
     @Override

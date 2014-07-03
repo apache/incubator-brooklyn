@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.util.exceptions.Exceptions;
@@ -83,11 +84,11 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     }
     
     @Override
-    public void checkpoint(BrooklynMemento newMemento) {
+    public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         synchronized (mutex) {
             long timeObtainedMutex = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-            super.checkpoint(newMemento);
+            super.checkpoint(newMemento, exceptionHandler);
             long timeCheckpointed = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             writeMemento();
             long timeWritten = stopwatch.elapsed(TimeUnit.MILLISECONDS);
@@ -100,11 +101,11 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
     }
     
     @Override
-    public void delta(Delta delta) {
+    public void delta(Delta delta, PersistenceExceptionHandler exceptionHandler) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         synchronized (mutex) {
             long timeObtainedMutex = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-            super.delta(delta);
+            super.delta(delta, exceptionHandler);
             long timeDeltad = stopwatch.elapsed(TimeUnit.MILLISECONDS);
             writeMemento();
             long timeWritten = stopwatch.elapsed(TimeUnit.MILLISECONDS);

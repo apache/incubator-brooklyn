@@ -167,10 +167,13 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         for (String policyId : memento.getPolicies()) {
             AbstractPolicy policy = (AbstractPolicy) rebindContext.getPolicy(policyId);
             if (policy != null) {
-                entity.addPolicy(policy);
+                try {
+                    entity.addPolicy(policy);
+                } catch (Exception e) {
+                    rebindContext.getExceptionHandler().onAddPolicyFailed(entity, policy, e);
+                }
             } else {
-                LOG.warn("Policy not found; discarding policy {} of entity {}({})",
-                        new Object[] {policyId, memento.getType(), memento.getId()});
+                rebindContext.getExceptionHandler().onPolicyNotFound(policyId, "of entity "+entity);
             }
         }
     }
@@ -179,10 +182,13 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         for (String enricherId : memento.getEnrichers()) {
             AbstractEnricher enricher = (AbstractEnricher) rebindContext.getEnricher(enricherId);
             if (enricher != null) {
-                entity.addEnricher(enricher);
+                try {
+                    entity.addEnricher(enricher);
+                } catch (Exception e) {
+                    rebindContext.getExceptionHandler().onAddEnricherFailed(entity, enricher, e);
+                }
             } else {
-                LOG.warn("Enricher not found; discarding enricher {} of entity {}({})",
-                        new Object[] {enricherId, memento.getType(), memento.getId()});
+                rebindContext.getExceptionHandler().onEnricherNotFound(enricherId, "of entity "+entity);
             }
         }
     }

@@ -1,6 +1,7 @@
 package brooklyn.entity.rebind;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -51,17 +52,31 @@ public interface RebindExceptionHandler {
 
     void onCreatePolicyFailed(String id, String type, Exception e);
 
+    void onCreateEnricherFailed(String id, String type, Exception e);
+
     void onLocationNotFound(String id);
     
     void onEntityNotFound(String id);
     
     void onPolicyNotFound(String id);
 
+    void onPolicyNotFound(String id, String context);
+
+    void onEnricherNotFound(String id);
+
+    void onEnricherNotFound(String id, String context);
+
     void onRebindEntityFailed(Entity entity, Exception e);
 
     void onRebindLocationFailed(Location location, Exception e);
 
     void onRebindPolicyFailed(Policy policy, Exception e);
+
+    void onRebindEnricherFailed(Enricher enricher, Exception e);
+
+    void onAddPolicyFailed(EntityLocal entity, Policy policy, Exception e);
+
+    void onAddEnricherFailed(EntityLocal entity, Enricher enricher, Exception e);
 
     void onManageLocationFailed(Location location, Exception e);
 
