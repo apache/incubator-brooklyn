@@ -24,7 +24,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>org.marre.smsj</artifactId>
-            <version>1.0.0-20051126</version>
+            <version>${org.marre.smsj.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>

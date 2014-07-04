@@ -108,7 +108,7 @@
         		<plugin>
         			<groupId>org.eclipse.m2e</groupId>
         			<artifactId>lifecycle-mapping</artifactId>
-        			<version>1.0.0</version>
+        			<version>${eclipse-m2e.version}</version>
         			<configuration>
         				<lifecycleMappingMetadata>
         					<pluginExecutions>

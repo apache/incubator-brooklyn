@@ -15,12 +15,12 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.18</version>
+            <version>${mysql-connector-java.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
-            <version>1.0.2</version>
+            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn.example</groupId>
