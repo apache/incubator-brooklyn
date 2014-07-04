@@ -47,9 +47,13 @@ public class OsgiManager {
 
     public void stop() {
         try {
-            if (framework!=null)
+            if (framework!=null) {
                 framework.stop();
+                framework.waitForStop(0);
+            }
         } catch (BundleException e) {
+            throw Exceptions.propagate(e);
+        } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
         osgiTempDir = Os.deleteRecursively(osgiTempDir).asNullOrThrowing();
