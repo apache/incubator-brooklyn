@@ -19,6 +19,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
+import org.osgi.framework.namespace.PackageNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,7 +169,7 @@ public class Osgis {
         private Manifest manifest;
         private String source;
 
-        private static final String WIRING_PACKAGE = "osgi.wiring.package";
+        private static final String WIRING_PACKAGE = PackageNamespace.PACKAGE_NAMESPACE;
         
         public static ManifestHelper forManifestContents(String contents) throws IOException, BundleException {
             ManifestHelper result = forManifest(Streams.newInputStreamWithContents(contents));
