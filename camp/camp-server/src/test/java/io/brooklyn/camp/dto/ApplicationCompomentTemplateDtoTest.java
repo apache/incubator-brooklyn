@@ -4,10 +4,10 @@ import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.rest.util.DtoFactory;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
 import io.brooklyn.camp.test.mock.web.MockWebPlatform;
-import junit.framework.Assert;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class ApplicationCompomentTemplateDtoTest {

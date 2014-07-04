@@ -6,8 +6,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import junit.framework.Assert;
-
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

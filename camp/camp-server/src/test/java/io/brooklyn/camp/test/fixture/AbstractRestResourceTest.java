@@ -6,9 +6,9 @@ import io.brooklyn.camp.BasicCampPlatform;
 import io.brooklyn.camp.CampServer;
 import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
-import org.junit.AfterClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.reporters.Files;
 
