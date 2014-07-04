@@ -102,13 +102,17 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
     
     @Override
-    public void stop() {
+    public void stop(boolean graceful) {
         running = false;
-        executor.shutdown();
-        try {
-            executor.awaitTermination(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
+        if (graceful) {
+            executor.shutdown();
+            try {
+                executor.awaitTermination(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                throw Exceptions.propagate(e);
+            }
+        } else {
+            executor.shutdownNow();
         }
     }
     

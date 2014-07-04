@@ -47,7 +47,7 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     }
     
     @Override
-    public void stop() {
+    public void stop(boolean graceful) {
         // no-op
     }
     

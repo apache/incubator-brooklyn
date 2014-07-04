@@ -2,6 +2,7 @@ package brooklyn.entity.rebind;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -29,17 +30,17 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final RebindFailureMode addPolicyFailureMode;
     protected final RebindFailureMode loadPolicyFailureMode;
 
-    protected final Set<String> missingEntities = Sets.newLinkedHashSet();
-    protected final Set<String> missingLocations = Sets.newLinkedHashSet();
-    protected final Set<String> missingPolicies = Sets.newLinkedHashSet();
-    protected final Set<String> missingEnrichers = Sets.newLinkedHashSet();
-    protected final Set<String> creationFailedEntities = Sets.newLinkedHashSet();
-    protected final Set<String> creationFailedLocations = Sets.newLinkedHashSet();
-    protected final Set<String> creationFailedPolicies = Sets.newLinkedHashSet();
-    protected final Set<String> creationFailedEnrichers = Sets.newLinkedHashSet();
-    protected final Set<Exception> addPolicyFailures = Sets.newLinkedHashSet();
-    protected final Set<Exception> loadPolicyFailures = Sets.newLinkedHashSet();
-    protected final List<Exception> exceptions = Lists.newArrayList();
+    protected final Set<String> missingEntities = Sets.newConcurrentHashSet();
+    protected final Set<String> missingLocations = Sets.newConcurrentHashSet();
+    protected final Set<String> missingPolicies = Sets.newConcurrentHashSet();
+    protected final Set<String> missingEnrichers = Sets.newConcurrentHashSet();
+    protected final Set<String> creationFailedEntities = Sets.newConcurrentHashSet();
+    protected final Set<String> creationFailedLocations = Sets.newConcurrentHashSet();
+    protected final Set<String> creationFailedPolicies = Sets.newConcurrentHashSet();
+    protected final Set<String> creationFailedEnrichers = Sets.newConcurrentHashSet();
+    protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
+    protected final Set<Exception> loadPolicyFailures = Sets.newConcurrentHashSet();
+    protected final List<Exception> exceptions = Collections.synchronizedList(Lists.<Exception>newArrayList());
     
     public static Builder builder() {
         return new Builder();

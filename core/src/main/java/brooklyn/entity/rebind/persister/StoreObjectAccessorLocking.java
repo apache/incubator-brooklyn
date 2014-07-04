@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -152,8 +153,12 @@ public class StoreObjectAccessorLocking implements PersistenceObjectStore.StoreO
     @Override
     public void waitForCurrentWrites(Duration timeout) throws InterruptedException, TimeoutException {
         try {
-            lock.readLock().lockInterruptibly();
-            lock.readLock().unlock();
+            boolean locked = lock.readLock().tryLock(timeout.toMillisecondsRoundingUp(), TimeUnit.MILLISECONDS);
+            if (locked) {
+                lock.readLock().unlock();
+            } else {
+                throw new TimeoutException("Timeout waiting for writes of "+delegate+" after "+timeout);
+            }
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }

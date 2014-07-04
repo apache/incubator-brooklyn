@@ -175,6 +175,13 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         assertEquals(newE.getDisplayName(), "mydisplayname");
     }
     
+    // Saw this fail during development (fixed now); but want at least one of these tests to be run 
+    // many times for stress testing purposes
+    @Test(invocationCount=100, groups="Integeration")
+    public void testRestoresEntityIdAndDisplayNameManyTimes() throws Exception {
+        testRestoresEntityIdAndDisplayName();
+    }
+    
     @Test
     public void testCanCustomizeRebind() throws Exception {
         MyEntity2 origE = origApp.createAndManageChild(EntitySpec.create(MyEntity2.class).configure("myfield", "myval"));

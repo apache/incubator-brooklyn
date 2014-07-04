@@ -21,6 +21,7 @@ import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
@@ -105,6 +106,10 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     public Void call() {
                         try {
                             persistNow();
+                            return null;
+                        } catch (RuntimeInterruptedException e) {
+                            LOG.debug("Interrupted persisting change-delta (rethrowing)", e);
+                            Thread.currentThread().interrupt();
                             return null;
                         } catch (Exception e) {
                             // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,

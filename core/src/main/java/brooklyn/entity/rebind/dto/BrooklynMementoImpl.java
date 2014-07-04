@@ -27,12 +27,12 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     
     public static class Builder {
         protected String brooklynVersion = BrooklynVersion.get();
-        protected final List<String> applicationIds = Lists.newArrayList();
-        protected final List<String> topLevelLocationIds = Lists.newArrayList();
-        protected final Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
-        protected final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
-        protected final Map<String, PolicyMemento> policies = Maps.newLinkedHashMap();
-        protected final Map<String, EnricherMemento> enrichers = Maps.newLinkedHashMap();
+        protected final List<String> applicationIds = Collections.synchronizedList(Lists.<String>newArrayList());
+        protected final List<String> topLevelLocationIds = Collections.synchronizedList(Lists.<String>newArrayList());
+        protected final Map<String, EntityMemento> entities = Maps.newConcurrentMap();
+        protected final Map<String, LocationMemento> locations = Maps.newConcurrentMap();
+        protected final Map<String, PolicyMemento> policies = Maps.newConcurrentMap();
+        protected final Map<String, EnricherMemento> enrichers = Maps.newConcurrentMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;

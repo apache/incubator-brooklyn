@@ -192,7 +192,7 @@ public class RebindManagerImpl implements RebindManager {
     public void stop() {
         running = false;
         if (realChangeListener != null) realChangeListener.stop();
-        if (persister != null) persister.stop();
+        if (persister != null) persister.stop(true);
     }
     
     @Override
@@ -536,7 +536,7 @@ public class RebindManagerImpl implements RebindManager {
             T nodeinchain = node;
             while (nodeinchain != null) {
                 tempchain.add(0, nodeinchain);
-                nodeinchain = nodes.get(nodeinchain.getParent());
+                nodeinchain = (nodeinchain.getParent() == null) ? null : nodes.get(nodeinchain.getParent());
             }
             for (T n : tempchain) {
                 result.put(n.getId(), n);

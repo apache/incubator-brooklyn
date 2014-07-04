@@ -18,10 +18,10 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     
     public static class Builder {
         protected String brooklynVersion;
-        protected final Map<String, String> entityIdToType = Maps.newLinkedHashMap();
-        protected final Map<String, String> locationIdToType = Maps.newLinkedHashMap();
-        protected final Map<String, String> policyIdToType = Maps.newLinkedHashMap();
-        protected final Map<String, String> enricherIdToType = Maps.newLinkedHashMap();
+        protected final Map<String, String> entityIdToType = Maps.newConcurrentMap();
+        protected final Map<String, String> locationIdToType = Maps.newConcurrentMap();
+        protected final Map<String, String> policyIdToType = Maps.newConcurrentMap();
+        protected final Map<String, String> enricherIdToType = Maps.newConcurrentMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
@@ -55,10 +55,10 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         }
     }
 
-    private Map<String, String> entityIdToType;
-    private Map<String, String> locationIdToType;
-    private Map<String, String> policyIdToType;
-    private Map<String, String> enricherIdToType;
+    private final Map<String, String> entityIdToType;
+    private final Map<String, String> locationIdToType;
+    private final Map<String, String> policyIdToType;
+    private final Map<String, String> enricherIdToType;
     
     private BrooklynMementoManifestImpl(Builder builder) {
         entityIdToType = builder.entityIdToType;

@@ -80,6 +80,8 @@ public class Exceptions {
     public static void propagateIfFatal(Throwable throwable) {
         if (throwable instanceof InterruptedException)
             throw new RuntimeInterruptedException((InterruptedException) throwable);
+        if (throwable instanceof RuntimeInterruptedException)
+            throw (RuntimeInterruptedException) throwable;
         if (throwable instanceof Error)
             throw (Error) throwable;
     }

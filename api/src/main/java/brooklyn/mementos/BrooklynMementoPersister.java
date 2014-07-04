@@ -42,7 +42,7 @@ public interface BrooklynMementoPersister {
 
     void delta(Delta delta, PersistenceExceptionHandler exceptionHandler);
 
-    void stop();
+    void stop(boolean graceful);
 
     @VisibleForTesting
     void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException;
