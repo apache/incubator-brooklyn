@@ -10,7 +10,6 @@ import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,22 +30,24 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynAssemblyTemplateInstantiator.class);
+    
+    public static final String NEVER_UNWRAP_APPS_PROPERTY = "wrappedApp";
     
     @Override
     public Assembly instantiate(AssemblyTemplate template, CampPlatform platform) {
@@ -56,32 +57,80 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return platform.assemblies().get(app.getApplicationId());
     }
 
+    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform) {
+        return createAppOrSpec(template, platform, true).getSpec();
+    }
+
     // note: based on BrooklynRestResourceUtils, but modified to not allow child entities (yet)
     // (will want to revise that when building up from a non-brooklyn template)
     public Application create(AssemblyTemplate template, CampPlatform platform) {
+        ManagementContext mgmt = getBrooklynManagementContext(platform);
+        
+        AppOrSpec appOrSpec = createAppOrSpec(template, platform, false);
+        
+        if (appOrSpec.hasApp())
+            return appOrSpec.getApp();
+        if (!appOrSpec.hasSpec())
+            throw new IllegalStateException("No spec could be produced from "+template);
+        
+        EntitySpec<? extends Application> spec = appOrSpec.getSpec();
+        
+        Application instance = (Application) mgmt.getEntityManager().createEntity(spec);
+        log.info("CAMP placing '{}' under management", instance);
+        Entities.startManagement(instance, mgmt);
+
+        return instance;
+    }
+    
+    protected AppOrSpec createAppOrSpec(AssemblyTemplate template, CampPlatform platform, boolean requireSpec) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
         
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
-        // TODO: item is always null because template.id is a random String, so
-        // createApplicationFromCatalog branch below is never taken.  If `id'
-        // key is given in blueprint it is available with:
-        // Object customId = template.getCustomAttributes().get("id");
+        
         CatalogItem<?,?> item = catalog.getCatalogItem(template.getId());
-
-        if (item==null) {
-            return createApplicationFromNonCatalogCampTemplate(template, platform);
+        if (item!=null) {
+            // TODO legacy path - currently item is always null because template.id is a random String,
+            // and pretty sure that is the desired behaviour; we now (Jul 2014) automatically promote
+            // so fine for users always to put the catalog registeredType in the services block;
+            // if we did want to support users supplying an `id' that would be available not via the above
+            // but via template.getCustomAttributes().get("id");
+            
+            return createApplicationFromCatalog(platform, item, template, requireSpec);
         } else {
-            return createApplicationFromCatalog(platform, item, template);
+            return new AppOrSpec(createApplicationFromNonCatalogCampTemplate(template, platform));
         }
     }
+    
+    private static class AppOrSpec {
+        private final Application app;
+        private final EntitySpec<? extends Application> spec;
+        
+        public AppOrSpec(Application app) {
+            this.app = app;
+            this.spec = null;
+        }
 
-    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform) {
-        // TODO rewrite this class so everything below returns a spec, then rewrite above just to instantiate (and start?) the spec
-        throw new UnsupportedOperationException();
+        public AppOrSpec(EntitySpec<? extends Application> spec) {
+            this.app = null;
+            this.spec = spec;
+        }
+
+        public boolean hasApp() {
+            return app!=null;
+        }
+        public boolean hasSpec() {
+            return spec!=null;
+        }
+        public Application getApp() {
+            return app;
+        }
+        public EntitySpec<? extends Application> getSpec() {
+            return spec;
+        }
     }
     
-    protected Application createApplicationFromCatalog(CampPlatform platform, CatalogItem<?,?> item, AssemblyTemplate template) {
+    protected AppOrSpec createApplicationFromCatalog(CampPlatform platform, CatalogItem<?,?> item, AssemblyTemplate template, boolean requireSpec) {
         ManagementContext mgmt = getBrooklynManagementContext(platform);
 
         if (!template.getApplicationComponentTemplates().isEmpty() ||
@@ -93,7 +142,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         String name = template.getName();
                 
         String type = item.getJavaType();
-        final Application instance;
 
         // Load the class; first try to use the appropriate catalog item; but then allow anything that is on the classpath
         final Class<? extends Entity> clazz;
@@ -105,8 +153,17 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         
         try {
             if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
+                if (requireSpec) {
+                    // TODO we could enable this, by returning the spec from the ApplicationBuilder;
+                    // note that we would have to set it up so that ApplicationBuilder.doBuild is called from an
+                    // entity initializer set on the spec, and remove the doBuild call from ApplicationBuilder.manage.
+                    // (this could also allow ApplicationBuilder instances to be used from catalog)
+                    throw new IllegalStateException("ApplicationBuilder items cannot be used when specs have to be created");
+                }
                 Constructor<?> constructor = clazz.getConstructor();
                 ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
+                // for builder, we (1) can't get a spec (so discourage use of Builder?),
+                // and (2) we have to manually extract key bits of the template
                 
                 if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
         
@@ -115,27 +172,25 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
                 log.info("CAMP placing '{}' under management", appBuilder);
                 appBuilder.configure( convertFlagsToKeys(appBuilder.getType(), configO) );
-                instance = appBuilder.manage(mgmt);
+                Application instance = appBuilder.manage(mgmt);
                 
                 applyLocations(mgmt, template, instance);
+
+                return new AppOrSpec(instance);
                 
             } else if (Application.class.isAssignableFrom(clazz)) {
                 // TODO use resolver's configureEntitySpec instead
                 final Map<?,?> configO = (Map<?,?>) template.getCustomAttributes().get("brooklyn.config");
                 
-                brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
-                instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
-
-                log.info("CAMP placing '{}' under management", instance);
-                Entities.startManagement(instance, mgmt);
+                @SuppressWarnings("unchecked")
+                brooklyn.entity.proxying.EntitySpec<? extends Application> coreSpec = toCoreEntitySpec((Class<? extends Application>)clazz, name, configO);
+                applyLocations(mgmt, template, coreSpec);
                 
-                applyLocations(mgmt, template, instance);
+                return new AppOrSpec(coreSpec);
                 
             } else {
                 throw new IllegalArgumentException("Class "+clazz+" must extend one of ApplicationBuilder or Application");
             }
-            
-            return instance;
             
         } catch (Exception e) {
             log.error("CAMP failed to create application: "+e, e);
@@ -147,6 +202,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
         if (locations!=null)
             ((EntityInternal)instance).addLocations(locations);
+    }
+
+    private void applyLocations(ManagementContext mgmt, AssemblyTemplate template, final EntitySpec<?> spec) {
+        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(template.getCustomAttributes(), false);
+        if (locations!=null)
+            spec.locations(locations);
     }
 
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
@@ -180,7 +241,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
     // TODO exact copy of BRRU, as above
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T extends Entity> EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<?,?> configO) {
+    private <T extends Entity> EntitySpec<? extends T> toCoreEntitySpec(Class<? extends T> clazz, String name, Map<?,?> configO) {
         Map<?, ?> config = (configO == null) ? Maps.newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
         EntitySpec result;
@@ -199,151 +260,72 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return result;
     }
 
-    /*
-     * recursive method that finds child entities referenced in the config map, side-effecting the entities and entitySpecs maps.
-     */
-    protected void buildEntityHierarchy(ManagementContext mgmt, Map<Entity, EntitySpec<?>> entitySpecs, Entity parent, List<Map<String, Object>> childConfig) {
-        if (childConfig != null) {
-            for (Map<String, Object> childAttrs : childConfig) {
-                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, childAttrs);
-                EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
-
-                spec.parent(parent);
-                Entity entity = entityResolver.newEntity(spec);
-                entitySpecs.put(entity, spec);
-                buildEntityHierarchy(mgmt, entitySpecs, entity, entityResolver.getChildren(childAttrs));
-            }
-        }
-    }
-    
-    protected Application createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform) {
+    @SuppressWarnings("unchecked")
+    protected EntitySpec<? extends Application> createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform) {
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
-        Map<Entity, EntitySpec<?>> allEntities = Maps.newLinkedHashMap();
-        StartableApplication rootApp = buildRootApp(template, platform, allEntities);
-        initEntities(mgmt, allEntities);
-        log.info("CAMP placing '{}' under management", allEntities.get(rootApp));
-        Entities.startManagement(rootApp, mgmt);
-        return rootApp;
-    }
-
-    private StartableApplication buildRootApp(AssemblyTemplate template, CampPlatform platform, Map<Entity, EntitySpec<?>> allEntities) {
-        if (shouldWrapInApp(template, platform)) {
-            return buildWrappedApp(template, platform, allEntities);
-        } else {
-            return buildPromotedApp(template, platform, allEntities);
+        BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
+        EntitySpec<? extends Application> app = resolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
+        
+        // first build the children into an empty shell app
+        buildTemplateServicesAsSpecs(template, app, mgmt);
+        
+        if (shouldUnwrap(template, app)) {
+            app = (EntitySpec<? extends Application>) Iterables.getOnlyElement( app.getChildren() );
         }
-    }
-
-    private StartableApplication buildWrappedApp(AssemblyTemplate template, CampPlatform platform, Map<Entity, EntitySpec<?>> allEntities) {
-        final ManagementContext mgmt = getBrooklynManagementContext(platform);
         
-        BrooklynComponentTemplateResolver appResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
-        EntitySpec<StartableApplication> wrapAppSpec = appResolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
-        StartableApplication wrapApp = appResolver.newEntity(wrapAppSpec);
-        allEntities.put(wrapApp, wrapAppSpec);
+        // now apply template items to the root app (possibly promoted)
         
-        buildEntities(template, wrapApp, wrapAppSpec, allEntities, mgmt);
-        
-        return wrapApp;
-    }
-
-    private StartableApplication buildPromotedApp(AssemblyTemplate template, CampPlatform platform, Map<Entity, EntitySpec<?>> allEntities) {
-        final ManagementContext mgmt = getBrooklynManagementContext(platform);
-        
-        ResolvableLink<PlatformComponentTemplate> promotedAppTemplate = template.getPlatformComponentTemplates().links().get(0);
-        
-        PlatformComponentTemplate appChildComponentTemplate = promotedAppTemplate.resolve();
-        BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
-        EntitySpec<?> spec = buildEntitySpecNonHierarchical(null, appChildComponentTemplate, allEntities, mgmt, entityResolver);
-
-        // and this is needed in case 'name' was set at template level (eg ApplicationResourceTest.testDeployApplicationYaml)
-        if (spec.getDisplayName()==null && template.getName()!=null)
-            spec.displayName(template.getName());
-            
-        StartableApplication app = (StartableApplication) buildEntityHierarchical(spec, appChildComponentTemplate, allEntities, mgmt, entityResolver);
-        
-        // TODO i (alex) think we need this because locations defined at the root of the template could have been lost otherwise?
+        // take name from template if not already set
+        if (app.getDisplayName()==null && template.getName()!=null)
+            app.displayName(template.getName());
+          
+        // apply locations defined at the root of the template
         applyLocations(mgmt, template, app);
         
         return app;
     }
 
-    private void buildEntities(AssemblyTemplate template, StartableApplication app, EntitySpec<StartableApplication> appSpec,
-            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt) {
+    protected boolean shouldUnwrap(AssemblyTemplate template, EntitySpec<? extends Application> app) {
+        Object leaveWrapped = template.getCustomAttributes().get(NEVER_UNWRAP_APPS_PROPERTY);
+        if (leaveWrapped!=null) {
+            if (TypeCoercions.coerce(leaveWrapped, Boolean.class))
+                return false;
+        }
+        
+        if (app.getChildren().size()!=1) 
+            return false;
+        
+        EntitySpec<?> childSpec = Iterables.getOnlyElement(app.getChildren());
+        if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
+            return false;
+
+        return true;
+    }
+
+    private void buildTemplateServicesAsSpecs(AssemblyTemplate template, EntitySpec<? extends Application> root, ManagementContext mgmt) {
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
-            buildEntity(app, ctl, allEntities, mgmt);
+            PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
+            BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
+            
+            EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
+            root.child(spec);
+            
+            buildChildrenEntitySpecs(mgmt, spec, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
         }
     }
 
-    private Entity buildEntity(StartableApplication parent, ResolvableLink<PlatformComponentTemplate> ctl,
-            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt) {
-        PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
-        BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
-        EntitySpec<?> spec = buildEntitySpecNonHierarchical(parent, appChildComponentTemplate, allEntities, mgmt, entityResolver);
-        return buildEntityHierarchical(spec, appChildComponentTemplate, allEntities, mgmt, entityResolver);
-    }
-    private EntitySpec<?> buildEntitySpecNonHierarchical(StartableApplication parent, PlatformComponentTemplate appChildComponentTemplate,
-            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt, BrooklynComponentTemplateResolver entityResolver) {
-        EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
-        if(parent != null) {
-            spec.parent(parent);
-        }
-        return spec;
-    }
-    private Entity buildEntityHierarchical(EntitySpec<?> spec, PlatformComponentTemplate appChildComponentTemplate,
-            Map<Entity, EntitySpec<?>> allEntities, ManagementContext mgmt, BrooklynComponentTemplateResolver entityResolver) {
-        Entity entity = entityResolver.newEntity(spec);
-        allEntities.put(entity, spec);
-        buildEntityHierarchy(mgmt, allEntities, entity, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
-        return entity;
-    }
-
-    private boolean shouldWrapInApp(AssemblyTemplate template, CampPlatform platform) {
-        return isWrapAppRequested(template) ||
-                !isSingleApp(template, platform);
-    }
-
-    private boolean isWrapAppRequested(AssemblyTemplate template) {
-        return Boolean.TRUE.equals(template.getCustomAttributes().get("wrappedApp"));
-    }
-
-    protected boolean isSingleApp(AssemblyTemplate template, CampPlatform platform) {
-        // AssemblyTemplates created via PDP, _specifying_ then entities to put in
-        final ManagementContext mgmt = getBrooklynManagementContext(platform);
-
-        List<ResolvableLink<PlatformComponentTemplate>> pct = template.getPlatformComponentTemplates().links();
-        if(pct.size() == 1) {
-            ResolvableLink<PlatformComponentTemplate> res = pct.get(0);
-            PlatformComponentTemplate templ = res.resolve();
-            Class<Entity> entity = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, templ).loadEntityClass();
-            if(StartableApplication.class.isAssignableFrom(entity)) {
-                return true;
+    protected void buildChildrenEntitySpecs(ManagementContext mgmt, EntitySpec<?> parent, List<Map<String, Object>> childConfig) {
+        if (childConfig != null) {
+            for (Map<String, Object> childAttrs : childConfig) {
+                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, childAttrs);
+                EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
+                parent.child(spec);
+                
+                buildChildrenEntitySpecs(mgmt, spec, entityResolver.getChildren(childAttrs));
             }
         }
-        return false;
-    }
-    
-    private void initEntities(final ManagementContext mgmt, Map<Entity, EntitySpec<?>> entities) {
-        for (Entry<Entity, EntitySpec<?>> entry : entities.entrySet()) {
-            final Entity entity = entry.getKey();
-            
-            @SuppressWarnings("unchecked")
-            final EntitySpec<Entity> spec = (EntitySpec<Entity>)entry.getValue();
-            
-            ((EntityInternal) entity).getExecutionContext().submit(MutableMap.of(), new Runnable() {
-                @Override
-                public void run() {
-                    initEntity(mgmt, entity, spec);
-                }
-            }).getUnchecked();
-        }
-    }
-
-    protected <T extends Entity> void initEntity(ManagementContext mgmt, T entity, EntitySpec<T> spec) {
-        InternalEntityFactory entityFactory = ((ManagementContextInternal)mgmt).getEntityFactory();
-        entityFactory.initEntity(entity, spec);
     }
 
 }
