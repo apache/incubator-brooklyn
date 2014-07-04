@@ -20,9 +20,11 @@ package brooklyn.management.osgi;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
@@ -52,9 +54,11 @@ import brooklyn.util.stream.Streams;
  *  */
 public class OsgiStandaloneTest {
 
+
     private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
     
     public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:///brooklyn/osgi/brooklyn-osgi-test-a_0.1.0.jar";
+    private static final String BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL = "/brooklyn/osgi/brooklyn-tests-osgi-entities-0.1.0.jar";
     
     protected Framework framework = null;
     private File storageTempDir;
@@ -159,6 +163,25 @@ public class OsgiStandaloneTest {
         log.info("Total export package count: "+allPackages.size());
         Assert.assertTrue(allPackages.size()>20, "did not find enough packages"); // probably much larger
         Assert.assertTrue(allPackages.contains(Osgis.class.getPackage().getName()));
+    }
+    
+    @Test
+    public void testReadKnownManifest() throws Exception {
+        InputStream in = this.getClass().getResourceAsStream(BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL);
+        JarInputStream jarIn = new JarInputStream(in);
+        ManifestHelper helper = Osgis.ManifestHelper.forManifest(jarIn.getManifest());
+        jarIn.close();
+        Assert.assertEquals(helper.getVersion().toString(), "0.1.0");
+        Assert.assertTrue(helper.getExportedPackages().contains("brooklyn.osgi.tests"));
+    }
+    
+    @Test
+    public void testLoadOsgiBundleDependencies() throws Exception {
+        Bundle bundle = install("classpath:/" + BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL);
+        Assert.assertNotNull(bundle);
+        Class<?> aClass = bundle.loadClass("brooklyn.osgi.tests.SimpleApplicationImpl");
+        Object aInst = aClass.newInstance();
+        Assert.assertNotNull(aInst);
     }
     
 }

@@ -23,6 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
@@ -53,6 +58,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterators;
 
 /** 
  * utilities for working with osgi.
@@ -63,6 +69,7 @@ import com.google.common.base.Predicates;
 @Beta
 public class Osgis {
 
+    private static final String BROOKLYN_PACKAGE_PREFIX = "brooklyn.";
     private static final Logger LOG = LoggerFactory.getLogger(Osgis.class);
 
     public static List<Bundle> getBundlesByName(Framework framework, String symbolicName, Predicate<Version> versionMatcher) {
@@ -150,6 +157,7 @@ public class Osgis {
         Map<Object,Object> cfg = MutableMap.copyOf(extraStartupConfig);
         if (clean) cfg.put(Constants.FRAMEWORK_STORAGE_CLEAN, "onFirstInit");
         if (felixCacheDir!=null) cfg.put(Constants.FRAMEWORK_STORAGE, felixCacheDir);
+        cfg.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, getBrooklynBootBundles());
         FrameworkFactory factory = newFrameworkFactory();
         
         Framework framework = factory.newFramework(cfg);
@@ -164,6 +172,45 @@ public class Osgis {
         }
         return framework;
     }
+
+    private static String getBrooklynBootBundles() {
+        Enumeration<URL> resources;
+        try {
+            resources = Osgis.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
+        
+        Collection<String> exportPackages = new ArrayList<String>();
+        while(resources.hasMoreElements()) {
+            URL url = resources.nextElement();
+            exportPackages.addAll(getBundleExportedPackages(url));
+        }
+
+        Iterator<String> brooklynPackages = Iterators.filter(exportPackages.iterator(), new Predicate<String>() {
+            @Override
+            public boolean apply(String input) {
+                return input.startsWith(BROOKLYN_PACKAGE_PREFIX);
+            }
+        });
+        
+        String bootBundles = Joiner.on(",").join(brooklynPackages);
+        LOG.debug("Found the following boot OSGi packages: " + bootBundles);
+        return bootBundles;
+    }
+
+    private static Collection<String> getBundleExportedPackages(URL manifestUrl) {
+        try {
+            ManifestHelper helper = ManifestHelper.forManifest(manifestUrl);
+            return helper.getExportedPackages();
+        } catch (IOException e) {
+            LOG.warn("Unable to load manifest from " + manifestUrl + ", ignoring.", e);
+        } catch (BundleException e) {
+            LOG.warn("Unable to load manifest from " + manifestUrl + ", ignoring.", e);
+        }
+        return Collections.emptyList();
+    }
+
 
     /**
      * Installs a bundle from the given URL, doing a check if already installed, and
@@ -193,6 +240,13 @@ public class Osgis {
             ManifestHelper result = forManifest(Streams.newInputStreamWithContents(contents));
             result.source = contents;
             return result;
+        }
+        
+        public static ManifestHelper forManifest(URL url) throws IOException, BundleException {
+            InputStream in = url.openStream();
+            ManifestHelper helper = forManifest(in);
+            in.close();
+            return helper;
         }
         
         public static ManifestHelper forManifest(InputStream in) throws IOException, BundleException {
