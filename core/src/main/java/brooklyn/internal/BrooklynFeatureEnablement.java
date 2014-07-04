@@ -2,6 +2,9 @@ package brooklyn.internal;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Maps;
 
 /**
@@ -13,6 +16,8 @@ import com.google.common.collect.Maps;
  * @author aled
  */
 public class BrooklynFeatureEnablement {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynFeatureEnablement.class);
 
     public static final String FEATURE_POLICY_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.policyPersistence";
     
@@ -68,6 +73,9 @@ public class BrooklynFeatureEnablement {
                 String rawVal = System.getProperty(property);
                 if (rawVal == null) {
                     FEATURE_ENABLEMENTS.put(property, val);
+                    LOG.debug("Default enablement of "+property+" set to "+val);
+                } else {
+                    LOG.debug("Not setting default enablement of "+property+" to "+val+", because system property is "+rawVal);
                 }
             }
         }
