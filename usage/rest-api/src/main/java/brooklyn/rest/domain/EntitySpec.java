@@ -7,7 +7,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import java.util.Collections;
 import java.util.Map;
 
-public class EntitySpec {
+public class EntitySpec implements HasName {
 
   private final String name;
   private final String type;
@@ -31,6 +31,7 @@ public class EntitySpec {
     this.config = (config != null) ? ImmutableMap.copyOf(config) : ImmutableMap.<String, String>of();
   }
 
+  @Override
   public String getName() {
     return name;
   }

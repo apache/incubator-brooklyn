@@ -18,7 +18,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
-public abstract class ConfigSummary {
+public abstract class ConfigSummary implements HasName {
 
   private final String name;
   private final String type;
@@ -94,6 +94,7 @@ public abstract class ConfigSummary {
     }
   }
 
+  @Override
   public String getName() {
     return name;
   }

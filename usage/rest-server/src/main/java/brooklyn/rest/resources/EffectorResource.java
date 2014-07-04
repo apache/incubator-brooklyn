@@ -17,6 +17,7 @@ import brooklyn.management.Task;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.rest.api.EffectorApi;
 import brooklyn.rest.domain.EffectorSummary;
+import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.EffectorTransformer;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
@@ -30,11 +31,6 @@ import com.google.common.collect.FluentIterable;
 public class EffectorResource extends AbstractBrooklynRestResource implements EffectorApi {
 
     private static final Logger log = LoggerFactory.getLogger(EffectorResource.class);
-    private static final Comparator<EffectorSummary> SUMMARY_NAME_COMPARATOR = new Comparator<EffectorSummary>() {
-        @Override public int compare(EffectorSummary o1, EffectorSummary o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-    };
 
    @Override
   public List<EffectorSummary> list(final String application, final String entityToken) {
@@ -46,7 +42,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
                     return EffectorTransformer.effectorSummary(entity, effector);
                 }
             })
-           .toSortedList(SUMMARY_NAME_COMPARATOR);
+           .toSortedList(SummaryComparators.nameComparator());
    }
 
     @Override

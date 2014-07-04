@@ -19,6 +19,7 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.rest.api.LocationApi;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.LocationTransformer;
 import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.util.EntityLocationUtils;
@@ -60,16 +61,10 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
                 }
             }
         };
-        Comparator<LocationSummary> nameComparator = new Comparator<LocationSummary>() {
-            @Override
-            public int compare(LocationSummary o1, LocationSummary o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        };
         return FluentIterable.from(brooklyn().getLocationRegistry().getDefinedLocations().values())
                 .transform(transformer)
                 .filter(LocationSummary.class)
-                .toSortedList(nameComparator);
+                .toSortedList(SummaryComparators.nameComparator());
     }
 
     // this is here to support the web GUI's circles

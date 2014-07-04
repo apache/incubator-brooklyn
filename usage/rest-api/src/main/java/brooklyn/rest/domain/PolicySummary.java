@@ -6,7 +6,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import java.net.URI;
 import java.util.Map;
 
-public class PolicySummary {
+public class PolicySummary implements HasName, HasId {
 
   private final String id;
   private final String name;
@@ -25,10 +25,12 @@ public class PolicySummary {
     this.links = ImmutableMap.copyOf(links);
   }
 
+  @Override
   public String getId() {
       return id;
   }
   
+  @Override
   public String getName() {
     return name;
   }

@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableMap;
 
 /** variant of Catalog*ItemDto objects for JS/JSON serialization;
  * see also, subclasses */
-public class CatalogItemSummary {
+public class CatalogItemSummary implements HasId, HasName {
 
     private final String id;
     
@@ -53,6 +53,7 @@ public class CatalogItemSummary {
         this.links = ImmutableMap.copyOf(links);
     }
     
+    @Override
     public String getId() {
         return id;
     }
@@ -73,6 +74,7 @@ public class CatalogItemSummary {
         return planYaml;
     }
     
+    @Override
     public String getName() {
         return name;
     }
