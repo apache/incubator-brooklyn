@@ -175,7 +175,7 @@ public class BrooklynShutdownHooks {
             if (entitiesToStop.isEmpty()) {
                 log.debug("Brooklyn shutdown: no entities to stop");
             } else {
-                log.info("Brooklyn stopdown: stopping entities "+entitiesToStop);
+                log.info("Brooklyn shutdown: stopping entities "+entitiesToStop);
                 destroyAndWait(entitiesToStop, shutdownTimeout);
             }
 
