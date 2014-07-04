@@ -19,18 +19,25 @@
 package brooklyn.util.osgi;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.Manifest;
+
+import javax.annotation.Nullable;
 
 import org.apache.felix.framework.FrameworkFactory;
+import org.apache.felix.framework.util.StringMap;
+import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
+import org.osgi.framework.wiring.BundleCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +46,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
@@ -172,4 +180,60 @@ public class Osgis {
         return framework.getBundleContext().installBundle(url, stream);
     }
 
+    public static class ManifestHelper {
+        
+        private static ManifestParser parse;
+        private Manifest manifest;
+        private String source;
+
+        private static final String WIRING_PACKAGE = "osgi.wiring.package";
+        
+        public static ManifestHelper forManifestContents(String contents) throws IOException, BundleException {
+            ManifestHelper result = forManifest(Streams.newInputStreamWithContents(contents));
+            result.source = contents;
+            return result;
+        }
+        
+        public static ManifestHelper forManifest(InputStream in) throws IOException, BundleException {
+            return forManifest(new Manifest(in));
+        }
+
+        public static ManifestHelper forManifest(Manifest manifest) throws BundleException {
+            ManifestHelper result = new ManifestHelper();
+            result.manifest = manifest;
+            parse = new ManifestParser(null, null, null, new StringMap(manifest.getMainAttributes()));
+            return result;
+        }
+        
+        public String getSymbolicName() {
+            return parse.getSymbolicName();
+        }
+
+        public Version getVersion() {
+            return parse.getBundleVersion();
+        }
+
+        public String getSymbolicNameVersion() {
+            return getSymbolicName()+":"+getVersion();
+        }
+
+        public List<String> getExportedPackages() {
+            MutableList<String> result = MutableList.of();
+            for (BundleCapability c: parse.getCapabilities()) {
+                if (WIRING_PACKAGE.equals(c.getNamespace())) {
+                    result.add((String)c.getAttributes().get(WIRING_PACKAGE));
+                }
+            }
+            return result;
+        }
+        
+        @Nullable public String getSource() {
+            return source;
+        }
+        
+        public Manifest getManifest() {
+            return manifest;
+        }
+    }
+    
 }
