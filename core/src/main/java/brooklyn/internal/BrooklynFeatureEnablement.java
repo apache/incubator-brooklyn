@@ -22,13 +22,17 @@ public class BrooklynFeatureEnablement {
 
     private static final Object MUTEX = new Object();
     
-    static {
+    static void setDefaults() {
         // Idea is here one can put experimental features that are *enabled* by default, but 
         // that can be turned off via system properties, or vice versa.
         // Typically this is useful where a feature is deemed risky!
         
         setDefault(FEATURE_POLICY_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
+    }
+    
+    static {
+        setDefaults();
     }
     
     public static boolean isEnabled(String property) {
@@ -72,6 +76,7 @@ public class BrooklynFeatureEnablement {
     static void clearCache() {
         synchronized (MUTEX) {
             FEATURE_ENABLEMENTS.clear();
+            setDefaults();
         }
     }
 }

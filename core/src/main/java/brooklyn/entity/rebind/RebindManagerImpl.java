@@ -135,6 +135,8 @@ public class RebindManagerImpl implements RebindManager {
         rebindFailureMode = managementContext.getConfig().getConfig(REBIND_FAILURE_MODE);
         addPolicyFailureMode = managementContext.getConfig().getConfig(ADD_POLICY_FAILURE_MODE);
         loadPolicyFailureMode = managementContext.getConfig().getConfig(LOAD_POLICY_FAILURE_MODE);
+        
+        LOG.debug("Persistence in "+this+" of: policies="+persistEnrichersEnabled+" enrichers="+persistEnrichersEnabled);
     }
 
     /**
