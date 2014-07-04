@@ -40,6 +40,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
@@ -207,42 +208,59 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
         DeploymentPlan plan = makePlanFromYaml(yaml);
         
-        String name = null;
         CatalogLibrariesDto libraries = null;
 
-        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class);
+        @SuppressWarnings("rawtypes")
+        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
+        MutableMap<String, Object> catalog = MutableMap.of();
         if (possibleCatalog.isPresent()) {
-            Map catalog = possibleCatalog.get();
-            Map<String, Object> cast = (Map<String, Object>) possibleCatalog.get();
-            if (catalog.containsKey("name") && catalog.get("name") != null) {
-                name = String.valueOf(catalog.get("name"));
-            }
-            Object possibleLibraries = catalog.get("libraries");
-            if (possibleLibraries != null) {
-                if (possibleLibraries instanceof List) {
-                    libraries = CatalogLibrariesDto.fromList((List<?>) possibleLibraries);
-                }
-            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> catalog2 = (Map<String, Object>) possibleCatalog.get();
+            catalog.putAll(catalog2);
         }
 
-        // TODO #3 support version info
+        Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
+        if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
+        if (possibleLibraries.isPresentAndNonNull()) {
+            if (!(possibleLibraries.get() instanceof List))
+                throw new IllegalArgumentException("Libraries should be a list, not "+possibleLibraries.get());
+            libraries = CatalogLibrariesDto.fromList((List<?>) possibleLibraries.get());
+        }
 
+        // TODO clear up the abundance of id, name, registered type, java type
+        String registeredTypeName = (String) catalog.getMaybe("id").orNull();
+        if (Strings.isBlank(registeredTypeName))
+            registeredTypeName = (String) catalog.getMaybe("name").orNull();
         // take name from plan if not specified in brooklyn.catalog section not supplied
-        if (Strings.isBlank(name)) {
-            name = plan.getName();
-            if (Strings.isBlank(name)) {
+        if (Strings.isBlank(registeredTypeName)) {
+            registeredTypeName = plan.getName();
+            if (Strings.isBlank(registeredTypeName)) {
                 if (plan.getServices().size()==1) {
                     Service svc = Iterables.getOnlyElement(plan.getServices());
-                    name = svc.getServiceType();
+                    registeredTypeName = svc.getServiceType();
                 }
             }
         }
         
-        // build the catalog item from the plan (as CatalogItem<Entity> for now)
-        // TODO applications / templates
-        // TODO long-term support policies etc
+        // TODO long-term:  support applications / templates, policies
         
-        return CatalogItems.newEntityFromPlan(name, libraries, plan, yaml);
+        // build the catalog item from the plan (as CatalogItem<Entity> for now)
+        CatalogEntityItemDto dto = CatalogItems.newEntityFromPlan(registeredTypeName, libraries, plan, yaml);
+
+        // and populate other fields
+        Maybe<Object> name = catalog.getMaybe("name");
+        if (name.isPresent()) dto.name = (String)name.get();
+        
+        Maybe<Object> description = catalog.getMaybe("description");
+        if (description.isPresent()) dto.description = (String)description.get();
+        
+        Maybe<Object> iconUrl = catalog.getMaybe("iconUrl");
+        if (iconUrl.isAbsent()) iconUrl = catalog.getMaybe("icon_url");
+        if (iconUrl.isPresent()) dto.iconUrl = (String)iconUrl.get();
+
+        // TODO #3 support version info
+        
+        return dto;
     }
 
     private DeploymentPlan makePlanFromYaml(String yaml) {
