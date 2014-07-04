@@ -28,6 +28,7 @@ import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -296,10 +297,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             // (normally this will be done by the resolveSpec call above)
             if (app.getDisplayName()==null) app.displayName(oldApp.getDisplayName());
             app.locations(oldApp.getLocations());
-            app.configure(app.getConfig());
-            app.addInitializers(oldApp.getInitializers());
-            // TODO other things, as they are added (or refuse to promote if they are set)
-            // (it's a bit messy doing this copy)
         }
         
         return app;
@@ -319,6 +316,22 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
             return false;
 
+        Set<String> rootAttrs = template.getCustomAttributes().keySet();
+        for (String rootAttr: rootAttrs) {
+            if (rootAttr.equals("brooklyn.catalog")) {
+                // this attr does not block promotion
+                continue;
+            }
+            if (rootAttr.startsWith("brooklyn.")) {
+                // any others in 'brooklyn' namespace will block promotion
+                return false;
+            }
+            // location is allowed in both, and is copied on promotion
+            // (name also copied)
+            // others are root currently are ignored on promotion; they are usually metadata
+            // TODO might be nice to know what we are excluding
+        }
+        
         return true;
     }
 
