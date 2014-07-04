@@ -45,7 +45,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>jtidy</artifactId>
-            <version>r8-20060801</version>
+            <version>${jtidy.version}</version>
         </dependency>
 
         <dependency>
@@ -68,7 +68,7 @@
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-jms_1.1_spec</artifactId>
-            <version>1.1.1</version>
+            <version>${geronimo-jms_1.1_spec.version}</version>
             <scope>test</scope>
         </dependency>
 

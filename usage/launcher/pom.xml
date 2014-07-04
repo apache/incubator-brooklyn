@@ -91,13 +91,6 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-core</artifactId>
-            <version>${project.version}</version><!--$NO-MVN-MAN-VER$-->
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -110,13 +103,13 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.3.0</version>
+            <version>${osgi-core.version}</version>
         </dependency>
 
         <dependency>
           <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
           <artifactId>concurrentlinkedhashmap-lru</artifactId>
-          <version>1.0_jdk5</version>
+          <version>${concurrentlinkedhashmap.version}</version>
         </dependency>
 
         <dependency>
