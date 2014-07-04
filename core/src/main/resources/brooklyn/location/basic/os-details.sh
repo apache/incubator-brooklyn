@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,7 +17,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-#!/bin/bash
 # /etc/os-release is the new-ish standard for specifying OS details.
 # See http://www.freedesktop.org/software/systemd/man/os-release.html.
 # There are a multitude of system-dependent files we can check (see list 

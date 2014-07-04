@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,7 +17,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-#!/bin/bash
 
 # usage: run in the root dir of a project, it will grep in poms up to 3 levels deep
 # e.g. where are shaded jars defined?

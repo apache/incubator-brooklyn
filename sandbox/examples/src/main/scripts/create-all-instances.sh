@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,7 +17,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-#!/bin/bash -x
 # Creates an instance in each of the given regions.
 # Must supply the directory with the ssh-key that aws generated for that region,
 # and optionally supply a public key to be added to ~/.ssh/authorized_keys on the created instance

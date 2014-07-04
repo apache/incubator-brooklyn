@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -16,7 +17,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-#!/bin/bash
 # this generates the site in _site
 # override --url /myMountPoint  (as an argument to this script) if you don't like the default set in /_config.yml
 
