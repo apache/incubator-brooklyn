@@ -201,7 +201,7 @@ public class ControlledDynamicWebAppClusterTest {
                 .configure("initialSize", 1)
                 .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
         
-        RecordingSensorEventListener<Lifecycle> listener = new RecordingSensorEventListener<Lifecycle>();
+        RecordingSensorEventListener<Lifecycle> listener = new RecordingSensorEventListener<Lifecycle>(true);
         app.subscribe(cluster, Attributes.SERVICE_STATE, listener);
         app.start(locs);
 
@@ -241,11 +241,24 @@ public class ControlledDynamicWebAppClusterTest {
     public static class RecordingSensorEventListener<T> implements SensorEventListener<T> {
         private final List<SensorEvent<T>> events = Lists.newCopyOnWriteArrayList();
         private final List<T> values = Lists.newCopyOnWriteArrayList();
+        private boolean skipDuplicateValues;
 
+        public RecordingSensorEventListener() {
+            this(false);
+        }
+        
+        public RecordingSensorEventListener(boolean skipDuplicateValues) {
+            this.skipDuplicateValues = skipDuplicateValues;
+        }
+        
         @Override
         public void onEvent(SensorEvent<T> event) {
             events.add(event);
-            values.add(event.getValue());
+            if (skipDuplicateValues && !values.isEmpty() && values.get(values.size()-1).equals(event.getValue())) {
+                // skip
+            } else {
+                values.add(event.getValue());
+            }
         }
         
         public List<SensorEvent<T>> getEvents() {
