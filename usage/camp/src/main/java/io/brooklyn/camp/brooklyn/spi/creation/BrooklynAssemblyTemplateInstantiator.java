@@ -290,17 +290,17 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         buildTemplateServicesAsSpecs(template, app, mgmt);
         
         if (shouldUnwrap(template, app)) {
+            EntitySpec<? extends Application> oldApp = app;
             app = (EntitySpec<? extends Application>) Iterables.getOnlyElement( app.getChildren() );
+            // if promoted, apply the transformations done to the app
+            // (normally this will be done by the resolveSpec call above)
+            if (app.getDisplayName()==null) app.displayName(oldApp.getDisplayName());
+            app.locations(oldApp.getLocations());
+            app.configure(app.getConfig());
+            app.addInitializers(oldApp.getInitializers());
+            // TODO other things, as they are added (or refuse to promote if they are set)
+            // (it's a bit messy doing this copy)
         }
-        
-        // now apply template items to the root app (possibly promoted)
-        
-        // take name from template if not already set
-        if (app.getDisplayName()==null && template.getName()!=null)
-            app.displayName(template.getName());
-          
-        // apply locations defined at the root of the template
-        applyLocations(mgmt, template, app);
         
         return app;
     }
