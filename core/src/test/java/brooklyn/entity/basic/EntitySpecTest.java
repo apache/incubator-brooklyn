@@ -45,7 +45,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
-    public void testAddsChidlren() throws Exception {
+    public void testAddsChildren() throws Exception {
         entity = app.createAndManageChild( EntitySpec.create(TestEntity.class)
             .displayName("child")
             .child(EntitySpec.create(TestEntity.class)

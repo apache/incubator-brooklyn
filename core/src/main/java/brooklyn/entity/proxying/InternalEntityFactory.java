@@ -174,7 +174,7 @@ public class InternalEntityFactory {
 
             for (EntitySpec<?> childSpec : spec.getChildren()) {
                 Entity child = createEntity(childSpec);
-                ((EntityLocal)entity).addChild(child);
+                entity.addChild(child);
             }
 
             /* Marked transient so that the task is not needlessly kept around at the highest level.
