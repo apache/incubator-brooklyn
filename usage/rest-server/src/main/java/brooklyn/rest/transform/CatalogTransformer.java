@@ -13,8 +13,10 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityTypes;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.domain.CatalogPolicySummary;
@@ -33,9 +35,9 @@ public class CatalogTransformer {
     @SuppressWarnings("unused")
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(CatalogTransformer.class);
     
-    public static CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Entity> item) {
-        Class<? extends Entity> clazz = b.getCatalog().loadClass(item);
-        EntityDynamicType typeMap = EntityTypes.getDefinedEntityType(clazz);
+    public static CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Entity,EntitySpec<?>> item) {
+        EntitySpec<?> spec = b.getCatalog().createSpec(item);
+        EntityDynamicType typeMap = EntityTypes.getDefinedEntityType(spec.getType());
         EntityType type = typeMap.getSnapshot();
 
         Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
@@ -46,29 +48,35 @@ public class CatalogTransformer {
         for (Sensor<?> x: type.getSensors()) sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
         for (Effector<?> x: type.getEffectors()) effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
 
-        return new CatalogEntitySummary(item.getId(), item.getName(), item.getJavaType(),
+        return new CatalogEntitySummary(item.getId(), item.getName(), 
+            item.getRegisteredTypeName(), item.getJavaType(), 
+            item.getRegisteredTypeName(),
+            item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
                 config, sensors, effectors,
                 makeLinks(item));
     }
 
-    public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?> item) {
-        return new CatalogItemSummary(item.getId(), item.getName(), item.getJavaType(),
+    public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?,?> item) {
+        return new CatalogItemSummary(item.getId(), item.getName(), 
+                item.getRegisteredTypeName(), item.getJavaType(), 
+                item.getRegisteredTypeName(),
+                item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), makeLinks(item));
     }
 
-    public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy> item) {
+    public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
         Set<PolicyConfigSummary> config = ImmutableSet.of();
         return new CatalogPolicySummary(item.getId(), item.getName(), item.getJavaType(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
                 makeLinks(item));
     }
 
-    protected static Map<String, URI> makeLinks(CatalogItem<?> item) {
+    protected static Map<String, URI> makeLinks(CatalogItem<?,?> item) {
         return MutableMap.<String, URI>of();
     }
     
-    private static String tidyIconLink(BrooklynRestResourceUtils b, CatalogItem<?> item, String iconUrl) {
+    private static String tidyIconLink(BrooklynRestResourceUtils b, CatalogItem<?,?> item, String iconUrl) {
         if (b.isUrlServerSideAndSafe(iconUrl))
             return "/v1/catalog/icon/"+item.getId();
         return iconUrl;

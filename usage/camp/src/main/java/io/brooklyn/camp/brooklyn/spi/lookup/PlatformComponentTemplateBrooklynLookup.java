@@ -10,6 +10,7 @@ import java.util.List;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 
 public class PlatformComponentTemplateBrooklynLookup extends AbstractTemplateBrooklynLookup<PlatformComponentTemplate> {
@@ -19,7 +20,7 @@ public class PlatformComponentTemplateBrooklynLookup extends AbstractTemplateBro
     }
 
     @Override
-    public PlatformComponentTemplate adapt(CatalogItem<?> item) {
+    public PlatformComponentTemplate adapt(CatalogItem<?,?> item) {
         return PlatformComponentTemplate.builder().
                 name(item.getName()).
                 id(item.getId()).
@@ -30,9 +31,9 @@ public class PlatformComponentTemplateBrooklynLookup extends AbstractTemplateBro
 
     @Override
     public List<ResolvableLink<PlatformComponentTemplate>> links() {
-        Iterable<CatalogItem<Entity>> l = bmc.getCatalog().getCatalogItems(CatalogPredicates.IS_ENTITY);
+        Iterable<CatalogItem<Entity,EntitySpec<?>>> l = bmc.getCatalog().getCatalogItems(CatalogPredicates.IS_ENTITY);
         List<ResolvableLink<PlatformComponentTemplate>> result = new ArrayList<ResolvableLink<PlatformComponentTemplate>>();
-        for (CatalogItem<Entity> li: l)
+        for (CatalogItem<Entity,EntitySpec<?>> li: l)
             result.add(newLink(li));
         return result;
     }

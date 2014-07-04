@@ -631,9 +631,8 @@ public class BrooklynLauncher {
     }
 
     protected Application getAppFromYaml(String input) {
-        AssemblyTemplate at = campPlatform.pdp()
-                .registerDeploymentPlan(new StringReader(input));
-         BrooklynAssemblyTemplateInstantiator instantiator;
+        AssemblyTemplate at = campPlatform.pdp().registerDeploymentPlan(new StringReader(input));
+        BrooklynAssemblyTemplateInstantiator instantiator;
         try {
             AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
             if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
@@ -644,7 +643,8 @@ public class BrooklynLauncher {
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
-        return instantiator.create(at, campPlatform);
+        Application app = instantiator.create(at, campPlatform);
+        return app;
     }
     
     protected void startApps() {

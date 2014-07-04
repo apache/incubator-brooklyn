@@ -16,6 +16,7 @@ import io.brooklyn.camp.spi.PlatformTransaction;
 import io.brooklyn.camp.spi.collection.BasicResourceLookup;
 import io.brooklyn.camp.spi.collection.ResourceLookup;
 import io.brooklyn.camp.spi.collection.ResourceLookup.EmptyResourceLookup;
+import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.management.ManagementContext;
 
 /** Immutable CAMP platform which reflects things in the underlying Brooklyn system */

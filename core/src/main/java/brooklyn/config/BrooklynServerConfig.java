@@ -1,6 +1,7 @@
 package brooklyn.config;
 
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
+import io.brooklyn.camp.CampPlatform;
 
 import java.io.File;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 
 /** config keys for the brooklyn server */
@@ -131,4 +133,17 @@ public class BrooklynServerConfig {
         "or empty for no URL (use default scanner)", 
         new File(Os.fromHome(".brooklyn/catalog.xml")).toURI().toString());
     
+    public static final ConfigKey<Boolean> USE_OSGI = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.enabled",
+        "Whether OSGi is enabled, defaulting to true", true);
+
+    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
+        "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
+
+    /** Returns the CAMP platform associated with a management context, if there is one. */
+    public static Maybe<CampPlatform> getCampPlatform(ManagementContext mgmt) {
+        CampPlatform result = mgmt.getConfig().getConfig(BrooklynServerConfig.CAMP_PLATFORM);
+        if (result!=null) return Maybe.of(result);
+        return Maybe.absent("No CAMP Platform is registered with this Brooklyn management context.");
+    }
+
 }

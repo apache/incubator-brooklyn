@@ -97,7 +97,8 @@ public class EntitySpec<T extends Entity> implements Serializable {
                 .policies(spec.getPolicies())
                 .enricherSpecs(spec.getEnricherSpecs())
                 .enrichers(spec.getEnrichers())
-                .addInitializers(spec.getInitializers());
+                .addInitializers(spec.getInitializers())
+                .children(spec.getChildren());
         
         if (spec.getParent() != null) result.parent(spec.getParent());
         if (spec.getImplementation() != null) result.impl(spec.getImplementation());
@@ -123,6 +124,7 @@ public class EntitySpec<T extends Entity> implements Serializable {
     private final List<Location> locations = Lists.newArrayList();
     private final Set<Class<?>> additionalInterfaces = Sets.newLinkedHashSet();
     private final List<EntityInitializer> entityInitializers = Lists.newArrayList();
+    private final List<EntitySpec<?>> children = Lists.newArrayList();
     private volatile boolean immutable;
     
     public EntitySpec(Class<T> type) {
@@ -172,6 +174,10 @@ public class EntitySpec<T extends Entity> implements Serializable {
     /** @return {@link EntityInitializer} objects which customize the entity to be created */
     public List<EntityInitializer> getInitializers() {
         return entityInitializers;
+    }
+    
+    public List<EntitySpec<?>> getChildren() {
+        return children;
     }
     
     /**
@@ -272,7 +278,20 @@ public class EntitySpec<T extends Entity> implements Serializable {
         }
         return this;
     }
-        
+
+    public EntitySpec<T> children(Iterable<? extends EntitySpec<?>> children) {
+        checkMutable();
+        Iterables.addAll(this.children, children);
+        return this;
+    }
+
+    /** The supplied class must have a public no-arg constructor. */
+    public EntitySpec<T> child(EntitySpec<?> child) {
+        checkMutable();
+        children.add(child);
+        return this;
+    }
+
     public EntitySpec<T> parent(Entity val) {
         checkMutable();
         parent = checkNotNull(val, "parent");

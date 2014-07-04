@@ -1,4 +1,4 @@
-package io.brooklyn.camp.brooklyn.spi.platform;
+package brooklyn.camp.brooklyn.api;
 
 import brooklyn.management.ManagementContext;
 

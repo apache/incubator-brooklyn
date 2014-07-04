@@ -1,13 +1,15 @@
 package brooklyn.entity.basic;
 
-import static brooklyn.entity.basic.ConfigKeys.*;
+import static brooklyn.entity.basic.ConfigKeys.newBooleanConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.newConfigKeyWithPrefix;
+import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;

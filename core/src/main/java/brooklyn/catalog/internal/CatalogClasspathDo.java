@@ -66,7 +66,6 @@ public class CatalogClasspathDo {
         TYPES
     }
     
-
     private static final Logger log = LoggerFactory.getLogger(CatalogClasspathDo.class);
     
     private final CatalogDo catalog;
@@ -88,10 +87,11 @@ public class CatalogClasspathDo {
     /** causes all scanning-based classpaths to scan the classpaths
     * (but does _not_ load all JARs) */
     synchronized void load() {
-        if (classpath==null) return;
+        if (classpath == null || isLoaded) return;
 
-        if (classpath.getEntries()==null) urls = new URL[0];
-        else {
+        if (classpath.getEntries() == null) {
+            urls = new URL[0];
+        } else {
             urls = new URL[classpath.getEntries().size()];
             for (int i=0; i<urls.length; i++) {
                 try {
@@ -115,34 +115,29 @@ public class CatalogClasspathDo {
         ReflectionScanner scanner = null;
         if (!catalog.isLocal()) {
             log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
-        } else if (classpath.getEntries()==null || classpath.getEntries().isEmpty()) {
-            // no entries; check if we are local, and if so scan the default classpath
-            if (!catalog.isLocal()) {
-                log.warn("Scanning not supported for remote catalogs; ignoring scan request in "+catalog);
-            } else {                
-                // scan default classpath:
-                ClassLoader baseCL = null;
-                Iterable<URL> baseCP = null;
-                if (catalog.mgmt instanceof ManagementContextInternal) {
-                    baseCL = ((ManagementContextInternal)catalog.mgmt).getBaseClassLoader();
+        } else if (classpath.getEntries() == null || classpath.getEntries().isEmpty()) {
+            // scan default classpath:
+            ClassLoader baseCL = null;
+            Iterable<URL> baseCP = null;
+            if (catalog.mgmt instanceof ManagementContextInternal) {
+                baseCL = ((ManagementContextInternal)catalog.mgmt).getBaseClassLoader();
+                baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
+            }
+            scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
+            if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
+                try {
+                    ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+                    log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
                     baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
-                }
-                scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
-                if (scanner.getSubTypesOf(Entity.class).isEmpty()) {
-                    try {
-                        ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
-                        log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
-                        baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
-                        scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
-                    } catch (Exception e) {
-                        log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
-                        Exceptions.propagateIfFatal(e);
-                    }
+                    scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
+                } catch (Exception e) {
+                    log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
+                    Exceptions.propagateIfFatal(e);
                 }
             }
         } else {
             // scan specified jars:
-            scanner = new ReflectionScanner(urls==null || urls.length==0 ? null : Arrays.asList(urls), prefix, getLocalClassLoader()); 
+            scanner = new ReflectionScanner(urls==null || urls.length==0 ? null : Arrays.asList(urls), prefix, getLocalClassLoader());
         }
         
         if (scanner!=null) {
@@ -151,7 +146,7 @@ public class CatalogClasspathDo {
                 Set<Class<?>> catalogClasses = scanner.getTypesAnnotatedWith(Catalog.class);
                 for (Class<?> c: catalogClasses) {
                     try {
-                        CatalogItem<?> item = addCatalogEntry(c);
+                        CatalogItem<?,?> item = addCatalogEntry(c);
                         count++;
                         if (CatalogTemplateItemDto.class.isInstance(item)) countApps++;
                     } catch (Exception e) {
@@ -212,8 +207,10 @@ public class CatalogClasspathDo {
         return Iterables.filter(input, f);
     }
 
-    /** augments the given item with annotations and class data for the given class, then adds to catalog */
-    public CatalogItem<?> addCatalogEntry(Class<?> c) {
+    /** augments the given item with annotations and class data for the given class, then adds to catalog
+     * @deprecated since 0.7.0 the classpath DO is replaced by libraries */
+    @Deprecated
+    public CatalogItem<?,?> addCatalogEntry(Class<?> c) {
         if (Application.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
         if (ApplicationBuilder.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
         if (Entity.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogEntityItemDto(), c);
@@ -222,10 +219,12 @@ public class CatalogClasspathDo {
     }
     
     /** augments the given item with annotations and class data for the given class, then adds to catalog 
-     */
-    public CatalogItem<?> addCatalogEntry(CatalogItemDtoAbstract<?> item, Class<?> c) {
+     * @deprecated since 0.7.0 the classpath DO is replaced by libraries */
+    @Deprecated
+    public CatalogItem<?,?> addCatalogEntry(CatalogItemDtoAbstract<?,?> item, Class<?> c) {
         Catalog annotations = c.getAnnotation(Catalog.class);
-        item.type = c.getName();
+        item.registeredType = c.getName();
+        item.javaType = c.getName();
         item.name = firstNonEmpty(c.getSimpleName(), c.getName());
         if (annotations!=null) {
             item.name = firstNonEmpty(annotations.name(), item.name);

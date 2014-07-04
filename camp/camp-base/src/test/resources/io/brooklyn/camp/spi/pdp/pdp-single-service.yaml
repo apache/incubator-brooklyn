@@ -1,0 +1,11 @@
+name: sample
+description: Tomcat sample JSP and servlet application.
+origin: http://www.oracle.com/nCAMP/Hand
+services:
+  -
+    type: brooklyn:WebAppCluster
+    name: Hello WAR
+    wars:
+        /: hello.war
+    controller.spec:
+        port: 80

@@ -8,7 +8,7 @@ import brooklyn.util.xstream.EnumCaseForgivingSingleValueConverter;
 import brooklyn.util.xstream.XmlSerializer;
 
 public class CatalogXmlSerializer extends XmlSerializer<Object> {
-    
+
     public CatalogXmlSerializer() {
         xstream.aliasType("list", List.class);
         xstream.aliasType("map", Map.class);
@@ -21,17 +21,21 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
         xstream.addImplicitCollection(CatalogDto.class, "entries", CatalogTemplateItemDto.class);
         xstream.addImplicitCollection(CatalogDto.class, "entries", CatalogEntityItemDto.class);
         xstream.addImplicitCollection(CatalogDto.class, "entries", CatalogPolicyItemDto.class);
-        
+
         xstream.aliasType("template", CatalogTemplateItemDto.class);
         xstream.aliasType("entity", CatalogEntityItemDto.class);
         xstream.aliasType("policy", CatalogPolicyItemDto.class);
-        
+
         xstream.useAttributeFor(CatalogItemDtoAbstract.class, "type");
         xstream.useAttributeFor(CatalogItemDtoAbstract.class, "name");
-        
+        xstream.useAttributeFor(CatalogItemDtoAbstract.class, "version");
+
         xstream.useAttributeFor(CatalogClasspathDto.class, "scan");
         xstream.addImplicitCollection(CatalogClasspathDto.class, "entries", "entry", String.class);
         xstream.registerConverter(new EnumCaseForgivingSingleValueConverter(CatalogScanningModes.class));
+
+        xstream.aliasType("libraries", CatalogLibrariesDto.class);
+        xstream.addImplicitCollection(CatalogLibrariesDto.class, "bundles", "bundle", String.class);
     }
-    
+
 }

@@ -25,19 +25,19 @@ import java.util.List;
 public interface CatalogApi {
 
     @POST
-    @ApiOperation(value = "Add a new entity or policy type to the catalog by uploading a Groovy script from browser using multipart/form-data",
+    @ApiOperation(value = "Add a catalog item (e.g. new entity or policy type) by uploading YAML descriptor from browser using multipart/form-data",
         responseClass = "String")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response createFromMultipart(
-        @ApiParam(name = "groovyCode", value = "multipart/form-data file input field")
-        @FormDataParam("groovyCode") InputStream uploadedInputStream,
-        @FormDataParam("groovyCode") FormDataContentDisposition fileDetail) throws IOException ;
+        @ApiParam(name = "yaml", value = "multipart/form-data file input field")
+        @FormDataParam("yaml") InputStream uploadedInputStream,
+        @FormDataParam("yaml") FormDataContentDisposition fileDetail) throws IOException ;
     
     @POST
-    @ApiOperation(value = "Add a new entity or policy type by uploading a Groovy script", responseClass = "String")
+    @ApiOperation(value = "Add a catalog item (e.g. new entity or policy type) by uploading YAML descriptor", responseClass = "String")
     public Response create(
-            @ApiParam(name = "groovyCode", value = "Groovy code for the entity or policy", required = true)
-            @Valid String groovyCode
+            @ApiParam(name = "yaml", value = "YAML descriptor of catalog item", required = true)
+            @Valid String yaml
     ) ;
 
     @GET

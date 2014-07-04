@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,7 @@ import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class CatalogDo {
 
@@ -32,7 +32,7 @@ public class CatalogDo {
     
     List<CatalogDo> childrenCatalogs = new ArrayList<CatalogDo>();
     CatalogClasspathDo classpath;
-    Map<String, CatalogItemDo<?>> cache;
+    Map<String, CatalogItemDo<?,?>> cache;
     
     AggregateClassLoader childrenClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
     ClassLoader recursiveClassLoader;
@@ -61,29 +61,46 @@ public class CatalogDo {
         getCache();
         return this;
     }
-    
+
     protected synchronized void loadThisCatalog(ManagementContext mgmt, CatalogDo parent) {
         if (isLoaded()) return;
         if (this.parent!=null && !this.parent.equals(parent))
             log.warn("Catalog "+this+" being initialised with different parent "+parent+" when already parented by "+this.parent, new Throwable("source of reparented "+this));
-        this.parent = parent;
         if (this.mgmt!=null && !this.mgmt.equals(mgmt))
             log.warn("Catalog "+this+" being initialised with different mgmt "+mgmt+" when already managed by "+this.mgmt, new Throwable("source of reparented "+this));
+        this.parent = parent;
         this.mgmt = mgmt;
+        dto.populateFromUrl();
+        loadCatalogClasspath();
+        loadCatalogItems();
+        isLoaded = true;
+        synchronized (this) {
+            notifyAll();
+        }
+    }
+
+    private void loadCatalogClasspath() {
         try {
-            if (dto.url!=null)
-                CatalogDtoUtils.populateFromUrl(dto, dto.url);
             classpath = new CatalogClasspathDo(this);
             classpath.load();
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             log.error("Unable to load catalog "+this+" (ignoring): "+e);
-//            log.debug("Trace for failure to load "+this+": "+e, e);
             log.info("Trace for failure to load "+this+": "+e, e);
         }
-        isLoaded = true;
-        synchronized (this) {
-            notifyAll();
+    }
+
+    private void loadCatalogItems() {
+        List<CatalogLibrariesDo> loadedLibraries = Lists.newLinkedList();
+        List<CatalogItemDtoAbstract<?, ?>> entries = dto.entries;
+        if (entries!=null) {
+            for (CatalogItemDtoAbstract<?,?> entry : entries) {
+                if (entry.getLibrariesDto()!=null) {
+                    CatalogLibrariesDo library = new CatalogLibrariesDo(entry.getLibrariesDto());
+                    library.load(mgmt);
+                    loadedLibraries.add(library);
+                }
+            }
         }
     }
 
@@ -116,20 +133,20 @@ public class CatalogDo {
         return childL;
     }
 
-    protected Map<String, CatalogItemDo<?>> getCache() {
-        Map<String, CatalogItemDo<?>> cache = this.cache;
+    protected Map<String, CatalogItemDo<?,?>> getCache() {
+        Map<String, CatalogItemDo<?,?>> cache = this.cache;
         if (cache==null) cache = buildCache();
         return cache;
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected synchronized Map<String, CatalogItemDo<?>> buildCache() {
+    protected synchronized Map<String, CatalogItemDo<?,?>> buildCache() {
         if (cache!=null) return cache;
         log.debug("Building cache for "+this);
         if (!isLoaded()) 
             log.debug("Catalog not fully loaded when loading cache of "+this);
         
-        Map<String, CatalogItemDo<?>> cache = new LinkedHashMap<String, CatalogItemDo<?>>();
+        Map<String, CatalogItemDo<?,?>> cache = new LinkedHashMap<String, CatalogItemDo<?,?>>();
         
         // build the cache; first from children catalogs, then from local entities
         // so that root and near-root takes precedence over deeper items;
@@ -143,9 +160,9 @@ public class CatalogDo {
                 cache.putAll(child.getCache());
         }
         if (dto.entries!=null) {
-            List<CatalogItemDtoAbstract<?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?>>(dto.entries);
+            List<CatalogItemDtoAbstract<?,?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?,?>>(dto.entries);
             Collections.reverse(entriesReversed);
-            for (CatalogItemDtoAbstract<?> entry: entriesReversed)
+            for (CatalogItemDtoAbstract<?,?> entry: entriesReversed)
                 cache.put(entry.getId(), new CatalogItemDo(this, entry));
         }
         
@@ -163,9 +180,9 @@ public class CatalogDo {
      * callers may prefer {@link CatalogClasspathDo#addCatalogEntry(CatalogItemDtoAbstract, Class)}
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public synchronized void addEntry(CatalogItemDtoAbstract<?> entry) {
+    public synchronized void addEntry(CatalogItemDtoAbstract<?,?> entry) {
         if (dto.entries==null) 
-            dto.entries = new ArrayList<CatalogItemDtoAbstract<?>>();
+            dto.entries = new ArrayList<CatalogItemDtoAbstract<?,?>>();
         dto.entries.add(entry);
         if (cache!=null)
             cache.put(entry.getId(), new CatalogItemDo(this, entry));

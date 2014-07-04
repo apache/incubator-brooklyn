@@ -16,26 +16,38 @@ import com.google.common.collect.ImmutableMap;
 public class CatalogItemSummary {
 
     private final String id;
+    
+    // TODO too many types, see in CatalogItem
     private final String type;
+    private final String javaType;
+    private final String registeredType;
+    
     private final String name;
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String description;
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String iconUrl;
+    private final String planYaml;
     
     private final Map<String, URI> links;
 
     public CatalogItemSummary(
             @JsonProperty("id") String id,
             @JsonProperty("name") String name,
-            @JsonProperty("type") String type,
+            @JsonProperty("registeredType") String registeredType,
+            @JsonProperty("javaType") String javaType,
+            @JsonProperty("type") String highLevelType,
+            @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
             @JsonProperty("links") Map<String, URI> links
         ) {
         this.id = id;
         this.name = name;
-        this.type = type;
+        this.javaType = javaType;
+        this.registeredType = registeredType;
+        this.type = highLevelType;
+        this.planYaml = planYaml;
         this.description = description;
         this.iconUrl = iconUrl;
         this.links = ImmutableMap.copyOf(links);
@@ -49,6 +61,18 @@ public class CatalogItemSummary {
         return type;
     }
 
+    public String getJavaType() {
+        return javaType;
+    }
+
+    public String getRegisteredType() {
+        return registeredType;
+    }
+
+    public String getPlanYaml() {
+        return planYaml;
+    }
+    
     public String getName() {
         return name;
     }

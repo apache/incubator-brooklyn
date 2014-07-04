@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
-import brooklyn.catalog.internal.CatalogDtoUtils;
+import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
@@ -267,7 +267,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      * Returns the actual task (if it is local) or a proxy task (if it is remote);
      * if management for the entity has not yet started this may start it.
      * 
-     * @deprecated since 0.6.0 use effectors (or support {@link #runAtEntity(Entity, Task)} if something else is needed);
+     * @deprecated since 0.6.0 use effectors (or support {@code runAtEntity(Entity, Task)} if something else is needed);
      * (Callable with Map flags is too open-ended, bothersome to support, and not used much) 
      */
     @Deprecated
@@ -311,7 +311,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         
         try {
             if (!Strings.isEmpty(catalogUrl)) {
-                catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDtoFromUrl(catalogUrl));
+                catalog = new BasicBrooklynCatalog(this, catalogUrl);
                 if (log.isDebugEnabled())
                     log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
             }
@@ -330,11 +330,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         }
         if (catalog==null) {
             // retry, either an error, or was blank
-            catalog = new BasicBrooklynCatalog(this, CatalogDtoUtils.newDefaultLocalScanningDto(CatalogScanningModes.ANNOTATIONS));
+            catalog = new BasicBrooklynCatalog(this, CatalogDto.newDefaultLocalScanningDto(CatalogScanningModes.ANNOTATIONS));
             if (log.isDebugEnabled())
                 log.debug("Loaded default (local classpath) catalog: "+catalog);
         }
-        catalog.getCatalog().load(this, null);
+        catalog.load();
         
         this.catalog = catalog;
     }

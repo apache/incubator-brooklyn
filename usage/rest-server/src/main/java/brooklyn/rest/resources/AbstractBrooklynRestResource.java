@@ -8,6 +8,7 @@ import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
@@ -63,9 +64,7 @@ public abstract class AbstractBrooklynRestResource {
     }
 
     protected CampPlatform camp() {
-        CampPlatform camp = mgmt().getConfig().getConfig(BrooklynCampConstants.CAMP_PLATFORM);
-        if (camp!=null) return camp;
-        throw new IllegalStateException("CAMP platform server not enabled");
+        return BrooklynServerConfig.getCampPlatform(mgmt()).get();
     }
     
 }
