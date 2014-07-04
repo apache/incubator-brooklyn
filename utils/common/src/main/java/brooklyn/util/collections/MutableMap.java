@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.guava.Maybe;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 
@@ -111,6 +113,11 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return this;
     }
 
+    public Maybe<V> getMaybe(K key) {
+        if (containsKey(key)) return Maybe.of(get(key));
+        return Maybe.absent("No entry for key '"+key+"' in this map");
+    }
+    
     public ImmutableMap<K,V> toImmutable() {
         return ImmutableMap.copyOf(this);
     }

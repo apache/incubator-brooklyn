@@ -20,10 +20,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 
+import brooklyn.catalog.CatalogItem;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.util.collections.MutableList;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
@@ -47,17 +49,18 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   @Test
   public void testRegisterCustomEntity() {
     String registeredTypeName = "my.catalog.app.id";
+    String bundleUrl = "http://myurl/my.jar";
     String yaml =
         "name: "+registeredTypeName+"\n"+
         // FIXME name above should be unnecessary when brooklyn.catalog below is working
         "brooklyn.catalog:\n"+
-        "- id: " + registeredTypeName + "\n"+
-        "- name: My Catalog App\n"+
-        "- description: My description\n"+
-        "- icon_url: classpath://path/to/myicon.jpg\n"+
-        "- version: 0.1.2\n"+
-        "- brooklyn.libraries:\n"+
-        "  - url: http://myurl/my.jar\n"+
+        "  id: " + registeredTypeName + "\n"+
+        "  name: My Catalog App\n"+
+        "  description: My description\n"+
+        "  icon_url: classpath://path/to/myicon.jpg\n"+
+        "  version: 0.1.2\n"+
+        "  libraries:\n"+
+        "  - url: " + bundleUrl + "\n"+
         "\n"+
         "services:\n"+
         "- type: brooklyn.test.entity.TestEntity\n";
@@ -77,11 +80,19 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
     
-    // TODO @sjcorbett more checks, when  brooklyn.catalog  working
-//  assertEquals(entityItem.getId(), registeredTypeName);
-//  assertEquals(entityItem.getName(), "My Catalog App");
-//  assertEquals(entityItem.getDescription(), "My description");
-//  assertEquals(entityItem.getIconUrl(), "classpath://path/to/myicon.jpg");
+    assertEquals(entityItem.getId(), registeredTypeName);
+    
+    // and internally let's check we have libraries
+    CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(registeredTypeName);
+    Assert.assertNotNull(item);
+    List<String> libs = item.getLibraries().getBundles();
+    assertEquals(libs, MutableList.of(bundleUrl));
+
+    // now let's check other things on the item
+    assertEquals(entityItem.getName(), "My Catalog App");
+    assertEquals(entityItem.getDescription(), "My description");
+    assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/my.catalog.app.id");
+    assertEquals(item.getIconUrl(), "classpath://path/to/myicon.jpg");
   }
 
   @Test
