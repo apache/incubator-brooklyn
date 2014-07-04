@@ -62,7 +62,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     addResource(new CatalogResource());
   }
 
-  @Test(enabled=false, groups="WIP")
+  @Test
   public void testRegisterCustomEntity() {
     String registeredTypeName = "my.catalog.app.id";
     String yaml =
@@ -87,13 +87,19 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+registeredTypeName)
             .get(CatalogEntitySummary.class);
-    // TODO more checks, when  brooklyn.catalog  working
-//    assertEquals(entityItem.getId(), registeredTypeName);
-//    assertEquals(entityItem.getName(), "My Catalog App");
-//    assertEquals(entityItem.getDescription(), "My description");
-//    assertEquals(entityItem.getIconUrl(), "classpath://path/to/myicon.jpg");
+
     assertEquals(entityItem.getRegisteredType(), registeredTypeName);
-    assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
+    
+    // stored as yaml, not java
+//    assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
+    Assert.assertNotNull(entityItem.getPlanYaml());
+    Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
+    
+    // TODO @sjcorbett more checks, when  brooklyn.catalog  working
+//  assertEquals(entityItem.getId(), registeredTypeName);
+//  assertEquals(entityItem.getName(), "My Catalog App");
+//  assertEquals(entityItem.getDescription(), "My description");
+//  assertEquals(entityItem.getIconUrl(), "classpath://path/to/myicon.jpg");
   }
 
   @Test
