@@ -192,7 +192,7 @@ public class RebindManagerImpl implements RebindManager {
     public void stop() {
         running = false;
         if (realChangeListener != null) realChangeListener.stop();
-        if (persister != null) persister.stop();
+        if (persister != null) persister.stop(true);
     }
     
     @Override

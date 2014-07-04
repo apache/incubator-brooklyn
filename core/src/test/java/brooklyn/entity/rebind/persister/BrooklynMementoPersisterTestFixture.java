@@ -76,7 +76,7 @@ public abstract class BrooklynMementoPersisterTestFixture {
     public void tearDown() throws Exception {
         if (localManagementContext != null) Entities.destroyAll(localManagementContext);
         if (app != null) Entities.destroyAll(app.getManagementContext());
-        if (persister != null) persister.stop();
+        if (persister != null) persister.stop(false);
         if (objectStore!=null) objectStore.deleteCompletely();
         persister = null;
     }

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -21,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.rebind.PeriodicDeltaChangeListener;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersisterDeltaImpl;
 import brooklyn.entity.rebind.RebindExceptionHandler;
@@ -84,7 +84,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
      * Lock used on writes (checkpoint + delta) so that {@link #waitForWritesCompleted(Duration)} can block
      * for any concurrent call to complete.
      */
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
 
     public BrooklynMementoPersisterToObjectStore(PersistenceObjectStore objectStore, BrooklynProperties brooklynProperties, ClassLoader classLoader) {
         this.objectStore = checkNotNull(objectStore, "objectStore");
@@ -109,18 +109,29 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             }}));
     }
 
+    @Override
+    public void stop(boolean graceful) {
+        running = false;
+        if (executor != null) {
+            if (graceful) {
+                // a very long timeout to ensure we don't lose state. 
+                // If persisting thousands of entities over slow network to Object Store, could take minutes.
+                executor.shutdown();
+                try {
+                    executor.awaitTermination(1, TimeUnit.HOURS);
+                } catch (InterruptedException e) {
+                    throw Exceptions.propagate(e);
+                }
+            } else {
+                executor.shutdownNow();
+            }
+        }
+    }
+    
     public PersistenceObjectStore getObjectStore() {
         return objectStore;
     }
 
-    @Override
-    public void stop() {
-        running = false;
-        if (executor != null) {
-            executor.shutdownNow();
-        }
-    }
-    
     protected StoreObjectAccessorWithLock getWriter(String path) {
         String id = path.substring(path.lastIndexOf('/')+1);
         synchronized (writers) {
@@ -157,7 +168,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         LOG.debug("Scanning persisted state: {} entities, {} locations, {} policies, {} enrichers, from {}", new Object[]{
-            entitySubPathList/*.size()*/, locationSubPathList.size(), policySubPathList.size(), enricherSubPathList.size(),
+            entitySubPathList.size(), locationSubPathList.size(), policySubPathList.size(), enricherSubPathList.size(),
             objectStore.getSummaryName() });
 
         final BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
@@ -172,9 +183,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         String id = (String) XmlUtil.xpath(contents, "/entity/id");
                         String type = (String) XmlUtil.xpath(contents, "/entity/type");
                         builder.entity(id, type);
-                        LOG.debug("Loaded manifest for entity "+subPath+"; id "+id+"; type "+type); // FIXME
                     } catch (Exception e) {
-                        LOG.debug("Problem loading manifest for entity "+subPath); // FIXME
                         Exceptions.propagateIfFatal(e);
                         exceptionHandler.onLoadEntityMementoFailed("Memento "+subPath, e);
                     }
@@ -443,6 +452,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                 delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
     }
     
+    /**
+     * Concurrent calls will queue-up (the lock is "fair", which means an "approximately arrival-order policy").
+     * Current usage is with the {@link PeriodicDeltaChangeListener} so we expect only one call at a time.
+     * 
+     * TODO Longer term, if we care more about concurrent calls we could merge the queued deltas so that we
+     * don't do unnecessary repeated writes of an entity.
+     */
     private Stopwatch deltaImpl(Delta delta, PersistenceExceptionHandler exceptionHandler) {
         try {
             lock.writeLock().lockInterruptibly();
@@ -504,11 +520,17 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     
     @Override
     public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
-        lock.writeLock().lockInterruptibly();
-        lock.writeLock().unlock();
-        
-        for (StoreObjectAccessorWithLock writer : writers.values())
-            writer.waitForCurrentWrites(timeout);
+        boolean locked = lock.readLock().tryLock(timeout.toMillisecondsRoundingUp(), TimeUnit.MILLISECONDS);
+        if (locked) {
+            lock.readLock().unlock();
+            
+            // Belt-and-braces: the lock above should be enough to ensure no outstanding writes, because
+            // each writer is now synchronous.
+            for (StoreObjectAccessorWithLock writer : writers.values())
+                writer.waitForCurrentWrites(timeout);
+        } else {
+            throw new TimeoutException("Timeout waiting for writes to "+objectStore);
+        }
     }
 
     private String read(String subPath) {
@@ -534,13 +556,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         } catch (Exception e) {
             exceptionHandler.onDeleteMementoFailed(id, e);
         }
-    }
-
-    private ListenableFuture<String> asyncRead(final String subPath) {
-        return executor.submit(new Callable<String>() {
-            public String call() {
-                return read(subPath);
-            }});
     }
 
     private ListenableFuture<?> asyncPersist(final String subPath, final Memento memento, final PersistenceExceptionHandler exceptionHandler) {
