@@ -19,14 +19,17 @@
 package brooklyn.util.text;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import brooklyn.util.collections.MutableSet;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 
 public class StringPredicates {
 
@@ -39,6 +42,10 @@ public class StringPredicates {
             public boolean apply(@Nullable CharSequence input) {
                 return Strings.isBlank(input);
             }
+            @Override
+            public String toString() {
+                return "isBlank";
+            }
         };
     }
 
@@ -47,6 +54,10 @@ public class StringPredicates {
             @Override
             public boolean apply(@Nullable CharSequence input) {
                 return Strings.containsLiteralIgnoreCase(input, fragment);
+            }
+            @Override
+            public String toString() {
+                return "containsLiteralCaseInsensitive("+fragment+")";
             }
         };
     }
@@ -57,9 +68,22 @@ public class StringPredicates {
             public boolean apply(@Nullable CharSequence input) {
                 return Strings.containsLiteral(input, fragment);
             }
+            @Override
+            public String toString() {
+                return "containsLiteral("+fragment+")";
+            }
         };
     }
     
+    public static Predicate<CharSequence> containsAllLiterals(final String... fragments) {
+        return Predicates.and(Iterables.transform(Arrays.asList(fragments), new Function<String,Predicate<CharSequence>>() {
+            @Override
+            public Predicate<CharSequence> apply(String input) {
+                return containsLiteral(input);
+            }
+        }));
+    }
+
     public static Predicate<CharSequence> containsRegex(final String regex) {
         // "Pattern" ... what a bad name :)
         return Predicates.containsPattern(regex);
@@ -104,7 +128,7 @@ public class StringPredicates {
             return "equalToAny("+vals+")";
         }
     }
-    
+
     // TODO globs, matches regex, etc ... add as you need them!
     
 }
