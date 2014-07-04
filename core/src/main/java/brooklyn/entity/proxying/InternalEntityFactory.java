@@ -79,7 +79,6 @@ public class InternalEntityFactory {
      * @param managementContext
      * @param clazz
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static boolean isNewStyleEntity(ManagementContext managementContext, Class<?> clazz) {
         try {
             return isNewStyleEntity(clazz);
@@ -172,9 +171,22 @@ public class InternalEntityFactory {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
 
-            for (EntitySpec<?> childSpec : spec.getChildren()) {
-                Entity child = createEntity(childSpec);
-                entity.addChild(child);
+            /* Order is important here. Changed Jul 2014 when supporting children in spec.
+             * (Previously parent was set *after* running initializers, and there were no children.)
+             * <p>
+             * We may want access to the parent when running initializers (or in children initializers).
+             * <p>
+             * Currently initializers will be run before children are added.
+             * on the basis that it is more likely children will want to assume parent is initialized,
+             * than initializers will want access to children.
+             * <p>
+             * If this is not good enough we could do an additional pass where all children are built up
+             * before running any initializers.
+             */
+            Entity parent = spec.getParent();
+            if (parent != null) {
+                parent = (parent instanceof AbstractEntity) ? ((AbstractEntity)parent).getProxyIfAvailable() : parent;
+                entity.setParent(parent);
             }
 
             /* Marked transient so that the task is not needlessly kept around at the highest level.
@@ -221,11 +233,19 @@ public class InternalEntityFactory {
                 }
             }).build()).get();
             
-            Entity parent = spec.getParent();
-            if (parent != null) {
-                parent = (parent instanceof AbstractEntity) ? ((AbstractEntity)parent).getProxyIfAvailable() : parent;
-                entity.setParent(parent);
+            for (EntitySpec<?> childSpec : spec.getChildren()) {
+                if (childSpec.getParent()!=null) {
+                    if (!childSpec.getParent().equals(entity)) {
+                        throw new IllegalStateException("Spec "+childSpec+" has parent "+childSpec.getParent()+" defined, "
+                            + "but it is defined as a child of "+entity);
+                    }
+                    log.warn("Child spec "+childSpec+" is already set with parent "+entity+"; how did this happen?!");
+                }
+                childSpec.parent(entity);
+                Entity child = createEntity(childSpec);
+                entity.addChild(child);
             }
+
             return entity;
             
         } catch (Exception e) {
