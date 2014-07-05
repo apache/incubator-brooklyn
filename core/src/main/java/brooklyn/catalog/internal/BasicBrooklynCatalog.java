@@ -86,6 +86,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
         if (id==null) return null;
         CatalogItem<?,?> result = getCatalogItem(id);
+        if (result==null) return null;
         if (type==null || type.isAssignableFrom(result.getCatalogItemJavaType())) 
             return (CatalogItem<T,SpecT>)result;
         return null;
