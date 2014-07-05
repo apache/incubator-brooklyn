@@ -18,7 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeLoader.LoaderFromKey;
+import io.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
 
 import java.util.List;
 import java.util.Map;
@@ -41,10 +41,10 @@ import com.google.common.annotations.Beta;
 @Beta
 public abstract class BrooklynEntityDecorationResolver<DT> {
 
-    public final BrooklynYamlTypeLoader.Factory loader;
+    public final BrooklynYamlTypeInstantiator.Factory instantiator;
     
-    protected BrooklynEntityDecorationResolver(BrooklynYamlTypeLoader.Factory loader) {
-        this.loader = loader;
+    protected BrooklynEntityDecorationResolver(BrooklynYamlTypeInstantiator.Factory instantiator) {
+        this.instantiator = instantiator;
     }
     
     public abstract void decorate(EntitySpec<?> entitySpec, ConfigBag attrs);
@@ -84,7 +84,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
     public static class PolicySpecResolver extends BrooklynEntityDecorationResolver<PolicySpec<?>> {
         
-        protected PolicySpecResolver(BrooklynYamlTypeLoader.Factory loader) { super(loader); }
+        protected PolicySpecResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
         @Override protected String getDecorationKind() { return "Policy"; }
 
         @Override
@@ -99,7 +99,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
         @Override
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<PolicySpec<?>> decorations) {
-            LoaderFromKey decoLoader = loader.from(decorationJson).prefix("policy");
+            InstantiatorFromKey decoLoader = instantiator.from(decorationJson).prefix("policy");
             // this pattern of creating a spec could be simplified with a "Configurable" superinterface on *Spec  
             decorations.add(PolicySpec.create(decoLoader.getType(Policy.class))
                 .configure( decoLoader.getConfigMap() ));
@@ -108,7 +108,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
     public static class EnricherSpecResolver extends BrooklynEntityDecorationResolver<EnricherSpec<?>> {
         
-        protected EnricherSpecResolver(BrooklynYamlTypeLoader.Factory loader) { super(loader); }
+        protected EnricherSpecResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
         @Override protected String getDecorationKind() { return "Enricher"; }
 
         @Override
@@ -123,7 +123,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
         @Override
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<EnricherSpec<?>> decorations) {
-            LoaderFromKey decoLoader = loader.from(decorationJson).prefix("enricher");
+            InstantiatorFromKey decoLoader = instantiator.from(decorationJson).prefix("enricher");
             decorations.add(EnricherSpec.create(decoLoader.getType(Enricher.class))
                 .configure( decoLoader.getConfigMap() ));
         }
@@ -131,7 +131,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
     
     public static class InitializerResolver extends BrooklynEntityDecorationResolver<EntityInitializer> {
         
-        protected InitializerResolver(BrooklynYamlTypeLoader.Factory loader) { super(loader); }
+        protected InitializerResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
         @Override protected String getDecorationKind() { return "Entity initializer"; }
 
         @Override
@@ -146,7 +146,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
         @Override
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<EntityInitializer> decorations) {
-            decorations.add(loader.from(decorationJson).prefix("initializer").newInstance(EntityInitializer.class));
+            decorations.add(instantiator.from(decorationJson).prefix("initializer").newInstance(EntityInitializer.class));
         }
     }
     
