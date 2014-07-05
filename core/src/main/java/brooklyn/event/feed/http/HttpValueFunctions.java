@@ -72,6 +72,10 @@ public class HttpValueFunctions {
     public static <T> Function<HttpToolResponse, T> jsonContents(String[] elements, Class<T> expected) {
         return Functionals.chain(jsonContents(), JsonFunctions.walk(elements), JsonFunctions.cast(expected));
     }
+
+    public static <T> Function<HttpToolResponse, T> jsonContentsFromPath(String element, Class<T> expected){
+        return Functionals.chain(jsonContents(), JsonFunctions.getPath(element), JsonFunctions.cast(expected));
+    }
     
     public static Function<HttpToolResponse, Long> latency() {
         return new Function<HttpToolResponse, Long>() {

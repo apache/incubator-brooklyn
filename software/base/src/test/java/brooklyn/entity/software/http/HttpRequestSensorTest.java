@@ -1,11 +1,10 @@
-package brooklyn.entity.software;
+package brooklyn.entity.software.http;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.software.http.HttpRequestSensor;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
@@ -45,7 +44,7 @@ public class HttpRequestSensorTest {
     public void testHttpSensor() throws Exception {
         new HttpRequestSensor<String>(ConfigBag.newInstance()
                 .configure(HttpRequestSensor.SENSOR_NAME, SENSOR_STRING.getName())
-                .configure(HttpRequestSensor.JSON_PATH, "myKey")
+                .configure(HttpRequestSensor.JSON_PATH, "$.myKey")
                 .configure(HttpRequestSensor.SENSOR_URI, "http://echo.jsontest.com/myKey/myValue"))
             .apply(entity);
         entity.setAttribute(Attributes.SERVICE_UP, true);

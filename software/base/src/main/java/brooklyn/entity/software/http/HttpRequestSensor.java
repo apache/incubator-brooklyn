@@ -10,8 +10,8 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.time.Duration;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.jayway.jsonpath.JsonPath;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
@@ -45,7 +45,9 @@ public final class HttpRequestSensor<T extends String> extends AddSensor<String,
         Duration period = Duration.ONE_SECOND;
 
         HttpPollConfig<String> pollConfig = new HttpPollConfig<String>(sensor)
-                .onSuccess(HttpValueFunctions.jsonContents(jsonPath, String.class));
+                .checkSuccess(HttpValueFunctions.responseCodeEquals(200))
+                .onFailureOrException(Functions.constant((String) null))
+                .onSuccess(HttpValueFunctions.jsonContentsFromPath(jsonPath, String.class));
 
         if (period != null) pollConfig.period(period);
 
@@ -53,8 +55,6 @@ public final class HttpRequestSensor<T extends String> extends AddSensor<String,
                 .baseUri(uri)
                 .poll(pollConfig)
                 .build();
-
-        log.info("HTTPRequestSensor: " + uri + " -> " + jsonPath);
     }
 
     public HttpRequestSensor(Map<String, String> params) {
