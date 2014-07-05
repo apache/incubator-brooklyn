@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -44,9 +45,10 @@ public class BrooklynEntityMatcher implements PdpMatcher {
      * or null if not supported */
     protected String lookupType(Object deploymentPlanItem) {
         if (deploymentPlanItem instanceof Service) {
-            if (!BrooklynComponentTemplateResolver.Factory.supportsType(mgmt, ((Service)deploymentPlanItem).getServiceType()))
+            String serviceType = ((Service)deploymentPlanItem).getServiceType();
+            if (!BrooklynComponentTemplateResolver.Factory.supportsType(JavaBrooklynClassLoadingContext.newDefault(mgmt), serviceType))
                 return null;
-            return ((Service)deploymentPlanItem).getServiceType();
+            return serviceType;
         }
         return null;
     }
@@ -132,7 +134,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
      * as a custom attribute with type List.
      * @throws java.lang.IllegalArgumentException if map[key] is not an instance of List
      */
-    private void addCustomListAttributeIfNonNull(Builder<? extends PlatformComponentTemplate> builder, Map attrs, String key) {
+    private void addCustomListAttributeIfNonNull(Builder<? extends PlatformComponentTemplate> builder, Map<?,?> attrs, String key) {
         Object items = attrs.remove(key);
         if (items != null) {
             if (items instanceof List) {
@@ -151,7 +153,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
      * as a custom attribute with type Map.
      * @throws java.lang.IllegalArgumentException if map[key] is not an instance of Map
      */
-    private void addCustomMapAttributeIfNonNull(Builder<? extends PlatformComponentTemplate> builder, Map attrs, String key) {
+    private void addCustomMapAttributeIfNonNull(Builder<? extends PlatformComponentTemplate> builder, Map<?,?> attrs, String key) {
         Object items = attrs.remove(key);
         if (items != null) {
             if (items instanceof Map) {
@@ -172,7 +174,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (attrs==null || attrs.isEmpty())
             return null;
         try {
-            Class<Entity> type = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, typeName).loadEntityClass();
+            Class<? extends Entity> type = BrooklynComponentTemplateResolver.Factory.newInstance(JavaBrooklynClassLoadingContext.newDefault(mgmt), typeName).loadEntityClass();
             ConfigBag bag = ConfigBag.newInstance(attrs);
             List<FlagConfigKeyAndValueRecord> values = FlagUtils.findAllFlagsAndConfigKeys(null, type, bag);
             

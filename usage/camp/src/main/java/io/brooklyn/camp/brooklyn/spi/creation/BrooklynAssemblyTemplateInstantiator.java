@@ -35,6 +35,8 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -149,7 +151,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (Strings.isEmpty(type)) {
             clazz = BasicApplication.class;
         } else {
-            clazz = BrooklynEntityClassResolver.resolveEntity(type, mgmt);
+            clazz = item.newClassLoadingContext(mgmt).loadClass(type, Entity.class);
         }
         
         try {
@@ -266,11 +268,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
-        BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, template);
+        BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
+            JavaBrooklynClassLoadingContext.newDefault(mgmt), template);
         EntitySpec<? extends Application> app = resolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
         
         // first build the children into an empty shell app
-        buildTemplateServicesAsSpecs(template, app, mgmt);
+        buildTemplateServicesAsSpecs(JavaBrooklynClassLoadingContext.newDefault(mgmt), template, app);
         
         if (shouldUnwrap(template, app)) {
             EntitySpec<? extends Application> oldApp = app;
@@ -317,26 +320,30 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return true;
     }
 
-    private void buildTemplateServicesAsSpecs(AssemblyTemplate template, EntitySpec<? extends Application> root, ManagementContext mgmt) {
+    private void buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, EntitySpec<? extends Application> root) {
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
-            BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, appChildComponentTemplate);
+            BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
             
             EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
             root.child(spec);
             
-            buildChildrenEntitySpecs(mgmt, spec, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
+            BrooklynClassLoadingContext newLoader = entityResolver.loader;
+            buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
         }
     }
 
-    protected void buildChildrenEntitySpecs(ManagementContext mgmt, EntitySpec<?> parent, List<Map<String, Object>> childConfig) {
+    protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig) {
         if (childConfig != null) {
             for (Map<String, Object> childAttrs : childConfig) {
-                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(mgmt, childAttrs);
+                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
                 EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
                 parent.child(spec);
-                
-                buildChildrenEntitySpecs(mgmt, spec, entityResolver.getChildren(childAttrs));
+
+                // get the new loader in case the OSGi bundles from parent were added;
+                // not so important now but if we start working with versions this may be important
+                BrooklynClassLoadingContext newLoader = entityResolver.loader;
+                buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(childAttrs));
             }
         }
     }
