@@ -28,7 +28,6 @@
 -->
         <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
 
-        <maven-war-plugin.version>2.4</maven-war-plugin.version>
         <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
 
         <project.build.webapp>
