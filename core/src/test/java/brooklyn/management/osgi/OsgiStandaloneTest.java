@@ -40,7 +40,7 @@ public class OsgiStandaloneTest {
     private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
     
     public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:///brooklyn/osgi/brooklyn-osgi-test-a_0.1.0.jar";
-    public static final String BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL = "/brooklyn/osgi/brooklyn-tests-osgi-entities-0.1.0.jar";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_URL = "/brooklyn/osgi/brooklyn-test-osgi-entities.jar";
     
     protected Framework framework = null;
     private File storageTempDir;
@@ -149,7 +149,7 @@ public class OsgiStandaloneTest {
     
     @Test
     public void testReadKnownManifest() throws Exception {
-        InputStream in = this.getClass().getResourceAsStream(BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL);
+        InputStream in = this.getClass().getResourceAsStream(BROOKLYN_TEST_OSGI_ENTITIES_URL);
         JarInputStream jarIn = new JarInputStream(in);
         ManifestHelper helper = Osgis.ManifestHelper.forManifest(jarIn.getManifest());
         jarIn.close();
@@ -159,7 +159,7 @@ public class OsgiStandaloneTest {
     
     @Test
     public void testLoadOsgiBundleDependencies() throws Exception {
-        Bundle bundle = install("classpath:/" + BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL);
+        Bundle bundle = install("classpath:/" + BROOKLYN_TEST_OSGI_ENTITIES_URL);
         Assert.assertNotNull(bundle);
         Class<?> aClass = bundle.loadClass("brooklyn.osgi.tests.SimpleApplicationImpl");
         Object aInst = aClass.newInstance();
