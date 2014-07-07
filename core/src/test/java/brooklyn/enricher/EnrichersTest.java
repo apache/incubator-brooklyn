@@ -84,7 +84,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
                 .computing(new Function<Iterable<Integer>, Object>() {
                         @Override public Object apply(Iterable<Integer> input) {
                             if (input != null && Iterables.contains(input, 123)) {
-                                return Enrichers.sum((Iterable)input, 0, 0, TypeTokens.getTypeToken(null, Integer.class));
+                                return Enrichers.sum(input, 0, 0, new TypeToken<Integer>(){});
                             } else {
                                 return Entities.UNCHANGED;
                             }
@@ -311,7 +311,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
                 .computing(new Function<Iterable<Integer>, Object>() {
                         @Override public Object apply(Iterable<Integer> input) {
                             if (input != null && Iterables.contains(input, 123)) {
-                                return Enrichers.sum((Iterable)input, 0, 0, TypeTokens.getTypeToken(null, Integer.class));
+                                return Enrichers.sum(input, 0, 0, new TypeToken<Integer>(){});
                             } else {
                                 return Entities.UNCHANGED;
                             }
