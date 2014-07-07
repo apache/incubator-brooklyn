@@ -23,7 +23,10 @@ import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.collection.ResolvableLink;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,6 +40,7 @@ import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -109,18 +113,22 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
         
-        CatalogItem<?,?> item = catalog.getCatalogItem(template.getId());
+        CatalogItem<?,?> item = catalog.getCatalogItem(template.getName());
+        BrooklynClassLoadingContext loader;
         if (item!=null) {
+            loader = item.newClassLoadingContext(mgmt);
             // TODO legacy path - currently item is always null because template.id is a random String,
             // and pretty sure that is the desired behaviour; we now (Jul 2014) automatically promote
             // so fine for users always to put the catalog registeredType in the services block;
             // if we did want to support users supplying an `id' that would be available not via the above
             // but via template.getCustomAttributes().get("id");
             
-            return createApplicationFromCatalog(platform, item, template, requireSpec);
+            // FIXME No longer called; delete:
+            // return createApplicationFromCatalog(platform, item, template, requireSpec);
         } else {
-            return new AppOrSpec(createApplicationFromNonCatalogCampTemplate(template, platform));
+            loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
         }
+        return new AppOrSpec(createApplicationFromNonCatalogCampTemplate(template, platform, loader));
     }
     
     private static class AppOrSpec {
@@ -282,16 +290,16 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     @SuppressWarnings("unchecked")
-    protected EntitySpec<? extends Application> createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform) {
+    protected EntitySpec<? extends Application> createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
         final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
-            JavaBrooklynClassLoadingContext.newDefault(mgmt), template);
+            loader, template);
         EntitySpec<? extends Application> app = resolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
         
         // first build the children into an empty shell app
-        buildTemplateServicesAsSpecs(JavaBrooklynClassLoadingContext.newDefault(mgmt), template, app);
+        buildTemplateServicesAsSpecs(loader, template, platform, app);
         
         if (shouldUnwrap(template, app)) {
             EntitySpec<? extends Application> oldApp = app;
@@ -338,12 +346,51 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return true;
     }
 
-    private void buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, EntitySpec<? extends Application> root) {
+    private void buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, EntitySpec<? extends Application> root) {
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
             
-            EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
+            EntitySpec<? extends Entity> spec;
+            
+            ManagementContext mgmt = loader.getManagementContext();
+            
+            CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
+            if (item != null) {
+                String yaml = item.getPlanYaml();
+                Reader input = new StringReader(yaml);
+                
+                AssemblyTemplate at;
+                BrooklynClassLoadingContext itemLoader = item.newClassLoadingContext(mgmt);
+                BrooklynLoaderTracker.setLoader(itemLoader);
+                try {
+                    at = platform.pdp().registerDeploymentPlan(input);
+                } finally {
+                    BrooklynLoaderTracker.unsetLoader(itemLoader);
+                }
+
+
+                // FIXME Entitlement?
+//                if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, at)) {
+//                    throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
+//                        Entitlements.getEntitlementContext().user(), yaml);
+//                }
+                
+                try {
+                    AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
+                    if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
+                        spec = EntitySpec.create(BasicApplication.class);
+                        ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecs(itemLoader, at, platform, (EntitySpec)spec);
+                    } else {
+                        throw new IllegalStateException("Cannot create application with instantiator: " + ati);
+                    }
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
+            } else {
+                spec = entityResolver.resolveSpec();
+            }
+
             root.child(spec);
             
             BrooklynClassLoadingContext newLoader = entityResolver.loader;

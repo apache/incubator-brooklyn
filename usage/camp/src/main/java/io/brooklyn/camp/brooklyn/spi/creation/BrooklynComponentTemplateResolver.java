@@ -18,15 +18,12 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
-import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
-import java.io.StringReader;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.catalog.CatalogItem;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -160,6 +155,7 @@ public class BrooklynComponentTemplateResolver {
     protected String getCatalogIdOrJavaType() {
         String type = getDeclaredType();
         type = Strings.removeFromStart(type, "brooklyn:", "java:");
+        if (type == null) return null;
         
         // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow
         if (type.equals("cluster") || type.equals("Cluster")) return DynamicCluster.class.getName();
@@ -177,7 +173,12 @@ public class BrooklynComponentTemplateResolver {
      */
     @Nullable
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
-        return loader.getManagementContext().getCatalog().getCatalogItem(Entity.class, getCatalogIdOrJavaType());
+        String type = getCatalogIdOrJavaType();
+        if (type != null) {
+            return loader.getManagementContext().getCatalog().getCatalogItem(Entity.class, type);
+        } else {
+            return null;
+        }
     }
     
     public boolean canResolve() {
@@ -219,6 +220,7 @@ public class BrooklynComponentTemplateResolver {
     /** resolves the spec, updating the loader if a catalog item is loaded */
     @SuppressWarnings("unchecked")
     public <T extends Entity> EntitySpec<T> resolveSpec() {
+        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
         return (EntitySpec<T>)resolveSpec(loadEntityClass(), null);
     }
 

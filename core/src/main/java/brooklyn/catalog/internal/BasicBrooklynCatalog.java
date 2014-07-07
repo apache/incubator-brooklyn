@@ -18,7 +18,6 @@
  */
 package brooklyn.catalog.internal;
 
-import brooklyn.util.guava.Maybe;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
@@ -40,8 +39,10 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
 import brooklyn.util.javalang.Reflections;
@@ -60,7 +61,24 @@ import com.google.common.collect.Iterables;
 public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     private static final Logger log = LoggerFactory.getLogger(BasicBrooklynCatalog.class);
-    
+
+    public static class BrooklynLoaderTracker {
+        public static final ThreadLocal<BrooklynClassLoadingContext> loader = new ThreadLocal<BrooklynClassLoadingContext>();
+        
+        public static void setLoader(BrooklynClassLoadingContext val) {
+            loader.set(val);
+        }
+        
+        // TODO Stack, for recursive calls?
+        public static void unsetLoader(BrooklynClassLoadingContext val) {
+            loader.set(null);
+        }
+        
+        public static BrooklynClassLoadingContext getLoader() {
+            return loader.get();
+        }
+    }
+
     private final ManagementContext mgmt;
     private final CatalogDo catalog;
     private volatile CatalogDo manualAdditionsCatalog;
@@ -141,7 +159,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
             
             // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
-            AssemblyTemplate at = camp.pdp().registerDeploymentPlan(plan);
+            AssemblyTemplate at;
+            BrooklynClassLoadingContext loader = loadedItem.newClassLoadingContext(mgmt);
+            BrooklynLoaderTracker.setLoader(loader);
+            try {
+                at = camp.pdp().registerDeploymentPlan(plan);
+            } finally {
+                BrooklynLoaderTracker.unsetLoader(loader);
+            }
             
             try {
                 AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
@@ -276,6 +301,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
         manualAdditionsCatalog.addEntry(itemDto);
+        
+        // Load the libraries now.
+        // Otherwise, when CAMP looks up BrooklynEntityMatcher.accepts then it
+        // won't know about this bundle:class (via the catalog item's
+        // BrooklynClassLoadingContext) so will reject it as not-for-brooklyn.
+        new CatalogLibrariesDo(itemDto.getLibrariesDto()).load(mgmt);
+        
         return itemDto;
     }
 

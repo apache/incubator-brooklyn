@@ -45,6 +45,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.Tasks;
 
@@ -139,8 +140,18 @@ public class InternalEntityFactory {
         builder.addAll(spec.getAdditionalInterfaces());
         Set<Class<?>> interfaces = builder.build();
         
+        // TODO OSGi strangeness! The classloader obtained from the type should be enough.
+        // If an OSGi class loader, it should delegate to find things like Entity.class etc.
+        // However, we get errors such as:
+        //    NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities
+        // Building our own aggregating class loader gets around this.
+        // But we really should not have to do this! What are the consequences?
+        AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
+        aggregateClassLoader.addFirst(classloader);
+        aggregateClassLoader.addLast(Entity.class.getClassLoader());
+
         return (T) java.lang.reflect.Proxy.newProxyInstance(
-                classloader,
+                aggregateClassLoader,
                 interfaces.toArray(new Class[interfaces.size()]),
                 new EntityProxyImpl(entity));
     }
