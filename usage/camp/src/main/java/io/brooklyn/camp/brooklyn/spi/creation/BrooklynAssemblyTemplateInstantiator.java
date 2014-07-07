@@ -48,6 +48,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
@@ -281,7 +282,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         EntitySpec<? extends Application> app = resolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
         
         // first build the children into an empty shell app
-        buildTemplateServicesAsSpecs(loader, template, platform, app);
+        List<EntitySpec<?>> childSpecs = buildTemplateServicesAsSpecs(loader, template, platform);
+        for (EntitySpec<?> childSpec : childSpecs) {
+            app.child(childSpec);
+        }
         
         if (shouldUnwrap(template, app)) {
             EntitySpec<? extends Application> oldApp = app;
@@ -328,14 +332,15 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return true;
     }
 
-    private void buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, EntitySpec<? extends Application> root) {
+    private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {
+        List<EntitySpec<?>> result = Lists.newArrayList();
+        
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            
-            EntitySpec<? extends Entity> spec;
-            
             ManagementContext mgmt = loader.getManagementContext();
+            
+            EntitySpec<?> spec;
             
             CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
             if (item != null) {
@@ -351,18 +356,17 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                     BrooklynLoaderTracker.unsetLoader(itemLoader);
                 }
 
-
-                // FIXME Entitlement?
-//                if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, at)) {
-//                    throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
-//                        Entitlements.getEntitlementContext().user(), yaml);
-//                }
-                
+                // TODO Should we check entitlements, or sufficient to do once for this being called in the first place?
+                // TODO Is it acceptable to only allow a single  top-level entity in a catalog? If not, we need to think
+                //      about what it would mean to subsequently call buildChildrenEntitySpecs on the list of top-level entities!
                 try {
                     AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
                     if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                        spec = EntitySpec.create(BasicApplication.class);
-                        ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecs(itemLoader, at, platform, (EntitySpec)spec);
+                        List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecs(itemLoader, at, platform);
+                        if (specs.size() > 1) {
+                            throw new UnsupportedOperationException("Only supporting single service in catalog item currently");
+                        }
+                        spec = specs.get(0);
                     } else {
                         throw new IllegalStateException("Cannot create application with instantiator: " + ati);
                     }
@@ -373,11 +377,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                 spec = entityResolver.resolveSpec();
             }
 
-            root.child(spec);
-            
             BrooklynClassLoadingContext newLoader = entityResolver.loader;
             buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
+            
+            result.add(spec);
         }
+        return result;
     }
 
     protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig) {
