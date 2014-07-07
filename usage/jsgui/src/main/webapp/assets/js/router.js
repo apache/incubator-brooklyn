@@ -139,7 +139,6 @@ define([
                 appRouter:that
             })
             that.showView("#application-content", catalogResource)
-            catalogResource.refresh()
         },
         apidocPage:function () {
             var apidocResource = new ApidocView({})

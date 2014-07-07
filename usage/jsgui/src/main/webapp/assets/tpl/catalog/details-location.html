@@ -1,13 +1,12 @@
-<div class="catalog-details-location">
+<div class="catalog-details">
 
-<% if ((typeof title !== 'undefined') && (title.length > 0)) { %>
-    <div class="float-right"><button id="<%= id %>" class="btn btn-danger delete-location">Delete</button></div>
-    
-    <h3><%= title %></h3>
-<% } %>
+    <h3><%= model.getPrettyName() %></h3>
 
-<% if (typeof config === 'undefined') { %>
-    <i>Loading...</i>
+    <!-- TODO -->
+    <!--<div class="float-right"><button id="<%= id %>" class="btn btn-danger delete-location">Delete</button></div>-->
+
+<% if (typeof config === 'undefined' || _.isEmpty(config)) { %>
+    <em>No special configuration</em>
 <% } else { %>
 
     <br/>
@@ -32,10 +31,6 @@
         <% }); %>
         </tbody>
     </table>
-    <div class="has-no-config for-empty-table hide">
-        <i>No special configuration set</i>
-    </div>
-
 <% } %>
 
 </div>

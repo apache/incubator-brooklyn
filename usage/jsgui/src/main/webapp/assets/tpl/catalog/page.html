@@ -1,64 +1,29 @@
 <!-- Catalog page template -->
-<div id="catalog-resource">    
-<div class="row row-fluid">
-    <div class="span4" id="accord">
-        <div class="navbar_top">
-            <h3>Catalog</h3>
-            <div class="apps-tree-toolbar">
-                <i id="add-new-thing" class="icon-br-plus-sign handy" />
-                &nbsp;
-                <i class="icon-br-refresh refresh handy" />
+<div id="catalog-resource">
+    <div class="row row-fluid">
+        <div class="span4" id="accord">
+            <div class="navbar_top">
+                <h3>Catalog</h3>
+
+                <div class="apps-tree-toolbar">
+                    <i id="add-new-thing" class="icon-br-plus-sign handy"/>
+                    &nbsp;
+                    <i class="icon-br-refresh refresh handy"/>
+                </div>
+            </div>
+            <div class="navbar_main_wrapper">
+                <div id="accordion-empty-to-create-info-message" class="label-message hide">
+                    <div class="label-important full-width">ERROR</div>
+                    No category selected.
+                    Select the category of the item type you wish to add.
+                </div>
+                <div class="catalog-accordion-parent catalog-accordion-wrapper"></div>
             </div>
         </div>
-        <div class="navbar_main_wrapper">
 
-<div id="accordion-empty-to-create-info-message" class="label-message hide">
-    <div class="label-important full-width">ERROR</div>
-        No category selected.
-        Select the category of the item type you wish to add.
-</div>
-
-<div class="catalog-accordion-wrapper">
-
-<div id="applications" class="accordion-item">
-    <div class="accordion-head">
-        Applications
+        <div class="span8" id="details"></div>
     </div>
-    <div class="accordion-body hide"></div>
 </div>
-<div id="entities" class="accordion-item">
-    <div class="accordion-head">
-        Entities
-    </div>
-    <div class="accordion-body hide"></div>
-</div>
-<div id="policies" class="accordion-item">
-    <div class="accordion-head">
-        Policies
-    </div>
-    <div class="accordion-body hide"></div>
-</div>
-<div id="locations" class="accordion-item">
-    <div class="accordion-head">
-        Locations
-    </div>
-    <div class="accordion-body hide"></div>
-</div>
-
-</div>
-        </div>
-        
-    </div>
-    <div class="span8" id="details">
-        <div id="details-empty" class="catalog-details hide">
-            <i>Nothing selected</i>
-        </div>
-        <div id="details-applications" class="catalog-details hide"/>
-        <div id="details-entities" class="catalog-details hide"/>
-        <div id="details-policies" class="catalog-details hide"/>
-        <div id="details-locations" class="catalog-details hide"/>
-    </div>
-</div></div>
 
 <div class="modal hide fade" id="new-entity-modal">
     <form class="form-vertical" id="new-entity-form">

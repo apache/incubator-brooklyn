@@ -1371,3 +1371,7 @@ the element's children, who probably want to control their opacity separately. *
     border-radius: 10px;
     color: black;
 }
+
+.capitalized {
+    text-transform: capitalize;
+}
