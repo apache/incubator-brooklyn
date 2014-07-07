@@ -1,5 +1,6 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate.Builder;
 import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
@@ -12,8 +13,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -45,8 +48,16 @@ public class BrooklynEntityMatcher implements PdpMatcher {
      * or null if not supported */
     protected String lookupType(Object deploymentPlanItem) {
         if (deploymentPlanItem instanceof Service) {
+            String name = ((Service)deploymentPlanItem).getName();
+            if (mgmt.getCatalog().getCatalogItem(name) != null) {
+                return name;
+            }
+        }
+        if (deploymentPlanItem instanceof Service) {
             String serviceType = ((Service)deploymentPlanItem).getServiceType();
-            if (!BrooklynComponentTemplateResolver.Factory.supportsType(JavaBrooklynClassLoadingContext.newDefault(mgmt), serviceType))
+            BrooklynClassLoadingContext loader = BasicBrooklynCatalog.BrooklynLoaderTracker.getLoader();
+            if (loader == null) loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
+            if (!BrooklynComponentTemplateResolver.Factory.supportsType(loader, serviceType))
                 return null;
             return serviceType;
         }
