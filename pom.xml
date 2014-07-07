@@ -606,22 +606,6 @@
                          </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
-                <!-- Needed for command-line access, e.g mvn apache-rat:rat and mvn apache-rat:check -->
-                <plugin>
-                  <groupId>org.apache.rat</groupId>
-                  <artifactId>apache-rat-plugin</artifactId>
-                  <version>0.10</version>
-                  <configuration>
-                    <!--
-                         If you wish to override this list in the component (child) pom, ensure you use
-                             <excludes combine.children="merge">
-                         so that the child pom entries replace the parent entries
-                     -->
-                    <excludes combine.children="append">
-                      <exclude>.checkstyle</exclude>
-                    </excludes>
-                  </configuration>
-                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -711,6 +695,83 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Needed for command-line access, e.g mvn apache-rat:rat and mvn apache-rat:check -->
+            <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <version>0.10</version>
+              <executions>
+                <execution>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>check</goal>
+                  </goals>
+                </execution> 
+              </executions>
+              <configuration>
+                <!--
+                     If you wish to override this list in the component (child) pom, ensure you use
+                         <excludes combine.children="merge">
+                     so that the child pom entries replace the parent entries
+                 -->
+                <excludes combine.children="append">
+                  <!-- git and IDE project files -->
+                  <!-- see https://issues.apache.org/jira/browse/RAT-107 -->
+                  <exclude>**/.git/**</exclude>
+                  <exclude>**/.gitignore</exclude>
+                  <exclude>**/.idea/**</exclude>
+                  <exclude>**/*.iml</exclude>
+                  <exclude>**/.classpath/**</exclude>
+                  <exclude>**/.project</exclude>
+                  <exclude>**/.settings/**</exclude>
+                  <exclude>**/*.log</exclude>
+                  <exclude>**/brooklyn*.log.*</exclude>
+                  <!-- files not requiring licence -->
+                  <exclude>ignored/**</exclude>
+                  <exclude>LICENSE.md</exclude>
+                  <exclude>**/MANIFEST.MF</exclude>
+                  <exclude>**/test-output/**</exclude>
+                  <exclude>**/*.pem.pub</exclude>
+                  <exclude>**/*.svg</exclude>
+                  <exclude>**/*.crt</exclude>
+                  <exclude>**/*.csr</exclude>
+                  <exclude>**/*.key</exclude>
+                  <exclude>**/*.key.org</exclude>
+                  <exclude>**/*.psd</exclude>
+                  <exclude>**/*.json</exclude>
+                  <exclude>**/target/classes/**</exclude>
+                  <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
+                  <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
+                  <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
+                  <!-- TODO: Once reviewed and accepted, these entries should be moved into the subproject's pom.xml file -->
+                  <!--       the have been grouped here for easier review -->
+                  <exclude>**/dropwizard/src/main/resources/banner.txt</exclude>
+                  <exclude>**/services/brooklyn.location.LocationResolver</exclude>
+                  <exclude>**/src/main/resources/brooklyn/location/geo/external-ip-address-resolvers.txt</exclude>
+                  <exclude>**/src/test/resources/brooklyn/entity/basic/template_with_extra_substitutions.txt</exclude>
+                  <exclude>**/src/main/resources/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
+                  <exclude>**/src/main/resources/brooklyn/entity/nosql/riak/vm.args</exclude>
+                  <!-- brooklyn-jsgui -->
+                  <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
+                  <exclude>**/src/main/dev/info.txt</exclude>
+                  <exclude>**/src/main/dev/js/libs/*</exclude>
+                  <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
+                  <exclude>**/src/test/javascript/config.txt</exclude>
+                  <!-- brooklyn-archetype-quickstart -->
+                  <exclude>**/src/test/resources/projects/integration-test-1/goal.txt</exclude>
+                  <!-- brooklyn-examples-parent -->
+                  <exclude>**/simple-open-loop-policy/localrepo/io/brooklyn/org.marre.smsj/1.0.0-20051126/org.marre.smsj-1.0.0-20051126.pom</exclude>
+                  <!-- simple-messaging-pubsub  -->
+                  <exclude>**/src/main/resources/passwd</exclude>
+                  <!-- brooklyn-qa -->
+                  <exclude>**/log-exclusions.txt</exclude>
+                  <!-- FIXME: Check licences for docs -->
+                  <exclude>docs/**</exclude>
+                  <!-- FIXME: Maxmind code to be removed due to licence, see https://issues.apache.org/jira/browse/BROOKLYN-32-->
+                  <exclude>**/src/3rd/maxmind/**</exclude>
+                </excludes>
+              </configuration>
             </plugin>
         </plugins>
         <extensions>
