@@ -56,31 +56,31 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
         assertEquals(simpleEntity.getEntityType().getName(), "brooklyn.osgi.tests.SimpleEntity");
     }
 
-//    @Test
-//    public void testLaunchApplicationWithCatalogReferencingOtherCatalogYaml() throws Exception {
-//        String referencedRegisteredTypeName = "my.catalog.app.id.referenced";
-//        String referrerRegisteredTypeName = "my.catalog.app.id.referring";
-//        addCatalogOSGiEntity(referencedRegisteredTypeName);
-//        addCatalogEntityReferencingCatalogEntry(referrerRegisteredTypeName, referencedRegisteredTypeName);
-//
-//        String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+referrerRegisteredTypeName+" } ] }";
-//        
-//        ClientResponse response = client().resource("/v1/applications")
-//            .entity(yaml, "application/x-yaml")
-//            .post(ClientResponse.class);
-//        assertTrue(response.getStatus()/100 == 2, "response is "+response);
-//        
-//        // Expect app to be running
-//        URI appUri = response.getLocation();
-//        waitForApplicationToBeRunning(response.getLocation());
-//        ApplicationSummary appSummary = client().resource(appUri).get(ApplicationSummary.class);
-//        String appId = appSummary.getId();
-//        assertEquals(appSummary.getSpec().getName(), "simple-app-yaml");
-//
-//        Application app = (Application) getManagementContext().getEntityManager().getEntity(appId);
-//        Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-//        assertEquals(simpleEntity.getEntityType().getName(), "brooklyn.osgi.tests.SimpleEntity");
-//    }
+    @Test
+    public void testLaunchApplicationWithCatalogReferencingOtherCatalogYaml() throws Exception {
+        String referencedRegisteredTypeName = "my.catalog.app.id.referenced";
+        String referrerRegisteredTypeName = "my.catalog.app.id.referring";
+        addCatalogOSGiEntity(referencedRegisteredTypeName);
+        addCatalogEntityReferencingCatalogEntry(referrerRegisteredTypeName, referencedRegisteredTypeName);
+
+        String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+referrerRegisteredTypeName+" } ] }";
+        
+        ClientResponse response = client().resource("/v1/applications")
+            .entity(yaml, "application/x-yaml")
+            .post(ClientResponse.class);
+        assertTrue(response.getStatus()/100 == 2, "response is "+response);
+        
+        // Expect app to be running
+        URI appUri = response.getLocation();
+        waitForApplicationToBeRunning(response.getLocation());
+        ApplicationSummary appSummary = client().resource(appUri).get(ApplicationSummary.class);
+        String appId = appSummary.getId();
+        assertEquals(appSummary.getSpec().getName(), "simple-app-yaml");
+
+        Application app = (Application) getManagementContext().getEntityManager().getEntity(appId);
+        Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(simpleEntity.getEntityType().getName(), "brooklyn.osgi.tests.SimpleEntity");
+    }
 
     private void addCatalogOSGiEntity(String registeredTypeName) {
         String catalogYaml =
