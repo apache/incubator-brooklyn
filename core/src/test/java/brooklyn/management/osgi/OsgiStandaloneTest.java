@@ -58,7 +58,7 @@ public class OsgiStandaloneTest {
     private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
     
     public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:///brooklyn/osgi/brooklyn-osgi-test-a_0.1.0.jar";
-    private static final String BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL = "/brooklyn/osgi/brooklyn-tests-osgi-entities-0.1.0.jar";
+    public static final String BROOKLYN_TESTS_OSGI_ENTITIES_0_1_0_URL = "/brooklyn/osgi/brooklyn-tests-osgi-entities-0.1.0.jar";
     
     protected Framework framework = null;
     private File storageTempDir;
