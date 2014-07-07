@@ -34,10 +34,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <mongo-java-driver.version>2.11.3</mongo-java-driver.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -60,7 +56,7 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>${mongo-java-driver.version}</version>
+            <version>${mongodb.version}</version>
         </dependency>
 
         <!-- for redis testing -->

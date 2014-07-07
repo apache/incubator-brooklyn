@@ -145,6 +145,7 @@
         <commons-lang3.version>3.1</commons-lang3.version>
         <commons-compress.version>1.4</commons-compress.version>
         <qpid.version>0.20</qpid.version>
+        <mongodb.version>2.11.4</mongodb.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
