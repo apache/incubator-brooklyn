@@ -41,11 +41,34 @@
             <artifactId>brooklyn-core</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
-        
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-policy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-utils-common</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.brooklyn.camp</groupId>
             <artifactId>camp-base</artifactId>
             <version>${brooklyn.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         
         <!-- TODO not enamoured of including software-base here, but it allows us to reference chef and vanilla for short names;
