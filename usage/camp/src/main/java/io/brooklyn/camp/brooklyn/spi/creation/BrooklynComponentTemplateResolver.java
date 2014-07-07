@@ -1,11 +1,14 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
+import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
+import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
+import java.io.StringReader;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -170,9 +175,26 @@ public class BrooklynComponentTemplateResolver {
         CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
         String typeName = getCatalogIdOrJavaType();
         if (item!=null) {
+            // add additional bundles
             loader = new BrooklynClassLoadingContextSequential(mgmt, item.newClassLoadingContext(mgmt), loader);
+            
+//            if (item.getPlanYaml()!=null) {
+//                // TODO if yaml refers to *another* catalog item, or remote yaml reference, or even have config
+//                // then we will need to parse that YAML
+//                // (but NB as it stands this code might cause infinite looping?)
+//                CampPlatform platform = BrooklynServerConfig.getCampPlatform(mgmt).get();
+//                AssemblyTemplate template2 = platform.pdp().registerDeploymentPlan( new StringReader(item.getPlanYaml()) );
+//                return ((AssemblyTemplateSpecInstantiator) template2.getInstantiator().newInstance()).createSpec(template2, platform);
+//            }
+
             typeName = item.getJavaType();
+            if (typeName==null) {
+                // FIXME temporary fix, until we parse the YAML above
+                // i think even config items in yaml on the catalog item will be ignored if we don't do the above 
+                typeName = item.getRegisteredTypeName();
+            }
         }
+        
         return loader.loadClass(typeName, Entity.class);
     }
 
