@@ -307,7 +307,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         // won't know about this bundle:class (via the catalog item's
         // BrooklynClassLoadingContext) so will reject it as not-for-brooklyn.
         new CatalogLibrariesDo(itemDto.getLibrariesDto()).load(mgmt);
-        
+
+        // Ensure the cache is populated
+        getCatalog().addEntry(itemDto);
+
         return itemDto;
     }
 
