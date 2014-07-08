@@ -1,5 +1,7 @@
 package brooklyn.management.classloading;
 
+import javax.annotation.Nullable;
+
 import brooklyn.management.ManagementContext;
 import brooklyn.util.guava.Maybe;
 
@@ -28,18 +30,18 @@ public abstract class AbstractBrooklynClassLoadingContext implements BrooklynCla
     public abstract Maybe<Class<?>> tryLoadClass(String className);
 
     @Override
-    public <T> Class<? extends T> loadClass(String className, Class<T> type) {
-        return tryLoadClass(className, type).get();
+    public <T> Class<? extends T> loadClass(String className, @Nullable Class<T> supertype) {
+        return tryLoadClass(className, supertype).get();
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public <T> Maybe<Class<? extends T>> tryLoadClass(String className, Class<T> type) {
+    public <T> Maybe<Class<? extends T>> tryLoadClass(String className, @Nullable Class<T> supertype) {
         Maybe<Class<?>> result = tryLoadClass(className);
         if (result.isAbsent()) return (Maybe)result;
         Class<?> clazz = result.get();
-        if (type.isAssignableFrom(clazz)) return (Maybe)result;
-        throw new ClassCastException(className+" is not an instance of "+type);
+        if (supertype==null || supertype.isAssignableFrom(clazz)) return (Maybe)result;
+        throw new ClassCastException(className+" is not an instance of "+supertype);
     }
 
     @Override
