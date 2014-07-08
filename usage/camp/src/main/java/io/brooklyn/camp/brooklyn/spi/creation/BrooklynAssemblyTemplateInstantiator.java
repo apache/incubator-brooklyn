@@ -389,9 +389,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             BrooklynLoaderTracker.unsetLoader(itemLoader);
         }
 
-        // TODO Should we check entitlements, or sufficient to do once for this being called in the first place?
-        // TODO Is it acceptable to only allow a single  top-level entity in a catalog? If not, we need to think
-        //      about what it would mean to subsequently call buildChildrenEntitySpecs on the list of top-level entities!
+        // In case we want to allow multiple top-level entities in a catalog we need to think
+        // about what it would mean to subsequently call buildChildrenEntitySpecs on the list of top-level entities!
         try {
             AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
             if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
