@@ -134,6 +134,12 @@ public class BrooklynComponentTemplateResolver {
         return Factory.getDeclaredType(null, template.orNull(), attrs);
     }
     
+    // TODO Generalise to have other prefixes (e.g. explicit "catalog:" etc)?
+    protected boolean isJavaTypePrefix() {
+        String type = getDeclaredType();
+        return type != null && (type.toLowerCase().startsWith("java:") || type.toLowerCase().startsWith("brooklyn:java:"));
+    }
+
     protected String getCatalogIdOrJavaType() {
         String type = getDeclaredType();
         type = Strings.removeFromStart(type, "brooklyn:", "java:");

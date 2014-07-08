@@ -208,16 +208,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             ManagementContext mgmt = loader.getManagementContext();
 
             String catalogIdOrJavaType = entityResolver.getCatalogIdOrJavaType();
-
-            EntitySpec<?> spec;
-            
             CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
             
-            // FIXME
-            log.warn("buildTemplateServicesAsSpecsImpl: catalogIdOrJavaType="+catalogIdOrJavaType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
+            if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+catalogIdOrJavaType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
 
-
-            if (item == null || item.getJavaType() != null) {
+            EntitySpec<?> spec;
+            if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
                 spec = entityResolver.resolveSpec();
             } else {
                 boolean firstOccurrence = encounteredCatalogTypes.add(catalogIdOrJavaType);
