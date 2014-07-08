@@ -1,5 +1,7 @@
 package brooklyn.management.classloading;
 
+import javax.annotation.Nullable;
+
 import brooklyn.management.ManagementContext;
 import brooklyn.util.guava.Maybe;
 
@@ -11,9 +13,9 @@ public interface BrooklynClassLoadingContext {
 
     public ManagementContext getManagementContext();
     public Class<?> loadClass(String className);
-    public <T> Class<? extends T> loadClass(String className, Class<T> type);
+    public <T> Class<? extends T> loadClass(String className, @Nullable Class<T> supertype);
     
     public Maybe<Class<?>> tryLoadClass(String className);
-    public <T> Maybe<Class<? extends T>> tryLoadClass(String className, Class<T> type);
+    public <T> Maybe<Class<? extends T>> tryLoadClass(String className, @Nullable Class<T> supertype);
     
 }
