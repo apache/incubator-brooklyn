@@ -342,38 +342,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             EntitySpec<?> spec;
             
             CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
-            if (item != null) {
-                String yaml = item.getPlanYaml();
-                Reader input = new StringReader(yaml);
-                
-                AssemblyTemplate at;
-                BrooklynClassLoadingContext itemLoader = item.newClassLoadingContext(mgmt);
-                BrooklynLoaderTracker.setLoader(itemLoader);
-                try {
-                    at = platform.pdp().registerDeploymentPlan(input);
-                } finally {
-                    BrooklynLoaderTracker.unsetLoader(itemLoader);
-                }
-
-                // TODO Should we check entitlements, or sufficient to do once for this being called in the first place?
-                // TODO Is it acceptable to only allow a single  top-level entity in a catalog? If not, we need to think
-                //      about what it would mean to subsequently call buildChildrenEntitySpecs on the list of top-level entities!
-                try {
-                    AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
-                    if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                        List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecs(itemLoader, at, platform);
-                        if (specs.size() > 1) {
-                            throw new UnsupportedOperationException("Only supporting single service in catalog item currently");
-                        }
-                        spec = specs.get(0);
-                    } else {
-                        throw new IllegalStateException("Cannot create application with instantiator: " + ati);
-                    }
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
-            } else {
+            if (item == null || item.getJavaType() != null) {
                 spec = entityResolver.resolveSpec();
+            } else {
+                spec = resolveCatalogYamlReferenceSpec(platform, mgmt, item);
             }
 
             BrooklynClassLoadingContext newLoader = entityResolver.loader;
@@ -382,6 +354,40 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             result.add(spec);
         }
         return result;
+    }
+
+    private EntitySpec<?> resolveCatalogYamlReferenceSpec(CampPlatform platform,
+            ManagementContext mgmt,
+            CatalogItem<Entity, EntitySpec<?>> item) {
+        String yaml = item.getPlanYaml();
+        Reader input = new StringReader(yaml);
+        
+        AssemblyTemplate at;
+        BrooklynClassLoadingContext itemLoader = item.newClassLoadingContext(mgmt);
+        BrooklynLoaderTracker.setLoader(itemLoader);
+        try {
+            at = platform.pdp().registerDeploymentPlan(input);
+        } finally {
+            BrooklynLoaderTracker.unsetLoader(itemLoader);
+        }
+
+        // TODO Should we check entitlements, or sufficient to do once for this being called in the first place?
+        // TODO Is it acceptable to only allow a single  top-level entity in a catalog? If not, we need to think
+        //      about what it would mean to subsequently call buildChildrenEntitySpecs on the list of top-level entities!
+        try {
+            AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
+            if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
+                List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecs(itemLoader, at, platform);
+                if (specs.size() > 1) {
+                    throw new UnsupportedOperationException("Only supporting single service in catalog item currently");
+                }
+                return specs.get(0);
+            } else {
+                throw new IllegalStateException("Cannot create application with instantiator: " + ati);
+            }
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
     protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig) {

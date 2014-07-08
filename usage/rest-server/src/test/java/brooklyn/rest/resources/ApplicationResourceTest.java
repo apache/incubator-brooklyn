@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
@@ -188,6 +189,23 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   @Test(dependsOnMethods = {"testDeployApplication", "testLocatedLocation"})
   public void testDeployApplicationYaml() throws Exception {
     String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+BasicApplication.class.getCanonicalName()+" } ] }";
+      
+    ClientResponse response = client().resource("/v1/applications")
+        .entity(yaml, "application/x-yaml")
+        .post(ClientResponse.class);
+    assertTrue(response.getStatus()/100 == 2, "response is "+response);
+    
+    // Expect app to be running
+    URI appUri = response.getLocation();
+    waitForApplicationToBeRunning(response.getLocation());
+    assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-yaml");
+  }
+
+  @Test
+  public void testReferenceCatalogEntity() throws Exception {
+      getManagementContext().getCatalog().addItem(BasicEntity.class);
+
+      String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: " + BasicEntity.class.getName() + " } ] }";
       
     ClientResponse response = client().resource("/v1/applications")
         .entity(yaml, "application/x-yaml")
