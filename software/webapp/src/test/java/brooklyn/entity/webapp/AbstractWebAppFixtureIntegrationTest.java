@@ -306,7 +306,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                     String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist";
                     final int desiredMsgsPerSec = 10;
                     
-                    Stopwatch stopwatch = new Stopwatch().start();
+                    Stopwatch stopwatch = Stopwatch.createStarted();
                     final AtomicInteger reqsSent = new AtomicInteger();
                     final Integer preRequestCount = entity.getAttribute(WebAppService.REQUEST_COUNT);
                     
