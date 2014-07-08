@@ -134,6 +134,12 @@ public class BrooklynComponentTemplateResolver {
         return Factory.getDeclaredType(null, template.orNull(), attrs);
     }
     
+    // TODO Generalise to have other prefixes (e.g. explicit "catalog:" etc)?
+    protected boolean isJavaTypePrefix() {
+        String type = getDeclaredType();
+        return type != null && (type.toLowerCase().startsWith("java:") || type.toLowerCase().startsWith("brooklyn:java:"));
+    }
+
     protected String getCatalogIdOrJavaType() {
         String type = getDeclaredType();
         type = Strings.removeFromStart(type, "brooklyn:", "java:");
@@ -173,8 +179,14 @@ public class BrooklynComponentTemplateResolver {
 
     /** returns the entity class, if needed in contexts which scan its statics for example */
     public Class<? extends Entity> loadEntityClass() {
+        return tryLoadEntityClass().get();
+    }
+    
+    /** tries to load the Java entity class */
+    public Maybe<Class<? extends Entity>> tryLoadEntityClass() {
         CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
         String typeName = getCatalogIdOrJavaType();
+        
         if (item!=null) {
             // add additional bundles
             loader = new BrooklynClassLoadingContextSequential(mgmt, item.newClassLoadingContext(mgmt), loader);
@@ -196,7 +208,7 @@ public class BrooklynComponentTemplateResolver {
             }
         }
         
-        return loader.loadClass(typeName, Entity.class);
+        return loader.tryLoadClass(typeName, Entity.class);
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */

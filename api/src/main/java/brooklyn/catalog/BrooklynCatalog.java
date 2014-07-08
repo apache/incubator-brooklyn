@@ -1,5 +1,7 @@
 package brooklyn.catalog;
 
+import java.util.NoSuchElementException;
+
 import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
@@ -7,6 +9,9 @@ public interface BrooklynCatalog {
     /** @return The item with the given ID, or null if not found */
     CatalogItem<?,?> getCatalogItem(String id);
 
+    /** @return Deletes the item with the given ID
+     * @throws NoSuchElementException if not found */
+    void deleteCatalogItem(String id);
 
     /** variant of {@link #getCatalogItem(String)} which checks (and casts) type for convenience
      * (returns null if type does not match) */

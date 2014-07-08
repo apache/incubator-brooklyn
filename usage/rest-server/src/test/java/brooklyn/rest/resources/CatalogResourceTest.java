@@ -108,9 +108,6 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertTrue(entities.size() > 0);
   }
 
-  // TODO test registering entity from the bundle using new registered name
-  // TODO test registering entity from the bundle using type of item and the registered name (check endless loop)
-  
   @Test
   public void testFilterListOfEntitiesByName() {
     List<CatalogItemSummary> entities = client().resource("/v1/catalog/entities")
@@ -170,4 +167,31 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     Assert.assertNotNull(asp, "didn't find AutoScalerPolicy");
   }
   
+  @Test
+  public void testDeleteCustomEntityFromCatalog() {
+    String registeredTypeName = "my.catalog.app.id.to.subsequently.delete";
+    String yaml =
+        "name: "+registeredTypeName+"\n"+
+        // FIXME name above should be unnecessary when brooklyn.catalog below is working
+        "brooklyn.catalog:\n"+
+        "  id: " + registeredTypeName + "\n"+
+        "  name: My Catalog App To Be Deleted\n"+
+        "  description: My description\n"+
+        "  version: 0.1.2\n"+
+        "\n"+
+        "services:\n"+
+        "- type: brooklyn.test.entity.TestEntity\n";
+
+    client().resource("/v1/catalog")
+            .post(ClientResponse.class, yaml);
+    
+    ClientResponse deleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName)
+            .delete(ClientResponse.class);
+
+    assertEquals(deleteResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+    ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName)
+            .get(ClientResponse.class);
+    assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+  }
 }
