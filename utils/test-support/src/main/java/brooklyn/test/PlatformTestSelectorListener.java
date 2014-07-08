@@ -19,16 +19,17 @@ public class PlatformTestSelectorListener implements IInvokedMethodListener {
         boolean isWinTest = false;
         
         String[] groups = method.getTestMethod().getGroups();
-        for(String group : groups) {
+        for (String group : groups) {
             isUnixTest = isUnixTest || group.equalsIgnoreCase(GROUP_UNIX);
             isWinTest = isWinTest || group.equalsIgnoreCase(GROUP_WINDOWS);
         }
         
         boolean isWinPlatform = isWindows();
-        if(isUnixTest || isWinTest) {
-            if(isWinPlatform && isUnixTest && !isWinTest ||
-                !isWinPlatform && isWinTest && !isUnixTest) {
-                throw new SkipException("Skipping platform specific test."); 
+        if (isUnixTest || isWinTest) {
+            if (isWinPlatform && isUnixTest && !isWinTest) {
+                throw new SkipException("Skipping unix-specific test."); 
+            } else if (!isWinPlatform && isWinTest && !isUnixTest) {
+                throw new SkipException("Skipping windows-specific test."); 
             }
         }
     }
