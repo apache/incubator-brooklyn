@@ -38,8 +38,6 @@ public final class BrooklynClassLoadingContextSequential extends AbstractBrookly
         }
     }
 
-    /** @since 0.7.0 only for supporting legacy java-classloading based catalog */
-    @Deprecated
     public void addSecondary(BrooklynClassLoadingContext target) {
         if (!(target instanceof JavaBrooklynClassLoadingContext)) {
             // support for legacy catalog classloader only
