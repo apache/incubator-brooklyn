@@ -111,7 +111,6 @@ public class InternalEntityFactory {
     public <T extends Entity> T createEntityProxy(EntitySpec<T> spec, T entity) {
         // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
-        ClassLoader classloader = (spec.getImplementation() != null ? spec.getImplementation() : spec.getType()).getClassLoader();
         MutableSet.Builder<Class<?>> builder = MutableSet.<Class<?>>builder()
                 .add(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class);
         if (spec.getType().isInterface()) {
