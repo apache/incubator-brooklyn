@@ -205,7 +205,7 @@ public class EntityExecutionManagerTest {
         app = ApplicationBuilder.newManagedApp(TestApplication.class, new LocalManagementContext(brooklynProperties));
         final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         Task<?> oldTask = entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of());
         oldTask.get();
         

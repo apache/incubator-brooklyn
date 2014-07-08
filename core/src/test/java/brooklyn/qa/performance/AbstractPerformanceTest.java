@@ -112,8 +112,7 @@ public class AbstractPerformanceTest {
     }
     
     protected long measure(Runnable r) {
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         r.run();
         return stopwatch.elapsed(TimeUnit.MILLISECONDS);
     }

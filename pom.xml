@@ -91,9 +91,9 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
 
-        <jclouds.groupId>io.cloudsoft.jclouds</jclouds.groupId>
-        <jclouds.version>1.7.4-ea-brooklyn.1</jclouds.version>
-        <guava.version>15.0</guava.version>
+        <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
+        <jclouds.version>1.8.0-SNAPSHOT</jclouds.version>
+        <guava.version>17.0</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>
         <testng.version>6.8</testng.version>

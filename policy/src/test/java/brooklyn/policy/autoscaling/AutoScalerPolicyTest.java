@@ -323,8 +323,7 @@ public class AutoScalerPolicyTest {
         
         // Will grow to only the max sustained in this time window 
         // (i.e. to 2 within the first $resizeUpStabilizationDelay milliseconds)
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 61L, 1*10L, 1*20L)); // would grow to 4
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 21L, 1*10L, 1*20L)); // would grow to 2
@@ -444,8 +443,7 @@ public class AutoScalerPolicyTest {
         
         // Will shrink to only the min sustained in this time window
         // (i.e. to 2 within the first $resizeUpStabilizationDelay milliseconds)
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(3, 1L, 3*10L, 3*20L)); // would shrink to 1
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(3, 20L, 3*10L, 3*20L)); // would shrink to 2
