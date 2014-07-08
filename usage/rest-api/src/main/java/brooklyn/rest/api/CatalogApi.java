@@ -71,6 +71,16 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId) throws Exception ;
 
     @GET
+    @Path("/applications/{applicationId}")
+    @ApiOperation(value = "Fetch an application's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public CatalogEntitySummary getApplication(
+        @ApiParam(name = "applicationId", value = "The ID of the application to retrieve", required = true)
+        @PathParam("applicationId") String entityId) throws Exception ;
+
+    @GET
     @Path("/policies")
     @ApiOperation(value = "List available policies optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
     public List<CatalogItemSummary> listPolicies(

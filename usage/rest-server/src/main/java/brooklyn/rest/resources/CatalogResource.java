@@ -35,8 +35,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -101,6 +99,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
       }
 
       return CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity,EntitySpec<?>>) result);
+    }
+
+    @Override
+    public CatalogEntitySummary getApplication(String applicationId) {
+        return getEntity(applicationId);
     }
 
     @Override
