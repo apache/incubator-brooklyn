@@ -37,6 +37,7 @@ import brooklyn.location.basic.BasicMachineDetails;
 import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
@@ -288,10 +289,15 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         putIfNotNull(builder, "ram", "" + (hardware != null ? hardware.getRam() : null));
         putIfNotNull(builder, "cpus", "" + (processors != null ? processors.size() : null));
         
-        OsDetails osDetails = getOsDetails();
-        putIfNotNull(builder, "osName", osDetails.getName());
-        putIfNotNull(builder, "osArch", osDetails.getArch());
-        putIfNotNull(builder, "64bit", osDetails.is64bit() ? "true" : "false");
+        try {
+            OsDetails osDetails = getOsDetails();
+            putIfNotNull(builder, "osName", osDetails.getName());
+            putIfNotNull(builder, "osArch", osDetails.getArch());
+            putIfNotNull(builder, "64bit", osDetails.is64bit() ? "true" : "false");
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            LOG.warn("Unable to get OS Details for "+node+"; continuing", e);
+        }
         
         return builder.build();
     }

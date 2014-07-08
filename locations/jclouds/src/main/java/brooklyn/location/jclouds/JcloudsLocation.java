@@ -1678,6 +1678,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String vmIp = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
         if (vmIp==null) LOG.warn("Unable to extract IP for "+node+" ("+setup.getDescription()+"): subsequent connection attempt will likely fail");
         
+        int vmPort = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPortOrDefault(22) : 22;
+        
         long delayMs = -1;
         try {
             delayMs = Time.parseTimeString(""+waitForSshable);
@@ -1688,9 +1690,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             delayMs = Time.parseTimeString(WAIT_FOR_SSHABLE.getDefaultValue());
         
         String user = expectedCredentials.getUser();
-        LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}{}", new Object[] {
+        LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}:{}{}", new Object[] {
                 setup.getDescription(), Time.makeTimeStringRounded(delayMs),
-                user, vmIp, Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"});
+                user, vmIp, vmPort,
+                Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"});
         
         Callable<Boolean> checker;
         if (hostAndPortOverride.isPresent()) {
