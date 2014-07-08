@@ -40,6 +40,7 @@ import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
 
@@ -195,20 +196,36 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {
+        return buildTemplateServicesAsSpecsImpl(loader, template, platform, Sets.<String>newLinkedHashSet());
+    }
+
+    private List<EntitySpec<?>> buildTemplateServicesAsSpecsImpl(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredCatalogTypes) {
         List<EntitySpec<?>> result = Lists.newArrayList();
         
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
             ManagementContext mgmt = loader.getManagementContext();
-            
+
+            String catalogIdOrJavaType = entityResolver.getCatalogIdOrJavaType();
+
             EntitySpec<?> spec;
             
             CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
+            
+            // FIXME
+            log.warn("buildTemplateServicesAsSpecsImpl: catalogIdOrJavaType="+catalogIdOrJavaType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
+
+
             if (item == null || item.getJavaType() != null) {
                 spec = entityResolver.resolveSpec();
             } else {
-                spec = resolveCatalogYamlReferenceSpec(platform, mgmt, item);
+                boolean firstOccurrence = encounteredCatalogTypes.add(catalogIdOrJavaType);
+                if (firstOccurrence) {
+                    spec = resolveCatalogYamlReferenceSpec(platform, mgmt, item, encounteredCatalogTypes);
+                } else {
+                    throw new IllegalStateException("Recursive reference to " + catalogIdOrJavaType);
+                }
             }
 
             BrooklynClassLoadingContext newLoader = entityResolver.loader;
@@ -221,7 +238,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
     private EntitySpec<?> resolveCatalogYamlReferenceSpec(CampPlatform platform,
             ManagementContext mgmt,
-            CatalogItem<Entity, EntitySpec<?>> item) {
+            CatalogItem<Entity, EntitySpec<?>> item,
+            Set<String> encounteredCatalogTypes) {
+        
         String yaml = item.getPlanYaml();
         Reader input = new StringReader(yaml);
         
@@ -239,9 +258,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         try {
             AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
             if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecs(itemLoader, at, platform);
+                List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecsImpl(itemLoader, at, platform, encounteredCatalogTypes);
                 if (specs.size() > 1) {
-                    throw new UnsupportedOperationException("Only supporting single service in catalog item currently");
+                    throw new UnsupportedOperationException("Only supporting single service in catalog item currently: got "+specs);
                 }
                 return specs.get(0);
             } else {
