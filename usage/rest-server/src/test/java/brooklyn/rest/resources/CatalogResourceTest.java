@@ -39,6 +39,7 @@ import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
@@ -65,9 +66,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   }
 
   @Test
-  public void testRegisterCustomEntity() {
+  public void testRegisterCustomEntityWithBundleWhereEntityIsFromCore() {
     String registeredTypeName = "my.catalog.app.id";
-    String bundleUrl = "http://myurl/my.jar";
+    String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
     String yaml =
         "name: "+registeredTypeName+"\n"+
         // FIXME name above should be unnecessary when brooklyn.catalog below is working
