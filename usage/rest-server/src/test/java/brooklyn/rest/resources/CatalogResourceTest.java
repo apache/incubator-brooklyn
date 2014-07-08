@@ -126,9 +126,6 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertTrue(entities.size() > 0);
   }
 
-  // TODO test registering entity from the bundle using new registered name
-  // TODO test registering entity from the bundle using type of item and the registered name (check endless loop)
-  
   @Test
   public void testFilterListOfEntitiesByName() {
     List<CatalogItemSummary> entities = client().resource("/v1/catalog/entities")
