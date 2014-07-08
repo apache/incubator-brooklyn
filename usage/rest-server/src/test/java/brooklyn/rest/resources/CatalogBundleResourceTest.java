@@ -21,6 +21,8 @@ import com.sun.jersey.api.client.ClientResponse;
 
 public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
 
+    private static final String SIMPLE_ENTITY_TYPE = "brooklyn.osgi.tests.SimpleEntity";
+
     @Test
     public void testListApplicationYaml() throws Exception {
         String registeredTypeName = "my.catalog.app.id.load";
@@ -35,7 +37,17 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testLaunchApplicationYaml() throws Exception {
         String registeredTypeName = "my.catalog.app.id.launch";
-        addCatalogOSGiEntity(registeredTypeName);
+        registerAndLaunch(registeredTypeName, SIMPLE_ENTITY_TYPE);
+    }
+
+    @Test
+    public void testLaunchApplicationLoopYaml() throws Exception {
+        String registeredTypeName = "my.catalog.app.id.launch";
+        registerAndLaunch(registeredTypeName, registeredTypeName);
+    }
+
+    private void registerAndLaunch(String registeredTypeName, String catalogServiceType) {
+        addCatalogOSGiEntity(registeredTypeName, catalogServiceType);
 
         String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+registeredTypeName+" } ] }";
         
@@ -53,7 +65,7 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
 
         Application app = (Application) getManagementContext().getEntityManager().getEntity(appId);
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        assertEquals(simpleEntity.getEntityType().getName(), "brooklyn.osgi.tests.SimpleEntity");
+        assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
     }
 
     @Test
@@ -79,10 +91,15 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
 
         Application app = (Application) getManagementContext().getEntityManager().getEntity(appId);
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        assertEquals(simpleEntity.getEntityType().getName(), "brooklyn.osgi.tests.SimpleEntity");
+        assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
     }
 
+    
     private void addCatalogOSGiEntity(String registeredTypeName) {
+        addCatalogOSGiEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
+    }
+    
+    private void addCatalogOSGiEntity(String registeredTypeName, String catalogServiceType) {
         String catalogYaml =
             "name: "+registeredTypeName+"\n"+
             // FIXME name above should be unnecessary when brooklyn.catalog below is working
@@ -96,9 +113,9 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "\n"+
             "\n"+
             "services:\n"+
-            "- type: brooklyn.osgi.tests.SimpleEntity\n";
+            "- type: " + catalogServiceType;
 
-        addCatalogEntity(registeredTypeName, catalogYaml);
+        addCatalogEntity(catalogYaml);
     }
 
     private void addCatalogEntityReferencingCatalogEntry(String ownRegisteredTypeName, String otherRegisteredTypeName) {
@@ -115,10 +132,10 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
             "services:\n"+
             "- type: "+otherRegisteredTypeName+"\n";
 
-        addCatalogEntity(ownRegisteredTypeName, catalogYaml);
+        addCatalogEntity(catalogYaml);
     }
 
-    private void addCatalogEntity(String registeredTypeName, String catalogYaml) {
+    private void addCatalogEntity(String catalogYaml) {
         ClientResponse catalogResponse = client().resource("/v1/catalog")
             .post(ClientResponse.class, catalogYaml);
 
