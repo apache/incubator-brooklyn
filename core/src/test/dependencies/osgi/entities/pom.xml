@@ -4,6 +4,8 @@
     <packaging>jar</packaging>
 
     <artifactId>brooklyn-test-osgi-entities</artifactId>
+    <!-- verison here is not tied to brooklyn -->
+    <version>0.1.0-SNAPSHOT</version>
 
     <name>OSGi bundled test entities</name>
 
