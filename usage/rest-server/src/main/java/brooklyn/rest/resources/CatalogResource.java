@@ -99,6 +99,15 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
+    public void deleteEntity(String entityId) throws Exception {
+      CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);
+      if (result==null) {
+        throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
+      }
+      brooklyn().getCatalog().deleteCatalogItem(entityId);
+    }
+
+    @Override
     public List<CatalogItemSummary> listEntities(
         final String regex,
         final String fragment

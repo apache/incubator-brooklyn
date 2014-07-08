@@ -117,6 +117,22 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDo.getDto();
     }
     
+    @Override
+    public void deleteCatalogItem(String id) {
+        log.debug("Deleting manual catalog item from "+mgmt+": "+id);
+        Preconditions.checkNotNull(id, "id");
+        CatalogItem<?, ?> item = getCatalogItem(id);
+        CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(item);
+        if (itemDto == null) {
+            throw new NoSuchElementException("No catalog item found with id "+id);
+        }
+        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
+        manualAdditionsCatalog.deleteEntry(itemDto);
+        
+        // Ensure the cache is de-populated
+        getCatalog().removeEntry(itemDto);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
