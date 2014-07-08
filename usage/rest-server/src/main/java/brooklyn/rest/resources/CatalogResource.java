@@ -173,7 +173,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
             log.debug("Loading and returning "+url+" as icon for "+result);
             
             MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
-            Object content = ResourceUtils.create(brooklyn().getCatalog().getRootClassLoader()).getResourceFromUrl(url);
+            Object content = ResourceUtils.create(result.newClassLoadingContext(mgmt())).getResourceFromUrl(url);
             return Response.ok(content, mime).build();
         }
         

@@ -1,5 +1,6 @@
 package brooklyn.management.classloading;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Set;
 
@@ -59,6 +60,20 @@ public final class BrooklynClassLoadingContextSequential extends AbstractBrookly
         }
 
         return Maybe.absent("Unable to load "+className+" from "+primaries);
+    }
+
+
+    @Override
+    public URL getResource(String resourceInThatDir) {
+        for (BrooklynClassLoadingContext target: primaries) {
+            URL result = target.getResource(resourceInThatDir);
+            if (result!=null) return result;
+        }
+        for (BrooklynClassLoadingContext target: secondaries) {
+            URL result = target.getResource(resourceInThatDir);
+            if (result!=null) return result;
+        }
+        return null;
     }
 
     @Override

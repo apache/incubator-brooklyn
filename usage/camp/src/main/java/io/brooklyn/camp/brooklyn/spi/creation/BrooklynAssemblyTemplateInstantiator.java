@@ -293,7 +293,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     @SuppressWarnings("unchecked")
     protected EntitySpec<? extends Application> createApplicationFromNonCatalogCampTemplate(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
-        final ManagementContext mgmt = getBrooklynManagementContext(platform);
 
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
             loader, template);
