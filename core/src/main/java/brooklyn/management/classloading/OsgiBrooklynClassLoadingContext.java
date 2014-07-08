@@ -1,5 +1,6 @@
 package brooklyn.management.classloading;
 
+import java.net.URL;
 import java.util.List;
 
 import brooklyn.management.ManagementContext;
@@ -59,6 +60,17 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         if (!(obj instanceof OsgiBrooklynClassLoadingContext)) return false;
         if (!Objects.equal(bundles, ((OsgiBrooklynClassLoadingContext)obj).bundles)) return false;
         return true;
+    }
+
+    @Override
+    public URL getResource(String name) {
+        if (mgmt!=null) {
+            Maybe<OsgiManager> osgi = ((ManagementContextInternal)mgmt).getOsgiManager();
+            if (osgi.isPresent() && bundles!=null && !bundles.isEmpty()) {
+                return osgi.get().getResource(name, bundles);
+            }
+        }
+        return null;
     }
     
 }

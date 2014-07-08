@@ -20,7 +20,11 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Threads;
@@ -38,9 +42,9 @@ import com.google.common.collect.Lists;
 public class ResourceUtils {
     
     private static final Logger log = LoggerFactory.getLogger(ResourceUtils.class);
-    private static final List<Function<Object,ClassLoader>> classLoaderProviders = Lists.newCopyOnWriteArrayList();
+    private static final List<Function<Object,BrooklynClassLoadingContext>> classLoaderProviders = Lists.newCopyOnWriteArrayList();
 
-    private ClassLoader loader = null;
+    private BrooklynClassLoadingContext loader = null;
     private String context = null;
     private Object contextObject = null;
     
@@ -55,6 +59,20 @@ public class ResourceUtils {
      * @see ResourceUtils#create(Object)
      */
     public static final ResourceUtils create(ClassLoader loader, Object contextObject, String contextMessage) {
+        return new ResourceUtils(loader, contextObject, contextMessage);
+    }
+
+    /**
+     * Creates a {@link ResourceUtils} object with a specific class loader and context.
+     * <p>
+     * Use the provided {@link BrooklynClassLoadingContext} object for class loading with the
+     * {@code contextObject} for context and the {@code contextMessage} string for
+     * error messages.
+     *
+     * @see ResourceUtils#create(Object, String)
+     * @see ResourceUtils#create(Object)
+     */
+    public static final ResourceUtils create(BrooklynClassLoadingContext loader, Object contextObject, String contextMessage) {
         return new ResourceUtils(loader, contextObject, contextMessage);
     }
 
@@ -95,13 +113,16 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
+    }
+    
+    public ResourceUtils(BrooklynClassLoadingContext loader, Object contextObject, String contextMessage) {
         this.loader = loader;
         this.contextObject = contextObject;
         this.context = contextMessage;
     }
 
     public ResourceUtils(Object contextObject, String contextMessage) {
-        this(contextObject==null ? null : getClassLoaderForObject(contextObject), contextObject, contextMessage);
+        this(contextObject==null ? null : getClassLoadingContextForObject(contextObject), contextObject, contextMessage);
     }
 
     public ResourceUtils(Object contextObject) {
@@ -109,23 +130,34 @@ public class ResourceUtils {
     }
     
     /** used to register custom mechanisms for getting classloaders given an object */
-    public static void addClassLoaderProvider(Function<Object,ClassLoader> provider) {
+    public static void addClassLoaderProvider(Function<Object,BrooklynClassLoadingContext> provider) {
         classLoaderProviders.add(provider);
     }
     
-    public static ClassLoader getClassLoaderForObject(Object contextObject) {
-        for (Function<Object,ClassLoader> provider: classLoaderProviders) {
-            ClassLoader result = provider.apply(contextObject);
+    public static BrooklynClassLoadingContext getClassLoadingContextForObject(Object contextObject) {
+        if (contextObject instanceof BrooklynClassLoadingContext)
+            return (BrooklynClassLoadingContext) contextObject;
+        
+        for (Function<Object,BrooklynClassLoadingContext> provider: classLoaderProviders) {
+            BrooklynClassLoadingContext result = provider.apply(contextObject);
             if (result!=null) return result;
         }
-        return contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
+        
+        ClassLoader cl = contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
             contextObject instanceof ClassLoader ? ((ClassLoader)contextObject) : 
                 contextObject.getClass().getClassLoader();
+        return getClassLoadingContextForClassLoader(cl);
     }
     
-    public ClassLoader getLoader() {
-        //TODO allow a sequence of loaders?
-        return (loader!=null ? loader : getClass().getClassLoader());
+    protected static BrooklynClassLoadingContext getClassLoadingContextForClassLoader(ClassLoader loader) {
+        ManagementContext mgmt = null;
+        BrooklynClassLoadingContext bl = BrooklynLoaderTracker.getLoader();
+        if (bl!=null) mgmt = bl.getManagementContext();
+        return new JavaBrooklynClassLoadingContext(mgmt, loader);
+    }
+    
+    public BrooklynClassLoadingContext getLoader() {
+        return (loader!=null ? loader : getClassLoadingContextForClassLoader(getClass().getClassLoader()));
     }
     
     /**

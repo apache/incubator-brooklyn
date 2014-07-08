@@ -1,6 +1,7 @@
 package brooklyn.management.ha;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -104,6 +105,26 @@ public class OsgiManager {
             }
         }
         return Maybe.absent("Unable to resolve class "+type+": "+bundleProblems);
+    }
+
+    public URL getResource(String name, Iterable<String> bundleUrlsOrNameVersionString) {
+        for (String bundleUrlOrNameVersionString: bundleUrlsOrNameVersionString) {
+            try {
+                String bundleNameVersion = bundleUrlToNameVersionString.get(bundleUrlOrNameVersionString);
+                if (bundleNameVersion==null) {
+                    bundleNameVersion = bundleUrlOrNameVersionString;
+                }
+                
+                Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleNameVersion);
+                if (bundle.isPresent()) {
+                    URL result = bundle.get().getResource(name);
+                    if (result!=null) return result;
+                }
+            } catch (Throwable e) {
+                Exceptions.propagateIfFatal(e);
+            }
+        }
+        return null;
     }
 
 }

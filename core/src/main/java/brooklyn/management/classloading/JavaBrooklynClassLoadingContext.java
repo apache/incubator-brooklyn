@@ -1,5 +1,7 @@
 package brooklyn.management.classloading;
 
+import java.net.URL;
+
 import com.google.common.base.Objects;
 
 import brooklyn.management.ManagementContext;
@@ -16,7 +18,10 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
     }
     
     public static JavaBrooklynClassLoadingContext newDefault(ManagementContext mgmt) {
-        return new JavaBrooklynClassLoadingContext(mgmt, JavaBrooklynClassLoadingContext.class.getClassLoader());
+        ClassLoader cl = null;
+        if (mgmt!=null) cl = mgmt.getCatalog().getRootClassLoader();
+        if (cl==null) cl = JavaBrooklynClassLoadingContext.class.getClassLoader();
+        return new JavaBrooklynClassLoadingContext(mgmt, cl);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -45,6 +50,11 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         if (!(obj instanceof JavaBrooklynClassLoadingContext)) return false;
         if (!Objects.equal(loader, ((JavaBrooklynClassLoadingContext)obj).loader)) return false;
         return true;
+    }
+
+    @Override
+    public URL getResource(String name) {
+        return loader.getResource(name);
     }
     
 }

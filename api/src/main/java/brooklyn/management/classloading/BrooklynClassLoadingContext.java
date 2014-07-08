@@ -1,5 +1,7 @@
 package brooklyn.management.classloading;
 
+import java.net.URL;
+
 import javax.annotation.Nullable;
 
 import brooklyn.management.ManagementContext;
@@ -17,5 +19,8 @@ public interface BrooklynClassLoadingContext {
     
     public Maybe<Class<?>> tryLoadClass(String className);
     public <T> Maybe<Class<? extends T>> tryLoadClass(String className, @Nullable Class<T> supertype);
+    
+    /** as {@link ClassLoader#getResource(String)} */
+    public URL getResource(String name);
     
 }
