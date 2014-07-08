@@ -62,6 +62,13 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
     }
 
     @Test
+    public void testLaunchApplicationWithTypeUsingJavaColonPrefixInYaml() throws Exception {
+        String registeredTypeName = SIMPLE_ENTITY_TYPE;
+        String serviceName = "java:"+SIMPLE_ENTITY_TYPE;
+        registerAndLaunchAndAssertSimpleEntity(registeredTypeName, serviceName);
+    }
+
+    @Test
     public void testLaunchApplicationLoopWithJavaTypeNameInYamlFails() throws Exception {
         String registeredTypeName = SIMPLE_ENTITY_TYPE;
         registerAndLaunchFailsWithRecursionError(registeredTypeName, registeredTypeName);
@@ -75,16 +82,19 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
 
     private void registerAndLaunchAndAssertSimpleEntity(String registeredTypeName, String serviceType) {
         addCatalogOSGiEntity(registeredTypeName, serviceType);
-
-        String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+registeredTypeName+" } ] }";
-        ApplicationSummary appSummary = createAndWaitForApp(yaml);
-
-        String appId = appSummary.getId();
-        assertEquals(appSummary.getSpec().getName(), "simple-app-yaml");
-
-        Application app = (Application) getManagementContext().getEntityManager().getEntity(appId);
-        Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
+        try {
+            String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+registeredTypeName+" } ] }";
+            ApplicationSummary appSummary = createAndWaitForApp(yaml);
+    
+            String appId = appSummary.getId();
+            assertEquals(appSummary.getSpec().getName(), "simple-app-yaml");
+    
+            Application app = (Application) getManagementContext().getEntityManager().getEntity(appId);
+            Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
+            assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
+        } finally {
+            deleteCatalogEntity(registeredTypeName);
+        }
     }
 
     private void registerAndLaunchFailsWithRecursionError(String registeredTypeName, String serviceType) {
