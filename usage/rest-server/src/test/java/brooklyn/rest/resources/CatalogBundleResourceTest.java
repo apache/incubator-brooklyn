@@ -93,7 +93,7 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
             "  icon_url: classpath://path/to/myicon.jpg\n"+
             "  version: 0.1.2\n"+
             "  libraries:\n"+
-            "  - url: classpath:/" + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "\n"+
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "\n"+
             "\n"+
             "services:\n"+
             "- type: brooklyn.osgi.tests.SimpleEntity\n";

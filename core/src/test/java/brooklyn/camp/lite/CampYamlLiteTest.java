@@ -22,6 +22,7 @@ import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -92,7 +93,7 @@ public class CampYamlLiteTest {
         CatalogItem<Object, Object> retrievedItem = Iterables.getOnlyElement(retrievedItems);
         Assert.assertEquals(retrievedItem, realItem);
 
-        Set<String> expectedBundles = Sets.newHashSet("http://www.example.com/bundle.jar");
+        Set<String> expectedBundles = Sets.newHashSet(OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL);
         Assert.assertEquals(retrievedItem.getLibraries().getBundles(), expectedBundles);
         // Assert.assertEquals(retrievedItem.getVersion(), "0.9");
 

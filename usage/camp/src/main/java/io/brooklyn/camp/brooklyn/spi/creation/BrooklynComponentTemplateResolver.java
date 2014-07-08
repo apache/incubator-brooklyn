@@ -202,7 +202,9 @@ public class BrooklynComponentTemplateResolver {
     /** resolves the spec, updating the loader if a catalog item is loaded */
     @SuppressWarnings("unchecked")
     public <T extends Entity> EntitySpec<T> resolveSpec() {
-        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
+        // ensure loader is updated
+        getCatalogItem();
+        
         return (EntitySpec<T>)resolveSpec(loadEntityClass(), null);
     }
 

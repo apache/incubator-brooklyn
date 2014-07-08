@@ -17,4 +17,4 @@ brooklyn.catalog:
   libraries:
   - name: lib1
     version: v1
-    url: http://www.example.com/bundle.jar
+    url: classpath:/brooklyn/osgi/brooklyn-test-osgi-entities.jar
