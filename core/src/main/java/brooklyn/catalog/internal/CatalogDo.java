@@ -190,6 +190,21 @@ public class CatalogDo {
             cache.put(entry.getId(), new CatalogItemDo(this, entry));
     }
 
+    public synchronized void deleteEntry(CatalogItemDtoAbstract<?, ?> entry) {
+        if (dto.entries != null)
+            dto.entries.remove(entry);
+        if (cache!=null)
+            cache.remove(entry.getId());
+    }
+
+    /** removes the given entry from the catalog;
+     */
+    public synchronized void removeEntry(CatalogItemDtoAbstract<?,?> entry) {
+        dto.entries.remove(entry);
+        if (cache!=null)
+            cache.remove(entry.getId());
+    }
+
     /** returns loaded catalog, if this has been loaded */
     CatalogDo addCatalog(CatalogDto child) {
         if (dto.catalogs==null) 
@@ -283,5 +298,4 @@ public class CatalogDo {
     public BrooklynClassLoadingContext newClassLoadingContext() {
         return new JavaBrooklynClassLoadingContext(mgmt, getRootClassLoader());
     }
-
 }
