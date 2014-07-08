@@ -147,8 +147,10 @@ public class InternalEntityFactory {
         // Building our own aggregating class loader gets around this.
         // But we really should not have to do this! What are the consequences?
         AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
-        aggregateClassLoader.addFirst(classloader);
-        aggregateClassLoader.addLast(Entity.class.getClassLoader());
+        aggregateClassLoader.addFirst(entity.getClass().getClassLoader());
+        for(Class<?> iface : interfaces) {
+            aggregateClassLoader.addLast(iface.getClassLoader());
+        }
 
         return (T) java.lang.reflect.Proxy.newProxyInstance(
                 aggregateClassLoader,
