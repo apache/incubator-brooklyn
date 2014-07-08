@@ -12,66 +12,71 @@ define([
 ], function(_, $, Backbone, FormatJSON, Location, Entity, AddLocationModalView,
         CatalogPageHtml, DetailsEntityHtml, DetailsGenericHtml, EntryHtml, LocationDetailsHtml) {
 
+    // Holds the currently active details type, e.g. applications, policies
+    var activeDetails;
+
     // TODO: Loading item's details should perform page navigation
     var DetailsView = Backbone.View.extend({
 
-        genericDetails: _.template(DetailsGenericHtml),
-        entityDetails: _.template(DetailsEntityHtml),
-        locationDetails: _.template(LocationDetailsHtml),
-
-        render: function() {
-            this.$el.html("<div class='catalog-details'><h3>Select an entry on the left</h3></div>");
+        events: {
+            "click .delete": "deleteItem"
         },
 
-        showDetailsFor: function(event, type) {
-            var $event = $(event.currentTarget);
-            if ($event.hasClass("active")) return;
+        initialize: function() {
+            _.bindAll(this);
+        },
 
-            $(".accordion-nav-row").removeClass("active");
-            $event.addClass('active');
-            var chosenId = $event.attr('id');
-            var url, template, Model;
-            if (type == 'applications' || type == 'entities') {
-                // app templates are just normal entities, in the API
-                url = '/v1/catalog/entities/' + chosenId;
-                template = this.entityDetails;
-                Model = Entity.Model;
-            } else if (type == 'locations') {
-                url = chosenId;
-                template = this.locationDetails;
-                Model = Location.Model;
-            } else {
-                url = '/v1/catalog/' + type + '/' + chosenId;
-                template = this.genericDetails;
-            }
+        render: function(extraMessage) {
+            this.$el.html("<div class='catalog-details'>" +
+                "<h3>Select an entry on the left</h3>" +
+                (extraMessage ? extraMessage : "") +
+                "</div>");
+        },
 
-            // TODO: Set 'Loading' template
-            //this.$el.html(this.genericDetails({title: chosenId}));
+        show: function(model, template) {
+            // Keep the previously open section open between items
+            var open = this.$(".in").attr("id");
+            var newHtml = $(template({model: model}));
+            $(newHtml).find("#"+open).addClass("in");
+            this.$el.html(newHtml);
+
+            // rewire events. previous callbacks are removed automatically.
+            this.delegateEvents()
+        },
+
+        showDetailsFor: function(model, template) {
+            this.activeModel = model;
             var that = this;
-            $.ajax({ url: url,
-                success: function (data) {
-                    var defaults = {
-                        "description": undefined,
-                        "planYaml": undefined,
-                        "sensors": [],
-                        "effectors": [],
-                        "id": undefined,
-                        "name": undefined,
-                        "spec": undefined,
-                        "config": undefined
-                    };
-                    if (Model) {
-                        defaults['model'] = new Model(data);
-                    }
-                    that.$el.html(template(_.extend(defaults, data)))
-                },
-                error: function (xhr, textStatus, error) {
-                    that.$el.html(that.genericDetails({
-                        title: chosenId,
-                        json: FormatJSON({ "status": textStatus, "error": error })
-                    }));
+            // Load the view with currently available data and refresh once the load is complete.
+            // Only refreshes the view if the model changes and the user hasn't selected another
+            // item while the load was executing.
+            this.show(model, template);
+            model.on("change", function() {
+                if (that.activeModel.cid === model.cid) {
+                    that.show(model, template);
                 }
             });
+            model.fetch()
+                .fail(function(xhr, textStatus, errorThrown) {
+                    console.log("error loading", model.id, ":", errorThrown);
+                    if (that.activeModel.cid === model.cid) {
+                        model.error = true;
+                        that.show(model, template);
+                    }
+                })
+                // Runs after the change event fires, or after the xhr completes
+                .always(function () {
+                    model.off("change");
+                });
+        },
+
+        deleteItem: function(event) {
+            // Could use wait flag to block removal of model from collection
+            // until server confirms deletion and success handler to perform
+            // removal. Useful if delete fails for e.g. lack of entitlement.
+            this.activeModel.destroy();
+            var displayName = $(event.currentTarget).data("name");
+            this.render(displayName ? "Deleted " + displayName : "");
         }
     });
 
@@ -81,6 +86,7 @@ define([
             if (!this.name) {
                 throw new Error("Catalog collection must know its name");
             }
+            _.bindAll(this);
         },
         url: function() {
             return "/v1/catalog/" + this.name;
@@ -109,20 +115,32 @@ define([
 
             // Generic templates
             this.template = _.template(this.options.template || EntryHtml);
-            // Returns template applied to function arguments. Alter if collection altered. Will be run
-            // in the context of the AccordionItemView.
-            this.templateFn = this.options.templateFn || function(model, index) {
-                return this.template({type: model.get("type"), id: model.get("id")});
+            this.detailsTemplate = _.template(this.options.detailsTemplate || DetailsGenericHtml);
+
+            // Returns template applied to function arguments. Alter if collection altered.
+            // Will be run in the context of the AccordionItemView.
+            this.templateArgs = this.options.templateArgs || function(model, index) {
+                return {type: model.get("type"), id: model.get("id")};
             };
 
-            // undefined argument is for existing models
-            this.collection = this.options.collection || new Catalog(undefined, {"name": this.name});
-            this.collection.on("sync", this.renderEntries);
+            // undefined argument is used for existing model items
+            var collectionModel = this.options.model || Backbone.Model;
+            this.collection = this.options.collection || new Catalog(undefined, {
+                name: this.name,
+                model: collectionModel
+            });
+            // Refreshes entries list when the collection is synced with the server or
+            // any of its members are destroyed.
+            this.collection
+                .on("sync", this.renderEntries)
+                .on("destroy", this.renderEntries);
             this.refresh();
         },
+
         beforeClose: function() {
             this.collection.off();
         },
+
         render: function() {
             this.$el.html(accordionBodyTemplate({
                 name: this.name,
@@ -131,19 +149,43 @@ define([
             this.renderEntries();
             return this;
         },
+
         renderEntries: function() {
-            var elements = this.collection.map(this.templateFn, this);
-            this.$el.find(".accordion-body")
+            var templater = function(model, index) {
+                var args = _.extend({cid: model.cid}, this.templateArgs(model));
+                return this.template(args);
+            };
+            var elements = this.collection.map(templater, this);
+            this.$(".accordion-body")
                 .empty()
                 .append(elements.join(''));
+            // Rehighlight active model
+            if (this.activeCid && activeDetails === this.name) {
+                $(".accordion-nav-row").removeClass("active");
+                this.setActiveItem(this.$("[data-cid='"+this.activeCid+"'"));
+            }
         },
+
         refresh: function() {
             this.collection.fetch();
         },
-        showDetails: function(event) {
-            // TODO: Incorporate model from view collection.
-            this.options.details.showDetailsFor(event, this.name);
+
+        setActiveItem: function($element) {
+            $(".accordion-nav-row").removeClass("active");
+            $element.addClass("active");
+            activeDetails = this.name;
         },
+
+        showDetails: function(event) {
+            var $event = $(event.currentTarget);
+            if (!$event.hasClass("active")) {
+                this.setActiveItem($event);
+                var cid = this.activeCid = $(event.currentTarget).data("cid");
+                var model = this.collection.get(cid);
+                this.options.details.showDetailsFor(model, this.detailsTemplate);
+            }
+        },
+
         toggle: function() {
             var body = this.$(".accordion-body");
             var hidden = this.hidden = body.css("display") == "none";
@@ -162,7 +204,7 @@ define([
         className:"container container-fluid",
         entryTemplate:_.template(EntryHtml),
 
-        events:{
+        events: {
             'click .refresh':'refresh',
             'click #add-new-thing':'createNewThing',
             'click #add-new-entity':'addNewCatalogResource',
@@ -176,19 +218,34 @@ define([
             $(".nav1_catalog").addClass("active");
             this.detailsView = new DetailsView();
             this.accordion = this.options.accordion || [
-                new AccordionItemView({name: "applications", details: this.detailsView, autoOpen: true}),
-                new AccordionItemView({name: "entities", details: this.detailsView}),
-                new AccordionItemView({name: "policies", details: this.detailsView}),
+                new AccordionItemView({
+                    name: "applications",
+                    details: this.detailsView,
+                    detailsTemplate: DetailsEntityHtml,
+                    model: Entity.Model,
+                    autoOpen: true
+                }),
+                new AccordionItemView({
+                    name: "entities",
+                    details: this.detailsView,
+                    detailsTemplate: DetailsEntityHtml,
+                    model: Entity.Model
+                }),
+                new AccordionItemView({
+                    name: "policies",
+                    detailsTemplate: DetailsGenericHtml,
+                    details: this.detailsView
+                }),
                 new AccordionItemView({
                     name: "locations",
                     details: this.detailsView,
+                    detailsTemplate: LocationDetailsHtml,
                     collection: this.options.locations,
-                    templateFn: function(location, index) {
-                        // this reference is AccordionItemView intentionally
-                        return this.template({
+                    templateArgs: function(location, index) {
+                        return {
                             type: location.getPrettyName(),
                             id: location.getLinkByName("self")
-                        });
+                        };
                     }
                 })
             ];
@@ -207,7 +264,6 @@ define([
             _.each(this.accordion, function(child) {
                 parent.append(child.render().$el);
             });
-//            this.accordion[0].toggle();
             return this
         },
 

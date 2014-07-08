@@ -2,18 +2,19 @@
 
     <h3><%= model.getPrettyName() %></h3>
 
-    <!-- TODO -->
-    <!--<div class="float-right"><button id="<%= id %>" class="btn btn-danger delete-location">Delete</button></div>-->
+    <div class="float-right">
+        <button data-name="<%= model.getPrettyName() %>" class="btn btn-danger delete">Delete</button>
+    </div>
 
-<% if (typeof config === 'undefined' || _.isEmpty(config)) { %>
+<% if (!model.get("config") || _.isEmpty(model.get("config"))) { %>
     <em>No special configuration</em>
 <% } else { %>
 
     <br/>
     <table>
-        <tr><td><b>ID:</b>&nbsp;&nbsp;</td><td><%= id %></td></tr>
-        <tr><td><b>Name:</b>&nbsp;&nbsp;</td><td><%= name !== undefined ? name : "" %></td></tr>
-        <tr><td><b>Spec:</b>&nbsp;&nbsp;</td><td><%= spec !== undefined ? spec : "" %></td></tr>
+        <tr><td><strong>ID:</strong>&nbsp;&nbsp;</td><td><%= model.get("id") || "" %></td></tr>
+        <tr><td><strong>Name:</strong>&nbsp;&nbsp;</td><td><%= model.get("name") || "" %></td></tr>
+        <tr><td><strong>Spec:</strong>&nbsp;&nbsp;</td><td><%= model.get("spec") || "" %></td></tr>
     </table>
     
     <br/>
@@ -23,7 +24,7 @@
             <th>Value</th>
         </tr></thead>
         <tbody>
-        <% _.each(config, function(value, key){ %>
+        <% _.each(model.get("config"), function(value, key) { %>
         <tr>
             <td style="border-left:none; width:50%;"><%- key%></td>
             <td><%- value%></td>
