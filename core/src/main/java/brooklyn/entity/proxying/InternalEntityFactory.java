@@ -111,6 +111,7 @@ public class InternalEntityFactory {
     public <T extends Entity> T createEntityProxy(EntitySpec<T> spec, T entity) {
         // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
+        ClassLoader classloader = (spec.getImplementation() != null ? spec.getImplementation() : spec.getType()).getClassLoader();
         MutableSet.Builder<Class<?>> builder = MutableSet.<Class<?>>builder()
                 .add(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class);
         if (spec.getType().isInterface()) {
@@ -128,6 +129,7 @@ public class InternalEntityFactory {
         // Building our own aggregating class loader gets around this.
         // But we really should not have to do this! What are the consequences?
         AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
+        aggregateClassLoader.addFirst(classloader);
         aggregateClassLoader.addFirst(entity.getClass().getClassLoader());
         for(Class<?> iface : interfaces) {
             aggregateClassLoader.addLast(iface.getClassLoader());
