@@ -66,6 +66,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   }
 
   @Test
+  /** based on CampYamlLiteTest */
   public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() {
     String registeredTypeName = "my.catalog.app.id";
     String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
@@ -114,7 +115,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
     
     byte[] iconData = client().resource("/v1/catalog/icon/"+registeredTypeName).get(byte[].class);
-    log.info("ICON: "+new String(iconData));
+    assertEquals(iconData.length, 43);
   }
 
   @Test
@@ -125,6 +126,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertTrue(entities.size() > 0);
   }
 
+  // TODO test registering entity from the bundle using new registered name
+  // TODO test registering entity from the bundle using type of item and the registered name (check endless loop)
+  
   @Test
   public void testFilterListOfEntitiesByName() {
     List<CatalogItemSummary> entities = client().resource("/v1/catalog/entities")
