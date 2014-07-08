@@ -1,3 +1,4 @@
+[#ftl]
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
@@ -17,9 +18,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
-[#ftl]
-
 <server xmlns="urn:jboss:domain:1.2">
     <extensions>
         <extension module="org.jboss.as.clustering.infinispan"/>
