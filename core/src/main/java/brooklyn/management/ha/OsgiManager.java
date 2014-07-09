@@ -117,7 +117,7 @@ public class OsgiManager {
                 } else {
                     bundleProblems.put(bundleUrlOrNameVersionString, new IllegalStateException("Unable to find bundle "+bundleUrlOrNameVersionString));
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 bundleProblems.put(bundleUrlOrNameVersionString, e);
             }
@@ -138,7 +138,7 @@ public class OsgiManager {
                     URL result = bundle.get().getResource(name);
                     if (result!=null) return result;
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
             }
         }
