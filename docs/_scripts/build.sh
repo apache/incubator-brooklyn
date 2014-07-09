@@ -1,4 +1,5 @@
 #!/bin/bash
+#
 # this generates the site in _site
 # override --url /myMountPoint  (as an argument to this script) if you don't like the default set in /_config.yml
 
