@@ -1,4 +1,3 @@
-#!/bin/bash
 
 if [ -z "$GROOVY_CMD" ] ; then
   if [ ! -z "$GROOVY_HOME" ] ; then
