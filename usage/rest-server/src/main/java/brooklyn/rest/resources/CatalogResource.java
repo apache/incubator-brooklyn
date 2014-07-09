@@ -100,6 +100,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         }
     }
 
+    @Override
     public Response resetXml(String xml) {
         ((BasicBrooklynCatalog)mgmt().getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "REST reset"));
         return Response.ok().build();
