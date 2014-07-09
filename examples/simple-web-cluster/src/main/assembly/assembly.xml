@@ -17,7 +17,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
 <assembly>
     <id>bin</id>
     <!-- Generates an archive containing the needed files; 

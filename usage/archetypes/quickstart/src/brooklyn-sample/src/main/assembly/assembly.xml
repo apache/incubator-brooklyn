@@ -17,7 +17,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
 <assembly>
     <id>dist</id>
     <!-- Generates an archive and a dir containing the needed files; 

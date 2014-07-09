@@ -17,7 +17,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
 <configuration scan="true">
 
   <!-- the point of this file (and this project) is to supply a logging framework which:

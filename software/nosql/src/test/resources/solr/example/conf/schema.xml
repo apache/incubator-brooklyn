@@ -17,7 +17,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
 <schema name="example" version="1.5">
     <fields>
         <field name="_version_" type="long" indexed="true" stored="true" />
