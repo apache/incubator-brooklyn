@@ -17,7 +17,6 @@
     specific language governing permissions and limitations
     under the License.
 -->
-
 <included>
 
     <!-- this file defines the default logging configuration for brooklyn projects,
