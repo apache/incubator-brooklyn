@@ -71,5 +71,9 @@ public interface ServerApi {
     @ApiOperation(value = "Fetches the status of all Brooklyn instances in the management plane",
         responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
     public HighAvailabilitySummary getHighAvailability();
-
+    
+    @GET
+    @Path("/user")
+    @ApiOperation(value = "Return user information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
+    public String getUser();
 }
