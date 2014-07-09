@@ -209,20 +209,8 @@ public class BrooklynComponentTemplateResolver {
             // add additional bundles
             loader = new BrooklynClassLoadingContextSequential(mgmt, item.newClassLoadingContext(mgmt), loader);
             
-//            if (item.getPlanYaml()!=null) {
-//                // TODO if yaml refers to *another* catalog item, or remote yaml reference, or even have config
-//                // then we will need to parse that YAML
-//                // (but NB as it stands this code might cause infinite looping?)
-//                CampPlatform platform = BrooklynServerConfig.getCampPlatform(mgmt).get();
-//                AssemblyTemplate template2 = platform.pdp().registerDeploymentPlan( new StringReader(item.getPlanYaml()) );
-//                return ((AssemblyTemplateSpecInstantiator) template2.getInstantiator().newInstance()).createSpec(template2, platform);
-//            }
-
-            typeName = item.getJavaType();
-            if (typeName==null) {
-                // FIXME temporary fix, until we parse the YAML above
-                // i think even config items in yaml on the catalog item will be ignored if we don't do the above 
-                typeName = item.getRegisteredTypeName();
+            if (item.getJavaType() != null) {
+                typeName = item.getJavaType();
             }
         }
         
