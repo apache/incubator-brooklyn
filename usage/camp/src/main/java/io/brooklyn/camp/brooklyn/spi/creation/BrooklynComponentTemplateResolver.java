@@ -214,21 +214,16 @@ public class BrooklynComponentTemplateResolver {
     /** resolves the spec, updating the loader if a catalog item is loaded */
     @SuppressWarnings("unchecked")
     public <T extends Entity> EntitySpec<T> resolveSpec() {
-        // ensure loader is updated
-        getCatalogItem();
-        
-        return (EntitySpec<T>)resolveSpec(loadEntityClass(), null);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public <T extends Entity> EntitySpec<T> resolveSpec(Class<T> type, @Nullable Class<? extends T> optionalImpl) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
 
+        // ensure loader is updated
+        getCatalogItem();
+        
+        Class<T> type = (Class<T>) loadEntityClass();
+        
         EntitySpec<T> spec;
-        if (optionalImpl != null) {
-            spec = EntitySpec.create(type).impl(optionalImpl);
-        } else if (type.isInterface()) {
+        if (type.isInterface()) {
             spec = EntitySpec.create(type);
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy

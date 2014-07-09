@@ -1,16 +1,20 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.AssemblyTemplate.Builder;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
+import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
 
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -141,8 +145,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
 
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
-            loader, template);
-        EntitySpec<? extends Application> app = resolver.resolveSpec(StartableApplication.class, BasicApplicationImpl.class);
+            loader, buildWrapperAppTemplate(template));
+        EntitySpec<? extends Application> app = resolver.resolveSpec();
         
         // first build the children into an empty shell app
         List<EntitySpec<?>> childSpecs = buildTemplateServicesAsSpecs(loader, template, platform);
@@ -160,6 +164,19 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
         
         return app;
+    }
+
+    private AssemblyTemplate buildWrapperAppTemplate(AssemblyTemplate template) {
+        Builder<? extends AssemblyTemplate> builder = AssemblyTemplate.builder();
+        builder.type("brooklyn:" + BasicApplicationImpl.class.getName());
+        builder.id(template.getId());
+        builder.name(template.getName());
+        for (Entry<String, Object> entry : template.getCustomAttributes().entrySet()) {
+            builder.customAttribute(entry.getKey(), entry.getValue());
+        }
+        builder.instantiator(template.getInstantiator());
+        AssemblyTemplate wrapTemplate = builder.build();
+        return wrapTemplate;
     }
 
     protected boolean shouldUnwrap(AssemblyTemplate template, EntitySpec<? extends Application> app) {
