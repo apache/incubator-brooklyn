@@ -244,19 +244,22 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
             String catalogIdOrJavaType = entityResolver.getCatalogIdOrJavaType();
             CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
-            
+
+            boolean firstOccurrence = encounteredCatalogTypes.add(catalogIdOrJavaType);
+            boolean recursiveButTryJava = !firstOccurrence;
+                         
             if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+catalogIdOrJavaType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
 
             EntitySpec<?> spec;
             if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
                 spec = entityResolver.resolveSpec();
-            } else {
-                boolean firstOccurrence = encounteredCatalogTypes.add(catalogIdOrJavaType);
-                if (firstOccurrence) {
-                    spec = resolveCatalogYamlReferenceSpec(platform, mgmt, item, encounteredCatalogTypes);
-                } else {
-                    throw new IllegalStateException("Recursive reference to " + catalogIdOrJavaType);
+            } else if (recursiveButTryJava) {
+                if (entityResolver.tryLoadEntityClass().isAbsent()) {
+                    throw new IllegalStateException("Recursive reference to " + catalogIdOrJavaType + " (and cannot be resolved as a Java type)");
                 }
+                spec = entityResolver.resolveSpec();
+            } else {
+                spec = resolveCatalogYamlReferenceSpec(platform, mgmt, item, encounteredCatalogTypes);
             }
 
             BrooklynClassLoadingContext newLoader = entityResolver.loader;

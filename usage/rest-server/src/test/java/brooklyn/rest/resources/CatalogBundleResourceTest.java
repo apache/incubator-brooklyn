@@ -69,9 +69,10 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
     }
 
     @Test
-    public void testLaunchApplicationLoopWithJavaTypeNameInYamlFails() throws Exception {
+    public void testLaunchApplicationLoopWithJavaTypeNameInYaml() throws Exception {
         String registeredTypeName = SIMPLE_ENTITY_TYPE;
-        registerAndLaunchFailsWithRecursionError(registeredTypeName, registeredTypeName);
+        String serviceName = SIMPLE_ENTITY_TYPE;
+        registerAndLaunchAndAssertSimpleEntity(registeredTypeName, serviceName);
     }
 
     @Test
