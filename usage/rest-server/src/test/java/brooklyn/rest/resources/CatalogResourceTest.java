@@ -71,8 +71,6 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     String registeredTypeName = "my.catalog.app.id";
     String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
     String yaml =
-        "name: "+registeredTypeName+"\n"+
-        // FIXME name above should be unnecessary when brooklyn.catalog below is working
         "brooklyn.catalog:\n"+
         "  id: " + registeredTypeName + "\n"+
         "  name: My Catalog App\n"+
