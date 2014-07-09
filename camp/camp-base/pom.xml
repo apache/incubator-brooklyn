@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-test-support</artifactId>
+            <artifactId>brooklyn-utils-test-support</artifactId>
             <version>${brooklyn.version}</version>
             <scope>test</scope>
         </dependency>
