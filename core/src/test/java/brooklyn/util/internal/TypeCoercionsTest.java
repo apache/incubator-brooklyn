@@ -27,13 +27,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.runtime.GStringImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.util.flags.ClassCoercionException;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.StringPredicates;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +45,8 @@ import com.google.common.reflect.TypeToken;
 
 public class TypeCoercionsTest {
 
+    private static final Logger log = LoggerFactory.getLogger(TypeCoercionsTest.class);
+    
     @Test
     public void testCoerceCharSequenceToString() {
         assertEquals(TypeCoercions.coerce(new StringBuilder("abc"), String.class), "abc");
@@ -56,6 +62,7 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce("1", Float.class), (Float)1f);
         assertEquals(TypeCoercions.coerce("1", Double.class), (Double)1d);
         assertEquals(TypeCoercions.coerce("true", Boolean.class), (Boolean)true);
+        assertEquals(TypeCoercions.coerce("False", Boolean.class), (Boolean)false);
         
         assertEquals(TypeCoercions.coerce("1", char.class), (Character)'1');
         assertEquals(TypeCoercions.coerce("1", short.class), (Short)((short)1));
@@ -63,7 +70,8 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce("1", long.class), (Long)1l);
         assertEquals(TypeCoercions.coerce("1", float.class), (Float)1f);
         assertEquals(TypeCoercions.coerce("1", double.class), (Double)1d);
-        assertEquals(TypeCoercions.coerce("true", boolean.class), (Boolean)true);
+        assertEquals(TypeCoercions.coerce("TRUE", boolean.class), (Boolean)true);
+        assertEquals(TypeCoercions.coerce("false", boolean.class), (Boolean)false);
     }
 
     @Test
@@ -102,9 +110,30 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce((long)1, Integer.class), (Integer)1);
         assertEquals(TypeCoercions.coerce((float)1, Integer.class), (Integer)1);
         assertEquals(TypeCoercions.coerce((double)1, Integer.class), (Integer)1);
-        
     }
     
+    @Test
+    public void testCoercePrimitiveFailures() {
+        // error messages don't have to be this exactly, but they should include sufficient information...
+        assertCoercionFailsWithErrorMatching("maybe", boolean.class, StringPredicates.containsAllLiterals("String", "boolean", "maybe"));
+        assertCoercionFailsWithErrorMatching("NaN", int.class, StringPredicates.containsAllLiterals("String", "int", "NaN"));
+        assertCoercionFailsWithErrorMatching('c', boolean.class, StringPredicates.containsAllLiterals("boolean", "(c)"));  // will say 'string' rather than 'char'
+        assertCoercionFailsWithErrorMatching(0, boolean.class, StringPredicates.containsAllLiterals("Integer", "boolean", "0"));
+    }
+    
+    protected void assertCoercionFailsWithErrorMatching(Object input, Class<?> type, Predicate<? super String> errorMessageRequirement) {
+        try {
+            Object result = TypeCoercions.coerce(input, type);
+            Assert.fail("Should have failed type coercion of "+input+" to "+type+", instead got: "+result);
+        } catch (Exception e) {
+            if (errorMessageRequirement==null || errorMessageRequirement.apply(e.toString()))
+                log.info("Primitive coercion failed as expected, with: "+e);
+            else
+                Assert.fail("Error from type coercion of "+input+" to "+type+" failed with wrong exception; expected match of "+errorMessageRequirement+" but got: "+e);
+        }
+        
+    }
+
     @Test
     public void testCastToNumericPrimitives() {
         assertEquals(TypeCoercions.coerce(BigInteger.ONE, Integer.class), (Integer)1);
@@ -161,13 +190,13 @@ public class TypeCoercionsTest {
 
     @Test
     public void testStringToMapCoercion() {
-        Map s = TypeCoercions.coerce("a=1,b=2,c=3", Map.class);
+        Map<?,?> s = TypeCoercions.coerce("a=1,b=2,c=3", Map.class);
         Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", "2", "c", "3"));
     }
 
     @Test
     public void testJsonStringToMapCoercion() {
-        Map s = TypeCoercions.coerce("{ \"a\" : \"1\", \"b\" : \"2\", \"c\" : \"3\" }", Map.class);
+        Map<?,?> s = TypeCoercions.coerce("{ \"a\" : \"1\", \"b\" : \"2\", \"c\" : \"3\" }", Map.class);
         Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", "2", "c", "3"));
     }
 

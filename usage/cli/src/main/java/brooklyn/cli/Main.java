@@ -372,8 +372,7 @@ public class Main {
                 computeLocations();
                 
                 ResourceUtils utils = ResourceUtils.create(this);
-                ClassLoader parent = utils.getLoader();
-                GroovyClassLoader loader = new GroovyClassLoader(parent);
+                GroovyClassLoader loader = new GroovyClassLoader(getClass().getClassLoader());
     
                 // First, run a setup script if the user has provided one
                 if (script != null) {

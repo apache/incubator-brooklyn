@@ -19,7 +19,7 @@
 package brooklyn.catalog.internal;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 
@@ -36,7 +37,11 @@ public class CatalogDto {
     private static final Logger LOG = LoggerFactory.getLogger(CatalogDto.class);
 
     String id;
+    /** e.g. url */
     String url;
+    
+    String contents;
+    String contentsDescription;
     String name;
     String description;
     CatalogClasspathDto classpath;
@@ -57,13 +62,20 @@ public class CatalogDto {
         if (LOG.isDebugEnabled()) LOG.debug("Retrieving catalog from: {}", url);
         try {
             InputStream source = ResourceUtils.create().getResourceFromUrl(url);
-            CatalogDto result = (CatalogDto) new CatalogXmlSerializer().deserialize(new InputStreamReader(source));
-            if (LOG.isDebugEnabled()) LOG.debug("Retrieved catalog from: {}", url);
-            return result;
+            String contents = Streams.readFullyString(source);
+            return newDtoFromXmlContents(contents, url);
         } catch (Throwable t) {
             Exceptions.propagateIfFatal(t);
             throw new PropagatedRuntimeException("Unable to retrieve catalog from " + url + ": " + t, t);
         }
+    }
+
+    public static CatalogDto newDtoFromXmlContents(String xmlContents, String originDescription) {
+        CatalogDto result = (CatalogDto) new CatalogXmlSerializer().deserialize(new StringReader(xmlContents));
+        result.contentsDescription = originDescription;
+        
+        if (LOG.isDebugEnabled()) LOG.debug("Retrieved catalog from: {}", originDescription);
+        return result;
     }
 
     public static CatalogDto newNamedInstance(String name, String description) {
@@ -75,9 +87,29 @@ public class CatalogDto {
 
     public static CatalogDto newLinkedInstance(String url) {
         CatalogDto result = new CatalogDto();
-        result.url = url;
+        result.contentsDescription = url;
+        result.contents = ResourceUtils.create().getResourceAsString(url);
         return result;
     }
+    
+    void populate() {
+        if (contents==null) {
+            if (url != null) {
+                contents = ResourceUtils.create().getResourceAsString(url);
+                contentsDescription = url;
+            } else {
+                LOG.warn("Catalog DTO has no contents); ignoring call to populate it.");
+                return;
+            }
+        }
+        
+        CatalogDto remoteDto = newDtoFromXmlContents(contents, contentsDescription);
+        try {
+            copyFrom(remoteDto, true);
+        } catch (Exception e) {
+            Exceptions.propagate(e);
+        }
+    }        
 
     /**
      * @throws NullPointerException If source is null (and !skipNulls)
@@ -89,26 +121,12 @@ public class CatalogDto {
         }
         
         if (!skipNulls || source.id != null) id = source.id;
-        if (!skipNulls || source.url != null) url = source.url;
+        if (!skipNulls || source.contentsDescription != null) contentsDescription = source.contentsDescription;
+        if (!skipNulls || source.contents != null) contents = source.contents;
         if (!skipNulls || source.name != null) name = source.name;
         if (!skipNulls || source.description != null) description = source.description;
         if (!skipNulls || source.classpath != null) classpath = source.classpath;
         if (!skipNulls || source.entries != null) entries = source.entries;
-    }
-
-    /**
-     * Populates this Dto by loading the catalog at its {@link #url}. Takes no action if url is null.
-     * Throws if there are any problems in retrieving or copying from url.
-     */
-    void populateFromUrl() {
-        if (url != null) {
-            CatalogDto remoteDto = newDtoFromUrl(url);
-            try {
-                copyFrom(remoteDto, true);
-            } catch (Exception e) {
-                Exceptions.propagate(e);
-            }
-        }
     }
 
     @Override
@@ -117,7 +135,7 @@ public class CatalogDto {
                 .omitNullValues()
                 .add("name", name)
                 .add("id", id)
-                .add("url", url)
+                .add("contentsDescription", contentsDescription)
                 .toString();
     }
 

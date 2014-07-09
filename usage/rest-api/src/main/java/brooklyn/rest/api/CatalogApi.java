@@ -58,6 +58,25 @@ public interface CatalogApi {
             @Valid String yaml
     ) ;
 
+    @POST
+    @Consumes(MediaType.APPLICATION_XML)
+    @Path("/reset")
+    @ApiOperation(value = "Resets the catalog to the given (XML) format")
+    public Response resetXml(
+            @ApiParam(name = "xml", value = "XML descriptor of the entire catalog to install", required = true)
+            @Valid String xml
+    ) ;
+
+    @DELETE
+    @Path("/entities/{entityId}")
+    @ApiOperation(value = "Deletes an entity's definition from the catalog")
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public void deleteEntity(
+        @ApiParam(name = "entityId", value = "The ID of the entity or template to delete", required = true)
+        @PathParam("entityId") String entityId) throws Exception ;
+
     @GET
     @Path("/entities")
     @ApiOperation(value = "List available entity types optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)

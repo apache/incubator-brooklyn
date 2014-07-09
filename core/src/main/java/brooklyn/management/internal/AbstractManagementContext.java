@@ -58,8 +58,11 @@ import brooklyn.internal.storage.impl.inmemory.InMemoryDataGridFactory;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.entitlement.EntitlementManager;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.HighAvailabilityManager;
@@ -111,15 +114,17 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     static {
         // ensure that if ResourceUtils is given an entity as context,
         // we use the catalog class loader (e.g. to resolve classpath URLs)
-        ResourceUtils.addClassLoaderProvider(new Function<Object, ClassLoader>() {
+        ResourceUtils.addClassLoaderProvider(new Function<Object, BrooklynClassLoadingContext>() {
             @Override
-            public ClassLoader apply(@Nullable Object input) {
+            public BrooklynClassLoadingContext apply(@Nullable Object input) {
+                // TODO for entities, this should get its originating catalog item's loader
                 if (input instanceof EntityInternal)
                     return apply(((EntityInternal)input).getManagementSupport());
+                
                 if (input instanceof EntityManagementSupport)
                     return apply(((EntityManagementSupport)input).getManagementContext());
-                if (input instanceof AbstractManagementContext)
-                    return ((AbstractManagementContext)input).getCatalog().getRootClassLoader();
+                if (input instanceof ManagementContext)
+                    return JavaBrooklynClassLoadingContext.newDefault((ManagementContext) input);
                 return null;
             }
         });
@@ -329,7 +334,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         
         try {
             if (!Strings.isEmpty(catalogUrl)) {
-                catalog = new BasicBrooklynCatalog(this, catalogUrl);
+                catalog = new BasicBrooklynCatalog(this, CatalogDto.newDtoFromUrl(catalogUrl));
                 if (log.isDebugEnabled())
                     log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
             }

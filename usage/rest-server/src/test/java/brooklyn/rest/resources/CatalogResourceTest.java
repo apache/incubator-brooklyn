@@ -38,10 +38,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.util.collections.MutableList;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
@@ -62,20 +65,20 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     addResource(new CatalogResource());
   }
 
-  @Test(enabled=false, groups="WIP")
-  public void testRegisterCustomEntity() {
+  @Test
+  /** based on CampYamlLiteTest */
+  public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() {
     String registeredTypeName = "my.catalog.app.id";
+    String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
     String yaml =
-        "name: "+registeredTypeName+"\n"+
-        // FIXME name above should be unnecessary when brooklyn.catalog below is working
         "brooklyn.catalog:\n"+
-        "- id: " + registeredTypeName + "\n"+
-        "- name: My Catalog App\n"+
-        "- description: My description\n"+
-        "- icon_url: classpath://path/to/myicon.jpg\n"+
-        "- version: 0.1.2\n"+
-        "- brooklyn.libraries:\n"+
-        "  - url: http://myurl/my.jar\n"+
+        "  id: " + registeredTypeName + "\n"+
+        "  name: My Catalog App\n"+
+        "  description: My description\n"+
+        "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
+        "  version: 0.1.2\n"+
+        "  libraries:\n"+
+        "  - url: " + bundleUrl + "\n"+
         "\n"+
         "services:\n"+
         "- type: brooklyn.test.entity.TestEntity\n";
@@ -87,13 +90,30 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+registeredTypeName)
             .get(CatalogEntitySummary.class);
-    // TODO more checks, when  brooklyn.catalog  working
-//    assertEquals(entityItem.getId(), registeredTypeName);
-//    assertEquals(entityItem.getName(), "My Catalog App");
-//    assertEquals(entityItem.getDescription(), "My description");
-//    assertEquals(entityItem.getIconUrl(), "classpath://path/to/myicon.jpg");
+
     assertEquals(entityItem.getRegisteredType(), registeredTypeName);
-    assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
+    
+    // stored as yaml, not java
+//    assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
+    Assert.assertNotNull(entityItem.getPlanYaml());
+    Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
+    
+    assertEquals(entityItem.getId(), registeredTypeName);
+    
+    // and internally let's check we have libraries
+    CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(registeredTypeName);
+    Assert.assertNotNull(item);
+    List<String> libs = item.getLibraries().getBundles();
+    assertEquals(libs, MutableList.of(bundleUrl));
+
+    // now let's check other things on the item
+    assertEquals(entityItem.getName(), "My Catalog App");
+    assertEquals(entityItem.getDescription(), "My description");
+    assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/my.catalog.app.id");
+    assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
+    
+    byte[] iconData = client().resource("/v1/catalog/icon/"+registeredTypeName).get(byte[].class);
+    assertEquals(iconData.length, 43);
   }
 
   @Test
@@ -163,4 +183,31 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     Assert.assertNotNull(asp, "didn't find AutoScalerPolicy");
   }
   
+  @Test
+  public void testDeleteCustomEntityFromCatalog() {
+    String registeredTypeName = "my.catalog.app.id.to.subsequently.delete";
+    String yaml =
+        "name: "+registeredTypeName+"\n"+
+        // FIXME name above should be unnecessary when brooklyn.catalog below is working
+        "brooklyn.catalog:\n"+
+        "  id: " + registeredTypeName + "\n"+
+        "  name: My Catalog App To Be Deleted\n"+
+        "  description: My description\n"+
+        "  version: 0.1.2\n"+
+        "\n"+
+        "services:\n"+
+        "- type: brooklyn.test.entity.TestEntity\n";
+
+    client().resource("/v1/catalog")
+            .post(ClientResponse.class, yaml);
+    
+    ClientResponse deleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName)
+            .delete(ClientResponse.class);
+
+    assertEquals(deleteResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+    ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName)
+            .get(ClientResponse.class);
+    assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+  }
 }

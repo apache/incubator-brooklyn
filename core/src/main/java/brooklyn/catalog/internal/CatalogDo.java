@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
@@ -88,7 +90,7 @@ public class CatalogDo {
             log.warn("Catalog "+this+" being initialised with different mgmt "+mgmt+" when already managed by "+this.mgmt, new Throwable("source of reparented "+this));
         this.parent = parent;
         this.mgmt = mgmt;
-        dto.populateFromUrl();
+        dto.populate();
         loadCatalogClasspath();
         loadCatalogItems();
         isLoaded = true;
@@ -206,6 +208,21 @@ public class CatalogDo {
             cache.put(entry.getId(), new CatalogItemDo(this, entry));
     }
 
+    public synchronized void deleteEntry(CatalogItemDtoAbstract<?, ?> entry) {
+        if (dto.entries != null)
+            dto.entries.remove(entry);
+        if (cache!=null)
+            cache.remove(entry.getId());
+    }
+
+    /** removes the given entry from the catalog;
+     */
+    public synchronized void removeEntry(CatalogItemDtoAbstract<?,?> entry) {
+        dto.entries.remove(entry);
+        if (cache!=null)
+            cache.remove(entry.getId());
+    }
+
     /** returns loaded catalog, if this has been loaded */
     CatalogDo addCatalog(CatalogDto child) {
         if (dto.catalogs==null) 
@@ -295,5 +312,8 @@ public class CatalogDo {
         if (parent!=null) return parent.getRootClassLoader();
         return getRecursiveClassLoader();
     }
-
+    
+    public BrooklynClassLoadingContext newClassLoadingContext() {
+        return new JavaBrooklynClassLoadingContext(mgmt, getRootClassLoader());
+    }
 }
