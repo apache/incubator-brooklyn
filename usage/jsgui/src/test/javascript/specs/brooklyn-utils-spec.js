@@ -68,4 +68,19 @@ define([
         });
 
     });
+
+    describe("pathOf", function() {
+
+        it("should extract the path component of a URI", function() {
+            expect(Util.pathOf("http://www.example.com/path/to/resource#more?a=b&c=d")).toBe("/path/to/resource");
+        });
+
+        it("should return an empty path for an empty URL", function() {
+            expect(Util.pathOf("")).toBe("");
+        });
+
+        it("should handle input without domain", function() {
+            expect(Util.pathOf("/a/b/c/d#e")).toBe("/a/b/c/d");
+        })
+    });
 });
