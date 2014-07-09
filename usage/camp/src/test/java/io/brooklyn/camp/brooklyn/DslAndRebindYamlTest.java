@@ -86,7 +86,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     }
 
 
-    protected Entity setupAndCheckTestEntityInBasicTemplateWith(String ...extras) throws Exception {
+    protected Entity setupAndCheckTestEntityInBasicYamlWith(String ...extras) throws Exception {
         Entity app = createAndStartApplication("test-entity-basic-template.yaml", extras);
         waitForApplicationTasks(app);
 
@@ -129,7 +129,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     }
 
     private Entity entityWithAttributeWhenReady() throws Exception {
-        return setupAndCheckTestEntityInBasicTemplateWith( 
+        return setupAndCheckTestEntityInBasicYamlWith( 
             "  id: x",
             "  brooklyn.config:",
             "    test.confName: $brooklyn:component(\"x\").attributeWhenReady(\"foo\")");
@@ -152,7 +152,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     }
 
     private Entity entityWithConfigFromRoot() throws Exception {
-        return setupAndCheckTestEntityInBasicTemplateWith( 
+        return setupAndCheckTestEntityInBasicYamlWith( 
             "  id: x",
             "  brooklyn.config:",
             "    test.confName: $brooklyn:component(\"x\").config(\"foo\")",
@@ -177,7 +177,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     }
 
     private Entity entityWithFormatString() throws Exception {
-        return setupAndCheckTestEntityInBasicTemplateWith( 
+        return setupAndCheckTestEntityInBasicYamlWith( 
             "  id: x",
             "  brooklyn.config:",
             "    test.confName: $brooklyn:formatString(\"hello %s\", \"world\")");
