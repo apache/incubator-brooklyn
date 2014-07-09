@@ -131,6 +131,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
+        this(new JavaBrooklynClassLoadingContext(null, loader), contextObject, contextMessage);
     }
     
     public ResourceUtils(BrooklynClassLoadingContext loader, Object contextObject, String contextMessage) {
