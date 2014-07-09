@@ -72,7 +72,7 @@ public class CatalogDo {
             log.warn("Catalog "+this+" being initialised with different mgmt "+mgmt+" when already managed by "+this.mgmt, new Throwable("source of reparented "+this));
         this.parent = parent;
         this.mgmt = mgmt;
-        dto.populateFromUrl();
+        dto.populate();
         loadCatalogClasspath();
         loadCatalogItems();
         isLoaded = true;

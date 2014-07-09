@@ -62,13 +62,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     private final ManagementContext mgmt;
-    private final CatalogDo catalog;
+    private CatalogDo catalog;
     private volatile CatalogDo manualAdditionsCatalog;
     private volatile LoadedClassLoader manualAdditionsClasses;
-
-    public BasicBrooklynCatalog(ManagementContext mgmt, String catalogUrl) {
-        this(mgmt, CatalogDto.newDtoFromUrl(catalogUrl));
-    }
 
     public BasicBrooklynCatalog(final ManagementContext mgmt, final CatalogDto dto) {
         this.mgmt = Preconditions.checkNotNull(mgmt, "managementContext");
@@ -81,6 +77,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
+    }
+    
+    public void reset(CatalogDto dto) {
+        CatalogDo catalog = new CatalogDo(mgmt, dto);
+        log.debug("Resetting "+this+" catalog to "+dto);
+        catalog.load(mgmt, null);
+        log.debug("Reloaded catalog for "+this+", now switching");
+        this.catalog = catalog;
     }
     
     public CatalogDo getCatalog() {

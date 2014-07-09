@@ -316,7 +316,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         
         try {
             if (!Strings.isEmpty(catalogUrl)) {
-                catalog = new BasicBrooklynCatalog(this, catalogUrl);
+                catalog = new BasicBrooklynCatalog(this, CatalogDto.newDtoFromUrl(catalogUrl));
                 if (log.isDebugEnabled())
                     log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
             }

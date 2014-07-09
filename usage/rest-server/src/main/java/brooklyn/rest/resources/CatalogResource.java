@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.rest.api.CatalogApi;
@@ -80,6 +82,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         }
     }
 
+    public Response resetXml(String xml) {
+        ((BasicBrooklynCatalog)mgmt().getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "REST reset"));
+        return Response.ok().build();
+    }
+    
     @Override
     public void deleteEntity(String entityId) throws Exception {
       CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);

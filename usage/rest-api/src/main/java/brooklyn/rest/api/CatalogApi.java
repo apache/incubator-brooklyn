@@ -40,6 +40,15 @@ public interface CatalogApi {
             @Valid String yaml
     ) ;
 
+    @POST
+    @Consumes(MediaType.APPLICATION_XML)
+    @Path("/reset")
+    @ApiOperation(value = "Resets the catalog to the given (XML) format")
+    public Response resetXml(
+            @ApiParam(name = "xml", value = "XML descriptor of the entire catalog to install", required = true)
+            @Valid String xml
+    ) ;
+
     @DELETE
     @Path("/entities/{entityId}")
     @ApiOperation(value = "Deletes an entity's definition from the catalog")
