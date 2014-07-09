@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
@@ -27,12 +45,12 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     
     public static class Builder {
         protected String brooklynVersion = BrooklynVersion.get();
-        protected final List<String> applicationIds = Lists.newArrayList();
-        protected final List<String> topLevelLocationIds = Lists.newArrayList();
-        protected final Map<String, EntityMemento> entities = Maps.newLinkedHashMap();
-        protected final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
-        protected final Map<String, PolicyMemento> policies = Maps.newLinkedHashMap();
-        protected final Map<String, EnricherMemento> enrichers = Maps.newLinkedHashMap();
+        protected final List<String> applicationIds = Collections.synchronizedList(Lists.<String>newArrayList());
+        protected final List<String> topLevelLocationIds = Collections.synchronizedList(Lists.<String>newArrayList());
+        protected final Map<String, EntityMemento> entities = Maps.newConcurrentMap();
+        protected final Map<String, LocationMemento> locations = Maps.newConcurrentMap();
+        protected final Map<String, PolicyMemento> policies = Maps.newConcurrentMap();
+        protected final Map<String, EnricherMemento> enrichers = Maps.newConcurrentMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;

@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package brooklyn.entity.rebind;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -27,6 +45,7 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.javalang.Serializers;
@@ -119,7 +138,8 @@ public class RebindTestUtils {
         BrooklynProperties properties;
         PersistenceObjectStore objectStore;
         Duration persistPeriod = Duration.millis(100);
-
+        boolean forLive;
+        
         ManagementContextBuilder(File mementoDir, ClassLoader classLoader) {
             this(classLoader, new FileBasedObjectStore(mementoDir));
         }
@@ -146,17 +166,33 @@ public class RebindTestUtils {
             return this;
         }
 
+        public ManagementContextBuilder forLive(boolean val) {
+            this.forLive = val;
+            return this;
+        }
+
         public LocalManagementContext buildUnstarted() {
             LocalManagementContext unstarted;
-            if (properties != null) {
-                unstarted = new LocalManagementContextForTests(properties);
+            if (forLive) {
+                if (properties != null) {
+                    unstarted = new LocalManagementContext(properties);
+                } else {
+                    unstarted = new LocalManagementContext();
+                }
             } else {
-                unstarted = new LocalManagementContextForTests();
+                if (properties != null) {
+                    unstarted = new LocalManagementContextForTests(properties);
+                } else {
+                    unstarted = new LocalManagementContextForTests();
+                }
             }
             
             objectStore.injectManagementContext(unstarted);
             objectStore.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);
-            BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
+            BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(
+                    objectStore, 
+                    unstarted.getBrooklynProperties(), 
+                    classLoader);
             ((RebindManagerImpl) unstarted.getRebindManager()).setPeriodicPersistPeriod(persistPeriod);
             unstarted.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
             return unstarted;
@@ -221,7 +257,10 @@ public class RebindTestUtils {
     public static Collection<Application> rebindAll(ManagementContext newManagementContext, File mementoDir, ClassLoader classLoader, RebindExceptionHandler exceptionHandler, PersistenceObjectStore objectStore) throws Exception {
         LOG.info("Rebinding app, using directory "+mementoDir);
 
-        BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(objectStore, classLoader);
+        BrooklynMementoPersisterToObjectStore newPersister = new BrooklynMementoPersisterToObjectStore(
+                objectStore,
+                ((ManagementContextInternal)newManagementContext).getBrooklynProperties(),
+                classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
         List<Application> newApps;
         if (exceptionHandler == null) {

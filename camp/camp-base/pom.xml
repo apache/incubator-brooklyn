@@ -24,9 +24,9 @@
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-test-support</artifactId>
+            <artifactId>brooklyn-utils-test-support</artifactId>
             <version>${brooklyn.version}</version>
-            <scope>tests</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.11</version>
+            <version>${snakeyaml.version}</version>
         </dependency>
         
             <!-- just for logging, not exported -->
