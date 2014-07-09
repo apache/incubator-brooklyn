@@ -42,6 +42,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
@@ -219,6 +220,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-yaml");
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void testReferenceCatalogEntity() throws Exception {
       getManagementContext().getCatalog().addItem(BasicEntity.class);
@@ -234,6 +236,10 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     URI appUri = response.getLocation();
     waitForApplicationToBeRunning(response.getLocation());
     assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-yaml");
+    
+    ClientResponse response2 = client().resource(appUri.getPath())
+        .delete(ClientResponse.class);
+    assertEquals(response2.getStatus(), Response.Status.ACCEPTED.getStatusCode());
   }
 
   @Test
@@ -350,6 +356,12 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     
     Collection groupMembers = (Collection) groupDetails.get("members");
     Assert.assertNotNull(groupMembers);
+    
+    for (Application appi: getManagementContext().getApplications()) {
+        Entities.dumpInfo(appi);
+    }
+    log.info("MEMBERS: "+groupMembers);
+    
     Assert.assertEquals(groupMembers.size(), 3); // includes the app too?!
     Map entityMemberDetails = (Map) Iterables.find(groupMembers, withValueForKey("name", "simple-ent"), null);
     Map groupMemberDetails = (Map) Iterables.find(groupMembers, withValueForKey("name", "simple-group"), null);
