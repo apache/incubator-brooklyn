@@ -16,11 +16,6 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <jersey.version>1.12</jersey.version>
-        <jetty.version>8.1.4.v20120524</jetty.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.brooklyn.camp</groupId>
@@ -29,10 +24,21 @@
         </dependency>
 
         <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-utils-test-support</artifactId>
+            <version>${brooklyn.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.brooklyn.camp</groupId>
             <artifactId>camp-base</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
         
@@ -85,7 +91,7 @@
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
-            <version>1.0.0.GA</version>
+            <version>${validation-api.version}</version>
         </dependency>
 
         <dependency>

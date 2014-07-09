@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package brooklyn.location.jclouds;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
@@ -37,6 +55,7 @@ import brooklyn.location.basic.BasicMachineDetails;
 import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.HasSubnetHostname;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
@@ -288,10 +307,15 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         putIfNotNull(builder, "ram", "" + (hardware != null ? hardware.getRam() : null));
         putIfNotNull(builder, "cpus", "" + (processors != null ? processors.size() : null));
         
-        OsDetails osDetails = getOsDetails();
-        putIfNotNull(builder, "osName", osDetails.getName());
-        putIfNotNull(builder, "osArch", osDetails.getArch());
-        putIfNotNull(builder, "64bit", osDetails.is64bit() ? "true" : "false");
+        try {
+            OsDetails osDetails = getOsDetails();
+            putIfNotNull(builder, "osName", osDetails.getName());
+            putIfNotNull(builder, "osArch", osDetails.getArch());
+            putIfNotNull(builder, "64bit", osDetails.is64bit() ? "true" : "false");
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            LOG.warn("Unable to get OS Details for "+node+"; continuing", e);
+        }
         
         return builder.build();
     }

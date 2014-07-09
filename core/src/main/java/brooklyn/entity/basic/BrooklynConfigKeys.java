@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package brooklyn.entity.basic;
 
 import static brooklyn.entity.basic.ConfigKeys.newBooleanConfigKey;
@@ -40,7 +58,14 @@ public class BrooklynConfigKeys {
         "Provides a label which uniquely identifies an installation, used in the computation of the install dir; "
         + "this should include something readable, and must include a hash of all data which differentiates an installation "
         + "(e.g. version, plugins, etc), but should be the same where install dirs can be shared to allow for re-use");
-        
+    
+    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("pre.launch.command",
+            "Command to be run prior to the launch method being called on the driver");
+    
+    // The implementation in AbstractSoftwareSshDriver runs this command as an SSH command 
+    public static final ConfigKey<String> POST_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("post.launch.command",
+            "Command to be run after the launch method being called on the driver");
+    
     public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
             "${"
             + "config['"+ONBOX_BASE_DIR.getName()+"']!"

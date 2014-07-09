@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package brooklyn.location.jclouds;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
@@ -1678,6 +1696,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String vmIp = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
         if (vmIp==null) LOG.warn("Unable to extract IP for "+node+" ("+setup.getDescription()+"): subsequent connection attempt will likely fail");
         
+        int vmPort = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPortOrDefault(22) : 22;
+        
         long delayMs = -1;
         try {
             delayMs = Time.parseTimeString(""+waitForSshable);
@@ -1688,9 +1708,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             delayMs = Time.parseTimeString(WAIT_FOR_SSHABLE.getDefaultValue());
         
         String user = expectedCredentials.getUser();
-        LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}{}", new Object[] {
+        LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}:{}{}", new Object[] {
                 setup.getDescription(), Time.makeTimeStringRounded(delayMs),
-                user, vmIp, Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"});
+                user, vmIp, vmPort,
+                Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"});
         
         Callable<Boolean> checker;
         if (hostAndPortOverride.isPresent()) {
