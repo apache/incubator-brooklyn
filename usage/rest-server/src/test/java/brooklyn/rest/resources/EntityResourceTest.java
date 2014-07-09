@@ -46,12 +46,6 @@ import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 
-/**
- * Test the {@link SensorApi} implementation.
- * <p>
- * Check that {@link SensorResource} correctly renders {@link AttributeSensor}
- * values, including {@link RendererHints.DisplayValue} hints.
- */
 @Test(singleThreaded = true)
 public class EntityResourceTest extends BrooklynRestResourceTest {
 
@@ -65,12 +59,6 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
 
     private static final String entityEndpoint = "/v1/applications/simple-app/entities/simple-ent";
 
-    /**
-     * Sets up the application and entity.
-     * <p>
-     * Adds a sensor and sets its value to {@code 12345}. Configures a display value
-     * hint that appends {@code frogs} to the value of the sensor.
-     */
     @BeforeClass(alwaysRun = true)
     @Override
     public void setUp() throws Exception {
@@ -87,13 +75,6 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
                 return "RestMockSimpleEntity".equals(input.getEntityType().getSimpleName());
             }
         });
-    }
-
-    @AfterClass(alwaysRun = true)
-    @Override
-    public void tearDown() throws Exception {
-        TestRendererHints.clearRegistry();
-        super.tearDown();
     }
 
     @Test
