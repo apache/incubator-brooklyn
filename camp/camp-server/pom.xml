@@ -46,7 +46,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-test-support</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -150,7 +150,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-rest-swagger</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -184,7 +184,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-logback-xml</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <!-- optional so that this project has logging; dependencies may redeclare or supply their own -->
             <optional>true</optional>
         </dependency>

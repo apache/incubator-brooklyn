@@ -46,12 +46,13 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-policy</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

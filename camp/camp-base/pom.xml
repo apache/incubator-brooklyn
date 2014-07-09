@@ -39,12 +39,12 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-common</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-test-support</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -80,14 +80,14 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-logback-xml</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <optional>true</optional>
             <scope>tests</scope>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <optional>true</optional>
             <scope>tests</scope>
         </dependency>

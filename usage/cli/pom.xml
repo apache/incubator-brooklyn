@@ -40,10 +40,12 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -53,6 +55,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>
@@ -85,6 +88,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-logback-xml</artifactId>
+            <version>${project.version}</version>
             <!-- optional so that this project has logging; dependencies may redeclare or supply their own -->
             <optional>true</optional>
         </dependency>
@@ -97,6 +101,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

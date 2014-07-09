@@ -74,7 +74,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-test-support</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- common includes are always included, but test-support logging config files above 
@@ -82,6 +82,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-logback-includes</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

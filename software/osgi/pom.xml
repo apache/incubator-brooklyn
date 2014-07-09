@@ -43,14 +43,17 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-utils-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -76,8 +79,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -98,7 +102,7 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 	</dependencies>

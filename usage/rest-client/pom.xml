@@ -36,13 +36,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-rest-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
@@ -117,26 +118,28 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-rest-server</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-rest-server</artifactId>
-            <version>${brooklyn.version}</version>
+            <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
