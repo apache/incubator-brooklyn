@@ -134,7 +134,8 @@ public class CatalogBundleResourceTest extends BrooklynRestResourceTest {
     private void addCatalogOSGiEntity(String registeredTypeName, String serviceType) {
         String catalogYaml =
             "name: "+registeredTypeName+"\n"+
-            // FIXME name above should be unnecessary when brooklyn.catalog below is working
+            // FIXME name above should be unnecessary -- slight problem somewhere currently
+            // as testListApplicationYaml fails without the line above
             "brooklyn.catalog:\n"+
             "  id: " + registeredTypeName + "\n"+
             "  name: My Catalog App\n"+
