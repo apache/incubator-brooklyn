@@ -68,7 +68,8 @@ public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
         for (String bundleUrl : bundles) {
             osgi.get().registerBundle(bundleUrl);
         }
-        LOG.debug("Catalog registered {} bundles in {}", bundles.size(), Time.makeTimeStringRounded(timer));
+        LOG.debug("{} registered {} bundles in {}",
+                new Object[]{bundles.size(), Time.makeTimeStringRounded(timer)});
     }
 
 }

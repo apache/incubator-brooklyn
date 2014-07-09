@@ -110,8 +110,6 @@ public class LocationConfigUtils {
      * Returns the file contents, or null if none of the files can be read.
      *  
      * @param files             list of file paths
-     * @param fileContext       what this file refers to (e.g. privateKeyFile)
-     * @param configDescription what this file is being read for 
      */
     private static String getFileContents(Iterable<String> files) {
         int size = Iterables.size(files);

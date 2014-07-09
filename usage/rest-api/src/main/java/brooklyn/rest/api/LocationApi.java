@@ -72,11 +72,6 @@ public interface LocationApi {
           @DefaultValue("false")
           @QueryParam("full") String fullConfig) ;
 
-  // breaks BrooklynApi -- as method needs an annotation
-//  /** @deprecated since 0.7.0; REST call now handled by above (optional query parameter added) */
-//  @Deprecated
-//  public LocationSummary get(String locationId);
-
   @POST
   @ApiOperation(value = "Create a new location", responseClass = "String")
   public Response create(

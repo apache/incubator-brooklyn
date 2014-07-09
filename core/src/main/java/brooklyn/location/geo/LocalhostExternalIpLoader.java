@@ -143,7 +143,7 @@ public class LocalhostExternalIpLoader {
                         try {
                             LOG.debug("Looking up external IP of this host from {} in private thread {}", url, Thread.currentThread());
                             localExternalIp = new IpLoader(url).call();
-                            LOG.debug("Finished looking up external IP of this host from {} in private thread, result ", url, localExternalIp);
+                            LOG.debug("Finished looking up external IP of this host from {} in private thread, result {}", url, localExternalIp);
                             break;
                         } catch (Throwable t) {
                             LOG.debug("Unable to look up external IP of this host from {}, probably offline {})", url, t);
@@ -168,7 +168,6 @@ public class LocalhostExternalIpLoader {
         if (localExternalIp == null) {
             return null;
         }
-        LOG.debug("Looked up external IP of this host, result is: {}", localExternalIp);
         return localExternalIp;
     }
 
