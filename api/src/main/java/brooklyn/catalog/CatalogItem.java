@@ -23,6 +23,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+
 import com.google.common.annotations.Beta;
 
 @Beta
@@ -66,5 +69,6 @@ public interface CatalogItem<T,SpecT> {
     /** return underlying YAML for this item, if known */ 
     @Nullable public String getPlanYaml();
 
+    BrooklynClassLoadingContext newClassLoadingContext(final ManagementContext mgmt);
 }
 

@@ -20,18 +20,28 @@ package brooklyn.management.osgi;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.jar.JarInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
+import brooklyn.util.osgi.Osgis.ManifestHelper;
+import brooklyn.util.stream.Streams;
 
 /** tests some assumptions about OSGi behaviour, in standalone mode (not part of brooklyn).
  * 
@@ -44,7 +54,13 @@ import brooklyn.util.osgi.Osgis;
  *  */
 public class OsgiStandaloneTest {
 
-    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:///brooklyn/osgi/brooklyn-osgi-test-a_0.1.0.jar";
+
+    private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
+    
+    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:/brooklyn/osgi/brooklyn-osgi-test-a_0.1.0.jar";
+    
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = "/brooklyn/osgi/brooklyn-test-osgi-entities.jar";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_URL = "classpath:"+BROOKLYN_TEST_OSGI_ENTITIES_PATH;
     
     protected Framework framework = null;
     private File storageTempDir;
@@ -133,6 +149,41 @@ public class OsgiStandaloneTest {
         Assert.assertNotNull(bundle);
         Class<?> aClass = bundle.loadClass("brooklyn.test.osgi.TestA");
         aClass.getField("multiplier").set(null, newMultiplier);
+    }
+
+    @Test
+    public void testReadAManifest() throws Exception {
+        Enumeration<URL> manifests = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+        log.info("Bundles and exported packages:");
+        MutableSet<String> allPackages = MutableSet.of();
+        while (manifests.hasMoreElements()) {
+            ManifestHelper mf = Osgis.ManifestHelper.forManifestContents(Streams.readFullyString( manifests.nextElement().openStream() ));
+            List<String> mfPackages = mf.getExportedPackages();
+            log.info("  "+mf.getSymbolicNameVersion()+": "+mfPackages);
+            allPackages.addAll(mfPackages);
+        }
+        log.info("Total export package count: "+allPackages.size());
+        Assert.assertTrue(allPackages.size()>20, "did not find enough packages"); // probably much larger
+        Assert.assertTrue(allPackages.contains(Osgis.class.getPackage().getName()));
+    }
+    
+    @Test
+    public void testReadKnownManifest() throws Exception {
+        InputStream in = this.getClass().getResourceAsStream(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+        JarInputStream jarIn = new JarInputStream(in);
+        ManifestHelper helper = Osgis.ManifestHelper.forManifest(jarIn.getManifest());
+        jarIn.close();
+        Assert.assertEquals(helper.getVersion().toString(), "0.1.0");
+        Assert.assertTrue(helper.getExportedPackages().contains("brooklyn.osgi.tests"));
+    }
+    
+    @Test
+    public void testLoadOsgiBundleDependencies() throws Exception {
+        Bundle bundle = install(BROOKLYN_TEST_OSGI_ENTITIES_URL);
+        Assert.assertNotNull(bundle);
+        Class<?> aClass = bundle.loadClass("brooklyn.osgi.tests.SimpleApplicationImpl");
+        Object aInst = aClass.newInstance();
+        Assert.assertNotNull(aInst);
     }
     
 }

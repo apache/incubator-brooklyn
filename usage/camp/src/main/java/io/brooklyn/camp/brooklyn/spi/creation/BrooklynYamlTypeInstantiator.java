@@ -26,65 +26,65 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
-import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
-import brooklyn.util.osgi.Osgis;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-public abstract class BrooklynYamlTypeLoader {
+/** Assists in loading types referenced from YAML;
+ * mainly as a way to share logic used in very different contexts. */
+public abstract class BrooklynYamlTypeInstantiator {
 
-    private static final Logger log = LoggerFactory.getLogger(BrooklynYamlTypeLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(BrooklynYamlTypeInstantiator.class);
     
     protected final Factory factory;
 
     @Beta
     public static class Factory {
-        final ManagementContext mgmt;
+        final BrooklynClassLoadingContext loader;
         final Object contextForLogging;
         
-        public Factory(ManagementContext mgmt, Object contextForLogging) {
-            this.mgmt = mgmt;
+        public Factory(BrooklynClassLoadingContext loader, Object contextForLogging) {
+            this.loader = loader;
             this.contextForLogging = contextForLogging;
         }
         
-        public LoaderFromKey from(Map<?,?> data) {
-            return new LoaderFromKey(this, ConfigBag.newInstance(data));
+        public InstantiatorFromKey from(Map<?,?> data) {
+            return new InstantiatorFromKey(this, ConfigBag.newInstance(data));
         }
         
-        public LoaderFromKey from(ConfigBag data) {
-            return new LoaderFromKey(this, data);
+        public InstantiatorFromKey from(ConfigBag data) {
+            return new InstantiatorFromKey(this, data);
         }
         
-        public LoaderFromName type(String typeName) {
-            return new LoaderFromName(this, typeName);
+        public InstantiatorFromName type(String typeName) {
+            return new InstantiatorFromName(this, typeName);
         }
 
     }
         
-    public static class LoaderFromKey extends BrooklynYamlTypeLoader {
+    public static class InstantiatorFromKey extends BrooklynYamlTypeInstantiator {
         protected final ConfigBag data;
         protected String typeKeyPrefix = null;
         
         /** Nullable only permitted for instances which do not do loading, e.g. LoaderFromKey#lookup */
-        protected LoaderFromKey(@Nullable Factory factory, ConfigBag data) {
+        protected InstantiatorFromKey(@Nullable Factory factory, ConfigBag data) {
             super(factory);
             this.data = data;
         }
         
         public static Maybe<String> extractTypeName(String prefix, ConfigBag data) {
             if (data==null) return Maybe.absent();
-            return new LoaderFromKey(null, data).prefix(prefix).getTypeName();
+            return new InstantiatorFromKey(null, data).prefix(prefix).getTypeName();
         }
         
-        public LoaderFromKey prefix(String prefix) {
+        public InstantiatorFromKey prefix(String prefix) {
             typeKeyPrefix = prefix;
             return this;
         }
@@ -159,9 +159,9 @@ public abstract class BrooklynYamlTypeLoader {
 
     }
     
-    public static class LoaderFromName extends BrooklynYamlTypeLoader {
+    public static class InstantiatorFromName extends BrooklynYamlTypeInstantiator {
         protected final String typeName;
-        protected LoaderFromName(Factory factory, String typeName) {
+        protected InstantiatorFromName(Factory factory, String typeName) {
             super(factory);
             this.typeName = typeName;
         }
@@ -171,40 +171,30 @@ public abstract class BrooklynYamlTypeLoader {
         }
     }
     
-    protected BrooklynYamlTypeLoader(Factory factory) {
+    protected BrooklynYamlTypeInstantiator(Factory factory) {
         this.factory = factory;
     }
         
     public abstract Maybe<String> getTypeName();
     
-    public Class<?> getType() {
-        return getType(null);
+    public BrooklynClassLoadingContext getClassLoadingContext() {
+        Preconditions.checkNotNull("No factory set; cannot use this instance for type loading");
+        return factory.loader;
     }
     
-    public <T> Class<? extends T> getType(@Nullable Class<T> type) {
-        Preconditions.checkNotNull("No factory set; cannot use this instance for type loading");
-        return loadClass(type, getTypeName().get(), factory.mgmt, factory.contextForLogging);
+    public Class<?> getType() {
+        return getType(Object.class);
     }
-
-    /**
-     * TODO in future will want OSGi-based resolver here (eg create from osgi:<bundle>: prefix
-     * would use that OSGi mechanism here
-     */
-    @SuppressWarnings("unchecked")
-    private static <T> Class<T> loadClass(@Nullable Class<T> optionalSupertype, String typeName, ManagementContext mgmt, Object otherContext) {
+    
+    public <T> Class<? extends T> getType(@Nonnull Class<T> type) {
         try {
-            if (optionalSupertype != null && Entity.class.isAssignableFrom(optionalSupertype))
-                return (Class<T>) BrooklynEntityClassResolver.<Entity>resolveEntity(typeName, mgmt);
-            else
-                return BrooklynEntityClassResolver.<T>tryLoadFromClasspath(typeName, mgmt).get();
+            return getClassLoadingContext().loadClass(getTypeName().get(), type);
+//            return loadClass(type, getTypeName().get(), factory.mgmt, factory.contextForLogging);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            log.warn("Unable to resolve " + typeName + " in spec " + otherContext);
-            throw Exceptions.propagate(new IllegalStateException("Unable to resolve "
-                    + (optionalSupertype != null ? optionalSupertype.getSimpleName() + " " : "")
-                    + "type '" + typeName + "'", e));
+            log.warn("Unable to resolve " + type + " " + getTypeName().get() + " (rethrowing) in spec " + factory.contextForLogging);
+            throw Exceptions.propagate(e);
         }
     }
-
 
 }

@@ -18,13 +18,16 @@
  */
 package brooklyn.camp.lite;
 
+import static org.testng.Assert.assertEquals;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.pdp.PdpYamlTest;
 import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,12 +40,17 @@ import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Predicates;
@@ -110,7 +118,7 @@ public class CampYamlLiteTest {
         CatalogItem<Object, Object> retrievedItem = Iterables.getOnlyElement(retrievedItems);
         Assert.assertEquals(retrievedItem, realItem);
 
-        Set<String> expectedBundles = Sets.newHashSet("http://www.example.com/bundle.jar");
+        Set<String> expectedBundles = Sets.newHashSet(OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL);
         Assert.assertEquals(retrievedItem.getLibraries().getBundles(), expectedBundles);
         // Assert.assertEquals(retrievedItem.getVersion(), "0.9");
 
@@ -120,6 +128,78 @@ public class CampYamlLiteTest {
         Assert.assertEquals(spec1.getConfig().get(TestEntity.CONF_NAME), "sample");
         
         // TODO other assertions, about children
+    }
+    
+    @Test
+    public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() throws IOException {
+      String registeredTypeName = "my.catalog.app.id";
+      String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
+      String yaml = getSampleMyCatalogAppYaml(registeredTypeName, bundleUrl);
+
+      mgmt.getCatalog().addItem(yaml);
+      
+      assertMgmtHasSampleMyCatalogApp(registeredTypeName, bundleUrl);
+    }
+
+    private String getSampleMyCatalogAppYaml(String registeredTypeName, String bundleUrl) {
+        return "brooklyn.catalog:\n"+
+          "  id: " + registeredTypeName + "\n"+
+          "  name: My Catalog App\n"+
+          "  description: My description\n"+
+          "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
+          "  version: 0.1.2\n"+
+          "  libraries:\n"+
+          "  - url: " + bundleUrl + "\n"+
+          "\n"+
+          "services:\n"+
+          "- type: brooklyn.test.entity.TestEntity\n";
+    }
+
+    private void assertMgmtHasSampleMyCatalogApp(String registeredTypeName, String bundleUrl) {
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName);
+          assertEquals(item.getRegisteredTypeName(), registeredTypeName);
+          
+          // stored as yaml, not java
+//      assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
+          Assert.assertNotNull(item.getPlanYaml());
+          Assert.assertTrue(item.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
+          
+          assertEquals(item.getId(), registeredTypeName);
+          
+          // and let's check we have libraries
+          List<String> libs = item.getLibraries().getBundles();
+          assertEquals(libs, MutableList.of(bundleUrl));
+
+          // now let's check other things on the item
+          assertEquals(item.getName(), "My Catalog App");
+          assertEquals(item.getDescription(), "My description");
+          assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
+          
+          // and confirm we can resolve ICON
+          byte[] iconData = Streams.readFully( ResourceUtils.create(item.newClassLoadingContext(mgmt)).getResourceFromUrl(item.getIconUrl()) );
+          assertEquals(iconData.length, 43);
+    }
+
+    
+    @Test
+    public void testResetXmlWithCustomEntity() throws IOException {
+      String registeredTypeName = "my.catalog.app.id";
+      String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
+      String yaml = getSampleMyCatalogAppYaml(registeredTypeName, bundleUrl);
+
+      LocalManagementContextForTests mgmt2 = new LocalManagementContextForTests();
+      try {
+          CampPlatformWithJustBrooklynMgmt platform2 = new CampPlatformWithJustBrooklynMgmt(mgmt2);
+          MockWebPlatform.populate(platform2, TestAppAssemblyInstantiator.class);
+          
+          mgmt2.getCatalog().addItem(yaml);
+          String xml = ((BasicBrooklynCatalog)mgmt2.getCatalog()).toXmlString();
+          ((BasicBrooklynCatalog)mgmt.getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "copy of temporary catalog"));
+      } finally {
+          mgmt2.terminate();
+      }
+      
+      assertMgmtHasSampleMyCatalogApp(registeredTypeName, bundleUrl);
     }
 
 }

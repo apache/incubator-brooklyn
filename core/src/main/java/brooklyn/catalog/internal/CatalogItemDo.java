@@ -18,17 +18,13 @@
  */
 package brooklyn.catalog.internal;
 
-import java.util.List;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.OsgiManager;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
 
 import com.google.common.base.Preconditions;
 
@@ -100,45 +96,26 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     }
 
     /** @deprecated since 0.7.0 this is the legacy mechanism; still needed for policies and apps, but being phased out.
-     * new items should use {@link #getYaml()} */
+     * new items should use {@link #getYaml()} and {@link #newClassLoadingContext(ManagementContext, BrooklynClassLoadingContext)} */
     @Deprecated
     public Class<T> getJavaClass() {
         if (javaClass==null) loadJavaClass(null);
         return javaClass;
     }
     
+    @SuppressWarnings("deprecation")
+    public BrooklynClassLoadingContext newClassLoadingContext(final ManagementContext mgmt) {
+        BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
+        result.add(itemDto.newClassLoadingContext(mgmt));
+        result.addSecondary(catalog.newClassLoadingContext());
+        return result;
+    }
+    
     @SuppressWarnings("unchecked")
-    protected Class<? extends T> loadJavaClass(ManagementContext mgmt) {
-        Maybe<Class<Object>> clazz = null;
-        try {
-            if (javaClass!=null) return javaClass;
-
-            if (mgmt!=null) {
-                Maybe<OsgiManager> osgi = ((ManagementContextInternal)mgmt).getOsgiManager();
-                if (osgi.isPresent() && getLibraries()!=null) {
-                    // TODO getLibraries() should never be null but sometimes it is still
-                    // e.g. run CatalogResourceTest without the above check
-                    List<String> bundles = getLibraries().getBundles();
-                    if (bundles!=null && !bundles.isEmpty()) {
-                        clazz = osgi.get().tryResolveClass(getJavaType(), bundles);
-                        if (clazz.isPresent()) {
-                            return (Class<? extends T>) clazz.get();
-                        }
-                    }
-                }
-            }
-            
-            javaClass = (Class<T>) catalog.getRootClassLoader().loadClass(getJavaType());
-            return javaClass;
-        } catch (Throwable e) {
-            Exceptions.propagateIfFatal(e);
-            if (clazz!=null) {
-                // if OSGi bundles were defined and failed, then prefer to throw its error message
-                clazz.get();
-            }
-            // else throw the java error
-            throw Exceptions.propagate(e);
-        }
+    Class<? extends T> loadJavaClass(final ManagementContext mgmt) {
+        if (javaClass!=null) return javaClass;
+        javaClass = (Class<T>)newClassLoadingContext(mgmt).loadClass(getJavaType());
+        return javaClass;
     }
 
     @Override

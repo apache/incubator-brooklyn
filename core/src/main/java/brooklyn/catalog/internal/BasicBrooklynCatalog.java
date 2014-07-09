@@ -18,7 +18,6 @@
  */
 package brooklyn.catalog.internal;
 
-import brooklyn.util.guava.Maybe;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
@@ -40,7 +39,10 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
 import brooklyn.util.javalang.Reflections;
@@ -59,15 +61,28 @@ import com.google.common.collect.Iterables;
 public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     private static final Logger log = LoggerFactory.getLogger(BasicBrooklynCatalog.class);
-    
+
+    public static class BrooklynLoaderTracker {
+        public static final ThreadLocal<BrooklynClassLoadingContext> loader = new ThreadLocal<BrooklynClassLoadingContext>();
+        
+        public static void setLoader(BrooklynClassLoadingContext val) {
+            loader.set(val);
+        }
+        
+        // TODO Stack, for recursive calls?
+        public static void unsetLoader(BrooklynClassLoadingContext val) {
+            loader.set(null);
+        }
+        
+        public static BrooklynClassLoadingContext getLoader() {
+            return loader.get();
+        }
+    }
+
     private final ManagementContext mgmt;
-    private final CatalogDo catalog;
+    private CatalogDo catalog;
     private volatile CatalogDo manualAdditionsCatalog;
     private volatile LoadedClassLoader manualAdditionsClasses;
-
-    public BasicBrooklynCatalog(ManagementContext mgmt, String catalogUrl) {
-        this(mgmt, CatalogDto.newDtoFromUrl(catalogUrl));
-    }
 
     public BasicBrooklynCatalog(final ManagementContext mgmt, final CatalogDto dto) {
         this.mgmt = Preconditions.checkNotNull(mgmt, "managementContext");
@@ -80,6 +95,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
+    }
+    
+    public void reset(CatalogDto dto) {
+        CatalogDo catalog = new CatalogDo(mgmt, dto);
+        log.debug("Resetting "+this+" catalog to "+dto);
+        catalog.load(mgmt, null);
+        log.debug("Reloaded catalog for "+this+", now switching");
+        this.catalog = catalog;
     }
     
     public CatalogDo getCatalog() {
@@ -98,11 +121,28 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDo.getDto();
     }
     
+    @Override
+    public void deleteCatalogItem(String id) {
+        log.debug("Deleting manual catalog item from "+mgmt+": "+id);
+        Preconditions.checkNotNull(id, "id");
+        CatalogItem<?, ?> item = getCatalogItem(id);
+        CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(item);
+        if (itemDto == null) {
+            throw new NoSuchElementException("No catalog item found with id "+id);
+        }
+        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
+        manualAdditionsCatalog.deleteEntry(itemDto);
+        
+        // Ensure the cache is de-populated
+        getCatalog().removeEntry(itemDto);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
         if (id==null) return null;
         CatalogItem<?,?> result = getCatalogItem(id);
+        if (result==null) return null;
         if (type==null || type.isAssignableFrom(result.getCatalogItemJavaType())) 
             return (CatalogItem<T,SpecT>)result;
         return null;
@@ -139,7 +179,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
             
             // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
-            AssemblyTemplate at = camp.pdp().registerDeploymentPlan(plan);
+            AssemblyTemplate at;
+            BrooklynClassLoadingContext loader = loadedItem.newClassLoadingContext(mgmt);
+            BrooklynLoaderTracker.setLoader(loader);
+            try {
+                at = camp.pdp().registerDeploymentPlan(plan);
+            } finally {
+                BrooklynLoaderTracker.unsetLoader(loader);
+            }
             
             try {
                 AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
@@ -207,42 +254,59 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
         DeploymentPlan plan = makePlanFromYaml(yaml);
         
-        String name = null;
         CatalogLibrariesDto libraries = null;
 
-        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class);
+        @SuppressWarnings("rawtypes")
+        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
+        MutableMap<String, Object> catalog = MutableMap.of();
         if (possibleCatalog.isPresent()) {
-            Map catalog = possibleCatalog.get();
-            Map<String, Object> cast = (Map<String, Object>) possibleCatalog.get();
-            if (catalog.containsKey("name") && catalog.get("name") != null) {
-                name = String.valueOf(catalog.get("name"));
-            }
-            Object possibleLibraries = catalog.get("libraries");
-            if (possibleLibraries != null) {
-                if (possibleLibraries instanceof List) {
-                    libraries = CatalogLibrariesDto.fromList((List<?>) possibleLibraries);
-                }
-            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> catalog2 = (Map<String, Object>) possibleCatalog.get();
+            catalog.putAll(catalog2);
         }
 
-        // TODO #3 support version info
+        Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
+        if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
+        if (possibleLibraries.isPresentAndNonNull()) {
+            if (!(possibleLibraries.get() instanceof List))
+                throw new IllegalArgumentException("Libraries should be a list, not "+possibleLibraries.get());
+            libraries = CatalogLibrariesDto.fromList((List<?>) possibleLibraries.get());
+        }
 
+        // TODO clear up the abundance of id, name, registered type, java type
+        String registeredTypeName = (String) catalog.getMaybe("id").orNull();
+        if (Strings.isBlank(registeredTypeName))
+            registeredTypeName = (String) catalog.getMaybe("name").orNull();
         // take name from plan if not specified in brooklyn.catalog section not supplied
-        if (Strings.isBlank(name)) {
-            name = plan.getName();
-            if (Strings.isBlank(name)) {
+        if (Strings.isBlank(registeredTypeName)) {
+            registeredTypeName = plan.getName();
+            if (Strings.isBlank(registeredTypeName)) {
                 if (plan.getServices().size()==1) {
                     Service svc = Iterables.getOnlyElement(plan.getServices());
-                    name = svc.getServiceType();
+                    registeredTypeName = svc.getServiceType();
                 }
             }
         }
         
-        // build the catalog item from the plan (as CatalogItem<Entity> for now)
-        // TODO applications / templates
-        // TODO long-term support policies etc
+        // TODO long-term:  support applications / templates, policies
         
-        return CatalogItems.newEntityFromPlan(name, libraries, plan, yaml);
+        // build the catalog item from the plan (as CatalogItem<Entity> for now)
+        CatalogEntityItemDto dto = CatalogItems.newEntityFromPlan(registeredTypeName, libraries, plan, yaml);
+
+        // and populate other fields
+        Maybe<Object> name = catalog.getMaybe("name");
+        if (name.isPresent()) dto.name = (String)name.get();
+        
+        Maybe<Object> description = catalog.getMaybe("description");
+        if (description.isPresent()) dto.description = (String)description.get();
+        
+        Maybe<Object> iconUrl = catalog.getMaybe("iconUrl");
+        if (iconUrl.isAbsent()) iconUrl = catalog.getMaybe("icon_url");
+        if (iconUrl.isPresent()) dto.iconUrl = (String)iconUrl.get();
+
+        // TODO #3 support version info
+        
+        return dto;
     }
 
     private DeploymentPlan makePlanFromYaml(String yaml) {
@@ -257,6 +321,16 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
         manualAdditionsCatalog.addEntry(itemDto);
+        
+        // Load the libraries now.
+        // Otherwise, when CAMP looks up BrooklynEntityMatcher.accepts then it
+        // won't know about this bundle:class (via the catalog item's
+        // BrooklynClassLoadingContext) so will reject it as not-for-brooklyn.
+        new CatalogLibrariesDo(itemDto.getLibrariesDto()).load(mgmt);
+
+        // Ensure the cache is populated
+        getCatalog().addEntry(itemDto);
+
         return itemDto;
     }
 

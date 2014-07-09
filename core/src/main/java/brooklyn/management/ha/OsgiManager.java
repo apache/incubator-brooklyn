@@ -19,6 +19,7 @@
 package brooklyn.management.ha;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -65,9 +66,13 @@ public class OsgiManager {
 
     public void stop() {
         try {
-            if (framework!=null)
+            if (framework!=null) {
                 framework.stop();
+                framework.waitForStop(0);
+            }
         } catch (BundleException e) {
+            throw Exceptions.propagate(e);
+        } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
         osgiTempDir = Os.deleteRecursively(osgiTempDir).asNullOrThrowing();
@@ -112,12 +117,32 @@ public class OsgiManager {
                 } else {
                     bundleProblems.put(bundleUrlOrNameVersionString, new IllegalStateException("Unable to find bundle "+bundleUrlOrNameVersionString));
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 bundleProblems.put(bundleUrlOrNameVersionString, e);
             }
         }
         return Maybe.absent("Unable to resolve class "+type+": "+bundleProblems);
+    }
+
+    public URL getResource(String name, Iterable<String> bundleUrlsOrNameVersionString) {
+        for (String bundleUrlOrNameVersionString: bundleUrlsOrNameVersionString) {
+            try {
+                String bundleNameVersion = bundleUrlToNameVersionString.get(bundleUrlOrNameVersionString);
+                if (bundleNameVersion==null) {
+                    bundleNameVersion = bundleUrlOrNameVersionString;
+                }
+                
+                Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleNameVersion);
+                if (bundle.isPresent()) {
+                    URL result = bundle.get().getResource(name);
+                    if (result!=null) return result;
+                }
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+            }
+        }
+        return null;
     }
 
 }
