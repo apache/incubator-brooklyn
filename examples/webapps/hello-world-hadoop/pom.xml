@@ -35,12 +35,12 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.18</version>
+            <version>${mysql-connector-java.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
-            <version>1.0.2</version>
+            <version>${hadoop.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brooklyn.example</groupId>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.5.11</version>
+            <version>${slf4j.version}</version>
         </dependency>
     </dependencies>
 

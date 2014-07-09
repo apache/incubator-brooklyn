@@ -20,8 +20,7 @@ package brooklyn.rest.resources;
 
 import java.util.Collections;
 
-import junit.framework.Assert;
-
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;

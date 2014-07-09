@@ -53,12 +53,12 @@
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-jms_1.1_spec</artifactId>
-            <version>1.1.1</version>
+            <version>${geronimo-jms_1.1_spec.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.qpid</groupId>
             <artifactId>qpid-client</artifactId>
-            <version>0.14</version>
+            <version>${qpid.version}</version>
         </dependency>
     </dependencies>
 
@@ -78,12 +78,12 @@
                                 <artifactItem>
                                     <groupId>org.apache.qpid</groupId>
                                     <artifactId>qpid-bdbstore</artifactId>
-                                    <version>0.14</version>
+                                    <version>${qpid.version}</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.sleepycat</groupId>
                                     <artifactId>je</artifactId>
-                                    <version>5.0.34</version>
+                                    <version>${sleepycat-je.version}</version>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}/classes</outputDirectory>

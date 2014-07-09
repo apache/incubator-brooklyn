@@ -71,7 +71,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.18</version>
+            <version>${mysql-connector-java.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
+            <version>${postgresql.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

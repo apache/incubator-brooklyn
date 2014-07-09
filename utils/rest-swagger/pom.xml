@@ -37,10 +37,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <swagger.version>1.0.1</swagger.version>
-    </properties>
-
     <dependencies>
     
         <!-- need this to get the right ServletConfig as used elsewhere :( -->

@@ -34,10 +34,6 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <mongo-java-driver.version>2.11.3</mongo-java-driver.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
@@ -60,14 +56,14 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>${mongo-java-driver.version}</version>
+            <version>${mongodb.version}</version>
         </dependency>
 
         <!-- for redis testing -->
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>1.5.2</version>
+            <version>${redis.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -75,7 +71,7 @@
         <dependency>
             <groupId>com.netflix.astyanax</groupId>
             <artifactId>astyanax</artifactId>
-            <version>1.56.24</version>
+            <version>${astyanax.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -99,7 +95,7 @@
         <dependency>
             <groupId>com.google.code.jcouchdb</groupId>
             <artifactId>jcouchdb</artifactId>
-            <version>0.11.0-1</version>
+            <version>${jcouchdb.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -121,7 +117,7 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>4.7.0</version>
+            <version>${solr.version}</version>
             <scope>test</scope>
         </dependency>
 
