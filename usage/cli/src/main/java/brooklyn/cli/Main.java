@@ -192,10 +192,10 @@ public class Main {
             // Display info text
             System.out.println(BANNER);
             System.out.println("Version:  " + version);
-            System.out.println("Website:  http://brooklyn.io/");
-            System.out.println("Source:   https://github.com/brooklyncentral/brooklyn/");
+            System.out.println("Website:  http://brooklyn.incubator.apache.org");
+            System.out.println("Source:   https://github.com/apache/incubator-brooklyn");
             System.out.println();
-            System.out.println("Copyright 2011-2014 by Cloudsoft Corp.");
+            System.out.println("Copyright 2011-2014 The Apache Software Foundation.");
             System.out.println("Licensed under the Apache 2.0 License");
             System.out.println();
 
