@@ -740,36 +740,17 @@
                   <exclude>**/*.key.org</exclude>
                   <exclude>**/*.psd</exclude>
                   <exclude>**/*.json</exclude>
-                  <exclude>**/target/classes/**</exclude>
+                  <exclude>**/*.plxarc</exclude>
+                  <exclude>**/services/brooklyn.location.LocationResolver</exclude>
+                  <exclude>**/src/test/resources/brooklyn/entity/basic/template_with_extra_substitutions.txt</exclude>
+                  <exclude>**/src/main/resources/banner.txt</exclude>
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
                   <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
+                  <exclude>**/sandbox/*/target/classes/**</exclude>
+                  <exclude>**/sandbox/*/target/test-classes/**</exclude>
                   <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
-                  <!-- TODO: Once reviewed and accepted, these entries should be moved into the subproject's pom.xml file -->
-                  <!--       the have been grouped here for easier review -->
-                  <exclude>**/dropwizard/src/main/resources/banner.txt</exclude>
-                  <exclude>**/services/brooklyn.location.LocationResolver</exclude>
-                  <exclude>**/src/main/resources/brooklyn/location/geo/external-ip-address-resolvers.txt</exclude>
-                  <exclude>**/src/test/resources/brooklyn/entity/basic/template_with_extra_substitutions.txt</exclude>
-                  <exclude>**/src/main/resources/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
-                  <exclude>**/src/main/resources/brooklyn/entity/nosql/riak/vm.args</exclude>
-                  <!-- brooklyn-jsgui -->
-                  <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
-                  <exclude>**/src/main/dev/info.txt</exclude>
-                  <exclude>**/src/main/dev/js/libs/*</exclude>
-                  <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
-                  <exclude>**/src/test/javascript/config.txt</exclude>
-                  <!-- brooklyn-archetype-quickstart -->
-                  <exclude>**/src/test/resources/projects/integration-test-1/goal.txt</exclude>
-                  <!-- brooklyn-examples-parent -->
-                  <exclude>**/simple-open-loop-policy/localrepo/io/brooklyn/org.marre.smsj/1.0.0-20051126/org.marre.smsj-1.0.0-20051126.pom</exclude>
-                  <!-- simple-messaging-pubsub  -->
-                  <exclude>**/src/main/resources/passwd</exclude>
-                  <!-- brooklyn-qa -->
-                  <exclude>**/log-exclusions.txt</exclude>
                   <!-- FIXME: Check licences for docs -->
                   <exclude>docs/**</exclude>
-                  <!-- FIXME: Maxmind code to be removed due to licence, see https://issues.apache.org/jira/browse/BROOKLYN-32-->
-                  <exclude>**/src/3rd/maxmind/**</exclude>
                 </excludes>
               </configuration>
             </plugin>

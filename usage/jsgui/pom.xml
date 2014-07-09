@@ -178,6 +178,25 @@
                 </configuration>
             </plugin>
         </plugins>
+      <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <version>0.10</version>
+            <configuration>
+              <excludes combine.children="append">
+                <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
+                <exclude>**/src/main/dev/info.txt</exclude>
+                <exclude>**/src/main/dev/js/libs/*</exclude>
+                <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
+                <exclude>**/src/test/javascript/config.txt</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+
     </build>
 
     <profiles>
