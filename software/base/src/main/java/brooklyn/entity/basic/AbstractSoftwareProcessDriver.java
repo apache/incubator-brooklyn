@@ -14,10 +14,10 @@ import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -70,7 +70,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             customize();
         }});
 
-        if (!Strings.isNullOrEmpty(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
             DynamicTasks.queue("pre-launch command", new Runnable() { public void run() {
                 runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
             }});
@@ -81,7 +81,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             launch();
         }});
         
-        if (!Strings.isNullOrEmpty(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
             DynamicTasks.queue("post-launch command", new Runnable() { public void run() {
                 runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
             }});

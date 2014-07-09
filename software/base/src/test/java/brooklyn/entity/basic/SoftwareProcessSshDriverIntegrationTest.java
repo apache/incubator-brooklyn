@@ -207,21 +207,20 @@ public class SoftwareProcessSshDriverIntegrationTest {
 
     @Test(groups="Integration")
     public void testPreAndPostLaunchCommands() throws IOException {
-        File tempPreLaunchFile = new File(tempDataDir, "prelaunch.txt");
-        File tempPostLaunchFile = new File(tempDataDir, "postlaunch.txt");
+        File tempFile = new File(tempDataDir, "tempFile.txt");
         localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
-        app.createAndManageChild(EntitySpec.create(MyService.class)
-                .configure(SoftwareProcess.PRE_LAUNCH_COMMAND, String.format("echo foo > %s", tempPreLaunchFile.getAbsoluteFile()))
-                .configure(SoftwareProcess.POST_LAUNCH_COMMAND, String.format("echo bar > %s", tempPostLaunchFile.getAbsoluteFile())));
+        app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
+                .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
+                .configure(SoftwareProcess.PRE_LAUNCH_COMMAND, String.format("echo inPreLaunch >> %s", tempFile.getAbsoluteFile()))
+                .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, String.format("echo inLaunch >> %s", tempFile.getAbsoluteFile()))
+                .configure(SoftwareProcess.POST_LAUNCH_COMMAND, String.format("echo inPostLaunch >> %s", tempFile.getAbsoluteFile())));
         app.start(ImmutableList.of(localhost));
-        List<String> prelaunch = Files.readLines(tempPreLaunchFile, Charsets.UTF_8);
-        List<String> postlaunch = Files.readLines(tempPostLaunchFile, Charsets.UTF_8);
-        assertEquals(prelaunch.size(), 1);
-        assertEquals(postlaunch.size(), 1);
-        assertEquals(postlaunch.get(0), "bar");
-        assertEquals(prelaunch.get(0), "foo");
-        tempPreLaunchFile.delete();
-        tempPostLaunchFile.delete();
+        List<String> output = Files.readLines(tempFile, Charsets.UTF_8);
+        assertEquals(output.size(), 3);
+        assertEquals(output.get(0), "inPreLaunch");
+        assertEquals(output.get(1), "inLaunch");
+        assertEquals(output.get(2), "inPostLaunch");
+        tempFile.delete();
     }
 
     @ImplementedBy(MyServiceImpl.class)

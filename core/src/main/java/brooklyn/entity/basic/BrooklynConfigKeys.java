@@ -44,10 +44,10 @@ public class BrooklynConfigKeys {
     public static final ConfigKey<String> PRE_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("pre.launch.command",
             "Command to be run prior to the launch method being called on the driver");
     
+    // The implementation in AbstractSoftwareSshDriver runs this command as an SSH command 
     public static final ConfigKey<String> POST_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("post.launch.command",
-            "Command to be run after the launch method being called on the driver. The implementation in AbstractSoftwareSshDriver "
-            + "runs this comamnd as an SSH command");
-        
+            "Command to be run after the launch method being called on the driver");
+    
     public static final BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
             "${"
             + "config['"+ONBOX_BASE_DIR.getName()+"']!"
