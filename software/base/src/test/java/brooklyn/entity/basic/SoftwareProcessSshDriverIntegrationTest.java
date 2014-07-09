@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -222,6 +223,23 @@ public class SoftwareProcessSshDriverIntegrationTest {
         }
     }
 
+    @Test(groups="Integration")
+    public void testPreAndPostLaunchCommands() throws IOException {
+        File tempFile = new File(tempDataDir, "tempFile.txt");
+        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
+                .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
+                .configure(SoftwareProcess.PRE_LAUNCH_COMMAND, String.format("echo inPreLaunch >> %s", tempFile.getAbsoluteFile()))
+                .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, String.format("echo inLaunch >> %s", tempFile.getAbsoluteFile()))
+                .configure(SoftwareProcess.POST_LAUNCH_COMMAND, String.format("echo inPostLaunch >> %s", tempFile.getAbsoluteFile())));
+        app.start(ImmutableList.of(localhost));
+        List<String> output = Files.readLines(tempFile, Charsets.UTF_8);
+        assertEquals(output.size(), 3);
+        assertEquals(output.get(0), "inPreLaunch");
+        assertEquals(output.get(1), "inLaunch");
+        assertEquals(output.get(2), "inPostLaunch");
+        tempFile.delete();
+    }
 
     @ImplementedBy(MyServiceImpl.class)
     public interface MyService extends SoftwareProcess {
