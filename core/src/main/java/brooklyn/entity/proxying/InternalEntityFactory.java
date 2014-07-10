@@ -45,6 +45,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.Tasks;
 
@@ -97,7 +98,6 @@ public class InternalEntityFactory {
      * @param managementContext
      * @param clazz
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static boolean isNewStyleEntity(ManagementContext managementContext, Class<?> clazz) {
         try {
             return isNewStyleEntity(clazz);
@@ -140,13 +140,46 @@ public class InternalEntityFactory {
         builder.addAll(spec.getAdditionalInterfaces());
         Set<Class<?>> interfaces = builder.build();
         
+        // TODO OSGi strangeness! The classloader obtained from the type should be enough.
+        // If an OSGi class loader, it should delegate to find things like Entity.class etc.
+        // However, we get errors such as:
+        //    NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities
+        // Building our own aggregating class loader gets around this.
+        // But we really should not have to do this! What are the consequences?
+        AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
+        aggregateClassLoader.addFirst(classloader);
+        aggregateClassLoader.addFirst(entity.getClass().getClassLoader());
+        for(Class<?> iface : interfaces) {
+            aggregateClassLoader.addLast(iface.getClassLoader());
+        }
+
         return (T) java.lang.reflect.Proxy.newProxyInstance(
-                classloader,
+                aggregateClassLoader,
                 interfaces.toArray(new Class[interfaces.size()]),
                 new EntityProxyImpl(entity));
     }
 
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
+        /* Order is important here. Changed Jul 2014 when supporting children in spec.
+         * (Previously was much simpler, and parent was set right after running initializers; and there were no children.)
+         * <p>
+         * It seems we need access to the parent (indeed the root application) when running some initializers (esp children initializers).
+         * <p>
+         * Now we do two passes, so that hierarchy is fully populated before initialization and policies.
+         * (This is needed where some config or initializer might reference another entity by its ID, e.g. yaml $brooklyn:component("id"). 
+         * Initialization is done in parent-first order with depth-first children traversal.
+         */
+
+        // (maps needed because we need the spec, and we need to keep the AbstractEntity to call init, not a proxy)
+        Map<String,Entity> entitiesByEntityId = MutableMap.of();
+        Map<String,EntitySpec<?>> specsByEntityId = MutableMap.of();
+        
+        T entity = createEntityAndDescendantsUninitialized(spec, entitiesByEntityId, specsByEntityId);
+        initEntityAndDescendants(entity.getId(), entitiesByEntityId, specsByEntityId);
+        return entity;
+    }
+    
+    protected <T extends Entity> T createEntityAndDescendantsUninitialized(EntitySpec<T> spec, Map<String,Entity> entitiesByEntityId, Map<String,EntitySpec<?>> specsByEntityId) {
         if (spec.getFlags().containsKey("parent") || spec.getFlags().containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+spec);
         }
@@ -169,7 +202,24 @@ public class InternalEntityFactory {
             ((AbstractEntity)entity).setManagementContext(managementContext);
             managementContext.prePreManage(entity);
 
-            initEntity(entity, spec);
+            loadUnitializedEntity(entity, spec);
+
+            entitiesByEntityId.put(entity.getId(), entity);
+            specsByEntityId.put(entity.getId(), spec);
+
+            for (EntitySpec<?> childSpec : spec.getChildren()) {
+                if (childSpec.getParent()!=null) {
+                    if (!childSpec.getParent().equals(entity)) {
+                        throw new IllegalStateException("Spec "+childSpec+" has parent "+childSpec.getParent()+" defined, "
+                            + "but it is defined as a child of "+entity);
+                    }
+                    log.warn("Child spec "+childSpec+" is already set with parent "+entity+"; how did this happen?!");
+                }
+                childSpec.parent(entity);
+                Entity child = createEntityAndDescendantsUninitialized(childSpec, entitiesByEntityId, specsByEntityId);
+                entity.addChild(child);
+            }
+            
             return entity;
             
         } catch (Exception e) {
@@ -178,7 +228,7 @@ public class InternalEntityFactory {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <T extends Entity> T initEntity(final T entity, final EntitySpec<T> spec) {
+    protected <T extends Entity> T loadUnitializedEntity(final T entity, final EntitySpec<T> spec) {
         try {
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
@@ -190,65 +240,82 @@ public class InternalEntityFactory {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
 
-            for (EntitySpec<?> childSpec : spec.getChildren()) {
-                Entity child = createEntity(childSpec);
-                ((EntityLocal)entity).addChild(child);
-            }
-
-            /* Marked transient so that the task is not needlessly kept around at the highest level.
-             * Note that the task is not normally visible in the GUI, because 
-             * (a) while it is running, the entity is parentless (and so not in the tree);
-             * and (b) when it is completed it is GC'd, as it is transient.
-             * However task info is available via the API if you know its ID,
-             * and if better subtask querying is available it will be picked up as a background task 
-             * of the parent entity creating this child entity
-             * (note however such subtasks are currently filtered based on parent entity so is excluded).
-             */
-            ((EntityInternal)entity).getExecutionContext().submit(Tasks.builder().dynamic(false).name("Entity initialization").tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
-                    .body(new Runnable() {
-                @Override
-                public void run() {
-                    ((AbstractEntity)entity).init();
-                    for (EntityInitializer initializer: spec.getInitializers())
-                        initializer.apply((EntityInternal)entity);
-                    /* 31 Mar 2014, moved initialization (above) into this task: primarily for consistency and traceability on failure.
-                     * TBC whether this is good/bad/indifferent. My (Alex) opinion is that whether it is done in a subtask 
-                     * should be the same as whether enricher/policy/etc (below) is done subtasks, which is was added recently
-                     * in 249c96fbb18bd9d763029475e0a3dc251c01b287. @nakomis can you give exact reason code below is needed in a task
-                     * commit message said was to do with wiring up yaml sensors and policies -- which makes sense but specifics would be handy!
-                     * and would let me know if there is any reason to do / not_do the initializer code above also here! 
-                     */
-                    
-                    for (Enricher enricher : spec.getEnrichers()) {
-                        entity.addEnricher(enricher);
-                    }
-                    
-                    for (EnricherSpec<?> enricherSpec : spec.getEnricherSpecs()) {
-                        entity.addEnricher(policyFactory.createEnricher(enricherSpec));
-                    }
-                    
-                    for (Policy policy : spec.getPolicies()) {
-                        entity.addPolicy((AbstractPolicy)policy);
-                    }
-                    
-                    for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
-                        entity.addPolicy(policyFactory.createPolicy(policySpec));
-                    }
-                    
-                    ((AbstractEntity)entity).addLocations(spec.getLocations());
-                }
-            }).build()).get();
-            
             Entity parent = spec.getParent();
             if (parent != null) {
                 parent = (parent instanceof AbstractEntity) ? ((AbstractEntity)parent).getProxyIfAvailable() : parent;
                 entity.setParent(parent);
             }
+            
             return entity;
             
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
+    }
+    
+    protected <T extends Entity> void initEntityAndDescendants(String entityId, final Map<String,Entity> entitiesByEntityId, final Map<String,EntitySpec<?>> specsByEntityId) {
+        final Entity entity = entitiesByEntityId.get(entityId);
+        final EntitySpec<?> spec = specsByEntityId.get(entityId);
+        
+        if (entity==null || spec==null) {
+            log.debug("Skipping initialization of "+entityId+" found as child of entity being initialized, "
+                + "but this child is not one we created; likely it was created by an initializer, "
+                + "and thus it should be already fully initialized.");
+            return;
+        }
+        
+        /* Marked transient so that the task is not needlessly kept around at the highest level.
+         * Note that the task is not normally visible in the GUI, because 
+         * (a) while it is running, the entity is parentless (and so not in the tree);
+         * and (b) when it is completed it is GC'd, as it is transient.
+         * However task info is available via the API if you know its ID,
+         * and if better subtask querying is available it will be picked up as a background task 
+         * of the parent entity creating this child entity
+         * (note however such subtasks are currently filtered based on parent entity so is excluded).
+         */
+        ((EntityInternal)entity).getExecutionContext().submit(Tasks.builder().dynamic(false).name("Entity initialization")
+                .tag(BrooklynTaskTags.tagForContextEntity(entity))
+                .tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
+                .body(new Runnable() {
+            @Override
+            public void run() {
+                ((AbstractEntity)entity).init();
+                
+                ((AbstractEntity)entity).addLocations(spec.getLocations());
+
+                for (EntityInitializer initializer: spec.getInitializers())
+                    initializer.apply((EntityInternal)entity);
+                /* 31 Mar 2014, moved initialization (above) into this task: primarily for consistency and traceability on failure.
+                 * TBC whether this is good/bad/indifferent. My (Alex) opinion is that whether it is done in a subtask 
+                 * should be the same as whether enricher/policy/etc (below) is done subtasks, which is was added recently
+                 * in 249c96fbb18bd9d763029475e0a3dc251c01b287. @nakomis can you give exact reason code below is needed in a task
+                 * commit message said was to do with wiring up yaml sensors and policies -- which makes sense but specifics would be handy!
+                 * and would let me know if there is any reason to do / not_do the initializer code above also here! 
+                 */
+                
+                for (Enricher enricher : spec.getEnrichers()) {
+                    entity.addEnricher(enricher);
+                }
+                
+                for (EnricherSpec<?> enricherSpec : spec.getEnricherSpecs()) {
+                    entity.addEnricher(policyFactory.createEnricher(enricherSpec));
+                }
+                
+                for (Policy policy : spec.getPolicies()) {
+                    entity.addPolicy((AbstractPolicy)policy);
+                }
+                
+                for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
+                    entity.addPolicy(policyFactory.createPolicy(policySpec));
+                }
+                                
+                for (Entity child: entity.getChildren()) {
+                    // right now descendants are initialized depth-first (see the getUnchecked() call below)
+                    // they could be done in parallel, but OTOH initializers should be very quick
+                    initEntityAndDescendants(child.getId(), entitiesByEntityId, specsByEntityId);
+                }
+            }
+        }).build()).getUnchecked();        
     }
     
     /**

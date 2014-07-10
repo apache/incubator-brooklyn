@@ -116,13 +116,17 @@ public class DeploymentPlan {
      * Does not remove the attribute from the custom attribute map.
      */
     @SuppressWarnings("unchecked")
-    public <T> Maybe<T> getCustomAttribute(String attributeName, Class<T> type) {
+    public <T> Maybe<T> getCustomAttribute(String attributeName, Class<T> type, boolean throwIfTypeMismatch) {
         Object attribute = customAttributes.get(attributeName);
         if (attribute == null) {
             return Maybe.absent("Custom attributes does not contain " + attributeName);
         } else if (!type.isAssignableFrom(attribute.getClass())) {
-            return Maybe.absent("Custom attribute " + attributeName + " is not of expected type: " +
-                    "expected=" + type.getName() + " actual=" + attribute.getClass().getName());
+            String message = "Custom attribute " + attributeName + " is not of expected type: " +
+                    "expected=" + type.getName() + " actual=" + attribute.getClass().getName();
+            if (throwIfTypeMismatch) {
+                throw new IllegalArgumentException(message);
+            }
+            return Maybe.absent(message);
         } else {
             return Maybe.of((T) attribute);
         }

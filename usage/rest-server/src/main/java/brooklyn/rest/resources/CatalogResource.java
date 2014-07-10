@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.rest.api.CatalogApi;
@@ -96,6 +98,21 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         case CONFIGURATION: return Response.created(URI.create("configurations/" + itemId)).build();
         default: throw new IllegalStateException("Unsupported catalog item type "+item.getCatalogItemType()+": "+item);
         }
+    }
+
+    @Override
+    public Response resetXml(String xml) {
+        ((BasicBrooklynCatalog)mgmt().getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "REST reset"));
+        return Response.ok().build();
+    }
+    
+    @Override
+    public void deleteEntity(String entityId) throws Exception {
+      CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);
+      if (result==null) {
+        throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
+      }
+      brooklyn().getCatalog().deleteCatalogItem(entityId);
     }
 
     @Override
@@ -170,7 +187,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
             log.debug("Loading and returning "+url+" as icon for "+result);
             
             MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
-            Object content = ResourceUtils.create(brooklyn().getCatalog().getRootClassLoader()).getResourceFromUrl(url);
+            Object content = ResourceUtils.create(result.newClassLoadingContext(mgmt())).getResourceFromUrl(url);
             return Response.ok(content, mime).build();
         }
         

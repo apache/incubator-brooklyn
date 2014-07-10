@@ -34,7 +34,7 @@ import brooklyn.qa.longevity.MonitorUtilsTest;
 
 class MonitorUtilsTest {
 
-    @Test(enabled=false) // Demonstrates that process.waitFor() hangs for big output streams
+    @Test(enabled=false, groups="UNIX") // Demonstrates that process.waitFor() hangs for big output streams
     public void testGroovyExecuteAndWaitFor() {
         String bigstr = Strings.repeat("a", 100000)
         def process = "echo $bigstr".execute()
@@ -43,7 +43,7 @@ class MonitorUtilsTest {
         assertTrue(out.contains(bigstr), "out.size="+out.length())
     }
 
-    @Test
+    @Test(groups="UNIX")
     public void testGroovyExecuteAndWaitForConsumingOutputStream() {
         String bigstr = Strings.repeat("a", 100000)
         def process = "echo $bigstr".execute()
@@ -51,14 +51,14 @@ class MonitorUtilsTest {
         assertTrue(out.contains(bigstr), "out.size="+out.length())
     }
 
-    @Test
+    @Test(groups="UNIX")
     public void testFindOwnPid() {
         int ownpid = MonitorUtils.findOwnPid()
         assertTrue(ownpid > 0, "ownpid=$ownpid")
         assertTrue(MonitorUtils.isPidRunning(ownpid, "java"),"java is not running")
     }
             
-    @Test
+    @Test(groups="UNIX")
     public void testIsPidRunning() {
         int usedPid = MonitorUtils.findOwnPid()
         
@@ -78,7 +78,7 @@ class MonitorUtilsTest {
         assertFalse(MonitorUtils.isPidRunning(1234567)) // too large
     }
     
-    @Test
+    @Test(groups="UNIX")
     public void testGetRunningPids() {
         int ownpid = MonitorUtils.findOwnPid()
 
@@ -92,7 +92,7 @@ class MonitorUtilsTest {
         assertFalse(MonitorUtils.isUrlUp(new URL("http://localhost/thispathdoesnotexist")))
     }
     
-    @Test
+    @Test(groups="UNIX")
     public void testSearchLog() {
         String fileContents = "line1\nline2\nline3\n"
         File file = File.createTempFile("monitorUtilsTest.testSearchLog", ".txt")

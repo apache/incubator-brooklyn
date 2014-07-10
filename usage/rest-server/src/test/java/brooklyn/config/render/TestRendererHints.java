@@ -21,7 +21,13 @@ package brooklyn.config.render;
 /** Methods used when testing the {@link RendererHints} regiostry. */
 public class TestRendererHints {
 
-    /** Clear the registry. */
+    /** Clear the registry. 
+     *
+     *  MUST be used by a single test only.
+     *  TestNG interleaves the tests (sequentially) which results in tearDown 
+     *  executing in the middle of another class' tests. Only one tearDown may
+     *  call this method.
+     **/
     public static void clearRegistry() {
         RendererHints.registry.clear();
     }

@@ -67,7 +67,7 @@ import com.google.common.collect.Iterables;
 public class EntitiesYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(EntitiesYamlTest.class);
 
-    protected Entity setupAndCheckTestEntityInBasicTemplateWith(String ...extras) throws Exception {
+    protected Entity setupAndCheckTestEntityInBasicYamlWith(String ...extras) throws Exception {
         Entity app = createAndStartApplication("test-entity-basic-template.yaml", extras);
         waitForApplicationTasks(app);
 
@@ -85,13 +85,13 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     
     @Test
     public void testSingleEntity() throws Exception {
-        setupAndCheckTestEntityInBasicTemplateWith();
+        setupAndCheckTestEntityInBasicYamlWith();
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynConfig() throws Exception {
-        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  brooklyn.config:",
             "    test.confName: Test Entity Name",
             "    test.confMapPlain:",
@@ -120,7 +120,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
 
     @Test
     public void testFlagInBrooklynConfig() throws Exception {
-        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  brooklyn.config:",
             "    confName: Foo Bar");
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
@@ -128,7 +128,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
 
     @Test
     public void testUndeclaredItemInBrooklynConfig() throws Exception {
-        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  brooklyn.config:",
             "    test.dynamic.confName: Foo Bar");
         Assert.assertEquals(testEntity.getConfig(ConfigKeys.newStringConfigKey("test.dynamic.confName")), "Foo Bar");
@@ -136,21 +136,21 @@ public class EntitiesYamlTest extends AbstractYamlTest {
 
     @Test
     public void testFlagAtRoot() throws Exception {
-        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  confName: Foo Bar");
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
     }
 
     @Test
     public void testConfigKeyAtRoot() throws Exception {
-        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  test.confName: Foo Bar");
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
     }
 
     @Test
     public void testUndeclaredItemAtRootIgnored() throws Exception {
-        Entity testEntity = setupAndCheckTestEntityInBasicTemplateWith( 
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  test.dynamic.confName: Foo Bar");
         // should NOT be set (and there should be a warning in the log)
         String dynamicConfNameValue = testEntity.getConfig(ConfigKeys.newStringConfigKey("test.dynamic.confName"));

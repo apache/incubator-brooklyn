@@ -22,6 +22,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
+import brooklyn.management.classloading.OsgiBrooklynClassLoadingContext;
 
 public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,SpecT> {
 
@@ -107,6 +113,21 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
     private synchronized void loadSerializer() {
         if (serializer==null) 
             serializer = new CatalogXmlSerializer();
+    }
+
+    public BrooklynClassLoadingContext newClassLoadingContext(final ManagementContext mgmt) {
+        BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
+        
+        if (getLibraries()!=null && getLibraries().getBundles()!=null && !getLibraries().getBundles().isEmpty())
+            // TODO getLibraries() should never be null but sometimes it is still
+            // e.g. run CatalogResourceTest without the above check
+            result.add(new OsgiBrooklynClassLoadingContext(mgmt, getLibraries().getBundles()));
+
+        BrooklynClassLoadingContext next = BrooklynLoaderTracker.getLoader();
+        if (next==null) next = JavaBrooklynClassLoadingContext.newDefault(mgmt);
+        result.add(next);
+        
+        return result;
     }
 
     public abstract Class<SpecT> getSpecType();

@@ -42,7 +42,7 @@ public class ProcessToolIntegrationTest extends ShellToolAbstractTest {
     // ones here included as *non*-integration tests. must run on windows and linux.
     // (also includes integration tests from parent)
 
-    @Test
+    @Test(groups="UNIX")
     public void testPortableCommand() throws Exception {
         String out = execScript("echo hello world");
         assertTrue(out.contains("hello world"), "out="+out);
