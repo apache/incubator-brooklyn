@@ -96,7 +96,8 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
         assertEquals(event2.getApplicationId(), app.getId());
         assertEquals(event2.getEntityId(), entity.getId());
         assertEquals(event2.getState(), Lifecycle.DESTROYED);
-        assertTrue(event2.getDate().getTime() > preStop && event2.getDate().getTime() < postStop, "date="+event2.getDate()+"; pre="+preStop+"; post="+postStop);
+        long eventTime = event2.getDate().getTime();
+        assertTrue(eventTime >= preStop && eventTime <= postStop, "date="+eventTime+"; pre="+preStop+"; post="+postStop);
     }
     
     public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
