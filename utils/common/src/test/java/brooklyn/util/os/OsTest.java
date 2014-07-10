@@ -21,11 +21,15 @@ package brooklyn.util.os;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -83,6 +87,50 @@ public class OsTest {
         assertEquals(Os.mergePaths("a/", "b"), "a/b");
         assertEquals(Os.mergePaths("a", "b/"), "a/b/");
         assertEquals(Os.mergePaths("/a", "b"), "/a/b");
+    }
+    
+    @Test
+    public void testNewTempFile() {
+        int CREATE_CNT = 1500;
+        Collection<File> folders = new ArrayList<File>(CREATE_CNT);
+        
+        try {
+            for (int i = 0; i < CREATE_CNT; i++) {
+                try {
+                    folders.add(Os.newTempFile(OsTest.class, "test"));
+                } catch (IllegalStateException e) {
+                    log.warn("testNewTempFile failed at " + i + " iteration.");
+                    Exceptions.propagate(e);
+                }
+            }
+        } finally {
+            //cleanup
+            for (File folder : folders) {
+                folder.delete();
+            }
+        }
+    }
+    
+    @Test
+    public void testNewTempDir() {
+        int CREATE_CNT = 2000;
+        Collection<File> folders = new ArrayList<File>(CREATE_CNT);
+        
+        try {
+            for (int i = 0; i < CREATE_CNT; i++) {
+                try {
+                    folders.add(Os.newTempDir(OsTest.class));
+                } catch (IllegalStateException e) {
+                    log.warn("testNewTempDir failed at " + i + " iteration.");
+                    Exceptions.propagate(e);
+                }
+            }
+        } finally {
+            //cleanup
+            for (File folder : folders) {
+                folder.delete();
+            }
+        }
     }
 
 }

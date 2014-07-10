@@ -56,6 +56,8 @@ public class Os {
 
     private static final Logger log = LoggerFactory.getLogger(Os.class);
     
+    private static final int TEMP_DIR_ATTEMPTS = 1000;
+
     private static final char SEPARATOR_UNIX = '/';
     private static final char SEPARATOR_WIN = '\\';
     
@@ -523,17 +525,16 @@ public class Os {
      * either prefix or ext may be null; 
      * if ext is non-empty and not > 4 chars and not starting with a ., then a dot will be inserted */
     public static File newTempFile(String prefix, String ext) {
-        String baseName = (prefix!=null ? prefix + "-" : "") + Identifiers.makeRandomId(4) + 
-            (ext!=null ? ext.startsWith(".") || ext.length()>4 ? ext : "."+ext : "");
-        File tempFile = new File(tmp(), baseName);
+        String sanitizedPrefix = (prefix!=null ? prefix + "-" : "");
+        String sanitizedExt = (ext!=null ? ext.startsWith(".") || ext.length()>4 ? ext : "."+ext : "");
         try {
-            if (tempFile.createNewFile()) {
-                tempFile.deleteOnExit();
-                return tempFile;
-            }
-            throw new IllegalStateException("cannot create temp file "+tempFile+", call returned false");
+            File tempFile = File.createTempFile(sanitizedPrefix, sanitizedExt, new File(tmp()));
+            tempFile.deleteOnExit();
+            return tempFile;
         } catch (IOException e) {
-            throw new IllegalStateException("cannot create temp file "+tempFile+", error: "+e, e);
+            Exceptions.propagate(e);
+            //non-reachable, prevent uninitialized warning in following code
+            return null;
         }
     }
     
@@ -544,13 +545,23 @@ public class Os {
 
     /** creates a temp dir which will be deleted on exit */
     public static File newTempDir(String prefix) {
-        String baseName = (prefix==null ? "" : prefix + "-") + Identifiers.makeRandomId(4);
-        File tempDir = new File(tmp(), baseName);
-        if (tempDir.mkdir()) {
-            Os.deleteOnExitRecursively(tempDir);
-            return tempDir;
+        String sanitizedPrefix = (prefix==null ? "" : prefix + "-");
+        String tmpParent = tmp();
+        for (int i = 0; i < TEMP_DIR_ATTEMPTS; i++) {
+            String baseName = sanitizedPrefix + Identifiers.makeRandomId(4);
+            File tempDir = new File(tmpParent, baseName);
+            if (!tempDir.exists()) {
+                if (tempDir.mkdir()) {
+                    Os.deleteOnExitRecursively(tempDir);
+                    return tempDir;
+                } else {
+                    log.warn("Attempt to create temp dir failed " + tempDir);
+                }
+            } else {
+                log.debug("Attemp to create temp dir failed, already exists " + tempDir);
+            }
         }
-        throw new IllegalStateException("cannot write to temp dir, making directory "+tempDir);
+        throw new IllegalStateException("cannot create temporary folders in parent " + tmpParent + " after " + TEMP_DIR_ATTEMPTS + " attempts.");
     }
     
     /** as {@link #newTempDir(String)}, using the class as the basis for a prefix */
