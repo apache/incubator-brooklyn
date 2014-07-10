@@ -18,6 +18,8 @@
  */
 package brooklyn.util.ssh;
 
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.sudo;
 
 import com.google.common.annotations.Beta;
@@ -61,8 +63,8 @@ public class IptablesCommands {
 
     @Beta // implementation not portable across distros
     public static String iptablesService(String cmd) {
-        return sudo(BashCommands.alternatives(
-                BashCommands.ifExecutableElse1("service", "service iptables "+cmd),
+        return sudo(alternatives(
+                BashCommands.ifExecutableElse1("service", "service iptables " + cmd),
                 "/sbin/service iptables " + cmd));
     }
 
@@ -87,15 +89,20 @@ public class IptablesCommands {
     }
 
     /**
-     * Returns the command that saves on disk iptables rules, to make them resilient to reboot.
+     * Returns the command that saves iptables rules on file.
      *
-     * @return Returns the command that saves on disk iptables rules.
+     * @return Returns the command that saves iptables rules on file.
+     *
      */
     public static String saveIptablesRules() {
-        return BashCommands.alternatives(
-                BashCommands.ifExecutableElse1("iptables-save", sudo("iptables-save")),
-                iptablesService("save"));
+        return alternatives(sudo("service iptables save"), installPackage("iptables-persistent"));
     }
+        /*
+        return BashCommands.chain(
+                BashCommands.ifExecutableElse1("apt-get", installPackage("iptables-persistent")),
+                // rhel derivatives already have iptables-save installed
+                BashCommands.ifExecutableElse1("iptables-save", String.format("iptables-save > %s", filename)));
+        */
 
     /**
      * Returns the command that cleans up iptables rules.
