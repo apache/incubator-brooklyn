@@ -501,7 +501,7 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         final List<Entity> creationOrder = Lists.newArrayList();
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
-                .configure("factory", new EntityFactory() {
+                .configure("factory", new EntityFactory<Entity>() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         Entity result = new TestEntityImpl(flags);
                         creationOrder.add(result);
@@ -514,10 +514,18 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(cluster.getCurrentSize(), (Integer)2);
         assertEquals(ImmutableSet.copyOf(cluster.getMembers()), ImmutableSet.copyOf(creationOrder), "actual="+cluster.getMembers());
 
+        Collection<Entity> preStopMembers = ImmutableList.copyOf(cluster.getMembers());
+
         // Now stop one
         cluster.resize(1);
         assertEquals(cluster.getCurrentSize(), (Integer)1);
-        assertEquals(ImmutableList.copyOf(cluster.getMembers()), creationOrder.subList(0, 1));
+
+        //Make sure we stopped the entity with the earliest creation time
+        //Could be multiple entities with identical creation time, pick any.
+        Entity remainingEntity = cluster.getMembers().iterator().next();
+        for(Entity entity : preStopMembers) {
+            assertTrue(entity.getCreationTime() >= remainingEntity.getCreationTime());
+        }
     }
 
     @Test
