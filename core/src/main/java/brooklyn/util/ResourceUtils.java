@@ -227,13 +227,21 @@ public class ResourceUtils {
 
             try {
                 //try as classpath reference, then as file
-                URL u = getLoader().getResource(url);
-                if (u!=null) return u.openStream();
+                try {
+                    URL u = getLoader().getResource(url);
+                    if (u!=null) return u.openStream();
+                } catch (IllegalArgumentException e) {
+                    //Felix installs an additional URL to the system classloader
+                    //which throws an IllegalArgumentException when passed a
+                    //windows path. See ExtensionManager.java static initializer.
+
+                    //ignore, not a classpath resource
+                }
                 if (url.startsWith("/")) {
                     //some getResource calls fail if argument starts with /
                     String urlNoSlash = url;
                     while (urlNoSlash.startsWith("/")) urlNoSlash = urlNoSlash.substring(1);
-                    u = getLoader().getResource(urlNoSlash);
+                    URL u = getLoader().getResource(urlNoSlash);
                     if (u!=null) return u.openStream();
 //                    //Class.getResource can require a /  (else it attempts to be relative) but Class.getClassLoader doesn't
 //                    u = getLoader().getResource("/"+urlNoSlash);
