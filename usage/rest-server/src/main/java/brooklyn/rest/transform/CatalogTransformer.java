@@ -42,6 +42,7 @@ import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.PolicyConfigSummary;
 import brooklyn.rest.domain.SensorSummary;
+import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.util.collections.MutableMap;
 
@@ -58,15 +59,18 @@ public class CatalogTransformer {
         EntityDynamicType typeMap = EntityTypes.getDefinedEntityType(spec.getType());
         EntityType type = typeMap.getSnapshot();
 
-        Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
-        Set<SensorSummary> sensors = Sets.newLinkedHashSet();
-        Set<EffectorSummary> effectors = Sets.newLinkedHashSet();
+        Set<EntityConfigSummary> config = Sets.newTreeSet(SummaryComparators.nameComparator());
+        Set<SensorSummary> sensors = Sets.newTreeSet(SummaryComparators.nameComparator());
+        Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
 
-        for (ConfigKey<?> x: type.getConfigKeys()) config.add(EntityTransformer.entityConfigSummary(x, typeMap.getConfigKeyField(x.getName())));
-        for (Sensor<?> x: type.getSensors()) sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
-        for (Effector<?> x: type.getEffectors()) effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
+        for (ConfigKey<?> x: type.getConfigKeys())
+            config.add(EntityTransformer.entityConfigSummary(x, typeMap.getConfigKeyField(x.getName())));
+        for (Sensor<?> x: type.getSensors())
+            sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
+        for (Effector<?> x: type.getEffectors())
+            effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
 
-        return new CatalogEntitySummary(item.getId(), item.getName(), 
+        return new CatalogEntitySummary(item.getId(), item.getName(),
             item.getRegisteredTypeName(), item.getJavaType(), 
             item.getRegisteredTypeName(),
             item.getPlanYaml(),
