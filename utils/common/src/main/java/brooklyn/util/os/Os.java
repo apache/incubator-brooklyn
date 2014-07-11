@@ -532,9 +532,7 @@ public class Os {
             tempFile.deleteOnExit();
             return tempFile;
         } catch (IOException e) {
-            Exceptions.propagate(e);
-            //non-reachable, prevent uninitialized warning in following code
-            return null;
+            throw Exceptions.propagate(e);
         }
     }
     
@@ -547,6 +545,10 @@ public class Os {
     public static File newTempDir(String prefix) {
         String sanitizedPrefix = (prefix==null ? "" : prefix + "-");
         String tmpParent = tmp();
+        
+        //With lots of stale temp dirs it is possible to have 
+        //name collisions so we need to retry until a unique 
+        //name is found
         for (int i = 0; i < TEMP_DIR_ATTEMPTS; i++) {
             String baseName = sanitizedPrefix + Identifiers.makeRandomId(4);
             File tempDir = new File(tmpParent, baseName);
@@ -555,10 +557,10 @@ public class Os {
                     Os.deleteOnExitRecursively(tempDir);
                     return tempDir;
                 } else {
-                    log.warn("Attempt to create temp dir failed " + tempDir);
+                    log.warn("Attempt to create temp dir failed " + tempDir + ". Either an IO error (disk full, no rights) or someone else created the folder after the !exists() check.");
                 }
             } else {
-                log.debug("Attemp to create temp dir failed, already exists " + tempDir);
+                log.debug("Attempt to create temp dir failed, already exists " + tempDir + ". With ID of length 4 it is not unusual (15% chance) to have duplicate names at the 2000 samples mark.");
             }
         }
         throw new IllegalStateException("cannot create temporary folders in parent " + tmpParent + " after " + TEMP_DIR_ATTEMPTS + " attempts.");

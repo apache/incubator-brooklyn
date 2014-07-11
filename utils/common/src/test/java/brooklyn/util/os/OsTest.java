@@ -89,9 +89,9 @@ public class OsTest {
         assertEquals(Os.mergePaths("/a", "b"), "/a/b");
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testNewTempFile() {
-        int CREATE_CNT = 1500;
+        int CREATE_CNT = 5000;
         Collection<File> folders = new ArrayList<File>(CREATE_CNT);
         
         try {
@@ -111,9 +111,9 @@ public class OsTest {
         }
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testNewTempDir() {
-        int CREATE_CNT = 2000;
+        int CREATE_CNT = 5000;
         Collection<File> folders = new ArrayList<File>(CREATE_CNT);
         
         try {
