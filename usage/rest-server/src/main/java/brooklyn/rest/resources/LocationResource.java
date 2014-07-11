@@ -19,6 +19,7 @@
 package brooklyn.rest.resources;
 
 import java.net.URI;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.rest.api.LocationApi;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.LocationTransformer;
 import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.util.EntityLocationUtils;
@@ -45,6 +47,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -52,35 +55,39 @@ import com.google.common.collect.Sets;
 public class LocationResource extends AbstractBrooklynRestResource implements LocationApi {
 
     private static final Logger log = LoggerFactory.getLogger(LocationResource.class);
-    
-    private final Set<String> specsWarnedOnException = Sets.newConcurrentHashSet();
-    
-    @Override
-  public List<LocationSummary> list() {
-    return Lists.newArrayList(Iterables.filter(Iterables.transform(brooklyn().getLocationRegistry().getDefinedLocations().values(),
-        new Function<LocationDefinition, LocationSummary>() {
-          @Override
-          public LocationSummary apply(LocationDefinition l) {
-              try {
-                  return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
-              } catch (Exception e) {
-                  Exceptions.propagateIfFatal(e);
-                  String spec = l.getSpec();
-                  if (spec == null || specsWarnedOnException.add(spec)) {
-                      log.warn("Unable to find details of location {} in REST call to list (ignoring location): {}", l, e);
-                      if (log.isDebugEnabled()) log.debug("Error details for location "+l, e);
-                  } else {
-                      if (log.isTraceEnabled()) log.trace("Unable again to find details of location {} in REST call to list (ignoring location): {}", l, e);
-                  }
-                  return null;
-              }
-          }
-        }), LocationSummary.class));
-  }
 
-  // this is here to support the web GUI's circles
+    private final Set<String> specsWarnedOnException = Sets.newConcurrentHashSet();
+
     @Override
-  public Map<String,Map<String,Object>> getLocatedLocations() {
+    public List<LocationSummary> list() {
+        Function<LocationDefinition, LocationSummary> transformer = new Function<LocationDefinition, LocationSummary>() {
+            @Override
+            public LocationSummary apply(LocationDefinition l) {
+                try {
+                    return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    String spec = l.getSpec();
+                    if (spec == null || specsWarnedOnException.add(spec)) {
+                        log.warn("Unable to find details of location {} in REST call to list (ignoring location): {}", l, e);
+                        if (log.isDebugEnabled()) log.debug("Error details for location " + l, e);
+                    } else {
+                        if (log.isTraceEnabled())
+                            log.trace("Unable again to find details of location {} in REST call to list (ignoring location): {}", l, e);
+                    }
+                    return null;
+                }
+            }
+        };
+        return FluentIterable.from(brooklyn().getLocationRegistry().getDefinedLocations().values())
+                .transform(transformer)
+                .filter(LocationSummary.class)
+                .toSortedList(SummaryComparators.nameComparator());
+    }
+
+    // this is here to support the web GUI's circles
+    @Override
+    public Map<String,Map<String,Object>> getLocatedLocations() {
       Map<String,Map<String,Object>> result = new LinkedHashMap<String,Map<String,Object>>();
       Map<Location, Integer> counts = new EntityLocationUtils(mgmt()).countLeafEntitiesByLocatedLocations();
       for (Map.Entry<Location,Integer> count: counts.entrySet()) {
@@ -95,25 +102,25 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
           result.put(l.getId(), m);
       }
       return result;
-  }
+    }
 
   /** @deprecated since 0.7.0; REST call now handled by below (optional query parameter added) */
   public LocationSummary get(String locationId) {
       return get(locationId, false);
   }
-  
+
   @Override
   public LocationSummary get(String locationId, String fullConfig) {
       return get(locationId, Boolean.valueOf(fullConfig));
   }
-  
+
   public LocationSummary get(String locationId, boolean fullConfig) {
       LocationDetailLevel configLevel = fullConfig ? LocationDetailLevel.FULL_EXCLUDING_SECRET : LocationDetailLevel.LOCAL_EXCLUDING_SECRET;
       Location l1 = mgmt().getLocationManager().getLocation(locationId);
       if (l1!=null) {
         return LocationTransformer.newInstance(mgmt(), l1, configLevel);
     }
-      
+
       LocationDefinition l2 = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
       if (l2==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
       return LocationTransformer.newInstance(mgmt(), l2, configLevel);

@@ -27,7 +27,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.collect.ImmutableMap;
 
-public class ApplicationSummary {
+public class ApplicationSummary implements HasId {
 
     private final static Map<Status, Status> validTransitions =
             ImmutableMap.<Status, Status>builder()
@@ -56,6 +56,7 @@ public class ApplicationSummary {
         this.links = links == null ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
     }
 
+    @Override
     public String getId() {
         return id;
     }

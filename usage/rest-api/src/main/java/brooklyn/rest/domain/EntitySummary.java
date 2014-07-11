@@ -24,7 +24,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import java.net.URI;
 import java.util.Map;
 
-public class EntitySummary {
+public class EntitySummary implements HasId, HasName {
 
   private final String id;
   private final String name;
@@ -47,10 +47,12 @@ public class EntitySummary {
     return type;
   }
 
+  @Override
   public String getId() {
     return id;
   }
   
+  @Override
   public String getName() {
     return name;
   }

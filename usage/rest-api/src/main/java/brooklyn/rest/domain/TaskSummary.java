@@ -35,7 +35,7 @@ import brooklyn.util.collections.Jsonya;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class TaskSummary {
+public class TaskSummary implements HasId {
 
   private final String id;
   private final String displayName;
@@ -112,6 +112,7 @@ public class TaskSummary {
 }
 
 
+  @Override
   public String getId() {
       return id;
   }

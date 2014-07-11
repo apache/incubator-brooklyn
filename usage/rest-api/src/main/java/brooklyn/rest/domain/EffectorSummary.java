@@ -29,9 +29,9 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
-public class EffectorSummary {
+public class EffectorSummary implements HasName {
 
-  public static class ParameterSummary<T> {
+  public static class ParameterSummary<T> implements HasName {
     private final String name;
     private final String type;
     @JsonSerialize(include=Inclusion.NON_NULL)
@@ -50,6 +50,7 @@ public class EffectorSummary {
       this.defaultValue = defaultValue;
     }
 
+    @Override
     public String getName() {
       return name;
     }
@@ -120,6 +121,7 @@ public class EffectorSummary {
     this.links = links != null ? ImmutableMap.copyOf(links) : null;
   }
 
+  @Override
   public String getName() {
     return name;
   }

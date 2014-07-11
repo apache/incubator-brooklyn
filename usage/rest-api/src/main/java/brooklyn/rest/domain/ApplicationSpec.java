@@ -32,7 +32,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class ApplicationSpec {
+public class ApplicationSpec implements HasName {
 
   public static Builder builder() {
     return new Builder();
@@ -109,6 +109,7 @@ public class ApplicationSpec {
 //    if (this.entities==null && this.type==null) throw new IllegalStateException("must supply either type or entities for an application spec");
   }
 
+  @Override
   public String getName() {
     return name;
   }

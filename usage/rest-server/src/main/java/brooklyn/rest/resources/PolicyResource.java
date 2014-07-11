@@ -34,6 +34,7 @@ import brooklyn.policy.basic.Policies;
 import brooklyn.rest.api.PolicyApi;
 import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.domain.Status;
+import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.ApplicationTransformer;
 import brooklyn.rest.transform.PolicyTransformer;
 import brooklyn.util.exceptions.Exceptions;
@@ -45,11 +46,6 @@ import com.google.common.collect.Maps;
 public class PolicyResource extends AbstractBrooklynRestResource implements PolicyApi {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyResource.class);
-    private static final Comparator<PolicySummary> SUMMARY_NAME_COMPARATOR = new Comparator<PolicySummary>() {
-        @Override public int compare(PolicySummary o1, PolicySummary o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-    };
 
     @Override
     public List<PolicySummary> list( final String application, final String entityToken) {
@@ -61,7 +57,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
                     return PolicyTransformer.policySummary(entity, policy);
                 }
             })
-            .toSortedList(SUMMARY_NAME_COMPARATOR);
+            .toSortedList(SummaryComparators.nameComparator());
     }
 
     // TODO support parameters  ?show=value,summary&name=xxx

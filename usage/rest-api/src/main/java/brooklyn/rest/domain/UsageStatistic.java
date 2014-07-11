@@ -29,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author Adam Lowe
  */
-public class UsageStatistic {
+public class UsageStatistic implements HasId {
     private final Status status;
     private final String id;
     private final String applicationId;
@@ -55,6 +55,7 @@ public class UsageStatistic {
         return status;
     }
 
+    @Override
     public String getId() {
         return id;
     }

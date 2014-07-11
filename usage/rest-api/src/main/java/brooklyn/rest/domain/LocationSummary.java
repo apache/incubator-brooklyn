@@ -32,7 +32,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
-public class LocationSummary extends LocationSpec {
+public class LocationSummary extends LocationSpec implements HasName, HasId {
 
   private final String id;
   
@@ -55,6 +55,7 @@ public class LocationSummary extends LocationSpec {
     this.links = ImmutableMap.copyOf(links);
   }
 
+  @Override
   public String getId() {
     return id;
   }

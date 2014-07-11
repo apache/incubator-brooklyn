@@ -43,6 +43,7 @@ import brooklyn.rest.api.CatalogApi;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.CatalogTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
@@ -53,8 +54,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -116,24 +116,18 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public List<CatalogItemSummary> listEntities(
-        final String regex,
-        final String fragment
-    ) {
+    public List<CatalogItemSummary> listEntities(String regex, String fragment) {
         return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_ENTITY, regex, fragment);
     }
 
     @Override
-    public List<CatalogItemSummary> listApplications(
-            final String regex,
-            final  String fragment
-    ) {
+    public List<CatalogItemSummary> listApplications(String regex, String fragment) {
         return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_TEMPLATE, regex, fragment);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public CatalogEntitySummary getEntity(String entityId) throws Exception {
+    public CatalogEntitySummary getEntity(String entityId) {
       CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);
       if (result==null) {
         throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
@@ -143,16 +137,17 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public List<CatalogItemSummary> listPolicies(
-            final String regex,
-            final String fragment
-    ) {
+    public CatalogEntitySummary getApplication(String applicationId) {
+        return getEntity(applicationId);
+    }
+
+    @Override
+    public List<CatalogItemSummary> listPolicies(String regex, String fragment) {
         return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_POLICY, regex, fragment);
     }
     
     @Override
-    public CatalogItemSummary getPolicy(
-        String policyId) throws Exception {
+    public CatalogItemSummary getPolicy(String policyId) {
         CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(policyId);
         if (result==null) {
           throw WebResourceUtils.notFound("Policy with id '%s' not found", policyId);
@@ -169,9 +164,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
             filters.add(CatalogPredicates.xml(StringPredicates.containsRegex(regex)));
         if (Strings.isNonEmpty(fragment))
             filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralCaseInsensitive(fragment)));
-        return ImmutableList.copyOf(Iterables.transform(
-                brooklyn().getCatalog().getCatalogItems(Predicates.and(filters)),
-                TO_CATALOG_ITEM_SUMMARY));        
+
+        return FluentIterable.from(brooklyn().getCatalog().getCatalogItems())
+                .filter(Predicates.and(filters))
+                .transform(TO_CATALOG_ITEM_SUMMARY)
+                .toSortedList(SummaryComparators.idComparator());
     }
 
     @Override

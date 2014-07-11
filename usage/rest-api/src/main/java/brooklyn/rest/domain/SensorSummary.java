@@ -27,7 +27,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import com.google.common.collect.ImmutableMap;
 
-public class SensorSummary {
+public class SensorSummary implements HasName {
 
   private final String name;
   private final String type;
@@ -48,6 +48,7 @@ public class SensorSummary {
     this.links = links != null ? ImmutableMap.copyOf(links) : null;
   }
 
+  @Override
   public String getName() {
     return name;
   }
