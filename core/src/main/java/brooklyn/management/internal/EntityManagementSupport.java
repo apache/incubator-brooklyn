@@ -361,6 +361,10 @@ public class EntityManagementSupport {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
+        public void onTagsChanged() {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+        }
+        @Override
         public void onMembersChanged() {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }

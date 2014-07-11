@@ -1292,16 +1292,22 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public boolean addTag(Object tag) {
+        boolean result;
         synchronized (tags) {
-            return tags.add(tag);
+            result = tags.add(tag);
         }
+        getManagementSupport().getEntityChangeListener().onTagsChanged();
+        return result;
     }    
 
     @Override
     public boolean removeTag(Object tag) {
+        boolean result;
         synchronized (tags) {
-            return tags.remove(tag);
+            result = tags.remove(tag);
         }
+        getManagementSupport().getEntityChangeListener().onTagsChanged();
+        return result;
     }    
 
     @Override
