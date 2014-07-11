@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,9 @@ import com.google.gson.JsonElement;
 public class CouchbaseClusterImpl extends DynamicClusterImpl implements CouchbaseCluster {
     private static final Logger log = LoggerFactory.getLogger(CouchbaseClusterImpl.class);
     private final Object mutex = new Object[0];
-    private final HttpFeed[] resetBucketCreation = new HttpFeed[]{null};
+    // Used to serialize bucket creation as only one bucket can be created at a time,
+    // so a feed is used to determine when a bucket has finished being created
+    private final AtomicReference<HttpFeed> resetBucketCreation = new AtomicReference<HttpFeed>();
 
     public void init() {
         log.info("Initializing the Couchbase cluster...");
@@ -195,8 +198,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
     @Override
     public void stop() {
-        if (resetBucketCreation[0] != null) {
-            resetBucketCreation[0].stop();
+        if (resetBucketCreation.get() != null) {
+            resetBucketCreation.get().stop();
         }
         super.stop();
     }
@@ -360,8 +363,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
     
     public void createBuckets() {
-        //FIXME: multiple buckets require synchronization/wait time (checks for port conflicts and exceeding ram size)
-        //TODO: check for multiple bucket conflicts with port
+        //TODO: check for port conflicts if buckets are being created with a port
         List<Map<String, Object>> bucketsToCreate = getConfig(CREATE_BUCKETS);
         Entity primaryNode = getPrimaryNode();
 
@@ -374,7 +376,6 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
             log.info("adding bucket: {} to primary node: {}", bucketName, primaryNode.getId());
             createBucket(primaryNode, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
-            //TODO: add if bucket has been created.
         }
     }
 
@@ -384,12 +385,12 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                     @Override
                     public Void call() throws Exception {
                         DependentConfiguration.waitInTaskForAttributeReady(CouchbaseClusterImpl.this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
-                        if (CouchbaseClusterImpl.this.resetBucketCreation[0] != null) {
-                            CouchbaseClusterImpl.this.resetBucketCreation[0].stop();
+                        if (CouchbaseClusterImpl.this.resetBucketCreation.get() != null) {
+                            CouchbaseClusterImpl.this.resetBucketCreation.get().stop();
                         }
                         setAttribute(CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, true);
                         
-                        CouchbaseClusterImpl.this.resetBucketCreation[0] = HttpFeed.builder()
+                        CouchbaseClusterImpl.this.resetBucketCreation.set(HttpFeed.builder()
                                 .entity(CouchbaseClusterImpl.this)
                                 .period(500, TimeUnit.MILLISECONDS)
                                 .baseUri(String.format("%s/pools/default/buckets/%s", primaryNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), bucketName))
@@ -420,13 +421,13 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                                                 throw new IllegalStateException("Unexpected response when creating bucket:" + input);
                                             }
                                         }))
-                                .build();
+                                .build());
 
                         // TODO: Bail out if bucket creation fails, to allow next bucket to proceed
                         Entities.invokeEffectorWithArgs(CouchbaseClusterImpl.this, primaryNode, CouchbaseNode.BUCKET_CREATE, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
                         DependentConfiguration.waitInTaskForAttributeReady(CouchbaseClusterImpl.this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
-                        if (CouchbaseClusterImpl.this.resetBucketCreation[0] != null) {
-                            CouchbaseClusterImpl.this.resetBucketCreation[0].stop();
+                        if (CouchbaseClusterImpl.this.resetBucketCreation.get() != null) {
+                            CouchbaseClusterImpl.this.resetBucketCreation.get().stop();
                         }
                         return null;
                     }

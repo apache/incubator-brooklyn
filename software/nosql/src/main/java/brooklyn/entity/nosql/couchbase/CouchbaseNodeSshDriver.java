@@ -284,15 +284,15 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         return !HttpValueFunctions.jsonContents("status", String.class).apply(response).equals("none");
     }
     
-    private HttpToolResponse getAPIResponse(String path) throws URISyntaxException {
-        URI uri = new URI(path);
+    private HttpToolResponse getAPIResponse(String uri) throws URISyntaxException {
+        URI apiUri = new URI(uri);
         Credentials credentials = new UsernamePasswordCredentials(getUsername(), getPassword());
         return HttpTool.httpGet(HttpTool.httpClientBuilder()
                 // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
-                .uri(uri)
+                .uri(apiUri)
                 .credentials(credentials)
                 .build(), 
-            uri, 
+            apiUri, 
             ImmutableMap.<String, String>of());
     }
     
