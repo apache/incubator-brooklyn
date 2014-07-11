@@ -18,7 +18,6 @@
  */
 package brooklyn.entity.pool;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -30,21 +29,19 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.TestApplication;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
 
 public class ServerPoolRebindTest extends AbstractServerPoolTest {
 

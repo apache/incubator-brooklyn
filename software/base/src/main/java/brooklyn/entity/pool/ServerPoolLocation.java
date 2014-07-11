@@ -40,6 +40,8 @@ import brooklyn.util.flags.SetFromFlag;
 public class ServerPoolLocation extends AbstractLocation implements MachineProvisioningLocation<MachineLocation>,
         DynamicLocation<ServerPool, ServerPoolLocation> {
 
+    private static final long serialVersionUID = -6771844611899475409L;
+
     private static final Logger LOG = LoggerFactory.getLogger(ServerPoolLocation.class);
 
     @SetFromFlag("owner")

@@ -80,6 +80,7 @@ public class ServerPoolLocationResolver implements EnableableLocationResolver {
         return BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
         if (LOG.isDebugEnabled()) {

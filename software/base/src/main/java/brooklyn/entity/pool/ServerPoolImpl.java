@@ -18,23 +18,11 @@
  */
 package brooklyn.entity.pool;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.reflect.TypeToken;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -57,6 +45,13 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
+
 public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerPoolImpl.class);
@@ -75,14 +70,17 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
 
     /** Accesses must be synchronised by mutex */
     // Would use BiMap but persisting them tends to throw ConcurrentModificationExceptions.
+    @SuppressWarnings("serial")
     public static final AttributeSensor<Map<Entity, MachineLocation>> ENTITY_MACHINE = Sensors.newSensor(new TypeToken<Map<Entity, MachineLocation>>() {},
                 "pool.entityMachineMap", "A mapping of entities and their machine locations");
+    @SuppressWarnings("serial")
     public static final AttributeSensor<Map<MachineLocation, Entity>> MACHINE_ENTITY = Sensors.newSensor(new TypeToken<Map<MachineLocation, Entity>>() {},
                 "pool.machineEntityMap", "A mapping of machine locations and their entities");
 
     public static final AttributeSensor<LocationDefinition> DYNAMIC_LOCATION_DEFINITION = Sensors.newSensor(LocationDefinition.class,
             "pool.locationDefinition", "The location definition used to create the pool's dynamic location");
 
+    @SuppressWarnings("unused")
     private MemberTrackingPolicy membershipTracker;
 
     @Override
@@ -233,7 +231,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
                         new Object[]{this, delta, -removeable});
                 delta = -removeable;
             }
-            Collection removed = super.shrink(delta);
+            Collection<Entity> removed = super.shrink(delta);
             updateCountSensors();
             return removed;
         }
