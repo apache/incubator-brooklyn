@@ -79,7 +79,8 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
         assertEquals(event1.getApplicationId(), app.getId());
         assertEquals(event1.getEntityId(), entity.getId());
         assertEquals(event1.getState(), Lifecycle.CREATED);
-        assertTrue(event1.getDate().getTime() > preStart && event1.getDate().getTime() < postStart, "date="+event1.getDate()+"; pre="+preStart+"; post="+postStart);
+        long event1Time = event1.getDate().getTime();
+        assertTrue(event1Time >= preStart && event1Time <= postStart, "event1="+event1Time+"; pre="+preStart+"; post="+postStart);
         
         // Stop the app; expect record of location no longer in use
         long preStop = System.currentTimeMillis();
@@ -96,8 +97,8 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
         assertEquals(event2.getApplicationId(), app.getId());
         assertEquals(event2.getEntityId(), entity.getId());
         assertEquals(event2.getState(), Lifecycle.DESTROYED);
-        long eventTime = event2.getDate().getTime();
-        assertTrue(eventTime >= preStop && eventTime <= postStop, "date="+eventTime+"; pre="+preStop+"; post="+postStop);
+        long event2Time = event2.getDate().getTime();
+        assertTrue(event2Time >= preStop && event2Time <= postStop, "event2="+event2Time+"; pre="+preStop+"; post="+postStop);
     }
     
     public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
