@@ -87,7 +87,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
 
 
     protected Entity setupAndCheckTestEntityInBasicYamlWith(String ...extras) throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml", extras);
+        Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml", extras));
         waitForApplicationTasks(app);
 
         Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");

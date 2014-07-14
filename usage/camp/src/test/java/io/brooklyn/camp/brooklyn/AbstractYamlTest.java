@@ -38,7 +38,6 @@ import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.stream.Streams;
 
 public abstract class AbstractYamlTest {
 
@@ -85,12 +84,12 @@ public abstract class AbstractYamlTest {
         }
     }
 
-    protected Entity createAndStartApplication(String yamlFileName, String ...extraLines) throws Exception {
+    protected Reader loadYaml(String yamlFileName, String ...extraLines) throws Exception {
         String input = new ResourceUtils(this).getResourceAsString(yamlFileName).trim();
         StringBuilder builder = new StringBuilder(input);
         for (String l: extraLines)
             builder.append("\n").append(l);
-        return createAndStartApplication(Streams.newReaderWithContents(builder.toString()));
+        return new StringReader(builder.toString());
     }
     
     protected Entity createAndStartApplication(String input) throws Exception {

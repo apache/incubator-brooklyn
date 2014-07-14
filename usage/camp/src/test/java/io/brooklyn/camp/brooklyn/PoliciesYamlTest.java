@@ -47,7 +47,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
 
     @Test
     public void testWithAppPolicy() throws Exception {
-        Entity app = createAndStartApplication("test-app-with-policy.yaml");
+        Entity app = createAndStartApplication(loadYaml("test-app-with-policy.yaml"));
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-app-with-policy");
 
@@ -67,7 +67,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
     
     @Test
     public void testWithEntityPolicy() throws Exception {
-        Entity app = createAndStartApplication("test-entity-with-policy.yaml");
+        Entity app = createAndStartApplication(loadYaml("test-entity-with-policy.yaml"));
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-entity-with-policy");
 
@@ -90,7 +90,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
     
     @Test
     public void testChildWithPolicy() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+        Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml",
                     "  brooklyn.config:",
                     "    test.confName: parent entity",
                     "  brooklyn.children:",
@@ -100,7 +100,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
                     "    - policyType: brooklyn.test.policy.TestPolicy",
                     "      brooklyn.config:",
                     "        test.confName: Name from YAML",
-                    "        test.attributeSensor: $brooklyn:sensor(\"brooklyn.test.entity.TestEntity\", \"test.name\")");
+                    "        test.attributeSensor: $brooklyn:sensor(\"brooklyn.test.entity.TestEntity\", \"test.name\")"));
         waitForApplicationTasks(app);
 
         Assert.assertEquals(app.getChildren().size(), 1);
@@ -126,7 +126,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
     
     @Test
     public void testMultiplePolicyReferences() throws Exception {
-        final Entity app = createAndStartApplication("test-referencing-policies.yaml");
+        final Entity app = createAndStartApplication(loadYaml("test-referencing-policies.yaml"));
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-referencing-policies");
         
