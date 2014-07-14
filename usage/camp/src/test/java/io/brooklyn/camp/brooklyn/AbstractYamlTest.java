@@ -22,6 +22,7 @@ import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -90,6 +91,10 @@ public abstract class AbstractYamlTest {
         for (String l: extraLines)
             builder.append("\n").append(l);
         return createAndStartApplication(Streams.newReaderWithContents(builder.toString()));
+    }
+    
+    protected Entity createAndStartApplication(String input) throws Exception {
+        return createAndStartApplication(new StringReader(input));
     }
 
     protected Entity createAndStartApplication(Reader input) throws Exception {
