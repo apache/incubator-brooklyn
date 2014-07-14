@@ -14,12 +14,15 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
+
 import java.util.Map;
 
 /**
  * Configurable {@link brooklyn.entity.proxying.EntityInitializer} which adds an HTTP sensor feed to retrieve the
  * <code>JSONObject</code> from a JSON response in order to populate the sensor with the indicated <code>name</code>.
  */
+@Beta
 public final class HttpRequestSensor<T> extends AddSensor<T, AttributeSensor<T>> {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(HttpRequestSensor.class);
@@ -27,8 +30,12 @@ public final class HttpRequestSensor<T> extends AddSensor<T, AttributeSensor<T>>
     public static final ConfigKey<String> JSON_PATH = ConfigKeys.newStringConfigKey("jsonPath");
     public static final ConfigKey<String> SENSOR_URI = ConfigKeys.newStringConfigKey("uri");
 
-    private String jsonPath;
-    private String uri;
+    private final String jsonPath;
+    private final String uri;
+
+    public HttpRequestSensor(Map<String, String> params) {
+        this(ConfigBag.newInstance(params));
+    }
 
     public HttpRequestSensor(ConfigBag params) {
         super(AddSensor.<T>newSensor(params));
@@ -52,9 +59,5 @@ public final class HttpRequestSensor<T> extends AddSensor<T, AttributeSensor<T>>
                 .baseUri(uri)
                 .poll(pollConfig)
                 .build();
-    }
-
-    public HttpRequestSensor(Map<String, String> params) {
-        this(ConfigBag.newInstance(params));
     }
 }

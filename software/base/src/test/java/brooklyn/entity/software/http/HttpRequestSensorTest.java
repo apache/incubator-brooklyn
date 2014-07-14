@@ -8,6 +8,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
@@ -16,14 +17,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertEquals;
-import static brooklyn.test.Asserts.succeedsEventually;
 
 public class HttpRequestSensorTest {
-    final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
-    final static AttributeSensor<String> SENSOR_JSON_OBJECT = Sensors.newStringSensor("aJSONObject","");
-    final static AttributeSensor<String> SENSOR_URI = Sensors.newStringSensor("uri","");
+    final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString");
+    final static String TARGET_TYPE = "java.lang.String";
 
     private TestApplication app;
     private EntityLocal entity;
@@ -42,21 +40,16 @@ public class HttpRequestSensorTest {
 
     @Test(groups="Integration")
     public void testHttpSensor() throws Exception {
-        new HttpRequestSensor<String>(ConfigBag.newInstance()
+        HttpRequestSensor<Integer> sensor = new HttpRequestSensor<Integer>(ConfigBag.newInstance()
                 .configure(HttpRequestSensor.SENSOR_NAME, SENSOR_STRING.getName())
+                .configure(HttpRequestSensor.SENSOR_TYPE, TARGET_TYPE)
                 .configure(HttpRequestSensor.JSON_PATH, "$.myKey")
-                .configure(HttpRequestSensor.SENSOR_URI, "http://echo.jsontest.com/myKey/myValue"))
-            .apply(entity);
+                .configure(HttpRequestSensor.SENSOR_URI, "http://echo.jsontest.com/myKey/myValue"));
+            sensor.apply(entity);
         entity.setAttribute(Attributes.SERVICE_UP, true);
 
-        succeedsEventually(new Runnable() {
-            public void run() {
-                String val = entity.getAttribute(SENSOR_STRING);
-                assertTrue(val != null);
-            }
-        });
-
-        String val = entity.getAttribute(SENSOR_STRING);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_STRING, SENSOR_STRING.getName());
+        String val = entity.getConfig(HttpRequestSensor.SENSOR_NAME);
         assertEquals(val, "myValue", "val=" + val);
     }
 }

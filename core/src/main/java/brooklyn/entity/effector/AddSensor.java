@@ -32,9 +32,12 @@ import brooklyn.util.time.Duration;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
-/** Entity initializer which adds a sensor to an entity's type definition.
- * Subclasses must add the feed; this class does not do that. 
- * @since 0.7.0 */
+/**
+ * Creates a new sensor. The configuration can include the sensor {@code name} and {@code targetType}.
+ * For the targetType, currently this only supports classes on the initial classpath
+ * (e.g. not those in OSGi bundles added at runtime).
+ * @since 0.7.0
+ * */
 @Beta
 public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
     protected final T sensor;
@@ -66,7 +69,7 @@ public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
         try {
             type = (Class<T>) Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Invalid target type");
+            throw new IllegalArgumentException("Invalid target type for sensor "+name+": " + className);
         }
         return Sensors.newSensor(type, name);
     }
