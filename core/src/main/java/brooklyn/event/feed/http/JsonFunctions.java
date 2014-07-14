@@ -34,9 +34,7 @@ import brooklyn.util.guava.MaybeFunctions;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.google.gson.JsonParser;
 import com.jayway.jsonpath.JsonPath;
 
@@ -152,17 +150,14 @@ public class JsonFunctions {
     }
 
     /**
-     * returns an element from a json object given a full path {@link com.jayway.jsonpath.JsonPath}
+     * returns an element from a single json primitive value given a full path {@link com.jayway.jsonpath.JsonPath}
      */
-    public static Function<JsonElement,? extends JsonElement> getPath(final String element) {
-        return new Function<JsonElement, JsonElement>() {
-            @Override public JsonElement apply(JsonElement input) {
+    public static <T> Function<JsonElement,T> getPath(final String path) {
+        return new Function<JsonElement, T>() {
+            @Override public T apply(JsonElement input) {
                 String jsonString = input.toString();
-                JsonParser jsonParser = new JsonParser();
-                JsonElement curr = jsonParser.parse(JsonPath.<String>read(jsonString, element));
-                if (curr==null)
-                    throw new NoSuchElementException("No element '"+element+" in JSON);");
-                return curr;
+                Object rawElement = JsonPath.read(jsonString, path);
+                return (T) rawElement;
             }
         };
     }

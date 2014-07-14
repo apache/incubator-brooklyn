@@ -38,12 +38,11 @@ import com.google.common.base.Preconditions;
 @Beta
 public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
     protected final T sensor;
-    
     public static final ConfigKey<String> SENSOR_NAME = ConfigKeys.newStringConfigKey("name");
     public static final ConfigKey<Duration> SENSOR_PERIOD = ConfigKeys.newConfigKey(Duration.class, "period", "Period, including units e.g. 1m or 5s or 200ms");
     
     // TODO
-//    public static final ConfigKey<String> SENSOR_TYPE = ConfigKeys.newStringConfigKey("targetType");
+    public static final ConfigKey<String> SENSOR_TYPE = ConfigKeys.newStringConfigKey("targetType");
 
     public AddSensor(T sensor) {
         this.sensor = Preconditions.checkNotNull(sensor, "sensor");
@@ -53,10 +52,23 @@ public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
     public void apply(EntityLocal entity) {
         ((EntityInternal)entity).getMutableEntityType().addSensor(sensor);
     }
-    
-    public static <T> AttributeSensor<T> newSensor(Class<T> type, ConfigBag params) {
+
+    public static <T> AttributeSensor<T> newSensor(Class<T> type, ConfigBag params){
         String name = Preconditions.checkNotNull(params.get(SENSOR_NAME), "name must be supplied when defining a sensor");
-        return Sensors.newSensor(type, name); 
+        return Sensors.newSensor(type, name);
+    }
+
+    public static <T> AttributeSensor<T> newSensor(ConfigBag params) {
+        String name = Preconditions.checkNotNull(params.get(SENSOR_NAME), "name must be supplied when defining a sensor");
+        String className = Preconditions.checkNotNull(params.get(SENSOR_TYPE), "target class must be supplied when defining a sensor");
+        Class<T> type = null;
+
+        try {
+            type = (Class<T>) Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException("Invalid target type");
+        }
+        return Sensors.newSensor(type, name);
     }
 
 }
