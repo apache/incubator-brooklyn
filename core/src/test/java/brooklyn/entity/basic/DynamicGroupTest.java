@@ -293,7 +293,7 @@ public class DynamicGroupTest {
         });
 
         for (int i = 0; i < NUM_CYCLES; i++) {
-            final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).id("entity-" + i));
+            final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
             LOG.debug("Created: entity {}", i);
             Asserts.succeedsEventually(new Runnable() {
                 public void run() {
