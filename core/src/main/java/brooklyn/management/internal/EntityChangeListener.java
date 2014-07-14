@@ -33,6 +33,7 @@ public interface EntityChangeListener {
         @Override public void onConfigChanged(ConfigKey<?> key) {}
         @Override public void onLocationsChanged() {}
         @Override public void onMembersChanged() {}
+        @Override public void onTagsChanged() {}
         @Override public void onChildrenChanged() {}
         @Override public void onPolicyAdded(Policy policy) {}
         @Override public void onPolicyRemoved(Policy policy) {}
@@ -49,6 +50,8 @@ public interface EntityChangeListener {
     void onConfigChanged(ConfigKey<?> key);
 
     void onLocationsChanged();
+    
+    void onTagsChanged();
 
     void onMembersChanged();
 
