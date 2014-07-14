@@ -18,6 +18,9 @@
  */
 package brooklyn.util.text;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -33,6 +36,28 @@ public class IdentifiersTest {
         Assert.assertEquals(id1.length(), 4);
         String id2 = Identifiers.makeRandomId(4);
         Assert.assertNotEquals(id1, id2);
+    }
+
+    //The test is disabled since it takes a while to finish
+    //and there is still the possibility that it could fail.
+    @Test(enabled = false)
+    public void testRandomIdRandomness() {
+        int collisionTestCnt = 100000;
+        int sampleSize = 2000;
+        
+        int duplicateTests = 0;
+        for(int testIdx = 0; testIdx < collisionTestCnt; testIdx++) {
+            Set<String> randomIds = new HashSet<String>();
+            for (int sampleCnt = 0; sampleCnt < sampleSize; sampleCnt++) {
+                if(!randomIds.add(Identifiers.makeRandomId(4))) {
+                    duplicateTests++;
+                    break;
+                }
+            }
+        }
+        double probability = ((double)duplicateTests)*100/collisionTestCnt;
+        log.info("testRandomIdRandomness probability = " + probability);
+        Assert.assertEquals(probability, 15, 0.5d, "Expected probability of collision with id of length 4 and 2000 samples is 15%.");
     }
 
     @Test

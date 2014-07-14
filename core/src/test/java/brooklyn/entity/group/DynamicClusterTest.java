@@ -501,7 +501,7 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         final List<Entity> creationOrder = Lists.newArrayList();
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 0)
-                .configure("factory", new EntityFactory() {
+                .configure("factory", new EntityFactory<Entity>() {
                     @Override public Entity newEntity(Map flags, Entity parent) {
                         Entity result = new TestEntityImpl(flags);
                         creationOrder.add(result);
@@ -510,6 +510,12 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
 
         cluster.start(ImmutableList.of(loc));
         cluster.resize(1);
+        
+        //Prevent the two entities created in the same ms
+        //so that the removal strategy can always choose the 
+        //entity created next
+        Thread.sleep(1);
+        
         cluster.resize(2);
         assertEquals(cluster.getCurrentSize(), (Integer)2);
         assertEquals(ImmutableSet.copyOf(cluster.getMembers()), ImmutableSet.copyOf(creationOrder), "actual="+cluster.getMembers());

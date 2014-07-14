@@ -29,6 +29,7 @@ import java.util.jar.JarInputStream;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
@@ -72,9 +74,10 @@ public class OsgiStandaloneTest {
     }
 
     @AfterMethod
-    public void tearDown() throws BundleException, IOException {
+    public void tearDown() throws BundleException, IOException, InterruptedException {
         if (framework!=null) {
             framework.stop();
+            Assert.assertEquals(framework.waitForStop(1000).getType(), FrameworkEvent.STOPPED);
             framework = null;
         }
         if (storageTempDir!=null) {
@@ -184,6 +187,22 @@ public class OsgiStandaloneTest {
         Class<?> aClass = bundle.loadClass("brooklyn.osgi.tests.SimpleApplicationImpl");
         Object aInst = aClass.newInstance();
         Assert.assertNotNull(aInst);
+    }
+    
+    @Test
+    public void testLoadAbsoluteWindowsResourceWithInstalledOSGi() {
+        //Felix installs an additional URL to the system classloader
+        //which throws an IllegalArgumentException when passed a
+        //windows path. See ExtensionManager.java static initializer.
+        String context = "mycontext";
+        String dummyPath = "C:\\dummypath";
+        ResourceUtils utils = ResourceUtils.create(this, context);
+        try {
+            utils.getResourceFromUrl(dummyPath);
+            Assert.fail("Non-reachable, should throw an exception for non-existing resource.");
+        } catch (RuntimeException e) {
+            Assert.assertTrue(e.getMessage().startsWith("Error getting resource '"+dummyPath+"' for "+context));
+        }
     }
     
 }

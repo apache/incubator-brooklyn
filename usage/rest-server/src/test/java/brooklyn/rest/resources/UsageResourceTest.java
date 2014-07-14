@@ -100,14 +100,17 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
         // check app ignored if endDate before app started
-        response = client().resource("/v1/usage/applications?start="+0+"&end="+preStart.getTime()).get(ClientResponse.class);
+        response = client().resource("/v1/usage/applications?start="+0+"&end="+(preStart.getTime()-1)).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
+        
+        long afterPostStart = postStart.getTime()+1;
+        waitForFuture(afterPostStart);
 
         // check app start and end date truncated, even if running for longer
         // note that start==end means we get a snapshot of the apps in use at that exact time.
-        response = client().resource("/v1/usage/applications?start="+postStart.getTime()+"&end="+postStart.getTime()).get(ClientResponse.class);
+        response = client().resource("/v1/usage/applications?start="+afterPostStart+"&end="+afterPostStart).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
@@ -127,7 +130,10 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING, Status.DESTROYED), roundDown(preStart), postDelete);
         assertAppUsage(ImmutableList.copyOf(usage.getStatistics()).subList(2, 3), appId, ImmutableList.of(Status.DESTROYED), roundDown(preDelete), postDelete);
 
-        response = client().resource("/v1/usage/applications?start=" + (postDelete.getTime()+1)).get(ClientResponse.class);
+        long afterPostDelete = postDelete.getTime()+1;
+        waitForFuture(afterPostDelete);
+        
+        response = client().resource("/v1/usage/applications?start=" + afterPostDelete).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
@@ -193,7 +199,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(ImmutableList.copyOf(usage.getStatistics()).subList(2, 3), appId, ImmutableList.of(Status.DESTROYED), roundDown(preDelete), postDelete);
 
         // Deleted app not returned if terminated before time range begins
-        response = client().resource("/v1/usage/applications/" + appId +"?start=" + (postDelete.getTime()+1)).get(ClientResponse.class);
+        long afterPostDelete = postDelete.getTime()+1;
+        waitForFuture(afterPostDelete);
+        response = client().resource("/v1/usage/applications/" + appId +"?start=" + afterPostDelete).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty(), "usages="+usage);
@@ -277,7 +285,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertMachineUsage(ImmutableList.copyOf(usage.getStatistics()).subList(1,2), appId, machine.getId(), ImmutableList.of(Status.DESTROYED), roundDown(preStop), postStop);
 
         // Terminated machines ignored if terminated since start-time
-        response = client().resource("/v1/usage/applications?start=" + (postStop.getTime()+1)).get(ClientResponse.class);
+        long futureTime = postStop.getTime()+1;
+        waitForFuture(futureTime);
+        response = client().resource("/v1/usage/applications?start=" + futureTime).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
@@ -415,4 +425,12 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
             getManagementContext().getLocationManager().unmanage(machine);
         }
     }
+
+    private void waitForFuture(long futureTime) throws InterruptedException {
+        long now;
+        while ((now = System.currentTimeMillis()) < futureTime) {
+            Thread.sleep(futureTime - now);
+        }
+    }
+
 }

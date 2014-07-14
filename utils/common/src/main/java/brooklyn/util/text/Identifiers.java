@@ -40,6 +40,11 @@ public class Identifiers {
      * tests ensure random distribution, so random ID of length 5 
      * is about 2^29 possibilities 
      * <p>
+     * With ID of length 4 it is not unlikely (15% chance) to get
+     * duplicates in the first 2000 attempts.
+     * With ID of length 8 there is 1% chance to get duplicates
+     * in the first 1M attempts and 50% for the first 16M.
+     * <p>
      * implementation is efficient, uses char array, and 
      * makes one call to random per 5 chars; makeRandomId(5)
      * takes about 4 times as long as a simple Math.random call,
