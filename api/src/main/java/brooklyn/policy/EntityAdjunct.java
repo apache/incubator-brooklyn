@@ -36,6 +36,12 @@ public interface EntityAdjunct extends Identifiable {
      *
      * @return the name assigned to the adjunct
      */
+    String getDisplayName();
+    
+    /**
+     * @deprecated since 0.7; use {@link #getDisplayName()}
+     */
+    @Deprecated
     String getName();
     
     /**

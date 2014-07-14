@@ -92,7 +92,7 @@ public class InternalPolicyFactory extends InternalFactory {
             T pol = construct(clazz, spec.getFlags());
 
             if (spec.getDisplayName()!=null)
-                ((AbstractPolicy)pol).setName(spec.getDisplayName());
+                ((AbstractPolicy)pol).setDisplayName(spec.getDisplayName());
             
             if (isNewStylePolicy(clazz)) {
                 ((AbstractPolicy)pol).setManagementContext(managementContext);
@@ -127,7 +127,7 @@ public class InternalPolicyFactory extends InternalFactory {
             T enricher = construct(clazz, spec.getFlags());
             
             if (spec.getDisplayName()!=null)
-                ((AbstractEnricher)enricher).setName(spec.getDisplayName());
+                ((AbstractEnricher)enricher).setDisplayName(spec.getDisplayName());
             
             if (isNewStyleEnricher(clazz)) {
                 ((AbstractEnricher)enricher).setManagementContext(managementContext);

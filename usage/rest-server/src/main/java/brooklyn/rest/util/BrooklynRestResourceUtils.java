@@ -118,7 +118,7 @@ public class BrooklynRestResourceUtils {
             if (policy.equals(p.getId())) return p;
         }
         for (Policy p: entity.getPolicies()) {
-            if (policy.equals(p.getName())) return p;
+            if (policy.equals(p.getDisplayName())) return p;
         }
         
         throw WebResourceUtils.notFound("Cannot find policy '%s' in entity '%s'", policy, entity);

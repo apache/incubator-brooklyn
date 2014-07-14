@@ -54,7 +54,7 @@ public class PolicyTransformer {
                 .put("entity", URI.create(entityUri))
                 .build();
 
-        return new PolicySummary(policy.getId(), policy.getName(), ApplicationTransformer.statusFromLifecycle(Policies.getPolicyStatus(policy)), links);
+        return new PolicySummary(policy.getId(), policy.getDisplayName(), ApplicationTransformer.statusFromLifecycle(Policies.getPolicyStatus(policy)), links);
     }
 
     public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, ApplicationSummary application, EntityLocal entity, Policy policy, ConfigKey<?> config) {

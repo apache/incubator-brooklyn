@@ -173,7 +173,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
             //TODO inconsistent with entity and location, where name is legacy and displayName is encouraged!
             //'displayName' is a legacy way to refer to a policy's name
             Preconditions.checkArgument(flags.get("displayName") instanceof CharSequence, "'displayName' property should be a string");
-            setName(flags.remove("displayName").toString());
+            setDisplayName(flags.remove("displayName").toString());
         }
     }
     
@@ -271,12 +271,26 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     }
     
     @Override
-    public String getName() { 
+    public String getDisplayName() {
         if (name!=null && name.length()>0) return name;
         return getClass().getCanonicalName();
     }
     
-    public void setName(String name) { this.name = name; }
+    @Override
+    @Deprecated
+    public String getName() {
+        return getDisplayName();
+    }
+    
+    public void setDisplayName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @deprecated since 0.7.0; see {@link #setDisplayName(String)}
+     */
+    @Deprecated
+    public void setName(String name) { setDisplayName(name); }
 
     @Override
     public String getId() { return id; }

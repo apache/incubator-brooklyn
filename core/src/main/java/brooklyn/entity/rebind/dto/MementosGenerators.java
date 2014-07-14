@@ -251,7 +251,7 @@ public class MementosGenerators {
         builder.type = policy.getClass().getName();
         builder.typeClass = policy.getClass();
         builder.id = policy.getId();
-        builder.displayName = policy.getName();
+        builder.displayName = policy.getDisplayName();
 
         // TODO persist config keys as well? Or only support those defined on policy class;
         // current code will lose the ConfigKey type on rebind for anything not defined on class.
@@ -297,7 +297,7 @@ public class MementosGenerators {
         builder.type = enricher.getClass().getName();
         builder.typeClass = enricher.getClass();
         builder.id = enricher.getId();
-        builder.displayName = enricher.getName();
+        builder.displayName = enricher.getDisplayName();
 
         // TODO persist config keys as well? Or only support those defined on policy class;
         // current code will lose the ConfigKey type on rebind for anything not defined on class.
