@@ -54,7 +54,7 @@ public class VanillaBashNetcatYamlTest extends AbstractYamlTest {
     public void testInvocationSensorAndEnricher() throws Exception {
         Preconditions.checkArgument(Networking.isPortAvailable(4321), "port 4321 must not be in use (no leaked nc instances) for this test to succeed!");
         
-        Entity app = createAndStartApplication("vanilla-bash-netcat-w-client.yaml");
+        Entity app = createAndStartApplication(loadYaml("vanilla-bash-netcat-w-client.yaml"));
         waitForApplicationTasks(app);
         
         log.info("App started:");

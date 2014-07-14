@@ -40,7 +40,7 @@ public class EntitiesYamlIntegrationTest extends AbstractYamlTest {
 
     @Test(groups = "Integration")
     public void testStartTomcatCluster() throws Exception {
-        Entity app = createAndStartApplication("test-tomcat-cluster.yaml");
+        Entity app = createAndStartApplication(loadYaml("test-tomcat-cluster.yaml"));
         waitForApplicationTasks(app);
 
         assertNotNull(app);

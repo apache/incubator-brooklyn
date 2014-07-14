@@ -48,7 +48,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
 
     @Test
     public void testWithAppEnricher() throws Exception {
-        Entity app = createAndStartApplication("test-app-with-enricher.yaml");
+        Entity app = createAndStartApplication(loadYaml("test-app-with-enricher.yaml"));
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-app-with-enricher");
         
@@ -81,7 +81,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
     
     @Test
     public void testWithEntityEnricher() throws Exception {
-        final Entity app = createAndStartApplication("test-entity-with-enricher.yaml");
+        final Entity app = createAndStartApplication(loadYaml("test-entity-with-enricher.yaml"));
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-entity-with-enricher");
 
@@ -109,7 +109,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
     
     @Test
     public void testPropagatingEnricher() throws Exception {
-        Entity app = createAndStartApplication("test-propagating-enricher.yaml");
+        Entity app = createAndStartApplication(loadYaml("test-propagating-enricher.yaml"));
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getDisplayName(), "test-propagating-enricher");
 
@@ -122,7 +122,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
     
     @Test
     public void testPropogateChildSensor() throws Exception {
-        Entity app = createAndStartApplication("test-entity-basic-template.yaml",
+        Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml",
                     "  brooklyn.config:",
                     "    test.confName: parent entity",
                     "  id: parentId",
@@ -135,7 +135,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
                     "  - serviceType: brooklyn.test.entity.TestEntity",
                     "    id: childId",
                     "    brooklyn.config:",
-                    "      test.confName: Child Name");
+                    "      test.confName: Child Name"));
         waitForApplicationTasks(app);
         
         log.info("App started:");
@@ -167,7 +167,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
     
     @Test
     public void testMultipleEnricherReferences() throws Exception {
-        final Entity app = createAndStartApplication("test-referencing-enrichers.yaml");
+        final Entity app = createAndStartApplication(loadYaml("test-referencing-enrichers.yaml"));
         waitForApplicationTasks(app);
         
         Entity entity1 = null, entity2 = null, child1 = null, child2 = null, grandchild1 = null, grandchild2 = null;
