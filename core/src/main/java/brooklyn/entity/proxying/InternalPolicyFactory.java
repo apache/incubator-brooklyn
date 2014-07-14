@@ -89,7 +89,7 @@ public class InternalPolicyFactory extends InternalFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            T pol = constructPolicy(clazz, spec);
+            T pol = construct(clazz, spec.getFlags());
 
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setName(spec.getDisplayName());
@@ -124,7 +124,7 @@ public class InternalPolicyFactory extends InternalFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            T enricher = constructEnricher(clazz, spec);
+            T enricher = construct(clazz, spec.getFlags());
             
             if (spec.getDisplayName()!=null)
                 ((AbstractEnricher)enricher).setName(spec.getDisplayName());
@@ -150,20 +150,6 @@ public class InternalPolicyFactory extends InternalFactory {
         }
     }
     
-    /**
-     * Constructs a policy (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
-     */
-    public <T extends Policy> T constructPolicy(Class<? extends T> clazz, PolicySpec<T> spec) {
-        return super.construct(clazz, spec.getFlags());
-    }
-
-    /**
-     * Constructs an enricher (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
-     */
-    public <T extends Enricher> T constructEnricher(Class<? extends T> clazz, EnricherSpec<T> spec) {
-        return super.construct(clazz, spec.getFlags());
-    }
-
     /**
      * Constructs a new-style policy (fails if no no-arg constructor).
      */

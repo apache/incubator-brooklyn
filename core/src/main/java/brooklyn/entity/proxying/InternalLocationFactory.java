@@ -87,7 +87,7 @@ public class InternalLocationFactory extends InternalFactory {
         try {
             Class<? extends T> clazz = spec.getType();
             
-            T loc = constructLocation(clazz, spec);
+            T loc = construct(clazz, spec.getFlags());
 
             if (spec.getId() != null) {
                 FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", spec.getId()), loc);
@@ -121,13 +121,6 @@ public class InternalLocationFactory extends InternalFactory {
         }
     }
     
-    /**
-     * Constructs an entity (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
-     */
-    public <T extends Location> T constructLocation(Class<? extends T> clazz, LocationSpec<T> spec) {
-        return super.construct(clazz, spec.getFlags());
-    }
-
     /**
      * Constructs a new-style entity (fails if no no-arg constructor).
      */

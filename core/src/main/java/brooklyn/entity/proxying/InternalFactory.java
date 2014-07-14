@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -62,19 +61,10 @@ public class InternalFactory {
     }
 
     /**
-     * Returns true if this is a "new-style" policy (i.e. where not expected to call the constructor to instantiate it).
+     * Returns true if this is a "new-style" policy (i.e. where not expected callers to use the constructor directly to instantiate it).
      * 
-     * @param managementContext
      * @param clazz
      */
-    public static boolean isNewStyle(ManagementContext managementContext, Class<?> clazz) {
-        try {
-            return isNewStyle(clazz);
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-    }
-    
     public static boolean isNewStyle(Class<?> clazz) {
         try {
             clazz.getConstructor(new Class[0]);
@@ -88,6 +78,10 @@ public class InternalFactory {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
 
+    /**
+     * Constructs an instance (e.g. of entity, location, enricher or policy.
+     * If new-style, calls no-arg constructor; if old-style, uses spec to pass in config.
+     */
     protected <T> T construct(Class<? extends T> clazz, Map<String, ?> constructorFlags) {
         try {
             if (isNewStyle(clazz)) {

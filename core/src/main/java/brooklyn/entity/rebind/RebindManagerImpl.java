@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -41,6 +42,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.internal.BrooklynFeatureEnablement;
@@ -566,41 +568,11 @@ public class RebindManagerImpl implements RebindManager {
     private Entity newEntity(String entityId, String entityType, Reflections reflections) {
         Class<? extends Entity> entityClazz = (Class<? extends Entity>) reflections.loadClass(entityType);
         
-        if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
-            // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called
-            // TODO Need to rationalise this to move code into methods of InternalEntityFactory.
-            //      The InternalEntityFactory.constructEntity is used in three places:
-            //       1. normal entity creation (through entityManager.createEntity)
-            //       2. rebind (i.e. here)
-            //       3. yaml parsing
-            //      Purpose is to create a new (unconfigured/uninitialised) entity, but that is
-            //      known about by the managementContext and that has things like the right id and 
-            //      a proxy for if another entity needs to reference it during the init phase.
+        if (InternalFactory.isNewStyle(entityClazz)) {
+            // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called.
+            // Creates an uninitialized entity, but that has correct id + proxy.
             InternalEntityFactory entityFactory = managementContext.getEntityFactory();
-            Entity entity = entityFactory.constructEntity(entityClazz);
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
-            if (entity instanceof AbstractApplication) {
-                FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
-            }
-            managementContext.prePreManage(entity);
-            ((AbstractEntity)entity).setManagementContext(managementContext);
-            
-            Class<?> entityInterface;
-            List<Class<?>> additionalInterfaces;
-            try {
-                entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
-                additionalInterfaces = Reflections.getAllInterfaces(entityClazz);
-            } catch (IllegalArgumentException e) {
-                // TODO this can happen if it's an app with no annotation, for example; not nice catching exception
-                entityInterface = Entity.class;
-                additionalInterfaces = Reflections.getAllInterfaces(entityClazz);
-            }
-            EntitySpec<Entity> entitySpec = EntitySpec.create((Class)entityInterface)
-                    .additionalInterfaces(additionalInterfaces)
-                    .impl((Class)entityClazz)
-                    .id(entityId);
-
-            ((AbstractEntity)entity).setProxy(entityFactory.createEntityProxy(entitySpec, entity));
+            Entity entity = entityFactory.constructEntity(entityClazz, Reflections.getAllInterfaces(entityClazz), entityId);
             
             return entity;
 
