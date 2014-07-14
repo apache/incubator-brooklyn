@@ -325,7 +325,6 @@ public class TypeCoercions {
     @SuppressWarnings("unchecked")
     public static <T> T stringToPrimitive(String value, Class<T> targetType) {
         assert Primitives.allPrimitiveTypes().contains(targetType) || Primitives.allWrapperTypes().contains(targetType) : "targetType="+targetType;
-        value = value.trim();
         // If char, then need to do explicit conversion
         if (targetType == Character.class || targetType == char.class) {
             if (value.length() == 1) {
@@ -334,7 +333,7 @@ public class TypeCoercions {
                 throw new ClassCoercionException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
             }
         }
-
+        value = value.trim();
         // For boolean we could use valueOf, but that returns false whereas we'd rather throw errors on bad values
         if (targetType == Boolean.class || targetType == boolean.class) {
             if ("true".equalsIgnoreCase(value)) return (T) Boolean.TRUE;
