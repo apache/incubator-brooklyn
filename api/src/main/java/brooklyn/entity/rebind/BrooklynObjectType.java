@@ -18,24 +18,13 @@
  */
 package brooklyn.entity.rebind;
 
-import brooklyn.entity.trait.Identifiable;
-import brooklyn.mementos.Memento;
-
 import com.google.common.annotations.Beta;
 
-/**
- * Handler called on all exceptions to do with persistence.
- * 
- * @author aled
- */
 @Beta
-public interface PersistenceExceptionHandler {
-
-    void stop();
-
-    void onGenerateMementoFailed(BrooklynObjectType type, Identifiable instance, Exception e);
-    
-    void onPersistMementoFailed(Memento memento, Exception e);
-    
-    void onDeleteMementoFailed(String id, Exception e);
+public enum BrooklynObjectType {
+    ENTITY,
+    LOCATION,
+    POLICY,
+    ENRICHER,
+    UNKNOWN;
 }

@@ -29,6 +29,7 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 
 import com.google.common.collect.ImmutableList;
@@ -64,6 +65,19 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         public Builder topLevelLocationIds(List<String> vals) {
             topLevelLocationIds.addAll(vals); return this;
         }
+        public void memento(Memento memento) {
+            if (memento instanceof EntityMemento) {
+                entity((EntityMemento)memento);
+            } else if (memento instanceof LocationMemento) {
+                location((LocationMemento)memento);
+            } else if (memento instanceof PolicyMemento) {
+                policy((PolicyMemento)memento);
+            } else if (memento instanceof EnricherMemento) {
+                enricher((EnricherMemento)memento);
+            } else {
+                throw new IllegalStateException("Unexpected memento type :"+memento);
+            }
+        }
         public Builder entities(Map<String, EntityMemento> vals) {
             entities.putAll(vals); return this;
         }
@@ -77,7 +91,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
             enrichers.put(val.getId(), val); return this;
         }
         public Builder entity(EntityMemento val) {
-            entities.put(val.getId(), val); return this;
+            entities.put(val.getId(), val);
+            if (val.isTopLevelApp()) {
+                applicationId(val.getId());
+            }
+            return this;
         }
         public Builder location(LocationMemento val) {
             locations.put(val.getId(), val); return this;

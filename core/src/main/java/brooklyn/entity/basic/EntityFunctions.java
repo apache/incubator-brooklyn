@@ -26,6 +26,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
@@ -59,9 +60,9 @@ public class EntityFunctions {
         };
     }
     
-    public static Function<Entity, String> id() {
-        return new Function<Entity, String>() {
-            @Override public String apply(Entity input) {
+    public static Function<Identifiable, String> id() {
+        return new Function<Identifiable, String>() {
+            @Override public String apply(Identifiable input) {
                 return (input == null) ? null : input.getId();
             }
         };

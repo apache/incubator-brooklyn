@@ -225,28 +225,28 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     try {
                         persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        exceptionHandler.onGenerateLocationMementoFailed(location, e);
+                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.LOCATION, location, e);
                     }
                 }
                 for (Entity entity : prevDeltaCollector.entities) {
                     try {
                         persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        exceptionHandler.onGenerateEntityMementoFailed(entity, e);
+                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
                 }
                 for (Policy policy : prevDeltaCollector.policies) {
                     try {
                         persisterDelta.policies.add(policy.getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        exceptionHandler.onGeneratePolicyMementoFailed(policy, e);
+                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.POLICY, policy, e);
                     }
                 }
                 for (Enricher enricher : prevDeltaCollector.enrichers) {
                     try {
                         persisterDelta.enrichers.add(enricher.getRebindSupport().getMemento());
                     } catch (Exception e) {
-                        exceptionHandler.onGenerateEnricherMementoFailed(enricher, e);
+                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.ENRICHER, enricher, e);
                     }
                 }
                 persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;

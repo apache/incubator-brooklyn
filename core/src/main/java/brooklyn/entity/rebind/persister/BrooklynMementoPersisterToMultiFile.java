@@ -32,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
@@ -60,6 +61,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  * it has a multi-file filesystem backend for equivalent functionality, but is pluggable
  * to support other storage backends 
  */
+@Deprecated
 public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersister {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynMementoPersisterToMultiFile.class);
@@ -158,7 +160,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
+            exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
         
@@ -175,7 +177,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String type = (String) XmlUtil.xpath(contents, "/entity/type");
                     builder.entity(id, type);
                 } catch (Exception e) {
-                    exceptionHandler.onLoadEntityMementoFailed("File "+file, e);
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENTITY, "File "+file, e);
                 }
             }
             for (File file : locationFiles) {
@@ -185,7 +187,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String type = (String) XmlUtil.xpath(contents, "/location/type");
                     builder.location(id, type);
                 } catch (Exception e) {
-                    exceptionHandler.onLoadLocationMementoFailed("File "+file, e);
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.LOCATION, "File "+file, e);
                 }
             }
             for (File file : policyFiles) {
@@ -195,7 +197,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String type = (String) XmlUtil.xpath(contents, "/policy/type");
                     builder.policy(id, type);
                 } catch (Exception e) {
-                    exceptionHandler.onLoadPolicyMementoFailed("File "+file, e);
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.POLICY, "File "+file, e);
                 }
             }
             for (File file : enricherFiles) {
@@ -205,7 +207,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String type = (String) XmlUtil.xpath(contents, "/enricher/type");
                     builder.enricher(id, type);
                 } catch (Exception e) {
-                    exceptionHandler.onLoadEnricherMementoFailed("File "+file, e);
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENRICHER, "File "+file, e);
                 }
             }
             
@@ -241,7 +243,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             enricherFiles = enrichersDir.listFiles(fileFilter);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
+            exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
 
@@ -264,7 +266,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                         }
                     }
                 } catch (Exception e) {
-                    exceptionHandler.onLoadEntityMementoFailed("File "+file, e);
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENTITY, "File "+file, e);
                 }
             }
             for (File file : locationFiles) {
@@ -276,7 +278,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                         builder.location(memento);
                     }
                 } catch (Exception e) {
-                    exceptionHandler.onLoadLocationMementoFailed("File "+file, e);
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.LOCATION, "File "+file, e);
                 }
             }
             for (File file : policyFiles) {
@@ -288,7 +290,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                         builder.policy(memento);
                     }
                 } catch (Exception e) {
-                    exceptionHandler.onLoadPolicyMementoFailed("File "+file, e);
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.POLICY, "File "+file, e);
                 }
             }
             for (File file : enricherFiles) {

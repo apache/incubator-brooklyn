@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PeriodicDeltaChangeListener;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersisterDeltaImpl;
@@ -179,7 +180,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             enricherSubPathList = objectStore.listContentsWithSubPath("enrichers");
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
+            exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+objectStore, e);
         }
 
@@ -203,7 +204,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         builder.entity(id, type);
                     } catch (Exception e) {
                         Exceptions.propagateIfFatal(e);
-                        exceptionHandler.onLoadEntityMementoFailed("Memento "+subPath, e);
+                        exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENTITY, "Memento "+subPath, e);
                     }
                 }}));
         }
@@ -217,7 +218,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         builder.location(id, type);
                     } catch (Exception e) {
                         Exceptions.propagateIfFatal(e);
-                        exceptionHandler.onLoadLocationMementoFailed("Memento "+subPath, e);
+                        exceptionHandler.onLoadMementoFailed(BrooklynObjectType.LOCATION, "Memento "+subPath, e);
                     }
                 }}));
         }
@@ -231,7 +232,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         builder.policy(id, type);
                     } catch (Exception e) {
                         Exceptions.propagateIfFatal(e);
-                        exceptionHandler.onLoadPolicyMementoFailed("Memento "+subPath, e);
+                        exceptionHandler.onLoadMementoFailed(BrooklynObjectType.POLICY, "Memento "+subPath, e);
                     }
                 }}));
         }
@@ -245,7 +246,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         builder.enricher(id, type);
                     } catch (Exception e) {
                         Exceptions.propagateIfFatal(e);
-                        exceptionHandler.onLoadEnricherMementoFailed("Memento "+subPath, e);
+                        exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENRICHER, "Memento "+subPath, e);
                     }
                 }}));
         }
@@ -313,7 +314,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             enricherSubPathList = objectStore.listContentsWithSubPath("enrichers");
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            exceptionHandler.onLoadBrooklynMementoFailed("Failed to list files", e);
+            exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+objectStore+": "+e, e);
         }
         
@@ -325,72 +326,40 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         serializer.setLookupContext(lookupContext);
         
         List<ListenableFuture<?>> futures = Lists.newArrayList();
-        
+
+        class MementoLoader implements Runnable {
+            private final String subPath;
+            private final BrooklynObjectType type;
+            public MementoLoader(String subPath, BrooklynObjectType type) {
+                this.subPath = subPath;
+                this.type = type;
+            }
+            public void run() {
+                try {
+                    Memento memento = (Memento) serializer.fromString(read(subPath));
+                    if (memento == null) {
+                        LOG.warn("No "+type.toString().toLowerCase()+"-memento deserialized from " + subPath + "; ignoring and continuing");
+                    } else {
+                        builder.memento(memento);
+                    }
+                } catch (Exception e) {
+                    exceptionHandler.onLoadMementoFailed(type, "Memento "+subPath, e);
+                }
+            }
+        }
+
         try {
             for (final String subPath : entitySubPathList) {
-                futures.add(executor.submit(new Runnable() {
-                    public void run() {
-                        try {
-                            EntityMemento memento = (EntityMemento) serializer.fromString(read(subPath));
-                            if (memento == null) {
-                                LOG.warn("No entity-memento deserialized from " + subPath + "; ignoring and continuing");
-                            } else {
-                                builder.entity(memento);
-                                if (memento.isTopLevelApp()) {
-                                    builder.applicationId(memento.getId());
-                                }
-                            }
-                        } catch (Exception e) {
-                            exceptionHandler.onLoadEntityMementoFailed("Memento "+subPath, e);
-                        }
-                    }}));
+                futures.add(executor.submit(new MementoLoader(subPath, BrooklynObjectType.ENTITY)));
             }
             for (final String subPath : locationSubPathList) {
-                futures.add(executor.submit(new Runnable() {
-                    public void run() {
-                        try {
-                            LocationMemento memento = (LocationMemento) serializer.fromString(read(subPath));
-                            if (memento == null) {
-                                LOG.warn("No location-memento deserialized from " + subPath + "; ignoring and continuing");
-                            } else {
-                                builder.location(memento);
-                            }
-                        } catch (Exception e) {
-                            exceptionHandler.onLoadLocationMementoFailed("Memento "+subPath, e);
-                        }
-                    }}));
+                futures.add(executor.submit(new MementoLoader(subPath, BrooklynObjectType.LOCATION)));
             }
             for (final String subPath : policySubPathList) {
-                futures.add(executor.submit(new Runnable() {
-                    public void run() {
-                        try {
-                            StoreObjectAccessor objectAccessor = objectStore.newAccessor(subPath);
-                            PolicyMemento memento = (PolicyMemento) serializer.fromString(objectAccessor.get());
-                            if (memento == null) {
-                                LOG.warn("No policy-memento deserialized from " + subPath + "; ignoring and continuing");
-                            } else {
-                                builder.policy(memento);
-                            }
-                        } catch (Exception e) {
-                            exceptionHandler.onLoadPolicyMementoFailed("Memento "+subPath, e);
-                        }
-                    }}));
+                futures.add(executor.submit(new MementoLoader(subPath, BrooklynObjectType.POLICY)));
             }
             for (final String subPath : enricherSubPathList) {
-                futures.add(executor.submit(new Runnable() {
-                    public void run() {
-                        try {
-                            StoreObjectAccessor objectAccessor = objectStore.newAccessor(subPath);
-                            EnricherMemento memento = (EnricherMemento) serializer.fromString(objectAccessor.get());
-                            if (memento == null) {
-                                LOG.warn("No enricher-memento deserialized from " + subPath + "; ignoring and continuing");
-                            } else {
-                                builder.enricher(memento);
-                            }
-                        } catch (Exception e) {
-                            exceptionHandler.onLoadEnricherMementoFailed("Memento "+subPath, e);
-                        }
-                    }}));
+                futures.add(executor.submit(new MementoLoader(subPath, BrooklynObjectType.ENRICHER)));
             }
             
             try {
