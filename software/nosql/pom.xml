@@ -154,5 +154,23 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
+    <build>
+      <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <version>0.10</version>
+            <configuration>
+              <excludes combine.children="append">
+                <exclude>**/couchdb/couch.uri</exclude>
+                <exclude>**/riak/vm.args</exclude>
+                <!-- In theory, binary files should be excluded, but for reasons unknown the example.tgz was being picked up as non-binary -->
+                <exclude>**/*.tgz</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+    </build>
 </project>

@@ -194,6 +194,24 @@
       </plugin>
 
     </plugins>
+      <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <version>0.10</version>
+            <configuration>
+              <excludes combine.children="append">
+                <exclude>**/src/main/resources/archetype-resources/README.md</exclude>
+                <exclude>**/src/brooklyn-sample/README.md</exclude>
+                <exclude>**/src/test/resources/projects/integration-test-1/reference/README.md</exclude>
+                <exclude>**/src/test/resources/projects/integration-test-1/goal.txt</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+
   </build>
 
 </project>
