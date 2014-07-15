@@ -18,9 +18,6 @@
  */
 package brooklyn.util.flags;
 
-import groovy.lang.Closure;
-import groovy.time.TimeDuration;
-
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -46,6 +43,19 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Table;
+import com.google.common.net.HostAndPort;
+import com.google.common.primitives.Primitives;
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
@@ -59,19 +69,8 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.time.Duration;
-
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Table;
-import com.google.common.net.HostAndPort;
-import com.google.common.primitives.Primitives;
-import com.google.common.reflect.TypeToken;
+import groovy.lang.Closure;
+import groovy.time.TimeDuration;
 
 public class TypeCoercions {
 
@@ -326,7 +325,6 @@ public class TypeCoercions {
     @SuppressWarnings("unchecked")
     public static <T> T stringToPrimitive(String value, Class<T> targetType) {
         assert Primitives.allPrimitiveTypes().contains(targetType) || Primitives.allWrapperTypes().contains(targetType) : "targetType="+targetType;
-
         // If char, then need to do explicit conversion
         if (targetType == Character.class || targetType == char.class) {
             if (value.length() == 1) {
@@ -335,7 +333,7 @@ public class TypeCoercions {
                 throw new ClassCoercionException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
             }
         }
-        
+        value = value.trim();
         // For boolean we could use valueOf, but that returns false whereas we'd rather throw errors on bad values
         if (targetType == Boolean.class || targetType == boolean.class) {
             if ("true".equalsIgnoreCase(value)) return (T) Boolean.TRUE;

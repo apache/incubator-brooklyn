@@ -32,16 +32,16 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.util.flags.ClassCoercionException;
-import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.text.StringPredicates;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
+
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.util.flags.ClassCoercionException;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.StringPredicates;
 
 public class TypeCoercionsTest {
 
@@ -56,6 +56,7 @@ public class TypeCoercionsTest {
     @Test
     public void testCoerceStringToPrimitive() {
         assertEquals(TypeCoercions.coerce("1", Character.class), (Character)'1');
+        assertEquals(TypeCoercions.coerce(" ", Character.class), (Character)' ');
         assertEquals(TypeCoercions.coerce("1", Short.class), (Short)((short)1));
         assertEquals(TypeCoercions.coerce("1", Integer.class), (Integer)1);
         assertEquals(TypeCoercions.coerce("1", Long.class), (Long)1l);
@@ -63,7 +64,8 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce("1", Double.class), (Double)1d);
         assertEquals(TypeCoercions.coerce("true", Boolean.class), (Boolean)true);
         assertEquals(TypeCoercions.coerce("False", Boolean.class), (Boolean)false);
-        
+        assertEquals(TypeCoercions.coerce("true ", Boolean.class), (Boolean)true);
+
         assertEquals(TypeCoercions.coerce("1", char.class), (Character)'1');
         assertEquals(TypeCoercions.coerce("1", short.class), (Short)((short)1));
         assertEquals(TypeCoercions.coerce("1", int.class), (Integer)1);
