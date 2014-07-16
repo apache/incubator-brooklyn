@@ -227,14 +227,14 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
 
         if (!Strings.isEmpty(ssl.getCertificateSourceUrl())) {
             String certificateDestination = Strings.isEmpty(ssl.getCertificateDestination()) ? driver.getRunDir() + "/conf/" + id + ".crt" : ssl.getCertificateDestination();
-            driver.getMachine().copyTo(ImmutableMap.of("permissions", "0400"),
+            driver.getMachine().copyTo(ImmutableMap.of("permissions", "0600"),
                     ResourceUtils.create(this).getResourceFromUrl(ssl.getCertificateSourceUrl()),
                     certificateDestination);
         }
 
         if (!Strings.isEmpty(ssl.getKeySourceUrl())) {
             String keyDestination = Strings.isEmpty(ssl.getKeyDestination()) ? driver.getRunDir() + "/conf/" + id + ".key" : ssl.getKeyDestination();
-            driver.getMachine().copyTo(ImmutableMap.of("permissions", "0400"),
+            driver.getMachine().copyTo(ImmutableMap.of("permissions", "0600"),
                     ResourceUtils.create(this).getResourceFromUrl(ssl.getKeySourceUrl()),
                     keyDestination);
         }
