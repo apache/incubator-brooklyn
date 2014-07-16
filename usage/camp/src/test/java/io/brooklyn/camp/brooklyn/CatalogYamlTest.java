@@ -22,10 +22,13 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.util.Collection;
+
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 
 import com.google.common.collect.Iterables;
@@ -41,7 +44,6 @@ public class CatalogYamlTest extends AbstractYamlTest {
         
         CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(registeredTypeName);
         assertEquals(item.getRegisteredTypeName(), registeredTypeName);
-        
     }
 
     @Test
@@ -49,7 +51,7 @@ public class CatalogYamlTest extends AbstractYamlTest {
         String registeredTypeName = "my.catalog.app.id.launch";
         registerAndLaunchAndAssertSimpleEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
     }
-
+    
     @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
         String referencedRegisteredTypeName = "my.catalog.app.id.referenced";
@@ -65,6 +67,35 @@ public class CatalogYamlTest extends AbstractYamlTest {
         
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
         assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
+    }
+
+    @Test
+    public void testLaunchApplicationChildWithCatalogReferencingOtherCatalog() throws Exception {
+        String referencedRegisteredTypeName = "my.catalog.app.id.child.referenced";
+        String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
+        addCatalogOSGiEntity(referencedRegisteredTypeName, SIMPLE_ENTITY_TYPE);
+        addCatalogChildOSGiEntity(referrerRegisteredTypeName, referencedRegisteredTypeName);
+
+        Entity app = createAndStartApplication(
+            "name: simple-app-yaml",
+            "location: localhost",
+            "services:",
+            "- serviceType: "+BasicEntity.class.getName(),
+            "  brooklyn.children:",
+            "  - type: " + referrerRegisteredTypeName);
+        
+        Collection<Entity> children = app.getChildren();
+        assertEquals(children.size(), 1);
+        Entity child = Iterables.getOnlyElement(children);
+        assertEquals(child.getEntityType().getName(), BasicEntity.class.getName());
+        Collection<Entity> grandChildren = child.getChildren();
+        assertEquals(grandChildren.size(), 1);
+        Entity grandChild = Iterables.getOnlyElement(grandChildren);
+        assertEquals(grandChild.getEntityType().getName(), BasicEntity.class.getName());
+        Collection<Entity> grandGrandChildren = grandChild.getChildren();
+        assertEquals(grandGrandChildren.size(), 1);
+        Entity grandGrandChild = Iterables.getOnlyElement(grandGrandChildren);
+        assertEquals(grandGrandChild.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
     }
 
     @Test
@@ -85,6 +116,28 @@ public class CatalogYamlTest extends AbstractYamlTest {
     public void testLaunchApplicationLoopCatalogIdFails() throws Exception {
         String registeredTypeName = "self.referencing.type";
         registerAndLaunchFailsWithRecursionError(registeredTypeName, registeredTypeName);
+    }
+    
+    @Test
+    public void testLaunchApplicationChildLoopCatalogIdFails() throws Exception {
+        String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
+        addCatalogChildOSGiEntity(referrerRegisteredTypeName, referrerRegisteredTypeName);
+
+        try {
+            createAndStartApplication(
+                "name: simple-app-yaml",
+                "location: localhost",
+                "services:",
+                "- serviceType: "+BasicEntity.class.getName(),
+                "  brooklyn.children:",
+                "  - type: " + referrerRegisteredTypeName);
+            
+                fail("Expected to throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("Recursive reference to "+referrerRegisteredTypeName));
+        } finally {
+            deleteCatalogEntity(referrerRegisteredTypeName);
+        }
     }
 
     private void registerAndLaunchAndAssertSimpleEntity(String registeredTypeName, String serviceType) throws Exception {
@@ -126,23 +179,41 @@ public class CatalogYamlTest extends AbstractYamlTest {
     }
     
     private void addCatalogOSGiEntity(String registeredTypeName, String serviceType) {
-        String catalogYaml =
-            "name: "+registeredTypeName+"\n"+
+        addCatalogItem(
+            "name: "+registeredTypeName,
             // FIXME name above should be unnecessary -- slight problem somewhere currently
             // as testListApplicationYaml fails without the line above
-            "brooklyn.catalog:\n"+
-            "  id: " + registeredTypeName + "\n"+
-            "  name: My Catalog App\n"+
-            "  description: My description\n"+
-            "  icon_url: classpath://path/to/myicon.jpg\n"+
-            "  version: 0.1.2\n"+
-            "  libraries:\n"+
-            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "\n"+
-            "\n"+
-            "services:\n"+
-            "- type: " + serviceType;
+            "brooklyn.catalog:",
+            "  id: " + registeredTypeName,
+            "  name: My Catalog App",
+            "  description: My description",
+            "  icon_url: classpath://path/to/myicon.jpg",
+            "  version: 0.1.2",
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: " + serviceType);
+    }
 
-        addCatalogItem(catalogYaml);
+    private void addCatalogChildOSGiEntity(String registeredTypeName, String serviceType) {
+        addCatalogItem(
+            "name: "+registeredTypeName,
+            // FIXME name above should be unnecessary -- slight problem somewhere currently
+            // as testListApplicationYaml fails without the line above
+            "brooklyn.catalog:",
+            "  id: " + registeredTypeName,
+            "  name: My Catalog App",
+            "  description: My description",
+            "  icon_url: classpath://path/to/myicon.jpg",
+            "  version: 0.1.2",
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: " + BasicEntity.class.getName(),
+            "  brooklyn.children:",
+            "  - type: " + serviceType);
     }
 
 }

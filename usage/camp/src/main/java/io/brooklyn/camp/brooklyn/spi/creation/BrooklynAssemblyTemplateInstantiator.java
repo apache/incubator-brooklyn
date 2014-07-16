@@ -204,44 +204,51 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            ManagementContext mgmt = loader.getManagementContext();
-
-            String brooklynType = entityResolver.getBrooklynType();
-            CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
-
-            boolean firstOccurrence = encounteredCatalogTypes.add(brooklynType);
-            boolean recursiveButTryJava = !firstOccurrence;
-                         
-            if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+brooklynType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
-
-            EntitySpec<?> spec = null;
-            if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(Urls.getProtocol(brooklynType))) {
-                spec = tryResolveYamlURLReferenceSpec(brooklynType, loader, encounteredCatalogTypes);
-                if (spec != null) {
-                    entityResolver.populateSpec(spec);
-                }
-            }
-            
-            if (spec == null) {
-                if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
-                    spec = entityResolver.resolveSpec();
-                } else if (recursiveButTryJava) {
-                    if (entityResolver.tryLoadEntityClass().isAbsent()) {
-                        throw new IllegalStateException("Recursive reference to " + brooklynType + " (and cannot be resolved as a Java type)");
-                    }
-                    spec = entityResolver.resolveSpec();
-                } else {
-                    spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
-                    entityResolver.populateSpec(spec);
-                }
-            }
-
-            BrooklynClassLoadingContext newLoader = entityResolver.loader;
-            buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(appChildComponentTemplate.getCustomAttributes()));
+            EntitySpec<?> spec = resolveSpec(entityResolver, encounteredCatalogTypes);
             
             result.add(spec);
         }
         return result;
+    }
+
+    private EntitySpec<?> resolveSpec(
+            BrooklynComponentTemplateResolver entityResolver, 
+            Set<String> encounteredCatalogTypes) {
+        ManagementContext mgmt = entityResolver.loader.getManagementContext();
+
+        String brooklynType = entityResolver.getBrooklynType();
+        CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
+
+        boolean firstOccurrence = encounteredCatalogTypes.add(brooklynType);
+        boolean recursiveButTryJava = !firstOccurrence;
+        
+        if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+brooklynType+"; item="+item+"; loader="+entityResolver.loader+"; encounteredCatalogTypes="+encounteredCatalogTypes);
+
+        EntitySpec<?> spec = null;
+        if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(Urls.getProtocol(brooklynType))) {
+            spec = tryResolveYamlURLReferenceSpec(brooklynType, entityResolver.loader, encounteredCatalogTypes);
+            if (spec != null) {
+                entityResolver.populateSpec(spec);
+            }
+        }
+        
+        if (spec == null) {
+            if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
+                spec = entityResolver.resolveSpec();
+            } else if (recursiveButTryJava) {
+                if (entityResolver.tryLoadEntityClass().isAbsent()) {
+                    throw new IllegalStateException("Recursive reference to " + brooklynType + " (and cannot be resolved as a Java type)");
+                }
+                spec = entityResolver.resolveSpec();
+            } else {
+                spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+                entityResolver.populateSpec(spec);
+            }
+        }
+
+        BrooklynClassLoadingContext newLoader = entityResolver.loader;
+        buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(entityResolver.attrs.getAllConfig()), encounteredCatalogTypes);
+        return spec;
     }
 
     private EntitySpec<?> tryResolveYamlURLReferenceSpec(
@@ -310,17 +317,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
     }
 
-    protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig) {
+    protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig, Set<String> encounteredCatalogTypes) {
         if (childConfig != null) {
             for (Map<String, Object> childAttrs : childConfig) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                EntitySpec<? extends Entity> spec = entityResolver.resolveSpec();
+                EntitySpec<? extends Entity> spec = resolveSpec(entityResolver, encounteredCatalogTypes);
                 parent.child(spec);
-
-                // get the new loader in case the OSGi bundles from parent were added;
-                // not so important now but if we start working with versions this may be important
-                BrooklynClassLoadingContext newLoader = entityResolver.loader;
-                buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(childAttrs));
             }
         }
     }

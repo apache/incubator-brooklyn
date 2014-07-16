@@ -395,7 +395,7 @@ public class BrooklynComponentTemplateResolver {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> getChildren(Map<String, Object> attrs) {
+    protected List<Map<String, Object>> getChildren(Map<String, Object> attrs) {
         if (attrs==null) return null;
         return (List<Map<String, Object>>) attrs.get("brooklyn.children");
     }

@@ -26,7 +26,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
-import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.Iterables;
 
@@ -44,6 +43,15 @@ public class ReferencedYamlTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testAnonymousReferenceEntityYamlAsPlatformComponent() throws Exception {
+        Entity app = createAndStartApplication(
+            "services:",
+            "- type: classpath://yaml-ref-entity.yaml");
+        
+        checkChildEntitySpec(app, "service");
+    }
+
+    @Test
     public void testReferenceAppYamlAsPlatformComponent() throws Exception {
         Entity app = createAndStartApplication(
             "services:",
@@ -57,8 +65,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getEntityType().getName(), BasicApplication.class.getName());
     }
 
-    //the test fails, since the current code doesn't allow for nested yaml references
-    @Test(enabled = false)
+    @Test
     public void testReferenceYamlAsChild() throws Exception {
         String entityName = "Reference child name";
         Entity createAndStartApplication = createAndStartApplication(
@@ -69,6 +76,17 @@ public class ReferencedYamlTest extends AbstractYamlTest {
             "    type: classpath://yaml-ref-entity.yaml");
         
         checkGrandchildEntitySpec(createAndStartApplication, entityName);
+    }
+
+    @Test
+    public void testAnonymousReferenceYamlAsChild() throws Exception {
+        Entity createAndStartApplication = createAndStartApplication(
+            "services:",
+            "- type: brooklyn.entity.basic.BasicEntity",
+            "  brooklyn.children:",
+            "  - type: classpath://yaml-ref-entity.yaml");
+        
+        checkGrandchildEntitySpec(createAndStartApplication, "service");
     }
 
     @Test
