@@ -199,9 +199,25 @@ public class BrooklynGarbageCollector {
 
     /**
      * Deletes old tasks. The age/number of tasks to keep is controlled by fields like 
-     * {@link #maxTasksPerTag} and {@link #maxTaskAge}. 
+     * {@link #maxTasksPerTag} and {@link #maxTaskAge}.
      */
     private void gcTasks() {
+        // TODO Must be careful with memory usage here : saw an OOME when copying the tasks set to sort it.
+        // (This happened when there were a *lot* of tasks (e.g. 100,000s) due to a crazy trigger for  
+        // effector calls.)
+        // 
+        // At that point we have potentially three copies of the list in-memory:
+        //  - original in ExecutionManager
+        //  - copy returned by getTasksWithTag(tag)
+        //  - copy for sortedTasks (but at least now that only contains done tasks)
+        // 
+        // It's hard to avoid fewer copies: getTasksWithTag(tag) should continue to return copy rather than 
+        // mutable underlying list; and if we're going to sort then we need to take a copy.
+        // 
+        // An option is for getTasksWithTag(tag) to return an ArrayList rather than a LinkedHashSet. That
+        // is a far more memory efficient data structure (e.g. 4 bytes overhead per object rather than 
+        // 32 bytes overhead per object for HashSet).
+        
         if (!running) return;
         
         Set<Object> taskTags = executionManager.getTaskTags();
@@ -216,30 +232,34 @@ public class BrooklynGarbageCollector {
             // For each tag, we find the tasks with that tag; we ignore sub-tasks
             // as those will be automatically GC'ed by the parent task at the appropriate point.
             Set<Task<?>> tasksWithTag = executionManager.getTasksWithTag(tag);
+
             Iterable<Task<?>> topTasksWithTag = Iterables.filter(tasksWithTag, new Predicate<Task<?>>() {
                     @Override public boolean apply(Task<?> input) {
-                        return input != null && !input.getTags().contains(ManagementContextInternal.SUB_TASK_TAG);
+                        return input != null && input.isDone() && !input.getTags().contains(ManagementContextInternal.SUB_TASK_TAG);
                     }});
             
             int numTasksToDelete = (Iterables.size(topTasksWithTag) - maxTasksPerTag);
             if (numTasksToDelete > 0 || maxTaskAge > 0) {
                 List<Task<?>> sortedTasks = Lists.newArrayList(topTasksWithTag);
+                topTasksWithTag = null;
+                tasksWithTag = null;
+                
                 Collections.sort(sortedTasks, new Comparator<Task<?>>() {
                     @Override public int compare(Task<?> t1, Task<?> t2) {
-                        long end1 = t1.isDone() ? t1.getEndTimeUtc() : Long.MAX_VALUE;
-                        long end2 = t2.isDone() ? t2.getEndTimeUtc() : Long.MAX_VALUE;
+                        // know that tasks are all done; filtered those above
+                        long end1 = t1.getEndTimeUtc();
+                        long end2 = t2.getEndTimeUtc();
                         return (end1 < end2) ? -1 : ((end1 == end2) ? 0 : 1);
                     }
                 });
                 if (numTasksToDelete > 0) {
                     for (Task<?> taskToDelete : sortedTasks.subList(0, numTasksToDelete)) {
-                        if (!taskToDelete.isDone()) break;
                         executionManager.deleteTask(taskToDelete);
                     }
                 }
                 if (maxTaskAge > 0) {
                     for (Task<?> taskContender : sortedTasks.subList((numTasksToDelete > 0 ? numTasksToDelete : 0), sortedTasks.size())) {
-                        if (taskContender.isDone() && (System.currentTimeMillis() - taskContender.getEndTimeUtc() > maxTaskAge)) {
+                        if (System.currentTimeMillis() - taskContender.getEndTimeUtc() > maxTaskAge) {
                             executionManager.deleteTask(taskContender);
                         } else {
                             break; // all subsequent tasks will be newer; stop looking
