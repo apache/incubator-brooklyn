@@ -180,9 +180,6 @@ public class CatalogYamlTest extends AbstractYamlTest {
     
     private void addCatalogOSGiEntity(String registeredTypeName, String serviceType) {
         addCatalogItem(
-            "name: "+registeredTypeName,
-            // FIXME name above should be unnecessary -- slight problem somewhere currently
-            // as testListApplicationYaml fails without the line above
             "brooklyn.catalog:",
             "  id: " + registeredTypeName,
             "  name: My Catalog App",
@@ -198,9 +195,6 @@ public class CatalogYamlTest extends AbstractYamlTest {
 
     private void addCatalogChildOSGiEntity(String registeredTypeName, String serviceType) {
         addCatalogItem(
-            "name: "+registeredTypeName,
-            // FIXME name above should be unnecessary -- slight problem somewhere currently
-            // as testListApplicationYaml fails without the line above
             "brooklyn.catalog:",
             "  id: " + registeredTypeName,
             "  name: My Catalog App",
