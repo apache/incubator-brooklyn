@@ -78,32 +78,21 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return platform.assemblies().get(app.getApplicationId());
     }
 
-    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform) {
-        return createAppOrSpec(template, platform, true).getSpec();
-    }
-
     // note: based on BrooklynRestResourceUtils, but modified to not allow child entities (yet)
     // (will want to revise that when building up from a non-brooklyn template)
     public Application create(AssemblyTemplate template, CampPlatform platform) {
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         
-        AppOrSpec appOrSpec = createAppOrSpec(template, platform, false);
+        EntitySpec<? extends Application> spec = createSpec(template, platform);
         
-        if (appOrSpec.hasApp())
-            return appOrSpec.getApp();
-        if (!appOrSpec.hasSpec())
-            throw new IllegalStateException("No spec could be produced from "+template);
-        
-        EntitySpec<? extends Application> spec = appOrSpec.getSpec();
-        
-        Application instance = (Application) mgmt.getEntityManager().createEntity(spec);
+        Application instance = mgmt.getEntityManager().createEntity(spec);
         log.info("CAMP placing '{}' under management", instance);
         Entities.startManagement(instance, mgmt);
 
         return instance;
     }
     
-    protected AppOrSpec createAppOrSpec(AssemblyTemplate template, CampPlatform platform, boolean requireSpec) {
+    public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
         
         ManagementContext mgmt = getBrooklynManagementContext(platform);
@@ -116,35 +105,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         } else {
             loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
         }
-        return new AppOrSpec(createApplicationFromCampTemplate(template, platform, loader));
-    }
-    
-    private static class AppOrSpec {
-        private final Application app;
-        private final EntitySpec<? extends Application> spec;
-        
-        public AppOrSpec(Application app) {
-            this.app = app;
-            this.spec = null;
-        }
-
-        public AppOrSpec(EntitySpec<? extends Application> spec) {
-            this.app = null;
-            this.spec = spec;
-        }
-
-        public boolean hasApp() {
-            return app!=null;
-        }
-        public boolean hasSpec() {
-            return spec!=null;
-        }
-        public Application getApp() {
-            return app;
-        }
-        public EntitySpec<? extends Application> getSpec() {
-            return spec;
-        }
+        return createApplicationFromCampTemplate(template, platform, loader);
     }
     
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
