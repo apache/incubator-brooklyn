@@ -218,7 +218,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        EntityTestUtils.assertAttributeEventuallyNonNull(entity, SENSOR_STRING);        
+        EntityTestUtils.assertAttributeEventuallyNonNull(entity2, SENSOR_STRING);        
         final String val1 = assertDifferentOneInOutput(entity2);
         
         EntityTestUtils.assertAttributeEventually(entity2, SENSOR_STRING, Predicates.not(Predicates.equalTo(val1)));        
