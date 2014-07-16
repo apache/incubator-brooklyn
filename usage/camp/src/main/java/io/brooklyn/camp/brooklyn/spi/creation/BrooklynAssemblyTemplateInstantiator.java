@@ -203,20 +203,20 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
             ManagementContext mgmt = loader.getManagementContext();
 
-            String catalogIdOrJavaType = entityResolver.getCatalogIdOrJavaType();
+            String brooklynType = entityResolver.getBrooklynType();
             CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
 
-            boolean firstOccurrence = encounteredCatalogTypes.add(catalogIdOrJavaType);
+            boolean firstOccurrence = encounteredCatalogTypes.add(brooklynType);
             boolean recursiveButTryJava = !firstOccurrence;
                          
-            if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+catalogIdOrJavaType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
+            if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+brooklynType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
 
             EntitySpec<?> spec;
             if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
                 spec = entityResolver.resolveSpec();
             } else if (recursiveButTryJava) {
                 if (entityResolver.tryLoadEntityClass().isAbsent()) {
-                    throw new IllegalStateException("Recursive reference to " + catalogIdOrJavaType + " (and cannot be resolved as a Java type)");
+                    throw new IllegalStateException("Recursive reference to " + brooklynType + " (and cannot be resolved as a Java type)");
                 }
                 spec = entityResolver.resolveSpec();
             } else {

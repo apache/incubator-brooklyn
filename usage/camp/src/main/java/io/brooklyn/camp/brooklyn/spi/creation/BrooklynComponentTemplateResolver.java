@@ -158,7 +158,7 @@ public class BrooklynComponentTemplateResolver {
         return type != null && (type.toLowerCase().startsWith("java:") || type.toLowerCase().startsWith("brooklyn:java:"));
     }
 
-    protected String getCatalogIdOrJavaType() {
+    protected String getBrooklynType() {
         String type = getDeclaredType();
         type = Strings.removeFromStart(type, "brooklyn:", "java:");
         if (type == null) return null;
@@ -179,7 +179,7 @@ public class BrooklynComponentTemplateResolver {
      */
     @Nullable
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
-        String type = getCatalogIdOrJavaType();
+        String type = getBrooklynType();
         if (type != null) {
             return loader.getManagementContext().getCatalog().getCatalogItem(Entity.class, type);
         } else {
@@ -190,7 +190,7 @@ public class BrooklynComponentTemplateResolver {
     public boolean canResolve() {
         if (getCatalogItem()!=null) 
             return true;
-        if (loader.tryLoadClass(getCatalogIdOrJavaType(), Entity.class).isPresent())
+        if (loader.tryLoadClass(getBrooklynType(), Entity.class).isPresent())
             return true;
         return false;
     }
@@ -203,7 +203,7 @@ public class BrooklynComponentTemplateResolver {
     /** tries to load the Java entity class */
     public Maybe<Class<? extends Entity>> tryLoadEntityClass() {
         CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
-        String typeName = getCatalogIdOrJavaType();
+        String typeName = getBrooklynType();
         
         if (item!=null) {
             // add additional bundles
