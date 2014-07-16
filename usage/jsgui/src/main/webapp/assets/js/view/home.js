@@ -178,8 +178,6 @@ define([
         },
         
         getUser: function() {     	
-        //alert('Inside getUser home.js');
-        //self.$('#reload-brooklyn-properties-indicator').show();
         $.ajax({
                 type: "GET",
                 url: "/v1/server/user",
@@ -187,14 +185,11 @@ define([
                 dataType: "text",
                 success: function(data) {
                     console.log("Successfully fetched user details");
-                    $('#user').append(data);	
+                    if(data!=null){
+                    $('#user').append(data);
+                    }
                 },
                 error: function(data) {
-                    // TODO render the error better than poor-man's flashing
-                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
-                    /*self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
-                    self.$('#reload-brooklyn-properties-indicator').hide();*/
-                	//self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
                     console.error("ERROR fetching user details");
                     console.debug(data);
                 }
