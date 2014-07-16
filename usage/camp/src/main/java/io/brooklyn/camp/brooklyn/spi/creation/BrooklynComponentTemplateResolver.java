@@ -218,11 +218,18 @@ public class BrooklynComponentTemplateResolver {
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */
-    @SuppressWarnings("unchecked")
     public <T extends Entity> EntitySpec<T> resolveSpec() {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
+        
+        EntitySpec<T> spec = createSpec();
+        populateSpec(spec);
+        
+        return spec;
+    }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private <T extends Entity> EntitySpec<T> createSpec() {
         // ensure loader is updated
         getCatalogItem();
         
@@ -238,7 +245,11 @@ public class BrooklynComponentTemplateResolver {
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
+        return spec;
+    }
 
+    //called from BrooklynAssemblyTemplateInstantiator as well
+    protected <T extends Entity> void populateSpec(EntitySpec<T> spec) {
         String name, templateId=null, planId=null;
         if (template.isPresent()) {
             name = template.get().getName();
@@ -262,8 +273,6 @@ public class BrooklynComponentTemplateResolver {
             spec.locations(childLocations);
         
         decorateSpec(spec);
-        
-        return spec;
     }
 
     protected <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
