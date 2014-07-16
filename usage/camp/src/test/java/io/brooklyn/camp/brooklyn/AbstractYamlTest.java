@@ -25,10 +25,13 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Set;
 
+import org.codehaus.groovy.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+
+import com.google.common.base.Joiner;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
@@ -92,6 +95,10 @@ public abstract class AbstractYamlTest {
         return new StringReader(builder.toString());
     }
     
+    protected Entity createAndStartApplication(String... multiLineYaml) throws Exception {
+        return createAndStartApplication(join(multiLineYaml));
+    }
+    
     protected Entity createAndStartApplication(String input) throws Exception {
         return createAndStartApplication(new StringReader(input));
     }
@@ -121,7 +128,24 @@ public abstract class AbstractYamlTest {
         return app;
     }
 
+    protected void addCatalogItem(String... catalogYaml) {
+        addCatalogItem(join(catalogYaml));
+    }
+
+    protected void addCatalogItem(String catalogYaml) {
+        mgmt().getCatalog().addItem(catalogYaml);
+    }
+
+    protected void deleteCatalogEntity(String catalogItem) {
+        mgmt().getCatalog().deleteCatalogItem(catalogItem);
+    }
+    
     protected Logger getLogger() {
         return LOG;
     }
+
+    private String join(String[] catalogYaml) {
+        return Joiner.on("\n").join(catalogYaml);
+    }
+    
 }

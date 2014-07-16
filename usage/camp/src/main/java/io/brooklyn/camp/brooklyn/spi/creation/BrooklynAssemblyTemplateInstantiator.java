@@ -19,15 +19,16 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AbstractResource;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate.Builder;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
@@ -43,22 +44,24 @@ import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.net.Urls;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -211,16 +214,26 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                          
             if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+brooklynType+"; item="+item+"; loader="+loader+"; template="+template+"; encounteredCatalogTypes="+encounteredCatalogTypes);
 
-            EntitySpec<?> spec;
-            if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
-                spec = entityResolver.resolveSpec();
-            } else if (recursiveButTryJava) {
-                if (entityResolver.tryLoadEntityClass().isAbsent()) {
-                    throw new IllegalStateException("Recursive reference to " + brooklynType + " (and cannot be resolved as a Java type)");
+            EntitySpec<?> spec = null;
+            if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(Urls.getProtocol(brooklynType))) {
+                spec = tryResolveYamlURLReferenceSpec(brooklynType, loader, encounteredCatalogTypes);
+                if (spec != null) {
+                    entityResolver.populateSpec(spec);
                 }
-                spec = entityResolver.resolveSpec();
-            } else {
-                spec = resolveCatalogYamlReferenceSpec(platform, mgmt, item, encounteredCatalogTypes);
+            }
+            
+            if (spec == null) {
+                if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
+                    spec = entityResolver.resolveSpec();
+                } else if (recursiveButTryJava) {
+                    if (entityResolver.tryLoadEntityClass().isAbsent()) {
+                        throw new IllegalStateException("Recursive reference to " + brooklynType + " (and cannot be resolved as a Java type)");
+                    }
+                    spec = entityResolver.resolveSpec();
+                } else {
+                    spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+                    entityResolver.populateSpec(spec);
+                }
             }
 
             BrooklynClassLoadingContext newLoader = entityResolver.loader;
@@ -231,16 +244,47 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return result;
     }
 
-    private EntitySpec<?> resolveCatalogYamlReferenceSpec(CampPlatform platform,
+    private EntitySpec<?> tryResolveYamlURLReferenceSpec(
+            String brooklynType, BrooklynClassLoadingContext itemLoader, 
+            Set<String> encounteredCatalogTypes) {
+        ManagementContext mgmt = itemLoader.getManagementContext();
+        Reader yaml;
+        try {
+            ResourceUtils ru = ResourceUtils.create(this);
+            yaml = new InputStreamReader(ru.getResourceFromUrl(brooklynType), "UTF-8");
+        } catch (Exception e) {
+            log.warn("AssemblyTemplate type " + brooklynType + " which looks like a URL can't be fetched.", e);
+            return null;
+        }
+        try {
+            return resolveYamlSpec(mgmt, encounteredCatalogTypes, yaml, itemLoader);
+        } finally {
+            try {
+                yaml.close();
+            } catch (IOException e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+    }
+
+    private EntitySpec<?> resolveCatalogYamlReferenceSpec(
             ManagementContext mgmt,
             CatalogItem<Entity, EntitySpec<?>> item,
             Set<String> encounteredCatalogTypes) {
         
         String yaml = item.getPlanYaml();
         Reader input = new StringReader(yaml);
+        BrooklynClassLoadingContext itemLoader = item.newClassLoadingContext(mgmt);
+        
+        return resolveYamlSpec(mgmt, encounteredCatalogTypes, input, itemLoader);
+    }
+
+    private EntitySpec<?> resolveYamlSpec(ManagementContext mgmt,
+            Set<String> encounteredCatalogTypes, Reader input,
+            BrooklynClassLoadingContext itemLoader) {
+        CampPlatform platform = BrooklynServerConfig.getCampPlatform(mgmt).get();
         
         AssemblyTemplate at;
-        BrooklynClassLoadingContext itemLoader = item.newClassLoadingContext(mgmt);
         BrooklynLoaderTracker.setLoader(itemLoader);
         try {
             at = platform.pdp().registerDeploymentPlan(input);

@@ -145,12 +145,4 @@ public class CatalogYamlTest extends AbstractYamlTest {
         addCatalogItem(catalogYaml);
     }
 
-    private void addCatalogItem(String catalogYaml) {
-        mgmt().getCatalog().addItem(catalogYaml);
-    }
-
-    private void deleteCatalogEntity(String catalogItem) {
-        mgmt().getCatalog().deleteCatalogItem(catalogItem);
-    }
-    
 }

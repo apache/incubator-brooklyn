@@ -18,7 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate.Builder;
 import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
@@ -41,6 +41,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
+import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Lists;
@@ -66,18 +67,22 @@ public class BrooklynEntityMatcher implements PdpMatcher {
      * or null if not supported */
     protected String lookupType(Object deploymentPlanItem) {
         if (deploymentPlanItem instanceof Service) {
-            String name = ((Service)deploymentPlanItem).getName();
+            Service service = (Service)deploymentPlanItem;
+            
+            String name = service.getName();
             if (mgmt.getCatalog().getCatalogItem(name) != null) {
                 return name;
             }
-        }
-        if (deploymentPlanItem instanceof Service) {
-            String serviceType = ((Service)deploymentPlanItem).getServiceType();
+
+            String serviceType = service.getServiceType();
             BrooklynClassLoadingContext loader = BasicBrooklynCatalog.BrooklynLoaderTracker.getLoader();
             if (loader == null) loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
-            if (!BrooklynComponentTemplateResolver.Factory.supportsType(loader, serviceType))
-                return null;
-            return serviceType;
+            if (BrooklynComponentTemplateResolver.Factory.supportsType(loader, serviceType))
+                return serviceType;
+
+            if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(Urls.getProtocol(serviceType))) {
+                return serviceType;
+            }
         }
         return null;
     }
