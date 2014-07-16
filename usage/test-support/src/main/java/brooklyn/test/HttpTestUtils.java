@@ -231,6 +231,21 @@ public class HttpTestUtils {
         }
     }
 
+    public static void assertContentNotContainsText(final String url, final String phrase, final String ...additionalPhrases) {
+        try {
+            String contents = getContent(url);
+            Assert.assertTrue(contents != null);
+            for (String text: Lists.asList(phrase, additionalPhrases)) {
+                if (contents.contains(text)) {
+                    LOG.warn("CONTENTS OF URL "+url+" HAS TEXT: "+text+"\n"+contents);
+                    Assert.fail("URL "+url+" contain text: "+text);
+                }
+            }
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
     public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         assertContentEventuallyContainsText(MutableMap.of(), url, phrase, additionalPhrases);
     }

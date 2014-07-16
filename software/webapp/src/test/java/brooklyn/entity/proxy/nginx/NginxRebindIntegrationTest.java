@@ -54,7 +54,6 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -67,8 +66,6 @@ import com.google.common.io.Files;
  */
 public class NginxRebindIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(NginxRebindIntegrationTest.class);
-
-    static { TimeExtras.init(); }
 
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;

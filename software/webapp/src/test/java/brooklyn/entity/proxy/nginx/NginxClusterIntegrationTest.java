@@ -18,7 +18,6 @@
  */
 package brooklyn.entity.proxy.nginx;
 
-import static brooklyn.test.TestUtils.urlRespondsStatusCode;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -29,12 +28,11 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
@@ -43,11 +41,12 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.EntityManager;
-import brooklyn.test.TestUtils;
-import brooklyn.test.entity.TestApplication;
+import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
+import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicates;
@@ -59,37 +58,31 @@ import com.google.common.collect.Lists;
 /**
  * Test the operation of the {@link NginxController} class.
  */
-public class NginxClusterIntegrationTest {
+public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(NginxClusterIntegrationTest.class);
 
     private static final long TIMEOUT_MS = 60*1000;
     
     private URL war;
-    private LocalhostMachineProvisioningLocation localhostProvisioningLoc;
-    private TestApplication app;
+    private Location localhostProvisioningLoc;
     private EntityManager entityManager;
     private LoadBalancerCluster loadBalancerCluster;
     private EntitySpec<NginxController> nginxSpec;
     private Group urlMappings;
 
-
-    
-    @BeforeMethod(groups = "Integration")
-    public void setup() throws Exception {
+    @BeforeMethod(alwaysRun=true)
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         war = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"), "hello-world.war not on classpath");
-        localhostProvisioningLoc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
+        localhostProvisioningLoc = mgmt.getLocationRegistry().resolve("localhost");
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
         urlMappings = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         entityManager = app.getManagementContext().getEntityManager();
         
         nginxSpec = EntitySpec.create(NginxController.class);
-    }
-
-    @AfterMethod(groups = "Integration", alwaysRun=true)
-    public void shutdown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test(groups = "Integration")
@@ -169,13 +162,13 @@ public class NginxClusterIntegrationTest {
                 .configure(NginxController.DOMAIN_NAME, "localhost"));
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
-        TestUtils.assertAttributeContinually(loadBalancerCluster, Startable.SERVICE_UP, false);
+        EntityTestUtils.assertAttributeEqualsContinually(loadBalancerCluster, Startable.SERVICE_UP, false);
         
         loadBalancerCluster.resize(1);
-        TestUtils.assertAttributeEventually(loadBalancerCluster, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(loadBalancerCluster, Startable.SERVICE_UP, true);
 
         loadBalancerCluster.resize(0);
-        TestUtils.assertAttributeEventually(loadBalancerCluster, Startable.SERVICE_UP, false);
+        EntityTestUtils.assertAttributeEqualsEventually(loadBalancerCluster, Startable.SERVICE_UP, false);
     }
     
     // Warning: test is a little brittle for if a previous run leaves something on these required ports
@@ -217,12 +210,8 @@ public class NginxClusterIntegrationTest {
         assertNginxsResponsiveEvenutally(nginxs, null, Collections.<String>emptyList());
     }
 
-    private void assertNginxsResponsiveEvenutally(final Iterable<NginxController> nginxs, final List<String> pathsFor200) {
-        assertNginxsResponsiveEvenutally(nginxs, null, pathsFor200);
-    }
-    
     private void assertNginxsResponsiveEvenutally(final Iterable<NginxController> nginxs, final String hostname, final List<String> pathsFor200) {
-        TestUtils.executeUntilSucceeds(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 for (NginxController nginx : nginxs) {
                     assertTrue(nginx.getAttribute(NginxController.SERVICE_UP));
@@ -232,11 +221,11 @@ public class NginxClusterIntegrationTest {
                     String rootUrl = (hostname != null) ? ("http://"+hostname+":"+port+"/") : normalRootUrl;
                     
                     String wrongUrl = rootUrl+"doesnotexist";
-                    assertEquals(urlRespondsStatusCode(wrongUrl), 404, "url="+wrongUrl);
+                    HttpTestUtils.assertHttpStatusCodeEquals(wrongUrl, 404);
                     
                     for (String pathFor200 : pathsFor200) {
                         String url = rootUrl+pathFor200;
-                        assertEquals(urlRespondsStatusCode(url), 200, "url="+url);
+                        HttpTestUtils.assertHttpStatusCodeEquals(url, 200);
                     }
                 }
             }});
