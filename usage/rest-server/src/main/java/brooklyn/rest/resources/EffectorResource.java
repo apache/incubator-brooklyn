@@ -82,7 +82,11 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
         Maybe<Effector<?>> effector = EffectorUtils.findEffectorDeclared(entity, effectorName);
         if (effector.isAbsentOrNull())
             throw WebResourceUtils.notFound("Entity '%s' has no effector with name '%s'", entityToken, effectorName);
-
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR,
+                Entitlements.EntityAndItem.of(entity, effector.get().getName()))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to invoke effector %s on entity %s",
+                    Entitlements.getEntitlementContext().user(), effector.get().getName(), entity);
+        }
         log.info("REST invocation of " + entity + "." + effector.get() + " " + parameters);
         Task<?> t = entity.invoke(effector.get(), parameters);
 
