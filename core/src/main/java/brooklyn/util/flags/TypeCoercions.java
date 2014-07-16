@@ -60,6 +60,8 @@ import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
@@ -608,6 +610,12 @@ public class TypeCoercions {
             @Override
             public BigInteger apply(Integer input) {
                 return BigInteger.valueOf(input);
+            }
+        });
+        registerAdapter(String.class, AttributeSensor.class, new Function<String,AttributeSensor>() {
+            @Override
+            public AttributeSensor apply(final String input) {
+                return new BasicAttributeSensor(Object.class, input);
             }
         });
         registerAdapter(String.class, List.class, new Function<String,List>() {
