@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
+import brooklyn.management.osgi.OsgiStandaloneTest;
 
 import com.google.common.collect.Iterables;
 
@@ -121,6 +122,34 @@ public class ReferencedYamlTest extends AbstractYamlTest {
             "  type: classpath://yaml-ref-catalog.yaml");
         
         checkChildEntitySpec(app, entityName);
+    }
+
+    /**
+     * Tests that a YAML referenced by URL from a catalog item
+     * will have access to the catalog item's bundles.
+     */
+    @Test
+    public void testCatalogLeaksBundlesToReferencedYaml() throws Exception {
+        String parentCatalogId = "my.catalog.app.id.url.parent";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + parentCatalogId,
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: classpath://yaml-ref-bundle-without-libraries.yaml");
+
+        Entity app = createAndStartApplication(
+            "services:",
+                "- type: " + parentCatalogId);
+        
+        Collection<Entity> children = app.getChildren();
+        Assert.assertEquals(children.size(), 1);
+        Entity child = Iterables.getOnlyElement(children);
+        Assert.assertEquals(child.getEntityType().getName(), "brooklyn.osgi.tests.SimpleEntity");
+
+        deleteCatalogEntity(parentCatalogId);
     }
 
     private void checkChildEntitySpec(Entity app, String entityName) {

@@ -51,7 +51,7 @@ public class CatalogYamlTest extends AbstractYamlTest {
         String registeredTypeName = "my.catalog.app.id.launch";
         registerAndLaunchAndAssertSimpleEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
     }
-    
+
     @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
         String referencedRegisteredTypeName = "my.catalog.app.id.referenced";
@@ -138,6 +138,43 @@ public class CatalogYamlTest extends AbstractYamlTest {
         } finally {
             deleteCatalogEntity(referrerRegisteredTypeName);
         }
+    }
+
+    /**
+     * Tests that a catalog item referenced by another
+     * catalog item won't have access to the parent's bundles.
+     */
+    @Test
+    public void testParentCatalogDoesNotLeakBundlesToChildCatalogItems() throws Exception {
+        String childCatalogId = "my.catalog.app.id.no_bundles";
+        String parentCatalogId = "my.catalog.app.id.parent";
+        addCatalogItem(
+                "brooklyn.catalog:",
+                "  id: " + childCatalogId,
+                "",
+                "services:",
+                "- type: " + SIMPLE_ENTITY_TYPE);
+        
+        addCatalogItem(
+                "brooklyn.catalog:",
+                "  id: " + parentCatalogId,
+                "  libraries:",
+                "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+                "",
+                "services:",
+                "- type: " + childCatalogId);
+        
+        try {
+            createAndStartApplication(
+                    "services:",
+                    "- type: " + parentCatalogId);
+        } catch (UnsupportedOperationException e) {
+            assertTrue(e.getMessage().endsWith("cannot be matched"));
+            assertTrue(e.getMessage().contains(SIMPLE_ENTITY_TYPE));
+        }
+
+        deleteCatalogEntity(parentCatalogId);
+        deleteCatalogEntity(childCatalogId);
     }
 
     private void registerAndLaunchAndAssertSimpleEntity(String registeredTypeName, String serviceType) throws Exception {
