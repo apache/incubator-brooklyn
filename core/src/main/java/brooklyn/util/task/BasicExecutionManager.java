@@ -124,7 +124,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 .build();
                 
         // use Executors.newCachedThreadPool(daemonThreadFactory), but timeout of 1s rather than 60s for better shutdown!
-        runner = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), 
+        runner = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), 
                 daemonThreadFactory);
             
         delayedRunner = new ScheduledThreadPoolExecutor(1, daemonThreadFactory);
@@ -138,7 +138,7 @@ public class BasicExecutionManager implements ExecutionManager {
 	protected ThreadFactory newThreadFactory(String contextid) {
 	    return new ThreadFactoryBuilder()
         	    .setNameFormat("brooklyn-execmanager-"+contextid+"-%d")
-        	    .setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler(){
+        	    .setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                         @Override
                         public void uncaughtException(Thread t, Throwable e) {
                             log.error("Uncaught exception in thread "+t.getName(), e);

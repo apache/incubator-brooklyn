@@ -81,7 +81,7 @@ import com.google.common.base.Throwables;
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
 
-    private static DataGridFactory loadDataGridFactory(BrooklynProperties properties){
+    private static DataGridFactory loadDataGridFactory(BrooklynProperties properties) {
         String clazzName = properties.getFirst(DataGridFactory.class.getName());
         if(clazzName == null){
             clazzName = InMemoryDataGridFactory.class.getName();
