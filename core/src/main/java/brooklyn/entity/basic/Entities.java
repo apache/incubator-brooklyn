@@ -810,11 +810,21 @@ public class Entities {
         }
         return url;
     }
+    
     /** as {@link #getRequiredUrlConfig(Entity, ConfigKey)} */
     public static String getRequiredUrlConfig(Entity entity, HasConfigKey<String> urlKey) {
         return getRequiredUrlConfig(entity, urlKey.getConfigKey());
     }
     
+    /** fails-fast if value of the given URL is null or unresolveable */
+    public static String checkRequiredUrl(Entity entity, String url) {
+        Preconditions.checkNotNull(url, "url");
+        if (!ResourceUtils.create(entity).doesUrlExist(url)) {
+            throw new IllegalStateException(String.format("URL %s on %s is unavailable", url, entity));
+        }
+        return url;
+    }
+
     /** submits a task factory to construct its task at the entity (in a precursor task) and then to submit it;
      * important if e.g. task construction relies on an entity being in scope (in tags, via {@link BrooklynTaskTags}) */
     public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final TaskFactory<T> taskFactory) {

@@ -58,13 +58,13 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 /**
  * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
@@ -98,7 +98,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public String getClusterName() { return entity.getAttribute(CassandraNode.CLUSTER_NAME); }
 
     @Override
-    public String getCassandraConfigTemplateUrl() { return entity.getConfig(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL); }
+    public String getCassandraConfigTemplateUrl() {
+        String templatedUrl = entity.getConfig(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL);
+        return TemplateProcessor.processTemplateContents(templatedUrl, this, ImmutableMap.<String, Object>of());
+    }
 
     @Override
     public String getCassandraConfigFileName() { return entity.getConfig(CassandraNode.CASSANDRA_CONFIG_FILE_NAME); }
@@ -113,6 +116,16 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     
     protected String getDefaultUnpackedDirectoryName() {
         return "apache-cassandra-"+getVersion();
+    }
+    
+    @Override
+    public boolean installJava() {
+        String version = getVersion();
+        if (version.startsWith("2.")) {
+            return checkForAndInstallJava7or8();
+        } else {
+            return super.installJava();
+        }
     }
     
     @Override

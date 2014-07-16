@@ -40,6 +40,8 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.reflect.TypeToken;
+
 /**
  * An {@link brooklyn.entity.Entity} that represents a Cassandra node in a {@link CassandraDatacenter}.
  */
@@ -99,8 +101,8 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
 
     @SetFromFlag("cassandraConfigTemplateUrl")
     ConfigKey<String> CASSANDRA_CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "cassandra.config.templateUrl", "Template file (in freemarker format) for the cassandra.yaml config file", 
-            "classpath://brooklyn/entity/nosql/cassandra/cassandra.yaml");
+            "cassandra.config.templateUrl", "A URL (in freemarker format) for a cassandra.yaml config file (in freemarker format)", 
+            "classpath://brooklyn/entity/nosql/cassandra/cassandra-${entity.majorMinorVersion}.yaml");
 
     @SetFromFlag("cassandraConfigFileName")
     ConfigKey<String> CASSANDRA_CONFIG_FILE_NAME = ConfigKeys.newStringConfigKey(
@@ -125,9 +127,21 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             String.class, "cassandra.replication.rackName", "Rack name (used for configuring replication, when a suitable snitch is used)", 
             null);
 
+    ConfigKey<Integer> NUM_TOKENS_PER_NODE = ConfigKeys.newIntegerConfigKey("cassandra.numTokensPerNode",
+            "Number of tokens per node; if using vnodes, should set this to a value like 256",
+            1);
+    
+    /**
+     * @deprecated since 0.7; use {@link #TOKENS}
+     */
     @SetFromFlag("token")
+    @Deprecated
     BasicAttributeSensorAndConfigKey<BigInteger> TOKEN = new BasicAttributeSensorAndConfigKey<BigInteger>(
             BigInteger.class, "cassandra.token", "Cassandra Token");
+
+    @SetFromFlag("tokens")
+    BasicAttributeSensorAndConfigKey<Set<BigInteger>> TOKENS = new BasicAttributeSensorAndConfigKey<Set<BigInteger>>(
+            new TypeToken<Set<BigInteger>>() {}, "cassandra.tokens", "Cassandra Tokens");
 
     AttributeSensor<Integer> PEERS = Sensors.newIntegerSensor( "cassandra.peers", "Number of peers in cluster");
 
@@ -166,6 +180,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
 
     /* Accessors used from template */
     
+    String getMajorMinorVersion();
     Integer getGossipPort();
     Integer getSslGossipPort();
     Integer getThriftPort();
@@ -179,10 +194,27 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     String getPrivateIp();
     String getPublicIp();
     
-    /** in range 0 to (2^127)-1; or null if not yet set or known */
+    /**
+     * In range 0 to (2^127)-1; or null if not yet set or known.
+     * Returns the first token if more than one token.
+     * @deprecated since 0.7; see {@link #getTokens()}
+     */
+    @Deprecated
     BigInteger getToken();
-    /** string value of token (with no commas, which freemarker introduces!) or blank if none */
+
+    int getNumTokensPerNode();
+
+    Set<BigInteger> getTokens();
+
+    /**
+     * string value of token (with no commas, which freemarker introduces!) or blank if none
+     * @deprecated since 0.7; use {@link #getTokensAsString()}
+     */
+    @Deprecated
     String getTokenAsString();
+
+    /** string value of comma-separated tokens; or blank if none */
+    String getTokensAsString();
 
     /* For configuration */
     

@@ -229,6 +229,10 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         return (seedSupplier == null) ? defaultSeedSupplier : seedSupplier;
     }
     
+    protected boolean useVnodes() {
+        return Boolean.TRUE.equals(getConfig(USE_VNODES));
+    }
+    
     protected synchronized TokenGenerator getTokenGenerator() {
         if (tokenGenerator!=null) 
             return tokenGenerator;
@@ -281,20 +285,34 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
 
     @Override
     public Collection<Entity> grow(int delta) {
-        if (getCurrentSize() == 0) {
-            getTokenGenerator().growingCluster(delta);
+        if (useVnodes()) {
+            // nothing to do for token generator
+        } else {
+            if (getCurrentSize() == 0) {
+                getTokenGenerator().growingCluster(delta);
+            }
         }
         return super.grow(delta);
     }
     
     @Override
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
-        Map<?,?> allflags; 
-        if (flags.containsKey(CassandraNode.TOKEN) || flags.containsKey("token")) {
-            allflags = flags;
-        } else {
+        Map<Object, Object> allflags = MutableMap.copyOf(flags);
+        
+        if ((flags.containsKey(CassandraNode.TOKEN) || flags.containsKey("token")) || (flags.containsKey(CassandraNode.TOKENS) || flags.containsKey("tokens"))) {
+            // leave token config as-is
+        } else if (!useVnodes()) {
             BigInteger token = getTokenGenerator().newToken();
-            allflags = (token == null) ? flags : MutableMap.builder().putAll(flags).put(CassandraNode.TOKEN, token).build();
+            allflags.put(CassandraNode.TOKEN, token);
+        }
+
+        if ((flags.containsKey(CassandraNode.NUM_TOKENS_PER_NODE) || flags.containsKey("numTokensPerNode"))) {
+            // leave num_tokens as-is
+        } else if (useVnodes()) {
+            Integer numTokensPerNode = getConfig(NUM_TOKENS_PER_NODE);
+            allflags.put(CassandraNode.NUM_TOKENS_PER_NODE, numTokensPerNode);
+        } else {
+            allflags.put(CassandraNode.NUM_TOKENS_PER_NODE, 1);
         }
         
         return super.createNode(loc, allflags);
@@ -302,9 +320,9 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
 
     @Override
     protected Entity replaceMember(Entity member, Location memberLoc, Map<?, ?> extraFlags) {
-        BigInteger oldToken = ((CassandraNode) member).getToken();
-        BigInteger newToken = (oldToken != null) ? getTokenGenerator().getTokenForReplacementNode(oldToken) : null;
-        return super.replaceMember(member, memberLoc,  MutableMap.copyOf(extraFlags).add(CassandraNode.TOKEN, newToken));
+        Set<BigInteger> oldTokens = ((CassandraNode) member).getTokens();
+        Set<BigInteger> newTokens = (oldTokens != null && oldTokens.size() > 0) ? getTokenGenerator().getTokensForReplacementNode(oldTokens) : null;
+        return super.replaceMember(member, memberLoc,  MutableMap.copyOf(extraFlags).add(CassandraNode.TOKENS, newTokens));
     }
 
     @Override

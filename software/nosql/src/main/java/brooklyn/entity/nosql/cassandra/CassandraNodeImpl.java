@@ -61,16 +61,22 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Implementation of {@link CassandraNode}.
@@ -82,6 +88,23 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     private final AtomicReference<Boolean> detectedCloudSensors = new AtomicReference<Boolean>(false);
     
     public CassandraNodeImpl() {
+    }
+    
+    @Override
+    public void init() {
+        super.init();
+        
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+            @Override
+            public String call(ConfigBag parameters) {
+                return executeScript((String)parameters.getStringKey("commands"));
+            }
+        });
+        
+        Entities.checkRequiredUrl(this, getCassandraConfigTemplateUrl());
+        Entities.getRequiredUrlConfig(this, CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL);
+        
+        connectEnrichers();
     }
     
     /**
@@ -143,12 +166,30 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         setCloudPreferredSensorNames();
     }
     
+    // Used for freemarker
+    public String getMajorMinorVersion() {
+        String version = getConfig(CassandraNode.SUGGESTED_VERSION);
+        if (Strings.isBlank(version)) return "";
+        List<String> versionParts = ImmutableList.copyOf(Splitter.on(".").split(version));
+        return versionParts.get(0) + (versionParts.size() > 1 ? "."+versionParts.get(1) : "");
+    }
+    
+    public String getCassandraConfigTemplateUrl() {
+        String templatedUrl = getConfig(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL);
+        return TemplateProcessor.processTemplateContents(templatedUrl, this, ImmutableMap.<String, Object>of());
+    }
+
     @Override public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }
     @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
     @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
     @Override public Integer getNativeTransportPort() { return getAttribute(CassandraNode.NATIVE_TRANSPORT_PORT); }
     @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
     
+    @Override public int getNumTokensPerNode() {
+        return getConfig(CassandraNode.NUM_TOKENS_PER_NODE);
+    }
+
+    @Deprecated
     @Override public BigInteger getToken() {
         BigInteger token = getAttribute(CassandraNode.TOKEN);
         if (token == null) {
@@ -157,12 +198,41 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         return token;
     }
     
+    @Override public Set<BigInteger> getTokens() {
+        Set<BigInteger> tokens = getAttribute(CassandraNode.TOKENS);
+        if (tokens == null) {
+            BigInteger token = getAttribute(CassandraNode.TOKEN);
+            if (token != null) {
+                tokens = ImmutableSet.of(token);
+            }
+        }
+        if (tokens == null) {
+            tokens = getAttribute(CassandraNode.TOKENS);
+        }
+        if (tokens == null) {
+            BigInteger token = getAttribute(CassandraNode.TOKEN);
+            if (token != null) {
+                tokens = ImmutableSet.of(token);
+            }
+        }
+        return tokens;
+    }
+    
+    @Deprecated
     @Override public String getTokenAsString() {
         BigInteger token = getToken();
         if (token==null) return "";
         return ""+token;
     }
 
+    @Override public String getTokensAsString() {
+        // TODO check what is required when replacing failed node.
+        // with vnodes in Cassandra 2.x, don't bother supplying token
+        Set<BigInteger> tokens = getTokens();
+        if (tokens == null) return "";
+        return Joiner.on(",").join(tokens);
+    }
+    
     @Override public String getListenAddress() {
         String sensorName = getConfig(LISTEN_ADDRESS_SENSOR);
         if (Strings.isNonBlank(sensorName))
@@ -315,23 +385,6 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         return (CassandraNodeDriver) super.getDriver();
     }
 
-    @Override
-    public void init() {
-        super.init();
-        
-        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
-            @Override
-            public String call(ConfigBag parameters) {
-                return executeScript((String)parameters.getStringKey("commands"));
-            }
-        });
-        
-        Entities.getRequiredUrlConfig(this, CASSANDRA_CONFIG_TEMPLATE_URL);
-        Entities.getRequiredUrlConfig(this, CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL);
-        
-        connectEnrichers();
-    }
-    
     private volatile JmxFeed jmxFeed;
     private volatile FunctionFeed functionFeed;
     private JmxFeed jmxMxBeanFeed;
@@ -360,20 +413,37 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                         .attributeName("Initialized")
                         .onSuccess(Functions.forPredicate(Predicates.notNull()))
                         .onException(Functions.constant(false)))
+                .pollAttribute(new JmxAttributePollConfig<Set<BigInteger>>(TOKENS)
+                        .objectName(storageServiceMBean)
+                        .attributeName("TokenToEndpointMap")
+                        .onSuccess((Function) new Function<Map, Set<BigInteger>>() {
+                            @Override
+                            public Set<BigInteger> apply(@Nullable Map input) {
+                                if (input == null || input.isEmpty()) return null;
+                                // FIXME does not work on aws-ec2, uses RFC1918 address
+                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS), getAttribute(SUBNET_ADDRESS), getAttribute(SUBNET_HOSTNAME)));
+                                Set<String> tokens = Maps.filterValues(input, self).keySet();
+                                Set<BigInteger> result = Sets.newLinkedHashSet();
+                                for (String token : tokens) {
+                                    result.add(new BigInteger(token));
+                                }
+                                return result;
+                            }})
+                        .onException(Functions.<Set<BigInteger>>constant(null)))
                 .pollAttribute(new JmxAttributePollConfig<BigInteger>(TOKEN)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
                         .onSuccess((Function) new Function<Map, BigInteger>() {
                             @Override
                             public BigInteger apply(@Nullable Map input) {
-                                if (input == null || input.isEmpty()) return BigInteger.valueOf(0);
+                                // TODO remove duplication from setting TOKENS
+                                if (input == null || input.isEmpty()) return null;
                                 // FIXME does not work on aws-ec2, uses RFC1918 address
-                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS)));
+                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS), getAttribute(SUBNET_ADDRESS), getAttribute(SUBNET_HOSTNAME)));
                                 Set<String> tokens = Maps.filterValues(input, self).keySet();
                                 String token = Iterables.getFirst(tokens, null);
                                 return (token != null) ? new BigInteger(token) : null;
-                            }
-                        })
+                            }})
                         .onException(Functions.<BigInteger>constant(null)))
                 .pollOperation(new JmxOperationPollConfig<String>(DATACENTER_NAME)
                         .period(60, TimeUnit.SECONDS)
