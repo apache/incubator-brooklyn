@@ -94,12 +94,6 @@ public class ServerPoolTest extends AbstractServerPoolTest {
         assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
     }
 
-//    @Test(invocationCount=100, groups="Integration")
-//    public void testResizingPoolUpManyTimes() {
-//        testResizingPoolUp();
-//    }
-
-
     @Test
     public void testResizePoolDownSucceedsWhenEnoughMachinesAreFree() {
         TestApplication app = createAppWithChildren(1);
