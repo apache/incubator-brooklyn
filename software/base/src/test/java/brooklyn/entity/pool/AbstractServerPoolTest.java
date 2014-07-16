@@ -40,6 +40,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;
@@ -110,6 +111,10 @@ public abstract class AbstractServerPoolTest {
 
     protected void assertAvailableCountEquals(ServerPool pool, Integer count) {
         assertEquals(pool.getAttribute(ServerPool.AVAILABLE_COUNT), count);
+    }
+
+    protected void assertAvailableCountEventuallyEquals(int count) {
+        EntityTestUtils.assertAttributeEqualsEventually(pool, ServerPool.AVAILABLE_COUNT, count);
     }
 
     protected void assertClaimedCountEquals(int count) {

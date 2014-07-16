@@ -26,14 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.entity.TestApplication;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class ServerPoolTest extends AbstractServerPoolTest {
 
@@ -73,8 +71,9 @@ public class ServerPoolTest extends AbstractServerPoolTest {
 
         app2.start(ImmutableList.of(pool.getDynamicLocation()));
         assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
+        
+        assertAvailableCountEventuallyEquals(getInitialPoolSize() - 1);
         assertClaimedCountEquals(1);
-        assertAvailableCountEquals(getInitialPoolSize() - 1);
     }
 
     @Test
@@ -87,11 +86,19 @@ public class ServerPoolTest extends AbstractServerPoolTest {
         assertNoMachinesAvailableForApp(app2);
 
         pool.resizeByDelta(1);
+        
+        assertAvailableCountEventuallyEquals(1);
 
         assertEquals((int) pool.getCurrentSize(), getInitialPoolSize() + 1);
         app2.start(ImmutableList.of(pool.getDynamicLocation()));
         assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
     }
+
+//    @Test(invocationCount=100, groups="Integration")
+//    public void testResizingPoolUpManyTimes() {
+//        testResizingPoolUp();
+//    }
+
 
     @Test
     public void testResizePoolDownSucceedsWhenEnoughMachinesAreFree() {
@@ -101,7 +108,7 @@ public class ServerPoolTest extends AbstractServerPoolTest {
 
         pool.resize(1);
 
-        assertAvailableCountEquals(0);
+        assertAvailableCountEventuallyEquals(0);
     }
 
     @Test
@@ -113,6 +120,8 @@ public class ServerPoolTest extends AbstractServerPoolTest {
 
         LOG.info("Test attempting to resize to 0 members. Should only drop one machine.");
         pool.resize(0);
+
+        assertAvailableCountEventuallyEquals(0);
 
         assertEquals(Iterables.size(pool.getMembers()), getInitialPoolSize() - 1);
         assertAvailableCountEquals(0);
