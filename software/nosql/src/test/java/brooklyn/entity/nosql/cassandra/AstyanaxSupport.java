@@ -25,6 +25,7 @@ import static org.testng.Assert.assertTrue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.util.exceptions.Exceptions;
@@ -71,7 +72,7 @@ public class AstyanaxSupport {
         this.thriftPort = thriftPort;
     }
     
-    public AstyanaxContext<Keyspace> getAstyanaxContextForKeyspace(String keyspace) {
+    public AstyanaxContext<Keyspace> newAstyanaxContextForKeyspace(String keyspace) {
         AstyanaxContext<Keyspace> context = new AstyanaxContext.Builder()
                 .forCluster(clusterName)
                 .forKeyspace(keyspace)
@@ -89,7 +90,7 @@ public class AstyanaxSupport {
         return context;
     }
     
-    public AstyanaxContext<Cluster> getAstyanaxContextForCluster() {
+    public AstyanaxContext<Cluster> newAstyanaxContextForCluster() {
         AstyanaxContext<Cluster> context = new AstyanaxContext.Builder()
                 .forCluster(clusterName)
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
@@ -175,13 +176,14 @@ public class AstyanaxSupport {
          */
         public void writeData() throws ConnectionException {
             // Create context
-            AstyanaxContext<Keyspace> context = getAstyanaxContextForKeyspace("BrooklynIntegrationTest");
+            AstyanaxContext<Keyspace> context = newAstyanaxContextForKeyspace("BrooklynIntegrationTest");
             try {
                 Keyspace keyspace = context.getEntity();
                 try {
-                    assertNull(keyspace.describeKeyspace().getColumnFamily(columnFamilyName));
+                    checkNull(keyspace.describeKeyspace().getColumnFamily(columnFamilyName), "key space for column family "+columnFamilyName);
                 } catch (Exception ek) {
-                    // (Re) Create keyspace if needed
+                    // (Re) Create keyspace if needed (including if family name already existed, 
+                    // e.g. due to a timeout on previous attempt)
                     log.debug("repairing Cassandra error by re-creating keyspace "+keyspace+": "+ek);
                     try {
                         log.debug("dropping Cassandra keyspace "+keyspace);
@@ -208,8 +210,8 @@ public class AstyanaxSupport {
                     }
                 }
                 
-                assertNull(keyspace.describeKeyspace().getColumnFamily("Rabbits"));
-                assertNull(keyspace.describeKeyspace().getColumnFamily(columnFamilyName));
+                assertNull(keyspace.describeKeyspace().getColumnFamily("Rabbits"), "key space for arbitrary column family Rabbits");
+                assertNull(keyspace.describeKeyspace().getColumnFamily(columnFamilyName), "key space for column family "+columnFamilyName);
 
                 // Create column family
                 keyspace.createColumnFamily(sampleColumnFamily, null);
@@ -217,12 +219,12 @@ public class AstyanaxSupport {
                 // Insert rows
                 MutationBatch m = keyspace.prepareMutationBatch();
                 m.withRow(sampleColumnFamily, "one")
-                .putColumn("name", "Alice", null)
-                .putColumn("company", "Cloudsoft Corp", null);
+                        .putColumn("name", "Alice", null)
+                        .putColumn("company", "Cloudsoft Corp", null);
                 m.withRow(sampleColumnFamily, "two")
-                .putColumn("name", "Bob", null)
-                .putColumn("company", "Cloudsoft Corp", null)
-                .putColumn("pet", "Cat", null);
+                        .putColumn("name", "Bob", null)
+                        .putColumn("company", "Cloudsoft Corp", null)
+                        .putColumn("pet", "Cat", null);
 
                 OperationResult<Void> insert = m.execute();
                 assertEquals(insert.getHost().getHostName(), hostname);
@@ -238,7 +240,7 @@ public class AstyanaxSupport {
          */
         public void readData() throws ConnectionException {
             // Create context
-            AstyanaxContext<Keyspace> context = getAstyanaxContextForKeyspace("BrooklynIntegrationTest");
+            AstyanaxContext<Keyspace> context = newAstyanaxContextForKeyspace("BrooklynIntegrationTest");
             try {
                 Keyspace keyspace = context.getEntity();
 
@@ -267,35 +269,50 @@ public class AstyanaxSupport {
         
 
         public void writeData(int numRetries) throws ConnectionException {
+            int retryCount = 0;
             while (true) {
                 try {
                     writeData();
                     return;
                 } catch (Exception e) {
-                    log.warn("Error writing data - num retries = "+numRetries+": "+e, e);
-                    if (--numRetries <= 0)
+                    log.warn("Error writing data - attempt "+(retryCount+1)+" of "+(numRetries+1)+": "+e, e);
+                    if (++retryCount > numRetries)
                         throw Exceptions.propagate(e);
                 }
             }
         }
 
         public void readData(int numRetries) throws ConnectionException {
+            int retryCount = 0;
             while (true) {
                 try {
                     readData();
                     return;
                 } catch (Exception e) {
-                    log.warn("Error reading data - num retries = "+numRetries+": "+e, e);
-                    if (--numRetries <= 0)
+                    log.warn("Error reading data - attempt "+(retryCount+1)+" of "+(numRetries+1)+": "+e, e);
+                    if (++retryCount > numRetries)
                         throw Exceptions.propagate(e);
                 }
             }
         }
 
+        /**
+         * Like {@link Assert#assertNull(Object, String)}, except throws IllegalStateException instead
+         */
+        private void checkNull(Object obj, String msg) {
+            if (obj != null) {
+                throw new IllegalStateException("Not null: "+msg+"; obj="+obj);
+            }
+        }
     }
 
     public static void main(String[] args) throws Exception {
         AstyanaxSample support = new AstyanaxSample("ignored", "ec2-79-125-32-2.eu-west-1.compute.amazonaws.com", 9160);
-        System.out.println(support.getAstyanaxContextForCluster().getEntity().describeSchemaVersions());
+        AstyanaxContext<Cluster> context = support.newAstyanaxContextForCluster();
+        try {
+            System.out.println(context.getEntity().describeSchemaVersions());
+        } finally {
+            context.shutdown();
+        }
     }
 }

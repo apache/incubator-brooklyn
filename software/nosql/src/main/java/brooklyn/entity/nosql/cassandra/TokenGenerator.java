@@ -33,6 +33,8 @@ public interface TokenGenerator {
     
     BigInteger getTokenForReplacementNode(BigInteger oldToken);
     
+    Set<BigInteger> getTokensForReplacementNode(Set<BigInteger> oldTokens);
+    
     /**
      * Indicates that we are starting a new cluster of the given number of nodes,
      * so expect that number of consecutive calls to {@link #newToken()}.
