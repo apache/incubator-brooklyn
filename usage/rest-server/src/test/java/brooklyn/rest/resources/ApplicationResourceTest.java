@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.codehaus.jackson.JsonGenerationException;
@@ -80,6 +81,7 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BrooklynRestResourceTest {
@@ -427,6 +429,22 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
     
+    String result = response.getEntity(String.class);
+    assertEquals(result, "foo4");
+  }
+
+  @Test(dependsOnMethods = "testListSensors")
+  public void testTriggerSampleEffectorWithFormData() throws InterruptedException, IOException {
+    MultivaluedMap<String, String> data = new MultivaluedMapImpl();
+    data.add("param1", "foo");
+    data.add("param2", "4");
+    ClientResponse response = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors/"+
+            RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
+        .type(MediaType.APPLICATION_FORM_URLENCODED)
+        .post(ClientResponse.class, data);
+
+    assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
+
     String result = response.getEntity(String.class);
     assertEquals(result, "foo4");
   }

@@ -75,7 +75,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
 
     @Override
     public Response invoke(String application, String entityToken, String effectorName,
-                           String timeout, Map<String, String> parameters) {
+            String timeout, Map<String, Object> parameters) {
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
 
         // TODO check effectors?
