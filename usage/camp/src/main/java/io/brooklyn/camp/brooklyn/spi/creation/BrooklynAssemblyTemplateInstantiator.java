@@ -43,6 +43,7 @@ import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
@@ -101,7 +102,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         BrooklynCatalog catalog = mgmt.getCatalog();
         
-        CatalogItem<?,?> item = catalog.getCatalogItem(template.getName());
+        CatalogItem<?,?> item = catalog.getCatalogItem(
+                CatalogDtoUtils.getIdFromVersionedId(template.getName()),
+                CatalogDtoUtils.getVersionFromVersionedId(template.getName()));
+        
         BrooklynClassLoadingContext loader;
         if (item!=null) {
             loader = item.newClassLoadingContext(mgmt);

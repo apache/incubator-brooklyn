@@ -24,16 +24,33 @@ import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
 
-    /** @return The item with the given ID, or null if not found */
+    /** @return The item with the given ID, or null if not found
+     * @deprecated since 0.7.0 use {@link #getCatalogItem(String, String)} */
+    @Deprecated
     CatalogItem<?,?> getCatalogItem(String id);
 
+    /** @return The item with the given ID and version, or null if not found */
+    CatalogItem<?,?> getCatalogItem(String id, String version);
+
     /** @return Deletes the item with the given ID
-     * @throws NoSuchElementException if not found */
+     * @throws NoSuchElementException if not found
+     * @deprecated since 0.7.0 use {@link #deleteCatalogItem(String, String)} */
+    @Deprecated
     void deleteCatalogItem(String id);
+
+    /** @return Deletes the item with the given ID and version
+     * @throws NoSuchElementException if not found */
+    void deleteCatalogItem(String id, String version);
+
+    /** variant of {@link #getCatalogItem(String)} which checks (and casts) type for convenience
+     * (returns null if type does not match)
+     * @deprecated since 0.7.0 use {@link #getCatalogItem(Class<T>, String, String)} */
+    @Deprecated
+    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id);
 
     /** variant of {@link #getCatalogItem(String)} which checks (and casts) type for convenience
      * (returns null if type does not match) */
-    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id);
+    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id, String version);
 
     /** @return All items in the catalog */
     <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems();

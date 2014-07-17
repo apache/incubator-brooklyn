@@ -32,7 +32,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -181,7 +183,10 @@ public class BrooklynComponentTemplateResolver {
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
         String type = getBrooklynType();
         if (type != null) {
-            return loader.getManagementContext().getCatalog().getCatalogItem(Entity.class, type);
+            BrooklynCatalog catalog = loader.getManagementContext().getCatalog();
+            return catalog.getCatalogItem(Entity.class,
+                    CatalogDtoUtils.getIdFromVersionedId(type),
+                    CatalogDtoUtils.getVersionFromVersionedId(type));
         } else {
             return null;
         }

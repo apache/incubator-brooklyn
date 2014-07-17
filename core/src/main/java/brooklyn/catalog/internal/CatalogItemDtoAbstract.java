@@ -39,7 +39,7 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
     String name;
     String description;
     String iconUrl;
-    String version;
+    String version = BasicBrooklynCatalog.NO_VERSION;
     CatalogLibrariesDto libraries;
     
     String planYaml;

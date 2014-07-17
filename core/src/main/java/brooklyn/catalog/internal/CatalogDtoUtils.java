@@ -29,6 +29,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
 public class CatalogDtoUtils {
+    public static final char VERSION_DELIMITER = ':';
 
     private static final Logger log = LoggerFactory.getLogger(CatalogDtoUtils.class);
     
@@ -62,6 +63,26 @@ public class CatalogDtoUtils {
         } catch (Throwable t) {
             log.debug("Unable to retrieve catalog from: "+url+" ("+t+")");
             throw Exceptions.propagate(t);
+        }
+    }
+
+    public static String getIdFromVersionedId(String versionedId) {
+        if (versionedId == null) return null;
+        int versionDelimiterPos = versionedId.lastIndexOf(VERSION_DELIMITER);
+        if (versionDelimiterPos != -1) {
+            return versionedId.substring(0, versionDelimiterPos);
+        } else {
+            return null;
+        }
+    }
+
+    public static String getVersionFromVersionedId(String versionedId) {
+        if (versionedId == null) return null;
+        int versionDelimiterPos = versionedId.lastIndexOf(VERSION_DELIMITER);
+        if (versionDelimiterPos != -1) {
+            return versionedId.substring(versionDelimiterPos+1);
+        } else {
+            return null;
         }
     }
 }

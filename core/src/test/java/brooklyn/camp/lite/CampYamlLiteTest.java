@@ -60,6 +60,7 @@ import com.google.common.collect.Sets;
 /** Tests of lightweight CAMP integration. Since the "real" integration is in brooklyn-camp project,
  * but some aspects of CAMP we want to be able to test here. */
 public class CampYamlLiteTest {
+    private static final String TEST_VERSION = "0.1.2";
 
     private static final Logger log = LoggerFactory.getLogger(CampYamlLiteTest.class);
     
@@ -147,7 +148,7 @@ public class CampYamlLiteTest {
           "  name: My Catalog App\n"+
           "  description: My description\n"+
           "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
-          "  version: 0.1.2\n"+
+          "  version: " + TEST_VERSION + "\n"+
           "  libraries:\n"+
           "  - url: " + bundleUrl + "\n"+
           "\n"+
@@ -156,28 +157,26 @@ public class CampYamlLiteTest {
     }
 
     private void assertMgmtHasSampleMyCatalogApp(String registeredTypeName, String bundleUrl) {
-        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName);
-          assertEquals(item.getRegisteredTypeName(), registeredTypeName);
-          
-          // stored as yaml, not java
-//      assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
-          Assert.assertNotNull(item.getPlanYaml());
-          Assert.assertTrue(item.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
-          
-          assertEquals(item.getId(), registeredTypeName);
-          
-          // and let's check we have libraries
-          List<String> libs = item.getLibraries().getBundles();
-          assertEquals(libs, MutableList.of(bundleUrl));
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
+        assertEquals(item.getRegisteredTypeName(), registeredTypeName);
 
-          // now let's check other things on the item
-          assertEquals(item.getName(), "My Catalog App");
-          assertEquals(item.getDescription(), "My description");
-          assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
-          
-          // and confirm we can resolve ICON
-          byte[] iconData = Streams.readFully( ResourceUtils.create(item.newClassLoadingContext(mgmt)).getResourceFromUrl(item.getIconUrl()) );
-          assertEquals(iconData.length, 43);
+        Assert.assertNotNull(item.getPlanYaml());
+        Assert.assertTrue(item.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
+
+        assertEquals(item.getId(), registeredTypeName);
+
+        // and let's check we have libraries
+        List<String> libs = item.getLibraries().getBundles();
+        assertEquals(libs, MutableList.of(bundleUrl));
+
+        // now let's check other things on the item
+        assertEquals(item.getName(), "My Catalog App");
+        assertEquals(item.getDescription(), "My description");
+        assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
+
+        // and confirm we can resolve ICON
+        byte[] iconData = Streams.readFully( ResourceUtils.create(item.newClassLoadingContext(mgmt)).getResourceFromUrl(item.getIconUrl()) );
+        assertEquals(iconData.length, 43);
     }
 
     

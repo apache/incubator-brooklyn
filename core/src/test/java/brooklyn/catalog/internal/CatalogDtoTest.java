@@ -73,7 +73,7 @@ public class CatalogDtoTest {
         CatalogDo loader = new CatalogDo(root).load(managementContext, null);
         
         // test app comes from jar, by default
-        CatalogItemDo<?,?> worker = loader.getCache().get(TestApplication.class.getCanonicalName());
+        CatalogItemDo<?,?> worker = loader.getCache().get(new CatalogId(TestApplication.class.getCanonicalName(), BasicBrooklynCatalog.NO_VERSION));
         Assert.assertNotNull(worker);
         Assert.assertEquals(worker.getName(), "Test App from JAR");
         
@@ -112,6 +112,20 @@ public class CatalogDtoTest {
 
         root.addCatalog(CatalogDto.newLinkedInstance("classpath://brooklyn-catalog-empty.xml"));
         return root.dto;
+    }
+    
+    @Test
+    public void testVersionedIdSplitter() {
+        String id = "simple.id";
+        String version = "0.1.2";
+        String versionedId = id + CatalogDtoUtils.VERSION_DELIMITER + version;
+        
+        Assert.assertNull(CatalogDtoUtils.getIdFromVersionedId(null));
+        Assert.assertNull(CatalogDtoUtils.getVersionFromVersionedId(null));
+        Assert.assertNull(CatalogDtoUtils.getIdFromVersionedId(id));
+        Assert.assertNull(CatalogDtoUtils.getVersionFromVersionedId(version));
+        Assert.assertEquals(CatalogDtoUtils.getIdFromVersionedId(versionedId), id);
+        Assert.assertEquals(CatalogDtoUtils.getVersionFromVersionedId(versionedId), version);
     }
 
 }

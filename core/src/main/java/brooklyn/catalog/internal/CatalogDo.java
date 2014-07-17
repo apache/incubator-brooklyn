@@ -52,7 +52,7 @@ public class CatalogDo {
     
     List<CatalogDo> childrenCatalogs = new ArrayList<CatalogDo>();
     CatalogClasspathDo classpath;
-    Map<String, CatalogItemDo<?,?>> cache;
+    Map<CatalogId, CatalogItemDo<?,?>> cache;
     
     AggregateClassLoader childrenClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
     ClassLoader recursiveClassLoader;
@@ -153,20 +153,20 @@ public class CatalogDo {
         return childL;
     }
 
-    protected Map<String, CatalogItemDo<?,?>> getCache() {
-        Map<String, CatalogItemDo<?,?>> cache = this.cache;
+    protected Map<CatalogId, CatalogItemDo<?,?>> getCache() {
+        Map<CatalogId, CatalogItemDo<?,?>> cache = this.cache;
         if (cache==null) cache = buildCache();
         return cache;
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected synchronized Map<String, CatalogItemDo<?,?>> buildCache() {
+    protected synchronized Map<CatalogId, CatalogItemDo<?,?>> buildCache() {
         if (cache!=null) return cache;
         log.debug("Building cache for "+this);
         if (!isLoaded()) 
             log.debug("Catalog not fully loaded when loading cache of "+this);
         
-        Map<String, CatalogItemDo<?,?>> cache = new LinkedHashMap<String, CatalogItemDo<?,?>>();
+        Map<CatalogId, CatalogItemDo<?,?>> cache = new LinkedHashMap<CatalogId, CatalogItemDo<?,?>>();
         
         // build the cache; first from children catalogs, then from local entities
         // so that root and near-root takes precedence over deeper items;
@@ -183,7 +183,7 @@ public class CatalogDo {
             List<CatalogItemDtoAbstract<?,?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?,?>>(dto.entries);
             Collections.reverse(entriesReversed);
             for (CatalogItemDtoAbstract<?,?> entry: entriesReversed)
-                cache.put(entry.getId(), new CatalogItemDo(this, entry));
+                cache.put(new CatalogId(entry), new CatalogItemDo(this, entry));
         }
         
         this.cache = cache;
@@ -205,14 +205,14 @@ public class CatalogDo {
             dto.entries = new ArrayList<CatalogItemDtoAbstract<?,?>>();
         dto.entries.add(entry);
         if (cache!=null)
-            cache.put(entry.getId(), new CatalogItemDo(this, entry));
+            cache.put(new CatalogId(entry), new CatalogItemDo(this, entry));
     }
 
     public synchronized void deleteEntry(CatalogItemDtoAbstract<?, ?> entry) {
         if (dto.entries != null)
             dto.entries.remove(entry);
         if (cache!=null)
-            cache.remove(entry.getId());
+            cache.remove(new CatalogId(entry));
     }
 
     /** removes the given entry from the catalog;
@@ -220,7 +220,7 @@ public class CatalogDo {
     public synchronized void removeEntry(CatalogItemDtoAbstract<?,?> entry) {
         dto.entries.remove(entry);
         if (cache!=null)
-            cache.remove(entry.getId());
+            cache.remove(new CatalogId(entry));
     }
 
     /** returns loaded catalog, if this has been loaded */
