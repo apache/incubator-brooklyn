@@ -57,6 +57,8 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
     
     protected ManagementContext mgmt;
     protected DelegatingSecurityProvider provider;
+    
+    private static ThreadLocal<String> originalRequest = new ThreadLocal<String>();
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -73,18 +75,45 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                 // do nothing here, fall through to below
             } else {
                 WebEntitlementContext entitlementContext = null;
+                String uri = ((HttpServletRequest)request).getRequestURI();
                 try {
-                    entitlementContext = new WebEntitlementContext(user, ((HttpServletRequest)request).getRemoteAddr(), ((HttpServletRequest)request).getRequestURI());
+                    String uid = Integer.toHexString(hashCode());
+                    entitlementContext = new WebEntitlementContext(user, ((HttpServletRequest)request).getRemoteAddr(), uri, uid);
+                    if (originalRequest.get()==null) {
+                        // initial filter application
+                        originalRequest.set(uri);
+                    } else {
+                        // this filter is being applied *again*, probably due to forwarding (e.g. from '/' to '/index.html')
+                        log.debug("REST request {} being forwarded from {} to {}", new Object[] { uid, originalRequest.get(), uri });
+                        // clear the entitlement context before setting to avoid warnings
+                        Entitlements.clearEntitlementContext();
+                    }
                     Entitlements.setEntitlementContext(entitlementContext);
-                    log.debug("REST starting processing request {}", entitlementContext);
+                    
+                    log.debug("REST starting processing request {} with {}", uri, entitlementContext);
+                    if (!((HttpServletRequest)request).getParameterMap().isEmpty()) {
+                        log.debug("  REST req {} parameters: {}", uid, ((HttpServletRequest)request).getParameterMap());
+                    }
+                    if (((HttpServletRequest)request).getContentLength()>0) {
+                        log.debug("  REST req {} upload content type {}", uid, ((HttpServletRequest)request).getContentType()+" length "+((HttpServletRequest)request).getContentLength());
+                    }
+                    
                     chain.doFilter(request, response);
-                    log.debug("REST completed processing request {}", entitlementContext);
+                    
+                    log.debug("REST completed, code {}, processing request {} with {}", 
+                        new Object[] { ((HttpServletResponse)response).getStatus(), uri, entitlementContext } );
                     return;
+                    
                 } catch (Throwable e) {
+                    // NB errors are typically already caught at this point
                     if (log.isDebugEnabled())
-                        log.debug("REST failed processing request "+entitlementContext+": "+e, e);
+                        log.debug("REST` failed processing request "+uri+" with "+entitlementContext+": "+e, e);
+                    
+                    log.warn("REST` failed processing request "+uri+" with "+entitlementContext+": "+e, e);
                     throw Exceptions.propagate(e);
+                    
                 } finally {
+                    originalRequest.remove();
                     Entitlements.clearEntitlementContext();
                 }
             }

@@ -228,6 +228,7 @@ public class Entitlements {
         EntitlementContext oldContext = PerThreadEntitlementContextHolder.perThreadEntitlementsContextHolder.get();
         if (oldContext!=null && context!=null) {
             log.warn("Changing entitlement context from "+oldContext+" to "+context+"; context should have been reset or extended, not replaced");
+            log.debug("Trace for entitlement context duplicate overwrite", new Throwable("Trace for entitlement context overwrite"));
         }
         PerThreadEntitlementContextHolder.perThreadEntitlementsContextHolder.set(context);
     }
