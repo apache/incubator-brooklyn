@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
@@ -49,6 +50,8 @@ import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.CatalogTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 
@@ -78,6 +81,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
       return create(CharStreams.toString(new InputStreamReader(uploadedInputStream, Charsets.UTF_8)));
     }
 
+    static Set<String> missingIcons = MutableSet.of();
+    
     @Override
     public Response create(String yaml) {
         CatalogItem<?,?> item;
@@ -202,8 +207,23 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
             log.debug("Loading and returning "+url+" as icon for "+result);
             
             MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
-            Object content = ResourceUtils.create(result.newClassLoadingContext(mgmt())).getResourceFromUrl(url);
-            return Response.ok(content, mime).build();
+            try {
+                Object content = ResourceUtils.create(result.newClassLoadingContext(mgmt())).getResourceFromUrl(url);
+                return Response.ok(content, mime).build();
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                synchronized (missingIcons) {
+                    if (missingIcons.add(url)) {
+                        // note: this can be quite common when running from an IDE, as resources may not be copied;
+                        // a mvn build should sort it out (the IDE will then find the resources, until you clean or maybe refresh...)
+                        log.warn("Missing icon data for "+itemId+", expected at: "+url+" (subsequent messages will log debug only)");
+                        log.debug("Trace for missing icon data at "+url+": "+e, e);
+                    } else {
+                        log.debug("Missing icon data for "+itemId+", expected at: "+url+" (already logged WARN and error details)");
+                    }
+                }
+                throw WebResourceUtils.notFound("Icon unavailable for %s", itemId);
+            }
         }
         
         log.debug("Returning redirect to "+url+" as icon for "+result);
