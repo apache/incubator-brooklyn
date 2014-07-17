@@ -52,6 +52,8 @@ import com.sun.jersey.api.client.GenericType;
 public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogResourceTest.class);
+    
+    private static String TEST_VERSION = "0.1.2";
 
     @BeforeClass(alwaysRun=true)
     @Override
@@ -76,7 +78,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         "  name: My Catalog App\n"+
         "  description: My description\n"+
         "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
-        "  version: 0.1.2\n"+
+        "  version: " + TEST_VERSION + "\n"+
         "  libraries:\n"+
         "  - url: " + bundleUrl + "\n"+
         "\n"+
@@ -88,20 +90,18 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
-    CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+registeredTypeName)
+    CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+registeredTypeName + "/" + TEST_VERSION)
             .get(CatalogEntitySummary.class);
 
     assertEquals(entityItem.getRegisteredType(), registeredTypeName);
     
-    // stored as yaml, not java
-//    assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
     
     assertEquals(entityItem.getId(), registeredTypeName);
     
     // and internally let's check we have libraries
-    CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(registeredTypeName);
+    CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
     Assert.assertNotNull(item);
     List<String> libs = item.getLibraries().getBundles();
     assertEquals(libs, MutableList.of(bundleUrl));
@@ -112,7 +112,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/my.catalog.app.id");
     assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
     
-    byte[] iconData = client().resource("/v1/catalog/icon/"+registeredTypeName).get(byte[].class);
+    byte[] iconData = client().resource("/v1/catalog/icon/"+registeredTypeName + "/" + TEST_VERSION).get(byte[].class);
     assertEquals(iconData.length, 43);
   }
 
@@ -149,7 +149,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
   private static final String REDIS_STORE_ICON_URL = "/v1/catalog/icon/brooklyn.entity.nosql.redis.RedisStore";
   
+  /** @deprecated since 0.7.0 */
   @Test
+  @Deprecated
   public void testGetCatalogEntityDetails() {
       CatalogEntitySummary details = client().resource(
               URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore"))
@@ -158,7 +160,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
       assertTrue(details.getIconUrl().contains(REDIS_STORE_ICON_URL), "expected brooklyn URL for icon image, but got: "+details.getIconUrl());
   }
 
+  /** @deprecated since 0.7.0 */
   @Test
+  @Deprecated
   public void testGetCatalogEntityIconDetails() throws IOException {
       ClientResponse response = client().resource(
               URI.create(REDIS_STORE_ICON_URL)).get(ClientResponse.class);
@@ -193,7 +197,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         "  id: " + registeredTypeName + "\n"+
         "  name: My Catalog App To Be Deleted\n"+
         "  description: My description\n"+
-        "  version: 0.1.2\n"+
+        "  version: " + TEST_VERSION + "\n"+
         "\n"+
         "services:\n"+
         "- type: brooklyn.test.entity.TestEntity\n";
@@ -201,12 +205,12 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     client().resource("/v1/catalog")
             .post(ClientResponse.class, yaml);
     
-    ClientResponse deleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName)
+    ClientResponse deleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName+"/"+TEST_VERSION)
             .delete(ClientResponse.class);
 
     assertEquals(deleteResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
 
-    ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName)
+    ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName+"/"+TEST_VERSION)
             .get(ClientResponse.class);
     assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
   }

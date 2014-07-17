@@ -68,14 +68,17 @@ public interface CatalogApi {
     ) ;
 
     @DELETE
-    @Path("/entities/{entityId}")
-    @ApiOperation(value = "Deletes an entity's definition from the catalog")
+    @Path("/entities/{entityId}/{version}")
+    @ApiOperation(value = "Deletes a specific version of an entity's definition from the catalog")
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public void deleteEntity(
         @ApiParam(name = "entityId", value = "The ID of the entity or template to delete", required = true)
-        @PathParam("entityId") String entityId) throws Exception ;
+        @PathParam("entityId") String entityId,
+
+        @ApiParam(name = "version", value = "The version identifier of the entity or template to delete", required = true)
+        @PathParam("version") String version) throws Exception ;
 
     @GET
     @Path("/entities")
@@ -97,6 +100,8 @@ public interface CatalogApi {
             final @QueryParam("fragment") @DefaultValue("") String fragment
     ) ;
 
+    /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
+    @Deprecated
     @GET
     @Path("/entities/{entityId}")
     @ApiOperation(value = "Fetch an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
@@ -108,14 +113,30 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId) throws Exception ;
 
     @GET
-    @Path("/applications/{applicationId}")
-    @ApiOperation(value = "Fetch an application's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
+    @Path("/entities/{entityId}/{version}")
+    @ApiOperation(value = "Fetch a specific version of an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public CatalogEntitySummary getEntity(
+        @ApiParam(name = "entityId", value = "The ID of the entity or template to retrieve", required = true)
+        @PathParam("entityId") String entityId,
+        
+        @ApiParam(name = "version", value = "The version identifier of the entity or template to retrieve", required = true)
+        @PathParam("version") String version) throws Exception ;
+
+    @GET
+    @Path("/applications/{applicationId}/{version}")
+    @ApiOperation(value = "Fetch a specific version of an application's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public CatalogEntitySummary getApplication(
         @ApiParam(name = "applicationId", value = "The ID of the application to retrieve", required = true)
-        @PathParam("applicationId") String entityId) throws Exception ;
+        @PathParam("applicationId") String entityId,
+        
+        @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
+        @PathParam("version") String version) throws Exception ;
 
     @GET
     @Path("/policies")
@@ -137,6 +158,8 @@ public interface CatalogApi {
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId) throws Exception ;
     
+    /** @deprecated since 0.7.0 use {@link #getIcon(String, String)} */
+    @Deprecated
     @GET
     @Path("/icon/{itemId}")
     @ApiOperation(value = "Return the icon for a given catalog entry (application/image or HTTP redirect)")
@@ -147,6 +170,21 @@ public interface CatalogApi {
     public Response getIcon(
         @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy)")
         final @PathParam("itemId") @DefaultValue("") String itemId
+    ) ;
+
+    @GET
+    @Path("/icon/{itemId}/{version}")
+    @ApiOperation(value = "Return the icon for a given catalog entry (application/image or HTTP redirect)")
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Item not found")
+        })
+    @Produces("application/image")
+    public Response getIcon(
+        @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy)", required=true)
+        final @PathParam("itemId") String itemId,
+
+        @ApiParam(name = "version", value = "version identifier of catalog item (application, entity, policy)", required=true)
+        final @PathParam("version") String version
     ) ;
 
 }
