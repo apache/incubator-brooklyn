@@ -42,6 +42,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.javalang.JavaClassNames;
@@ -333,10 +334,11 @@ public class BasicLocationRegistry implements LocationRegistry {
 
     @Override
     public Location resolveForPeeking(LocationDefinition ld) {
-        // TODO actually look it up
-        Location l = resolve(ld, Collections.emptyMap());
-        mgmt.getLocationManager().unmanage(l);
-        return l;
+        // TODO should clean up how locations are stored, figuring out whether they are shared or not;
+        // or maybe better, the API calls to this might just want to get the LocationSpec objects back
+        
+        // for now we use a 'CREATE_UNMANGED' flag to prevent management (leaks and logging)
+        return resolve(ld, ConfigBag.newInstance().configure(LocalLocationManager.CREATE_UNMANAGED, true).getAllConfig());
     }
 
     @Override

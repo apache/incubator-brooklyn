@@ -26,6 +26,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.internal.storage.BrooklynStorage;
@@ -35,6 +37,7 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.AccessController;
 import brooklyn.management.LocationManager;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 
@@ -44,6 +47,9 @@ import com.google.common.collect.Maps;
 
 public class LocalLocationManager implements LocationManager {
 
+    public static final ConfigKey<Boolean> CREATE_UNMANAGED = ConfigKeys.newBooleanConfigKey("brooklyn.internal.location.createUnmanaged",
+        "If set on a location or spec, causes the manager to create it in an unmanaged state (for peeking)", false);
+    
     private static final Logger log = LoggerFactory.getLogger(LocalLocationManager.class);
 
     private final LocalManagementContext managementContext;
@@ -71,8 +77,17 @@ public class LocalLocationManager implements LocationManager {
     @Override
     public <T extends Location> T createLocation(LocationSpec<T> spec) {
         try {
+            boolean createUnmanaged = ConfigBag.coerceFirstNonNullKeyValue(CREATE_UNMANAGED, 
+                spec.getConfig().get(CREATE_UNMANAGED), spec.getFlags().get(CREATE_UNMANAGED.getName()));
+            if (createUnmanaged) {
+                spec.removeConfig(CREATE_UNMANAGED);
+            }
+            
             T loc = locationFactory.createLocation(spec);
-            manage(loc);
+            if (!createUnmanaged) {
+                manage(loc);
+            }
+            
             return loc;
         } catch (Throwable e) {
             log.warn("Failed to create location using spec "+spec+" (rethrowing)", e);
