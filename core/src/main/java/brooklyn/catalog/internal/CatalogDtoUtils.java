@@ -33,10 +33,7 @@ public class CatalogDtoUtils {
     private static final Logger log = LoggerFactory.getLogger(CatalogDtoUtils.class);
     
     public static CatalogDto newDefaultLocalScanningDto(CatalogScanningModes scanMode) {
-        CatalogDo result = new CatalogDo(
-                CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the default classpath") );
-        result.setClasspathScanForEntities(scanMode);
-        return result.dto;
+        return CatalogDto.newDefaultLocalScanningDto(scanMode);
     }
 
     /** throws if there are any problems in retrieving or copying */

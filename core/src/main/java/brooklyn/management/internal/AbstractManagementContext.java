@@ -336,7 +336,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             if (!Strings.isEmpty(catalogUrl)) {
                 catalog = new BasicBrooklynCatalog(this, CatalogDto.newDtoFromUrl(catalogUrl));
                 if (log.isDebugEnabled())
-                    log.debug("Loaded catalog from "+catalogUrl+": "+catalog);
+                    log.debug("Loading catalog from "+catalogUrl+": "+catalog);
             }
         } catch (Exception e) {
             if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
@@ -345,7 +345,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
                     log.warn("Could not find catalog XML specified at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e);
                 } else {
                     if (log.isDebugEnabled())
-                        log.debug("No default catalog file available; trying again using local classpath to populate catalog. Error was: "+e);
+                        log.debug("No default catalog file available at "+catalogUrl+"; trying again using local classpath to populate catalog. Error was: "+e);
                 }
             } else {
                 log.warn("Error importing catalog XML at "+catalogUrl+"; using default (local classpath) catalog. Error was: "+e, e);                

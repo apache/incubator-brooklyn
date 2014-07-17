@@ -30,8 +30,10 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.stream.Streams;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 
+@Beta
 public class CatalogDto {
 
     private static final Logger LOG = LoggerFactory.getLogger(CatalogDto.class);
@@ -53,7 +55,7 @@ public class CatalogDto {
 
     public static CatalogDto newDefaultLocalScanningDto(CatalogClasspathDo.CatalogScanningModes scanMode) {
         CatalogDo result = new CatalogDo(
-                CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the default classpath") );
+                newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the default classpath", "scanning-local-classpath") );
         result.setClasspathScanForEntities(scanMode);
         return result.dto;
     }
@@ -78,10 +80,24 @@ public class CatalogDto {
         return result;
     }
 
-    public static CatalogDto newNamedInstance(String name, String description) {
+    /**
+     * Creates a DTO.
+     * <p>
+     * The way contents is treated may change; thus this (and much of catalog) should be treated as beta.
+     * 
+     * @param name
+     * @param description
+     * @param optionalContentsDescription optional description of contents; if null, we normally expect source 'contents' to be set later;
+     *   if the DTO has no 'contents' (ie XML source) then a description should be supplied so we know who is populating it
+     *   (e.g. manual additions); without this, warnings may be generated
+     *   
+     * @return a new Catalog DTO
+     */
+    public static CatalogDto newNamedInstance(String name, String description, String optionalContentsDescription) {
         CatalogDto result = new CatalogDto();
         result.name = name;
         result.description = description;
+        if (optionalContentsDescription!=null) result.contentsDescription = optionalContentsDescription;
         return result;
     }
 
@@ -97,8 +113,11 @@ public class CatalogDto {
             if (url != null) {
                 contents = ResourceUtils.create().getResourceAsString(url);
                 contentsDescription = url;
+            } else if (contentsDescription==null) {
+                LOG.warn("Catalog DTO has no contents and no description; ignoring call to populate it. Description should be set to suppress this warning.");
+                return;
             } else {
-                LOG.warn("Catalog DTO has no contents); ignoring call to populate it.");
+                LOG.debug("Nothing needs doing (no contents or URL) for catalog with contents described as "+contentsDescription+".");
                 return;
             }
         }
