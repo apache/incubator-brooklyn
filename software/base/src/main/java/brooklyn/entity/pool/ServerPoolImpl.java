@@ -118,8 +118,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     private void addMembershipTrackerPolicy() {
         membershipTracker = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName(getDisplayName() + " membership tracker")
-                .configure("group", this)
-                .configure("notifyOnDuplicates", false));
+                .configure("group", this));
     }
 
     @Override

@@ -33,7 +33,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -60,7 +59,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
 
     public static final ConfigKey<Boolean> NOTIFY_ON_DUPLICATES = ConfigKeys.newBooleanConfigKey("notifyOnDuplicates",
             "Whether to notify listeners when a sensor is published with the same value as last time",
-            true);
+            false);
 
     public static final ConfigKey<Group> GROUP = ConfigKeys.newConfigKey(Group.class, "group");
 
@@ -175,28 +174,25 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
 
         for (Sensor<?> sensor : getSensorsToTrack()) {
             subscribeToMembers(group, sensor, new SensorEventListener<Object>() {
-                boolean hasWarnedOfServiceUp = false;
-                
                 @Override public void onEvent(SensorEvent<Object> event) {
                     boolean notifyOnDuplicates = getRequiredConfig(NOTIFY_ON_DUPLICATES);
-                    if (Startable.SERVICE_UP.equals(event.getSensor()) && notifyOnDuplicates && !hasWarnedOfServiceUp) {
-                        LOG.warn("Deprecated behaviour: not notifying of duplicate value for service-up in {}, group {}", AbstractMembershipTrackingPolicy.this, group);
-                        hasWarnedOfServiceUp = true;
-                        notifyOnDuplicates = false;
-                    }
-                    
                     String entityId = event.getSource().getId();
 
-                    Map<Sensor<Object>, Object> newMap = MutableMap.<Sensor<Object>, Object>of();
-                    // NOTE: putIfAbsent returns null if the key is not present, or the *previous* value if present
-                    Map<Sensor<Object>, Object> sensorCache = entitySensorCache.putIfAbsent(entityId, newMap);
-                    if (sensorCache == null) {
-                        sensorCache = newMap;
-                    }
-                    
-                    if (!notifyOnDuplicates && Objects.equal(event.getValue(), sensorCache.put(event.getSensor(), event.getValue()))) {
-                        // ignore if value has not changed
-                        return;
+                    if (!notifyOnDuplicates) {
+                        Map<Sensor<Object>, Object> newMap = MutableMap.<Sensor<Object>, Object>of();
+                        // NOTE: putIfAbsent returns null if the key is not present, or the *previous* value if present
+                        Map<Sensor<Object>, Object> sensorCache = entitySensorCache.putIfAbsent(entityId, newMap);
+                        if (sensorCache == null) {
+                            sensorCache = newMap;
+                        }
+                        
+                        boolean oldExists = sensorCache.containsKey(event.getSensor());
+                        Object oldVal = sensorCache.put(event.getSensor(), event.getValue());
+                        
+                        if (oldExists && Objects.equal(event.getValue(), oldVal)) {
+                            // ignore if value has not changed
+                            return;
+                        }
                     }
 
                     onEntityEvent(EventType.ENTITY_CHANGE, event.getSource());

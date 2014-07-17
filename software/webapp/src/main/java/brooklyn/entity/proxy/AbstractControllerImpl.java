@@ -124,8 +124,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         serverPoolMemberTrackerPolicy = addPolicy(PolicySpec.create(ServerPoolMemberTrackerPolicy.class)
                 .displayName("Controller targets tracker")
                 .configure("group", serverPool)
-                .configure("sensorsToTrack", sensorsToTrack)
-                .configure(ServerPoolMemberTrackerPolicy.NOTIFY_ON_DUPLICATES, false));
+                .configure("sensorsToTrack", sensorsToTrack));
 
         LOG.info("Added policy {} to {}", serverPoolMemberTrackerPolicy, this);
         
