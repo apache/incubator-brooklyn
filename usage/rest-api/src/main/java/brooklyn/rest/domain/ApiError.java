@@ -20,7 +20,13 @@ package brooklyn.rest.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import brooklyn.util.text.Strings;
 
@@ -76,6 +82,11 @@ public class ApiError {
             return this;
         }
 
+        /** as {@link #prefixMessage(String, String)} with default separator of `: ` */
+        public Builder prefixMessage(String prefix) {
+            return prefixMessage(prefix, ": ");
+        }
+        
         /** puts a prefix in front of the message, with the given separator if there is already a message;
          * if there is no message, it simply sets the prefix as the message
          */
@@ -107,6 +118,8 @@ public class ApiError {
     }
 
     private final String message;
+    
+    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String details;
 
     public ApiError(
@@ -144,5 +157,16 @@ public class ApiError {
                 .add("message", message)
                 .add("details", details)
                 .toString();
+    }
+
+    public Response asBadRequestResponseJson() {
+        return asResponse(Status.BAD_REQUEST, MediaType.APPLICATION_JSON_TYPE);
+    }
+
+    public Response asResponse(Status status, MediaType type) {
+        return Response.status(status)
+            .type(type)
+            .entity(this)
+            .build();
     }
 }

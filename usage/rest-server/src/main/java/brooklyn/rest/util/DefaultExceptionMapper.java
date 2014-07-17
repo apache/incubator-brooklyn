@@ -18,6 +18,8 @@
  */
 package brooklyn.rest.util;
 
+import java.util.Set;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -29,10 +31,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.error.YAMLException;
 
-import com.google.common.base.Optional;
-
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.ApiError.Builder;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.flags.ClassCoercionException;
 import brooklyn.util.text.Strings;
 
@@ -41,6 +45,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
+    static Set<Class<?>> warnedUnknownExceptions = MutableSet.of();
+    
     /**
      * Maps a throwable to a response.
      * <p/>
@@ -51,38 +57,45 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
     @Override
     public Response toResponse(Throwable throwable) {
 
+        LOG.debug("REST request running as {} threw: {}", Entitlements.getEntitlementContext(), throwable);
         if (LOG.isTraceEnabled()) {
-            String message = Optional.fromNullable(throwable.getMessage()).or(throwable.getClass().getName());
-            LOG.trace("Request threw: " + message);
+            LOG.trace("Full details of "+Entitlements.getEntitlementContext()+" "+throwable, throwable);
         }
 
+        // Some methods will throw this, which gets converted automatically
         if (throwable instanceof WebApplicationException) {
             WebApplicationException wae = (WebApplicationException) throwable;
             return wae.getResponse();
         }
 
-        // Assume ClassCoercionExceptions are caused by TypeCoercions from input parameters gone wrong.
-        if (throwable instanceof ClassCoercionException)
-            return responseBadRequestJson(ApiError.of(throwable));
+        // The nicest way for methods to provide errors, wrap as this, and the stack trace will be suppressed
+        if (throwable instanceof UserFacingException) {
+            return ApiError.of(throwable.getMessage()).asBadRequestResponseJson();
+        }
 
-        if (throwable instanceof YAMLException)
-            return responseBadRequestJson(ApiError.builderFromThrowable(throwable).prefixMessage("Invalid YAML", ": ").build());
+        // For everything else, a trace is supplied
         
-        LOG.info("No exception mapping for " + throwable.getClass() + ", responding 500", throwable);
+        // Assume ClassCoercionExceptions are caused by TypeCoercions from input parameters gone wrong
+        // And IllegalArgumentException for malformed input parameters.
+        if (throwable instanceof ClassCoercionException || throwable instanceof IllegalArgumentException) {
+            return ApiError.of(throwable).asBadRequestResponseJson();
+        }
+
+        // YAML exception 
+        if (throwable instanceof YAMLException) {
+            return ApiError.builder().message(throwable.getMessage()).prefixMessage("Invalid YAML").build().asBadRequestResponseJson();
+        }
+
+        if (!Exceptions.isPrefixBoring(throwable)) {
+            if ( warnedUnknownExceptions.add( throwable.getClass() )) {
+                LOG.info("No exception mapping for " + throwable.getClass() + "; consider adding to "+getClass()+" (future warnings logged at debug)");
+            }
+        }
+        
         Builder rb = ApiError.builderFromThrowable(throwable);
         if (Strings.isBlank(rb.getMessage()))
-            rb.message("Internal error. Check server logs for details.");
-        return Response.status(Status.INTERNAL_SERVER_ERROR)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(rb.build())
-                .build();
-    }
-
-    private Response responseBadRequestJson(ApiError build) {
-        return Response.status(Status.BAD_REQUEST)
-            .type(MediaType.APPLICATION_JSON)
-            .entity(build)
-            .build();
+            rb.message("Internal error. Contact server administrator to consult logs for more details.");
+        return rb.build().asResponse(Status.INTERNAL_SERVER_ERROR, MediaType.APPLICATION_JSON_TYPE);
     }
 
 }

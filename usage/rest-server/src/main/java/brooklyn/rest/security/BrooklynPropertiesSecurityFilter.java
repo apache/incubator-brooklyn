@@ -95,7 +95,12 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                         log.debug("  REST req {} parameters: {}", uid, ((HttpServletRequest)request).getParameterMap());
                     }
                     if (((HttpServletRequest)request).getContentLength()>0) {
-                        log.debug("  REST req {} upload content type {}", uid, ((HttpServletRequest)request).getContentType()+" length "+((HttpServletRequest)request).getContentLength());
+                        int len = ((HttpServletRequest)request).getContentLength();
+                        log.debug("  REST req {} upload content type {}", uid, ((HttpServletRequest)request).getContentType()+" length "+len
+                            // would be nice to do this, but the stream can only be read once;
+                            // TODO figure out how we could peek at it
+//                            +(len>0 && len<4096 ? ""+Streams.readFullyString(((HttpServletRequest)request).getInputStream()) : "") 
+                            );
                     }
                     
                     chain.doFilter(request, response);
@@ -107,9 +112,9 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                 } catch (Throwable e) {
                     // NB errors are typically already caught at this point
                     if (log.isDebugEnabled())
-                        log.debug("REST` failed processing request "+uri+" with "+entitlementContext+": "+e, e);
+                        log.debug("REST failed processing request "+uri+" with "+entitlementContext+": "+e, e);
                     
-                    log.warn("REST` failed processing request "+uri+" with "+entitlementContext+": "+e, e);
+                    log.warn("REST failed processing request "+uri+" with "+entitlementContext+": "+e, e);
                     throw Exceptions.propagate(e);
                     
                 } finally {

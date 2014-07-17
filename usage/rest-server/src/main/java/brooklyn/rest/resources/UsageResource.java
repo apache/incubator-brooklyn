@@ -40,6 +40,7 @@ import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.domain.UsageStatistic;
 import brooklyn.rest.domain.UsageStatistics;
 import brooklyn.rest.transform.ApplicationTransformer;
+import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
@@ -249,8 +250,8 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     
     private void checkDates(Date startDate, Date endDate) {
         if (startDate.compareTo(endDate) > 0) {
-            throw new IllegalArgumentException("Start must be less than or equal to end: " + startDate + " > " + endDate + 
-                    " (" + startDate.getTime() + " > " + endDate.getTime() + ")");
+            throw new UserFacingException(new IllegalArgumentException("Start must be less than or equal to end: " + startDate + " > " + endDate + 
+                    " (" + startDate.getTime() + " > " + endDate.getTime() + ")"));
         }
     }
 

@@ -66,6 +66,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
+import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Networking;
@@ -763,7 +764,8 @@ public class Main {
         } catch (Exception e) { // unexpected error during command execution
             log.error("Execution error: " + e.getMessage(), e);
             System.err.println("Execution error: " + e.getMessage());
-            e.printStackTrace();
+            if (!(e instanceof UserFacingException))
+                e.printStackTrace();
             System.exit(EXECUTION_ERROR);
         }
     }
