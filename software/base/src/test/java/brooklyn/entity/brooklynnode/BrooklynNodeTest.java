@@ -20,7 +20,6 @@ package brooklyn.entity.brooklynnode;
 
 import static org.testng.Assert.assertTrue;
 
-import java.io.File;
 import java.util.List;
 
 import org.testng.annotations.AfterMethod;
@@ -37,9 +36,6 @@ import brooklyn.util.collections.MutableMap;
 public class BrooklynNodeTest {
 
     // TODO Need test for copying/setting classpath
-    
-    private static final File BROOKLYN_PROPERTIES_PATH = new File(System.getProperty("user.home")+"/.brooklyn/brooklyn.properties");
-    private static final File BROOKLYN_PROPERTIES_BAK_PATH = new File(BROOKLYN_PROPERTIES_PATH+".test.bak");
     
     private TestApplication app;
     private SshMachineLocation loc;
