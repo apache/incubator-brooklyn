@@ -80,8 +80,15 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             if (BrooklynComponentTemplateResolver.Factory.supportsType(loader, serviceType))
                 return serviceType;
 
-            if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(Urls.getProtocol(serviceType))) {
-                return serviceType;
+            String protocol = Urls.getProtocol(serviceType);
+            if (protocol != null) {
+                if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(protocol)) {
+                    return serviceType;
+                } else {
+                    log.warn("The reference '" + serviceType + "' looks like an URL but the protocol '" + 
+                            protocol + "' isn't white listed " + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + ". " +
+                            "Not recognized as catalog item or java item as well!");
+                }
             }
         }
         return null;

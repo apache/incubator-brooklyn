@@ -225,10 +225,17 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+brooklynType+"; item="+item+"; loader="+entityResolver.loader+"; encounteredCatalogTypes="+encounteredCatalogTypes);
 
         EntitySpec<?> spec = null;
-        if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(Urls.getProtocol(brooklynType))) {
-            spec = tryResolveYamlURLReferenceSpec(brooklynType, entityResolver.loader, encounteredCatalogTypes);
-            if (spec != null) {
-                entityResolver.populateSpec(spec);
+        String protocol = Urls.getProtocol(brooklynType);
+        if (protocol != null) {
+            if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(protocol)) {
+                spec = tryResolveYamlURLReferenceSpec(brooklynType, entityResolver.loader, encounteredCatalogTypes);
+                if (spec != null) {
+                    entityResolver.populateSpec(spec);
+                }
+            } else {
+                log.warn("The reference " + brooklynType + " looks like an URL but the protocol " + 
+                        protocol + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
+                        "Will try to load it as catalog item or java type.");
             }
         }
         
