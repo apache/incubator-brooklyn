@@ -101,11 +101,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         // FIXME configurations/ not supported
         switch (item.getCatalogItemType()) {
         case TEMPLATE:
-            return Response.created(URI.create("applications/" + itemId))
+            return Response.created(URI.create("applications/" + itemId + "/" + item.getVersion()))
                     .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
                     .build();
         case ENTITY:
-            return Response.created(URI.create("entities/" + itemId))
+            return Response.created(URI.create("entities/" + itemId + "/" + item.getVersion()))
                     .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
                     .build();
         case POLICY:
@@ -128,12 +128,22 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
     
     @Override
+    @Deprecated
     public void deleteEntity(String entityId) throws Exception {
-      CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);
+        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);
+        if (result==null) {
+            throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
+        }
+        brooklyn().getCatalog().deleteCatalogItem(entityId);
+    }
+
+    @Override
+    public void deleteEntity(String entityId, String version) throws Exception {
+      CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId, version);
       if (result==null) {
         throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
       }
-      brooklyn().getCatalog().deleteCatalogItem(entityId);
+      brooklyn().getCatalog().deleteCatalogItem(entityId, version);
     }
 
     @Override
@@ -146,20 +156,45 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_TEMPLATE, regex, fragment);
     }
 
+    
     @Override
-    @SuppressWarnings("unchecked")
+    @Deprecated
     public CatalogEntitySummary getEntity(String entityId) {
-      CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);
-      if (result==null) {
-        throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
-      }
+        //TODO These casts are not pretty, we could just provide separate get methods for the different types?
+        //Or we could provide asEntity/asPolicy cast methods on the CataloItem doing a safety check internally
+        @SuppressWarnings("unchecked")
+        CatalogItem<? extends Entity,EntitySpec<?>> result =
+                (CatalogItem<? extends Entity,EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(entityId);
 
-      return CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) result);
+        if (result==null) {
+            throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
+        }
+
+        return CatalogTransformer.catalogEntitySummary(brooklyn(), result);
+    }
+    
+    @Override
+    public CatalogEntitySummary getEntity(String entityId, String version) {
+        @SuppressWarnings("unchecked")
+        CatalogItem<? extends Entity, EntitySpec<?>> result =
+              (CatalogItem<? extends Entity, EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(entityId, version);
+
+        if (result==null) {
+            throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", entityId, version);
+        }
+
+        return CatalogTransformer.catalogEntitySummary(brooklyn(), result);
     }
 
     @Override
-    public CatalogEntitySummary getApplication(String applicationId) {
-        return getEntity(applicationId);
+    @Deprecated
+    public CatalogEntitySummary getApplication(String entityId) throws Exception {
+        return getEntity(entityId);
+    }
+
+    @Override
+    public CatalogEntitySummary getApplication(String applicationId, String version) {
+        return getEntity(applicationId, version);
     }
 
     @Override
@@ -167,15 +202,31 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_POLICY, regex, fragment);
     }
     
-    @SuppressWarnings("unchecked")
     @Override
+    @Deprecated
     public CatalogItemSummary getPolicy(String policyId) {
-        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(policyId);
+        @SuppressWarnings("unchecked")
+        CatalogItem<? extends Policy, PolicySpec<?>> result =
+                (CatalogItem<? extends Policy, PolicySpec<?>>) brooklyn().getCatalog().getCatalogItem(policyId);
+
         if (result==null) {
-          throw WebResourceUtils.notFound("Policy with id '%s' not found", policyId);
+            throw WebResourceUtils.notFound("Policy with id '%s' not found", policyId);
         }
 
-        return CatalogTransformer.catalogPolicySummary(brooklyn(), (CatalogItem<? extends Policy, PolicySpec<?>>) result);
+        return CatalogTransformer.catalogPolicySummary(brooklyn(), result);
+    }
+
+    @Override
+    public CatalogItemSummary getPolicy(String policyId, String version) throws Exception {
+        @SuppressWarnings("unchecked")
+        CatalogItem<? extends Policy, PolicySpec<?>> result =
+                (CatalogItem<? extends Policy, PolicySpec<?>>)brooklyn().getCatalog().getCatalogItem(policyId, version);
+
+        if (result==null) {
+          throw WebResourceUtils.notFound("Policy with id '%s:%s' not found", policyId, version);
+        }
+
+        return CatalogTransformer.catalogPolicySummary(brooklyn(), result);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -194,8 +245,19 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
+    @Deprecated
     public Response getIcon(String itemId) {
         CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId);
+        return getCatalogItemIcon(result);
+    }
+
+    @Override
+    public Response getIcon(String itemId, String version) {
+        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId, version);
+        return getCatalogItemIcon(result);
+    }
+
+    private Response getCatalogItemIcon(CatalogItem<?, ?> result) {
         String url = result.getIconUrl();
         if (url==null) {
             log.debug("No icon available for "+result+"; returning "+Status.NO_CONTENT);
@@ -218,13 +280,13 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                     if (missingIcons.add(url)) {
                         // note: this can be quite common when running from an IDE, as resources may not be copied;
                         // a mvn build should sort it out (the IDE will then find the resources, until you clean or maybe refresh...)
-                        log.warn("Missing icon data for "+itemId+", expected at: "+url+" (subsequent messages will log debug only)");
+                        log.warn("Missing icon data for "+result.getId()+", expected at: "+url+" (subsequent messages will log debug only)");
                         log.debug("Trace for missing icon data at "+url+": "+e, e);
                     } else {
-                        log.debug("Missing icon data for "+itemId+", expected at: "+url+" (already logged WARN and error details)");
+                        log.debug("Missing icon data for "+result.getId()+", expected at: "+url+" (already logged WARN and error details)");
                     }
                 }
-                throw WebResourceUtils.notFound("Icon unavailable for %s", itemId);
+                throw WebResourceUtils.notFound("Icon unavailable for %s", result.getId());
             }
         }
         
