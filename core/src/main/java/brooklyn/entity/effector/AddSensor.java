@@ -43,9 +43,7 @@ public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
     protected final T sensor;
     public static final ConfigKey<String> SENSOR_NAME = ConfigKeys.newStringConfigKey("name");
     public static final ConfigKey<Duration> SENSOR_PERIOD = ConfigKeys.newConfigKey(Duration.class, "period", "Period, including units e.g. 1m or 5s or 200ms");
-    
-    // TODO
-    public static final ConfigKey<String> SENSOR_TYPE = ConfigKeys.newStringConfigKey("targetType");
+    public static final ConfigKey<String> SENSOR_TYPE = ConfigKeys.newStringConfigKey("targetType", "Target type for the value", "string");
 
     public AddSensor(T sensor) {
         this.sensor = Preconditions.checkNotNull(sensor, "sensor");
@@ -63,7 +61,7 @@ public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
 
     public static <T> AttributeSensor<T> newSensor(ConfigBag params) {
         String name = Preconditions.checkNotNull(params.get(SENSOR_NAME), "name must be supplied when defining a sensor");
-        String className = Preconditions.checkNotNull(params.get(SENSOR_TYPE), "target class must be supplied when defining a sensor");
+        String className = getFullClassName(params.get(SENSOR_TYPE));
         Class<T> type = null;
 
         try {
@@ -72,6 +70,26 @@ public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
             throw new IllegalArgumentException("Invalid target type for sensor "+name+": " + className);
         }
         return Sensors.newSensor(type, name);
+    }
+
+    private static String getFullClassName(String className) {
+        if(className.equalsIgnoreCase("string")){
+            return "java.lang.String";
+        }else if(className.equalsIgnoreCase("int") || className.equalsIgnoreCase("integer")){
+            return "java.lang.Integer";
+        }else if(className.equalsIgnoreCase("long")){
+            return "java.lang.Long";
+        }else if(className.equalsIgnoreCase("float")){
+            return "java.lang.Float";
+        }else if(className.equalsIgnoreCase("double")){
+            return "java.lang.Double";
+        }else if(className.equalsIgnoreCase("bool") || className.equalsIgnoreCase("boolean")){
+            return "java.lang.Boolean";
+        }else if(className.equalsIgnoreCase("object")){
+            return "java.lang.Object";
+        }else{
+            return className;
+        }
     }
 
 }
