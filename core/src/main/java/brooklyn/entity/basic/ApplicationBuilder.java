@@ -70,6 +70,9 @@ public abstract class ApplicationBuilder {
 
     @SuppressWarnings("unchecked")
     @Beta
+    /** @deprecated since 0.7.0 the management context should normally be passed in;
+     * for TestApplication also see TestApplication.Factory.newManagedInstanceForTests() */ 
+    @Deprecated
     public static <T extends StartableApplication> T newManagedApp(Class<T> type) {
         if (type.isInterface()) {
             return (T) newManagedApp(EntitySpec.create(type));
@@ -80,6 +83,9 @@ public abstract class ApplicationBuilder {
 
     @SuppressWarnings("unchecked")
     @Beta
+    /** @deprecated since 0.7.0 the management context should normally be passed in;
+     * for TestApplication also see TestApplication.Factory.newManagedInstanceForTests() */ 
+    @Deprecated
     public static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec) {
         return (T) new ApplicationBuilder(spec) {
             @Override protected void doBuild() {

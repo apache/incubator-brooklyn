@@ -127,7 +127,7 @@ public class EntityPollingTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         
         /*
          * Create an entity, using real entity code, but that swaps out the external process

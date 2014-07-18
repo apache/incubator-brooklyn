@@ -34,6 +34,7 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,7 +54,7 @@ public class AggregatingMachineProvisioningLocationTest {
     @BeforeMethod(alwaysRun=true)
     @SuppressWarnings("unchecked")
     public void setUp() {
-        managementContext = new LocalManagementContext();
+        managementContext = new LocalManagementContextForTests();
         machine1a = newLocation(LocalhostMachine.class, "1a");
         machine1b = newLocation(LocalhostMachine.class, "1b");
         machine2a = newLocation(LocalhostMachine.class, "2a");

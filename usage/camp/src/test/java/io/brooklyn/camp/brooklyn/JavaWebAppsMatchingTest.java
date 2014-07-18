@@ -38,7 +38,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.stream.Streams;
@@ -54,7 +54,7 @@ public class JavaWebAppsMatchingTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        brooklynMgmt = new LocalManagementContext();
+        brooklynMgmt = new LocalManagementContextForTests();
         platform = new BrooklynCampPlatform(
               PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),
               brooklynMgmt);

@@ -45,7 +45,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
@@ -81,8 +80,8 @@ public class VanillaJavaAppTest {
     private static final Object LONG_TIMEOUT_MS = 61*1000;
 
     private static String BROOKLYN_THIS_CLASSPATH = null;
-    private static Class MAIN_CLASS = ExampleVanillaMain.class;
-    private static Class MAIN_CPU_HUNGRY_CLASS = ExampleVanillaMainCpuHungry.class;
+    private static Class<?> MAIN_CLASS = ExampleVanillaMain.class;
+    private static Class<?> MAIN_CPU_HUNGRY_CLASS = ExampleVanillaMainCpuHungry.class;
     
     private TestApplication app;
     private LocalhostMachineProvisioningLocation loc;
@@ -92,7 +91,7 @@ public class VanillaJavaAppTest {
         if (BROOKLYN_THIS_CLASSPATH==null) {
             BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
     }
 
@@ -307,6 +306,7 @@ public class VanillaJavaAppTest {
         final JMXServiceURL url;
         final Map<String,Object> env;
         
+        @SuppressWarnings("unchecked")
         public AsserterForJmxConnection(VanillaJavaApp e) throws MalformedURLException {
             this.entity = e;
             

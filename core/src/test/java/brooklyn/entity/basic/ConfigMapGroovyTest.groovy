@@ -36,7 +36,7 @@ public class ConfigMapGroovyTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         entity = new MySubEntity(app);
         Entities.manage(entity);
     }
