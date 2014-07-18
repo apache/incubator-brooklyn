@@ -16,38 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.launcher
+package brooklyn.launcher;
 
-import static java.util.concurrent.TimeUnit.*
-import static org.testng.Assert.*
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.testng.annotations.AfterMethod
-import org.testng.annotations.Test
+import java.util.List;
+import java.util.Map;
 
-import brooklyn.config.BrooklynProperties
-import brooklyn.entity.basic.Entities
-import brooklyn.management.internal.LocalManagementContext
-import brooklyn.test.HttpTestUtils
-import brooklyn.util.internal.TimeExtras
-import brooklyn.util.net.Networking
-import brooklyn.util.time.Duration
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
 
-import com.google.common.collect.Lists
+import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.Entities;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.test.HttpTestUtils;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
+
+import com.google.common.collect.Lists;
 
 
 /**
  * These tests require the brooklyn.war to work. (Should be placed by maven build.)
  */
 public class WebAppRunnerTest {
-    static { TimeExtras.init() }
 
     public static final Logger log = LoggerFactory.getLogger(WebAppRunnerTest.class);
             
-    private static Duration TIMEOUT_MS;
-    static { TIMEOUT_MS = Duration.THIRTY_SECONDS; }
-    
     List<LocalManagementContext> managementContexts = Lists.newCopyOnWriteArrayList();
     
     @AfterMethod(alwaysRun=true)
@@ -64,28 +63,24 @@ public class WebAppRunnerTest {
         return result;
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     BrooklynWebServer createWebServer(Map properties) {
-        Map bigProps = [:] + properties;
-        Map attributes = bigProps.attributes
-        if (attributes==null) {
-            attributes = [:]
-        } else {
-            attributes = [:] + attributes; //copy map, don't change what was supplied
-        }
-        bigProps.attributes = attributes;
+        Map bigProps = MutableMap.copyOf(properties);
+        Map attributes = MutableMap.copyOf( (Map) bigProps.get("attributes") );
+        bigProps.put("attributes", attributes);
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
         brooklynProperties.putAll(bigProps);
-        brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
+        brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider");
         brooklynProperties.put("brooklyn.webconsole.security.https.required","false");
         return new BrooklynWebServer(bigProps, newManagementContext(brooklynProperties));
     }
     
     @Test
-    public void testStartWar1() {
+    public void testStartWar1() throws Exception {
         if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
-        BrooklynWebServer server = createWebServer(port:8090);
+        BrooklynWebServer server = createWebServer(MutableMap.of("port", 8090));
         assertNotNull(server);
         
         try {
@@ -101,10 +96,11 @@ public class WebAppRunnerTest {
     }
     
     @Test
-    public void testStartSecondaryWar() {
+    public void testStartSecondaryWar() throws Exception {
         if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
-        BrooklynWebServer server = createWebServer(port:8090, war:"brooklyn.war", wars:["hello":"hello-world.war"]);
+        BrooklynWebServer server = createWebServer(
+            MutableMap.of("port", 8090, "war", "brooklyn.war", "wars", MutableMap.of("hello", "hello-world.war")) );
         assertNotNull(server);
         
         try {
@@ -120,10 +116,10 @@ public class WebAppRunnerTest {
     }
 
     @Test
-    public void testStartSecondaryWarAfter() {
+    public void testStartSecondaryWarAfter() throws Exception {
         if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
-        BrooklynWebServer server = createWebServer(port:8090, war:"brooklyn.war");
+        BrooklynWebServer server = createWebServer(MutableMap.of("port", 8090, "war", "brooklyn.war"));
         assertNotNull(server);
         
         try {
@@ -140,9 +136,9 @@ public class WebAppRunnerTest {
     }
 
     @Test
-    public void testStartWithLauncher() {
+    public void testStartWithLauncher() throws Exception {
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .brooklynProperties("brooklyn.webconsole.security.provider",'brooklyn.rest.security.provider.AnyoneSecurityProvider')
+                .brooklynProperties("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
                 .webapp("/hello", "hello-world.war")
                 .start();
         BrooklynServerDetails details = launcher.getServerDetails();
@@ -157,6 +153,7 @@ public class WebAppRunnerTest {
 
         } finally {
             details.getWebServer().stop();
+            ((ManagementContextInternal)details.getManagementContext()).terminate();
         }
     }
     
