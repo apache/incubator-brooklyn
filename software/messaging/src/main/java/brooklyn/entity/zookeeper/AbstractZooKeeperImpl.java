@@ -64,7 +64,7 @@ public abstract class AbstractZooKeeperImpl extends SoftwareProcessImpl implemen
             try {
                 helper.assertMBeanExistsEventually(ZOOKEEPER_MBEAN, units.toMillis(duration));
             } finally {
-                helper.disconnect();
+                helper.terminate();
             }
         }
     }

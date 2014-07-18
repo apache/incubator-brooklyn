@@ -85,7 +85,7 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
         } catch (IOException e) {
             throw Exceptions.propagate(e);
         } finally {
-            if (helper != null) helper.disconnect();
+            if (helper != null) helper.terminate();
         }
     }
     

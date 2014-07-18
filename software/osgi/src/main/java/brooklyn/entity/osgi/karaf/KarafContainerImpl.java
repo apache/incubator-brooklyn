@@ -169,7 +169,7 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
     protected void preStop() {
         super.preStop();
         
-        if (jmxHelper != null) jmxHelper.disconnect();
+        if (jmxHelper != null) jmxHelper.terminate();
     }
 
     @Effector(description="Updates the OSGi Service's properties, adding (and overriding) the given key-value pairs")

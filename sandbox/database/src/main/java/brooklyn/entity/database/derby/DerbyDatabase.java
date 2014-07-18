@@ -127,7 +127,7 @@ public class DerbyDatabase extends SoftwareProcessImpl implements Database, Uses
         for (DerbySchema schema : schemas.values()) {
             schema.destroy();
         }
-        if (jmxHelper != null) jmxHelper.disconnect();
+        if (jmxHelper != null) jmxHelper.terminate();
     }
 
     public void createSchema(String name) {

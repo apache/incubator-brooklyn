@@ -265,7 +265,7 @@ public class JmxFeed extends AbstractFeed {
     @Override
     protected void postStop() {
         super.postStop();
-        if (helper != null && ownHelper) helper.disconnect();
+        if (helper != null && ownHelper) helper.terminate();
     }
     
     /**
