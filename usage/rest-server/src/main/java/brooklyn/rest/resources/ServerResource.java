@@ -96,7 +96,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
     }
 
-	@Override
+    @Override
     public String getUser() {
         EntitlementContext entitlementContext = Entitlements.getEntitlementContext();
         if (entitlementContext!=null && entitlementContext.user()!=null){
