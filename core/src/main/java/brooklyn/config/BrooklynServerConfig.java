@@ -22,6 +22,7 @@ import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 import io.brooklyn.camp.CampPlatform;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -164,4 +165,9 @@ public class BrooklynServerConfig {
         return Maybe.absent("No CAMP Platform is registered with this Brooklyn management context.");
     }
 
+    /** Returns {@link ManagementContext#getManagementNodeUri()}, located in this utility class for convenience. */
+    public static Maybe<URI> getBrooklynWebUri(ManagementContext mgmt) {
+        return mgmt.getManagementNodeUri();
+    }
+    
 }

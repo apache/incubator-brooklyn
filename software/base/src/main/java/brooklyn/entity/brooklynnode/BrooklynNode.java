@@ -166,6 +166,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public static final ConfigKey<String> BROOKLYN_CATALOG_CONTENTS = ConfigKeys.newStringConfigKey(
             "brooklynnode.brooklyncatalog.contents", "Contents for the brooklyn catalog.xml file (to upload to ~/.brooklyn/catalog.xml", null);
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @SetFromFlag("enabledHttpProtocols")
     public static final BasicAttributeSensorAndConfigKey<List<String>> ENABLED_HTTP_PROTOCOLS = new BasicAttributeSensorAndConfigKey(
             List.class, "brooklynnode.webconsole.enabledHttpProtocols", "List of enabled protocols (e.g. http, https)", ImmutableList.of("http"));
@@ -186,10 +187,12 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public static final BasicAttributeSensorAndConfigKey<String> WEB_CONSOLE_BIND_ADDRESS = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "brooklynnode.webconsole.bindAddress", "Specifies the IP address of the NIC to bind the Brooklyn Management Console to", null);
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @SetFromFlag("classpath")
     public static final BasicAttributeSensorAndConfigKey<List<String>> CLASSPATH = new BasicAttributeSensorAndConfigKey(
             List.class, "brooklynnode.classpath", "classpath to use, as list of URL entries", Lists.newArrayList());
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @SetFromFlag("portMapper")
     public static final ConfigKey<Function<? super Integer, ? extends Integer>> PORT_MAPPER = (ConfigKey) ConfigKeys.newConfigKey(Function.class,
             "brooklynnode.webconsole.portMapper", "Function for mapping private to public ports, for use in inferring the brooklyn URI", Functions.<Integer>identity());

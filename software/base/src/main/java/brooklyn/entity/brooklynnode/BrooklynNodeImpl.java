@@ -75,7 +75,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     }
     
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return BrooklynNodeDriver.class;
     }
 
@@ -90,6 +90,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         
         // TODO support YAML parsing
         // TODO define a new type YamlMap for the config key which supports coercing from string and from map
+        @SuppressWarnings("unchecked")
         public static Map<String,Object> asMap(ConfigBag parameters, ConfigKey<?> key) {
             Object v = parameters.getStringKey(key.getName());
             if (v==null || (v instanceof String && Strings.isBlank((String)v)))
@@ -121,8 +122,9 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 throw new IllegalArgumentException("Must supply plan or url");
             
             Map<String, Object> config = asMap(parameters, BLUEPRINT_CONFIG);
+            
             if (planRaw==null) {
-                planRaw = Jsonya.at("services").list().put("serviceType", url).put(config).getRootMap();
+                planRaw = Jsonya.at("services").list().put("serviceType", url).putIfNotNull("brooklyn.config", config).getRootMap();
             } else { 
                 if (config!=null)
                     throw new IllegalArgumentException("Cannot supply plan with config");
@@ -130,7 +132,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             
             // planRaw might be a yaml string, or a map; if a map, convert to string
             if (planRaw instanceof Map)
-                planRaw = Jsonya.of((Map)planRaw).toString();
+                planRaw = Jsonya.of((Map<?,?>)planRaw).toString();
             if (!(planRaw instanceof String))
                 throw new IllegalArgumentException("Invalid "+JavaClassNames.simpleClassName(planRaw)+" value for CAMP plan: "+planRaw);
             

@@ -22,16 +22,21 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.ConfigToAttributes;
+import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 
 public class BrooklynNodeTest {
 
@@ -79,4 +84,17 @@ public class BrooklynNodeTest {
         System.out.println("urls="+urls);
         assertTrue(urls.contains(expectedUrl), "urls="+urls);
     }
+    
+    @Test
+    public void testCanStartSameNode() throws Exception {
+        // not very interesting as done not have REST when run in this project
+        // but test BrooklynNodeRestTest in downstream project does
+        BrooklynNode bn = app.createAndManageChild(EntitySpec.create(BrooklynNode.class, SameBrooklynNodeImpl.class));
+        bn.start(MutableSet.<Location>of());
+        
+        Assert.assertEquals(bn.getAttribute(Attributes.SERVICE_UP), (Boolean)true);
+        // no URI
+        Assert.assertNull(bn.getAttribute(BrooklynNode.WEB_CONSOLE_URI));
+    }
+
 }

@@ -264,6 +264,14 @@ public class Jsonya {
             return this;
         }
         
+        public Navigator<T> putIfNotNull(Object k1, Object v1) {
+            if (v1!=null) {
+                map();
+                putInternal((Map)focus, k1, v1);
+            }
+            return this;
+        }
+        
         protected void putInternal(Map target, Object k1, Object v1, Object ...kvOthers) {
             assert (kvOthers.length % 2) == 0 : "even number of arguments required for put";
             target.put(translateKey(k1), translate(v1));

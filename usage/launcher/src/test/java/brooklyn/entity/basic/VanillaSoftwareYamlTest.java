@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Startable;
+import brooklyn.launcher.SimpleYamlLauncherForTests;
 import brooklyn.launcher.camp.SimpleYamlLauncher;
 import brooklyn.test.Asserts;
 import brooklyn.util.ResourceUtils;
@@ -40,7 +41,7 @@ public class VanillaSoftwareYamlTest {
     
     @Test(groups="Integration")
     public void testVanillaSoftwareYaml() {
-        SimpleYamlLauncher l = new SimpleYamlLauncher();
+        SimpleYamlLauncher l = new SimpleYamlLauncherForTests();
         try {
             Application app = l.launchAppYaml("vanilla-software-blueprint.yaml");
             log.info("started "+app);
@@ -76,7 +77,7 @@ public class VanillaSoftwareYamlTest {
     /** yaml variant of VanillaSoftwareProcessAndChildrenIntegrationTest */
     @Test(groups="Integration")
     public void testVanillaSoftwareYamlWithChildStartedAfter() {
-        SimpleYamlLauncher l = new SimpleYamlLauncher();
+        SimpleYamlLauncher l = new SimpleYamlLauncherForTests();
         try {
             Application app = l.launchAppYaml("vanilla-software-with-child-blueprint.yaml");
             log.info("started "+app);
