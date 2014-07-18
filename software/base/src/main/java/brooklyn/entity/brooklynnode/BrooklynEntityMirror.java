@@ -28,7 +28,10 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.time.Duration;
 
 /** Provides an entity which can sit in one brooklyn domain and reflect the status of an entity 
- * via the REST API of another domain */
+ * via the REST API of another domain.
+ * <p>
+ * Note tests for this depend on a REST server so are in other projects; search for *Mirror*Test,
+ * as well as *BrooklynNode*Test. */
 @ImplementedBy(BrooklynEntityMirrorImpl.class)
 public interface BrooklynEntityMirror extends Entity {
 
