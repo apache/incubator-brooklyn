@@ -164,7 +164,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
         
         response = client().resource("/v1/usage/applications/" + appId + "?start=9999-01-01T00:00:00+0100").get(ClientResponse.class);
-        assertTrue(response.getStatus() >= 500, "end defaults to NOW, so future start should fail");
+        assertTrue(response.getStatus() >= 400, "end defaults to NOW, so future start should fail, instead got code "+response.getStatus());
         
         response = client().resource("/v1/usage/applications/" + appId + "?start=9999-01-01T00:00:00%2B0100&end=9999-01-02T00:00:00%2B0100").get(ClientResponse.class);
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
