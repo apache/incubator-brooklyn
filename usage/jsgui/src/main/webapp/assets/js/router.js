@@ -88,6 +88,24 @@ define([
             return view
         }
     };
+    
+	getUser = function() {
+		$.ajax({
+			type : "GET",
+			url : "/v1/server/user",
+			dataType : "text",
+			success : function(data) {
+				console.log("Successfully fetched user details");
+				if (data != null) {
+					$("#user").html(data);
+				}
+			},
+			error : function(data) {
+				console.error("ERROR fetching user details");
+				console.debug(data);
+			}
+		});
+	}
 
     var Router = Backbone.Router.extend({
         routes:{
@@ -216,6 +234,6 @@ define([
         }
     });
     new HaStandbyOverlay({ el: $("#ha-standby-overlay") }).render();
-
+    getUser();
     return Router
 })

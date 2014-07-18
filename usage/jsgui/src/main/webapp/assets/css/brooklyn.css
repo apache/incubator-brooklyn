@@ -48,15 +48,14 @@ textarea {
     padding-right: 0px !important
 }
 
-.userName-top{
+.userName-top {
 	display: inline-block;
     vertical-align: bottom;
     float: right;
     text-align: bottom;
-    padding-top: 75px;
-    padding-left: 0px;
-    padding-right: 10px;
-    padding-bottom: 0px;
+    font-weight:bold;
+    font-size:15px;
+    padding: 75px 10px 0 0;
 }
 
 .navbar .nav {
