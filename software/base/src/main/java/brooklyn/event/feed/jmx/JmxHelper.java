@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.AttributeNotFoundException;
@@ -158,7 +159,8 @@ public class JmxHelper {
     private boolean failedReconnecting;
     private long failedReconnectingTime;
     private int minTimeBetweenReconnectAttempts = 1000;
-
+    private final AtomicBoolean terminated = new AtomicBoolean();
+    
     // Tracks the MBeans we have failed to find for this JmsHelper's connection URL (so can log just once for each)
     private final Set<ObjectName> notFoundMBeans;
 
@@ -263,6 +265,7 @@ public class JmxHelper {
     /** attempts to connect immediately */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public synchronized void connect() throws IOException {
+        if (terminated.get()) throw new IllegalStateException("JMX Helper "+this+" already terminated");
         if (connection != null) return;
 
         triedConnecting = true;
@@ -282,8 +285,20 @@ public class JmxHelper {
             } else {
                 throw npe;
             }
+        } catch (IOException e) {
+            Exceptions.propagateIfFatal(e);
+            if (terminated.get()) {
+                throw new IllegalStateException("JMX Helper "+this+" already terminated", e);
+            } else {
+                throw e;
+            }
         }
         connection = connector.getMBeanServerConnection();
+        
+        if (terminated.get()) {
+            disconnectNow();
+            throw new IllegalStateException("JMX Helper "+this+" already terminated");
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -353,11 +368,12 @@ public class JmxHelper {
                 connect();
                 return true;
             } catch (Exception e) {
-                if (shouldRetryOn(e)) {
+                Exceptions.propagateIfFatal(e);
+                if (!terminated.get() && shouldRetryOn(e)) {
                     if (LOG.isDebugEnabled()) LOG.debug("Attempt {} failed connecting to {} ({})", new Object[] {attempt + 1, url, e.getMessage()});
                     lastError = e;
                 } else {
-                    throw Throwables.propagate(e);
+                    throw Exceptions.propagate(e);
                 }
             }
             attempt++;
@@ -380,18 +396,39 @@ public class JmxHelper {
         if (e instanceof ListenerNotFoundException) return false;
         if (e instanceof MalformedObjectNameException) return false;
         if (e instanceof NotCompliantMBeanException) return false;
+        if (e instanceof InterruptedException) return false;
+        if (e instanceof RuntimeInterruptedException) return false;
 
         return true;
     }
 
     /**
-     * Disconnects. Method doesn't throw an exception.
-     *
-     * Can safely be called if already disconnected.
+     * A thread-safe version of {@link #disconnectNow()}.
      *
      * This method is threadsafe.
      */
     public synchronized void disconnect() {
+        disconnectNow();
+    }
+    
+    /**
+     * Disconnects, preventing subsequent connections to be made. Method doesn't throw an exception.
+     *
+     * Can safely be called if already disconnected.
+     *
+     * This method is not threadsafe, but will thus not block if 
+     * another thread is taking a long time for connections to timeout.
+     * 
+     * Any concurrent requests will likely get an IOException - see
+     * {@linkplain http://docs.oracle.com/javase/7/docs/api/javax/management/remote/JMXConnector.html#close()}.
+     * 
+     */
+    public void terminate() {
+        terminated.set(true);
+        disconnectNow();
+    }
+    
+    protected void disconnectNow() {
         triedConnecting = false;
         if (connector != null) {
             if (LOG.isDebugEnabled()) LOG.debug("Disconnecting from JMX URL {}", url);
