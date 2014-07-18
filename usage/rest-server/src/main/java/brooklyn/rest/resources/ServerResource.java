@@ -40,79 +40,69 @@ import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
-public class ServerResource extends AbstractBrooklynRestResource implements
-		ServerApi {
+public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(ServerResource.class);
+    private static final Logger log = LoggerFactory.getLogger(ServerResource.class);
 
-	@Override
-	public void reloadBrooklynProperties() {
-		brooklyn().reloadBrooklynProperties();
-	}
+    @Override
+    public void reloadBrooklynProperties() {
+        brooklyn().reloadBrooklynProperties();
+    }
 
-	@Override
-	public void shutdown(final boolean stopAppsFirst, final long delayMillis) {
-		log.info("REST call to shutdown server, stopAppsFirst=" + stopAppsFirst
-				+ ", delayMillis=" + delayMillis);
+    @Override
+    public void shutdown(final boolean stopAppsFirst, final long delayMillis) {
+        log.info("REST call to shutdown server, stopAppsFirst="+stopAppsFirst+", delayMillis="+delayMillis);
+        
+        new Thread() {
+            public void run() {
+                Duration delayBeforeSystemExit = Duration.millis(delayMillis);
+                CountdownTimer timer = delayBeforeSystemExit.countdownTimer();
 
-		new Thread() {
-			public void run() {
-				Duration delayBeforeSystemExit = Duration.millis(delayMillis);
-				CountdownTimer timer = delayBeforeSystemExit.countdownTimer();
+                if (stopAppsFirst) {
+                    List<Task<?>> stoppers = new ArrayList<Task<?>>();
+                    for (Application app: mgmt().getApplications()) {
+                        if (app instanceof StartableApplication)
+                            stoppers.add(Entities.invokeEffector((EntityLocal)app, app, StartableApplication.STOP));
+                    }
+                    for (Task<?> t: stoppers) {
+                        t.blockUntilEnded();
+                        if (t.isError()) {
+                            log.warn("Error stopping application "+t+" during shutdown (ignoring)\n"+t.getStatusDetail(true));
+                        }
+                    }
+                }
 
-				if (stopAppsFirst) {
-					List<Task<?>> stoppers = new ArrayList<Task<?>>();
-					for (Application app : mgmt().getApplications()) {
-						if (app instanceof StartableApplication)
-							stoppers.add(Entities.invokeEffector(
-									(EntityLocal) app, app,
-									StartableApplication.STOP));
-					}
-					for (Task<?> t : stoppers) {
-						t.blockUntilEnded();
-						if (t.isError()) {
-							log.warn("Error stopping application " + t
-									+ " during shutdown (ignoring)\n"
-									+ t.getStatusDetail(true));
-						}
-					}
-				}
+                ((ManagementContextInternal)mgmt()).terminate(); 
+                timer.waitForExpiryUnchecked();
+                
+                System.exit(0);
+            }
+        }.start();
+    }
 
-				((ManagementContextInternal) mgmt()).terminate();
-				timer.waitForExpiryUnchecked();
+    @Override
+    public String getVersion() {
+        return BrooklynVersion.get();
+    }
 
-				System.exit(0);
-			}
-		}.start();
-	}
+    @Override
+    public String getStatus() {
+        return mgmt().getHighAvailabilityManager().getNodeState().toString();
+    }
 
-	@Override
-	public String getVersion() {
-		return BrooklynVersion.get();
-	}
-
-	@Override
-	public String getStatus() {
-		return mgmt().getHighAvailabilityManager().getNodeState().toString();
-	}
-
-	@Override
-	public HighAvailabilitySummary getHighAvailability() {
-		ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager()
-				.getManagementPlaneSyncState();
-		return HighAvailabilityTransformer.highAvailabilitySummary(mgmt()
-				.getManagementNodeId(), memento);
-	}
+    @Override
+    public HighAvailabilitySummary getHighAvailability() {
+        ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getManagementPlaneSyncState();
+        return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
+    }
 
 	@Override
-	public String getUser() {
-		EntitlementContext entitlementContext = Entitlements
-				.getEntitlementContext();
-		if (entitlementContext != null && entitlementContext.user() != null) {
+    public String getUser() {
+		EntitlementContext entitlementContext = Entitlements.getEntitlementContext();
+		if (entitlementContext!=null && entitlementContext.user()!=null){
 			return entitlementContext.user();
 		} else {
-			return null; // User can be null if no authentication was requested
+			return null; //User can be null if no authentication was requested
 		}
 	}
 }
