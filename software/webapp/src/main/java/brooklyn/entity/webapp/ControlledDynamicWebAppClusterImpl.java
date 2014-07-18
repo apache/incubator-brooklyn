@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.webapp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -50,17 +52,14 @@ import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import brooklyn.entity.webapp.FilenameToWebContextMapper;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl implements ControlledDynamicWebAppCluster {
 
@@ -337,76 +336,79 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         try {
             checkNotNull(url, "url");
             checkNotNull(targetName, "targetName");
-            // actually deploy
-            List <Entity> cluster_members = Lists.newArrayList();
-//            cluster_members.addAll((Collection<? extends Entity>) Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class)); 
-            for (JavaWebAppSoftwareProcess member : Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class)) {
-            	Lifecycle serviceState = member.getAttribute(SERVICE_STATE);
-            	if (serviceState == Lifecycle.RUNNING) {
-            	  cluster_members.add(member);
-            	}
-            }            
-            Entities.invokeEffectorListWithArgs(this, cluster_members, DEPLOY, url, targetName).get();            
+            
+            // set it up so future nodes get the right wars
+            synchronized (this) {
+                Map<String,String> newWarsMap = MutableMap.copyOf(getConfig(WARS_BY_CONTEXT));
+                newWarsMap.put(targetName, url);
+                setConfig(WARS_BY_CONTEXT, newWarsMap);
+            }
+            
+            // now actually deploy
+            List <Entity> clusterMembers = MutableList.copyOf(
+                Iterables.filter(getCluster().getChildren(), Predicates.and(
+                     Predicates.instanceOf(JavaWebAppSoftwareProcess.class),
+                     EntityPredicates.attributeEqualTo(SERVICE_STATE, Lifecycle.RUNNING)
+            )));
+            Entities.invokeEffectorListWithArgs(this, clusterMembers, DEPLOY, url, targetName).get();            
             
             // Update attribute
-            Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
-            if (deployedWars == null) {
-                deployedWars = Sets.newLinkedHashSet();
-            }
+            Set<String> deployedWars = MutableSet.copyOf(getAttribute(DEPLOYED_WARS));
             deployedWars.add(targetName);
             setAttribute(DEPLOYED_WARS, deployedWars);
-        } catch (RuntimeException e) {
+            
+        } catch (Exception e) {
             // Log and propagate, so that log says which entity had problems...
             log.warn("Error deploying '"+url+"' to "+targetName+" on "+toString()+"; rethrowing...", e);
-            throw Throwables.propagate(e);
-        } catch (Throwable th) {
-            // Log and propagate, so that log says which entity had problems...
-            log.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", th);
-            throw Throwables.propagate(th);
+            throw Exceptions.propagate(e);
         }
     }
+    
+    /*
+     * TODO
+     * 
+     * - deploy to all, not just running, with a wait-for-running-or-bail-out logic
+     * - thread pool
+     * - redeploy to all (simple way, with notes)
+     * - check-in, then move down with echo here
+     */
+    
     /** For the DEPLOYED_WARS to be updated, the input must match the result of the call to deploy */
     @Effector(description="Undeploys the given context/artifact")
-    public void undeploy(
-            @EffectorParam(name="targetName") String targetName) {
+    public void undeploy(@EffectorParam(name="targetName") String targetName) {
     	
         try {
-
-            List <Entity> cluster_members = Lists.newArrayList();
-//            cluster_members.addAll((Collection<? extends Entity>) Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class));
-            for (JavaWebAppSoftwareProcess member : Iterables.filter(getCluster().getChildren(), JavaWebAppSoftwareProcess.class)) {
-            	Lifecycle serviceState = member.getAttribute(SERVICE_STATE);
-            	if (serviceState == Lifecycle.RUNNING) {
-            	  cluster_members.add(member);
-            	}
-            }             
-            Entities.invokeEffectorListWithArgs(this, cluster_members, UNDEPLOY, targetName).get(); 
+            checkNotNull(targetName, "targetName");
             
-       	
-            // Update attribute
-            Set<String> deployedWars = getAttribute(DEPLOYED_WARS);
-            if (deployedWars == null) {
-                deployedWars = Sets.newLinkedHashSet();
+            // set it up so future nodes get the right wars
+            synchronized (this) {
+                Map<String,String> newWarsMap = MutableMap.copyOf(getConfig(WARS_BY_CONTEXT));
+                newWarsMap.remove(targetName);
+                setConfig(WARS_BY_CONTEXT, newWarsMap);
             }
+
+            List <Entity> clusterMembers = MutableList.copyOf(
+                Iterables.filter(getCluster().getChildren(), Predicates.and(
+                     Predicates.instanceOf(JavaWebAppSoftwareProcess.class),
+                     EntityPredicates.attributeEqualTo(SERVICE_STATE, Lifecycle.RUNNING)
+            )));
+            Entities.invokeEffectorListWithArgs(this, clusterMembers, UNDEPLOY, targetName).get(); 
+            
+            // Update attribute
+            Set<String> deployedWars = MutableSet.copyOf(getAttribute(DEPLOYED_WARS));
             deployedWars.remove( filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName) );
             setAttribute(DEPLOYED_WARS, deployedWars);
-        } catch (RuntimeException e) {
+            
+        } catch (Exception e) {
             // Log and propagate, so that log says which entity had problems...
             log.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", e);
-            throw Throwables.propagate(e);
-        } catch (Throwable th) {
-            // Log and propagate, so that log says which entity had problems...
-            log.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", th);
-            throw Throwables.propagate(th);
+            throw Exceptions.propagate(e);
         }
+    }
+
+    @Override
+    public void redeployAll() {
+        throw new UnsupportedOperationException("TODO - support redeploying all WARs (if any of the deploy/undeploys fail)");
     }  
-    @Effector(description="Updates the given context/artifact")
-    public void update(
-    		@EffectorParam(name="url", description="URL of NEW WAR file") String url,
-            @EffectorParam(name="targetName") String targetName) {
-    	// simple for now
-    	undeploy(targetName);
-    	deploy(url, targetName);
-    
-    }    
+
 }
