@@ -408,6 +408,10 @@ public class Tasks {
             if (optionalError!=null) throw Exceptions.propagate(optionalError); else throw new RuntimeException("Failed: "+name);
         } }).build();
     }
+    public static Task<Void> warning(final String message, final Throwable optionalError) {
+        log.warn(message);
+        return TaskTags.markInessential(fail(message, optionalError));
+    }
 
     /** marks the current task inessential; this mainly matters if the task is running in a parent
      * {@link TaskQueueingContext} and we don't want the parent to fail if this task fails

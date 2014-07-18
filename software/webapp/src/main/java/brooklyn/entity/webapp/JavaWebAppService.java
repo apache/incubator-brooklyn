@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.MethodEffector;
@@ -49,7 +50,7 @@ public interface JavaWebAppService extends WebAppService, UsesJava {
             Map.class, "wars.by.context", "Map of context keys (path in user-facing URL, typically without slashes) to archives (e.g. WARs by URL) to deploy, supporting file: and classpath: prefixes)");
     
     /** Optional marker interface for entities which support 'deploy' and 'undeploy' */
-    public interface CanDeployAndUndeploy {
+    public interface CanDeployAndUndeploy extends Entity {
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public static final AttributeSensor<Set<String>> DEPLOYED_WARS = new BasicAttributeSensor(

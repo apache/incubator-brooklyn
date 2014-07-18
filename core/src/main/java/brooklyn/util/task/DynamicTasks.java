@@ -312,5 +312,11 @@ public class DynamicTasks {
     public static void markInessential() {
         Tasks.markInessential();
     }
+
+    /** queues the task if possible, otherwise submits it asynchronously; returns the task for callers to 
+     * {@link Task#getUnchecked()} or {@link Task#blockUntilEnded()} */
+    public static <T> Task<T> submit(TaskAdaptable<T> task, Entity entity) {
+        return queueIfPossible(task).orSubmitAsync(entity).asTask();
+    }
     
 }

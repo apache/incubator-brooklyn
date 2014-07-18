@@ -311,11 +311,13 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
 
     @Override
     public void deploy(String url, String targetName) {
+        DynamicWebAppClusterImpl.addToWarsByContext(this, url, targetName);
         getCluster().deploy(url, targetName);
     }
 
     @Override
     public void undeploy(String targetName) {
+        DynamicWebAppClusterImpl.removeFromWarsByContext(this, targetName);
         getCluster().undeploy(targetName);
     }
 
