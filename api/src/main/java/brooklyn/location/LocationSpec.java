@@ -150,11 +150,16 @@ public class LocationSpec<T extends Location> implements Serializable {
         return this;
     }
 
+    public <V> LocationSpec<T> removeConfig(ConfigKey<V> key) {
+        config.remove( checkNotNull(key, "key") );
+        return this;
+    }
+
     public <E> LocationSpec<T> extension(Class<E> extensionType, E extension) {
         extensions.put(checkNotNull(extensionType, "extensionType"), checkNotNull(extension, "extension"));
         return this;
     }
-
+    
     /**
      * @return The type of the location
      */

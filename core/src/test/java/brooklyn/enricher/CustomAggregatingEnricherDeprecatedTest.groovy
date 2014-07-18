@@ -34,6 +34,7 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.TestUtils
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
 
@@ -54,7 +55,7 @@ class CustomAggregatingEnricherDeprecatedTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         producer = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         intSensor = new BasicAttributeSensor<Integer>(Integer.class, "int sensor")
         target = new BasicAttributeSensor<Integer>(Long.class, "target sensor")

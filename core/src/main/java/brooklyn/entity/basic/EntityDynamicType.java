@@ -300,7 +300,7 @@ public class EntityDynamicType {
                     Effector<?> overwritten = result.put(eff.getName(), eff);
                     Field overwrittenFieldSource = fieldSources.put(eff.getName(), f);
                     if (overwritten!=null && !Effectors.sameInstance(overwritten, eff)) {
-                        LOG.debug("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                        LOG.trace("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                 eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, f, overwritten, 
                                 overwrittenFieldSource});
                     }
@@ -326,7 +326,7 @@ public class EntityDynamicType {
                         result.put(eff.getName(), eff);
                         Method overwrittenMethodSource = methodSources.put(eff.getName(), m);
                         Field overwrittenFieldSource = fieldSources.remove(eff.getName());
-                        LOG.debug("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                        LOG.trace("multiple definitions for effector {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                 eff.getName(), (optionalEntity != null ? optionalEntity : clazz), eff, m, overwritten, 
                                 (overwrittenMethodSource != null ? overwrittenMethodSource : overwrittenFieldSource)});
                     }
@@ -359,8 +359,8 @@ public class EntityDynamicType {
                     Field source = sources.put(sens.getName(), f);
                     if (overwritten!=null && overwritten != sens) {
                         if (sens instanceof HasConfigKey) {
-                            // probably overriding defaults, just log as debug (there will be add'l logging in config key section)
-                            LOG.debug("multiple definitions for config sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {
+                            // probably overriding defaults, just log low level (there will be add'l logging in config key section)
+                            LOG.trace("multiple definitions for config sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {
                                     sens.getName(), optionalEntity!=null ? optionalEntity : clazz, sens, f, overwritten, source});
                         } else {
                             LOG.warn("multiple definitions for sensor {} on {}; preferring {} from {} to {} from {}", new Object[] {
@@ -441,8 +441,8 @@ public class EntityDynamicType {
                     ConfigKey<? extends Object> lowerV = lower==null ? null : lower.equals(k.field) ? k.value : best.value;
                     if (best.value == k.value) {
                         // same value doesn't matter which we take (but take lower if there is one)
-                        if (LOG.isDebugEnabled()) 
-                            LOG.debug("multiple definitions for config key {} on {}; same value {}; " +
+                        if (LOG.isTraceEnabled()) 
+                            LOG.trace("multiple definitions for config key {} on {}; same value {}; " +
                                     "from {} and {}, preferring {}", 
                                     new Object[] {
                                     best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,
@@ -451,8 +451,8 @@ public class EntityDynamicType {
                         best = new FieldAndValue<ConfigKey<?>>(lower!=null ? lower : best.field, best.value);
                     } else if (lower!=null) {
                         // different value, but one clearly lower (in type hierarchy)
-                        if (LOG.isDebugEnabled()) 
-                            LOG.debug("multiple definitions for config key {} on {}; " +
+                        if (LOG.isTraceEnabled()) 
+                            LOG.trace("multiple definitions for config key {} on {}; " +
                                     "from {} and {}, preferring lower {}, value {}", 
                                     new Object[] {
                                     best.value.getName(), optionalEntity!=null ? optionalEntity : clazz,

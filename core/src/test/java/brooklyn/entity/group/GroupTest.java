@@ -25,7 +25,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -52,7 +51,7 @@ public class GroupTest {
 
     @BeforeMethod
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         loc = app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         entity1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));

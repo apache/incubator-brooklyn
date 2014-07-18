@@ -274,7 +274,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(n2.mgmt.getApplications().size(), 1);
     }
     
-    @Test(invocationCount=50)
+    @Test(invocationCount=50, groups="Integration")
     public void testIfNodeStopsBeingAbleToWriteManyTimes() throws Exception {
         testIfNodeStopsBeingAbleToWrite();
     }

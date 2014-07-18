@@ -21,7 +21,10 @@ package brooklyn.management;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import brooklyn.location.Location;
+import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationSpec;
 
 /**
@@ -35,7 +38,7 @@ public interface LocationManager {
      * @param spec
      */
     <T extends Location> T createLocation(LocationSpec<T> spec);
-    
+
     /**
      * Convenience (particularly for groovy code) to create a location.
      * Equivalent to {@code createLocation(LocationSpec.create(type).configure(config))}
@@ -83,4 +86,5 @@ public interface LocationManager {
      * (though it may be logged so duplicate calls are best avoided).
      */
     void unmanage(Location loc);
+
 }

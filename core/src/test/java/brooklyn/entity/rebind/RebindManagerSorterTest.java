@@ -54,7 +54,7 @@ public class RebindManagerSorterTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         mgmts.add(managementContext = app.getManagementContext());
         rebindManager = (RebindManagerImpl) managementContext.getRebindManager();
     }
@@ -95,7 +95,7 @@ public class RebindManagerSorterTest {
     
     @Test
     public void testSortOrderMultipleApps() throws Exception {
-        TestApplication app2 = ApplicationBuilder.newManagedApp(TestApplication.class);
+        TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests();
         mgmts.add(app2.getManagementContext());
 
         TestEntity e1a = app.createAndManageChild(EntitySpec.create(TestEntity.class));

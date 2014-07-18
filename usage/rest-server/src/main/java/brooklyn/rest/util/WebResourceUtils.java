@@ -59,7 +59,7 @@ public class WebResourceUtils {
     /** @throws WebApplicationException With code 404 not found */
     public static WebApplicationException notFound(String format, Object... args) {
         String msg = String.format(format, args);
-        if (log.isDebugEnabled()) log.debug("returning 404 notFound("+msg+") - may be a stale browser session");
+        if (log.isDebugEnabled()) log.debug("returning 404 notFound("+msg+")");
         throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .entity(ApiError.builder().message(msg).build()).build());

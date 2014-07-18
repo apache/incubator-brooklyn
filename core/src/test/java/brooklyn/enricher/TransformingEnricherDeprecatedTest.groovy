@@ -53,7 +53,7 @@ public class TransformingEnricherDeprecatedTest {
 
     @BeforeMethod()
     public void before() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         producer = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         intSensorA = new BasicAttributeSensor<Integer>(Integer.class, "int.sensor.a");
         target = new BasicAttributeSensor<Long>(Long.class, "long.sensor.target");

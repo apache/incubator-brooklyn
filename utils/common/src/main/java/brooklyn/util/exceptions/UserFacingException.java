@@ -18,17 +18,22 @@
  */
 package brooklyn.util.exceptions;
 
-/** Exception indicating a fatal error, typically used in CLI routines.
- * The message supplied here should be suitable for display in a CLI response (without stack trace / exception class). */
-public class FatalRuntimeException extends UserFacingException {
+/** marker interface, to show that an exception is suitable for pretty-printing to an end-user,
+ * without including a stack trace */
+public class UserFacingException extends RuntimeException {
 
-    private static final long serialVersionUID = -3359163414517503809L;
+    private static final long serialVersionUID = 2216885527195571323L;
 
-    public FatalRuntimeException(String message) {
+    public UserFacingException(String message) {
         super(message);
     }
-    
-    public FatalRuntimeException(String message, Throwable cause) {
+
+    public UserFacingException(Throwable cause) {
+        super(cause.getMessage(), cause);
+    }
+
+    public UserFacingException(String message, Throwable cause) {
         super(message, cause);
     }
+
 }

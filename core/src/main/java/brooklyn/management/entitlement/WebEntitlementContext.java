@@ -28,18 +28,23 @@ public class WebEntitlementContext implements EntitlementContext {
     final String sourceIp;
     final String requestUri;
     
-    public WebEntitlementContext(String user, String sourceIp, String requestUri) {
+    /** a mostly-unique identifier for the inbound request, to distinguish between duplicate requests and for cross-referencing with URI's */
+    final String requestUniqueIdentifier;
+    
+    public WebEntitlementContext(String user, String sourceIp, String requestUri, String requestUniqueIdentifier) {
         this.user = user;
         this.sourceIp = sourceIp;
         this.requestUri = requestUri;
+        this.requestUniqueIdentifier = requestUniqueIdentifier;
     }
     
     @Override public String user() { return user; }
     public String sourceIp() { return sourceIp; }
     public String requestUri() { return requestUri; }
+    public String requestUniqueIdentifier() { return requestUniqueIdentifier; }
 
     @Override
     public String toString() {
-        return JavaClassNames.simpleClassName(getClass())+"["+user+"@"+sourceIp+":"+requestUri+"]";
+        return JavaClassNames.simpleClassName(getClass())+"["+user+"@"+sourceIp+":"+requestUniqueIdentifier+"]";
     }
 }

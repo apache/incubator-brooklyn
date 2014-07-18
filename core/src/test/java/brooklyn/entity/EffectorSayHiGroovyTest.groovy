@@ -28,7 +28,6 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.annotation.EffectorParam
 import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.BasicParameterType
 import brooklyn.entity.basic.BrooklynTaskTags
 import brooklyn.entity.basic.Entities
@@ -55,7 +54,7 @@ public class EffectorSayHiGroovyTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         e = app.createAndManageChild(EntitySpec.create(MyEntity.class));
     }
 

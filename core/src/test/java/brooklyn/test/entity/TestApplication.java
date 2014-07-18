@@ -19,6 +19,7 @@
 package brooklyn.test.entity;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
@@ -39,5 +40,10 @@ public interface TestApplication extends StartableApplication, EntityInternal {
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec);
 
     public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation();
-    
+
+    public static class Factory {
+        public static TestApplication newManagedInstanceForTests() {
+            return ApplicationBuilder.newManagedApp(TestApplication.class, new LocalManagementContextForTests());
+        }
+    }
 }

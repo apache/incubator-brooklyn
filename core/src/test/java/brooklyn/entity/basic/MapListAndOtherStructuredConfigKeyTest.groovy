@@ -49,7 +49,7 @@ public class MapListAndOtherStructuredConfigKeyTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         locs = ImmutableList.of(new SimulatedLocation());
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
     }
 

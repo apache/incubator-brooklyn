@@ -68,7 +68,7 @@ public class AcmeEntitlementManagerTest {
     @Test
     public void testUserWithMinimal() {
         setup(configBag);
-        WebEntitlementContext entitlementContext = new WebEntitlementContext("hacker", "127.0.0.1", URI.create("/applications").toString());
+        WebEntitlementContext entitlementContext = new WebEntitlementContext("hacker", "127.0.0.1", URI.create("/applications").toString(), "H");
         Entitlements.setEntitlementContext(entitlementContext);
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
@@ -81,7 +81,7 @@ public class AcmeEntitlementManagerTest {
     @Test
     public void testUserWithReadOnly() {
         setup(configBag);
-        WebEntitlementContext entitlementContext = new WebEntitlementContext("bob", "127.0.0.1", URI.create("/applications").toString());
+        WebEntitlementContext entitlementContext = new WebEntitlementContext("bob", "127.0.0.1", URI.create("/applications").toString(), "B");
         Entitlements.setEntitlementContext(entitlementContext);
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
@@ -94,7 +94,7 @@ public class AcmeEntitlementManagerTest {
     @Test
     public void testUserWithAllPermissions() {
         setup(configBag);
-        WebEntitlementContext entitlementContext = new WebEntitlementContext("alice", "127.0.0.1", URI.create("/applications").toString());
+        WebEntitlementContext entitlementContext = new WebEntitlementContext("alice", "127.0.0.1", URI.create("/applications").toString(), "A");
         Entitlements.setEntitlementContext(entitlementContext);
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
@@ -107,7 +107,7 @@ public class AcmeEntitlementManagerTest {
     @Test
     public void testNullHasAllPermissions() {
         setup(configBag);
-        WebEntitlementContext entitlementContext = new WebEntitlementContext(null, "127.0.0.1", URI.create("/applications").toString());
+        WebEntitlementContext entitlementContext = new WebEntitlementContext(null, "127.0.0.1", URI.create("/applications").toString(), "X");
         Entitlements.setEntitlementContext(entitlementContext);
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));

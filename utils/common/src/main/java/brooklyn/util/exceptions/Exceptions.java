@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import brooklyn.util.collections.MutableList;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
@@ -38,11 +37,11 @@ import com.google.common.collect.Iterables;
 
 public class Exceptions {
 
-    private static final List<Class<? extends Throwable>> BORING_THROWABLES = ImmutableList.<Class<? extends Throwable>>of(
+    private static final List<Class<? extends Throwable>> BORING_THROWABLE_SUPERTYPES = ImmutableList.<Class<? extends Throwable>>of(
         ExecutionException.class, InvocationTargetException.class, PropagatedRuntimeException.class);
 
     private static boolean isBoring(Throwable t) {
-        for (Class<? extends Throwable> type: BORING_THROWABLES)
+        for (Class<? extends Throwable> type: BORING_THROWABLE_SUPERTYPES)
             if (type.isInstance(t)) return true;
         return false;
     }
@@ -54,13 +53,15 @@ public class Exceptions {
         }
     };
 
-    private static List<Class<? extends Throwable>> BORING_PREFIX_THROWABLES = MutableList.copyOf(BORING_THROWABLES)
-        .append(IllegalStateException.class).append(RuntimeException.class).append(CompoundRuntimeException.class)
-        .toImmutable();
+    private static List<Class<? extends Throwable>> BORING_PREFIX_THROWABLE_EXACT_TYPES = ImmutableList.<Class<? extends Throwable>>of(
+        IllegalStateException.class, RuntimeException.class, CompoundRuntimeException.class);
 
-    private static boolean isPrefixBoring(Throwable t) {
-        for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLES)
-            if (type.isInstance(t)) return true;
+    /** Returns whether this is throwable either known to be boring or to have an unuseful prefix */
+    public static boolean isPrefixBoring(Throwable t) {
+        if (isBoring(t))
+            return true;
+        for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLE_EXACT_TYPES)
+            if (t.getClass().equals(type)) return true;
         return false;
     }
 
@@ -68,7 +69,7 @@ public class Exceptions {
         String was;
         do {
             was = s;
-            for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLES) {
+            for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLE_EXACT_TYPES) {
                 s = Strings.removeAllFromStart(type.getCanonicalName(), type.getName(), type.getSimpleName(), ":", " ");
             }
         } while (!was.equals(s));

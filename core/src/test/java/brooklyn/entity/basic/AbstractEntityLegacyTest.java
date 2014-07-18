@@ -108,7 +108,7 @@ public class AbstractEntityLegacyTest {
     
     @Test
     public void testNewStyleCallsConfigureAfterConstruction() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class));
         
         assertEquals(entity.getConfigureCount(), 1);
@@ -139,7 +139,7 @@ public class AbstractEntityLegacyTest {
     
     @Test
     public void testNewStyleSetsDefaultDisplayName() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class));
         
         assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());

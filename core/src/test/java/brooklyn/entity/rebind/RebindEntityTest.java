@@ -194,7 +194,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     
     // Saw this fail during development (fixed now); but want at least one of these tests to be run 
     // many times for stress testing purposes
-    @Test(invocationCount=100, groups="Integeration")
+    @Test(invocationCount=100, groups="Integration")
     public void testRestoresEntityIdAndDisplayNameManyTimes() throws Exception {
         testRestoresEntityIdAndDisplayName();
     }

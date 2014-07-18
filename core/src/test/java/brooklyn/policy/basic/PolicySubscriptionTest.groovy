@@ -55,7 +55,7 @@ public class PolicySubscriptionTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         listener = new RecordingSensorEventListener();

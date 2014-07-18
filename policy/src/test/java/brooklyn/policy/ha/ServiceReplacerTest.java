@@ -184,8 +184,7 @@ public class ServiceReplacerTest {
         assertEventuallyHasEntityReplacementFailedEvent(cluster);
     }
 
-    
-    @Test
+    @Test(groups="Integration")  // 1s wait
     public void testStopFailureOfOldEntityDoesNotSetClusterOnFire() throws Exception {
         app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         

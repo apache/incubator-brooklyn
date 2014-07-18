@@ -399,12 +399,17 @@ public class ConfigBag {
     protected <T> T get(ConfigKey<T> key, boolean remove) {
         // TODO for now, no evaluation -- closure content / smart (self-extracting) keys are NOT supported
         // (need a clean way to inject that behaviour, as well as desired TypeCoercions)
-        Object value;
         if (config.containsKey(key.getName()))
-            value = getStringKey(key.getName(), remove);
-        else
-            value = key.getDefaultValue();
-        return TypeCoercions.coerce(value, key.getTypeToken());
+            return coerceFirstNonNullKeyValue(key, getStringKey(key.getName(), remove));
+        
+        return coerceFirstNonNullKeyValue(key);
+    }
+
+    /** returns the first non-null value to be the type indicated by the key, or the keys default value if no non-null values are supplied */
+    public static <T> T coerceFirstNonNullKeyValue(ConfigKey<T> key, Object ...values) {
+        for (Object o: values)
+            if (o!=null) return TypeCoercions.coerce(o, key.getTypeToken());
+        return TypeCoercions.coerce(key.getDefaultValue(), key.getTypeToken());
     }
 
     protected Object getStringKey(String key, boolean markUsed) {

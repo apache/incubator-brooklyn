@@ -58,7 +58,7 @@ public interface LocationRegistry {
      * but callers should prefer this when they don't wish to create a new location which will be managed in perpetuity!
      * 
      * @since 0.7.0, but beta and likely to change as the semantics of this class are tuned */
-    @Beta
+    @Beta   // see impl for notes
     public Location resolveForPeeking(LocationDefinition l);
 
     /** returns fully populated (config etc) location from the given definition */

@@ -83,10 +83,11 @@ public class CatalogDtoTest {
     public static CatalogDto buildExampleCatalog() {
         CatalogDo root = new CatalogDo(CatalogDto.newNamedInstance("My Local Catalog", 
                 "My favourite local settings, including remote catalogs -- " +
-        		"intended partly as a teaching example for what can be expressed, and how"));
+        		"intended partly as a teaching example for what can be expressed, and how",
+        		"contents-built-in-test"));
         root.setClasspathScanForEntities(CatalogScanningModes.NONE);
         
-        CatalogDo testEntitiesJavaCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java", null));
+        CatalogDo testEntitiesJavaCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java", null, "test-java"));
         testEntitiesJavaCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
         testEntitiesJavaCatalog.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
         testEntitiesJavaCatalog.addEntry(CatalogItems.newTemplateFromJava(
@@ -95,13 +96,13 @@ public class CatalogDtoTest {
                 TestEntity.class.getCanonicalName(), "Test Entity from JAR"));
         root.addCatalog(testEntitiesJavaCatalog.dto);
 
-        CatalogDo testEntitiesJavaCatalogScanning = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java Scanning", null));
+        CatalogDo testEntitiesJavaCatalogScanning = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java Scanning", null, "test-java-scan"));
         testEntitiesJavaCatalogScanning.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
         testEntitiesJavaCatalogScanning.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
         root.addCatalog(testEntitiesJavaCatalogScanning.dto);
         
         CatalogDo osgiCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from OSGi",
-                "A catalog whose entries define their libraries as a list of OSGi bundles"));
+                "A catalog whose entries define their libraries as a list of OSGi bundles", "test-osgi-defined"));
         osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
         CatalogEntityItemDto osgiEntity = CatalogItems.newEntityFromJava(TestEntity.class.getCanonicalName(), "Test Entity from OSGi");
         // NB: this is not actually an OSGi bundle, but it's okay as we don't instantiate the bundles ahead of time (currently)
