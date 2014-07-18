@@ -70,7 +70,7 @@ public class CatalogTransformer {
         for (Effector<?> x: type.getEffectors())
             effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
 
-        return new CatalogEntitySummary(item.getId(), item.getName(),
+        return new CatalogEntitySummary(item.getId(), item.getVersion(), item.getDisplayName(),
             item.getRegisteredTypeName(), item.getJavaType(), 
             item.getRegisteredTypeName(),
             item.getPlanYaml(),
@@ -80,7 +80,7 @@ public class CatalogTransformer {
     }
 
     public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?,?> item) {
-        return new CatalogItemSummary(item.getId(), item.getName(), 
+        return new CatalogItemSummary(item.getId(), item.getVersion(), item.getDisplayName(), 
                 item.getRegisteredTypeName(), item.getJavaType(), 
                 item.getRegisteredTypeName(),
                 item.getPlanYaml(),
@@ -89,7 +89,7 @@ public class CatalogTransformer {
 
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
         Set<PolicyConfigSummary> config = ImmutableSet.of();
-        return new CatalogPolicySummary(item.getId(), item.getName(), item.getRegisteredTypeName(),
+        return new CatalogPolicySummary(item.getId(), item.getVersion(), item.getDisplayName(), item.getRegisteredTypeName(),
                 item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
                 makeLinks(item));

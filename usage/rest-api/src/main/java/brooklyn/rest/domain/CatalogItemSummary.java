@@ -33,7 +33,8 @@ import com.google.common.collect.ImmutableMap;
  * see also, subclasses */
 public class CatalogItemSummary implements HasId, HasName {
 
-    private final String id;
+    private final String symbolicName;
+    private final String version;
     
     // TODO too many types, see in CatalogItem
     private final String type;
@@ -50,7 +51,8 @@ public class CatalogItemSummary implements HasId, HasName {
     private final Map<String, URI> links;
 
     public CatalogItemSummary(
-            @JsonProperty("id") String id,
+            @JsonProperty("symbolicName") String symbolicName,
+            @JsonProperty("version") String version,
             @JsonProperty("name") String name,
             @JsonProperty("registeredType") String registeredType,
             @JsonProperty("javaType") String javaType,
@@ -60,7 +62,8 @@ public class CatalogItemSummary implements HasId, HasName {
             @JsonProperty("iconUrl") String iconUrl,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        this.id = id;
+        this.symbolicName = symbolicName;
+        this.version = version;
         this.name = name;
         this.javaType = javaType;
         this.registeredType = registeredType;
@@ -70,10 +73,18 @@ public class CatalogItemSummary implements HasId, HasName {
         this.iconUrl = iconUrl;
         this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
     }
-    
+
     @Override
     public String getId() {
-        return id;
+        return symbolicName + ":" + version;
+    }
+
+    public String getSymbolicName() {
+        return symbolicName;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     public String getType() {
@@ -111,12 +122,15 @@ public class CatalogItemSummary implements HasId, HasName {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("id", id).toString();
+        return Objects.toStringHelper(this)
+                .add("id", symbolicName)
+                .add("version", version)
+                .toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id, name, type);
+        return Objects.hashCode(symbolicName, version, name, type);
     }
     
     @Override

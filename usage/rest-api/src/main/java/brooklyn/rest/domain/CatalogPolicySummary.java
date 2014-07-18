@@ -31,7 +31,8 @@ public class CatalogPolicySummary extends CatalogItemSummary {
     private final Set<PolicyConfigSummary> config;
 
     public CatalogPolicySummary(
-            @JsonProperty("id") String id,
+            @JsonProperty("symbolicName") String symbolicName,
+            @JsonProperty("version") String version,
             @JsonProperty("name") String name,
             @JsonProperty("type") String type,
             @JsonProperty("planYaml") String planYaml,
@@ -40,7 +41,7 @@ public class CatalogPolicySummary extends CatalogItemSummary {
             @JsonProperty("config") Set<PolicyConfigSummary> config,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(id, name, type, type, type, planYaml, description, iconUrl, links);
+        super(symbolicName, version, name, type, type, type, planYaml, description, iconUrl, links);
         // TODO expose config from policies
         this.config = (config == null) ? ImmutableSet.<PolicyConfigSummary>of() : config;
     }

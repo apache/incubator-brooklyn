@@ -1119,6 +1119,13 @@ tr.app-add-wizard-config-entry {
 .accordion-nav-row.active {
     font-weight: bold;
 }
+.accordion-nav-child {
+    padding-left: 15px;
+    color: lightgray;
+}
+.accordion-nav-child.active {
+    color: #505050;
+}
 .catalog-details {
     padding-left: 16px;
     padding-right: 25px;

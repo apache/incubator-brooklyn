@@ -18,9 +18,11 @@ under the License.
 -->
 <div class="catalog-details">
 
-    <h2><%- model.get("name") %></h2>
-    <% if (model.get("registeredType") && (model.get("name") != model.get("registeredType"))) { %>
-        <p><%- model.get("registeredType") %></p>
+    <% if (model.get("name") != model.get("symbolicName")) { %>
+        <h2><%- model.get("name") %></h2>
+        <p><%- model.getVersionedAttr("symbolicName") %></p>
+    <% } else { %>
+        <h2><%- model.getVersionedAttr("symbolicName") %></h2>
     <% } %>
     <% if (model.get("description")) { %>
         <p><%- model.get("description") %></p>

@@ -283,7 +283,7 @@ define([
             // Returns template applied to function arguments. Alter if collection altered.
             // Will be run in the context of the AccordionItemView.
             this.entryTemplateArgs = this.options.entryTemplateArgs || function(model, index) {
-                return {type: model.get("type"), id: model.get("id")};
+                return {type: model.getVersionedAttr("type"), id: model.get("id")};
             };
 
             // undefined argument is used for existing model items
@@ -313,19 +313,24 @@ define([
             return this;
         },
 
+        singleItemTempalter: function(name, active, isChild, model, index) {
+            var args = _.extend({
+                    cid: model.cid,
+                    isChild: isChild,
+                    extraClasses: (activeDetailsView == name && model.cid == active) ? "active" : ""
+                }, this.entryTemplateArgs(model));
+            return this.template(args);
+        },
+
         renderEntries: function() {
-            var name = this.name, active = this.activeCid;
-            var templater = function(model, index) {
-                var args = _.extend({
-                        cid: model.cid,
-                        extraClasses: (activeDetailsView == name && model.cid == active) ? "active" : ""
-                    }, this.entryTemplateArgs(model));
-                return this.template(args);
-            };
-            var elements = this.collection.map(templater, this);
+            var elements = this.collection.map(_.partial(this.singleItemTemplater, this.name, this.activeCid, false), this);
+            this.updateContent(elements.join(''));
+        },
+
+        updateContent: function(markup) {
             this.$(".accordion-body")
                 .empty()
-                .append(elements.join(''));
+                .append(markup);
         },
 
         refresh: function() {
@@ -362,6 +367,35 @@ define([
             }
         }
     });
+    
+    var AccordionEntityView = AccordionItemView.extend({
+        renderEntries: function() {
+            var symbolicNameFn = function(model) {return model.get("symbolicName")};
+            var groups = this.collection.groupBy(symbolicNameFn);
+            var orderedIds = _.uniq(this.collection.map(symbolicNameFn), true);
+
+            function getLatestStableVersion(items) {
+                //TODO implement more sophisticated "default" version selection
+                //Could let the server choose it
+                return items[items.length-1];
+            }
+
+            var catalogTree = orderedIds.map(function(symbolicName) {
+                var group = groups[symbolicName];
+                var root = getLatestStableVersion(group);
+                var children = _.reject(group, function(model) {return root.id == model.id;});
+                return {root: root, children: children};
+            });
+
+            var templater = function(memo, item, index) {
+                memo.push(this.singleItemTemplater(false, item.root));
+                return memo.concat(_.map(item.children, _.partial(this.singleItemTemplater, true), this));
+            };
+
+            var elements = _.reduce(catalogTree, templater, [], this);
+            this.updateContent(elements.join(''));
+        }
+    });
 
     // Controls whole page. Parent of accordion items and details view.
     var CatalogResourceView = Backbone.View.extend({
@@ -381,21 +415,21 @@ define([
             // `this' will not be set correctly for the onItemSelected callbacks.
             _.bindAll(this);
             this.accordion = this.options.accordion || {
-                "applications": new AccordionItemView({
+                "applications": new AccordionEntityView({
                     name: "applications",
                     singular: "application",
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     model: Entity.Model,
                     autoOpen: !this.options.kind || this.options.kind == "applications"
                 }),
-                "entities": new AccordionItemView({
+                "entities": new AccordionEntityView({
                     name: "entities",
                     singular: "entity",
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     model: Entity.Model,
                     autoOpen: this.options.kind == "entities"
                 }),
-                "policies": new AccordionItemView({
+                "policies": new AccordionEntityView({
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     name: "policies",
                     singular: "policy",

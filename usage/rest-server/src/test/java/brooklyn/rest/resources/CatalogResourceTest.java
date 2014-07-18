@@ -99,7 +99,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
     
-    assertEquals(entityItem.getId(), registeredTypeName);
+    assertEquals(entityItem.getSymbolicName(), registeredTypeName);
+    assertEquals(entityItem.getVersion(), TEST_VERSION);
     
     // and internally let's check we have libraries
     CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
@@ -141,7 +142,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertEquals(entityItem.getRegisteredType(), registeredTypeName);
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains(policyType));
-    assertEquals(entityItem.getId(), registeredTypeName);
+    assertEquals(entityItem.getSymbolicName(), registeredTypeName);
+    assertEquals(entityItem.getVersion(), TEST_VERSION);
   }
 
   @Test
@@ -184,7 +186,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
               URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore"))
               .get(CatalogEntitySummary.class);
       assertTrue(details.toString().contains("redis.port"), "expected more config, only got: "+details);
-      String iconUrl = "/v1/catalog/icon/" + details.getId();
+      String iconUrl = "/v1/catalog/icon/" + details.getSymbolicName();
       assertTrue(details.getIconUrl().contains(iconUrl), "expected brooklyn URL for icon image, but got: "+details.getIconUrl());
   }
 

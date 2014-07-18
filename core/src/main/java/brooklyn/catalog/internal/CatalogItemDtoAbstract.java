@@ -105,7 +105,13 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Override
     public String getVersion() {
-        return version;
+        //Deserializing doesn't call the constructor
+        //so the property may be null.
+        if (version != null) {
+            return version;
+        } else {
+            return BasicBrooklynCatalog.NO_VERSION;
+        }
     }
 
     @Nonnull
@@ -125,7 +131,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()+"["+getId()+"/"+getName()+"]";
+        return getClass().getSimpleName()+"["+getId()+":"+getVersion()+"/"+getName()+"]";
     }
 
     public abstract Class<SpecT> getSpecType();
