@@ -99,7 +99,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 	@Override
     public String getUser() {
         EntitlementContext entitlementContext = Entitlements.getEntitlementContext();
-	    if (entitlementContext!=null && entitlementContext.user()!=null){
+        if (entitlementContext!=null && entitlementContext.user()!=null){
         return entitlementContext.user();
         } else {
         return null; //User can be null if no authentication was requested
