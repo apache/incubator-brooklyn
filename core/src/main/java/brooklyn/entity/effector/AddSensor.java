@@ -59,6 +59,7 @@ public class AddSensor<RT,T extends Sensor<RT>> implements EntityInitializer {
         return Sensors.newSensor(type, name);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> AttributeSensor<T> newSensor(ConfigBag params) {
         String name = Preconditions.checkNotNull(params.get(SENSOR_NAME), "name must be supplied when defining a sensor");
         String className = getFullClassName(params.get(SENSOR_TYPE));
