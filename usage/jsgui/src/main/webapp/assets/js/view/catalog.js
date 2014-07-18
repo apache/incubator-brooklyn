@@ -138,7 +138,7 @@ define([
             // Returns template applied to function arguments. Alter if collection altered.
             // Will be run in the context of the AccordionItemView.
             this.templateArgs = this.options.templateArgs || function(model, index) {
-                return {type: model.get("type"), id: model.get("id")};
+                return {type: model.getVersionedAttr("type"), id: model.get("id")};
             };
 
             // undefined argument is used for existing model items
@@ -168,15 +168,20 @@ define([
             return this;
         },
 
+        singleItemTemplater: function(isChild, model, index) {
+            var args = _.extend({cid: model.cid, isChild: isChild}, this.templateArgs(model));
+            return this.template(args);
+        },
+
         renderEntries: function() {
-            var templater = function(model, index) {
-                var args = _.extend({cid: model.cid}, this.templateArgs(model));
-                return this.template(args);
-            };
-            var elements = this.collection.map(templater, this);
+            var elements = this.collection.map(_.partial(this.singleItemTemplater, false), this);
+            this.updateContent(elements.join(''));
+        },
+
+        updateContent: function(markup) {
             this.$(".accordion-body")
                 .empty()
-                .append(elements.join(''));
+                .append(markup);
             // Rehighlight active model
             if (this.activeCid && activeDetails === this.name) {
                 $(".accordion-nav-row").removeClass("active");
@@ -216,6 +221,35 @@ define([
             }
         }
     });
+    
+    var AccordionEntityView = AccordionItemView.extend({
+        renderEntries: function() {
+            var catalogIdFn = function(model) {return model.get("catalogId")};
+            var groups = this.collection.groupBy(catalogIdFn);
+            var orderedIds = _.uniq(this.collection.map(catalogIdFn), true);
+
+            function getLatestStableVersion(items) {
+                //Should we skip snapshot versions?
+                //Can we depend on versions sorting in increasing order?
+                return items[items.length-1];
+            }
+
+            var catalogTree = orderedIds.map(function(catalogId) {
+                var group = groups[catalogId];
+                var root = getLatestStableVersion(group);
+                var children = _.reject(group, function(model) {return root.id == model.id;});
+                return {root: root, children: children};
+            });
+
+            var templater = function(memo, item, index) {
+                memo.push(this.singleItemTemplater(false, item.root));
+                return memo.concat(_.map(item.children, _.partial(this.singleItemTemplater, true), this));
+            };
+
+            var elements = _.reduce(catalogTree, templater, [], this);
+            this.updateContent(elements.join(''));
+        }
+    });
 
     var CatalogResourceView = Backbone.View.extend({
         tagName:"div",
@@ -236,14 +270,14 @@ define([
             $(".nav1_catalog").addClass("active");
             this.detailsView = new DetailsView();
             this.accordion = this.options.accordion || [
-                new AccordionItemView({
+                new AccordionEntityView({
                     name: "applications",
                     details: this.detailsView,
                     detailsTemplate: DetailsEntityHtml,
                     model: Entity.Model,
                     autoOpen: true
                 }),
-                new AccordionItemView({
+                new AccordionEntityView({
                     name: "entities",
                     details: this.detailsView,
                     detailsTemplate: DetailsEntityHtml,

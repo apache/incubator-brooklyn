@@ -80,7 +80,13 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
     }
 
     public String getVersion() {
-        return version;
+        //Deserializing doesn't call the constructor
+        //so the property may be null.
+        if (version != null) {
+            return version;
+        } else {
+            return BasicBrooklynCatalog.NO_VERSION;
+        }
     }
 
     @Nonnull
@@ -100,7 +106,7 @@ public abstract class CatalogItemDtoAbstract<T,SpecT> implements CatalogItem<T,S
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()+"["+getId()+"/"+getName()+"]";
+        return getClass().getSimpleName()+"["+getId()+":"+getVersion()+"/"+getName()+"]";
     }
 
     transient CatalogXmlSerializer serializer;
