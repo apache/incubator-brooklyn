@@ -38,7 +38,7 @@ public class BrooklynServiceAttributes {
 	
     /** used to hold the instance of ManagementContext which should be used */
     public static final String BROOKLYN_MANAGEMENT_CONTEXT = ManagementContext.class.getName();
-
+    
     /** poor-man's security, to specify a user to be automatically logged in
      * (e.g. to bypass security, during dev/test); 'admin' is usually a sensible choice.
      * if not specified (the default) username+password is required. 

@@ -24,6 +24,7 @@ import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.spi.PlatformRootSummary;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.annotations.Beta;
@@ -39,7 +40,7 @@ public class BrooklynCampPlatformLauncher extends BrooklynCampPlatformLauncherAb
     public BrooklynCampPlatformLauncher launch() {
         assert platform == null;
 
-        mgmt = new LocalManagementContext();
+        mgmt = newManagementContext();
         
         // We created the management context, so we are responsible for terminating it
         BrooklynShutdownHooks.invokeTerminateOnShutdown(mgmt);
@@ -54,6 +55,10 @@ public class BrooklynCampPlatformLauncher extends BrooklynCampPlatformLauncherAb
         return this;
     }
     
+    protected ManagementContext newManagementContext() {
+        return new LocalManagementContext();
+    }
+
     public static void main(String[] args) {
         new BrooklynCampPlatformLauncher().launch();
     }

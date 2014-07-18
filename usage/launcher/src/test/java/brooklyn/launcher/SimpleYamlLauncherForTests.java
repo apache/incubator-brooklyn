@@ -16,9 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.brooklyn.util.yaml;
+package brooklyn.launcher;
 
-/** @deprecated since 0.7.0 use {@link brooklyn.util.yaml.Yamls} */
-@Deprecated
-public class Yamls extends brooklyn.util.yaml.Yamls {
+import brooklyn.launcher.camp.SimpleYamlLauncher;
+import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
+
+public class SimpleYamlLauncherForTests extends SimpleYamlLauncher {
+
+    protected ManagementContext newManagementContext() {
+        return new LocalManagementContextForTests();
+    }
+
 }

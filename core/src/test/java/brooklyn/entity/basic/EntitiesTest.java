@@ -106,7 +106,9 @@ public class EntitiesTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testCreateGetContainsAndRemoveTags() throws Exception {
-        entity.addTag("foo");
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+            .addInitializer(EntityInitializers.addingTags("foo")));
+        
         entity.addTag(app);
         
         Assert.assertTrue(entity.containsTag("foo"));
@@ -122,5 +124,5 @@ public class EntitiesTest extends BrooklynAppUnitTestSupport {
         
         Assert.assertEquals(entity.getTags(), MutableSet.of(app));
     }
-
+    
 }

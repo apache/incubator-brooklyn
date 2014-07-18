@@ -42,7 +42,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -53,8 +52,11 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
@@ -86,10 +88,10 @@ public class BrooklynNodeIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        pseudoBrooklynPropertiesFile = File.createTempFile("brooklynnode-test", ".properties");
+        pseudoBrooklynPropertiesFile = Os.newTempFile("brooklynnode-test", ".properties");
         pseudoBrooklynPropertiesFile.delete();
 
-        pseudoBrooklynCatalogFile = File.createTempFile("brooklynnode-test", ".catalog");
+        pseudoBrooklynCatalogFile = Os.newTempFile("brooklynnode-test", ".catalog");
         pseudoBrooklynCatalogFile.delete();
 
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
@@ -109,6 +111,7 @@ public class BrooklynNodeIntegrationTest {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                 .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1"));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, true);
 
@@ -122,6 +125,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true)
                 .configure(BrooklynNode.MANAGEMENT_USER, (String)null));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, true);
 
@@ -137,6 +141,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_CONTENTS, "abc=def"));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         assertEquals(Files.readLines(pseudoBrooklynPropertiesFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
     }
@@ -148,6 +153,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS, "abc=def"));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         assertEquals(Files.readLines(pseudoBrooklynPropertiesFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
     }
@@ -162,6 +168,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH, pseudoBrooklynPropertiesFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_GLOBAL_PROPERTIES_URI, brooklynPropertiesSourceFile.toURI().toString()));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         assertEquals(Files.readLines(pseudoBrooklynPropertiesFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
     }
@@ -173,6 +180,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.BROOKLYN_CATALOG_REMOTE_PATH, pseudoBrooklynCatalogFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_CATALOG_CONTENTS, "<catalog/>"));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         assertEquals(Files.readLines(pseudoBrooklynCatalogFile, Charsets.UTF_8), ImmutableList.of("<catalog/>"));
     }
@@ -187,6 +195,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.BROOKLYN_CATALOG_REMOTE_PATH, pseudoBrooklynCatalogFile.getAbsolutePath())
                 .configure(BrooklynNode.BROOKLYN_CATALOG_URI, brooklynCatalogSourceFile.toURI().toString()));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         assertEquals(Files.readLines(pseudoBrooklynCatalogFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
     }
@@ -204,6 +213,7 @@ public class BrooklynNodeIntegrationTest {
                     .configure(BrooklynNode.RUN_DIR, tempDir.getAbsolutePath())
                     .configure(BrooklynNode.COPY_TO_RUNDIR, ImmutableMap.of(sourceFile.getAbsolutePath(), "${RUN}/myfile.txt")));
             app.start(locs);
+            log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
             assertEquals(Files.readLines(expectedFile, Charsets.UTF_8), ImmutableList.of("abc=def"));
         } finally {
@@ -231,6 +241,7 @@ public class BrooklynNodeIntegrationTest {
                     .configure(BrooklynNode.CLASSPATH, ImmutableList.of(classpathEntry1.getAbsolutePath(), classpathEntry2.getAbsolutePath()))
                     );
             app.start(locs);
+            log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
             assertEquals(Files.readLines(expectedFile1, Charsets.UTF_8), ImmutableList.of(content));
             assertEquals(Files.readLines(expectedFile2, Charsets.UTF_8), ImmutableList.of(content));
@@ -261,9 +272,10 @@ public class BrooklynNodeIntegrationTest {
     
             BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                     .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
-                    .configure(BrooklynNode.SUGGESTED_RUN_DIR, tempDir.getAbsolutePath())
+                    .configure(BrooklynNode.RUN_DIR, tempDir.getAbsolutePath())
                     );
             app.start(locs);
+            log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
             assertEquals(Files.readLines(expectedFile1, Charsets.UTF_8), ImmutableList.of(content));
             assertEquals(Files.readLines(expectedFile2, Charsets.UTF_8), ImmutableList.of(content));
@@ -282,6 +294,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
                 .configure(BrooklynNode.HTTP_PORT, PortRanges.fromString("45000+")));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         Integer httpPort = brooklynNode.getAttribute(BrooklynNode.HTTP_PORT);
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
@@ -296,6 +309,7 @@ public class BrooklynNodeIntegrationTest {
                 .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true)
                 .configure(BrooklynNode.APP, BasicApplicationImpl.class.getName()));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
         String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
@@ -308,6 +322,7 @@ public class BrooklynNodeIntegrationTest {
         BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
                 .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, true));
         app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
         
         final String id = brooklynNode.invoke(BrooklynNode.DEPLOY_BLUEPRINT, ConfigBag.newInstance()
             .configure(DeployBlueprintEffector.BLUEPRINT_TYPE, BasicApplication.class.getName())
@@ -342,6 +357,7 @@ public class BrooklynNodeIntegrationTest {
                     .configure(BrooklynNode.APP, BasicApplicationImpl.class.getName())
                     .configure(BrooklynNode.LOCATIONS, "named:mynamedloc"));
             app.start(locs);
+            log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
             URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
 
@@ -388,6 +404,7 @@ public class BrooklynNodeIntegrationTest {
                         //                .configure(BrooklynNode.HTTP_PORT, PortRanges.fromString("45000+"))
                 );
             app.start(locs);
+            log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
             URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
             Assert.assertTrue(webConsoleUri.toString().startsWith("https://"), "web console not https: "+webConsoleUri);
@@ -411,7 +428,7 @@ public class BrooklynNodeIntegrationTest {
     }
 
     private <T> T parseJson(String json, List<String> elements, Class<T> clazz) {
-        Function<String, T> func = HttpValueFunctions.chain(
+        Function<String, T> func = Functionals.chain(
                 JsonFunctions.asJson(),
                 JsonFunctions.walk(elements),
                 JsonFunctions.cast(clazz));
@@ -419,9 +436,9 @@ public class BrooklynNodeIntegrationTest {
     }
 
     private <T> List<T> parseJsonList(String json, List<String> elements, Class<T> clazz) {
-        Function<String, List<T>> func = HttpValueFunctions.chain(
+        Function<String, List<T>> func = Functionals.chain(
                 JsonFunctions.asJson(),
-                JsonFunctions.forEach(HttpValueFunctions.chain(
+                JsonFunctions.forEach(Functionals.chain(
                         JsonFunctions.walk(elements),
                         JsonFunctions.cast(clazz))));
         return func.apply(json);

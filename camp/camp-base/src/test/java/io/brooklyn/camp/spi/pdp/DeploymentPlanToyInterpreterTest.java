@@ -21,7 +21,6 @@ package io.brooklyn.camp.spi.pdp;
 import io.brooklyn.camp.BasicCampPlatform;
 import io.brooklyn.camp.spi.resolve.PlanInterpreter.PlanInterpreterAdapter;
 import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
-import io.brooklyn.util.yaml.Yamls;
 
 import java.util.Map;
 
@@ -32,6 +31,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
+import brooklyn.util.yaml.Yamls;
 
 @Test
 public class DeploymentPlanToyInterpreterTest {
