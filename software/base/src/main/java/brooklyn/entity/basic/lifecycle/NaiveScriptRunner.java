@@ -37,6 +37,7 @@ public interface NaiveScriptRunner {
      *  out, err as output/error streams;
      *  logPrefix, prefix string to put in log output;
      *  env, map of environment vars to pass to shell environment */
+    @SuppressWarnings("rawtypes")
     int execute(Map flags, List<String> script, String summaryForLogging);
 
 }

@@ -44,6 +44,7 @@ import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
 import brooklyn.util.task.system.ProcessTaskFactory;
@@ -144,8 +145,13 @@ public class SshTasks {
             .returning(new Function<ProcessTaskWrapper<?>,Boolean>() { public Boolean apply(ProcessTaskWrapper<?> task) {
                 if (task.getExitCode()==0 && task.getStdout().contains("sudo-is-working-"+id)) return true;
                 Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
-                log.warn("Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
-                        " (exit code "+task.getExitCode()+(entity!=null ? ", entity "+entity : "")+")");
+                
+                // TODO if in a queueing context can we mark this task inessential and throw?
+                // that way user sees the message...
+                String message = "Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
+                        " (exit code "+task.getExitCode()+(entity!=null ? ", entity "+entity : "")+")";
+                DynamicTasks.queueIfPossible(Tasks.warning(message, null));
+                
                 Streams.logStreamTail(log, "STDERR of sudo setup problem", Streams.byteArrayOfString(task.getStderr()), 1024);
                 if (requireSuccess) {
                     throw new IllegalStateException("Passwordless sudo is required for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+

@@ -281,7 +281,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
             for (String targetName: wars.keySet()) {
                 redeployAllToTarget.add(Effectors.invocation(target, DEPLOY, MutableMap.of("url", wars.get(targetName), "targetName", targetName)));
             }
-            tb.add(redeployAllToTarget.build());
+            tb.add(whenServiceUp(target, redeployAllToTarget.build(), redeployPrefix+" at "+target+" when ready"));
         }
         DynamicTasks.queueIfPossible(tb.build()).orSubmitAsync(this).asTask().getUnchecked();
     }  
