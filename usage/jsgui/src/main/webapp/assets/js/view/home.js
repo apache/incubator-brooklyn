@@ -44,11 +44,9 @@ define([
         
         initialize:function () {
             var that = this
-            
             this.$el.html(_.template(ApplicationsHtml, {} ))
             $(".nav1").removeClass("active");
             $(".nav1_home").addClass("active");
-            this.getUser();
             this._appViews = {}
             this.summariesView = new HomeView.HomeSummariesView({
                 applications:this.collection,
@@ -172,25 +170,6 @@ define([
                     self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
                     self.$('#reload-brooklyn-properties-indicator').hide();
                     console.error("ERROR reloading brooklyn properties");
-                    console.debug(data);
-                }
-            });
-        },
-        
-        getUser: function() {     	
-        $.ajax({
-                type: "GET",
-                url: "/v1/server/user",
-                contentType: "application/json",
-                dataType: "text",
-                success: function(data) {
-                    console.log("Successfully fetched user details");
-                    if(data!=null){
-                    $('#user').append(data);
-                    }
-                },
-                error: function(data) {
-                    console.error("ERROR fetching user details");
                     console.debug(data);
                 }
             });
