@@ -158,7 +158,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
                 latch.countDown();
             }});
         
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         for (int i = 1; i <= 5; i++) {
             h.setAge(i);
         }
