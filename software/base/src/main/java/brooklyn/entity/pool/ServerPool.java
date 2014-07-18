@@ -18,10 +18,15 @@
  */
 package brooklyn.entity.pool;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.machine.MachineEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
@@ -71,8 +76,28 @@ public interface ServerPool extends DynamicCluster, LocationOwner<ServerPoolLoca
     ConfigKey<EntitySpec<?>> MEMBER_SPEC = ConfigKeys.newConfigKeyWithDefault(DynamicCluster.MEMBER_SPEC,
             EntitySpec.create(MachineEntity.class));
 
+    MethodEffector<Collection<Entity>> ADD_MACHINES_FROM_SPEC = new MethodEffector<Collection<Entity>>(ServerPool.class, "addExistingMachinesFromSpec");
+
     public MachineLocation claimMachine(Map<?, ?> flags) throws NoMachinesAvailableException;
 
     public void releaseMachine(MachineLocation machine);
 
+    /**
+     * Sets the pool to use an existing {@link MachineLocation} as a member. Existing locations
+     * will count towards the capacity of the pool but will not be terminated when the pool is
+     * stopped.
+     * @param machine An existing machine.
+     * @return the new member of the pool, created with the configured {@link #MEMBER_SPEC}.
+     */
+    public Entity addExistingMachine(MachineLocation machine);
+
+    /**
+     * Adds additional machines to the pool by resolving the given spec.
+     * @param spec
+     *          A location spec, e.g. <code>byon:(hosts="user@10.9.1.1,user@10.9.1.2,user@10.9.1.3")</code>
+     * @return the new members of the pool, created with the configured {@link #MEMBER_SPEC}.
+     */
+    @Effector(description = "Adds additional machines to the pool by resolving the given spec.")
+    public Collection<Entity> addExistingMachinesFromSpec(
+            @EffectorParam(name = "spec", description = "Spec") String spec);
 }

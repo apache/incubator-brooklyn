@@ -19,18 +19,23 @@
 package brooklyn.entity.pool;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
@@ -41,14 +46,20 @@ import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.dynamic.DynamicLocation;
 import brooklyn.management.LocationManager;
+import brooklyn.management.Task;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
@@ -72,13 +83,18 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     // Would use BiMap but persisting them tends to throw ConcurrentModificationExceptions.
     @SuppressWarnings("serial")
     public static final AttributeSensor<Map<Entity, MachineLocation>> ENTITY_MACHINE = Sensors.newSensor(new TypeToken<Map<Entity, MachineLocation>>() {},
-                "pool.entityMachineMap", "A mapping of entities and their machine locations");
+            "pool.entityMachineMap", "A mapping of entities and their machine locations");
+
     @SuppressWarnings("serial")
     public static final AttributeSensor<Map<MachineLocation, Entity>> MACHINE_ENTITY = Sensors.newSensor(new TypeToken<Map<MachineLocation, Entity>>() {},
-                "pool.machineEntityMap", "A mapping of machine locations and their entities");
+            "pool.machineEntityMap", "A mapping of machine locations and their entities");
 
     public static final AttributeSensor<LocationDefinition> DYNAMIC_LOCATION_DEFINITION = Sensors.newSensor(LocationDefinition.class,
             "pool.locationDefinition", "The location definition used to create the pool's dynamic location");
+
+    public static final ConfigKey<Boolean> REMOVABLE = ConfigKeys.newBooleanConfigKey(
+            "pool.member.removable", "Whether a pool member is removable from the cluster. Used to denote additional " +
+                    "existing machines that were manually added to the pool", true);
 
     @SuppressWarnings("unused")
     private MemberTrackingPolicy membershipTracker;
@@ -209,6 +225,36 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
                 LOG.debug("{} has been released in {}", machine, this);
             }
         }
+    }
+
+    @Override
+    public Entity addExistingMachine(MachineLocation machine) {
+        LOG.info("Adding additional machine to {}: {}", this, machine);
+        Entity added = addNode(machine, MutableMap.of(REMOVABLE, false));
+        Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(machine));
+        Task<Void> task = Effectors.invocation(added, Startable.START, args).asTask();
+        DynamicTasks.queueIfPossible(task).orSubmitAsync(this);
+        return added;
+    }
+
+    @Override
+    public Collection<Entity> addExistingMachinesFromSpec(String spec) {
+        Location location = getManagementContext().getLocationRegistry().resolveIfPossible(spec);
+        List<Entity> additions = Lists.newLinkedList();
+        if (location == null) {
+            LOG.warn("Spec was unresolvable: {}", spec);
+        } else {
+            Iterable<MachineLocation> machines = FluentIterable.from(location.getChildren())
+                    .filter(MachineLocation.class);
+            LOG.info("{} adding additional machines: {}", this, machines);
+            synchronized (mutex) {
+                for (MachineLocation machine : machines) {
+                    additions.add(addExistingMachine(machine));
+                }
+            }
+            LOG.debug("{} added additional machines", this);
+        }
+        return additions;
     }
 
     /**

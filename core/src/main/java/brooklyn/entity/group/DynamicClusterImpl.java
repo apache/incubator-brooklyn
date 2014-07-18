@@ -574,7 +574,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             chosenLocations = Collections.nCopies(delta, getLocation());
         }
 
-        // create the entities and start themo
+        // create and start the entities
         return addInEachLocation(chosenLocations, ImmutableMap.of());
     }
 
