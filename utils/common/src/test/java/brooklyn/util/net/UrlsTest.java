@@ -43,6 +43,11 @@ public class UrlsTest {
     }
 
     @Test
+    public void testPathEncode() throws Exception {
+        assertEquals(Urls.encode("name_with/%!"), "name_with%2F%25%21");
+    }
+
+    @Test
     public void testIsUrlWithProtocol() {
         Assert.assertTrue(Urls.isUrlWithProtocol("http://localhost/"));
         Assert.assertTrue(Urls.isUrlWithProtocol("protocol:"));
