@@ -34,10 +34,9 @@ import brooklyn.util.guava.MaybeFunctions;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.google.gson.JsonParser;
+import com.jayway.jsonpath.JsonPath;
 
 public class JsonFunctions {
 
@@ -80,14 +79,14 @@ public class JsonFunctions {
     public static Function<JsonElement, JsonElement> walk(final Iterable<String> elements) {
         // could do this instead, pointing at Maybe for this, and for walkN, but it's slightly less efficient
 //      return Functionals.chain(MaybeFunctions.<JsonElement>wrap(), walkM(elements), MaybeFunctions.<JsonElement>get());
-        
+
         return new Function<JsonElement, JsonElement>() {
             @Override public JsonElement apply(JsonElement input) {
                 JsonElement curr = input;
                 for (String element : elements) {
                     JsonObject jo = curr.getAsJsonObject();
                     curr = jo.get(element);
-                    if (curr==null) 
+                    if (curr==null)
                         throw new NoSuchElementException("No element '"+element+" in JSON, when walking "+elements);
                 }
                 return curr;
@@ -146,6 +145,19 @@ public class JsonFunctions {
                     curr = Maybe.of(currO);
                 }
                 return curr;
+            }
+        };
+    }
+
+    /**
+     * returns an element from a single json primitive value given a full path {@link com.jayway.jsonpath.JsonPath}
+     */
+    public static <T> Function<JsonElement,T> getPath(final String path) {
+        return new Function<JsonElement, T>() {
+            @Override public T apply(JsonElement input) {
+                String jsonString = input.toString();
+                Object rawElement = JsonPath.read(jsonString, path);
+                return (T) rawElement;
             }
         };
     }

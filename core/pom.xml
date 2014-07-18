@@ -163,6 +163,11 @@
             <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${jsonPath.version}</version>
+        </dependency>
     </dependencies>
 
   <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->

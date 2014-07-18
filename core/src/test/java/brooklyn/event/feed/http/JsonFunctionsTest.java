@@ -102,5 +102,21 @@ public class JsonFunctionsTest {
         Assert.assertNull(n);
     }
 
+    @Test
+    public void testGetPath1(){
+        Integer obj = (Integer) JsonFunctions.getPath("$.europe.uk.edinburgh.population").apply(europeMap());
+        Assert.assertEquals((int) obj, 500*1000);
+    }
 
+    @Test
+    public void testGetPath2(){
+        String obj = (String) JsonFunctions.getPath("$.europe.uk.edinburgh.lighting").apply(europeMap());
+        Assert.assertEquals(obj, "dark");
+    }
+
+    @Test
+    public void testGetPathWrong(){
+        Object obj = JsonFunctions.getPath("$.europe.spain.malaga").apply(europeMap());
+        Assert.assertNull(obj);
+    }
 }
