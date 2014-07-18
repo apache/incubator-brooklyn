@@ -88,7 +88,6 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
 
         if (!Exceptions.isPrefixBoring(throwable)) {
             if ( warnedUnknownExceptions.add( throwable.getClass() )) {
-                throwable.printStackTrace();
                 LOG.warn("REST call generated exception type "+throwable.getClass()+" unrecognized in "+getClass()+" (subsequent occurrences will be logged debug only): " + throwable);
             }
         }

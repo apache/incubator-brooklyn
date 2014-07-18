@@ -111,10 +111,10 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                     
                 } catch (Throwable e) {
                     // NB errors are typically already caught at this point
-                    if (log.isDebugEnabled())
+                    if (log.isDebugEnabled()) {
                         log.debug("REST failed processing request "+uri+" with "+entitlementContext+": "+e, e);
+                    }
                     
-                    log.warn("REST failed processing request "+uri+" with "+entitlementContext+": "+e, e);
                     throw Exceptions.propagate(e);
                     
                 } finally {

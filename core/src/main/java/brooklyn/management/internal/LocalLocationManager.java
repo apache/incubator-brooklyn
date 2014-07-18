@@ -41,12 +41,14 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
 public class LocalLocationManager implements LocationManager {
 
+    @Beta /* expect to remove when API returns LocationSpec or similar */
     public static final ConfigKey<Boolean> CREATE_UNMANAGED = ConfigKeys.newBooleanConfigKey("brooklyn.internal.location.createUnmanaged",
         "If set on a location or spec, causes the manager to create it in an unmanaged state (for peeking)", false);
     
