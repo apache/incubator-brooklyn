@@ -93,8 +93,8 @@ define([
         $.ajax({
             type : "GET",
             url : "/v1/server/user",
-     	   dataType : "text",
-     	   success : function(data) {
+     	    dataType : "text",
+     	    success : function(data) {
      	       console.log("Successfully fetched user details");
      	       if (data != null) {
      			$("#user").html(data);
