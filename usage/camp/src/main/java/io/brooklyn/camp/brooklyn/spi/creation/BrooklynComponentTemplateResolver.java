@@ -158,7 +158,7 @@ public class BrooklynComponentTemplateResolver {
         return type != null && (type.toLowerCase().startsWith("java:") || type.toLowerCase().startsWith("brooklyn:java:"));
     }
 
-    protected String getCatalogIdOrJavaType() {
+    protected String getBrooklynType() {
         String type = getDeclaredType();
         type = Strings.removeFromStart(type, "brooklyn:", "java:");
         if (type == null) return null;
@@ -179,7 +179,7 @@ public class BrooklynComponentTemplateResolver {
      */
     @Nullable
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
-        String type = getCatalogIdOrJavaType();
+        String type = getBrooklynType();
         if (type != null) {
             return loader.getManagementContext().getCatalog().getCatalogItem(Entity.class, type);
         } else {
@@ -190,7 +190,7 @@ public class BrooklynComponentTemplateResolver {
     public boolean canResolve() {
         if (getCatalogItem()!=null) 
             return true;
-        if (loader.tryLoadClass(getCatalogIdOrJavaType(), Entity.class).isPresent())
+        if (loader.tryLoadClass(getBrooklynType(), Entity.class).isPresent())
             return true;
         return false;
     }
@@ -203,7 +203,7 @@ public class BrooklynComponentTemplateResolver {
     /** tries to load the Java entity class */
     public Maybe<Class<? extends Entity>> tryLoadEntityClass() {
         CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
-        String typeName = getCatalogIdOrJavaType();
+        String typeName = getBrooklynType();
         
         if (item!=null) {
             // add additional bundles
@@ -218,11 +218,18 @@ public class BrooklynComponentTemplateResolver {
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */
-    @SuppressWarnings("unchecked")
     public <T extends Entity> EntitySpec<T> resolveSpec() {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
+        
+        EntitySpec<T> spec = createSpec();
+        populateSpec(spec);
+        
+        return spec;
+    }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private <T extends Entity> EntitySpec<T> createSpec() {
         // ensure loader is updated
         getCatalogItem();
         
@@ -238,7 +245,11 @@ public class BrooklynComponentTemplateResolver {
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
+        return spec;
+    }
 
+    //called from BrooklynAssemblyTemplateInstantiator as well
+    protected <T extends Entity> void populateSpec(EntitySpec<T> spec) {
         String name, templateId=null, planId=null;
         if (template.isPresent()) {
             name = template.get().getName();
@@ -262,8 +273,6 @@ public class BrooklynComponentTemplateResolver {
             spec.locations(childLocations);
         
         decorateSpec(spec);
-        
-        return spec;
     }
 
     protected <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
@@ -386,7 +395,7 @@ public class BrooklynComponentTemplateResolver {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> getChildren(Map<String, Object> attrs) {
+    protected List<Map<String, Object>> getChildren(Map<String, Object> attrs) {
         if (attrs==null) return null;
         return (List<Map<String, Object>>) attrs.get("brooklyn.children");
     }

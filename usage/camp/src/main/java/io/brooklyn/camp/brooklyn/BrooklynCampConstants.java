@@ -18,6 +18,10 @@
  */
 package io.brooklyn.camp.brooklyn;
 
+import java.util.Set;
+
+import com.google.common.collect.ImmutableSet;
+
 import io.brooklyn.camp.CampPlatform;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
@@ -39,4 +43,5 @@ public class BrooklynCampConstants {
 
     public static final ConfigKey<CampPlatform> CAMP_PLATFORM = BrooklynServerConfig.CAMP_PLATFORM;
 
+    public static final Set<String> YAML_URL_PROTOCOL_WHITELIST = ImmutableSet.of("classpath", "http");
 }

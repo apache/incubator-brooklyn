@@ -35,7 +35,7 @@ public class ChefComponentTemplateResolver extends BrooklynComponentTemplateReso
     }
 
     @Override
-    protected String getCatalogIdOrJavaType() {
+    protected String getBrooklynType() {
         return ChefEntity.class.getName();
     }
 
