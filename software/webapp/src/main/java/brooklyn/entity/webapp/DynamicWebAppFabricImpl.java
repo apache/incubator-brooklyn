@@ -63,7 +63,9 @@ public class DynamicWebAppFabricImpl extends DynamicFabricImpl implements Dynami
         }
         
         for (List<? extends AttributeSensor<? extends Number>> es : averagingEnricherSetup) {
+            @SuppressWarnings("unchecked")
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
+            @SuppressWarnings("unchecked")
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
             
             // TODO This needs to respond to changes in FABRIC_SIZE as well, to recalculate

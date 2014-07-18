@@ -50,7 +50,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     public DynamicGroupImpl() { }
 
     @Deprecated
-    public DynamicGroupImpl(Map flags, Entity parent) {
+    public DynamicGroupImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         super(flags, parent);
     }
 

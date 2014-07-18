@@ -48,14 +48,17 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
         super();
     }
 
+    @SuppressWarnings("rawtypes")
     public JavaWebAppSoftwareProcessImpl(Entity parent){
         this(new LinkedHashMap(),parent);
     }
 
+    @SuppressWarnings("rawtypes")
     public JavaWebAppSoftwareProcessImpl(Map flags){
         this(flags, null);
     }
 
+    @SuppressWarnings("rawtypes")
     public JavaWebAppSoftwareProcessImpl(Map flags, Entity parent) {
         super(flags, parent);
     }
