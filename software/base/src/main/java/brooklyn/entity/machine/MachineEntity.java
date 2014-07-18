@@ -20,14 +20,14 @@ package brooklyn.entity.machine;
 
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
+import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.time.Duration;
 
 @ImplementedBy(MachineEntityImpl.class)
-public interface MachineEntity extends SoftwareProcess {
+public interface MachineEntity extends EmptySoftwareProcess {
 
     AttributeSensor<Duration> UPTIME = MachineAttributes.UPTIME;
     AttributeSensor<Double> LOAD_AVERAGE = MachineAttributes.LOAD_AVERAGE;

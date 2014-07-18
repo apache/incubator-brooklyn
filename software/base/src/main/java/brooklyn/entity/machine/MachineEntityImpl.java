@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.EmptySoftwareProcessDriver;
-import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
@@ -42,7 +42,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Splitter;
 
-public class MachineEntityImpl extends SoftwareProcessImpl implements MachineEntity {
+public class MachineEntityImpl extends EmptySoftwareProcessImpl implements MachineEntity {
 
     private static final Logger LOG = LoggerFactory.getLogger(MachineEntityImpl.class);
 
