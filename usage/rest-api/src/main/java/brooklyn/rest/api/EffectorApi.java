@@ -59,6 +59,7 @@ public interface EffectorApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application, entity or effector")
   })
+  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
   public Response invoke(
       @ApiParam(name = "application", value = "Application ID or name", required = true)
       @PathParam("application") String application,
@@ -80,7 +81,7 @@ public interface EffectorApi {
       
       @ApiParam(name = "parameters", value = "Effector parameters (as key value pairs)", required = false)
       @Valid 
-      Map<String, String> parameters
+      Map<String, Object> parameters
   ) ;
-  
+
 }

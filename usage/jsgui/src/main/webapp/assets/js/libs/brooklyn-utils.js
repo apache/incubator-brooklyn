@@ -47,7 +47,9 @@ define([
 
     if (!String.prototype.trim) {
         // some older javascripts do not support 'trim' (including jasmine spec runner) so let's define it
-        String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
+        String.prototype.trim = function(){
+            return this.replace(/^\s+|\s+$/g, '');
+        };
     }
 
     // from http://stackoverflow.com/questions/646628/how-to-check-if-a-string-startswith-another-string
@@ -65,6 +67,16 @@ define([
     // poor-man's copy
     Util.promptCopyToClipboard = function(text) {
         window.prompt("To copy to the clipboard, press Ctrl+C then Enter.", text);
+    };
+
+    /**
+     * Returns the path component of a string URL. e.g. http://example.com/bob/bob --> /bob/bob
+     */
+    Util.pathOf = function(string) {
+        if (!string) return "";
+        var a = document.createElement("a");
+        a.href = string;
+        return a.pathname;
     };
 
     return Util;

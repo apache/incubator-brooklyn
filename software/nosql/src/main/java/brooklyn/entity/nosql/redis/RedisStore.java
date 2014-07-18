@@ -31,8 +31,6 @@ import brooklyn.util.flags.SetFromFlag;
 
 /**
  * An entity that represents a Redis key-value store service.
- *
- * TODO add sensors with Redis statistics using INFO command
  */
 @Catalog(name="Redis Server", description="Redis is an open-source, networked, in-memory, key-value data store with optional durability", iconUrl="classpath:///redis-logo.png")
 @ImplementedBy(RedisStoreImpl.class)

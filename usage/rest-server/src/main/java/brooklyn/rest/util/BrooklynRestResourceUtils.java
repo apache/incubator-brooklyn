@@ -97,7 +97,7 @@ public class BrooklynRestResourceUtils {
     }
 
     /** finds the policy indicated by the given ID or name.
-     * @see {@link getEntity(String,String)}; it then searches the policies of that
+     * @see {@link #getEntity(String,String)}; it then searches the policies of that
      * entity for one whose ID or name matches that given.
      * <p>
      * 
@@ -107,7 +107,7 @@ public class BrooklynRestResourceUtils {
     }
 
     /** finds the policy indicated by the given ID or name.
-     * @see {@link getPolicy(String,String,String)}.
+     * @see {@link #getPolicy(String,String,String)}.
      * <p>
      * 
      * @throws 404 or 412 (unless input is null in which case output is null) */

@@ -39,6 +39,8 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.rest.api.CatalogApi;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.CatalogEntitySummary;
@@ -89,14 +91,27 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         }
         String itemId = item.getId();
         log.info("REST created catalog item: "+item);
-        
+
         // FIXME configurations/ not supported
         switch (item.getCatalogItemType()) {
-        case TEMPLATE: return Response.created(URI.create("applications/" + itemId)).build();
-        case ENTITY: return Response.created(URI.create("entities/" + itemId)).build();
-        case POLICY: return Response.created(URI.create("policies/" + itemId)).build();
-        case CONFIGURATION: return Response.created(URI.create("configurations/" + itemId)).build();
-        default: throw new IllegalStateException("Unsupported catalog item type "+item.getCatalogItemType()+": "+item);
+        case TEMPLATE:
+            return Response.created(URI.create("applications/" + itemId))
+                    .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
+                    .build();
+        case ENTITY:
+            return Response.created(URI.create("entities/" + itemId))
+                    .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
+                    .build();
+        case POLICY:
+            return Response.created(URI.create("policies/" + itemId))
+                    .entity(CatalogTransformer.catalogPolicySummary(brooklyn(), (CatalogItem<? extends Policy, PolicySpec<?>>) item))
+                    .build();
+        case CONFIGURATION:
+            return Response.created(URI.create("configurations/" + itemId))
+                    .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
+                    .build();
+        default:
+            throw new IllegalStateException("Unsupported catalog item type "+item.getCatalogItemType()+": "+item);
         }
     }
 
@@ -133,7 +148,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
       }
 
-      return CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity,EntitySpec<?>>) result);
+      return CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) result);
     }
 
     @Override
@@ -153,7 +168,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
           throw WebResourceUtils.notFound("Policy with id '%s' not found", policyId);
         }
 
-        return CatalogTransformer.catalogItemSummary(brooklyn(), result);
+        return CatalogTransformer.catalogPolicySummary(brooklyn(), (CatalogItem<? extends Policy, PolicySpec<?>>) result);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

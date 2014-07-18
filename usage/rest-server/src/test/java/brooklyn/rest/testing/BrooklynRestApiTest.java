@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.testing;
 
+import brooklyn.rest.util.FormMapProvider;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import org.testng.annotations.AfterClass;
@@ -95,6 +96,7 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
     
     protected void addResources() {
         addProvider(DefaultExceptionMapper.class);
+        addProvider(FormMapProvider.class);
         for (Object r: BrooklynRestApi.getBrooklynRestResources())
             addResource(r);
     }

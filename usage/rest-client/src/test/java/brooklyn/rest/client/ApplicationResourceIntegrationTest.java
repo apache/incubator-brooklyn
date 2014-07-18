@@ -153,7 +153,7 @@ public class ApplicationResourceIntegrationTest {
     @Test(groups = "Integration", dependsOnMethods = {"testListSensorsRedis", "testListEntities"})
     public void testTriggerRedisStopEffector() throws Exception {
         String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
-        Response response = api.getEffectorApi().invoke("redis-app", entityId, "stop", "5000", ImmutableMap.<String, String>of());
+        Response response = api.getEffectorApi().invoke("redis-app", entityId, "stop", "5000", ImmutableMap.<String, Object>of());
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 

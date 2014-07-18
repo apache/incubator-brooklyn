@@ -42,6 +42,7 @@ import brooklyn.rest.resources.ServerResource;
 import brooklyn.rest.resources.UsageResource;
 import brooklyn.rest.resources.VersionResource;
 import brooklyn.rest.util.DefaultExceptionMapper;
+import brooklyn.rest.util.FormMapProvider;
 
 import com.google.common.collect.Iterables;
 
@@ -78,6 +79,7 @@ public class BrooklynRestApi {
         List<Object> resources = new ArrayList<Object>();
         resources.add(new DefaultExceptionMapper());
         resources.add(new JacksonJsonProvider());
+        resources.add(new FormMapProvider());
         return resources;
     }
 
