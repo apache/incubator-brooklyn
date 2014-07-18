@@ -27,7 +27,6 @@ import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 import io.brooklyn.camp.spi.pdp.Service;
 import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationContext;
 import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
-import io.brooklyn.util.yaml.Yamls;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -41,6 +40,7 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.yaml.snakeyaml.error.YAMLException;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.VisibleForTesting;
 

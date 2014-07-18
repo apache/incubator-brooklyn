@@ -32,16 +32,16 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.util.flags.ClassCoercionException;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.StringPredicates;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
-
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.util.flags.ClassCoercionException;
-import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.text.StringPredicates;
 
 public class TypeCoercionsTest {
 
@@ -191,15 +191,65 @@ public class TypeCoercionsTest {
     }
 
     @Test
-    public void testStringToMapCoercion() {
-        Map<?,?> s = TypeCoercions.coerce("a=1,b=2,c=3", Map.class);
-        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", "2", "c", "3"));
+    public void testJsonStringToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("{ \"a\" : \"1\", b : 2 }", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", 2));
     }
 
     @Test
-    public void testJsonStringToMapCoercion() {
-        Map<?,?> s = TypeCoercions.coerce("{ \"a\" : \"1\", \"b\" : \"2\", \"c\" : \"3\" }", Map.class);
-        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", "2", "c", "3"));
+    public void testJsonStringWithoutQuotesToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("{ a : 1 }", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", 1));
+    }
+
+    @Test
+    public void testJsonComplexTypesToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("{ a : [1, \"2\", '\"3\"'], b: { c: d, 'e': \"f\" } }", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", ImmutableList.<Object>of(1, "2", "\"3\""), 
+            "b", ImmutableMap.of("c", "d", "e", "f")));
+    }
+
+    @Test
+    public void testJsonStringWithoutBracesToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("a : 1", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", 1));
+    }
+
+    @Test
+    public void testJsonStringWithoutBracesWithMultipleToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("a : 1, b : 2", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", 1, "b", 2));
+    }
+
+    @Test
+    public void testKeyEqualsValueStringToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("a=1,b=2", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", "2"));
+    }
+
+    @Test(expectedExceptions=IllegalArgumentException.class)
+    public void testJsonStringWithoutBracesOrSpaceDisallowedAsMapCoercion() {
+        // yaml requires spaces after the colon
+        Map<?,?> s = TypeCoercions.coerce("a:1,b:2", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", 1, "b", 2));
+    }
+    
+    @Test
+    public void testEqualsInBracesMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("{ a = 1, b = '2' }", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", 1, "b", "2"));
+    }
+
+    @Test
+    public void testKeyEqualsOrColonValueWithBracesStringToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("{ a=1, b: 2 }", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", 2));
+    }
+
+    @Test
+    public void testKeyEqualsOrColonValueWithoutBracesStringToMapCoercion() {
+        Map<?,?> s = TypeCoercions.coerce("a=1, b: 2", Map.class);
+        Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", 2));
     }
 
     @Test
