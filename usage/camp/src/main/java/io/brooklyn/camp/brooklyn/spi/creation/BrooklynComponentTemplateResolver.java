@@ -241,6 +241,7 @@ public class BrooklynComponentTemplateResolver {
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
+            @SuppressWarnings("rawtypes")
             Class interfaceclazz = (Application.class.isAssignableFrom(type)) ? Application.class : Entity.class;
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
