@@ -48,7 +48,7 @@ public class TaskFinalizationTest {
             }
         });
         t = null;
-        Stopwatch watch = new Stopwatch().start();
+        Stopwatch watch = Stopwatch.createStarted();
         for (int i=0; i<30; i++) {
             System.gc(); System.gc();
             if (x.tryAcquire(1, TimeUnit.SECONDS)) {

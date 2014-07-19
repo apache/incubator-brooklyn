@@ -185,7 +185,7 @@ public class BasicTasksFutureTest {
         Task<String> t = waitForSemaphore(Duration.TEN_SECONDS, true, "x");
         addFutureListener(t, "before");
 
-        Stopwatch watch = new Stopwatch().start();
+        Stopwatch watch = Stopwatch.createStarted();
         ec.submit(t);
         
         addFutureListener(t, "during");
