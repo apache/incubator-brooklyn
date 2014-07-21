@@ -25,14 +25,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Set;
 
-import org.codehaus.groovy.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.base.Joiner;
-
+import brooklyn.catalog.internal.CatalogDtoUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
@@ -41,6 +39,8 @@ import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
+
+import com.google.common.base.Joiner;
 
 public abstract class AbstractYamlTest {
 
@@ -148,5 +148,8 @@ public abstract class AbstractYamlTest {
     private String join(String[] catalogYaml) {
         return Joiner.on("\n").join(catalogYaml);
     }
-    
+
+    protected String ver(String id) {
+        return id + CatalogDtoUtils.VERSION_DELIMITER + TEST_VERSION;
+    }
 }

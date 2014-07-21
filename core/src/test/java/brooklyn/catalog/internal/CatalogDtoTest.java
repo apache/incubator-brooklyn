@@ -87,9 +87,10 @@ public class CatalogDtoTest {
         		"contents-built-in-test"));
         root.setClasspathScanForEntities(CatalogScanningModes.NONE);
         
+        String bundleUrl = MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests"));
         CatalogDo testEntitiesJavaCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java", null, "test-java"));
         testEntitiesJavaCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
-        testEntitiesJavaCatalog.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
+        testEntitiesJavaCatalog.addToClasspath(bundleUrl);
         testEntitiesJavaCatalog.addEntry(CatalogItems.newTemplateFromJava(
                 TestApplication.class.getCanonicalName(), "Test App from JAR"));
         testEntitiesJavaCatalog.addEntry(CatalogItems.newEntityFromJava(
@@ -97,7 +98,7 @@ public class CatalogDtoTest {
         root.addCatalog(testEntitiesJavaCatalog.dto);
 
         CatalogDo testEntitiesJavaCatalogScanning = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java Scanning", null, "test-java-scan"));
-        testEntitiesJavaCatalogScanning.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
+        testEntitiesJavaCatalogScanning.addToClasspath(bundleUrl);
         testEntitiesJavaCatalogScanning.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
         root.addCatalog(testEntitiesJavaCatalogScanning.dto);
         
@@ -106,7 +107,7 @@ public class CatalogDtoTest {
         osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
         CatalogEntityItemDto osgiEntity = CatalogItems.newEntityFromJava(TestEntity.class.getCanonicalName(), "Test Entity from OSGi");
         // NB: this is not actually an OSGi bundle, but it's okay as we don't instantiate the bundles ahead of time (currently)
-        osgiEntity.libraries.addBundle(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
+        osgiEntity.libraries.addBundle(null, null, bundleUrl);
         testEntitiesJavaCatalog.addEntry(osgiEntity);
         root.addCatalog(osgiCatalog.dto);
 

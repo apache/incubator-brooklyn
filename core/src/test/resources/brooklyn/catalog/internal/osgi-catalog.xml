@@ -24,8 +24,8 @@
     <template name="Entity name" version="9.1.3" type="com.example.ExampleApp">
         <description>An example application</description>
         <libraries>
-            <bundle>file://path/to/bundle.jar</bundle>
-            <bundle>http://www.url.com/for/bundle.jar</bundle>
+            <bundle><url>file://path/to/bundle.jar</url></bundle>
+            <bundle><url>http://www.url.com/for/bundle.jar</url></bundle>
         </libraries>
     </template>
 </catalog>
