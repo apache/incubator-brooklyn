@@ -420,6 +420,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
 
         // Expect only these existing children
         Asserts.assertEqualsIgnoringOrder(fabric.getChildren(), existingChildren);
+        Asserts.assertEqualsIgnoringOrder(fabric.getMembers(), existingChildren);
 
         // Expect one location per existing child
         List<Location> remainingLocs = MutableList.copyOf(locs);
@@ -445,6 +446,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
 
         // Expect only these existing children
         Asserts.assertEqualsIgnoringOrder(fabric.getChildren(), existingChildren);
+        Asserts.assertEqualsIgnoringOrder(fabric.getMembers(), existingChildren);
 
         // Expect one location per existing child (round-robin)
         // Expect one location per existing child
@@ -470,6 +472,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
         // Expect three children: the existing one, and one per other location
         assertEquals(fabric.getChildren().size(), 3, "children="+fabric.getChildren());
         assertTrue(fabric.getChildren().contains(existingChild), "children="+fabric.getChildren()+"; existingChild="+existingChild);
+        Asserts.assertEqualsIgnoringOrder(fabric.getMembers(), fabric.getChildren());
 
         List<Location> remainingLocs = MutableList.<Location>builder().addAll(locs).build();
         for (Entity child : fabric.getChildren()) {
