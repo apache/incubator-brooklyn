@@ -60,7 +60,6 @@
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>airline</artifactId>
-            <version>${airline.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
