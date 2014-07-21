@@ -77,6 +77,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.Protocol;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
@@ -154,6 +155,10 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         }
     }
     
+    /**
+     * @deprecated since 0.7; {@see #installJavaAndCurl(OperatingSystem)}
+     */
+    @Deprecated
     public static final Statement APT_RUN_SCRIPT = newStatementList(//
           exec(installAfterUpdatingIfNotPresent("curl")),//
           exec("(which java && java -fullversion 2>&1|egrep -q 1.6 ) ||"),//
@@ -165,6 +170,10 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 .append("echo \"export PATH=\\\"$JAVA_HOME/bin/:$PATH\\\"\" >> /root/.bashrc")//
                 .toString()));
 
+    /**
+     * @deprecated since 0.7; {@see #installJavaAndCurl(OperatingSystem)}
+     */
+    @Deprecated
     public static final Statement YUM_RUN_SCRIPT = newStatementList(
           exec("which curl ||yum --nogpgcheck -y install curl"),//
           exec("(which java && java -fullversion 2>&1|egrep -q 1.6 ) ||"),//
@@ -174,6 +183,10 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 .append("echo \"export PATH=\\\"$JAVA_HOME/bin/:$PATH\\\"\" >> /root/.bashrc")//
                 .toString()));
 
+    /**
+     * @deprecated since 0.7; {@see #installJavaAndCurl(OperatingSystem)}
+     */
+    @Deprecated
     public static final Statement ZYPPER_RUN_SCRIPT = exec(new StringBuilder()//
           .append("echo nameserver 208.67.222.222 >> /etc/resolv.conf\n")//
           .append("which curl || zypper install curl\n")//
@@ -181,6 +194,10 @@ public class JcloudsUtil implements JcloudsLocationConfig {
           .toString());
 
     // Code taken from RunScriptData
+    /**
+     * @deprecated since 0.7; see {@link BashCommands#installJava7()} and {@link BashCommands#INSTALL_CURL}
+     */
+    @Deprecated
     public static Statement installJavaAndCurl(OperatingSystem os) {
        if (os == null || OperatingSystemPredicates.supportsApt().apply(os))
           return APT_RUN_SCRIPT;
