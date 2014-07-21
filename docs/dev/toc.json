@@ -11,8 +11,6 @@
   "file": "{{ site.url }}/dev/tips/index.html",
   "exclude": true,
   "children": {% readj ./tips/toc.json %} },
-{ "title": "Wishlist",
-  "file": "{{ site.url }}/dev/wishlist.html" },
 { "title": "Links",
   "file": "{{ site.url }}/dev/links.html",
   "children": [
