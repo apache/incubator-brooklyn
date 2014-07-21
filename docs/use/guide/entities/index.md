@@ -123,7 +123,7 @@ In the implementations of ``JavaWebApp`` entities, the behaviour which the entit
 Routines which are convenient for specific drivers can then be inherited in the driver class hierarchy. For example, when passing JMX environment variables to Java over SSH, ``JavaSoftwareProcessSshDriver`` extends ``AbstractSoftwareProcessSshDriver`` and parents ``JBoss7SshDriver``.
 
 <!---
-TODO more drivers such as whirr, jmx, etc are planned
+TODO more drivers such as jmx, etc are planned
 -->
 
 <a name="testing"></a>

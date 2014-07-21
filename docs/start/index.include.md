@@ -7,7 +7,7 @@ giving single-click deploy and adding the concepts of
 manageable clusters and fabrics:
 
 * many common software entities available out-of-the-box
-* integrates with [Apache Whirr](http://whirr.apache.org) -- and thereby Chef and Puppet --
+* integrates with [Apache Whirr](http://whirr.apache.org) 
   to deploy well-known services such as Hadoop and elasticsearch
   (or use POBS, plain-old-bash-scripts)
 * use PaaS's such as OpenShift, alongside self-built clusters, for maximum flexibility

@@ -132,7 +132,7 @@ If you use Maven, you can add Brooklyn with the following in your pom:
     </dependencies>
 {% endhighlight %}
 
-`brooklyn-all` (used above) brings in all dependencies, including jclouds and Apache Whirr.
+`brooklyn-all` (used above) brings in all dependencies, including jclouds.
 If you prefer a smaller repo you might want just ``brooklyn-core``,  ``brooklyn-policies``, 
 and some of ``brooklyn-software-webapp``,  ``brooklyn-software-database``, ``brooklyn-software-messaging``, or others
 (browse the full list [here]({{ this_anything_url_search }})).
