@@ -19,22 +19,22 @@
 package brooklyn.management.classloading;
 
 import java.net.URL;
-import java.util.List;
+import java.util.Collection;
 
+import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
 
 public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadingContext {
 
-    private final List<String> bundles;
+    private final Collection<CatalogBundle> bundles;
     private final String catalogItemId;
 
-    public OsgiBrooklynClassLoadingContext(ManagementContext mgmt, String catalogItemId, List<String> bundles) {
+    public OsgiBrooklynClassLoadingContext(ManagementContext mgmt, String catalogItemId, Collection<CatalogBundle> bundles) {
         super(mgmt);
         this.bundles = bundles;
         this.catalogItemId = catalogItemId;

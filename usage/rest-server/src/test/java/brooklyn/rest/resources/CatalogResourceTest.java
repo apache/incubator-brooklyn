@@ -25,6 +25,7 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -39,14 +40,16 @@ import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogBundle;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.domain.CatalogPolicySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
-import brooklyn.util.collections.MutableList;
 
+import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 
@@ -99,14 +102,16 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
     
+    assertEquals(entityItem.getId(), ver(registeredTypeName));
     assertEquals(entityItem.getSymbolicName(), registeredTypeName);
     assertEquals(entityItem.getVersion(), TEST_VERSION);
     
     // and internally let's check we have libraries
     CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
     Assert.assertNotNull(item);
-    List<String> libs = item.getLibraries().getBundles();
-    assertEquals(libs, MutableList.of(bundleUrl));
+    Collection<CatalogBundle> libs = item.getLibraries().getBundles();
+    assertEquals(libs.size(), 1);
+    assertEquals(Iterables.getOnlyElement(libs).getUrl(), bundleUrl);
 
     // now let's check other things on the item
     assertEquals(entityItem.getName(), "My Catalog App");
@@ -129,7 +134,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         "  id: " + registeredTypeName + "\n"+
         "  name: My Catalog App\n"+
         "  description: My description\n"+
-        "  version: 0.1.2\n"+
+        "  version: " + TEST_VERSION + "\n" +
         "  libraries:\n"+
         "  - url: " + bundleUrl + "\n"+
         "\n"+
@@ -142,6 +147,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     assertEquals(entityItem.getRegisteredType(), registeredTypeName);
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains(policyType));
+    assertEquals(entityItem.getId(), ver(registeredTypeName));
     assertEquals(entityItem.getSymbolicName(), registeredTypeName);
     assertEquals(entityItem.getVersion(), TEST_VERSION);
   }
@@ -259,5 +265,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName+"/"+TEST_VERSION)
             .get(ClientResponse.class);
     assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+  }
+  
+  private static String ver(String id) {
+      return id + CatalogUtils.VERSION_DELIMITER + TEST_VERSION;
   }
 }

@@ -18,7 +18,7 @@
  */
 package brooklyn.catalog;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,10 +36,19 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     public static enum CatalogItemType {
         TEMPLATE, ENTITY, POLICY, CONFIGURATION
     }
+    
+    public static interface CatalogBundle {
+        public String getName();
+        public String getVersion();
+        public String getUrl();
+
+        /** @return true if the bundle reference contains both name and version*/
+        public boolean isNamed();
+    }
 
     @Beta
     public static interface CatalogItemLibraries {
-        List<String> getBundles();
+        Collection<CatalogBundle> getBundles();
     }
 
     public CatalogItemType getCatalogItemType();

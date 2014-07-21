@@ -18,25 +18,49 @@
  */
 package brooklyn.catalog.internal;
 
-import java.util.Collection;
+import com.google.common.base.Objects;
 
-import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 
-import com.google.common.base.Preconditions;
+public class CatalogBundleDto implements CatalogBundle {
+    private String name;
+    private String version;
+    private String url;
 
-public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
+    public CatalogBundleDto() {}
 
-    private final CatalogLibrariesDto librariesDto;
-
-
-    public CatalogLibrariesDo(CatalogLibrariesDto librariesDto) {
-        this.librariesDto = Preconditions.checkNotNull(librariesDto, "librariesDto");
+    public CatalogBundleDto(String name, String version, String url) {
+        this.name = name;
+        this.version = version;
+        this.url = url;
     }
 
     @Override
-    public Collection<CatalogBundle> getBundles() {
-        return librariesDto.getBundles();
+    public boolean isNamed() {
+        return name != null && version != null;
     }
 
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getVersion() {
+        return version;
+    }
+
+    @Override
+    public String getUrl() {
+        return url;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("name", name)
+                .add("version", version)
+                .add("url", url)
+                .toString();
+    }
 }

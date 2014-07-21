@@ -25,10 +25,10 @@ import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import java.util.Collection;
 
+import org.junit.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
@@ -79,7 +79,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             String yaml = "name: simple-app-yaml\n" +
                           "location: localhost\n" +
                           "services: \n" +
-                          "  - serviceType: " + registeredTypeName;
+                          "  - serviceType: " + ver(registeredTypeName);
             try {
                 createAndStartApplication(yaml);
             } catch (UnsupportedOperationException e) {
@@ -115,7 +115,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         String referencedRegisteredTypeName = "my.catalog.app.id.child.referenced";
         String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
         addCatalogOSGiEntity(referencedRegisteredTypeName, SIMPLE_ENTITY_TYPE);
-        addCatalogChildOSGiEntity(referrerRegisteredTypeName, referencedRegisteredTypeName);
+        addCatalogChildOSGiEntity(referrerRegisteredTypeName, ver(referencedRegisteredTypeName));
 
         Entity app = createAndStartApplication(
             "name: simple-app-yaml",
@@ -123,7 +123,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "services:",
             "- serviceType: "+BasicEntity.class.getName(),
             "  brooklyn.children:",
-            "  - type: " + referrerRegisteredTypeName);
+            "  - type: " + ver(referrerRegisteredTypeName));
 
         Collection<Entity> children = app.getChildren();
         assertEquals(children.size(), 1);
@@ -160,10 +160,150 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     public void testLaunchApplicationChildLoopCatalogIdFails() throws Exception {
         String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
         try {
-            addCatalogChildOSGiEntity(referrerRegisteredTypeName, referrerRegisteredTypeName);
+            addCatalogChildOSGiEntity(referrerRegisteredTypeName, ver(referrerRegisteredTypeName));
             fail("Expected to throw IllegalStateException");
         } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("Could not find "+referrerRegisteredTypeName));
+        }
+    }
+
+    @Test
+    public void testReferenceInstalledBundleByName() {
+        String firstItemId = "my.catalog.app.id.register_bundle";
+        String secondItemId = "my.catalog.app.id.reference_bundle";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + firstItemId,
+            "  version: " + TEST_VERSION,
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: " + SIMPLE_ENTITY_TYPE);
+        deleteCatalogEntity(firstItemId);
+
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + secondItemId,
+            "  version: " + TEST_VERSION,
+            "  libraries:",
+            "  - name: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_NAME,
+            "    version: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_VERSION,
+            "",
+            "services:",
+            "- type: " + SIMPLE_ENTITY_TYPE);
+
+        deleteCatalogEntity(secondItemId);
+    }
+
+    @Test
+    public void testReferenceNonInstalledBundledByNameFails() {
+        String nonExistentId = "none-existent-id";
+        String nonExistentVersion = "9.9.9";
+        try {
+            addCatalogItem(
+                "brooklyn.catalog:",
+                "  id: my.catalog.app.id.non_existing.ref",
+                "  version: " + TEST_VERSION,
+                "  libraries:",
+                "  - name: " + nonExistentId,
+                "    version: " + nonExistentVersion,
+                "",
+                "services:",
+                "- type: " + SIMPLE_ENTITY_TYPE);
+            fail();
+        } catch (IllegalStateException e) {
+            Assert.assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} not already registered by name:version, but URL is empty.");
+        }
+    }
+
+    @Test
+    public void testPartialBundleReferenceFails() {
+        try {
+            addCatalogItem(
+                "brooklyn.catalog:",
+                "  id: my.catalog.app.id.non_existing.ref",
+                "  version: " + TEST_VERSION,
+                "  libraries:",
+                "  - name: io.brooklyn.brooklyn-test-osgi-entities",
+                "",
+                "services:",
+                "- type: " + SIMPLE_ENTITY_TYPE);
+            fail();
+        } catch (NullPointerException e) {
+            Assert.assertEquals(e.getMessage(), "version");
+        }
+        try {
+            addCatalogItem(
+                "brooklyn.catalog:",
+                "  id: my.catalog.app.id.non_existing.ref",
+                "  version: " + TEST_VERSION,
+                "  libraries:",
+                "  - version: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_VERSION,
+                "",
+                "services:",
+                "- type: " + SIMPLE_ENTITY_TYPE);
+            fail();
+        } catch (NullPointerException e) {
+            Assert.assertEquals(e.getMessage(), "name");
+        }
+    }
+
+    @Test
+    public void testFullBundleReference() {
+        String itemId = "my.catalog.app.id.full_ref";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + itemId,
+            "  version: " + TEST_VERSION,
+            "  libraries:",
+            "  - name: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_NAME,
+            "    version: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_VERSION,
+            "    url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: " + SIMPLE_ENTITY_TYPE);
+        deleteCatalogEntity(itemId);
+    }
+
+    /**
+     * Test that the name:version contained in the OSGi bundle will
+     * override the values supplied in the YAML.
+     */
+    @Test
+    public void testFullBundleReferenceUrlMetaOverridesLocalNameVersion() {
+        String firstItemId = "my.catalog.app.id.register_bundle";
+        String secondItemId = "my.catalog.app.id.reference_bundle";
+        String nonExistentId = "non_existent_id";
+        String nonExistentVersion = "9.9.9";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + firstItemId,
+            "  version: " + TEST_VERSION,
+            "  libraries:",
+            "  - name: " + nonExistentId,
+            "    version: " + nonExistentVersion,
+            "    url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: " + SIMPLE_ENTITY_TYPE);
+        deleteCatalogEntity(firstItemId);
+
+        try {
+            addCatalogItem(
+                "brooklyn.catalog:",
+                "  id: " + secondItemId,
+                "  version: " + TEST_VERSION,
+                "  libraries:",
+                "  - name: " + nonExistentId,
+                "    version: " + nonExistentVersion,
+                "",
+                "services:",
+                "- type: " + SIMPLE_ENTITY_TYPE);
+            fail();
+        } catch (IllegalStateException e) {
+            assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} " +
+                    "not already registered by name:version, but URL is empty.");
         }
     }
 
@@ -172,7 +312,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: "+registeredTypeName;
+                      "  - serviceType: "+ver(registeredTypeName);
         Entity app = createAndStartApplication(yaml);
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
@@ -207,7 +347,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  name: My Catalog App",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",
-            "  version: 0.1.2",
+            "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",
@@ -217,7 +357,4 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  - type: " + serviceType);
     }
 
-    private String ver(String id) {
-        return id + CatalogUtils.VERSION_DELIMITER + TEST_VERSION;
-    }
 }

@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
@@ -148,5 +149,8 @@ public abstract class AbstractYamlTest {
     private String join(String[] catalogYaml) {
         return Joiner.on("\n").join(catalogYaml);
     }
-    
+
+    protected String ver(String id) {
+        return id + CatalogUtils.VERSION_DELIMITER + TEST_VERSION;
+    }
 }

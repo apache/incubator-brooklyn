@@ -42,7 +42,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
     @Test
     public void testMoreEntityV1() throws Exception {
         addCatalogItem(getLocalResource("more-entity-v1-osgi-catalog.yaml"));
-        Entity app = createAndStartApplication("services: [ { type: more-entity } ]");
+        Entity app = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
         Entity moreEntity = Iterables.getOnlyElement(app.getChildren());
         
         Assert.assertEquals(moreEntity.getCatalogItemId(), "more-entity");
@@ -56,7 +56,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
     public void testMoreEntityV1WithPolicy() throws Exception {
         addCatalogItem(getLocalResource("simple-policy-osgi-catalog.yaml"));
         addCatalogItem(getLocalResource("more-entity-v1-with-policy-osgi-catalog.yaml"));
-        Entity app = createAndStartApplication("services: [ { type: more-entity } ]");
+        Entity app = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
         Entity moreEntity = Iterables.getOnlyElement(app.getChildren());
         
         Assert.assertEquals(moreEntity.getCatalogItemId(), "more-entity");
@@ -70,7 +70,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
     @Test
     public void testMoreEntityV2() throws Exception {
         addCatalogItem(getLocalResource("more-entity-v2-osgi-catalog.yaml"));
-        Entity app = createAndStartApplication("services: [ { type: more-entity } ]");
+        Entity app = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
         Entity moreEntity = Iterables.getOnlyElement(app.getChildren());
         
         Assert.assertEquals(moreEntity.getCatalogItemId(), "more-entity");
@@ -88,7 +88,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
     public void testMoreEntityV2ThenV1GivesV1() throws Exception {
         addCatalogItem(getLocalResource("more-entity-v2-osgi-catalog.yaml"));
         addCatalogItem(getLocalResource("more-entity-v1-osgi-catalog.yaml"));
-        Entity app = createAndStartApplication("services: [ { type: more-entity } ]");
+        Entity app = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
         Entity moreEntity = Iterables.getOnlyElement(app.getChildren());
         
         OsgiVersionMoreEntityTest.assertV1EffectorCall(moreEntity);
@@ -102,7 +102,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
     public void testMoreEntityV1ThenV2GivesV2() throws Exception {
         addCatalogItem(getLocalResource("more-entity-v1-osgi-catalog.yaml"));
         addCatalogItem(getLocalResource("more-entity-v2-osgi-catalog.yaml"));
-        Entity app = createAndStartApplication("services: [ { type: more-entity } ]");
+        Entity app = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
         Entity moreEntity = Iterables.getOnlyElement(app.getChildren());
         
         OsgiVersionMoreEntityTest.assertV2EffectorCall(moreEntity);
@@ -113,8 +113,8 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
     public void testMoreEntityBothV1AndV2() throws Exception {
         addCatalogItem(getLocalResource("more-entity-v1-called-v1-osgi-catalog.yaml"));
         addCatalogItem(getLocalResource("more-entity-v2-osgi-catalog.yaml"));
-        Entity v1 = createAndStartApplication("services: [ { type: more-entity-v1 } ]");
-        Entity v2 = createAndStartApplication("services: [ { type: more-entity } ]");
+        Entity v1 = createAndStartApplication("services: [ { type: 'more-entity-v1:1.0' } ]");
+        Entity v2 = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
         
         Entity moreEntityV1 = Iterables.getOnlyElement(v1.getChildren());
         Entity moreEntityV2 = Iterables.getOnlyElement(v2.getChildren());

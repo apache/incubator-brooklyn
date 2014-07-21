@@ -18,20 +18,17 @@
  */
 package brooklyn.catalog.internal;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.Beta;
-import com.google.common.base.Joiner;
-import com.google.common.base.Stopwatch;
-
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.CatalogItem.CatalogItemLibraries;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynLogging;
@@ -46,6 +43,10 @@ import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Time;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 
 public class CatalogUtils {
     private static final Logger log = LoggerFactory.getLogger(CatalogUtils.class);
@@ -66,7 +67,7 @@ public class CatalogUtils {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
         if (libraries!=null) {
-            List<String> bundles = libraries.getBundles();
+            Collection<CatalogBundle> bundles = libraries.getBundles();
             if (bundles!=null && !bundles.isEmpty()) {
                 result.add(new OsgiBrooklynClassLoadingContext(mgmt, catalogItemId, bundles));
             }
@@ -88,7 +89,7 @@ public class CatalogUtils {
         if (libraries == null) return;
 
         ManagementContextInternal mgmt = (ManagementContextInternal) managementContext;
-        List<String> bundles = libraries.getBundles();
+        Collection<CatalogBundle> bundles = libraries.getBundles();
         if (!bundles.isEmpty()) {
             Maybe<OsgiManager> osgi = mgmt.getOsgiManager();
             if (osgi.isAbsent()) {
@@ -99,7 +100,7 @@ public class CatalogUtils {
                     "Loading bundles in {}: {}", 
                     new Object[] {managementContext, Joiner.on(", ").join(bundles)});
             Stopwatch timer = Stopwatch.createStarted();
-            for (String bundleUrl : bundles) {
+            for (CatalogBundle bundleUrl : bundles) {
                 osgi.get().registerBundle(bundleUrl);
             }
             if (log.isDebugEnabled()) 

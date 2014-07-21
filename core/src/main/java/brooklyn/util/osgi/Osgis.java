@@ -57,6 +57,7 @@ import org.osgi.framework.wiring.BundleCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -91,6 +92,34 @@ public class Osgis {
     private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
     private static final Set<String> SYSTEM_BUNDLES = MutableSet.of();
 
+    public static class VersionedName {
+        private String symbolicName;
+        private Version version;
+        public VersionedName(Bundle b) {
+            this.symbolicName = b.getSymbolicName();
+            this.version = b.getVersion();
+        }
+        public VersionedName(String symbolicName, Version version) {
+            this.symbolicName = symbolicName;
+            this.version = version;
+        }
+        @Override public String toString() {
+            return symbolicName + ":" + Strings.toString(version);
+        }
+        public boolean equals(String sn, String v) {
+            return symbolicName.equals(sn) && (version == null && v == null || version != null && version.toString().equals(v));
+        }
+        public boolean equals(String sn, Version v) {
+            return symbolicName.equals(sn) && (version == null && v == null || version != null && version.equals(v));
+        }
+        protected String getSymbolicName() {
+            return symbolicName;
+        }
+        protected Version getVersion() {
+            return version;
+        }
+    }
+    
     public static class BundleFinder {
         protected final Framework framework;
         protected String symbolicName;
@@ -117,14 +146,29 @@ public class Osgis {
             if (Strings.isBlank(symbolicNameOptionallyWithVersion))
                 return this;
             
-            Maybe<String[]> partsM = parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
-            if (partsM.isAbsent())
+            Maybe<VersionedName> nv = parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
+            if (nv.isAbsent())
                 throw new IllegalArgumentException("Cannot parse symbolic-name:version string '"+symbolicNameOptionallyWithVersion+"'");
-            String[] parts = partsM.get();
-            
-            symbolicName(parts[0]);
-            if (parts.length >= 2) version(parts[1]);
-            
+
+            return id(nv.get());
+        }
+
+        private BundleFinder id(VersionedName nv) {
+            symbolicName(nv.getSymbolicName());
+            if (nv.getVersion() != null) {
+                version(nv.getVersion().toString());
+            }
+            return this;
+        }
+
+        public BundleFinder bundle(CatalogBundle bundle) {
+            if (bundle.isNamed()) {
+                symbolicName(bundle.getName());
+                version(bundle.getVersion());
+            }
+            if (bundle.getUrl() != null) {
+                requiringFromUrl(bundle.getUrl());
+            }
             return this;
         }
 
@@ -567,7 +611,7 @@ public class Osgis {
     /** Takes a string which might be of the form "symbolic-name" or "symbolic-name:version" (or something else entirely)
      * and returns an array of 1 or 2 string items being the symbolic name or symbolic name and version if possible
      * (or returning {@link Maybe#absent()} if not, with a suitable error message). */
-    public static Maybe<String[]> parseOsgiIdentifier(String symbolicNameOptionalWithVersion) {
+    public static Maybe<VersionedName> parseOsgiIdentifier(String symbolicNameOptionalWithVersion) {
         if (Strings.isBlank(symbolicNameOptionalWithVersion))
             return Maybe.absent("OSGi identifier is blank");
         
@@ -575,13 +619,14 @@ public class Osgis {
         if (parts.length>2)
             return Maybe.absent("OSGi identifier has too many parts; max one ':' symbol");
         
+        Version v = null;
         try {
-            Version.parseVersion(parts[1]);
+            v = Version.parseVersion(parts[1]);
         } catch (IllegalArgumentException e) {
             return Maybe.absent("OSGi identifier has invalid version string");
         }
         
-        return Maybe.of(parts);
+        return Maybe.of(new VersionedName(parts[0], v));
     }
 
     /**

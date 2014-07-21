@@ -60,7 +60,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "services: ",
             "  - type: brooklyn.entity.basic.BasicEntity\n" +
             "    brooklyn.policies:\n" +
-            "    - type: " + registeredTypeName,
+            "    - type: " + ver(registeredTypeName),
             "      brooklyn.config:",
             "        config2: config2 override",
             "        config3: config3");
@@ -87,19 +87,19 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "  name: My Catalog App",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",
-            "  version: 0.1.2",
+            "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",
             "services:",
             "- type: " + SIMPLE_ENTITY_TYPE,
             "  brooklyn.policies:",
-            "  - type: " + referencedRegisteredTypeName);
+            "  - type: " + ver(referencedRegisteredTypeName));
 
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: "+referrerRegisteredTypeName;
+                      "  - serviceType: "+ ver(referrerRegisteredTypeName);
 
         Entity app = createAndStartApplication(yaml);
 

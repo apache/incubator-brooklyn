@@ -19,7 +19,7 @@
 services:
 - type: brooklyn.osgi.tests.more.MoreEntity
   brooklyn.policies:
-  - type: simple-policy
+  - type: simple-policy:1.0
 
 brooklyn.catalog:
   id: more-entity

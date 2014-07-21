@@ -62,6 +62,8 @@ public class OsgiStandaloneTest {
 
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH;
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_URL = "classpath:"+BROOKLYN_TEST_OSGI_ENTITIES_PATH;
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_NAME = "org.apache.brooklyn.test.resources.osgi.brooklyn-test-osgi-entities";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_VERSION = "0.1.0";
 
     protected Framework framework = null;
     private File storageTempDir;
