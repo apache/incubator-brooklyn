@@ -46,6 +46,12 @@ import com.google.common.collect.Iterables;
  * An integration test of the {@link CassandraDatacenter} entity.
  *
  * Tests that a one node cluster can be started on localhost and data can be written/read, using the Astyanax API.
+ * 
+ * NOTE: If these tests fail with "Timeout waiting for SERVICE_UP" and "java.lang.IllegalStateException: Unable to contact any seeds!" 
+ * or "java.lang.RuntimeException: Unable to gossip with any seeds" appears in the log, it may be that the broadcast_address 
+ * (set to InetAddress.getLocalHost().getHostName()) is not resolving to the value specified in listen_address 
+ * (InetAddress.getLocalHost().getHostAddress()). You can work round this issue by ensuring that you machine has only one 
+ * address, e.g. by disabling wireless if you are also using a wired connection
  */
 public class CassandraDatacenterIntegrationTest extends BrooklynAppLiveTestSupport {
 
