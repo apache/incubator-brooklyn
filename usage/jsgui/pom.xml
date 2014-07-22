@@ -42,6 +42,7 @@
         <project.build.webapp>
             ${project.build.directory}/${project.build.finalName}
         </project.build.webapp>
+        <nodejs.path>${project.basedir}/target/nodejs/node</nodejs.path>
     </properties>
 
     <dependencies>
@@ -201,6 +202,50 @@
 
     <profiles>
         <profile>
+            <id>nodejs-path-override</id>
+            <activation>
+                <os><family>linux</family></os>
+            </activation>
+            <properties>
+                <nodejs.path>${project.basedir}/src/build/nodejs</nodejs.path>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.github.skwakman.nodejs-maven-binaries</groupId>
+                    <artifactId>nodejs-maven-binaries</artifactId>
+                    <version>${nodejs-maven-binaries.version}</version>
+                    <classifier>linux-x64</classifier>
+                    <type>zip</type>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>${maven-dependency-plugin.version}</version>
+                        <executions>
+                          <execution>
+                            <id>unpack-nodejs64</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                              <goal>unpack-dependencies</goal>
+                            </goals>
+                            <configuration>
+                              <includeGroupIds>com.github.skwakman.nodejs-maven-binaries</includeGroupIds>
+                              <includeArtifactIds>nodejs-maven-binaries</includeArtifactIds>
+                              <outputDirectory>
+                                 ${project.basedir}/target/nodejs64/
+                              </outputDirectory>
+                            </configuration>
+                          </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
             <id>Optimize resources</id>
             <activation>
                 <property>
@@ -272,7 +317,7 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <nodeExecutable>${project.basedir}/target/nodejs/node</nodeExecutable>
+                            <nodeExecutable>${nodejs.path}</nodeExecutable>
                             <optimizerFile>${project.basedir}/src/build/requirejs-maven-plugin/r.js</optimizerFile>
                             <!-- Replaces Maven tokens in the build file with their values -->
                             <filterConfig>true</filterConfig>

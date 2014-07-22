@@ -172,6 +172,7 @@
         <concurrentlinkedhashmap.version>1.0_jdk5</concurrentlinkedhashmap.version>
         <maven-replacer-plugin.version>1.5.2</maven-replacer-plugin.version>
         <nodejs-maven-plugin.version>1.0.3</nodejs-maven-plugin.version>
+        <nodejs-maven-binaries.version>0.10.25</nodejs-maven-binaries.version>
         <jasmine-maven-plugin.version>1.2.0.0</jasmine-maven-plugin.version>
 <!-- see comment about fixtures in brooklyn-jsgui
         <jasmine-maven-plugin.version>1.3.1.2</jasmine-maven-plugin.version>
