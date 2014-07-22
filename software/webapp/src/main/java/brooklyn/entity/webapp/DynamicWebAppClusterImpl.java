@@ -233,7 +233,8 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
     @Effector(description="Undeploys the given context/artifact")
     public void undeploy(@EffectorParam(name="targetName") String targetName) {
         checkNotNull(targetName, "targetName");
-
+        targetName = filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName);
+        
         // set it up so future nodes get the right wars
         removeFromWarsByContext(this, targetName);
         
