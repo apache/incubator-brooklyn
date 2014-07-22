@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.java;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
@@ -47,7 +47,7 @@ import com.google.common.base.Function;
 public class JavaAppUtils {
 
     public static boolean isEntityMxBeanStatsEnabled(Entity entity) {
-        return truth(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED));
+        return groovyTruth(entity.getConfig(UsesJavaMXBeans.MXBEAN_STATS_ENABLED));
     }
 
     /**

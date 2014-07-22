@@ -18,7 +18,7 @@
  */
 package brooklyn.location.jclouds;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
@@ -213,12 +213,12 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         // See https://issues.apache.org/jira/browse/WHIRR-416
         if ("aws-ec2".equals(provider)) {
             // TODO convert AWS-only flags to config keys
-            if (truth(conf.get(IMAGE_ID))) {
+            if (groovyTruth(conf.get(IMAGE_ID))) {
                 properties.setProperty(PROPERTY_EC2_AMI_QUERY, "");
                 properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
-            } else if (truth(conf.getStringKey("imageOwner"))) {
+            } else if (groovyTruth(conf.getStringKey("imageOwner"))) {
                 properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.getStringKey("imageOwner")+";state=available;image-type=machine");
-            } else if (truth(conf.getStringKey("anyOwner"))) {
+            } else if (groovyTruth(conf.getStringKey("anyOwner"))) {
                 // set `anyOwner: true` to override the default query (which is restricted to certain owners as per below), 
                 // allowing the AMI query to bind to any machine
                 // (note however, we sometimes pick defaults in JcloudsLocationFactory);
@@ -245,8 +245,8 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         properties.putAll(extra);
 
         String endpoint = conf.get(CLOUD_ENDPOINT);
-        if (!truth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
-        if (truth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
+        if (!groovyTruth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
+        if (groovyTruth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
 
         Map<?,?> cacheKey = MutableMap.builder()
                 .putAll(properties)

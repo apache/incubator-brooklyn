@@ -18,7 +18,7 @@
  */
 package brooklyn.event.feed.jmx;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.time.TimeDuration;
 
@@ -65,7 +65,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -291,12 +290,12 @@ public class JmxHelper {
     public Map getConnectionEnvVars() {
         Map env = new LinkedHashMap();
         
-        if (truth(user) && truth(password)) {
+        if (groovyTruth(user) && groovyTruth(password)) {
             String[] creds = new String[] {user, password};
             env.put(JMXConnector.CREDENTIALS, creds);
         }
         
-        if (entity!=null && GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED))) {
+        if (entity!=null && groovyTruth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED))) {
             env.put("jmx.remote.profiles", JmxmpAgent.TLS_JMX_REMOTE_PROFILES);
 
             PrivateKey key = entity.getConfig(UsesJmx.JMX_SSL_ACCESS_KEY);

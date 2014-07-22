@@ -18,8 +18,8 @@
  */
 package brooklyn.policy.loadbalancing;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -324,6 +324,6 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + (truth(name) ? "("+name+")" : "");
+        return getClass().getSimpleName() + (groovyTruth(name) ? "("+name+")" : "");
     }
 }
