@@ -37,10 +37,10 @@ import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Time;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 

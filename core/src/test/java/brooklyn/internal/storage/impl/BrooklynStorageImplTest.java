@@ -28,18 +28,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.internal.storage.impl.inmemory.InmemoryDatagrid;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.Reference;
+import brooklyn.internal.storage.impl.inmemory.InmemoryDatagrid;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 public class BrooklynStorageImplTest {
     
