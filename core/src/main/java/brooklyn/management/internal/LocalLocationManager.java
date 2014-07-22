@@ -122,7 +122,7 @@ public class LocalLocationManager implements LocationManager {
     
     @Override
     public boolean isManaged(Location loc) {
-        return (isRunning() && getLocation(loc.getId()) != null);
+        return (isRunning() && loc != null && getLocation(loc.getId()) != null);
     }
     
     synchronized boolean isPreRegistered(Location loc) {

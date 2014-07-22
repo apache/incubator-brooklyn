@@ -57,9 +57,7 @@ import com.google.common.collect.Sets;
  * Examples of valid specs:
  *   <ul>
  *     <li>byon:(hosts=myhost)
- *     <li>byon:(hosts=myhost,myhost2)
  *     <li>byon:(hosts="myhost, myhost2")
- *     <li>byon:(hosts=myhost,myhost2, name=abc)
  *     <li>byon:(hosts="myhost, myhost2", name="my location name")
  *   </ul>
  * 
