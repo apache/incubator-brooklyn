@@ -52,11 +52,14 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -322,12 +325,21 @@ public class LocalManagementContext extends AbstractManagementContext {
         terminate();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c) {
+    public <T> Task<T> runAtEntity(Map flags, Entity entity, Callable<T> c) {
 		manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));
-        return getExecutionContext(entity).submit(flags, c);
+        return runAtEntity(entity, Tasks.<T>builder().dynamic(true).body(c).flags(flags).build());
     }
 
+    protected <T> Task<T> runAtEntity(Entity entity, TaskAdaptable<T> task) {
+        getExecutionContext(entity).submit(task);
+        if (DynamicTasks.getTaskQueuingContext()!=null) {
+            // put it in the queueing context so it appears
+            DynamicTasks.getTaskQueuingContext().queue(task.asTask());
+        }
+        return task.asTask();
+    }
     
     @Override
     protected <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters) {
@@ -338,7 +350,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             log.debug("Top-level effector invocation: {} on {}", eff, entity);
             ec = getExecutionContext(entity);
         }
-        return ec.submit(Effectors.invocation(entity, eff, parameters));
+        return runAtEntity(entity, Effectors.invocation(entity, eff, parameters));
     }
 
     @Override
