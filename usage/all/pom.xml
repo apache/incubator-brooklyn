@@ -92,16 +92,6 @@
 
         <dependency>
             <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-systems-whirr</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
-            <artifactId>brooklyn-systems-hadoop</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-launcher</artifactId>
             <version>${project.version}</version>
         </dependency>
