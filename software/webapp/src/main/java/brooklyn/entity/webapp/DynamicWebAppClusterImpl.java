@@ -168,27 +168,34 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         return Tasks.<T>builder().name(name).dynamic(true).body(new Callable<T>() {
             @Override
             public T call() {
-                while (true) {
-                    if (!Entities.isManaged(target)) {
-                        Tasks.markInessential();
-                        throw new IllegalStateException("Target "+target+" is no longer managed");
-                    }
-                    if (target.getAttribute(Attributes.SERVICE_UP)) {
-                        TaskTags.markInessential(task);
-                        DynamicTasks.queue(task);
-                        try {
-                            return task.asTask().getUnchecked();
-                        } catch (Exception e) {
-                            if (Entities.isManaged(target)) {
-                                throw Exceptions.propagate(e);
-                            } else {
-                                Tasks.markInessential();
-                                throw new IllegalStateException("Target "+target+" is no longer managed", e);
-                            }
+                try {
+                    while (true) {
+                        if (!Entities.isManaged(target)) {
+                            Tasks.markInessential();
+                            throw new IllegalStateException("Target "+target+" is no longer managed");
                         }
+                        if (target.getAttribute(Attributes.SERVICE_UP)) {
+                            Tasks.resetBlockingDetails();
+                            TaskTags.markInessential(task);
+                            DynamicTasks.queue(task);
+                            try {
+                                return task.asTask().getUnchecked();
+                            } catch (Exception e) {
+                                if (Entities.isManaged(target)) {
+                                    throw Exceptions.propagate(e);
+                                } else {
+                                    Tasks.markInessential();
+                                    throw new IllegalStateException("Target "+target+" is no longer managed", e);
+                                }
+                            }
+                        } else {
+                            Tasks.setBlockingDetails("Waiting on "+target+" to be ready");
+                        }
+                        // TODO replace with subscription?
+                        Time.sleep(Duration.ONE_SECOND);
                     }
-                    // TODO replace with subscription?
-                    Time.sleep(Duration.ONE_SECOND);
+                } finally {
+                    Tasks.resetBlockingDetails();
                 }
             }
         }).build();        
