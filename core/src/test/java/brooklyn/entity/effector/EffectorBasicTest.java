@@ -19,6 +19,7 @@
 package brooklyn.entity.effector;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +31,17 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.FailingEntity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.ImmutableList;
 
@@ -75,7 +80,6 @@ public class EffectorBasicTest extends BrooklynAppUnitTestSupport {
         TestUtils.assertSetsEqual(locs, app.getLocations());
     }
 
-
     @Test
     public void testInvokeEffectorStartWithTwoEntities() {
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -91,6 +95,90 @@ public class EffectorBasicTest extends BrooklynAppUnitTestSupport {
         Task<Void> starting = app.invoke(Startable.START, MutableMap.of("locations", locs));
 //        log.info("TAGS: "+starting.getTags());
         Assert.assertTrue(starting.getTags().contains(ManagementContextInternal.EFFECTOR_TAG));
+    }
+
+    // check various failure situations
+    
+    private FailingEntity createFailingEntity() {
+        FailingEntity entity = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
+            .configure(FailingEntity.FAIL_ON_START, true));
+        return entity;
+    }
+
+    // uncaught failures are propagates
+    
+    @Test
+    public void testInvokeEffectorStartFailing_Method() {
+        FailingEntity entity = createFailingEntity();
+        assertStartMethodFails(entity);
+    }
+
+    @Test
+    public void testInvokeEffectorStartFailing_EntityInvoke() {
+        FailingEntity entity = createFailingEntity();
+        assertTaskFails( entity.invoke(Startable.START, MutableMap.of("locations", locs)) );
+    }
+     
+    @Test
+    public void testInvokeEffectorStartFailing_EntitiesInvoke() {
+        FailingEntity entity = createFailingEntity();
+        
+        assertTaskFails( Entities.invokeEffectorWithArgs(entity, entity, Startable.START, locs) );
+    }
+
+    // caught failures are NOT propagated!
+    
+    @Test
+    public void testInvokeEffectorStartFailing_MethodInDynamicTask() {
+        Task<Void> task = app.getExecutionContext().submit(Tasks.<Void>builder().dynamic(true).body(new Callable<Void>() {
+            @Override public Void call() throws Exception {
+                testInvokeEffectorStartFailing_Method();
+                return null;
+            }
+        }).build());
+        
+        assertTaskSucceeds(task);
+        assertTaskHasFailedChild(task);
+    }
+
+    @Test
+    public void testInvokeEffectorStartFailing_MethodInTask() {
+        Task<Void> task = app.getExecutionContext().submit(Tasks.<Void>builder().dynamic(false).body(new Callable<Void>() {
+            @Override public Void call() throws Exception {
+                testInvokeEffectorStartFailing_Method();
+                return null;
+            }
+        }).build());
+        
+        assertTaskSucceeds(task);
+    }
+
+    private void assertTaskSucceeds(Task<Void> task) {
+        task.getUnchecked();
+        Assert.assertFalse(task.isError());
+    }
+
+    private void assertTaskHasFailedChild(Task<Void> task) {
+        Assert.assertTrue(Tasks.failed( ((HasTaskChildren)task).getChildren() ).iterator().hasNext());
+    }
+        
+    private void assertStartMethodFails(FailingEntity entity) {
+        try {
+            entity.start(locs);
+            Assert.fail("Should have failed");
+        } catch (Exception e) {
+            // expected
+        }
+    }
+     
+    protected void assertTaskFails(Task<?> t) {
+        try {
+            t.get();
+            Assert.fail("Should have failed");
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            // expected
+        }
     }
     
 }

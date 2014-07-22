@@ -59,6 +59,7 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
@@ -335,7 +336,10 @@ public class LocalManagementContext extends AbstractManagementContext {
     protected <T> Task<T> runAtEntity(Entity entity, TaskAdaptable<T> task) {
         getExecutionContext(entity).submit(task);
         if (DynamicTasks.getTaskQueuingContext()!=null) {
-            // put it in the queueing context so it appears
+            // put it in the queueing context so it appears in the GUI
+            // mark it inessential as this is being invoked from code,
+            // the caller will do 'get' to handle errors
+            TaskTags.markInessential(task);
             DynamicTasks.getTaskQueuingContext().queue(task.asTask());
         }
         return task.asTask();

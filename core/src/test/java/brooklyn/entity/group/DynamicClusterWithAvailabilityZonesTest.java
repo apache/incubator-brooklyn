@@ -154,9 +154,9 @@ public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTest
         String otherLoc = (locUsed.equals("zone1") ? "zone2" : "zone1");
         
         // This entity will fail; configured to give up on that zone after just two failure
-        cluster.resize(2);
+        DynamicClusterTest.resizeExpectingError(cluster, 2);
         assertEquals(cluster.getCurrentSize(), (Integer)1);
-        cluster.resize(2);
+        DynamicClusterTest.resizeExpectingError(cluster, 2);
         assertEquals(cluster.getCurrentSize(), (Integer)1);
         
         cluster.resize(3);

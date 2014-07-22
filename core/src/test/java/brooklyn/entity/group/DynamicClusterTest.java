@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -349,11 +350,25 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
                     }}));
 
         cluster.start(ImmutableList.of(loc));
-        cluster.resize(3);
+        resizeExpectingError(cluster, 3);
         assertEquals(cluster.getCurrentSize(), (Integer)2);
         assertEquals(cluster.getMembers().size(), 2);
         for (Entity member : cluster.getMembers()) {
             assertFalse(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
+        }
+    }
+
+    static Exception resizeExpectingError(DynamicCluster cluster, int size) {
+        try {
+            cluster.resize(size);
+            Assert.fail("Resize should have failed");
+            // unreachable:
+            return null;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            // expect: brooklyn.util.exceptions.PropagatedRuntimeException: Error invoking resize at DynamicClusterImpl{id=I9Ggxfc1}: 1 of 3 parallel child tasks failed: Simulating entity stop failure for test
+            Assert.assertTrue(e.toString().contains("resize"));
+            return e;
         }
     }
 
@@ -447,7 +462,7 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
                     }}));
 
         cluster.start(ImmutableList.of(loc));
-        cluster.resize(3);
+        resizeExpectingError(cluster, 3);
         assertEquals(cluster.getCurrentSize(), (Integer)2);
         assertEquals(cluster.getMembers().size(), 2);
         assertEquals(Iterables.size(Iterables.filter(cluster.getChildren(), Predicates.instanceOf(FailingEntity.class))), 3);
@@ -484,7 +499,7 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(cluster.getChildren().size(), 0, "children="+cluster.getChildren());
         
         // Failed node will not be a member or child
-        cluster.resize(3);
+        resizeExpectingError(cluster, 3);
         assertEquals(cluster.getCurrentSize(), (Integer)2);
         assertEquals(cluster.getMembers().size(), 2);
         assertEquals(cluster.getChildren().size(), 2, "children="+cluster.getChildren());

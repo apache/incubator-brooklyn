@@ -80,6 +80,7 @@ import brooklyn.util.repeat.Repeater;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
+import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.task.system.SystemTasks;
@@ -161,7 +162,7 @@ public class Entities {
                         "description", "Invoking effector \""+effector.getName()+"\" on "+tasks.size()+(tasks.size() == 1 ? " entity" : " entities"),
                         "tag", BrooklynTaskTags.tagForCallerEntity(callingEntity)),
                 tasks);
-        
+        TaskTags.markInessential(invoke);
         return DynamicTasks.queueIfPossible(invoke).orSubmitAsync(callingEntity).asTask();
     }
     public static <T> Task<List<T>> invokeEffectorListWithMap(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
@@ -183,11 +184,18 @@ public class Entities {
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
+        TaskTags.markInessential(t);
         
         // we pass to callingEntity for consistency above, but in exec-context it should be
         // re-dispatched to targetEntity
         ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(
                 MutableMap.of("tag", BrooklynTaskTags.tagForCallerEntity(callingEntity)), t);
+        
+        if (DynamicTasks.getTaskQueuingContext()!=null) {
+            // include it as a child (in the gui), marked inessential, because the caller is invoking programmatically
+            DynamicTasks.queue(t);
+        }
+        
         return t;
     }
     @SuppressWarnings("unchecked")
