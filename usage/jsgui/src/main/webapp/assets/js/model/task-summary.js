@@ -65,7 +65,7 @@ define([
         parse: function(resp) {
             _.keys(this.attributes).forEach(function(key) {
               if (resp[key] === undefined) {
-                resp[key] = undefined;
+                resp[key] = null;
               }
             });
 
