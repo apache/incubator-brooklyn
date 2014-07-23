@@ -507,10 +507,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     @Override
     public CatalogItem<?,?> addItem(String yaml) {
+        return addItem(yaml, false);
+    }
+
+    @Override
+    public CatalogItem<?,?> addItem(String yaml, boolean forceUpdate) {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         checkNotNull(yaml, "yaml");
-        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
+        checkItemNotExists(itemDto, forceUpdate);
+
+        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(itemDto);
 
         // Ensure the cache is populated and it is persisted by the management context
@@ -525,8 +532,16 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDto;
     }
 
+    private void checkItemNotExists(CatalogItem<?,?> itemDto, boolean forceUpdate) {
+        if (!forceUpdate && getCatalogItemDo(itemDto.getId(), itemDto.getVersion()) != null) {
+            throw new IllegalStateException("Updating existing catalog entries is forbidden: " +
+                    itemDto.getId() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
+        }
+    }
+
     @Override @Deprecated /** @deprecated see super */
     public void addItem(CatalogItem<?,?> item) {
+        //assume forceUpdate for backwards compatibility
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
         checkNotNull(item, "item");
         CatalogUtils.installLibraries(mgmt, item.getLibraries());
@@ -536,6 +551,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     @Override @Deprecated /** @deprecated see super */
     public CatalogItem<?,?> addItem(Class<?> type) {
+        //assume forceUpdate for backwards compatibility
         log.debug("Adding manual catalog item to "+mgmt+": "+type);
         checkNotNull(type, "type");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();

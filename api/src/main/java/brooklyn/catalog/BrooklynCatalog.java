@@ -78,10 +78,21 @@ public interface BrooklynCatalog {
 
     /**
      * Adds an item (represented in yaml) to the catalog.
-     * 
+     * Fails if the same version exists in catalog.
+     *
      * @throws IllegalArgumentException if the yaml was invalid
      */
     CatalogItem<?,?> addItem(String yaml);
+    
+    /**
+     * Adds an item (represented in yaml) to the catalog.
+     * 
+     * @param forceUpdate If true allows catalog update even when an
+     * item exists with the same symbolicName and version
+     *
+     * @throws IllegalArgumentException if the yaml was invalid
+     */
+    CatalogItem<?,?> addItem(String yaml, boolean forceUpdate);
     
     /**
      * adds an item to the 'manual' catalog;

@@ -50,6 +50,7 @@ public abstract class AbstractYamlTest {
     private ManagementContext brooklynMgmt;
     protected BrooklynCampPlatform platform;
     protected BrooklynCampPlatformLauncherNoServer launcher;
+    private boolean forceUpdate;
     
     public AbstractYamlTest() {
         super();
@@ -59,6 +60,7 @@ public abstract class AbstractYamlTest {
     
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
+        forceUpdate = false;
         launcher = new BrooklynCampPlatformLauncherNoServer() {
             @Override
             protected LocalManagementContext newMgmtContext() {
@@ -135,7 +137,7 @@ public abstract class AbstractYamlTest {
     }
 
     protected void addCatalogItem(String catalogYaml) {
-        mgmt().getCatalog().addItem(catalogYaml);
+        mgmt().getCatalog().addItem(catalogYaml, forceUpdate);
     }
 
     protected void deleteCatalogEntity(String catalogItem) {
@@ -152,5 +154,9 @@ public abstract class AbstractYamlTest {
 
     protected String ver(String id) {
         return id + CatalogUtils.VERSION_DELIMITER + TEST_VERSION;
+    }
+
+    public void forceCatalogUpdate() {
+        forceUpdate = true;
     }
 }

@@ -307,6 +307,22 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                     "not already registered by name:version, but URL is empty.");
         }
     }
+    
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void testUpdatingItemFails() {
+        String id = "my.catalog.app.id.duplicate";
+        addCatalogOSGiEntity(id);
+        addCatalogOSGiEntity(id);
+    }
+
+    @Test
+    public void testForcedUpdatingItem() {
+        String id = "my.catalog.app.id.duplicate";
+        addCatalogOSGiEntity(id);
+        forceCatalogUpdate();
+        addCatalogOSGiEntity(id);
+        deleteCatalogEntity(id);
+    }
 
     @Test
     public void testCreateSpecFromCatalogItem() {
