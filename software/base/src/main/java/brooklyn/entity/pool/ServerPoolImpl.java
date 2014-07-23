@@ -135,10 +135,12 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     public void stop() {
         super.stop();
         deleteLocation();
-        setAttribute(AVAILABLE_COUNT, 0);
-        setAttribute(CLAIMED_COUNT, 0);
-        getAttribute(ENTITY_MACHINE).clear();
-        getAttribute(MACHINE_ENTITY).clear();
+        synchronized (mutex) {
+            setAttribute(AVAILABLE_COUNT, 0);
+            setAttribute(CLAIMED_COUNT, 0);
+            getAttribute(ENTITY_MACHINE).clear();
+            getAttribute(MACHINE_ENTITY).clear();
+        }
     }
 
     private void addMembershipTrackerPolicy() {
