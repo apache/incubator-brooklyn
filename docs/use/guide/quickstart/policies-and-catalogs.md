@@ -26,7 +26,7 @@ Now when we open the web console, two applications are displayed from the catalo
 
 Select the 'Demo Web Cluster with DB' and click 'Next'.
 
-[![Viewing Catalog entries in Add Application dialog.](images/add-application-catalog-web-cluster-with-db.png)](add-application-catalog-web-cluster-with-db-largea.png)
+[![Viewing Catalog entries in Add Application dialog.](images/add-application-catalog-web-cluster-with-db.png)](add-application-catalog-web-cluster-with-db-large.png)
 
 Select the Location that Brooklyn should deploy to, and name your application:
 
@@ -58,7 +58,7 @@ As load is added, Brooklyn requests a new cloud machine, creates a new app serve
 
 ### Next
 
-The [Elastic Web Cluster Example]({{site.url}}/use/examples/webcluster/index.html) page
+The [Elastic Web Cluster Example]({{site.url}}use/examples/webcluster/index.html) page
 details how to build this demo application from scratch in Java. It shows in more detail how Brooklyn can
 complement your application with policy driven management, and how applications can be
 run from the command line.
