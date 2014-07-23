@@ -937,6 +937,15 @@
                             </supportedProjectTypes>
                             <instructions>
                                 <!-- OSGi specific instruction -->
+                                <!--
+                                    By default packages containing impl and internal
+                                    are not included in the export list. Setting an
+                                    explicit wildcard will include all packages
+                                    regardless of name.
+                                    In time we should minimize our export lists to
+                                    what is really needed.
+                                -->
+                                <Export-Package>brooklyn.*</Export-Package>
                             </instructions>
                         </configuration>
                     </plugin>

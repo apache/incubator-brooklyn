@@ -129,7 +129,6 @@ public class InternalEntityFactory {
     public <T extends Entity> T createEntityProxy(EntitySpec<T> spec, T entity) {
         // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
         // AbstractEntity.parent is used (e.g. parent.getAllConfig)
-        ClassLoader classloader = (spec.getImplementation() != null ? spec.getImplementation() : spec.getType()).getClassLoader();
         MutableSet.Builder<Class<?>> builder = MutableSet.<Class<?>>builder()
                 .add(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class);
         if (spec.getType().isInterface()) {
@@ -139,15 +138,16 @@ public class InternalEntityFactory {
         }
         builder.addAll(spec.getAdditionalInterfaces());
         Set<Class<?>> interfaces = builder.build();
-        
-        // TODO OSGi strangeness! The classloader obtained from the type should be enough.
-        // If an OSGi class loader, it should delegate to find things like Entity.class etc.
-        // However, we get errors such as:
+
+        // When using the entity's classloader, we get errors such as:
         //    NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities
         // Building our own aggregating class loader gets around this.
-        // But we really should not have to do this! What are the consequences?
+        //
+        // The reason for the error is that the proxy tries to load all classes
+        // referenced from the entity and its interfaces with the single passed loader
+        // while a normal class loading would nest the class loaders (loading interfaces'
+        // references with their own class loaders which in our case are different).
         AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
-        aggregateClassLoader.addFirst(classloader);
         aggregateClassLoader.addFirst(entity.getClass().getClassLoader());
         for(Class<?> iface : interfaces) {
             aggregateClassLoader.addLast(iface.getClassLoader());
