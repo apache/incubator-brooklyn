@@ -18,7 +18,6 @@
  */
 package brooklyn.util.task;
 
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -77,10 +76,18 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
             return executeNow(c);
         } else {
             WrappingFuture<T> f = new WrappingFuture<T>();
-            order.add(new QueuedSubmission<T>(c, f));
+            order.add(new QueuedSubmission<T>(c, f) {
+                @Override
+                public String toString() {
+                    return "QueuedSubmission["+c+"]";
+                }
+            });
             int size = order.size();
             if (size>0 && (size == 50 || (size<=500 && (size%100)==0) || (size%1000)==0) && size!=lastSizeWarn) {
                 LOG.warn("{} is backing up, {} tasks queued", this, size);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Task queue backing up detail, queue "+this+"; task context is "+Tasks.current()+"; latest task is "+c+"; first task is "+order.peek());
+                }
                 lastSizeWarn = size;
             }
             return f;

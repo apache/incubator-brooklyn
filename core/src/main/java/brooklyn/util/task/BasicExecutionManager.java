@@ -300,46 +300,63 @@ public class BasicExecutionManager implements ExecutionManager {
 		task.submitTimeUtc = System.currentTimeMillis();
 		tasksById.put(task.getId(), task);
 		if (!task.isDone()) {
-			task.result = delayedRunner.schedule(new Callable<Object>() { @SuppressWarnings("rawtypes")
-            public Object call() {
-				if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
-				try {
-				    beforeStart(flags, task);
-				    final TaskInternal<?> taskScheduled = (TaskInternal<?>) task.newTask();
-				    taskScheduled.setSubmittedByTask(task);
-				    final Callable<?> oldJob = taskScheduled.getJob();
-				    taskScheduled.setJob(new Callable() { public Object call() {
-				        task.recentRun = taskScheduled;
-				        synchronized (task) {
-				            task.notifyAll();
-				        }
-				        Object result;
-				        try {
-				            result = oldJob.call();
-				        } catch (Exception e) {
-				            log.warn("Error executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution", e);
-				            throw Exceptions.propagate(e);
-				        }
-				        task.runCount++;
-				        if (task.period!=null && !task.isCancelled()) {
-				            task.delay = task.period;
-				            submitNewScheduledTask(flags, task);
-				        }
-				        return result;
-				    }});
-				    task.nextRun = taskScheduled;
-				    BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
-				    if (ec!=null) return ec.submit(taskScheduled);
-				    else return submit(taskScheduled);
-				} finally {
-				    afterEnd(flags, task);
-				}
-			}},
-			task.delay.toNanoseconds(), TimeUnit.NANOSECONDS);
+			task.result = delayedRunner.schedule(new ScheduledTaskCallable(task, flags),
+			    task.delay.toNanoseconds(), TimeUnit.NANOSECONDS);
 		} else {
 			task.endTimeUtc = System.currentTimeMillis();
 		}
 		return task;
+	}
+	
+	protected class ScheduledTaskCallable implements Callable<Object> {
+	    public ScheduledTask task;
+	    public Map<?,?> flags;
+	    
+	    public ScheduledTaskCallable(ScheduledTask task, Map<?, ?> flags) {
+	        this.task = task;
+	        this.flags = flags;
+        }
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        public Object call() {
+            if (task.startTimeUtc==-1) task.startTimeUtc = System.currentTimeMillis();
+            try {
+                beforeStart(flags, task);
+                final TaskInternal<?> taskScheduled = (TaskInternal<?>) task.newTask();
+                taskScheduled.setSubmittedByTask(task);
+                final Callable<?> oldJob = taskScheduled.getJob();
+                taskScheduled.setJob(new Callable() { public Object call() {
+                    task.recentRun = taskScheduled;
+                    synchronized (task) {
+                        task.notifyAll();
+                    }
+                    Object result;
+                    try {
+                        result = oldJob.call();
+                    } catch (Exception e) {
+                        log.warn("Error executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution", e);
+                        throw Exceptions.propagate(e);
+                    }
+                    task.runCount++;
+                    if (task.period!=null && !task.isCancelled()) {
+                        task.delay = task.period;
+                        submitNewScheduledTask(flags, task);
+                    }
+                    return result;
+                }});
+                task.nextRun = taskScheduled;
+                BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+                if (ec!=null) return ec.submit(taskScheduled);
+                else return submit(taskScheduled);
+            } finally {
+                afterEnd(flags, task);
+            }
+        }
+        
+        @Override
+        public String toString() {
+            return "ScheduledTaskCallable["+task+","+flags+"]";
+        }
 	}
 
     @SuppressWarnings("unchecked")
@@ -355,43 +372,49 @@ public class BasicExecutionManager implements ExecutionManager {
         if (((TaskInternal<T>)task).getJob() == null) 
             throw new NullPointerException("Task "+task+" submitted with with null job: job must be supplied.");
         
-        Callable<T> job = new Callable<T>() { public T call() {
-          try {
-            T result = null;
-            Throwable error = null;
-            String oldThreadName = Thread.currentThread().getName();
-            try {
-                if (RENAME_THREADS) {
-                    String newThreadName = oldThreadName+"-"+task.getDisplayName()+
-                            "["+task.getId().substring(0, 8)+"]";
-                    Thread.currentThread().setName(newThreadName);
+        Callable<T> job = new Callable<T>() { 
+            public T call() {
+                try {
+                    T result = null;
+                    Throwable error = null;
+                    String oldThreadName = Thread.currentThread().getName();
+                    try {
+                        if (RENAME_THREADS) {
+                            String newThreadName = oldThreadName+"-"+task.getDisplayName()+
+                                "["+task.getId().substring(0, 8)+"]";
+                            Thread.currentThread().setName(newThreadName);
+                        }
+                        beforeStart(flags, task);
+                        if (!task.isCancelled()) {
+                            result = ((TaskInternal<T>)task).getJob().call();
+                        } else throw new CancellationException();
+                    } catch(Throwable e) {
+                        error = e;
+                    } finally {
+                        if (RENAME_THREADS) {
+                            Thread.currentThread().setName(oldThreadName);
+                        }
+                        afterEnd(flags, task);
+                    }
+                    if (error!=null) {
+                        if (log.isDebugEnabled()) {
+                            // debug only here, because we rethrow
+                            log.debug("Exception running task "+task+" (rethrowing): "+error.getMessage(), error);
+                            if (log.isTraceEnabled())
+                                log.trace("Trace for exception running task "+task+" (rethrowing): "+error.getMessage(), error);
+                        }
+                        throw Exceptions.propagate(error);
+                    }
+                    return result;
+                } finally {
+                    ((TaskInternal<?>)task).runListeners();
                 }
-                beforeStart(flags, task);
-                if (!task.isCancelled()) {
-                    result = ((TaskInternal<T>)task).getJob().call();
-                } else throw new CancellationException();
-            } catch(Throwable e) {
-                error = e;
-            } finally {
-                if (RENAME_THREADS) {
-                    Thread.currentThread().setName(oldThreadName);
-                }
-                afterEnd(flags, task);
             }
-            if (error!=null) {
-                if (log.isDebugEnabled()) {
-                    // debug only here, because we rethrow
-                    log.debug("Exception running task "+task+" (rethrowing): "+error.getMessage(), error);
-                    if (log.isTraceEnabled())
-                        log.trace("Trace for exception running task "+task+" (rethrowing): "+error.getMessage(), error);
-                }
-                throw Exceptions.propagate(error);
+            @Override
+            public String toString() {
+                return "BasicExecutionManager.submitNewTask.Callable["+task+","+flags+"]";
             }
-            return result;
-          } finally {
-              ((TaskInternal<?>)task).runListeners();
-          }
-        }};
+        };
         
         // If there's a scheduler then use that; otherwise execute it directly
         Set<TaskScheduler> schedulers = null;
