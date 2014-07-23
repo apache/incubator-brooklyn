@@ -346,10 +346,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public CatalogItem<?,?> addItem(String yaml) {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         Preconditions.checkNotNull(yaml, "yaml");
-        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
+        if (getCatalogItemDo(itemDto.getId(), itemDto.getVersion()) != null) {
+            throw new IllegalStateException("Updating existing catalog entries is forbidden: " + itemDto.getId() + ":" + itemDto.getVersion());
+        }
+
+        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(itemDto);
-        
+
         // Load the libraries now.
         // Otherwise, when CAMP looks up BrooklynEntityMatcher.accepts then it
         // won't know about this bundle:class (via the catalog item's
