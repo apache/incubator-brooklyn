@@ -387,7 +387,18 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         //     jclouds.ssh.max-retries
         //     jclouds.ssh.retry-auth
 
-        final SshClient client = context.utils().sshForNode().apply(node);
+        SshClient client;
+        try {
+            client = context.utils().sshForNode().apply(node);
+        } catch (Exception e) {
+            /* i've seen: java.lang.IllegalStateException: Optional.get() cannot be called on an absent value
+             * from org.jclouds.crypto.ASN1Codec.createASN1Sequence(ASN1Codec.java:86), if the ssh key has a passphrase, against AWS.
+             * 
+             * others have reported: java.lang.IllegalArgumentException: DER length more than 4 bytes
+             * when using a key with a passphrase (perhaps from other clouds?); not sure if that's this callpath or a different one.
+             */
+            throw new IllegalStateException("Unable to connect SshClient to "+node+"; check that the node is accessible and that the SSH key exists and is correctly configured, including any passphrase defined", e);
+        }
         return client.getHostAddress();
     }
     
