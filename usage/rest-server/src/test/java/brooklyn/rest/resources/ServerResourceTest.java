@@ -102,7 +102,9 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
                 assertFalse(getManagementContext().isRunning());
             }});
     }
-    @Test
+    
+    // Disabled as BrooklynPropertiesSecurityFilter is not loaded in tests and the server responds 204 No Content.
+    @Test(groups = "WIP")
     public void testGetUser() throws Exception {
         String user = client().resource("/v1/server/user").get(String.class);
         assertEquals(user, Entitlements.getEntitlementContext().user());
