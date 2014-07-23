@@ -528,7 +528,7 @@ public abstract class AbstractLocation implements LocationInternal, HasHostGeoIn
         child.setParent(this);
     }
     
-    protected boolean removeChild(Location child) {
+    public boolean removeChild(Location child) {
         boolean removed;
         synchronized (children) {
             removed = children.remove(child);
