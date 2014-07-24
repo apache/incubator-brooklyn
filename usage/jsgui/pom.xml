@@ -107,23 +107,16 @@
                 <directory>${project.basedir}/src/test/resources/fixtures</directory>
                 <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
             </resource>
-        </resources>        
+        </resources>
         <plugins>
-            <!-- run js tests with: $ mvn clean process-resources jasmine:test -->
             <!--
-                 The Jasmine Maven plugin is now on version 1.3.1.0. It has several improvements,
-                 but we're unable to upgrade to it because of a change to the way it handles our
-                 fixtures. In 1.2 it serves target/fixtures at /fixtures.  This no longer happens
-                 in 1.3.1. Ideally, the plugin would have a configuration option to include other
-                 directories for Jetty to serve. If this were added we would also be able to use
-                 mvn jasmine:bdd.
+                 run js tests with: $ mvn clean process-resources jasmine:test
+                 run tests in the browser with: $ mvn jasmine:bdd
             -->
             <plugin>
                 <groupId>com.github.searls</groupId>
                 <artifactId>jasmine-maven-plugin</artifactId>
                 <version>${jasmine-maven-plugin.version}</version>
-                <!-- avoid double phase executions https://github.com/searls/jasmine-maven-plugin/pull/54 -->
-                <extensions>true</extensions>
                 <executions>
                     <execution>
                         <goals>
@@ -134,7 +127,9 @@
                 <configuration>
                     <!--Uses the require.js test spec-->
                     <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
-                    <scriptLoaderPath>js/libs/require.js</scriptLoaderPath>
+                    <preloadSources>
+                        <source>js/libs/require.js</source>
+                    </preloadSources>
 
                     <!--Sources-->
                     <jsSrcDir>${project.basedir}/src/main/webapp/assets</jsSrcDir>
@@ -142,8 +137,18 @@
                     <customRunnerConfiguration>
                         ${project.basedir}/src/test/javascript/config.txt
                     </customRunnerConfiguration>
+
+                    <additionalContexts>
+                        <!-- If context roots start with a / the resource will be available on the server at //root. -->
+                        <!-- It is an error for context roots to end with a /. -->
+                        <context>
+                            <contextRoot>fixtures</contextRoot>
+                            <directory>${project.build.directory}/jasmine/fixtures</directory>
+                        </context>
+                    </additionalContexts>
                 </configuration>
             </plugin>
+
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>${maven-dependency-plugin.version}</version>
@@ -179,25 +184,25 @@
                 </configuration>
             </plugin>
         </plugins>
-      <pluginManagement>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.rat</groupId>
-            <artifactId>apache-rat-plugin</artifactId>
-            <version>0.10</version>
-            <configuration>
-              <excludes combine.children="append">
-                <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
-                <exclude>**/src/main/dev/info.txt</exclude>
-                <exclude>**/src/main/dev/js/libs/*</exclude>
-                <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
-                <exclude>**/src/test/javascript/config.txt</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </pluginManagement>
 
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.10</version>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
+                            <exclude>**/src/main/dev/info.txt</exclude>
+                            <exclude>**/src/main/dev/js/libs/*</exclude>
+                            <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
+                            <exclude>**/src/test/javascript/config.txt</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <profiles>

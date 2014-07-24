@@ -26,7 +26,8 @@ define([
     "text!tpl/app-add-wizard/deploy-location-row.html", 
     "text!tpl/app-add-wizard/deploy-location-option.html",
     "text!tpl/apps/param.html",
-    "text!tpl/apps/param-list.html"
+    "text!tpl/apps/param-list.html",
+    "bootstrap"
 ], function (_, $, Backbone, Location, EffectorModalHtml, 
         DeployLocationRowHtml, DeployLocationOptionHtml, ParamHtml, ParamListHtml) {
 
