@@ -29,7 +29,6 @@ import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
@@ -57,7 +56,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
 
             jmxFeed = JmxFeed.builder()
                     .entity(this)
-                    .period(500, TimeUnit.MILLISECONDS)
+                    .period(3000, TimeUnit.MILLISECONDS)
                     .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
                             .objectName(requestProcessorMbeanName)
                             .attributeName("errorCount"))
@@ -95,6 +94,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Class getDriverInterface() {
         return Tomcat7Driver.class;
