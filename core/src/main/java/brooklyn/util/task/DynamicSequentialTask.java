@@ -184,9 +184,9 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     /** submits the indicated task for execution in the current execution context, and returns immediately */
     protected void submitBackgroundInheritingContext(Task<?> task) {
         BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
-        if (log.isTraceEnabled())
-            log.trace("task {} - submitting background task {} ({})", new Object[] { 
-                Tasks.current(), task, ec });
+        if (log.isTraceEnabled()) {
+            log.trace("task {} - submitting background task {} ({})", new Object[] { Tasks.current(), task, ec });
+        }
         if (ec==null) {
             String message = Tasks.current()!=null ?
                     // user forgot ExecContext:
@@ -197,10 +197,13 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             throw new IllegalStateException(message);
         }
         synchronized (task) {
-            if (task.isSubmitted() && !task.isDone())
-                log.debug("DST "+this+" skipping submission of child "+task+" because it is already submitted");
-            else
+            if (task.isSubmitted() && !task.isDone()) {
+                if (log.isTraceEnabled()) {
+                    log.trace("DST "+this+" skipping submission of child "+task+" because it is already submitted");
+                }
+            } else {
                 ec.submit(task);
+            }
         }
     }
 
