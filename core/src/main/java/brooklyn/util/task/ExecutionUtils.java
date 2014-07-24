@@ -31,6 +31,7 @@ public class ExecutionUtils {
      * throws exception if the callable is a non-null object which cannot be invoked (not a callable or runnable)
      * @deprecated since 0.7.0 ; this super-loose typing should be avoided; if it is needed, let's move it to one of the Groovy compatibility classes
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Object invoke(Object callable, Object ...args) {
         if (callable instanceof Closure) return ((Closure<?>)callable).call(args);
         if (callable instanceof Callable) {
