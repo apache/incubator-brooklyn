@@ -76,12 +76,7 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
             return executeNow(c);
         } else {
             WrappingFuture<T> f = new WrappingFuture<T>();
-            order.add(new QueuedSubmission<T>(c, f) {
-                @Override
-                public String toString() {
-                    return "QueuedSubmission["+c+"]";
-                }
-            });
+            order.add(new QueuedSubmission<T>(c, f));
             int size = order.size();
             if (size>0 && (size == 50 || (size<=500 && (size%100)==0) || (size%1000)==0) && size!=lastSizeWarn) {
                 LOG.warn("{} is backing up, {} tasks queued", this, size);
@@ -132,6 +127,11 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
         QueuedSubmission(Callable<T> c, WrappingFuture<T> f) {
             this.c = c;
             this.f = f;
+        }
+        
+        @Override
+        public String toString() {
+            return "QueuedSubmission["+c+"]@"+Integer.toHexString(System.identityHashCode(this));
         }
     }
     

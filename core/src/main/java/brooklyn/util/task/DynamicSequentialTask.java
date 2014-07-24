@@ -367,7 +367,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         
         @Override
         public String toString() {
-            return "DstJob:"+DynamicSequentialTask.this;
+            return "DstJob:"+DynamicSequentialTask.this.getId();
         }
 
         /** waits for this job to complete, or the given time to elapse */

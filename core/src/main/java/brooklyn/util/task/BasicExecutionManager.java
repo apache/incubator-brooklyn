@@ -412,7 +412,7 @@ public class BasicExecutionManager implements ExecutionManager {
             }
             @Override
             public String toString() {
-                return "BasicExecutionManager.submitNewTask.Callable["+task+","+flags+"]";
+                return "BEM.call("+task+","+flags+")";
             }
         };
         
