@@ -28,6 +28,7 @@ import java.util.Collection;
 import org.junit.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
@@ -305,6 +306,16 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} " +
                     "not already registered by name:version, but URL is empty.");
         }
+    }
+
+    @Test
+    public void testCreateSpecFromCatalogItem() {
+        String id = "my.catalog.app.id.create_spec";
+        addCatalogOSGiEntity(id);
+        BrooklynCatalog catalog = mgmt().getCatalog();
+        CatalogItem<?, ?> item = catalog.getCatalogItem(id, TEST_VERSION);
+        Object spec = catalog.createSpec(item);
+        Assert.assertNotNull(spec);
     }
 
     private void registerAndLaunchAndAssertSimpleEntity(String registeredTypeName, String serviceType) throws Exception {
