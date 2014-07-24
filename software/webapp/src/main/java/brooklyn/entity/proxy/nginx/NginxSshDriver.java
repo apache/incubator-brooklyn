@@ -43,6 +43,7 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.ssh.SshTasks.OnFailingTask;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
@@ -114,8 +115,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void install() {
-        // will fail later if can't sudo (if sudo is required)
-        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), false)).orSubmitAndBlock();
+        // inessential here, installation will fail later if it needs to sudo (eg if using port 80)
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), OnFailingTask.WARN_OR_FAIL_INESSENTIAL_IF_DYNAMIC)).orSubmitAndBlock();
 
         DownloadResolver nginxResolver = mgmt().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();

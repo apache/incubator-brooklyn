@@ -131,9 +131,24 @@ public class SshTasks {
         return result;
     }
 
+    @Beta
+    public static enum OnFailingTask { FAIL, WARN_OR_FAIL_INESSENTIAL_IF_DYNAMIC, WARN_IN_LOG_ONLY, IGNORE }
+    public static ProcessTaskFactory<Boolean> dontRequireTtyForSudo(SshMachineLocation machine, final boolean failIfCantSudo) {
+        return dontRequireTtyForSudo(machine, failIfCantSudo ? OnFailingTask.FAIL : OnFailingTask.WARN_IN_LOG_ONLY);
+    }
     /** creates a task which returns modifies sudoers to ensure non-tty access is permitted;
      * also gives nice warnings if sudo is not permitted */
-    public static ProcessTaskFactory<Boolean> dontRequireTtyForSudo(SshMachineLocation machine, final boolean requireSuccess) {
+    public static ProcessTaskFactory<Boolean> dontRequireTtyForSudo(SshMachineLocation machine, OnFailingTask onFailingTaskRequested) {
+        final OnFailingTask onFailingTask;
+        if (onFailingTaskRequested==OnFailingTask.WARN_OR_FAIL_INESSENTIAL_IF_DYNAMIC) {
+            if (DynamicTasks.getTaskQueuingContext()!=null)
+                onFailingTask = onFailingTaskRequested;
+            else
+                onFailingTask = OnFailingTask.WARN_IN_LOG_ONLY;
+        } else {
+            onFailingTask = onFailingTaskRequested;
+        }
+        
         final String id = Identifiers.makeRandomId(6);
         return newSshExecTaskFactory(machine, 
                 BashCommands.dontRequireTtyForSudo(),
@@ -146,18 +161,24 @@ public class SshTasks {
                 if (task.getExitCode()==0 && task.getStdout().contains("sudo-is-working-"+id)) return true;
                 Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
                 
-                // TODO if in a queueing context can we mark this task inessential and throw?
-                // that way user sees the message...
-                String message = "Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
-                        " (exit code "+task.getExitCode()+(entity!=null ? ", entity "+entity : "")+")";
-                DynamicTasks.queueIfPossible(Tasks.warning(message, null));
                 
+                if (onFailingTask!=OnFailingTask.IGNORE) {
+                    // TODO if in a queueing context can we mark this task inessential and throw?
+                    // that way user sees the message...
+                    String message = "Error setting up sudo for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+" "+
+                        " (exit code "+task.getExitCode()+(entity!=null ? ", entity "+entity : "")+")";
+                    DynamicTasks.queueIfPossible(Tasks.warning(message, null));
+                }
                 Streams.logStreamTail(log, "STDERR of sudo setup problem", Streams.byteArrayOfString(task.getStderr()), 1024);
-                if (requireSuccess) {
+                
+                if (onFailingTask==OnFailingTask.WARN_OR_FAIL_INESSENTIAL_IF_DYNAMIC) {
+                    Tasks.markInessential();
+                }
+                if (onFailingTask==OnFailingTask.FAIL || onFailingTask==OnFailingTask.WARN_OR_FAIL_INESSENTIAL_IF_DYNAMIC) {
                     throw new IllegalStateException("Passwordless sudo is required for "+task.getMachine().getUser()+"@"+task.getMachine().getAddress().getHostName()+
                             (entity!=null ? " ("+entity+")" : ""));
                 }
-                return true; 
+                return false; 
             } });
     }
 

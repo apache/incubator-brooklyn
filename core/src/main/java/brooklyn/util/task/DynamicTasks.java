@@ -159,6 +159,11 @@ public class DynamicTasks {
         public void andWaitForSuccess() {
             task.getUnchecked();
         }
+        public void orCancel() {
+            if (!wasQueued()) {
+                task.cancel(false);
+            }
+        }
     }
     
     /**
