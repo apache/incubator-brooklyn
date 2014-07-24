@@ -27,6 +27,7 @@ import java.util.Collection;
 import org.junit.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
@@ -359,6 +360,16 @@ public class CatalogYamlTest extends AbstractYamlTest {
         String id = "my.catalog.app.id.duplicate";
         addCatalogOSGiEntity(id);
         addCatalogOSGiEntity(id);
+    }
+    
+    @Test
+    public void testCreateSpecFromCatalogItem() {
+        String id = "my.catalog.app.id.create_spec";
+        addCatalogOSGiEntity(id);
+        BrooklynCatalog catalog = mgmt().getCatalog();
+        CatalogItem<?, ?> item = catalog.getCatalogItem(id, TEST_VERSION);
+        Object spec = catalog.createSpec(item);
+        Assert.assertNotNull(spec);
     }
 
     private void registerAndLaunchAndAssertSimpleEntity(String registeredTypeName, String serviceType) throws Exception {

@@ -98,14 +98,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     
     public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
-        
+
         ManagementContext mgmt = getBrooklynManagementContext(platform);
-        BrooklynCatalog catalog = mgmt.getCatalog();
-        
-        CatalogItem<?,?> item = catalog.getCatalogItem(
-                CatalogDtoUtils.getIdFromVersionedId(template.getName()),
-                CatalogDtoUtils.getVersionFromVersionedId(template.getName()));
-        
+
+        CatalogItem<?, ?> item = getCatalogItemFromAssemblyTemplate(template, mgmt);
+
         BrooklynClassLoadingContext loader;
         if (item!=null) {
             loader = item.newClassLoadingContext(mgmt);
@@ -114,7 +111,24 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
         return createApplicationFromCampTemplate(template, platform, loader);
     }
-    
+
+    //TODO clean up id/name/type - the name of the catalog item is different from the catalog id
+    private CatalogItem<?, ?> getCatalogItemFromAssemblyTemplate(AssemblyTemplate template, ManagementContext mgmt) {
+        BrooklynCatalog catalog = mgmt.getCatalog();
+
+        Map<String, Object> atts = template.getCustomAttributes();
+        Map<?, ?> attCatalog = (Map<?, ?>) atts.get("brooklyn.catalog");
+
+        if (attCatalog != null) {
+            String id = (String) attCatalog.get("id");
+            String version = attCatalog.get("version").toString();
+
+            return catalog.getCatalogItem(id, version);
+        } else {
+            return null;
+        }
+    }
+
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
         return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
     }
