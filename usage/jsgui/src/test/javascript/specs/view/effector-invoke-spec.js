@@ -26,11 +26,11 @@ define([
     
     var entityFixture = new Entity.Collection
     entityFixture.url = 'fixtures/entity.json'
-    entityFixture.fetch({async:true})
+    entityFixture.fetch()
     
     var locationsFixture = new Location.Collection
     locationsFixture.url = 'fixtures/location-list.json'
-    locationsFixture.fetch({async:true})
+    locationsFixture.fetch()
 
     var modalView = new EffectorInvokeView({
         tagName:"div",

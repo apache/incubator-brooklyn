@@ -67,7 +67,7 @@ define([
                 this.counter = 0;
                 this.callPeriodically("test-callback", function() {
                         this.counter += 1;
-                    }, 100)
+                    }, 3)
             }
         });
 
@@ -75,7 +75,7 @@ define([
         it("should have 'this' set to the owning view", function() {
             Brooklyn.refresh = true;
             var view = new CallbackView();
-            waits(500);
+            waits(15);
             runs(function() {
                 expect(view.counter).toBeGreaterThan(0);
             });
@@ -84,7 +84,7 @@ define([
         it("should not be run if Brooklyn.refresh is false", function() {
             Brooklyn.refresh = false;
             var view = new CallbackView();
-            waits(500);
+            waits(15);
             runs(function() {
                 expect(view.counter).toEqual(0);
                 Brooklyn.refresh = true;
