@@ -194,6 +194,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     @SetFromFlag // so it's persisted
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
     
+    static { Networking.init(); }
+    
     public JcloudsLocation() {
         super();
     }

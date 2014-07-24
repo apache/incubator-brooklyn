@@ -46,6 +46,7 @@ import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Threads;
+import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
@@ -65,6 +66,8 @@ public class ResourceUtils {
     private BrooklynClassLoadingContext loader = null;
     private String context = null;
     private Object contextObject = null;
+    
+    static { Networking.init(); }
     
     /**
      * Creates a {@link ResourceUtils} object with a specific class loader and context.
