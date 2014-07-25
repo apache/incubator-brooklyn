@@ -34,6 +34,7 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 
 import com.google.common.base.Function;
@@ -66,9 +67,9 @@ public class DeployBlueprintTest extends BrooklynRestApiLauncherTestFixture {
     }
     
     private <T> List<T> parseJsonList(String json, List<String> elements, Class<T> clazz) {
-        Function<String, List<T>> func = HttpValueFunctions.chain(
+        Function<String, List<T>> func = Functionals.chain(
                 JsonFunctions.asJson(),
-                JsonFunctions.forEach(HttpValueFunctions.chain(
+                JsonFunctions.forEach(Functionals.chain(
                         JsonFunctions.walk(elements),
                         JsonFunctions.cast(clazz))));
         return func.apply(json);

@@ -187,12 +187,8 @@ public class Main {
             if (log.isDebugEnabled()) log.debug("Invoked info command: {}", this);
             warnIfNoArguments();
 
-            // Get current version
-            String version = BrooklynVersion.get();
-
-            // Display info text
             System.out.println(BANNER);
-            System.out.println("Version:  " + version);
+            System.out.println("Version:  " + BrooklynVersion.get());
             System.out.println("Website:  http://brooklyn.incubator.apache.org");
             System.out.println("Source:   https://github.com/apache/incubator-brooklyn");
             System.out.println();
@@ -251,11 +247,11 @@ public class Main {
         public Boolean noConsoleSecurity = false;
 
         @Option(name = { "--ignoreWebStartupErrors" },
-            description = "Ignore web subsystem failures on startup (default is to abort if that fails to start)")
+            description = "Ignore web subsystem failures on startup (default is to abort if it fails to start)")
         public boolean ignoreWebErrors = false;
 
         @Option(name = { "--ignorePersistenceStartupErrors" },
-            description = "Ignore persistence/HA subsystem failures on startup (default is to abort if that fails to start)")
+            description = "Ignore persistence/HA subsystem failures on startup (default is to abort if it fails to start)")
         public boolean ignorePersistenceErrors = false;
 
         @Option(name = { "--ignoreManagedAppsStartupErrors" },
@@ -319,11 +315,11 @@ public class Main {
         public String persist = PERSIST_OPTION_DISABLED;
 
         @Option(name = { "--persistenceDir" }, title = "persistence dir",
-                description = "the directory to read/write persisted state (or container name if using an object store)")
+                description = "The directory to read/write persisted state (or container name if using an object store)")
         public String persistenceDir;
 
         @Option(name = { "--persistenceLocation" }, title = "persistence location",
-            description = "the location spec for an object store to read/write persisted state")
+            description = "The location spec for an object store to read/write persisted state")
         public String persistenceLocation;
     
 

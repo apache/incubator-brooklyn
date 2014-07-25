@@ -27,6 +27,7 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
+import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import brooklyn.test.HttpTestUtils;
 
 /** Convenience and demo for launching programmatically. */
@@ -53,8 +54,8 @@ public class BrooklynJavascriptGuiLauncherTest {
     @Test
     public void testJavascriptWithRest() throws Exception {
         server = BrooklynJavascriptGuiLauncher.startJavascriptAndRest();
-        BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(server);
-        BrooklynRestApiLauncherTest.enableAnyoneLogin(server);
+        BrooklynRestApiLauncherTestFixture.forceUseOfDefaultCatalogWithJavaClassPath(server);
+        BrooklynRestApiLauncherTestFixture.enableAnyoneLogin(server);
         checkUrlContains("/index.html", "Brooklyn");
         checkUrlContains("/v1/catalog/entities", "Tomcat");
     }
@@ -64,9 +65,8 @@ public class BrooklynJavascriptGuiLauncherTest {
         HttpTestUtils.assertContentContainsText(rootUrl+path, text);
     }
 
-    public static ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
-        ManagementContext mgmt = (ManagementContext) ((ContextHandler)server.getHandler()).getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
-        return mgmt;
+    private ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
+        return (ManagementContext) ((ContextHandler)server.getHandler()).getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
     }
 
 }
