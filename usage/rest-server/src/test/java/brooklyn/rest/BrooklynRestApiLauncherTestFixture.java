@@ -33,7 +33,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.util.exceptions.Exceptions;
 
-public class BrooklynRestApiLauncherTestFixture {
+public abstract class BrooklynRestApiLauncherTestFixture {
 
     Server server = null;
     
@@ -43,16 +43,16 @@ public class BrooklynRestApiLauncherTestFixture {
             ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
             server.stop();
             if (mgmt!=null) Entities.destroyAll(mgmt);
-            
             server = null;
         }
     }
     
     protected Server newServer() {
         try {
-            Server server = BrooklynRestApiLauncher.startRestResourcesViaFilter();
-            enableAnyoneLogin(server);
-            forceUseOfDefaultCatalogWithJavaClassPath(server);
+            Server server = BrooklynRestApiLauncher.launcher()
+                    .forceUseOfDefaultCatalogWithJavaClassPath(true)
+                    .securityProvider(AnyoneSecurityProvider.class)
+                    .start();
             return server;
         } catch (Exception e) {
             throw Exceptions.propagate(e);
@@ -61,7 +61,7 @@ public class BrooklynRestApiLauncherTestFixture {
     
     protected Server useServerForTest(Server server) {
         if (this.server!=null) {
-            Assert.fail("Test only meant for single server; already have "+server+" when checking "+server);
+            Assert.fail("Test only meant for single server; already have "+this.server+" when checking "+server);
         } else {
             this.server = server;
         }
@@ -95,14 +95,14 @@ public class BrooklynRestApiLauncherTestFixture {
         ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
         enableAnyoneLogin(mgmt);
     }
+
     public static void enableAnyoneLogin(ManagementContext mgmt) {
         ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, 
                 AnyoneSecurityProvider.class.getName());
     }
 
     public static ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
-        ManagementContext mgmt = (ManagementContext) ((ContextHandler)server.getHandler()).getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
-        return mgmt;
+        return (ManagementContext) ((ContextHandler) server.getHandler()).getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
     }
     
 }

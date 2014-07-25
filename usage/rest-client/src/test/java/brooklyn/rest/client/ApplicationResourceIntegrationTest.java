@@ -18,7 +18,6 @@
  */
 package brooklyn.rest.client;
 
-import static brooklyn.rest.BrooklynRestApiLauncher.startServer;
 import static org.testng.Assert.*;
 
 import java.util.Collection;
@@ -41,6 +40,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
@@ -60,10 +60,10 @@ public class ApplicationResourceIntegrationTest {
 
     private final String redisSpec = "{\"name\": \"redis-app\", \"type\": \"brooklyn.entity.nosql.redis.RedisStore\", \"locations\": [ \"localhost\"]}";
     
-    private final ApplicationSpec legacyRedisSpec = ApplicationSpec.builder().name("redis-legacy-app").
-            entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
-            locations(ImmutableSet.of("localhost")).
-            build();
+    private final ApplicationSpec legacyRedisSpec = ApplicationSpec.builder().name("redis-legacy-app")
+            .entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")))
+            .locations(ImmutableSet.of("localhost"))
+            .build();
 
     private ManagementContext manager;
 
@@ -88,7 +88,10 @@ public class ApplicationResourceIntegrationTest {
         context.setExtraClasspath("./target/test-rest-server/");
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, getManagementContext());
 
-        Server server = startServer(manager, context, "from WAR at " + context.getWar());
+        Server server = BrooklynRestApiLauncher.launcher()
+                .managementContext(manager)
+                .customContext(context)
+                .start();
 
         api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/");
     }

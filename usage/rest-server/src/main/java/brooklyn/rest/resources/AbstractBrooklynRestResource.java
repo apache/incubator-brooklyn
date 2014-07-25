@@ -19,7 +19,6 @@
 package brooklyn.rest.resources;
 
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;

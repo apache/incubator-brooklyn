@@ -18,17 +18,16 @@
  */
 package brooklyn.rest;
 
-import brooklyn.rest.util.HaMasterCheckFilter;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
-
+import java.util.Set;
 import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -36,24 +35,33 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+import com.google.common.io.Files;
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
+import brooklyn.rest.security.provider.SecurityProvider;
+import brooklyn.rest.util.HaMasterCheckFilter;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.api.core.ResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+import scala.actors.threadpool.Arrays;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -71,50 +79,130 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 public class BrooklynRestApiLauncher {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestApiLauncher.class);
-    
-    public static void main(String[] args) throws Exception {
-        startRestResourcesViaFilter();
-        // filter (above) is most flexible, but can also do either of the methods below
-//        startRestResourcesViaServlet();
-//        startRestResourcesViaWebXml();
-        
-        log.info("Press Ctrl-C to quit.");
-    }
-    
     final static int FAVOURITE_PORT = 8081;
-    
-    public static Server startRestResourcesViaFilter() throws Exception {
-        BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
-            .useManagementContext(new LocalManagementContext())
-            .launch();
-        
-        return startRestResourcesViaFilter(platform.getBrooklynMgmt());
+
+    enum StartMode {
+        FILTER, SERVLET, WEB_XML
     }
-    public static Server startRestResourcesViaFilter(ManagementContext managementContext) throws Exception {
+
+    private boolean forceUseOfDefaultCatalogWithJavaClassPath = false;
+    private Class<? extends SecurityProvider> securityProvider;
+    private Set<Class<? extends Filter>> filters = Sets.newHashSet();
+    private StartMode mode = StartMode.FILTER;
+    private ManagementContext mgmt;
+    private ContextHandler customContext;
+    private boolean deployJsgui = true;
+
+    private BrooklynRestApiLauncher() {}
+
+    public BrooklynRestApiLauncher managementContext(ManagementContext mgmt) {
+        this.mgmt = mgmt;
+        return this;
+    }
+
+    public BrooklynRestApiLauncher forceUseOfDefaultCatalogWithJavaClassPath(boolean forceUseOfDefaultCatalogWithJavaClassPath) {
+        this.forceUseOfDefaultCatalogWithJavaClassPath = forceUseOfDefaultCatalogWithJavaClassPath;
+        return this;
+    }
+
+    public BrooklynRestApiLauncher securityProvider(Class<? extends SecurityProvider> securityProvider) {
+        this.securityProvider = securityProvider;
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public BrooklynRestApiLauncher addFilters(Class<? extends Filter>... filters) {
+        this.filters.addAll(Arrays.asList(filters));
+        return this;
+    }
+
+    public BrooklynRestApiLauncher mode(StartMode mode) {
+        this.mode = checkNotNull(mode, "mode");
+        return this;
+    }
+
+    /** Overrides start mode to use an explicit context */
+    public BrooklynRestApiLauncher customContext(ContextHandler customContext) {
+        this.customContext = checkNotNull(customContext, "customContext");
+        return this;
+    }
+
+    public BrooklynRestApiLauncher withJsgui() {
+        this.deployJsgui = true;
+        return this;
+    }
+
+    public BrooklynRestApiLauncher withoutJsgui() {
+        this.deployJsgui = false;
+        return this;
+    }
+
+    public Server start() {
+        if (this.mgmt == null) {
+            mgmt = new LocalManagementContext();
+        }
+        BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
+                .useManagementContext(mgmt)
+                .launch();
+
+        ContextHandler context;
+        String summary;
+        if (customContext == null) {
+            switch (mode) {
+            case SERVLET:
+                context = servletContextHandler(mgmt);
+                summary = "programmatic Jersey ServletContainer servlet";
+                break;
+            case WEB_XML:
+                context = webXmlContextHandler(mgmt);
+                summary = "from WAR at " + ((WebAppContext) context).getWar();
+                break;
+            case FILTER:
+            default:
+                context = filterContextHandler(mgmt);
+                summary = "programmatic Jersey ServletContainer filter on webapp at " + ((WebAppContext) context).getWar();
+                break;
+            }
+        } else {
+            context = customContext;
+            summary = (context instanceof WebAppContext)
+                    ? "from WAR at " + ((WebAppContext) context).getWar()
+                    : "from custom context";
+        }
+
+        if (securityProvider != null) {
+            ((BrooklynProperties) mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
+                    securityProvider.getName());
+        }
+
+        if (forceUseOfDefaultCatalogWithJavaClassPath) {
+            // don't use any catalog.xml which is set
+            ((BrooklynProperties) mgmt.getConfig()).put(ManagementContextInternal.BROOKLYN_CATALOG_URL, "");
+            // sets URLs for a surefire
+            ((LocalManagementContext) mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+        }
+
+        return startServer(mgmt, context, summary);
+    }
+
+    private ContextHandler filterContextHandler(ManagementContext mgmt) {
         WebAppContext context = new WebAppContext();
-        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
+        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, mgmt);
         context.setContextPath("/");
         // here we run with the JS GUI, for convenience, if we can find it, else set up an empty dir
         // TODO pretty sure there is an option to monitor this dir and load changes to static content
-        context.setWar(findJsguiWebapp()!=null ? findJsguiWebapp() : createTempWebDirWithIndexHtml("Brooklyn REST API <p> (gui not available)"));
-        
+        context.setWar(this.deployJsgui && findJsguiWebapp() != null
+                       ? findJsguiWebapp()
+                       : createTempWebDirWithIndexHtml("Brooklyn REST API <p> (gui not available)"));
         installAsServletFilter(context);
-        
-        return startServer(managementContext, context, "programmatic Jersey ServletContainer filter on webapp at "+context.getWar());
+        return context;
     }
 
-    public static Server startRestResourcesViaServlet() throws Exception {
-        BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
-            .useManagementContext(new LocalManagementContext())
-            .launch();
-        
-        return startRestResourcesViaServlet(platform.getBrooklynMgmt());
-    }
-    public static Server startRestResourcesViaServlet(ManagementContext managementContext) throws Exception {
+    private ContextHandler servletContextHandler(ManagementContext managementContext) {
         ResourceConfig config = new DefaultResourceConfig();
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
-        
+
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
         ServletHolder servletHolder = new ServletHolder(new ServletContainer(config));
@@ -123,14 +211,94 @@ public class BrooklynRestApiLauncher {
 
         installBrooklynFilters(context);
 
-        return startServer(managementContext, context, "programmatic Jersey ServletContainer servlet");
+        return context;
     }
-    
+
+    private ContextHandler webXmlContextHandler(ManagementContext mgmt) {
+        // TODO add security to web.xml
+        WebAppContext context;
+        if (findMatchingFile("src/main/webapp")!=null) {
+            // running in source mode; need to use special classpath
+            context = new WebAppContext("src/main/webapp", "/");
+            context.setExtraClasspath("./target/classes");
+        } else if (findRestApiWar()!=null) {
+            context = new WebAppContext(findRestApiWar(), "/");
+        } else {
+            throw new IllegalStateException("Cannot find WAR for REST API. Expected in target/*.war, Maven repo, or in source directories.");
+        }
+        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, mgmt);
+
+        return context;
+    }
+
     private static void installBrooklynFilters(ServletContextHandler context) {
         context.addFilter(BrooklynPropertiesSecurityFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         context.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
     }
-    
+
+    /** starts a server, on all NICs if security is configured,
+     * otherwise (no security) only on loopback interface */
+    private Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
+        // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
+        boolean secure = mgmt!=null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig()) ? true : false;
+        if (secure) {
+            log.debug("Detected security configured, launching server on all network interfaces");
+        } else {
+            log.debug("Detected no security configured, launching server on loopback (localhost) network interface only");
+            if (mgmt!=null) {
+                log.debug("Detected no security configured, running on loopback; disabling authentication");
+                ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, AnyoneSecurityProvider.class.getName());
+            }
+        }
+        if (mgmt != null)
+            mgmt.getHighAvailabilityManager().disabled();
+        InetSocketAddress bindLocation = new InetSocketAddress(
+                secure ? Networking.ANY_NIC : Networking.LOOPBACK,
+                        Networking.nextAvailablePort(FAVOURITE_PORT));
+        return startServer(context, summary, bindLocation);
+    }
+
+    private Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
+        Server server = new Server(bindLocation);
+        server.setHandler(context);
+        try {
+            server.start();
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+        log.info("Brooklyn REST server started ("+summary+") on");
+        log.info("  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");
+
+        return server;
+    }
+
+    public static BrooklynRestApiLauncher launcher() {
+        return new BrooklynRestApiLauncher();
+    }
+
+    public static void main(String[] args) throws Exception {
+        startRestResourcesViaFilter();
+        log.info("Press Ctrl-C to quit.");
+    }
+
+    public static Server startRestResourcesViaFilter() {
+        return new BrooklynRestApiLauncher()
+                .mode(StartMode.FILTER)
+                .start();
+    }
+
+    public static Server startRestResourcesViaServlet() throws Exception {
+        return new BrooklynRestApiLauncher()
+                .mode(StartMode.SERVLET)
+                .start();
+    }
+
+    public static Server startRestResourcesViaWebXml() throws Exception {
+        return new BrooklynRestApiLauncher()
+                .mode(StartMode.WEB_XML)
+                .start();
+    }
+
     public static void installAsServletFilter(ServletContextHandler context) {
         installBrooklynFilters(context);
 
@@ -149,94 +317,41 @@ public class BrooklynRestApiLauncher {
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
     }
 
-    public static Server startRestResourcesViaWebXml() throws Exception {
-        return startRestResourcesViaWebXml(new LocalManagementContext());
-    }
-    public static Server startRestResourcesViaWebXml(ManagementContext managementContext) throws Exception {
-        // TODO add security to web.xml
-        WebAppContext context;
-        if (findMatchingFile("src/main/webapp")!=null) {
-            // running in source mode; need to use special classpath
-            context = new WebAppContext("src/main/webapp", "/");
-            context.setExtraClasspath("./target/classes");
-        } else if (findRestApiWar()!=null) {
-            context = new WebAppContext(findRestApiWar(), "/");
-        } else {
-            throw new IllegalStateException("Cannot find WAR for REST API. Expected in target/*.war, Maven repo, or in source directories.");
-        }
-        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
-        
-        return startServer(context, "from WAR at "+context.getWar());
-    }
-    
-    /** starts server on all nics (even if security not enabled).
-     * @deprecated since 0.6.0; use {@link #startServer(ManagementContext, ContextHandler, String)} or
-     * {@link #startServer(ContextHandler, String, InetSocketAddress)} */
+    /**
+     * Starts the server on all nics (even if security not enabled).
+     * @deprecated since 0.6.0; use {@link #launcher()} and set a custom context
+     */
     @Deprecated
     public static Server startServer(ContextHandler context, String summary) {
-        return startServer(context, summary, 
+        return launcher()
+                .customContext(context)
+                .startServer(context, summary,
                 new InetSocketAddress(Networking.ANY_NIC, Networking.nextAvailablePort(FAVOURITE_PORT)));
-    }
-    /** starts a server, on all NICs if security is configured,
-     * otherwise (no security) only on loopback interface */
-    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
-        // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
-        boolean secure = mgmt!=null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig()) ? true : false;
-        if (secure) {
-            log.debug("Detected security configured, launching server on all network interfaces");
-        } else {
-            log.debug("Detected no security configured, launching server on loopback (localhost) network interface only");
-            if (mgmt!=null) {
-                log.debug("Detected no security configured, running on loopback; disabling authentication");
-                ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, AnyoneSecurityProvider.class.getName());
-            }
-        }
-        if (mgmt != null)
-            mgmt.getHighAvailabilityManager().disabled();
-        InetSocketAddress bindLocation = new InetSocketAddress(
-                secure ? Networking.ANY_NIC : Networking.LOOPBACK, 
-                        Networking.nextAvailablePort(FAVOURITE_PORT));
-        return startServer(context, summary, bindLocation);
-    }
-    public static Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
-        Server server = new Server(bindLocation);
-        server.setHandler(context);
-        try {
-            server.start();
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        } 
-        log.info("Brooklyn REST server started ("+summary+") on");
-        log.info("  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");
-        
-        return server;
     }
 
     /** look for the JS GUI webapp in common places, returning path to it if found, or null */
-    public static String findJsguiWebapp() {
-        String result = null;
-        result = findMatchingFile("../jsgui/src/main/webapp");  if (result!=null) return result;
-        result = findMatchingFile("../jsgui/target/*.war");  if (result!=null) return result;
+    private static String findJsguiWebapp() {
         // could also look in maven repo ?
-        return null;
+        return Optional
+                .fromNullable(findMatchingFile("../jsgui/src/main/webapp"))
+                .or(findMatchingFile("../jsgui/target/*.war"))
+                .orNull();
     }
 
     /** look for the REST WAR file in common places, returning path to it if found, or null */
-    public static String findRestApiWar() {
-        String result = null;
+    private static String findRestApiWar() {
         // don't look at src/main/webapp here -- because classes won't be there!
-        result = findMatchingFile("../rest/target/*.war");  if (result!=null) return result;
         // could also look in maven repo ?
-        return null;
+        return findMatchingFile("../rest/target/*.war").orNull();
     }
 
     /** returns the supplied filename if it exists (absolute or relative to the current directory);
      * supports globs in the filename portion only, in which case it returns the _newest_ matching file.
      * <p>
      * otherwise returns null */
-    public static String findMatchingFile(String filename) {
+    private static Optional<String> findMatchingFile(String filename) {
         final File f = new File(filename);
-        if (f.exists()) return filename;
+        if (f.exists()) return Optional.of(filename);
         File dir = f.getParentFile();
         File result = null;
         if (dir.exists()) {
@@ -250,12 +365,12 @@ public class BrooklynRestApiLauncher {
                 if (result==null || mf.lastModified() > result.lastModified()) result = mf;
             }
         }
-        if (result==null) return null;
-        return result.getAbsolutePath();
+        if (result==null) return Optional.absent();
+        return Optional.of(result.getAbsolutePath());
     }
 
     /** create a directory with a simple index.html so we have some content being served up */
-    public static String createTempWebDirWithIndexHtml(String indexHtmlContent) {
+    private static String createTempWebDirWithIndexHtml(String indexHtmlContent) {
         File dir = Files.createTempDir();
         dir.deleteOnExit();
         try {
