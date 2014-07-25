@@ -84,7 +84,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public Object identityEffector(Object arg) {
         if (LOG.isTraceEnabled()) LOG.trace("In identityEffector for {}", this);
         callHistory.add("identityEffector");
-        return arg;
+        return checkNotNull(arg, "arg");
     }
     
     @Override
