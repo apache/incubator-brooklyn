@@ -63,7 +63,8 @@ public class BrooklynNodeRestTest {
     // but there are no waits (beyond 10ms), the delay is all classloading;
     // and this tests a lot of things, REST API, Brooklyn Node, yaml deployment,
     // so feels worth it to have as a unit test
-    @Test
+    // FIXME[BROOKLYN-43]: Test fails if security is configured in brooklyn.properties.
+    @Test(groups = "WIP")
     public void testBrooklynNodeRestDeployAndMirror() {
         final SimpleYamlLauncher l = new SimpleYamlLauncherForTests();
         try {
