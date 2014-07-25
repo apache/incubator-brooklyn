@@ -44,11 +44,9 @@ define([
         
         initialize:function () {
             var that = this
-            
             this.$el.html(_.template(ApplicationsHtml, {} ))
             $(".nav1").removeClass("active");
             $(".nav1_home").addClass("active");
-            
             this._appViews = {}
             this.summariesView = new HomeView.HomeSummariesView({
                 applications:this.collection,

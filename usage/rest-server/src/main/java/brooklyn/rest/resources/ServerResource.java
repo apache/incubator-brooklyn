@@ -30,6 +30,8 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.Task;
+import brooklyn.management.entitlement.EntitlementContext;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
@@ -92,5 +94,15 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     public HighAvailabilitySummary getHighAvailability() {
         ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getManagementPlaneSyncState();
         return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
+    }
+
+    @Override
+    public String getUser() {
+        EntitlementContext entitlementContext = Entitlements.getEntitlementContext();
+        if (entitlementContext!=null && entitlementContext.user()!=null){
+            return entitlementContext.user();
+        } else {
+            return null; //User can be null if no authentication was requested
+        }
     }
 }

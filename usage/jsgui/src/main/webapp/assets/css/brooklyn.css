@@ -48,6 +48,16 @@ textarea {
     padding-right: 0px !important
 }
 
+.userName-top {
+    display: inline-block;
+    vertical-align: bottom;
+    float: right;
+    text-align: bottom;
+    font-weight:bold;
+    font-size:15px;
+    padding: 75px 10px 0 0;
+}
+
 .navbar .nav {
     margin-right: 0px !important;
 }

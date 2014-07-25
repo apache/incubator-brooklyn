@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
@@ -100,5 +101,12 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
             @Override public void run() {
                 assertFalse(getManagementContext().isRunning());
             }});
+    }
+    
+    // Disabled as BrooklynPropertiesSecurityFilter is not loaded in tests and the server responds 204 No Content.
+    @Test(groups = "WIP")
+    public void testGetUser() throws Exception {
+        String user = client().resource("/v1/server/user").get(String.class);
+        assertEquals(user, Entitlements.getEntitlementContext().user());
     }
 }
