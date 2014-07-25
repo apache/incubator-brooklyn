@@ -24,12 +24,15 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.testng.annotations.Test;
 
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
@@ -38,20 +41,43 @@ import com.google.common.io.Files;
 
 public class MonitorUtilsTest {
 
-    @Test(enabled=false, groups="UNIX") // Demonstrates that process.waitFor() hangs for big output streams
+    @Test(enabled=false, timeOut=1000) // Demonstrates that process.waitFor() hangs for big output streams
     public void testExecuteAndWaitFor() throws Exception {
-        String bigstr = Strings.repeat("a", 100000);
-        Process process = MonitorUtils.exec("echo " + bigstr);
+        Process process = createDumpingProcess(false);
         process.waitFor();
-        fail();
+        fail("Should block while waiting to consume process output");
     }
 
-    @Test(groups="UNIX")
-    public void testExecuteAndWaitForConsumingOutputStream() {
-        String bigstr = Strings.repeat("a", 100000);
-        Process process = MonitorUtils.exec("echo " + bigstr);
+    @Test(enabled=false, timeOut=1000) // Demonstrates that process.waitFor() hangs for big err streams
+    public void testExecuteAndWaitForErr() throws Exception {
+        Process process = createDumpingProcess(true);
+        process.waitFor();
+        fail("Should block while waiting to consume process output");
+    }
+
+    @Test(timeOut=1000)
+    public void testExecuteAndWaitForConsumingOutputStream() throws Exception {
+        Process process = createDumpingProcess(false);
         String out = MonitorUtils.waitFor(process);
-        assertTrue(out.contains(bigstr), "out.size="+out.length());
+        assertTrue(out.length() > 100000, "out.size="+out.length());
+    }
+
+    @Test(timeOut=1000, expectedExceptions=IllegalStateException.class)
+    public void testExecuteAndWaitForConsumingErrorStream() throws Exception {
+        Process process = createDumpingProcess(true);
+        MonitorUtils.waitFor(process);
+    }
+
+    private Process createDumpingProcess(boolean writeToErr) throws IOException {
+        String errSuffix = writeToErr ? " >&2" : "";
+        //Windows limits the length of the arguments so echo multiple times instead
+        String bigstr = Strings.repeat("a", 8000);
+        String bigcmd = Strings.repeat(getSilentPrefix() + "echo " + bigstr + errSuffix + Os.LINE_SEPARATOR, 15);
+        File file = Os.newTempFile("test-consume", ".bat");
+        file.setExecutable(true);
+        Files.write(bigcmd, file, Charsets.UTF_8);
+        Process process = MonitorUtils.exec(file.getAbsolutePath());
+        return process;
     }
 
     @Test(groups="UNIX")
@@ -125,6 +151,14 @@ public class MonitorUtilsTest {
 
         MonitorUtils.MemoryUsage memUsage3 = MonitorUtils.getMemoryUsage(ownpid, MonitorUtilsTest.class.getCanonicalName(), 2);
         assertEquals(memUsage3.getInstanceCounts(), Collections.emptyMap());
+    }
+
+    private String getSilentPrefix() {
+        if (Os.isMicrosoftWindows()) {
+            return "@";
+        } else {
+            return "";
+        }
     }
 
 }
