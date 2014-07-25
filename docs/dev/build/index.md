@@ -33,6 +33,32 @@ Key things to note if you're new to Maven:
   (that link has some tips for resolving them too)
 
 
+## When the RAT Bites
+
+We use RAT to ensure that all files are compliant to Apache standards.  Most of the time you shouldn't see it or need to know about it, but if it detects a violation, you'll get a message such as:
+
+    [ERROR] Failed to execute goal org.apache.rat:apache-rat-plugin:0.10:check (default) on project brooklyn-parent: Too many files with unapproved license: 1 See RAT report in: /Users/alex/Data/cloudsoft/dev/gits/brooklyn/target/rat.txt -> [Help 1]
+
+If there's a problem, see the file `rat.txt` in the `target` directory of the failed project.  (Maven will show you this link in its output.)
+
+Often the problem is one of the following:
+
+* You've added a file which requires the license header but doesn't have it
+
+  **Resolution:**  Simply copy the header from another file
+
+* You've got some temporary files which RAT things should have headers
+
+  **Resolution:**  Move the files away, add headers, or turn off RAT (see below)
+
+* The project structure has changed and you have stale files (e.g. in a `target` directory)
+
+  **Resolution:**  Remove the stale files, e.g. with `git clean -df` (and if needed a `find . -name target -prune -exec rm -rf {} \;` to delete folders named `target`)
+
+To disable RAT checking on a build, set `rat.ignoreErrors`, e.g. `mvn -Drat.ignoreErrors=true clean install`.  (But note you will need RAT to pass in order for a PR to be accepted!)
+
+
+
 ## Other Handy Hints
 
 * On some **Ubuntu** (e.g. 10.4 LTS) maven v3 is not currently available from the repositories.
