@@ -4,6 +4,17 @@ title: Writing an Entity
 toc: /toc.json
 ---
 
+## Ways to write an entity
+
+There are several ways to write a new entity:
+
+* Write pure-java, extending existing base-classes and using utilities such as `HttpTool` and `BashCommands`.
+* Write scripts, and configure (e.g. using YAML) a **`VanillaSoftwareProcess`**.
+* Use Chef recipes, and wire these into the entity by using `ChefConfig` and `ChefLifecycleEffectorTasks`.
+* Use an equivalent of Chef (e.g. Salt or Puppet; support for these is currently less mature than for Chef)
+
+The rest of this section covers writing an entity in pure-java (or other JVM languages).
+
 
 ## Things To Know
 
@@ -17,11 +28,10 @@ instance, which is important in a distributed management plane.
 All entity implementations inherit from `AbstractEntity`, 
 often through one of the following:
 
-* **`SoftwareProcess`**:  if it's a software process
-* **`VanillaJavaApp`**:  if it's a plain-old-java app
-* **`JavaWebAppSoftwareProcess`**:  if it's a JVM-based web-app
-* **`WhirrEntity`**:  if it's a service launched using Whirr
-* **`DynamicGroup`**:  if it's a collection of other entities
+* **`SoftwareProcessImpl`**:  if it's a software process
+* **`VanillaJavaAppImpl`**:  if it's a plain-old-java app
+* **`JavaWebAppSoftwareProcessImpl`**:  if it's a JVM-based web-app
+* **`DynamicClusterImpl`**, **`DynamicGroupImpl`** or **`AbstractGroupImpl`**:  if it's a collection of other entities
 
 Software-based processes tend to use *drivers* to install and
 launch the remote processes onto *locations* which support that driver type.
@@ -44,10 +54,10 @@ So to get started:
 1. Create your entity interface, extending the appropriate selection from above,
    to define the effectors and sensors.
 2. Include an annotation like `@ImplementedBy(YourEntityImpl.class)` on your interface,
-   where YourEntityImpl will be the class name for your entity implementation.
+   where `YourEntityImpl` will be the class name for your entity implementation.
 3. Create your entity class, implementing your entity interface and extending the 
    classes for your chosen entity super-types. Naming convention is a suffix "Impl"
-   for the entity class.
+   for the entity class, but this is not essential.
 4. Create a driver interface, again extending as appropriate (e.g. `SoftwareProcessDriver`).
    The naming convention is to have a suffix "Driver". 
 5. Create the driver class, implementing your driver interface, and again extending as appropriate.
@@ -71,8 +81,8 @@ Check out some of the exemplar existing entities
 (note, some of the other entities use deprecated utilities and a deprecated class 
 hierarchy; it is suggested to avoid these, looking at the ones below instead):
 
-* JBoss7Server
-* MySqlNode
+* `JBoss7Server`
+* `MySqlNode`
 
 You might also find the following helpful:
 

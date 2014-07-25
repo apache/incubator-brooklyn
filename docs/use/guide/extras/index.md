@@ -7,9 +7,7 @@ categories: [use, guide]
 
 brooklyn comes bundled with support for a large number of systems and entities.
 
-*In this pre-release version not all entities are fully functional and that the documentation is incomplete.*
-
-*Please contact the Brooklyn Project for assistance and clarification.*
+*Some entities are in an early-access state, and documentation is incomplete. Please contact the Brooklyn Project for assistance and clarification.*
 <!---
 .. TODO fix
 .. TODO name entities
@@ -23,8 +21,8 @@ Web
 ### Clusters and Interfaces
 
 The class ``ControlledDynamicWebAppCluster`` creates a load-balanced cluster of web servers.
-It defaults to Nginx and JBoss 7, but this is configurable with the ``controller`` and 
-either the ``factory`` or ``memberSpec`` configuration options.
+It defaults to Nginx and JBoss 7, but this is configurable with the ``controller`` or ``controllerSpec``, and 
+the ``memberSpec`` configuration options.
 
 Most web app server processes, and some clusters and PaaS implementations,
 support the interface ``WebAppService`` which defines many sensors including requests per second.
@@ -93,10 +91,13 @@ Redis is a distributed key-value store, supporting master/slave replication of a
 a series of read-only slaves and a single read-write master, which propagates to the slaves with eventual consistency.
 
 
-### Infinispan
+### MongoDB
 
-Infinispan is a distributed in-memory datagrid.
 
+### Cassandra
+
+
+### CouchBase
 
 
 <a name="messaging"></a>
@@ -115,15 +116,45 @@ See ``QpidSetup`` for instantiating a broker.
 ActiveMQ support provides a JMS broker. This exposes JMS queues and topics as entities as well. See ``ActiveMQSetup`` for
 instantiating a broker.
 
+### RabbitMQ
 
 
-<a name="provisioning"></a>
-Provisioning
----------
+<a name="downstream-projects"></a>
+Downstream Projects
+-------------------
+
+Downstream projects include those below.
 
 ### Apache Whirr
 
+https://github.com/brooklyncentral/brooklyn-whirr
 
 Whirr allows running a variety of services on cloud providers and on localhost. This is done by providing a ``recipe`` which describes what services to launch. You can find an example of how Brooklyn integrates with Whirr [here](/use/examples/whirrhadoop/index.html#custom-whirr-recipe).
 
+### OpenShift
 
+https://github.com/cloudsoft/brooklyn-openshift
+
+### CloudFoundry
+
+https://github.com/cloudsoft/brooklyn-cloudfoundry and https://github.com/cloudsoft/brooklyn-cloudfoundry
+
+### MPI
+
+https://github.com/cloudsoft/brooklyn-openmpi
+
+### Waratek
+
+https://github.com/cloudsoft/brooklyn-waratek
+
+### MapR
+
+https://github.com/cloudsoft/brooklyn-mapr
+
+### Cloudera CDH
+
+https://github.com/cloudsoft/brooklyn-cdh
+
+### Drupal and Wordpress
+
+https://github.com/cloudsoft/brooklyn-social-apps

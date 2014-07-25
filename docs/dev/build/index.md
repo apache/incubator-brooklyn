@@ -63,58 +63,95 @@ brooklyn% mvn clean install
 [INFO] Reactor Build Order:
 [INFO] 
 [INFO] Brooklyn Parent Project
+[INFO] Brooklyn Utilities to Support Testing (listeners etc)
+[INFO] Brooklyn Logback Includable Configuration
+[INFO] Brooklyn Common Utilities
+[INFO] Brooklyn Groovy Utilities
 [INFO] Brooklyn API
-[INFO] Brooklyn Test Support
-[INFO] Brooklyn Core
 
 ...
 
-Mar 29, 2012 4:30:17 PM java.util.jar.Attributes read
-WARNING: Duplicate name in Manifest: Manifest-Version.
-Ensure that the manifest does not have duplicate entries, and
-that blank lines separate individual sections in both your
-manifest and in the META-INF/MANIFEST.MF entry in the jar file.
+[WARNING] Ignoring project type war - supportedProjectTypes = [jar]
 
 ...
 
-[WARNING] We have a duplicate org/jclouds/cloudsigma/CloudSigmaAsyncClient.class in 
-/Users/alex/.m2/repository/org/jclouds/provider/cloudsigma-zrh/1.4.0/cloudsigma-zrh-1.4.0.jar
+[WARNING] We have a duplicate org/xmlpull/v1/XmlPullParser.class in /Users/aled/.m2/repository/xpp3/xpp3_min/1.1.4c/xpp3_min-1.1.4c.jar
 
 ...
 
-[INFO] --- maven-jar-plugin:2.3.1:jar (default-jar) @ brooklyn-all ---
-[WARNING] JAR will be empty - no content was marked for inclusion!
+[INFO] — maven-assembly-plugin:2.3:single (build-distribution-dir) @ brooklyn-dist —
+[INFO] Reading assembly descriptor: src/main/config/build-distribution-dir.xml
+[WARNING] Cannot include project artifact: io.brooklyn:brooklyn-dist:jar:0.7.0-SNAPSHOT; it doesn't have an associated file or directory.
+[INFO] Copying files to /Users/aled/repos/apache/incubator-brooklyn/usage/dist/target/brooklyn-dist
+[WARNING] Assembly file: /Users/aled/repos/apache/incubator-brooklyn/usage/dist/target/brooklyn-dist is not a regular file (it may be a directory). It cannot be attached to the project build for installation or deployment.
 
 ...
 
-[INFO] ------------------------------------------------------------------------
+[INFO] — maven-assembly-plugin:2.3:single (build-distribution-archive) @ brooklyn-dist —
+[INFO] Reading assembly descriptor: src/main/config/build-distribution-archive.xml
+[WARNING] Cannot include project artifact: io.brooklyn:brooklyn-dist:jar:0.7.0-SNAPSHOT; it doesn't have an associated file or directory.
+[INFO] Building tar: /Users/aled/repos/apache/incubator-brooklyn/usage/dist/target/brooklyn-0.7.0-SNAPSHOT-dist.tar.gz
+[WARNING] Cannot include project artifact: io.brooklyn:brooklyn-dist:jar:0.7.0-SNAPSHOT; it doesn't have an associated file or directory.
+
+...
+
+[WARNING] Don't override file /Users/aled/repos/apache/incubator-brooklyn/usage/archetypes/quickstart/target/test-classes/projects/integration-test-1/project/brooklyn-sample/src/main/resources/sample-icon.png
+
+...
+
 [INFO] Reactor Summary:
 [INFO] 
-[INFO] Brooklyn Parent Project ........................... SUCCESS [0.813s]
-[INFO] Brooklyn API ...................................... SUCCESS [6.115s]
-[INFO] Brooklyn Test Support ............................. SUCCESS [4.592s]
-[INFO] Brooklyn Core ..................................... SUCCESS [1:20.536s]
-[INFO] Brooklyn Policies ................................. SUCCESS [57.996s]
-[INFO] Brooklyn Software Base ............................ SUCCESS [29.869s]
-[INFO] Brooklyn OSGi Software Entities ................... SUCCESS [9.392s]
-[INFO] Brooklyn Web App Software Entities ................ SUCCESS [49.606s]
-[INFO] Brooklyn Messaging Software Entities .............. SUCCESS [12.198s]
-[INFO] Brooklyn NoSQL Data Store Software Entities ....... SUCCESS [9.205s]
-[INFO] Brooklyn Database Software Entities ............... SUCCESS [7.815s]
-[INFO] Brooklyn Whirr Base Entities ...................... SUCCESS [21.292s]
-[INFO] Brooklyn Hadoop System Entities ................... SUCCESS [9.972s]
-[INFO] Brooklyn Web Console .............................. SUCCESS [1:00.814s]
-[INFO] Brooklyn Launcher ................................. SUCCESS [1:00.603s]
-[INFO] Brooklyn All Things ............................... SUCCESS [23.358s]
-[INFO] hello-world-webapp Maven Webapp ................... SUCCESS [2.521s]
-[INFO] Brooklyn Simple Web Cluster Example ............... SUCCESS [5.860s]
-[INFO] Brooklyn Hadoop and Whirr Example ................. SUCCESS [4.892s]
+[INFO] Brooklyn Parent Project ........................... SUCCESS [3.072s]
+[INFO] Brooklyn Utilities to Support Testing (listeners etc)  SUCCESS [3.114s]
+[INFO] Brooklyn Logback Includable Configuration ......... SUCCESS [0.680s]
+[INFO] Brooklyn Common Utilities ......................... SUCCESS [7.263s]
+[INFO] Brooklyn Groovy Utilities ......................... SUCCESS [5.193s]
+[INFO] Brooklyn API ...................................... SUCCESS [2.146s]
+[INFO] Brooklyn Test Support ............................. SUCCESS [2.517s]
+[INFO] CAMP Server Parent Project ........................ SUCCESS [0.075s]
+[INFO] CAMP Base ......................................... SUCCESS [4.079s]
+[INFO] Brooklyn REST Swagger Apidoc Utilities ............ SUCCESS [1.983s]
+[INFO] Brooklyn Logback Configuration .................... SUCCESS [0.625s]
+[INFO] CAMP Server ....................................... SUCCESS [5.446s]
+[INFO] Brooklyn Core ..................................... SUCCESS [1:24.122s]
+[INFO] Brooklyn Policies ................................. SUCCESS [44.425s]
+[INFO] Brooklyn Hazelcast Storage ........................ SUCCESS [7.143s]
+[INFO] Brooklyn Jclouds Location Targets ................. SUCCESS [16.488s]
+[INFO] Brooklyn Secure JMXMP Agent ....................... SUCCESS [8.634s]
+[INFO] Brooklyn JMX RMI Agent ............................ SUCCESS [2.315s]
+[INFO] Brooklyn Software Base ............................ SUCCESS [28.538s]
+[INFO] Brooklyn Network Software Entities ................ SUCCESS [3.896s]
+[INFO] Brooklyn OSGi Software Entities ................... SUCCESS [4.589s]
+[INFO] Brooklyn Web App Software Entities ................ SUCCESS [17.484s]
+[INFO] Brooklyn Messaging Software Entities .............. SUCCESS [7.106s]
+[INFO] Brooklyn Database Software Entities ............... SUCCESS [5.229s]
+[INFO] Brooklyn NoSQL Data Store Software Entities ....... SUCCESS [11.901s]
+[INFO] Brooklyn Monitoring Software Entities ............. SUCCESS [4.027s]
+[INFO] Brooklyn CAMP REST API ............................ SUCCESS [15.285s]
+[INFO] Brooklyn REST API ................................. SUCCESS [4.489s]
+[INFO] Brooklyn REST Server .............................. SUCCESS [30.270s]
+[INFO] Brooklyn REST Client .............................. SUCCESS [7.007s]
+[INFO] Brooklyn REST JavaScript Web GUI .................. SUCCESS [24.397s]
+[INFO] Brooklyn Launcher ................................. SUCCESS [15.923s]
+[INFO] Brooklyn Command Line Interface ................... SUCCESS [9.279s]
+[INFO] Brooklyn All Things ............................... SUCCESS [13.875s]
+[INFO] Brooklyn Distribution ............................. SUCCESS [49.370s]
+[INFO] Brooklyn Quick-Start Project Archetype ............ SUCCESS [12.053s]
+[INFO] Brooklyn Examples Aggregator Project .............. SUCCESS [0.085s]
+[INFO] Brooklyn Examples Support Aggregator Project - Webapps  SUCCESS [0.053s]
+[INFO] hello-world-webapp Maven Webapp ................... SUCCESS [0.751s]
+[INFO] hello-world-sql-webapp Maven Webapp ............... SUCCESS [0.623s]
+[INFO] Brooklyn Simple Web Cluster Example ............... SUCCESS [5.398s]
+[INFO] Brooklyn Global Web Fabric Example ................ SUCCESS [3.176s]
+[INFO] Brooklyn Simple Messaging Publish-Subscribe Example  SUCCESS [3.217s]
+[INFO] Brooklyn NoSQL Cluster Examples ................... SUCCESS [6.790s]
+[INFO] Brooklyn QA ....................................... SUCCESS [7.117s]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 7:52.328s
-[INFO] Finished at: Thu Mar 29 16:30:17 BST 2012
-[INFO] Final Memory: 180M/528M
+[INFO] Total time: 8:33.983s
+[INFO] Finished at: Mon Jul 21 14:56:46 BST 2014
+[INFO] Final Memory: 66M/554M
 [INFO] ------------------------------------------------------------------------
 
 {% endhighlight %}

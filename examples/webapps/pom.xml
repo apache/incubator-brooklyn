@@ -41,7 +41,5 @@
     <modules>
         <module>hello-world-webapp</module>
         <module>hello-world-sql</module>
-        <module>hello-world-hadoop-jar</module>
-        <module>hello-world-hadoop</module>
     </modules>
 </project>

@@ -116,7 +116,6 @@
         <logback.version>1.0.7</logback.version>
         <testng.version>6.8</testng.version>
         <mockito.version>1.9.5</mockito.version>
-        <whirr.version>0.8.1</whirr.version>
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
@@ -805,8 +804,6 @@
                 <module>software/nosql</module>
                 <module>software/database</module>
                 <module>software/monitoring</module>
-                <module>systems/whirr/base</module>
-                <module>systems/whirr/hadoop</module>
             </modules>
         </profile>
         <profile>

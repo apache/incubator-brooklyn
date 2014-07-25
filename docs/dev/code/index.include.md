@@ -31,31 +31,46 @@ This document is intended to help people become familiar with the codebase.
 
 ## Project Structure
 
-Brooklyn is split into the following projects and subprojects:
+Brooklyn is split into the following projects and sub-projects:
 
+* **``camp``**: the components for a server which speaks the CAMP REST API and which understands the CAMP YAML plan language
 * **``api``**: the pure-Java interfaces for interacting with the system
 * **``core``**: the base class implementations for entities and applications, entity traits, locations, policies, sensor and effector support, tasks, and more 
+* **``locations``**: specific location integrations
+    * **``jclouds``**: integration with many cloud APIs and providers, via Apache jclouds
 * **``policies``**: collection of useful policies for automating entity activity  
 * **``software``**: entities which are mainly launched by launched software processes on machines, and collections thereof
     * **``base``**: software process lifecycle abstract classes and drivers (e.g. SSH) 
     * **``webapp``**: web servers (JBoss, Tomcat), load-balancers (Nginx), and DNS (Geoscaling) 
     * **``database``**: relational databases (SQL) 
     * **``nosql``**: datastores other than RDBMS/SQL (often better in distributed environments) 
-    * **``messaging``**: messaging systems, including Qpid, Apache MQ 
+    * **``messaging``**: messaging systems, including Qpid, Apache MQ, RabbitMQ 
+    * **``monitoring``**: monitoring tools, including Monit
+    * **``osgi``**: OSGi servers 
     * **...**
-* **``systems``**: entities which are mainly created or managed by other systems, where Brooklyn integrates with those (multi-machine) systems and is removed from the processes
-    * **``whirr``**:  ``base`` Whirr integration, and entities built on Whirr such as the configurable ``hadoop`` deployment
-    * **...**
+* **``utils``**: projects which lower level utilities
+    * **common**: Utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
+    * **groovy**: Groovy extensions and utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
+    * **jmx/jmxmp-ssl-agent**: An agent implementation that can be attached to a Java process, to give expose secure JMXMP
+    * **jmx/jmxrmi-agent**: An agent implementation that can be attached to a Java process, to give expose JMX-RMI without requiring all high-number ports to be open
+    * **rest-swagger**: Swagger REST API utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
+    * **test-support**: Test utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
 * **``usage``**: projects which make Brooklyn easier to use, either for end-users or Brooklyn developers
-    * **all**: maven project to supply a shaded JAR (containing all dependencies) for convenience 
+    * **all**: maven project to supply a shaded JAR (containing all dependencies) for convenience
+    * **archetypes**: A maven archetype, for easily generating the structure of a new downstream projects 
+    * **camp**: Brooklyn bindings for the CAMP REST API
     * **cli**: backing implementation for Brooklyn's command line interface
     * **dist**: builds brooklyn as a downloadable .zip and .tar.gz
     * **jsgui**: Javascript web-app for the brooklyn management web console (builds a WAR)
     * **launcher**: for launching brooklyn, either using a main method or invoked from the cli project
-    * **qa**: longevity and stress tests
-    * **rest**: implementation of brooklyn's REST api 
+    * **logback-includes**: Various helpful logback XML files that can be included; does not contain logback.xml 
+    * **logback-xml**: Contains a logback.xml that references the include files in brooklyn-logback-includes
+    * **rest-api**: The API classes for the Brooklyn REST api
+    * **rest-client**: A client Java implementation for using the Brooklyn REST API 
+    * **rest-server**: The server-side implementation of the Brooklyn REST API
     * **scripts**: various scripts useful for building, updating, etc. (see comments in the scripts)
-    * **test-support**: provides support for tests, used by nearly all projects in scope ``test`` 
+    * **qa**: longevity and stress tests
+    * **test-support**: provides Brooklyn-specific support for tests, used by nearly all projects in scope ``test``
 * **``docs``**: the markdown source code for this documentation, as described [here]({{site.url}}/dev/tips/update-docs.html)
 * **``examples``**: some canonical examples, as listed [here]({{site.url}}/use/examples)
 * **``sandbox``**: various projects, entities, and policies which the Brooklyn Project is incubating
@@ -72,8 +87,8 @@ If you're interested in building and editing the code, check out:
 
 If you want to start writing your own policies and entities, have a look at:
 
-* [Writing a Brooklyn Policy](policy.html)
 * [Writing a Brooklyn Entity](entity.html)
+* [Writing a Brooklyn Policy](policy.html)
 * Or see the [User Guide]({{ site.url }}/use/guide/index.html) 
   on [policies]({{ site.url }}/use/guide/policies/index.html)
   and [entities]({{ site.url }}/use/guide/entities/index.html)
