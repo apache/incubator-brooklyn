@@ -725,6 +725,7 @@
                   <exclude>**/.settings/**</exclude>
                   <exclude>**/*.log</exclude>
                   <exclude>**/brooklyn*.log.*</exclude>
+                  <exclude>**/target/**</exclude>
                   <!-- files not requiring licence -->
                   <exclude>ignored/**</exclude>
                   <exclude>LICENSE.md</exclude>
@@ -744,8 +745,6 @@
                   <exclude>**/src/main/resources/banner.txt</exclude>
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
                   <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
-                  <exclude>**/sandbox/*/target/classes/**</exclude>
-                  <exclude>**/sandbox/*/target/test-classes/**</exclude>
                   <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
                   <!-- FIXME: Check licences for docs -->
                   <exclude>docs/**</exclude>

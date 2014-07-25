@@ -57,6 +57,7 @@ Often the problem is one of the following:
 
 To disable RAT checking on a build, set `rat.ignoreErrors`, e.g. `mvn -Drat.ignoreErrors=true clean install`.  (But note you will need RAT to pass in order for a PR to be accepted!)
 
+If there is a good reason that a file, pattern, or directory should be permanently ignored, that is easy to add inside the root `pom.xml`.
 
 
 ## Other Handy Hints
