@@ -19,18 +19,22 @@
 package brooklyn.entity.pool;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
+import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
@@ -41,14 +45,21 @@ import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.dynamic.DynamicLocation;
 import brooklyn.management.LocationManager;
+import brooklyn.management.Task;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
@@ -57,8 +68,14 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     private static final Logger LOG = LoggerFactory.getLogger(ServerPoolImpl.class);
 
     private static enum MachinePoolMemberStatus {
+        /** The server is available for use */
         AVAILABLE,
+        /** The server has been leased to another application */
         CLAIMED,
+        /**
+         * The server will not be leased to other applications. It will be the first
+         * candidate to release when the pool is shrunk.
+         */
         UNUSABLE
     }
 
@@ -72,13 +89,18 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     // Would use BiMap but persisting them tends to throw ConcurrentModificationExceptions.
     @SuppressWarnings("serial")
     public static final AttributeSensor<Map<Entity, MachineLocation>> ENTITY_MACHINE = Sensors.newSensor(new TypeToken<Map<Entity, MachineLocation>>() {},
-                "pool.entityMachineMap", "A mapping of entities and their machine locations");
+            "pool.entityMachineMap", "A mapping of entities and their machine locations");
+
     @SuppressWarnings("serial")
     public static final AttributeSensor<Map<MachineLocation, Entity>> MACHINE_ENTITY = Sensors.newSensor(new TypeToken<Map<MachineLocation, Entity>>() {},
-                "pool.machineEntityMap", "A mapping of machine locations and their entities");
+            "pool.machineEntityMap", "A mapping of machine locations and their entities");
 
     public static final AttributeSensor<LocationDefinition> DYNAMIC_LOCATION_DEFINITION = Sensors.newSensor(LocationDefinition.class,
             "pool.locationDefinition", "The location definition used to create the pool's dynamic location");
+
+    public static final ConfigKey<Boolean> REMOVABLE = ConfigKeys.newBooleanConfigKey(
+            "pool.member.removable", "Whether a pool member is removable from the cluster. Used to denote additional " +
+                    "existing machines that were manually added to the pool", true);
 
     @SuppressWarnings("unused")
     private MemberTrackingPolicy membershipTracker;
@@ -113,6 +135,12 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     public void stop() {
         super.stop();
         deleteLocation();
+        synchronized (mutex) {
+            setAttribute(AVAILABLE_COUNT, 0);
+            setAttribute(CLAIMED_COUNT, 0);
+            getAttribute(ENTITY_MACHINE).clear();
+            getAttribute(MACHINE_ENTITY).clear();
+        }
     }
 
     private void addMembershipTrackerPolicy() {
@@ -164,10 +192,12 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
             LOG.debug("{} deleting and unmanaging location {}", this, location);
             mgr.unmanage(location);
         }
+        // definition will only be null if deleteLocation has already been called, e.g. by two calls to stop().
         LocationDefinition definition = getAttribute(DYNAMIC_LOCATION_DEFINITION);
-        LOG.debug("{} unregistering dynamic location {}", this, definition);
-        getManagementContext().getLocationRegistry().removeDefinedLocation(definition.getId());
-
+        if (definition != null) {
+            LOG.debug("{} unregistering dynamic location {}", this, definition);
+            getManagementContext().getLocationRegistry().removeDefinedLocation(definition.getId());
+        }
         setAttribute(LOCATION_SPEC, null);
         setAttribute(DYNAMIC_LOCATION, null);
         setAttribute(LOCATION_NAME, null);
@@ -211,6 +241,36 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
         }
     }
 
+    @Override
+    public Entity addExistingMachine(MachineLocation machine) {
+        LOG.info("Adding additional machine to {}: {}", this, machine);
+        Entity added = addNode(machine, MutableMap.of(REMOVABLE, false));
+        Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(machine));
+        Task<Void> task = Effectors.invocation(added, Startable.START, args).asTask();
+        DynamicTasks.queueIfPossible(task).orSubmitAsync(this);
+        return added;
+    }
+
+    @Override
+    public Collection<Entity> addExistingMachinesFromSpec(String spec) {
+        Location location = getManagementContext().getLocationRegistry().resolveIfPossible(spec);
+        List<Entity> additions = Lists.newLinkedList();
+        if (location == null) {
+            LOG.warn("Spec was unresolvable: {}", spec);
+        } else {
+            Iterable<MachineLocation> machines = FluentIterable.from(location.getChildren())
+                    .filter(MachineLocation.class);
+            LOG.info("{} adding additional machines: {}", this, machines);
+            // Doesn't need to be synchronised on mutex: it will be claimed per-machine
+            // as the new members are handled by the membership tracking policy.
+            for (MachineLocation machine : machines) {
+                additions.add(addExistingMachine(machine));
+            }
+            LOG.debug("{} added additional machines", this);
+        }
+        return additions;
+    }
+
     /**
      * Overrides to restrict delta to the number of machines that can be <em>safely</em>
      * removed (i.e. those that are {@link MachinePoolMemberStatus#UNUSABLE unusable} or
@@ -222,14 +282,26 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
      */
     @Override
     protected Collection<Entity> shrink(int delta) {
+        if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
+            return super.shrink(delta);
+        }
+
         synchronized (mutex) {
-            int unusable = Iterables.size(getMembersWithStatus(MachinePoolMemberStatus.UNUSABLE));
-            int removeable = getAttribute(AVAILABLE_COUNT) + unusable;
-            if (-delta > removeable && !Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
-                LOG.info("Too few unclaimed machines in {} to shrink by delta {}. Altered delta to {}",
-                        new Object[]{this, delta, -removeable});
-                delta = -removeable;
+            int removable = 0;
+            for (Entity entity : getMembers()) {
+                // Skip machine marked not for removal and machines that are claimed
+                if (!Boolean.FALSE.equals(entity.getConfig(REMOVABLE)) &&
+                        !MachinePoolMemberStatus.CLAIMED.equals(entity.getAttribute(SERVER_STATUS))) {
+                    removable -= 1;
+                }
             }
+
+            if (delta < removable) {
+                LOG.info("Too few removable machines in {} to shrink by delta {}. Altered delta to {}",
+                        new Object[]{this, delta, removable});
+                delta = removable;
+            }
+
             Collection<Entity> removed = super.shrink(delta);
             updateCountSensors();
             return removed;
@@ -245,11 +317,6 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     }
 
     @Override
-    public Integer getCurrentSize() {
-        return super.getCurrentSize();
-    }
-
-    @Override
     public Function<Collection<Entity>, Entity> getRemovalStrategy() {
         return UNCLAIMED_REMOVAL_STRATEGY;
     }
@@ -257,12 +324,15 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     private final Function<Collection<Entity>, Entity> UNCLAIMED_REMOVAL_STRATEGY = new Function<Collection<Entity>, Entity>() {
         // Semantics of superclass mean that mutex should already be held when apply is called
         @Override
-        public Entity apply(Collection<Entity> input) {
+        public Entity apply(Collection<Entity> members) {
             synchronized (mutex) {
-                Optional<Entity> choice = getMemberWithStatus(MachinePoolMemberStatus.UNUSABLE)
-                        .or(getMemberWithStatus(MachinePoolMemberStatus.AVAILABLE));
-                if (!choice.isPresent() && Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
-                    choice = getMemberWithStatus(MachinePoolMemberStatus.CLAIMED);
+                Optional<Entity> choice;
+                if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
+                    choice = Optional.of(members.iterator().next());
+                } else {
+                    // Otherwise should only choose between removable + unusable or available
+                    choice = getMemberWithStatusExcludingUnremovable(members, MachinePoolMemberStatus.UNUSABLE)
+                            .or(getMemberWithStatusExcludingUnremovable(members, MachinePoolMemberStatus.AVAILABLE));
                 }
                 if (!choice.isPresent()) {
                     LOG.warn("{} has no machines available to remove!", this);
@@ -306,13 +376,27 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     }
 
     private Optional<Entity> getMemberWithStatus(MachinePoolMemberStatus status) {
-        return Iterables.tryFind(getMembers(),
-                EntityPredicates.attributeEqualTo(SERVER_STATUS, status));
+        return getMemberWithStatus0(getMembers(), status, true);
     }
 
-    private Iterable<Entity> getMembersWithStatus(MachinePoolMemberStatus status) {
-        return Iterables.filter(getMembers(),
-                EntityPredicates.attributeEqualTo(SERVER_STATUS, status));
+    private Optional<Entity> getMemberWithStatusExcludingUnremovable(Collection<Entity> entities, MachinePoolMemberStatus status) {
+        return getMemberWithStatus0(entities, status, false);
+    }
+
+    private Optional<Entity> getMemberWithStatus0(Collection<Entity> entities, final MachinePoolMemberStatus status, final boolean includeUnremovableMachines) {
+        return Iterables.tryFind(entities,
+                new Predicate<Entity>() {
+                    @Override
+                    public boolean apply(Entity input) {
+                        return (includeUnremovableMachines || isRemovable(input)) &&
+                                status.equals(input.getAttribute(SERVER_STATUS));
+                    }
+                });
+    }
+
+    /** @return true if the entity has {@link #REMOVABLE} set to null or true. */
+    private boolean isRemovable(Entity entity) {
+        return !Boolean.FALSE.equals(entity.getConfig(REMOVABLE));
     }
 
     private void updateCountSensors() {
@@ -330,7 +414,6 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
             setAttribute(CLAIMED_COUNT, claimed);
         }
     }
-
 
     public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
         @Override

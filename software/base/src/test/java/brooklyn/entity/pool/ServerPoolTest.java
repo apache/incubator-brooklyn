@@ -22,16 +22,24 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.test.entity.TestApplication;
-
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
+import brooklyn.test.entity.TestApplication;
 
 public class ServerPoolTest extends AbstractServerPoolTest {
 
@@ -122,4 +130,48 @@ public class ServerPoolTest extends AbstractServerPoolTest {
         assertClaimedCountEquals(getInitialPoolSize() - 1);
     }
 
+    @Test
+    public void testCanAddExistingMachinesToPool() {
+        TestApplication app = createAppWithChildren(getInitialPoolSize());
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertAvailableCountEquals(0);
+
+        LocalhostMachine loc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachine.class));
+        Entity added = pool.addExistingMachine(loc);
+        assertFalse(added.getConfig(ServerPoolImpl.REMOVABLE));
+        assertAvailableCountEventuallyEquals(1);
+
+        TestApplication app2 = createAppWithChildren(1);
+        app2.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertAvailableCountEquals(0);
+    }
+
+    @Test
+    public void testExistingMachinesAreNotRemovedFromThePoolOnShrinkButAreOnStop() {
+        LocalhostMachine loc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachine.class));
+        pool.addExistingMachine(loc);
+        assertAvailableCountEventuallyEquals(getInitialPoolSize() + 1);
+        pool.resize(0);
+        assertAvailableCountEventuallyEquals(1);
+        pool.stop();
+        assertAvailableCountEventuallyEquals(0);
+    }
+
+    @Test
+    public void testAddExistingMachineFromSpec() {
+        TestApplication app = createAppWithChildren(getInitialPoolSize());
+        app.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertAvailableCountEquals(0);
+
+        Collection<Entity> added = pool.addExistingMachinesFromSpec("byon:(hosts=\"localhost,localhost\")");
+        assertEquals(added.size(), 2, "Added: " + Joiner.on(", ").join(added));
+        Iterator<Entity> it = added.iterator();
+        assertFalse(it.next().getConfig(ServerPoolImpl.REMOVABLE));
+        assertFalse(it.next().getConfig(ServerPoolImpl.REMOVABLE));
+        assertAvailableCountEventuallyEquals(2);
+
+        TestApplication app2 = createAppWithChildren(2);
+        app2.start(ImmutableList.of(pool.getDynamicLocation()));
+        assertAvailableCountEquals(0);
+    }
 }
