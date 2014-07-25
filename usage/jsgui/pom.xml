@@ -137,7 +137,8 @@
                     <customRunnerConfiguration>
                         ${project.basedir}/src/test/javascript/config.txt
                     </customRunnerConfiguration>
-
+                    <!-- Makes output terser -->
+                    <format>progress</format>
                     <additionalContexts>
                         <!-- If context roots start with a / the resource will be available on the server at //root. -->
                         <!-- It is an error for context roots to end with a /. -->
