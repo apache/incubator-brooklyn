@@ -18,9 +18,10 @@
  */
 package brooklyn.entity.database;
 
-import com.beust.jcommander.internal.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 import java.sql.*;
 import java.util.List;
