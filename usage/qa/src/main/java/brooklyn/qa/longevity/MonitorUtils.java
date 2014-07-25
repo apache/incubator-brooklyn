@@ -52,8 +52,6 @@ public class MonitorUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(MonitorUtils.class);
 
-    private static final int checkPeriodMs = 1000;
-
     private static volatile int ownPid = -1;
 
     /**
@@ -275,25 +273,34 @@ public class MonitorUtils {
 
     /**
      * Waits for the given process to complete, consuming its stdout and returning it as a string.
-     * <p/>
-     * Does not just use Groovy's:
-     * process.waitFor()
-     * return process.text
-     * <p/>
-     * Because that code hangs for bing output streams.
+     * If there is any output on stderr an exception will be thrown.
      */
     public static String waitFor(Process process) {
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-        StreamGobbler gobbler = new StreamGobbler(process.getInputStream(), bytesOut, null);
-        gobbler.start();
+        @SuppressWarnings("resource") //Closeable doesn't seem appropriate for StreamGobbler since it isn't expected to be called every time
+        StreamGobbler gobblerOut = new StreamGobbler(process.getInputStream(), bytesOut, null);
+        gobblerOut.start();
+
+        ByteArrayOutputStream bytesErr = new ByteArrayOutputStream();
+        @SuppressWarnings("resource")
+        StreamGobbler gobblerErr = new StreamGobbler(process.getErrorStream(), bytesErr, null);
+        gobblerErr.start();
+
         try {
             process.waitFor();
-            gobbler.blockUntilFinished();
+            gobblerOut.blockUntilFinished();
+            gobblerErr.blockUntilFinished();
+
+            if (bytesErr.size() > 0) {
+                throw new IllegalStateException("Process printed to stderr: " + new String(bytesErr.toByteArray()));
+            }
+
             return new String(bytesOut.toByteArray());
         } catch (Exception e) {
             throw Throwables.propagate(e);
         } finally {
-            if (gobbler.isAlive()) gobbler.interrupt();
+            if (gobblerOut.isAlive()) gobblerOut.interrupt();
+            if (gobblerErr.isAlive()) gobblerErr.interrupt();
         }
     }
 
