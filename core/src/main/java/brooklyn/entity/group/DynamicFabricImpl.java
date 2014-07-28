@@ -23,6 +23,7 @@ import static brooklyn.util.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -113,7 +114,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         Preconditions.checkArgument(locations.size() >= 1, "One or more location must be supplied");
         addLocations(locations);
         
-        MutableList<Location> newLocations = MutableList.copyOf(locations);
+        List<Location> newLocations = MutableList.copyOf(locations);
         if (newLocations.isEmpty()) newLocations.addAll(getLocations());
         int locIndex = 0;
         
@@ -125,6 +126,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
             // if they have no locations yet
             for (Entity child: getChildren()) {
                 if (child instanceof Startable) {
+                    addMember(child);
                     Location it = null;
                     if (child.getLocations().isEmpty())
                         // give him any of these locations if he has none, allowing round robin here

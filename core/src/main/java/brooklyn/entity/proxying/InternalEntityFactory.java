@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
@@ -220,6 +221,17 @@ public class InternalEntityFactory {
                 entity.addChild(child);
             }
             
+            for (Entity member: spec.getMembers()) {
+                if (!(entity instanceof Group)) {
+                    throw new IllegalStateException("Entity "+entity+" must be a group to add members "+spec.getMembers());
+                }
+                ((Group)entity).addMember(member);
+            }
+
+            for (Group group : spec.getGroups()) {
+                group.addMember(entity);
+            }
+
             return entity;
             
         } catch (Exception e) {

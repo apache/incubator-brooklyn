@@ -35,9 +35,11 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class EntitySpecTest extends BrooklynAppUnitTestSupport {
@@ -121,6 +123,26 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
                 .enricher(enricher));
         
         assertEquals(Iterables.getOnlyElement(entity.getEnrichers()), enricher);
+    }
+    
+    @Test
+    public void testAddsMembers() throws Exception {
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        BasicGroup group = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
+                .member(entity));
+        
+        Asserts.assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of(entity));
+        Asserts.assertEqualsIgnoringOrder(entity.getGroups(), ImmutableSet.of(group));
+    }
+    
+    @Test
+    public void testAddsGroups() throws Exception {
+        BasicGroup group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .group(group));
+        
+        Asserts.assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of(entity));
+        Asserts.assertEqualsIgnoringOrder(entity.getGroups(), ImmutableSet.of(group));
     }
     
     public static class MyPolicy extends AbstractPolicy {

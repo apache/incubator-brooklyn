@@ -53,6 +53,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.BlockingEntity;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.repeat.Repeater;
 
@@ -403,6 +404,83 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
         assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("fromCluster"), "passed to base entity");
         assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("fromFabric"), null);
 	}
+
+    @Test
+    public void testExistingChildrenStarted() throws Exception {
+        List<Location> locs = ImmutableList.of(loc1, loc2, loc3);
+        
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
+            .configure(DynamicFabric.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
+        
+        List<TestEntity> existingChildren = Lists.newArrayList();
+        for (int i = 0; i < 3; i++) {
+            existingChildren.add(fabric.addChild(EntitySpec.create(TestEntity.class)));
+        }
+        app.start(locs);
+
+        // Expect only these existing children
+        Asserts.assertEqualsIgnoringOrder(fabric.getChildren(), existingChildren);
+        Asserts.assertEqualsIgnoringOrder(fabric.getMembers(), existingChildren);
+
+        // Expect one location per existing child
+        List<Location> remainingLocs = MutableList.copyOf(locs);
+        for (Entity existingChild : existingChildren) {
+            Collection<Location> childLocs = existingChild.getLocations();
+            assertEquals(childLocs.size(), 1, "childLocs="+childLocs);
+            assertTrue(remainingLocs.removeAll(childLocs));
+        }
+    }
+
+    @Test
+    public void testExistingChildrenStartedRoundRobiningAcrossLocations() throws Exception {
+        List<Location> locs = ImmutableList.of(loc1, loc2);
+        
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
+            .configure(DynamicFabric.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
+        
+        List<TestEntity> existingChildren = Lists.newArrayList();
+        for (int i = 0; i < 4; i++) {
+            existingChildren.add(fabric.addChild(EntitySpec.create(TestEntity.class)));
+        }
+        app.start(locs);
+
+        // Expect only these existing children
+        Asserts.assertEqualsIgnoringOrder(fabric.getChildren(), existingChildren);
+        Asserts.assertEqualsIgnoringOrder(fabric.getMembers(), existingChildren);
+
+        // Expect one location per existing child (round-robin)
+        // Expect one location per existing child
+        List<Location> remainingLocs = MutableList.<Location>builder().addAll(locs).addAll(locs).build();
+        for (Entity existingChild : existingChildren) {
+            Collection<Location> childLocs = existingChild.getLocations();
+            assertEquals(childLocs.size(), 1, "childLocs="+childLocs);
+            assertTrue(remainingLocs.remove(Iterables.get(childLocs, 0)), "childLocs="+childLocs+"; remainingLocs="+remainingLocs+"; allLocs="+locs);
+        }
+    }
+
+    @Test
+    public void testExistingChildrenToppedUpWhenNewMembersIfMoreLocations() throws Exception {
+        List<Location> locs = ImmutableList.of(loc1, loc2, loc3);
+        
+        DynamicFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicFabric.class)
+            .configure(DynamicFabric.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
+        
+        TestEntity existingChild = fabric.addChild(EntitySpec.create(TestEntity.class));
+        
+        app.start(locs);
+
+        // Expect three children: the existing one, and one per other location
+        assertEquals(fabric.getChildren().size(), 3, "children="+fabric.getChildren());
+        assertTrue(fabric.getChildren().contains(existingChild), "children="+fabric.getChildren()+"; existingChild="+existingChild);
+        Asserts.assertEqualsIgnoringOrder(fabric.getMembers(), fabric.getChildren());
+
+        List<Location> remainingLocs = MutableList.<Location>builder().addAll(locs).build();
+        for (Entity child : fabric.getChildren()) {
+            Collection<Location> childLocs = child.getLocations();
+            assertEquals(childLocs.size(), 1, "childLocs="+childLocs);
+            assertTrue(remainingLocs.remove(Iterables.get(childLocs, 0)), "childLocs="+childLocs+"; remainingLocs="+remainingLocs+"; allLocs="+locs);
+        }
+    }
 
 	private Entity getGrandchild(Entity entity, int childIndex, int grandchildIndex) {
         Entity child = getChild(entity, childIndex);

@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.policy.Enricher;
@@ -116,7 +117,9 @@ public class EntitySpec<T extends Entity> implements Serializable {
                 .enricherSpecs(spec.getEnricherSpecs())
                 .enrichers(spec.getEnrichers())
                 .addInitializers(spec.getInitializers())
-                .children(spec.getChildren());
+                .children(spec.getChildren())
+                .members(spec.getMembers())
+                .groups(spec.getGroups());
         
         if (spec.getParent() != null) result.parent(spec.getParent());
         if (spec.getImplementation() != null) result.impl(spec.getImplementation());
@@ -143,6 +146,8 @@ public class EntitySpec<T extends Entity> implements Serializable {
     private final Set<Class<?>> additionalInterfaces = Sets.newLinkedHashSet();
     private final List<EntityInitializer> entityInitializers = Lists.newArrayList();
     private final List<EntitySpec<?>> children = Lists.newArrayList();
+    private final List<Entity> members = Lists.newArrayList();
+    private final List<Group> groups = Lists.newArrayList();
     private volatile boolean immutable;
     
     public EntitySpec(Class<T> type) {
@@ -196,6 +201,14 @@ public class EntitySpec<T extends Entity> implements Serializable {
     
     public List<EntitySpec<?>> getChildren() {
         return children;
+    }
+    
+    public List<Entity> getMembers() {
+        return members;
+    }
+    
+    public List<Group> getGroups() {
+        return groups;
     }
     
     /**
@@ -307,6 +320,30 @@ public class EntitySpec<T extends Entity> implements Serializable {
     public EntitySpec<T> child(EntitySpec<?> child) {
         checkMutable();
         children.add(child);
+        return this;
+    }
+
+    public EntitySpec<T> members(Iterable<? extends Entity> members) {
+        checkMutable();
+        Iterables.addAll(this.members, members);
+        return this;
+    }
+
+    public EntitySpec<T> member(Entity member) {
+        checkMutable();
+        members.add(member);
+        return this;
+    }
+
+    public EntitySpec<T> groups(Iterable<? extends Group> groups) {
+        checkMutable();
+        Iterables.addAll(this.groups, groups);
+        return this;
+    }
+
+    public EntitySpec<T> group(Group group) {
+        checkMutable();
+        groups.add(group);
         return this;
     }
 
