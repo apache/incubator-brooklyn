@@ -38,6 +38,7 @@ import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.WebEntitlementContext;
 import brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
 import com.sun.jersey.core.util.Base64;
@@ -62,69 +63,66 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (provider==null) {
+        if (provider == null) {
             log.warn("No security provider available: disallowing web access to brooklyn");
             ((HttpServletResponse) response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             return;
         }
-        
-        if (authenticate((HttpServletRequest)request)) {
-            String user = Strings.toString( ((HttpServletRequest)request).getSession().getAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE) );
-            if (handleLogout((HttpServletRequest)request)) {
-                log.debug("REST logging out "+user+" of session "+((HttpServletRequest)request).getSession());
+
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        if (authenticate(httpRequest)) {
+            String user = Strings.toString(httpRequest.getSession().getAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE));
+            if (handleLogout(httpRequest)) {
+                log.debug("REST logging out " + user + " of session " + httpRequest.getSession());
                 // do nothing here, fall through to below
             } else {
                 WebEntitlementContext entitlementContext = null;
-                String uri = ((HttpServletRequest)request).getRequestURI();
+                String uri = httpRequest.getRequestURI();
                 try {
-                    String uid = Integer.toHexString(hashCode());
-                    entitlementContext = new WebEntitlementContext(user, ((HttpServletRequest)request).getRemoteAddr(), uri, uid);
-                    if (originalRequest.get()==null) {
+                    String uid = Identifiers.makeRandomId(6);
+                    entitlementContext = new WebEntitlementContext(user, httpRequest.getRemoteAddr(), uri, uid);
+                    if (originalRequest.get() == null) {
                         // initial filter application
                         originalRequest.set(uri);
                     } else {
                         // this filter is being applied *again*, probably due to forwarding (e.g. from '/' to '/index.html')
-                        log.debug("REST request {} being forwarded from {} to {}", new Object[] { uid, originalRequest.get(), uri });
+                        log.debug("REST request {} being forwarded from {} to {}", new Object[]{uid, originalRequest.get(), uri});
                         // clear the entitlement context before setting to avoid warnings
                         Entitlements.clearEntitlementContext();
                     }
                     Entitlements.setEntitlementContext(entitlementContext);
-                    
-                    log.debug("REST starting processing request {} with {}", uri, entitlementContext);
-                    if (!((HttpServletRequest)request).getParameterMap().isEmpty()) {
-                        log.debug("  REST req {} parameters: {}", uid, ((HttpServletRequest)request).getParameterMap());
-                    }
-                    if (((HttpServletRequest)request).getContentLength()>0) {
-                        int len = ((HttpServletRequest)request).getContentLength();
-                        log.debug("  REST req {} upload content type {}", uid, ((HttpServletRequest)request).getContentType()+" length "+len
-                            // would be nice to do this, but the stream can only be read once;
-                            // TODO figure out how we could peek at it
-//                            +(len>0 && len<4096 ? ""+Streams.readFullyString(((HttpServletRequest)request).getInputStream()) : "") 
-                            );
-                    }
-                    
+
+                    log.debug("REST req {} starting processing request {} with {}", new Object[]{uid, uri, entitlementContext});
                     chain.doFilter(request, response);
-                    
-                    log.debug("REST completed, code {}, processing request {} with {}", 
-                        new Object[] { ((HttpServletResponse)response).getStatus(), uri, entitlementContext } );
+
+                    // This logging must NOT happen before chain.doFilter, or FormMapProvider will not work as expected.
+                    // Getting the parameter map consumes the request body and only resource methods using @FormParam
+                    // will work as expected.
+                    if (log.isDebugEnabled()) {
+                        log.debug("REST req {} complete, responding {} for request {} with {}",
+                                new Object[]{uid, ((HttpServletResponse) response).getStatus(), uri, entitlementContext});
+                        if (!httpRequest.getParameterMap().isEmpty()) {
+                            log.debug("     parameters were: {}", httpRequest.getParameterMap());
+                        }
+                        if (httpRequest.getContentLength() > 0) {
+                            int len = httpRequest.getContentLength();
+                            log.debug("     upload content type was {}, length={}", httpRequest.getContentType(), len);
+                        }
+                    }
                     return;
-                    
                 } catch (Throwable e) {
                     // NB errors are typically already caught at this point
                     if (log.isDebugEnabled()) {
-                        log.debug("REST failed processing request "+uri+" with "+entitlementContext+": "+e, e);
+                        log.debug("REST failed processing request " + uri + " with " + entitlementContext + ": " + e, e);
                     }
-                    
                     throw Exceptions.propagate(e);
-                    
                 } finally {
                     originalRequest.remove();
                     Entitlements.clearEntitlementContext();
                 }
             }
         }
-        
-        ((HttpServletResponse) response).setHeader("WWW-Authenticate","Basic realm=\"brooklyn\"");
+        ((HttpServletResponse) response).setHeader("WWW-Authenticate", "Basic realm=\"brooklyn\"");
         ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 

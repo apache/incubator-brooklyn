@@ -16,17 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.resources;
+package brooklyn.rest.security.provider;
 
-import brooklyn.rest.testing.BrooklynRestResourceTest;
+import javax.servlet.http.HttpSession;
 
-public class ActivityResourceTest extends BrooklynRestResourceTest {
+public class TestSecurityProvider implements SecurityProvider {
 
-    
-  @Override
-  protected void setUpResources() throws Exception {
-  }
+    public static final String USER = "test";
+    public static final String PASSWORD = "opensesame";
 
-  // TODO tests for activity resource, including streams
+    @Override
+    public boolean isAuthenticated(HttpSession session) {
+        return false;
+    }
 
+    @Override
+    public boolean authenticate(HttpSession session, String user, String password) {
+        return USER.equals(user) && PASSWORD.equals(password);
+    }
+
+    @Override
+    public boolean logout(HttpSession session) {
+        return false;
+    }
 }

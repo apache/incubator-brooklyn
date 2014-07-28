@@ -18,9 +18,11 @@
  */
 package brooklyn.rest;
 
+import static brooklyn.rest.BrooklynRestApiLauncher.StartMode.*;
 import org.eclipse.jetty.server.Server;
 import org.testng.annotations.Test;
 
+import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
 import brooklyn.test.HttpTestUtils;
 
@@ -28,23 +30,29 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
 
     @Test
     public void testFilterStart() throws Exception {
-        checkRestCatalogApplications(useServerForTest(BrooklynRestApiLauncher.startRestResourcesViaFilter()));
+        checkRestCatalogApplications(useServerForTest(baseLauncher().mode(FILTER).start()));
     }
 
     @Test
     public void testServletStart() throws Exception {
-        checkRestCatalogApplications(useServerForTest(BrooklynRestApiLauncher.startRestResourcesViaServlet()));
+        checkRestCatalogApplications(useServerForTest(baseLauncher().mode(SERVLET).start()));
     }
 
     @Test
     public void testWebAppStart() throws Exception {
-        checkRestCatalogApplications(useServerForTest(BrooklynRestApiLauncher.startRestResourcesViaWebXml()));
+        checkRestCatalogApplications(useServerForTest(baseLauncher().mode(WEB_XML).start()));
+    }
+
+    private BrooklynRestApiLauncher baseLauncher() {
+        return BrooklynRestApiLauncher.launcher()
+                .securityProvider(AnyoneSecurityProvider.class)
+                .forceUseOfDefaultCatalogWithJavaClassPath(true);
     }
     
-    private static void checkRestCatalogApplications(Server server) {
-        enableAnyoneLogin(server);
-        forceUseOfDefaultCatalogWithJavaClassPath(server);
+    private static void checkRestCatalogApplications(Server server) throws Exception {
         String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
+        HttpTestUtils.assertHealthyStatusCode(
+                HttpTestUtils.getHttpStatusCode(rootUrl+"/v1/catalog/applications"));
         HttpTestUtils.assertContentContainsText(rootUrl+"/v1/catalog/applications", SampleNoOpApplication.class.getSimpleName());
     }
     

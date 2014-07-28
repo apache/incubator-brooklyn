@@ -18,8 +18,6 @@
  */
 package brooklyn.rest.client;
 
-import static brooklyn.rest.BrooklynRestApiLauncher.startServer;
-
 import java.util.List;
 
 import org.eclipse.jetty.server.Server;
@@ -37,6 +35,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.domain.LocationSummary;
 
@@ -68,7 +67,10 @@ public class BrooklynApiRestClientTest {
         context.setExtraClasspath("./target/test-rest-server/");
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, getManagementContext());
 
-        Server server = startServer(manager, context, "from WAR at " + context.getWar());
+        Server server = BrooklynRestApiLauncher.launcher()
+                .managementContext(manager)
+                .customContext(context)
+                .start();
 
         api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/");
     }

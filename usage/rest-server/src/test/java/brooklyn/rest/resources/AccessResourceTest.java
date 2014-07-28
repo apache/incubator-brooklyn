@@ -41,18 +41,6 @@ public class AccessResourceTest extends BrooklynRestResourceTest {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AccessResourceTest.class);
 
-    @BeforeClass(alwaysRun = true)
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @AfterClass
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     @Test
     public void testGetAndSetAccessControl() throws Exception {
         // Default is everything allowed
