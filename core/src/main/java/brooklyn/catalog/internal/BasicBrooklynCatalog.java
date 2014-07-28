@@ -18,14 +18,6 @@
  */
 package brooklyn.catalog.internal;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.pdp.DeploymentPlan;
-import io.brooklyn.camp.spi.pdp.Service;
-
-import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
@@ -33,21 +25,16 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
-import brooklyn.config.BrooklynServerConfig;
+import brooklyn.entity.basic.EntityUtils;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
 import brooklyn.util.javalang.Reflections;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -167,38 +154,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @Override
     public <T, SpecT> SpecT createSpec(CatalogItem<T, SpecT> item) {
         CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getId());
-        
+
         Class<SpecT> specType = loadedItem.getSpecType();
         if (specType==null) return null;
-            
+
         String yaml = loadedItem.getPlanYaml();
+        
         SpecT spec = null;
-            
-        if (yaml!=null) {
-            DeploymentPlan plan = makePlanFromYaml(yaml);
-            CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
-            
-            // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
-            AssemblyTemplate at;
-            BrooklynClassLoadingContext loader = loadedItem.newClassLoadingContext(mgmt);
-            BrooklynLoaderTracker.setLoader(loader);
-            try {
-                at = camp.pdp().registerDeploymentPlan(plan);
-            } finally {
-                BrooklynLoaderTracker.unsetLoader(loader);
-            }
-            
-            try {
-                AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
-                if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                    return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createSpec(at, camp);
-                }
-                throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
-            }
+        if (yaml != null) {
+            spec = (SpecT) EntityUtils.createSpec(mgmt, yaml);
         }
-            
+
         // revert to legacy mechanism
         try {
             if (loadedItem.getJavaType()!=null) {
@@ -212,10 +178,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         if (spec==null) 
             throw new IllegalStateException("Unknown how to create instance of "+this);
-
+        
         return spec;
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
@@ -251,75 +217,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         throw new IllegalStateException("Cannot unwrap catalog item '"+item+"' (type "+item.getClass()+") to restore DTO");
     }
 
-    private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
-        DeploymentPlan plan = makePlanFromYaml(yaml);
-        
-        CatalogLibrariesDto libraries = null;
-
-        @SuppressWarnings("rawtypes")
-        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
-        MutableMap<String, Object> catalog = MutableMap.of();
-        if (possibleCatalog.isPresent()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> catalog2 = (Map<String, Object>) possibleCatalog.get();
-            catalog.putAll(catalog2);
-        }
-
-        Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
-        if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
-        if (possibleLibraries.isPresentAndNonNull()) {
-            if (!(possibleLibraries.get() instanceof List))
-                throw new IllegalArgumentException("Libraries should be a list, not "+possibleLibraries.get());
-            libraries = CatalogLibrariesDto.fromList((List<?>) possibleLibraries.get());
-        }
-
-        // TODO clear up the abundance of id, name, registered type, java type
-        String registeredTypeName = (String) catalog.getMaybe("id").orNull();
-        if (Strings.isBlank(registeredTypeName))
-            registeredTypeName = (String) catalog.getMaybe("name").orNull();
-        // take name from plan if not specified in brooklyn.catalog section not supplied
-        if (Strings.isBlank(registeredTypeName)) {
-            registeredTypeName = plan.getName();
-            if (Strings.isBlank(registeredTypeName)) {
-                if (plan.getServices().size()==1) {
-                    Service svc = Iterables.getOnlyElement(plan.getServices());
-                    registeredTypeName = svc.getServiceType();
-                }
-            }
-        }
-        
-        // TODO long-term:  support applications / templates, policies
-        
-        // build the catalog item from the plan (as CatalogItem<Entity> for now)
-        CatalogEntityItemDto dto = CatalogItems.newEntityFromPlan(registeredTypeName, libraries, plan, yaml);
-
-        // and populate other fields
-        Maybe<Object> name = catalog.getMaybe("name");
-        if (name.isPresent()) dto.name = (String)name.get();
-        
-        Maybe<Object> description = catalog.getMaybe("description");
-        if (description.isPresent()) dto.description = (String)description.get();
-        
-        Maybe<Object> iconUrl = catalog.getMaybe("iconUrl");
-        if (iconUrl.isAbsent()) iconUrl = catalog.getMaybe("icon_url");
-        if (iconUrl.isPresent()) dto.iconUrl = (String)iconUrl.get();
-
-        // TODO #3 support version info
-        
-        return dto;
-    }
-
-    private DeploymentPlan makePlanFromYaml(String yaml) {
-        CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
-        return camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
-    }
-
     @Override
     public CatalogItem<?,?> addItem(String yaml) {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         Preconditions.checkNotNull(yaml, "yaml");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
-        CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
+        CatalogItemDtoAbstract<?,?> itemDto =  EntityUtils.createCatalogItem(mgmt, yaml);
         manualAdditionsCatalog.addEntry(itemDto);
         
         // Load the libraries now.

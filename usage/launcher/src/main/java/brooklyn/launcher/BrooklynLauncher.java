@@ -50,6 +50,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityUtils;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
@@ -651,20 +652,7 @@ public class BrooklynLauncher {
     }
 
     protected Application getAppFromYaml(String input) {
-        AssemblyTemplate at = campPlatform.pdp().registerDeploymentPlan(new StringReader(input));
-        BrooklynAssemblyTemplateInstantiator instantiator;
-        try {
-            AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
-            if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                instantiator = BrooklynAssemblyTemplateInstantiator.class.cast(ati);
-            } else {
-                throw new IllegalStateException("Cannot create application with instantiator: " + ati);
-            }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        Application app = instantiator.create(at, campPlatform);
-        return app;
+        return EntityUtils.createApp(managementContext, input);
     }
     
     protected void startApps() {

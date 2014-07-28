@@ -18,15 +18,11 @@
  */
 package brooklyn.rest.resources;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
-
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
@@ -81,8 +77,4 @@ public abstract class AbstractBrooklynRestResource {
         return WebResourceUtils.getValueForDisplay(value, preferJson, isJerseyReturnValue);
     }
 
-    protected CampPlatform camp() {
-        return BrooklynServerConfig.getCampPlatform(mgmt()).get();
-    }
-    
 }

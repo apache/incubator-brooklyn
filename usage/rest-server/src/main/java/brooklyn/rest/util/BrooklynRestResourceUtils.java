@@ -51,6 +51,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTypes;
+import brooklyn.entity.basic.EntityUtils;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -251,15 +252,12 @@ public class BrooklynRestResourceUtils {
                 } else if (Application.class.isAssignableFrom(clazz)) {
                     brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
                     configureRenderingMetadata(spec, coreSpec);
-                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                     for (EntitySpec entitySpec : entities) {
                         log.info("REST creating instance for entity {}", entitySpec.getType());
-                        instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(entitySpec)));
+                        coreSpec.child(toCoreEntitySpec(entitySpec));
                     }
 
-                    log.info("REST placing '{}' under management", spec.getName() != null ? spec.getName() : spec);
-                    Entities.startManagement(instance, mgmt);
-
+                    instance = EntityUtils.createApp(mgmt, coreSpec);
                 } else if (Entity.class.isAssignableFrom(clazz)) {
                     if (entities.size() > 0)
                         log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);

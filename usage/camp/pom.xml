@@ -72,6 +72,13 @@
         
         <!-- demo and tests -->
         <dependency>
+            <groupId>io.brooklyn.camp</groupId>
+            <artifactId>camp-base</artifactId>
+            <version>${brooklyn.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${brooklyn.version}</version>

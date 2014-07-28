@@ -16,26 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package brooklyn.internal;
 
-import io.brooklyn.camp.BasicCampPlatform;
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
-import brooklyn.management.ManagementContext;
+import java.util.ServiceLoader;
 
-public class CampPlatformWithJustBrooklynMgmt extends BasicCampPlatform implements HasBrooklynManagementContext {
+public class SpecCreatorFactory {
+    //TODO improve MIMEs
+    public static final String YAML_CAMP_PLAN_TYPE = "brooklyn.camp/yaml";
 
-    private ManagementContext mgmt;
-
-    public CampPlatformWithJustBrooklynMgmt(ManagementContext mgmt) {
-        this.mgmt = mgmt;
-        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynServerConfig.CAMP_PLATFORM, this);
+    public static SpecCreator forMime(String mime) {
+        ServiceLoader<SpecCreator> loader = ServiceLoader.load(SpecCreator.class);
+        for (SpecCreator producer : loader) {
+            if (producer.supports(mime)) {
+                return producer;
+            }
+        }
+        return null;
     }
-    
-    @Override
-    public ManagementContext getBrooklynManagementContext() {
-        return mgmt;
-    }
-
 }

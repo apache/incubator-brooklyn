@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
+import brooklyn.entity.basic.EntityUtils;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 
 import com.google.common.collect.Iterables;
@@ -145,7 +146,7 @@ public class CatalogYamlTest extends AbstractYamlTest {
      * catalog item won't have access to the parent's bundles.
      */
     @Test
-    public void testParentCatalogDoesNotLeakBundlesToChildCatalogItems() throws Exception {
+    public void notLeakBundlesToChildCatalogItems() throws Exception {
         String childCatalogId = "my.catalog.app.id.no_bundles";
         String parentCatalogId = "my.catalog.app.id.parent";
         addCatalogItem(
@@ -247,4 +248,25 @@ public class CatalogYamlTest extends AbstractYamlTest {
             "  - type: " + serviceType);
     }
 
+    @Test
+    public void testCheckConfig() {
+        testCheckConfigHelper(
+            "brooklyn.catalog:",
+            "  id: my.id.config",
+            "  name: My Catalog App",
+            "  description: My description",
+            "  icon_url: classpath://path/to/myicon.jpg",
+            "  version: 0.1.2",
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: " + BasicEntity.class.getName(),
+            "  brooklyn.children:",
+            "  - type: " + SIMPLE_ENTITY_TYPE);
+    }
+
+    private Object testCheckConfigHelper(String... lines) {
+        return EntityUtils.createCatalogItem(mgmt(), join(lines));
+    }
 }
