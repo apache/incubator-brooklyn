@@ -93,7 +93,7 @@ public class TemplateProcessor {
     public static String processTemplateContents(String templateContents, EntityInternal entity, Map<String,? extends Object> extraSubstitutions) {
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
                 .put("javaSysProps", System.getProperties())
-                .putAll(entity.getApplication().getManagementContext().getConfig().asMapWithStringKeys())
+                .putAll(entity.getManagementContext().getConfig().asMapWithStringKeys())
                 .put("entity", entity)
                 .put("config", entity.getConfigMap().asMapWithStringKeys());
         // TODO might want to look up locations, driver, if available

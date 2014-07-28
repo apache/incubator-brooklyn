@@ -112,7 +112,7 @@ public class StormImpl extends SoftwareProcessImpl implements Storm {
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
         if (jmxFeed != null) jmxFeed.stop();
-        if (jmxHelper !=null && jmxHelper.isConnected()) jmxHelper.disconnect();
+        if (jmxHelper !=null) jmxHelper.terminate();
     }
 
 }
