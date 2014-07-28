@@ -19,7 +19,6 @@
 package brooklyn.config;
 
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
-import io.brooklyn.camp.CampPlatform;
 
 import java.io.File;
 import java.net.URI;
@@ -154,16 +153,6 @@ public class BrooklynServerConfig {
     
     public static final ConfigKey<Boolean> USE_OSGI = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.enabled",
         "Whether OSGi is enabled, defaulting to true", true);
-
-    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
-        "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
-
-    /** Returns the CAMP platform associated with a management context, if there is one. */
-    public static Maybe<CampPlatform> getCampPlatform(ManagementContext mgmt) {
-        CampPlatform result = mgmt.getConfig().getConfig(BrooklynServerConfig.CAMP_PLATFORM);
-        if (result!=null) return Maybe.of(result);
-        return Maybe.absent("No CAMP Platform is registered with this Brooklyn management context.");
-    }
 
     /** Returns {@link ManagementContext#getManagementNodeUri()}, located in this utility class for convenience. */
     public static Maybe<URI> getBrooklynWebUri(ManagementContext mgmt) {

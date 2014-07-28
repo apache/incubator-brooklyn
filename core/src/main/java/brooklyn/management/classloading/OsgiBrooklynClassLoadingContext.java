@@ -19,7 +19,7 @@
 package brooklyn.management.classloading;
 
 import java.net.URL;
-import java.util.List;
+import java.util.Collection;
 
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.OsgiManager;
@@ -30,9 +30,9 @@ import com.google.common.base.Objects;
 
 public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadingContext {
 
-    private final List<String> bundles;
+    private final Collection<String> bundles;
 
-    public OsgiBrooklynClassLoadingContext(ManagementContext mgmt, List<String> bundles) {
+    public OsgiBrooklynClassLoadingContext(ManagementContext mgmt, Collection<String> bundles) {
         super(mgmt);
         this.bundles = bundles;
     }

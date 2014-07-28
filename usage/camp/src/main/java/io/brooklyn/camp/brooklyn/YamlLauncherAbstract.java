@@ -18,9 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-
+import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
@@ -28,10 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityUtils;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
@@ -75,11 +73,8 @@ public abstract class YamlLauncherAbstract {
 
     public Application launchAppYaml(String url) {
         try {
-            Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
-            AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
-
-            Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-            Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
+            Application app = createAppUrl(url);
+            EntityUtils.launch(brooklynMgmt, app);
             log.info("Launching "+app);
 
             if (getShutdownAppsOnExit()) BrooklynShutdownHooks.invokeStopOnShutdown(app);
@@ -92,6 +87,19 @@ public abstract class YamlLauncherAbstract {
             Entities.dumpInfo(app);
             return (Application)app;
         } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    private Application createAppUrl(String url) {
+        Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
+        try {
+            return EntityUtils.createApp(brooklynMgmt, input);
+        } catch (Exception e) {
+            try {input.close();}
+            catch (IOException ex) {
+                Exceptions.propagateIfFatal(ex);
+            }
             throw Exceptions.propagate(e);
         }
     }

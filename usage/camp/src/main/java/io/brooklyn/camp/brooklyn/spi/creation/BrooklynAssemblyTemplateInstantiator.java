@@ -44,7 +44,6 @@ import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
@@ -204,7 +203,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            EntitySpec<?> spec = resolveSpec(entityResolver, encounteredCatalogTypes);
+            EntitySpec<?> spec = resolveSpec(platform, entityResolver, encounteredCatalogTypes);
             
             result.add(spec);
         }
@@ -212,10 +211,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     private EntitySpec<?> resolveSpec(
+            CampPlatform platform,
             BrooklynComponentTemplateResolver entityResolver, 
             Set<String> encounteredCatalogTypes) {
-        ManagementContext mgmt = entityResolver.loader.getManagementContext();
-
         String brooklynType = entityResolver.getBrooklynType();
         CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
 
@@ -228,7 +226,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         String protocol = Urls.getProtocol(brooklynType);
         if (protocol != null) {
             if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(protocol)) {
-                spec = tryResolveYamlURLReferenceSpec(brooklynType, entityResolver.loader, encounteredCatalogTypes);
+                spec = tryResolveYamlURLReferenceSpec(platform, brooklynType, entityResolver.loader, encounteredCatalogTypes);
                 if (spec != null) {
                     entityResolver.populateSpec(spec);
                 }
@@ -248,20 +246,20 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                 }
                 spec = entityResolver.resolveSpec();
             } else {
-                spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+                spec = resolveCatalogYamlReferenceSpec(platform, item, encounteredCatalogTypes);
                 entityResolver.populateSpec(spec);
             }
         }
 
         BrooklynClassLoadingContext newLoader = entityResolver.loader;
-        buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(entityResolver.attrs.getAllConfig()), encounteredCatalogTypes);
+        buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(entityResolver.attrs.getAllConfig()), platform, encounteredCatalogTypes);
         return spec;
     }
 
     private EntitySpec<?> tryResolveYamlURLReferenceSpec(
+            CampPlatform platform,
             String brooklynType, BrooklynClassLoadingContext itemLoader, 
             Set<String> encounteredCatalogTypes) {
-        ManagementContext mgmt = itemLoader.getManagementContext();
         Reader yaml;
         try {
             ResourceUtils ru = ResourceUtils.create(this);
@@ -271,7 +269,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             return null;
         }
         try {
-            return resolveYamlSpec(mgmt, encounteredCatalogTypes, yaml, itemLoader);
+            return resolveYamlSpec(platform, encounteredCatalogTypes, yaml, itemLoader);
         } finally {
             try {
                 yaml.close();
@@ -282,22 +280,21 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     private EntitySpec<?> resolveCatalogYamlReferenceSpec(
-            ManagementContext mgmt,
+            CampPlatform platform,
             CatalogItem<Entity, EntitySpec<?>> item,
             Set<String> encounteredCatalogTypes) {
-        
+        ManagementContext mgmt = getBrooklynManagementContext(platform);
+
         String yaml = item.getPlanYaml();
         Reader input = new StringReader(yaml);
         BrooklynClassLoadingContext itemLoader = item.newClassLoadingContext(mgmt);
-        
-        return resolveYamlSpec(mgmt, encounteredCatalogTypes, input, itemLoader);
+
+        return resolveYamlSpec(platform, encounteredCatalogTypes, input, itemLoader);
     }
 
-    private EntitySpec<?> resolveYamlSpec(ManagementContext mgmt,
+    private EntitySpec<?> resolveYamlSpec(CampPlatform platform,
             Set<String> encounteredCatalogTypes, Reader input,
             BrooklynClassLoadingContext itemLoader) {
-        CampPlatform platform = BrooklynServerConfig.getCampPlatform(mgmt).get();
-        
         AssemblyTemplate at;
         BrooklynLoaderTracker.setLoader(itemLoader);
         try {
@@ -324,13 +321,14 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
     }
 
-    protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig, Set<String> encounteredCatalogTypes) {
+    protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig, CampPlatform platform, Set<String> encounteredCatalogTypes) {
         if (childConfig != null) {
             for (Map<String, Object> childAttrs : childConfig) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                EntitySpec<? extends Entity> spec = resolveSpec(entityResolver, encounteredCatalogTypes);
+                EntitySpec<? extends Entity> spec = resolveSpec(platform, entityResolver, encounteredCatalogTypes);
                 parent.child(spec);
             }
         }
     }
+    
 }

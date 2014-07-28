@@ -90,9 +90,9 @@ public class CatalogDtoTest {
         CatalogDo testEntitiesJavaCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from Java", null, "test-java"));
         testEntitiesJavaCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
         testEntitiesJavaCatalog.addToClasspath(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
-        testEntitiesJavaCatalog.addEntry(CatalogItems.newTemplateFromJava(
+        testEntitiesJavaCatalog.addEntry(newTemplateFromJava(
                 TestApplication.class.getCanonicalName(), "Test App from JAR"));
-        testEntitiesJavaCatalog.addEntry(CatalogItems.newEntityFromJava(
+        testEntitiesJavaCatalog.addEntry(newEntityFromJava(
                 TestEntity.class.getCanonicalName(), "Test Entity from JAR"));
         root.addCatalog(testEntitiesJavaCatalog.dto);
 
@@ -104,7 +104,7 @@ public class CatalogDtoTest {
         CatalogDo osgiCatalog = new CatalogDo(CatalogDto.newNamedInstance("Test Entities from OSGi",
                 "A catalog whose entries define their libraries as a list of OSGi bundles", "test-osgi-defined"));
         osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
-        CatalogEntityItemDto osgiEntity = CatalogItems.newEntityFromJava(TestEntity.class.getCanonicalName(), "Test Entity from OSGi");
+        CatalogEntityItemDto osgiEntity = newEntityFromJava(TestEntity.class.getCanonicalName(), "Test Entity from OSGi");
         // NB: this is not actually an OSGi bundle, but it's okay as we don't instantiate the bundles ahead of time (currently)
         osgiEntity.libraries.addBundle(MavenRetriever.localUrl(BrooklynMavenArtifacts.artifact("", "brooklyn-core", "jar", "tests")));
         testEntitiesJavaCatalog.addEntry(osgiEntity);
@@ -114,5 +114,19 @@ public class CatalogDtoTest {
         return root.dto;
     }
 
-}
+    private static CatalogTemplateItemDto newTemplateFromJava(String registeredType, String name) {
+        return newItemFromJava(CatalogItemBuilder.newTemplate(), registeredType, name);
+    }
 
+    private static CatalogEntityItemDto newEntityFromJava(String registeredType, String name) {
+        return newItemFromJava(CatalogItemBuilder.newEntity(), registeredType, name);
+    }
+
+    private static <CatalogItemType extends CatalogItemDtoAbstract<?, ?>> CatalogItemType  newItemFromJava(CatalogItemBuilder<CatalogItemType> builder,
+            String registeredType, String name) {
+        builder.registeredTypeName(registeredType);
+        builder.name(name);
+        return builder.build();
+    }
+
+}

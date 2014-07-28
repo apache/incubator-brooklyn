@@ -65,19 +65,18 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
         return new TestAppAssembly(app);
     }
 
-    @Override
     public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform) {
         EntitySpec<TestApplication> app = EntitySpec.create(TestApplication.class)
             .configure(TestEntity.CONF_NAME, template.getName())
             .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", template.getType(), "desc", template.getDescription()));
         
-        for (ResolvableLink<PlatformComponentTemplate> t: template.getPlatformComponentTemplates().links()) {
+//        for (ResolvableLink<PlatformComponentTemplate> t: template.getPlatformComponentTemplates().links()) {
             // TODO use EntitySpec.child(...)
 //            app.child(EntitySpec.create(TestEntity.class)
 //                .configure(TestEntity.CONF_NAME, t.getName())
 //                .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", t.resolve().getType(), "desc", t.resolve().getDescription()))
 //                );
-        }
+//        }
         
         return app;
     }
