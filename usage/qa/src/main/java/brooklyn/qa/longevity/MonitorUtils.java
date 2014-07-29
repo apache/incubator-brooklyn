@@ -271,6 +271,19 @@ public class MonitorUtils {
         }
     }
 
+    public static class ProcessHasStderr extends IllegalStateException {
+        private static final long serialVersionUID = -937871002993888405L;
+        
+        byte[] stderrBytes;
+        public ProcessHasStderr(byte[] stderrBytes) {
+            this("Process printed to stderr: " + new String(stderrBytes), stderrBytes);
+        }
+        public ProcessHasStderr(String message, byte[] stderrBytes) {
+            super(message);
+            this.stderrBytes = stderrBytes;
+        }
+    }
+    
     /**
      * Waits for the given process to complete, consuming its stdout and returning it as a string.
      * If there is any output on stderr an exception will be thrown.
@@ -292,7 +305,7 @@ public class MonitorUtils {
             gobblerErr.blockUntilFinished();
 
             if (bytesErr.size() > 0) {
-                throw new IllegalStateException("Process printed to stderr: " + new String(bytesErr.toByteArray()));
+                throw new ProcessHasStderr(bytesErr.toByteArray());
             }
 
             return new String(bytesOut.toByteArray());

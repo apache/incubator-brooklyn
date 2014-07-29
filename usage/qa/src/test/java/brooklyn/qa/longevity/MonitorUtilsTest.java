@@ -32,6 +32,7 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
+import brooklyn.qa.longevity.MonitorUtils.ProcessHasStderr;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
@@ -99,7 +100,12 @@ public class MonitorUtilsTest {
 
         assertTrue(MonitorUtils.isPidRunning(usedPid));
         assertFalse(MonitorUtils.isPidRunning(unusedPid));
-        assertFalse(MonitorUtils.isPidRunning(1234567)); // too large
+        
+        try {
+            assertFalse(MonitorUtils.isPidRunning(1234567)); // too large
+        } catch (ProcessHasStderr e) {
+            // expected on osx
+        }
     }
 
     @Test(groups="UNIX")
