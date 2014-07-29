@@ -243,7 +243,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      * @deprecated since 0.5; instead use no-arg constructor with EntityManager().createEntity(spec)
      */
     @Deprecated
-    public AbstractEntity(Map flags, Entity parent) {
+    public AbstractEntity(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         if (flags==null) {
             throw new IllegalArgumentException("Flags passed to entity "+this+" must not be null (try no-arguments or empty map)");
         }

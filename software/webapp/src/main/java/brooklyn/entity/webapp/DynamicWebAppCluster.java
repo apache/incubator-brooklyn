@@ -35,7 +35,7 @@ import brooklyn.util.time.Duration;
  * </ul>
  */
 @ImplementedBy(DynamicWebAppClusterImpl.class)
-public interface DynamicWebAppCluster extends DynamicCluster, WebAppService {
+public interface DynamicWebAppCluster extends DynamicCluster, WebAppService, JavaWebAppService, JavaWebAppService.CanDeployAndUndeploy, JavaWebAppService.CanRedeployAll {
 
     public static final AttributeSensor<Double> REQUEST_COUNT_PER_NODE = new BasicAttributeSensor<Double>(
             Double.class, "webapp.reqs.total.perNode", "Cluster entity request average");

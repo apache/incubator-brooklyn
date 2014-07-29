@@ -110,6 +110,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.ReferenceWithError;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
@@ -192,6 +193,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     @SetFromFlag // so it's persisted
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
+    
+    static { Networking.init(); }
     
     public JcloudsLocation() {
         super();
@@ -1733,16 +1736,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
         Stopwatch stopwatch = Stopwatch.createStarted();
         
-        boolean reachable = new Repeater()
+        ReferenceWithError<Boolean> reachable = new Repeater()
             .every(1,SECONDS)
             .until(checker)
             .limitTimeTo(delayMs, MILLISECONDS)
-            .run();
+            .runKeepingError();
 
-        if (!reachable) {
+        if (!reachable.getMaskingError()) {
             throw new IllegalStateException("SSH failed for "+
                     user+"@"+vmIp+" ("+setup.getDescription()+") after waiting "+
-                    Time.makeTimeStringRounded(delayMs));
+                    Time.makeTimeStringRounded(delayMs), reachable.getError());
         }
         
         LOG.debug("VM {}: is sshable after {} on {}@{}",new Object[] {

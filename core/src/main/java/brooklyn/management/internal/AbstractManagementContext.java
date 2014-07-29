@@ -290,12 +290,17 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      * Returns the actual task (if it is local) or a proxy task (if it is remote);
      * if management for the entity has not yet started this may start it.
      * 
-     * @deprecated since 0.6.0 use effectors (or support {@code runAtEntity(Entity, Task)} if something else is needed);
+     * @deprecated since 0.6.0 use effectors (or support {@code runAtEntity(Entity, Effector, Map)} if something else is needed);
      * (Callable with Map flags is too open-ended, bothersome to support, and not used much) 
      */
     @Deprecated
     public abstract <T> Task<T> runAtEntity(@SuppressWarnings("rawtypes") Map flags, Entity entity, Callable<T> c);
 
+    /** Runs the given effector in the right place for the given entity.
+     * The task is immediately submitted in the background, but also recorded in the queueing context (if present)
+     * so it appears as a child, but marked inessential so it does not fail the parent task, who will ordinarily
+     * call {@link Task#get()} on the object and may do their own failure handling. 
+     */
     protected abstract <T> Task<T> runAtEntity(final Entity entity, final Effector<T> eff, @SuppressWarnings("rawtypes") final Map parameters);
 
     @Override

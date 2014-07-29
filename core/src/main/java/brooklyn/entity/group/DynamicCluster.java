@@ -50,7 +50,6 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
@@ -80,6 +79,7 @@ import com.google.common.reflect.TypeToken;
  */
 // TODO document use of advanced availability zone configuration and features
 @ImplementedBy(DynamicClusterImpl.class)
+@SuppressWarnings("serial")
 public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceable {
 
     @Beta
@@ -121,6 +121,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
             "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);
 
     /** @deprecated since 0.7.0; use {@link #MEMBER_SPEC} instead. */
+    @SuppressWarnings("rawtypes")
     @Deprecated
     @SetFromFlag("factory")
     ConfigKey<EntityFactory> FACTORY = ConfigKeys.newConfigKey(
@@ -131,6 +132,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
             new TypeToken<Function<Collection<Entity>, Entity>>() {},
             "dynamiccluster.removalstrategy", "strategy for deciding what to remove when down-sizing", null);
 
+    @SuppressWarnings("rawtypes")
     @SetFromFlag("customChildFlags")
     ConfigKey<Map> CUSTOM_CHILD_FLAGS = ConfigKeys.newConfigKey(
             Map.class, "dynamiccluster.customChildFlags", "Additional flags to be passed to children when they are being created", ImmutableMap.of());
@@ -173,16 +175,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
      */
     @Effector(description="Changes the size of the cluster.")
     Collection<Entity> resizeByDelta(@EffectorParam(name="delta", description="The change in number of nodes") int delta);
-
-    /**
-     * Adds a node to the cluster in a single {@link Location}
-     */
-    Optional<Entity> addInSingleLocation(Location loc, Map<?,?> extraFlags);
-
-    /**
-     * Adds a node to the cluster in each {@link Location}
-     */
-    Collection<Entity> addInEachLocation(Iterable<Location> locs, Map<?,?> extraFlags);
 
     void setRemovalStrategy(Function<Collection<Entity>, Entity> val);
 

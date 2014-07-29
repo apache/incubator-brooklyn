@@ -209,6 +209,7 @@ public class Reflections {
     /** Invokes a suitable constructor, supporting varargs and primitives */
     public static <T> Optional<T> invokeConstructorWithArgs(ClassLoader classLoader, String className, Object...argsArray) {
         Reflections reflections = new Reflections(classLoader);
+        @SuppressWarnings("unchecked")
         Class<T> clazz = (Class<T>) reflections.loadClass(className);
         return invokeConstructorWithArgs(reflections, clazz, argsArray, false);
     }

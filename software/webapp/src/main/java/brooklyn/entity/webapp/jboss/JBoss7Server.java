@@ -24,7 +24,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
-import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -36,7 +35,7 @@ import brooklyn.util.javalang.JavaClassNames;
 
 @Catalog(name="JBoss Application Server 7", description="AS7: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
 @ImplementedBy(JBoss7ServerImpl.class)
-public interface JBoss7Server extends JavaWebAppSoftwareProcess, JavaWebAppService, HasShortName {
+public interface JBoss7Server extends JavaWebAppSoftwareProcess, HasShortName {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =

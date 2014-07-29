@@ -56,11 +56,13 @@ import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.ReferenceWithError;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
@@ -257,7 +259,13 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             int initialSize = getConfig(INITIAL_SIZE).intValue();
             int initialQuorumSize = getInitialQuorumSize();
 
-            resize(initialSize);
+            try {
+                resize(initialSize);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                // apart from logging, ignore problems here; we extract them below
+                LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
+            }
 
             Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
             Iterator<Task<?>> fi = failed.iterator();
@@ -478,10 +486,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
      */
     protected Entity replaceMember(Entity member, Location memberLoc, Map<?, ?> extraFlags) {
         synchronized (mutex) {
-            Optional<Entity> added = addInSingleLocation(memberLoc, extraFlags);
+            ReferenceWithError<Optional<Entity>> added = addInSingleLocation(memberLoc, extraFlags);
 
-            if (!added.isPresent()) {
+            if (!added.getMaskingError().isPresent()) {
                 String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
+                if (added.hasError())
+                    throw new IllegalStateException(msg, added.getError());
                 throw new IllegalStateException(msg);
             }
 
@@ -492,7 +502,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new StopFailedRuntimeException("replaceMember failed to stop and remove old member "+member.getId(), e);
             }
 
-            return added.get();
+            return added.getThrowingError().get();
         }
     }
 
@@ -575,7 +585,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         // create and start the entities
-        return addInEachLocation(chosenLocations, ImmutableMap.of());
+        return addInEachLocation(chosenLocations, ImmutableMap.of()).getThrowingError();
     }
 
     /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
@@ -606,14 +616,22 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
-    @Override
-    public Optional<Entity> addInSingleLocation(Location location, Map<?,?> flags) {
-        Collection<Entity> added = addInEachLocation(ImmutableList.of(location), flags);
-        return Iterables.isEmpty(added) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added));
+    protected ReferenceWithError<Optional<Entity>> addInSingleLocation(Location location, Map<?,?> flags) {
+        ReferenceWithError<Collection<Entity>> added = addInEachLocation(ImmutableList.of(location), flags);
+        
+        Optional<Entity> result = Iterables.isEmpty(added.getMaskingError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.get()));
+        if (!added.hasError()) {
+            return ReferenceWithError.newInstanceWithoutError( result );
+        } else {
+            if (added.masksErrorIfPresent()) {
+                return ReferenceWithError.newInstanceMaskingError( result, added.getError() );
+            } else {
+                return ReferenceWithError.newInstanceThrowingError( result, added.getError() );
+            }
+        }
     }
 
-    @Override
-    public Collection<Entity> addInEachLocation(Iterable<Location> locations, Map<?,?> flags) {
+    protected ReferenceWithError<Collection<Entity>> addInEachLocation(Iterable<Location> locations, Map<?,?> flags) {
         List<Entity> addedEntities = Lists.newArrayList();
         Map<Entity, Location> addedEntityLocations = Maps.newLinkedHashMap();
         Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
@@ -627,7 +645,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             tasks.put(entity, task);
         }
 
-        DynamicTasks.queueIfPossible(Tasks.parallel("starting "+tasks.size()+" node"+Strings.s(tasks.size())+" (parallel)", tasks.values())).orSubmitAsync(this);
+        Task<List<?>> parallel = Tasks.parallel("starting "+tasks.size()+" node"+Strings.s(tasks.size())+" (parallel)", tasks.values());
+        TaskTags.markInessential(parallel);
+        DynamicTasks.queueIfPossible(parallel).orSubmitAsync(this);
         Map<Entity, Throwable> errors = waitForTasksOnEntityStart(tasks);
 
         // if tracking, then report success/fail to the ZoneFailureDetector
@@ -643,6 +663,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 }
             }
         }
+        
+        Collection<Entity> result = MutableList.<Entity> builder()
+            .addAll(addedEntities)
+            .removeAll(errors.keySet())
+            .build();
 
         // quarantine/cleanup as necessary
         if (!errors.isEmpty()) {
@@ -651,12 +676,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } else {
                 cleanupFailedNodes(errors.keySet());
             }
+            return ReferenceWithError.newInstanceMaskingError(result, Exceptions.create(errors.values()));
         }
 
-        return MutableList.<Entity> builder()
-                .addAll(addedEntities)
-                .removeAll(errors.keySet())
-                .build();
+        return ReferenceWithError.newInstanceWithoutError(result);
     }
 
     protected void quarantineFailedNodes(Collection<Entity> failedEntities) {

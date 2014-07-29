@@ -386,4 +386,23 @@ public class Networking {
 
     // TODO go through nic's, looking for public, private, etc, on localhost
 
+    /**
+     * force use of TLSv1, fixing:
+     * http://stackoverflow.com/questions/9828414/receiving-sslhandshakeexception-handshake-failure-despite-my-client-ignoring-al
+     */
+    public static void installTlsOnlyForHttpsForcing() {
+        System.setProperty("https.protocols", "TLSv1");
+    }
+    public static void installTlsForHttpsIfAppropriate() {
+        if (System.getProperty("https.protocols")==null && System.getProperty("brooklyn.https.protocols.leave_untouched")==null) {
+            installTlsOnlyForHttpsForcing();
+        }
+    }
+    static {
+        installTlsForHttpsIfAppropriate();
+    }
+    
+    /** does nothing, but forces the class to be loaded and do static initialization */
+    public static void init() {}
+    
 }

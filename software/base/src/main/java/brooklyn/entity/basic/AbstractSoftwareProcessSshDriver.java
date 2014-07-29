@@ -588,7 +588,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             }
             if (INSTALLING.equals(phase)) {
                 // mutexId should be global because otherwise package managers will contend with each other 
-                s.useMutex(getLocation(), "installing", "installing "+elvis(entity,this));
+                s.useMutex(getLocation(), "installation lock at host", "installing "+elvis(entity,this));
                 s.header.append(
                         "export INSTALL_DIR=\""+getInstallDir()+"\"",
                         "mkdir -p $INSTALL_DIR",

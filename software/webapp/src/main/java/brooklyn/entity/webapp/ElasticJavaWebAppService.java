@@ -24,6 +24,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;
@@ -34,10 +35,14 @@ public interface ElasticJavaWebAppService extends JavaWebAppService, Startable {
         ConfigurableEntityFactory<ElasticJavaWebAppService> newWebClusterFactory();
     }
 
+    /** @deprecated since 0.7.0 use {@link EntitySpec} */
+    @Deprecated
     public static class Factory extends AbstractConfigurableEntityFactory<ElasticJavaWebAppService>
     implements EntityFactoryForLocation<ElasticJavaWebAppService> {
 
-        public ElasticJavaWebAppService newEntity2(Map flags, Entity parent) {
+        private static final long serialVersionUID = 6654647949712073832L;
+
+        public ElasticJavaWebAppService newEntity2(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
             return new ControlledDynamicWebAppClusterImpl(flags, parent);
         }
 

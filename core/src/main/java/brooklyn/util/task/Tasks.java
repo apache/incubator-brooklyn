@@ -327,6 +327,14 @@ public class Tasks {
         return isAncestorCancelled(t.getSubmittedByTask());
     }
 
+    public static boolean isQueued(TaskAdaptable<?> task) {
+        return ((TaskInternal<?>)task.asTask()).isQueued();
+    }
+
+    public static boolean isSubmitted(TaskAdaptable<?> task) {
+        return ((TaskInternal<?>)task.asTask()).isSubmitted();
+    }
+    
     public static boolean isQueuedOrSubmitted(TaskAdaptable<?> task) {
         return ((TaskInternal<?>)task.asTask()).isQueuedOrSubmitted();
     }
@@ -336,7 +344,7 @@ public class Tasks {
      * @return true if the task was added, false otherwise.
      */
     public static boolean tryQueueing(TaskQueueingContext adder, TaskAdaptable<?> task) {
-        if (task==null || isQueuedOrSubmitted(task))
+        if (task==null || isQueued(task))
             return false;
         try {
             adder.queue(task.asTask());
@@ -407,6 +415,10 @@ public class Tasks {
         return Tasks.<Void>builder().dynamic(false).name(name).body(new Runnable() { public void run() { 
             if (optionalError!=null) throw Exceptions.propagate(optionalError); else throw new RuntimeException("Failed: "+name);
         } }).build();
+    }
+    public static Task<Void> warning(final String message, final Throwable optionalError) {
+        log.warn(message);
+        return TaskTags.markInessential(fail(message, optionalError));
     }
 
     /** marks the current task inessential; this mainly matters if the task is running in a parent

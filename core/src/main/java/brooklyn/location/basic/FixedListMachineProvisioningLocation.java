@@ -184,7 +184,7 @@ implements MachineProvisioningLocation<T>, Closeable {
     }
 
     @Override
-    protected boolean removeChild(Location child) {
+    public boolean removeChild(Location child) {
         if (inUse.contains(child)) {
             throw new IllegalStateException("Child location "+child+" is in use; cannot remove from "+this);
         }

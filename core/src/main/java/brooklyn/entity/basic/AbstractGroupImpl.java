@@ -61,7 +61,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     }
 
     @Deprecated
-    public AbstractGroupImpl(Map flags, Entity parent) {
+    public AbstractGroupImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         super(flags, parent);
     }
 

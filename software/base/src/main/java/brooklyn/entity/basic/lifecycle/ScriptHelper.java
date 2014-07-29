@@ -66,6 +66,7 @@ public class ScriptHelper {
     public final ScriptPart body = new ScriptPart(this);
     public final ScriptPart footer = new ScriptPart(this);
     
+    @SuppressWarnings("rawtypes")
     protected final Map flags = new LinkedHashMap();
     protected Predicate<? super Integer> resultCodeCheck = Predicates.alwaysTrue();
     protected Predicate<? super ScriptHelper> executionCheck = Predicates.alwaysTrue();
@@ -86,6 +87,7 @@ public class ScriptHelper {
      * Takes a closure which accepts this ScriptHelper and returns true or false
      * as to whether the script needs to run (or can throw error if desired)
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public ScriptHelper executeIf(Closure c) {
         Predicate<ScriptHelper> predicate = GroovyJavaMethods.predicateFromClosure(c);
         return executeIf(predicate);
@@ -174,6 +176,7 @@ public class ScriptHelper {
      * closure always returns true (and the exit code is made available to the
      * caller if they care)
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public ScriptHelper requireResultCode(Closure integerFilter) {
         Predicate<Integer> objectPredicate = GroovyJavaMethods.predicateFromClosure(integerFilter);
         return requireResultCode(objectPredicate);
@@ -312,6 +315,7 @@ public class ScriptHelper {
         }
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public int executeInternal() {
         if (!executionCheck.apply(this)) {
             return 0;
@@ -358,10 +362,12 @@ public class ScriptHelper {
         throw new IllegalStateException(message);
     }
 
+    @SuppressWarnings("rawtypes")
     public Map getFlags() {
         return flags;
     }
     
+    @SuppressWarnings("unchecked")
     public ScriptHelper setFlag(String flag, Object value) {
         flags.put(flag, value);
         return this;

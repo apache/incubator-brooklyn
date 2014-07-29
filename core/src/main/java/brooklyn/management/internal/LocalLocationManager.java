@@ -88,6 +88,13 @@ public class LocalLocationManager implements LocationManager {
             T loc = locationFactory.createLocation(spec);
             if (!createUnmanaged) {
                 manage(loc);
+            } else {
+                // remove references
+                Location parent = loc.getParent();
+                if (parent!=null) {
+                    ((AbstractLocation)parent).removeChild(loc);
+                }
+                preRegisteredLocationsById.remove(loc.getId());
             }
             
             return loc;

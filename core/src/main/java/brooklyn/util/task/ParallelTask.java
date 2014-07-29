@@ -63,7 +63,11 @@ public class ParallelTask<T> extends CompoundTask<T> {
                 x = task.get();
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                exceptions.add(e);
+                if (TaskTags.isInessential(task)) {
+                    // ignore exception as it's inessential
+                } else {
+                    exceptions.add(e);
+                }
                 x = null;
             }
             result.add(x);

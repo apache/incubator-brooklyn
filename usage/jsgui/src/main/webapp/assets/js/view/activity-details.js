@@ -146,10 +146,14 @@ define([
                         that.displayTextForLinkedTask(v)+"</a>" })
             this.updateFieldWith('result',
                 function(v) {
-                    if (v.toString().length<20 &&  !/\r|\n/.exec(v)) {
-                        return " with result: <span class='result-literal'>"+_.escape(v)+"</span>";
+                    // use display string (JSON.stringify(_.escape(v)) because otherwise list of [null,null] is just ","  
+                    var vs = Util.toDisplayString(v);
+                    if (vs.trim().length==0) {
+                        return " (empty result)";
+                    } else if (vs.length<20 &&  !/\r|\n/.exec(v)) {
+                        return " with result: <span class='result-literal'>"+vs+"</span>";
                     } else {
-                        return "<div class='result-literal'>"+_.escape(v).replace(/\n+/g,"<br>")+"</div>"
+                        return "<div class='result-literal'>"+vs.replace(/\n+/g,"<br>")+"</div>"
                     }
                  })
             this.updateFieldWith('tags', function(tags) {
@@ -276,7 +280,7 @@ define([
             }
             ViewUtils.updateMyDataTable(this.subtasksTable, subtasks, function(task, index) {
                 return [ task.get("id"),
-                         (task.get("entityId") && task.get("entityId")!=that.task.get("entityId") ? task.get("entityDisplayName") + ": " : "") + 
+                         (task.get("entityId") && (!that.task || task.get("entityId")!=that.task.get("entityId")) ? task.get("entityDisplayName") + ": " : "") + 
                          task.get("displayName"),
                          task.get("submitTimeUtc") <= 0 ? "-" : moment(task.get("submitTimeUtc")).calendar(),
                          task.get("currentStatus")

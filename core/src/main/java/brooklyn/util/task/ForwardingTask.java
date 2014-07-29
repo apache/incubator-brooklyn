@@ -193,6 +193,11 @@ public abstract class ForwardingTask<T> extends ForwardingObject implements Task
     }
 
     @Override
+    public boolean isQueued() {
+        return delegate().isQueued();
+    }
+
+    @Override
     public boolean isQueuedOrSubmitted() {
         return delegate().isQueuedOrSubmitted();
     }

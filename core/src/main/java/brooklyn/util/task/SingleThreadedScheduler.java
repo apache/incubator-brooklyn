@@ -18,7 +18,6 @@
  */
 package brooklyn.util.task;
 
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -50,6 +49,7 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
     private static final Logger LOG = LoggerFactory.getLogger(SingleThreadedScheduler.class);
     
     private final Queue<QueuedSubmission<?>> order = new ConcurrentLinkedQueue<QueuedSubmission<?>>();
+    private int queueSize = 0;
     private final AtomicBoolean running = new AtomicBoolean(false);
     
     private ExecutorService executor;
@@ -78,10 +78,13 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
         } else {
             WrappingFuture<T> f = new WrappingFuture<T>();
             order.add(new QueuedSubmission<T>(c, f));
-            int size = order.size();
-            if (size>0 && (size == 50 || (size<=500 && (size%100)==0) || (size%1000)==0) && size!=lastSizeWarn) {
-                LOG.warn("{} is backing up, {} tasks queued", this, size);
-                lastSizeWarn = size;
+            queueSize++;
+            if (queueSize>0 && (queueSize == 50 || (queueSize<=500 && (queueSize%100)==0) || (queueSize%1000)==0) && queueSize!=lastSizeWarn) {
+                LOG.warn("{} is backing up, {} tasks queued", this, queueSize);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Task queue backing up detail, queue "+this+"; task context is "+Tasks.current()+"; latest task is "+c+"; first task is "+order.peek());
+                }
+                lastSizeWarn = queueSize;
             }
             return f;
         }
@@ -97,6 +100,7 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
                 done = true;
             } else {
                 QueuedSubmission<?> qs = order.remove();
+                queueSize--;
                 if (!qs.f.isCancelled()) {
                     Future future = executeNow(qs.c);
                     qs.f.setDelegate(future);
@@ -125,6 +129,11 @@ public class SingleThreadedScheduler implements TaskScheduler, CanSetName {
         QueuedSubmission(Callable<T> c, WrappingFuture<T> f) {
             this.c = c;
             this.f = f;
+        }
+        
+        @Override
+        public String toString() {
+            return "QueuedSubmission["+c+"]@"+Integer.toHexString(System.identityHashCode(this));
         }
     }
     

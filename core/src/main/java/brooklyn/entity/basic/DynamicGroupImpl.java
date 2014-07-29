@@ -33,6 +33,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.internal.CollectionChangeListener;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -50,7 +51,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     public DynamicGroupImpl() { }
 
     @Deprecated
-    public DynamicGroupImpl(Map flags, Entity parent) {
+    public DynamicGroupImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         super(flags, parent);
     }
 
@@ -160,7 +161,13 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
         }
         setChangeListener = new MyEntitySetChangeListener();
         ((ManagementContextInternal) getManagementContext()).addEntitySetListener(setChangeListener);
-        rescanEntities();
+        try {
+            rescanEntities();
+        } catch (Exception e) {
+            log.warn("Error rescanning entities when rebinding; may be a group set against an unknown entity: "+e);
+            log.debug("Trace for rescan entities error", e);
+            Exceptions.propagateIfFatal(e);
+        }
     }
 
     @Override

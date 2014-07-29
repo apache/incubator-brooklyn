@@ -33,7 +33,11 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface TaskQueueingContext {
 
-    /** queues the task for submission as part of this queueing context; should mark it as submitted */
+    /** queues the task for submission as part of this queueing context
+     * <p>
+     * implementations should mark it as queued but not yet submitted.
+     * note the task may have already been submitted, and is being queued here for informational purposes,
+     * in which case the implementation should not run it. */
     public void queue(Task<?> t);
     
     /** returns a list of queued tasks (immutable copy) */

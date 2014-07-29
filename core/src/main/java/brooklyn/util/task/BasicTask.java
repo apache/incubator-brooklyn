@@ -20,7 +20,6 @@ package brooklyn.util.task;
 
 import static brooklyn.util.JavaGroovyEquivalents.asString;
 import static brooklyn.util.JavaGroovyEquivalents.elvisString;
-import static brooklyn.util.JavaGroovyEquivalents.join;
 import groovy.lang.Closure;
 
 import java.io.PrintWriter;
@@ -117,8 +116,7 @@ public class BasicTask<T> implements TaskInternal<T> {
 
         description = elvisString(flags.remove("description"), "");
         String d = asString(flags.remove("displayName"));
-        if (d==null) d = join(tags, "-");
-        displayName = d;
+        displayName = (d==null ? "" : d);
     }
 
     public BasicTask(Runnable job) { this(GroovyJavaMethods.<T>callableFromRunnable(job)); }
@@ -144,10 +142,13 @@ public class BasicTask<T> implements TaskInternal<T> {
     }
 
     @Override
-    public String toString() { 
-        return "Task["+(displayName!=null && displayName.length()>0?displayName+
-                (tags!=null && !tags.isEmpty()?"":";")+" ":"")+
-                (tags!=null && !tags.isEmpty()?tags+"; ":"")+getId()+"]";
+    public String toString() {
+        // give display name plus id, or job and tags plus id; some jobs have been extended to include nice tostrings 
+        return "Task["+
+            (Strings.isNonEmpty(displayName) ? 
+                displayName : 
+                (job + (tags!=null && !tags.isEmpty() ? ";"+tags : "")) ) +
+            ":"+getId()+"]";
     }
 
     @Override
@@ -231,13 +232,18 @@ public class BasicTask<T> implements TaskInternal<T> {
     // basic fields --------------------
 
     @Override
+    public boolean isQueued() {
+        return (queuedTimeUtc >= 0);
+    }
+
+    @Override
     public boolean isQueuedOrSubmitted() {
-        return (queuedTimeUtc >= 0) || isSubmitted();
+        return isQueued() || isSubmitted();
     }
 
     @Override
     public boolean isQueuedAndNotSubmitted() {
-        return (queuedTimeUtc >= 0) && (!isSubmitted());
+        return isQueued() && (!isSubmitted());
     }
 
     @Override

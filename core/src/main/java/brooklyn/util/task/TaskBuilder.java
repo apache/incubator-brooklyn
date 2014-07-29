@@ -18,10 +18,9 @@
  */
 package brooklyn.util.task;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -30,7 +29,9 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.JavaGroovyEquivalents;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.Iterables;
 
@@ -41,8 +42,9 @@ public class TaskBuilder<T> {
     String description = null;
     Callable<T> body = null;
     Boolean swallowChildrenFailures = null;
-    List<TaskAdaptable<?>> children = new ArrayList<TaskAdaptable<?>>();
-    Set<Object> tags = new LinkedHashSet<Object>();
+    List<TaskAdaptable<?>> children = MutableList.of();
+    Set<Object> tags = MutableSet.of();
+    Map<String,Object> flags = MutableMap.of();
     Boolean dynamic = null;
     boolean parallel = false;
     
@@ -112,18 +114,30 @@ public class TaskBuilder<T> {
         tags.add(tag);
         return this;
     }
+    
+    /** adds a flag to the given task */
+    public TaskBuilder<T> flag(String flag, Object value) {
+        flags.put(flag, value);
+        return this;
+    }
+
+    /** adds the given flags to the given task */
+    public TaskBuilder<T> flags(Map<String,Object> flags) {
+        this.flags.putAll(flags);
+        return this;
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Task<T> build() {
-        MutableMap<String, Object> flags = MutableMap.of();
-        if (name!=null) flags.add("displayName", name);
-        if (description!=null) flags.add("description", description);
-        if (!tags.isEmpty()) flags.add("tags", tags);
+        MutableMap<String, Object> taskFlags = MutableMap.copyOf(flags);
+        if (name!=null) taskFlags.put("displayName", name);
+        if (description!=null) taskFlags.put("description", description);
+        if (!tags.isEmpty()) taskFlags.put("tags", tags);
         
         if (Boolean.FALSE.equals(dynamic) && children.isEmpty()) {
             if (swallowChildrenFailures!=null)
                 throw new IllegalArgumentException("Cannot set swallowChildrenFailures for non-dynamic task: "+this);
-            return new BasicTask<T>(flags, body);
+            return new BasicTask<T>(taskFlags, body);
         }
         
         // prefer dynamic set unless (a) user has said not dynamic, or (b) it's parallel (since there is no dynamic parallel yet)
@@ -132,7 +146,7 @@ public class TaskBuilder<T> {
         if (Boolean.TRUE.equals(dynamic) || (dynamic==null && !parallel)) {
             if (parallel)
                 throw new UnsupportedOperationException("No implementation of parallel dynamic aggregate task available");
-            DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(flags, body);
+            DynamicSequentialTask<T> result = new DynamicSequentialTask<T>(taskFlags, body);
             if (swallowChildrenFailures!=null && swallowChildrenFailures.booleanValue()) result.swallowChildrenFailures();
             for (TaskAdaptable t: children)
                 result.queue(t.asTask());
@@ -148,9 +162,9 @@ public class TaskBuilder<T> {
         }
         
         if (parallel)
-            return new ParallelTask(flags, children);
+            return new ParallelTask(taskFlags, children);
         else
-            return new SequentialTask(flags, children);
+            return new SequentialTask(taskFlags, children);
     }
 
     /** returns a a factory based on this builder */

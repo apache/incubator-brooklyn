@@ -49,7 +49,6 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -61,7 +60,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         this(MutableMap.of(), null);
     }
     
-    public ControlledDynamicWebAppClusterImpl(Map flags) {
+    public ControlledDynamicWebAppClusterImpl(Map<?,?> flags) {
         this(flags, null);
     }
     
@@ -69,7 +68,8 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         this(MutableMap.of(), parent);
     }
     
-    public ControlledDynamicWebAppClusterImpl(Map flags, Entity parent) {
+    @Deprecated
+    public ControlledDynamicWebAppClusterImpl(Map<?,?> flags, Entity parent) {
         super(flags, parent);
         setAttribute(SERVICE_UP, false);
     }
@@ -106,6 +106,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
             webClusterSpec = EntitySpec.create(DynamicWebAppCluster.class);
         }
         boolean hasMemberSpec = webClusterSpec.getConfig().containsKey(DynamicWebAppCluster.MEMBER_SPEC) || webClusterSpec.getFlags().containsKey("memberSpec");
+        @SuppressWarnings("deprecation")
         boolean hasMemberFactory = webClusterSpec.getConfig().containsKey(DynamicWebAppCluster.FACTORY) || webClusterSpec.getFlags().containsKey("factory");
         if (!(hasMemberSpec || hasMemberFactory)) {
             webClusterSpec.configure(webClusterFlags);
@@ -159,6 +160,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         return getAttribute(CONTROLLER);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized ConfigurableEntityFactory<WebAppService> getFactory() {
         return (ConfigurableEntityFactory<WebAppService>) getAttribute(FACTORY);
@@ -307,10 +309,21 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         return getCluster().getCurrentSize();
     }
 
-    private Entity findChildOrNull(Predicate<? super Entity> predicate) {
-        for (Entity contender : getChildren()) {
-            if (predicate.apply(contender)) return contender;
-        }
-        return null;
+    @Override
+    public void deploy(String url, String targetName) {
+        DynamicWebAppClusterImpl.addToWarsByContext(this, url, targetName);
+        getCluster().deploy(url, targetName);
     }
+
+    @Override
+    public void undeploy(String targetName) {
+        DynamicWebAppClusterImpl.removeFromWarsByContext(this, targetName);
+        getCluster().undeploy(targetName);
+    }
+
+    @Override
+    public void redeployAll() {
+        getCluster().redeployAll();
+    }
+
 }
