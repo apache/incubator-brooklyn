@@ -544,6 +544,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                             t.cancel(true);
                         } catch (Exception e) {
                             Exceptions.propagateIfFatal(e);
+                            LOG.debug("Error cancelling "+t+" on "+entity+" (will warn when all tasks are cancelled): "+e, e);
                             exceptions.add(e);
                         }
                     }

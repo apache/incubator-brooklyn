@@ -116,7 +116,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     @Override
     public void install() {
         // inessential here, installation will fail later if it needs to sudo (eg if using port 80)
-        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), OnFailingTask.WARN_OR_FAIL_INESSENTIAL_IF_DYNAMIC)).orSubmitAndBlock();
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), OnFailingTask.WARN_OR_IF_DYNAMIC_FAIL_MARKING_INESSENTIAL)).orSubmitAndBlock();
 
         DownloadResolver nginxResolver = mgmt().getEntityDownloadsManager().newDownloader(this);
         List<String> nginxUrls = nginxResolver.getTargets();
