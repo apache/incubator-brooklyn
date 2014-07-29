@@ -21,6 +21,7 @@ package brooklyn.entity.proxying;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,6 +52,7 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 
 /**
  * Creates entities (and proxies) of required types, given the 
@@ -147,16 +149,38 @@ public class InternalEntityFactory {
         // referenced from the entity and its interfaces with the single passed loader
         // while a normal class loading would nest the class loaders (loading interfaces'
         // references with their own class loaders which in our case are different).
-        AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
-        aggregateClassLoader.addFirst(entity.getClass().getClassLoader());
+        Collection<ClassLoader> loaders = Sets.newLinkedHashSet();
+        addClassLoaders(entity.getClass(), loaders);
         for(Class<?> iface : interfaces) {
-            aggregateClassLoader.addLast(iface.getClassLoader());
+            loaders.add(iface.getClassLoader());
+        }
+
+        AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
+        for (ClassLoader cl : loaders) {
+            aggregateClassLoader.addLast(cl);
         }
 
         return (T) java.lang.reflect.Proxy.newProxyInstance(
                 aggregateClassLoader,
                 interfaces.toArray(new Class[interfaces.size()]),
                 new EntityProxyImpl(entity));
+    }
+
+    private void addClassLoaders(Class<?> type, Collection<ClassLoader> loaders) {
+        ClassLoader cl = type.getClassLoader();
+
+        //java.lang.Object.getClassLoader() = null
+        if (cl != null) {
+            loaders.add(cl);
+        }
+
+        Class<?> superType = type.getSuperclass();
+        if (superType != null) {
+            addClassLoaders(superType, loaders);
+        }
+        for (Class<?> iface : type.getInterfaces()) {
+            addClassLoaders(iface, loaders);
+        }
     }
 
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
