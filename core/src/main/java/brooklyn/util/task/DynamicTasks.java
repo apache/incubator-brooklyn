@@ -226,7 +226,7 @@ public class DynamicTasks {
     public static <V extends TaskAdaptable<?>> V queue(V task) {
         try {
             Preconditions.checkNotNull(task, "Task to queue cannot be null");
-            Preconditions.checkState(!Tasks.isQueuedOrSubmitted(task), "Task to queue must not yet be submitted: %s", task);
+            Preconditions.checkState(!Tasks.isQueued(task), "Task to queue must not yet be queued: %s", task);
             TaskQueueingContext adder = getTaskQueuingContext();
             if (adder==null) 
                 throw new IllegalStateException("Task "+task+" cannot be queued here; no queueing context available");
@@ -267,14 +267,23 @@ public class DynamicTasks {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
     }
 
+    /** queues the task if needed, i.e. if it is not yet submitted (so it will run), 
+     * or if it is submitted but not queued and we are in a queueing context (so it is available for informational purposes) */
     public static <T extends TaskAdaptable<?>> T queueIfNeeded(T task) {
-        if (!Tasks.isQueuedOrSubmitted(task))
-            queue(task);
+        if (!Tasks.isQueued(task)) {
+            if (Tasks.isSubmitted(task) && getTaskQueuingContext()==null) {
+                // already submitted and not in a queueing context, don't try to queue
+            } else {
+                // needs submitting, put it in the queue
+                // (will throw an error if we are not a queueing context)
+                queue(task);
+            }
+        }
         return task;
     }
     
-    /** submits the given task if needed, and gets the result (unchecked) 
-     * only permitted in a queueing context (ie a DST main job) */
+    /** submits/queues the given task if needed, and gets the result (unchecked) 
+     * only permitted in a queueing context (ie a DST main job) if the task is not yet submitted */
     // things get really confusing if you try to queueInTaskHierarchy -- easy to cause deadlocks!
     public static <T> T get(TaskAdaptable<T> t) {
         return queueIfNeeded(t).asTask().getUnchecked();

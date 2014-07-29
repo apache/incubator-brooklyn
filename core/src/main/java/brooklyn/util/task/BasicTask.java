@@ -231,13 +231,18 @@ public class BasicTask<T> implements TaskInternal<T> {
     // basic fields --------------------
 
     @Override
+    public boolean isQueued() {
+        return (queuedTimeUtc >= 0);
+    }
+
+    @Override
     public boolean isQueuedOrSubmitted() {
-        return (queuedTimeUtc >= 0) || isSubmitted();
+        return isQueued() || isSubmitted();
     }
 
     @Override
     public boolean isQueuedAndNotSubmitted() {
-        return (queuedTimeUtc >= 0) && (!isSubmitted());
+        return isQueued() && (!isSubmitted());
     }
 
     @Override

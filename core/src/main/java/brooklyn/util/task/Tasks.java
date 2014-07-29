@@ -327,6 +327,14 @@ public class Tasks {
         return isAncestorCancelled(t.getSubmittedByTask());
     }
 
+    public static boolean isQueued(TaskAdaptable<?> task) {
+        return ((TaskInternal<?>)task.asTask()).isQueued();
+    }
+
+    public static boolean isSubmitted(TaskAdaptable<?> task) {
+        return ((TaskInternal<?>)task.asTask()).isSubmitted();
+    }
+    
     public static boolean isQueuedOrSubmitted(TaskAdaptable<?> task) {
         return ((TaskInternal<?>)task.asTask()).isQueuedOrSubmitted();
     }
@@ -336,7 +344,7 @@ public class Tasks {
      * @return true if the task was added, false otherwise.
      */
     public static boolean tryQueueing(TaskQueueingContext adder, TaskAdaptable<?> task) {
-        if (task==null || isQueuedOrSubmitted(task))
+        if (task==null || isQueued(task))
             return false;
         try {
             adder.queue(task.asTask());

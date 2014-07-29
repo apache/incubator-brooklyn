@@ -53,8 +53,8 @@ public interface TaskInternal<T> extends Task<T> {
     Future<T> getResult();
     
     boolean isQueuedOrSubmitted();
-
     boolean isQueuedAndNotSubmitted();
+    boolean isQueued();
 
     /** marks the task as queued for execution */
     void markQueued();
