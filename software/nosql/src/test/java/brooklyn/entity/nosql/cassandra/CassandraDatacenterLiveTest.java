@@ -110,17 +110,22 @@ public class CassandraDatacenterLiveTest extends BrooklynAppLiveTestSupport {
         runCluster(spec, true);
     }
     
+    /*
+     * TODO on some distros (e.g. CentOS?), it comes pre-installed with java 6. Installing java 7 
+     * didn't seem to be enough. I also had to set JAVA_HOME:
+     *     .configure("shell.env", MutableMap.of("JAVA_HOME", "/etc/alternatives/java_sdk_1.7.0"))
+     * However, that would break other deployments such as on Ubuntu where JAVA_HOME would be different.
+     */
     @Test(groups = "Live")
     public void testDatacenterWithVnodesVersion2() throws Exception {
         EntitySpec<CassandraDatacenter> spec = EntitySpec.create(CassandraDatacenter.class)
                 .configure("initialSize", 2)
                 .configure(CassandraNode.SUGGESTED_VERSION, "2.0.9")
-                .configure("shell.env", MutableMap.of("JAVA_HOME", "/etc/alternatives/java_sdk_1.7.0"))
                 .configure(CassandraDatacenter.USE_VNODES, true)
                 .configure("clusterName", "CassandraClusterLiveTest");
         runCluster(spec, true);
     }
-    
+
     @Test(groups = {"Live", "Acceptance"}, invocationCount=10)
     public void testManyTimes() throws Exception {
         testDatacenter();
@@ -268,12 +273,13 @@ public class CassandraDatacenterLiveTest extends BrooklynAppLiveTestSupport {
         if (versions.size() > 1) {
             Assert.fail("Inconsistent versions on Cassandra start: "+versions);
         }
+        String keyspacePrefix = "BrooklynTests_"+Identifiers.makeRandomId(8);
 
-        astyanaxFirst.writeData(numRetries);
+        String keyspaceName = astyanaxFirst.writeData(keyspacePrefix, numRetries);
 
         for (Entity node : nodes) {
             AstyanaxSample astyanaxSecond = AstyanaxSample.builder().node((CassandraNode)node).columnFamilyName(uniqueName).build();
-            astyanaxSecond.readData(numRetries);
+            astyanaxSecond.readData(keyspaceName, numRetries);
         }
     }
 

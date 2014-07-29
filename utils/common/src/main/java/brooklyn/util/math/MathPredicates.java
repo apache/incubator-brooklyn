@@ -24,6 +24,10 @@ import com.google.common.base.Predicate;
 
 public class MathPredicates {
 
+    /**
+     * Creates a predicate comparing a given number with {@code val}. 
+     * A number of {@code null} passed to the predicate will always return false.
+     */
     public static Predicate<Number> greaterThan(final double val) {
         return new Predicate<Number>() {
             public boolean apply(@Nullable Number input) {
@@ -32,6 +36,10 @@ public class MathPredicates {
         };
     }
 
+    /**
+     * Creates a predicate comparing a given number with {@code val}. 
+     * A number of {@code null} passed to the predicate will always return false.
+     */
     public static Predicate<Number> greaterThanOrEqual(final double val) {
         return new Predicate<Number>() {
             public boolean apply(@Nullable Number input) {
@@ -40,6 +48,10 @@ public class MathPredicates {
         };
     }
 
+    /**
+     * Creates a predicate comparing a given number with {@code val}. 
+     * A number of {@code null} passed to the predicate will always return false.
+     */
     public static Predicate<Number> lessThan(final double val) {
         return new Predicate<Number>() {
             public boolean apply(@Nullable Number input) {
@@ -48,6 +60,10 @@ public class MathPredicates {
         };
     }
 
+    /**
+     * Creates a predicate comparing a given number with {@code val}. 
+     * A number of {@code null} passed to the predicate will always return false.
+     */
     public static Predicate<Number> lessThanOrEqual(final double val) {
         return new Predicate<Number>() {
             public boolean apply(@Nullable Number input) {

@@ -199,6 +199,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     }
     
     @Override public Set<BigInteger> getTokens() {
+        // Prefer an already-set attribute over the config.
+        // Prefer TOKENS over TOKEN.
         Set<BigInteger> tokens = getAttribute(CassandraNode.TOKENS);
         if (tokens == null) {
             BigInteger token = getAttribute(CassandraNode.TOKEN);
@@ -207,10 +209,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             }
         }
         if (tokens == null) {
-            tokens = getAttribute(CassandraNode.TOKENS);
+            tokens = getConfig(CassandraNode.TOKENS);
         }
         if (tokens == null) {
-            BigInteger token = getAttribute(CassandraNode.TOKEN);
+            BigInteger token = getConfig(CassandraNode.TOKEN);
             if (token != null) {
                 tokens = ImmutableSet.of(token);
             }

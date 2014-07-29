@@ -113,22 +113,22 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                     Set<Entity> currentSeeds = getAttribute(CURRENT_SEEDS);
                     if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) {
                         if (Sets.intersection(currentSeeds, potentialSeeds).isEmpty()) {
-                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {this, currentSeeds});
+                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {CassandraDatacenterImpl.this, currentSeeds});
                         }
                         return currentSeeds;
                     } else if (potentialRunningSeeds.isEmpty()) {
                         // TODO Could be race where nodes have only just returned from start() and are about to 
                         // transition to serviceUp; so don't just abandon all our seeds!
-                        log.warn("Cluster {} has no running seeds (yet?); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {this});
+                        log.warn("Cluster {} has no running seeds (yet?); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraDatacenterImpl.this});
                         return currentSeeds;
                     } else {
                         Set<Entity> result = trim(quorumSize, potentialRunningSeeds);
-                        log.debug("Cluster {} updating seeds: chosen={}; potentialRunning={}", new Object[] {this, result, potentialRunningSeeds});
+                        log.debug("Cluster {} updating seeds: chosen={}; potentialRunning={}", new Object[] {CassandraDatacenterImpl.this, result, potentialRunningSeeds});
                         return result;
                     }
                 } else {
                     Set<Entity> result = trim(quorumSize, potentialSeeds);
-                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {this, result});
+                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {CassandraDatacenterImpl.this, result});
                     return result;
                 }
             }

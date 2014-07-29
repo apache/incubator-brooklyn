@@ -166,17 +166,18 @@ public class AstyanaxSupport {
          * Exercise the {@link CassandraNode} using the Astyanax API.
          */
         public void astyanaxTest() throws Exception {
-            writeData();
-            readData();
+            String keyspaceName = "BrooklynTests_"+Identifiers.makeRandomId(8);
+            writeData(keyspaceName);
+            readData(keyspaceName);
         }
 
         /**
          * Write to a {@link CassandraNode} using the Astyanax API.
          * @throws ConnectionException 
          */
-        public void writeData() throws ConnectionException {
+        public void writeData(String keyspaceName) throws ConnectionException {
             // Create context
-            AstyanaxContext<Keyspace> context = newAstyanaxContextForKeyspace("BrooklynIntegrationTest");
+            AstyanaxContext<Keyspace> context = newAstyanaxContextForKeyspace(keyspaceName);
             try {
                 Keyspace keyspace = context.getEntity();
                 try {
@@ -233,14 +234,14 @@ public class AstyanaxSupport {
                 context.shutdown();
             }
         }
-        
+
         /**
          * Read from a {@link CassandraNode} using the Astyanax API.
          * @throws ConnectionException 
          */
-        public void readData() throws ConnectionException {
+        public void readData(String keyspaceName) throws ConnectionException {
             // Create context
-            AstyanaxContext<Keyspace> context = newAstyanaxContextForKeyspace("BrooklynIntegrationTest");
+            AstyanaxContext<Keyspace> context = newAstyanaxContextForKeyspace(keyspaceName);
             try {
                 Keyspace keyspace = context.getEntity();
 
@@ -268,12 +269,19 @@ public class AstyanaxSupport {
         }
         
 
-        public void writeData(int numRetries) throws ConnectionException {
+        /**
+         * Returns the keyspace name to which the data has been written. If it fails the first time,
+         * then will increment the keyspace name. This is because the failure could be a response timeout,
+         * where the keyspace really has been created so subsequent attempts with the same name will 
+         * fail (because we assert that the keyspace did not exist).
+         */
+        public String writeData(String keyspacePrefix, int numRetries) throws ConnectionException {
             int retryCount = 0;
             while (true) {
                 try {
-                    writeData();
-                    return;
+                    String keyspaceName = keyspacePrefix + (retryCount > 0 ? "" : "_"+retryCount);
+                    writeData(keyspaceName);
+                    return keyspaceName;
                 } catch (Exception e) {
                     log.warn("Error writing data - attempt "+(retryCount+1)+" of "+(numRetries+1)+": "+e, e);
                     if (++retryCount > numRetries)
@@ -282,11 +290,15 @@ public class AstyanaxSupport {
             }
         }
 
-        public void readData(int numRetries) throws ConnectionException {
+        /**
+         * Repeatedly tries to read data from the given keyspace name. Asserts that the data is the
+         * same as would be written by calling {@code writeData(keyspaceName)}.
+         */
+        public void readData(String keyspaceName, int numRetries) throws ConnectionException {
             int retryCount = 0;
             while (true) {
                 try {
-                    readData();
+                    readData(keyspaceName);
                     return;
                 } catch (Exception e) {
                     log.warn("Error reading data - attempt "+(retryCount+1)+" of "+(numRetries+1)+": "+e, e);
