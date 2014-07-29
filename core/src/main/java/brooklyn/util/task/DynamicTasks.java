@@ -156,8 +156,13 @@ public class DynamicTasks {
          * <p>
          * throws if there are any errors
          */
-        public void andWaitForSuccess() {
-            task.getUnchecked();
+        public T andWaitForSuccess() {
+            return task.getUnchecked();
+        }
+        public void orCancel() {
+            if (!wasQueued()) {
+                task.cancel(false);
+            }
         }
     }
     
@@ -327,5 +332,5 @@ public class DynamicTasks {
     public static <T> Task<T> submit(TaskAdaptable<T> task, Entity entity) {
         return queueIfPossible(task).orSubmitAsync(entity).asTask();
     }
-    
+
 }

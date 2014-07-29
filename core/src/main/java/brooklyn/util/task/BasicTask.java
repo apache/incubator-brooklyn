@@ -735,7 +735,7 @@ public class BasicTask<T> implements TaskInternal<T> {
         @Override
         public void onTaskFinalization(Task<?> t) {
             if (!Tasks.isAncestorCancelled(t) && !t.isSubmitted()) {
-                log.warn("Task "+t+" was never submitted; did the code forget to run it?");
+                log.warn(t+" was never submitted; did the code create it and forget to run it? ('cancel' the task to suppress this message)");
                 log.debug("Detail of unsubmitted task "+t+":\n"+t.getStatusDetail(true));
                 return;
             }

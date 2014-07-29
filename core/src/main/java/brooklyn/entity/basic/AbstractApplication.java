@@ -224,7 +224,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             throw e;
         } catch (RuntimeException e) {
             if (getManagementContext().isRunning()) {
-                log.warn("Problem storing application event "+state+" for "+this, e);
+                log.warn("Problem recording application event '"+state+"' for "+this, e);
             }
         }
     }

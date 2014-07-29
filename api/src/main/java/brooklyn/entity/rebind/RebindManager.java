@@ -74,6 +74,7 @@ public interface RebindManager {
      */
     public void start();
 
+    /** Stops persisting. Waits for any current persistence to complete. */
     public void stop();
 
     /** @deprecated since 0.7.0; use {@link #waitForPendingComplete(Duration)} */

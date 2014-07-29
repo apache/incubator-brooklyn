@@ -66,7 +66,8 @@ public class ApplicationUsage {
 
     public ApplicationUsage(String applicationId, String applicationName, String entityType, Map<String, String> metadata) {
         this.applicationId = checkNotNull(applicationId, "applicationId");
-        this.applicationName = checkNotNull(applicationName, "applicationName");
+        // allow name to be null, happens in certain failed rebind cases
+        this.applicationName = applicationName;
         this.entityType = checkNotNull(entityType, "entityType");
         this.metadata = checkNotNull(metadata, "metadata");
     }

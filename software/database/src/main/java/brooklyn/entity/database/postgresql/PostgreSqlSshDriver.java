@@ -56,6 +56,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.ssh.SshTasks.OnFailingTask;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringFunctions;
@@ -112,7 +113,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(),
             // sudo is absolutely required here, in customize we set user to postgres
-            true)).orSubmitAndBlock();
+            OnFailingTask.FAIL)).orSubmitAndBlock();
         DynamicTasks.waitForLast();
 
         // Check whether we can find a usable pg_ctl, and if not install one

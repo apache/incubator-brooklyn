@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
@@ -43,6 +45,7 @@ import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
@@ -321,14 +324,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
     }
     
-    /**
-     * Publishes (via {@link #persister}) the state of this management node with itself set to master.
-     */
-    protected synchronized void publishDemotionFromMasterOnFailure() {
-        checkState(getNodeState() == ManagementNodeState.FAILED, "node status must be failed on publish, but is %s", getNodeState());
-        publishDemotionFromMaster(true);
-    }
-    
     protected synchronized void publishDemotionFromMaster(boolean clearMaster) {
         checkState(getNodeState() != ManagementNodeState.MASTER, "node status must not be master when demoting", getNodeState());
         
@@ -402,6 +397,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      */
     protected void checkMaster(boolean initializing) {
         ManagementPlaneSyncRecord memento = loadManagementPlaneSyncRecord(false);
+        
+        if (getNodeState() == ManagementNodeState.FAILED) {
+            // if we have failed then no point in checking who is master
+            // (if somehow this node is subsequently clearFailure() then it will resume)
+            return;
+        }
         
         String currMasterNodeId = memento.getMasterNodeId();
         ManagementNodeSyncRecord currMasterNodeRecord = memento.getManagementNodes().get(currMasterNodeId);
@@ -502,11 +503,16 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader());
         } catch (Exception e) {
             LOG.error("Management node enountered problem during rebind when promoting self to master; demoting to FAILED and rethrowing: "+e);
-            nodeState = ManagementNodeState.FAILED;
-            publishDemotionFromMasterOnFailure();
+            demoteToFailed();
             throw Exceptions.propagate(e);
         }
         managementContext.getRebindManager().start();
+    }
+    
+    protected void demoteToFailed() {
+        nodeState = ManagementNodeState.FAILED;
+        onDemotion();
+        publishDemotionFromMaster(true);
     }
 
     protected void demoteToStandby() {
@@ -516,10 +522,42 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
 
         nodeState = ManagementNodeState.STANDBY;
+        onDemotion();
+        publishDemotionFromMaster(false);
+    }
+    
+    protected void onDemotion() {
         managementContext.getRebindManager().stop();
         for (Application app: managementContext.getApplications())
             Entities.unmanage(app);
-        publishDemotionFromMaster(false);
+        // let's try forcibly interrupting tasks on managed entities
+        Collection<Exception> exceptions = MutableSet.of();
+        int tasks = 0;
+        LOG.debug("Cancelling tasks on demotion");
+        try {
+            for (Entity entity: managementContext.getEntityManager().getEntities()) {
+                for (Task<?> t: managementContext.getExecutionContext(entity).getTasks()) {
+                    if (!t.isDone()) {
+                        tasks++;
+                        try {
+                            LOG.debug("Cancelling "+t+" on "+entity);
+                            t.cancel(true);
+                        } catch (Exception e) {
+                            Exceptions.propagateIfFatal(e);
+                            LOG.debug("Error cancelling "+t+" on "+entity+" (will warn when all tasks are cancelled): "+e, e);
+                            exceptions.add(e);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            LOG.warn("Error inspecting tasks to cancel on demotion: "+e, e);
+        }
+        if (!exceptions.isEmpty())
+            LOG.warn("Error when cancelling tasks on demotion: "+Exceptions.create(exceptions));
+        if (tasks>0)
+            LOG.info("Cancelled "+tasks+" tasks on demotion");
     }
 
     /**

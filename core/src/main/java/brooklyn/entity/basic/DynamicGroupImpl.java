@@ -188,7 +188,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
                 return;
             }
             if (getConfig(ENTITY_FILTER) == null) {
-                log.warn("{} not (yet) scanning for children: no filter defined", this, this);
+                log.debug("{} not (yet) scanning for children: no filter defined", this, this);
                 return;
             }
             if (getApplication() == null) {
