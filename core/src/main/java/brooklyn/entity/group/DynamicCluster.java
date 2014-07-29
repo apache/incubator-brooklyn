@@ -45,13 +45,11 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
-import brooklyn.util.exceptions.ReferenceWithError;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
@@ -177,22 +175,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
      */
     @Effector(description="Changes the size of the cluster.")
     Collection<Entity> resizeByDelta(@EffectorParam(name="delta", description="The change in number of nodes") int delta);
-
-    /**
-     * Adds a node to the cluster in a single {@link Location}
-     *
-     * @deprecated since 0.7.0 tricky having this on the interface as implementation details
-     * may change; for instance we are (22 Jul) changing the return type to be a ReferenceWithError 
-     */
-    ReferenceWithError<Optional<Entity>> addInSingleLocation(Location loc, Map<?,?> extraFlags);
-
-    /**
-     * Adds a node to the cluster in each {@link Location}
-     * 
-     * @deprecated since 0.7.0 tricky having this on the interface as implementation details
-     * may change; for instance we are (22 Jul) changing the return type to be a ReferenceWithError 
-     */
-    ReferenceWithError<Collection<Entity>> addInEachLocation(Iterable<Location> locs, Map<?,?> extraFlags);
 
     void setRemovalStrategy(Function<Collection<Entity>, Entity> val);
 

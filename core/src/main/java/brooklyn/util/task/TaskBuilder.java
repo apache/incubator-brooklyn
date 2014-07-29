@@ -130,9 +130,9 @@ public class TaskBuilder<T> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Task<T> build() {
         MutableMap<String, Object> taskFlags = MutableMap.copyOf(flags);
-        if (name!=null) taskFlags.add("displayName", name);
-        if (description!=null) taskFlags.add("description", description);
-        if (!tags.isEmpty()) taskFlags.add("tags", tags);
+        if (name!=null) taskFlags.put("displayName", name);
+        if (description!=null) taskFlags.put("description", description);
+        if (!tags.isEmpty()) taskFlags.put("tags", tags);
         
         if (Boolean.FALSE.equals(dynamic) && children.isEmpty()) {
             if (swallowChildrenFailures!=null)

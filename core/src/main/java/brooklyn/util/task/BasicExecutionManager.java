@@ -288,33 +288,33 @@ public class BasicExecutionManager implements ExecutionManager {
     }
 
     public <T> Task<T> scheduleWith(Task<T> task) { return scheduleWith(Collections.emptyMap(), task); }
-	public <T> Task<T> scheduleWith(Map<?,?> flags, Task<T> task) {
-		synchronized (task) {
-			if (((TaskInternal<?>)task).getResult()!=null) return task;
-			return submitNewTask(flags, task);
-		}
-	}
+    public <T> Task<T> scheduleWith(Map<?,?> flags, Task<T> task) {
+        synchronized (task) {
+            if (((TaskInternal<?>)task).getResult()!=null) return task;
+            return submitNewTask(flags, task);
+        }
+    }
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     protected Task<?> submitNewScheduledTask(final Map<?,?> flags, final ScheduledTask task) {
-		task.submitTimeUtc = System.currentTimeMillis();
-		tasksById.put(task.getId(), task);
-		if (!task.isDone()) {
-			task.result = delayedRunner.schedule(new ScheduledTaskCallable(task, flags),
-			    task.delay.toNanoseconds(), TimeUnit.NANOSECONDS);
-		} else {
-			task.endTimeUtc = System.currentTimeMillis();
-		}
-		return task;
-	}
-	
-	protected class ScheduledTaskCallable implements Callable<Object> {
-	    public ScheduledTask task;
-	    public Map<?,?> flags;
-	    
-	    public ScheduledTaskCallable(ScheduledTask task, Map<?, ?> flags) {
-	        this.task = task;
-	        this.flags = flags;
+        task.submitTimeUtc = System.currentTimeMillis();
+        tasksById.put(task.getId(), task);
+        if (!task.isDone()) {
+            task.result = delayedRunner.schedule(new ScheduledTaskCallable(task, flags),
+                task.delay.toNanoseconds(), TimeUnit.NANOSECONDS);
+        } else {
+            task.endTimeUtc = System.currentTimeMillis();
+        }
+        return task;
+    }
+
+    protected class ScheduledTaskCallable implements Callable<Object> {
+        public ScheduledTask task;
+        public Map<?,?> flags;
+
+        public ScheduledTaskCallable(ScheduledTask task, Map<?, ?> flags) {
+            this.task = task;
+            this.flags = flags;
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -352,12 +352,12 @@ public class BasicExecutionManager implements ExecutionManager {
                 afterEnd(flags, task);
             }
         }
-        
+
         @Override
         public String toString() {
             return "ScheduledTaskCallable["+task+","+flags+"]";
         }
-	}
+    }
 
     @SuppressWarnings("unchecked")
     protected <T> Task<T> submitNewTask(final Map<?,?> flags, final Task<T> task) {

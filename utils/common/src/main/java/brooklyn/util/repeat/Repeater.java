@@ -301,7 +301,7 @@ public class Repeater {
      * @return true if the exit condition was satisfied; false if the loop terminated for any other reason.
      */
     public boolean run() {
-        return runKeepingError().getIgnoringError();
+        return runKeepingError().getMaskingError();
     }
     
     public ReferenceWithError<Boolean> runKeepingError() {
@@ -335,7 +335,7 @@ public class Repeater {
             }
             if (done) {
                 if (log.isDebugEnabled()) log.debug("{}: condition satisfied", description);
-                return ReferenceWithError.newInstanceWithNoError(true);
+                return ReferenceWithError.newInstanceWithoutError(true);
             } else {
                 if (log.isDebugEnabled()) {
                     String msg = String.format("%s: unsatisfied during iteration %s %s", description, iterations,
@@ -357,7 +357,7 @@ public class Repeater {
                 }
                 if (warnOnUnRethrownException && lastError != null)
                     log.warn("{}: error caught checking condition: {}", description, lastError.getMessage());
-                return ReferenceWithError.newInstanceWithInformativeError(false, lastError);
+                return ReferenceWithError.newInstanceMaskingError(false, lastError);
             }
 
             if (timer.isExpired()) {
@@ -367,7 +367,7 @@ public class Repeater {
                     log.error("{}: error caught checking condition: {}", description, lastError.getMessage());
                     throw Exceptions.propagate(lastError);
                 }
-                return ReferenceWithError.newInstanceWithInformativeError(false, lastError);
+                return ReferenceWithError.newInstanceMaskingError(false, lastError);
             }
 
             Time.sleep(delayThisIteration);

@@ -144,10 +144,11 @@ public class BasicTask<T> implements TaskInternal<T> {
     @Override
     public String toString() {
         // give display name plus id, or job and tags plus id; some jobs have been extended to include nice tostrings 
-        return "Task["+(Strings.isNonEmpty(displayName) ? displayName : 
-                job + 
-                (tags!=null && !tags.isEmpty() ? ";"+tags : "")) +
-                ":"+getId()+"]";
+        return "Task["+
+            (Strings.isNonEmpty(displayName) ? 
+                displayName : 
+                (job + (tags!=null && !tags.isEmpty() ? ";"+tags : "")) ) +
+            ":"+getId()+"]";
     }
 
     @Override

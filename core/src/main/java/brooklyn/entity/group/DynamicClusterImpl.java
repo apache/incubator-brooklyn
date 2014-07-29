@@ -263,7 +263,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 resize(initialSize);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                // ignore problems here; we extract them below
+                // apart from logging, ignore problems here; we extract them below
+                LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
             }
 
             Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
@@ -487,7 +488,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         synchronized (mutex) {
             ReferenceWithError<Optional<Entity>> added = addInSingleLocation(memberLoc, extraFlags);
 
-            if (!added.getIgnoringError().isPresent()) {
+            if (!added.getMaskingError().isPresent()) {
                 String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
                 if (added.hasError())
                     throw new IllegalStateException(msg, added.getError());
@@ -501,7 +502,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new StopFailedRuntimeException("replaceMember failed to stop and remove old member "+member.getId(), e);
             }
 
-            return added.getOrThrowError().get();
+            return added.getThrowingError().get();
         }
     }
 
@@ -584,7 +585,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         // create and start the entities
-        return addInEachLocation(chosenLocations, ImmutableMap.of()).getOrThrowError();
+        return addInEachLocation(chosenLocations, ImmutableMap.of()).getThrowingError();
     }
 
     /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
@@ -615,16 +616,22 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
-    @Override
-    public ReferenceWithError<Optional<Entity>> addInSingleLocation(Location location, Map<?,?> flags) {
+    protected ReferenceWithError<Optional<Entity>> addInSingleLocation(Location location, Map<?,?> flags) {
         ReferenceWithError<Collection<Entity>> added = addInEachLocation(ImmutableList.of(location), flags);
-        return ReferenceWithError.newInstanceWithInformativeError(
-            Iterables.isEmpty(added.getIgnoringError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.getIgnoringError())),
-                added.getError());
+        
+        Optional<Entity> result = Iterables.isEmpty(added.getMaskingError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.get()));
+        if (!added.hasError()) {
+            return ReferenceWithError.newInstanceWithoutError( result );
+        } else {
+            if (added.masksErrorIfPresent()) {
+                return ReferenceWithError.newInstanceMaskingError( result, added.getError() );
+            } else {
+                return ReferenceWithError.newInstanceThrowingError( result, added.getError() );
+            }
+        }
     }
 
-    @Override
-    public ReferenceWithError<Collection<Entity>> addInEachLocation(Iterable<Location> locations, Map<?,?> flags) {
+    protected ReferenceWithError<Collection<Entity>> addInEachLocation(Iterable<Location> locations, Map<?,?> flags) {
         List<Entity> addedEntities = Lists.newArrayList();
         Map<Entity, Location> addedEntityLocations = Maps.newLinkedHashMap();
         Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
@@ -669,10 +676,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } else {
                 cleanupFailedNodes(errors.keySet());
             }
-            return ReferenceWithError.newInstanceWithInformativeError(result, Exceptions.create(errors.values()));
+            return ReferenceWithError.newInstanceMaskingError(result, Exceptions.create(errors.values()));
         }
 
-        return ReferenceWithError.newInstanceWithNoError(result);
+        return ReferenceWithError.newInstanceWithoutError(result);
     }
 
     protected void quarantineFailedNodes(Collection<Entity> failedEntities) {

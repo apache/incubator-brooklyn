@@ -22,7 +22,7 @@ import static brooklyn.util.GroovyJavaMethods.truth
 
 import java.util.concurrent.Callable
 
-import brooklyn.util.javalang.RunnableAdapter
+import brooklyn.util.concurrent.CallableFromRunnable;
 
 import com.google.common.base.Function
 import com.google.common.base.Predicate
@@ -54,7 +54,7 @@ public class GroovyJavaMethods {
     }
 
     public static <T> Callable<T> callableFromRunnable(final Runnable job) {
-        return (job in Callable) ? callableFromClosure(job) : new RunnableAdapter<Object>(job, null);
+        return (job in Callable) ? callableFromClosure(job) : CallableFromRunnable.newInstance(job, null);
     }
 
     public static <T> Predicate<T> predicateFromClosure(final Closure<Boolean> job) {

@@ -27,58 +27,65 @@ public class ReferenceWithError<T> implements Supplier<T> {
 
     private final T object;
     private final Throwable error;
-    private final boolean throwErrorOnAccess;
+    private final boolean maskError;
 
     /** returns a reference which includes an error, and where attempts to get the content cause the error to throw */
-    public static <T> ReferenceWithError<T> newInstanceWithFatalError(T object, Throwable error) {
+    public static <T> ReferenceWithError<T> newInstanceThrowingError(T object, Throwable error) {
         return new ReferenceWithError<T>(object, error, true);
     }
     
     /** returns a reference which includes an error, but attempts to get the content do not cause the error to throw */
-    public static <T> ReferenceWithError<T> newInstanceWithInformativeError(T object, Throwable error) {
+    public static <T> ReferenceWithError<T> newInstanceMaskingError(T object, Throwable error) {
         return new ReferenceWithError<T>(object, error, false);
     }
     
     /** returns a reference which includes an error, but attempts to get the content do not cause the error to throw */
-    public static <T> ReferenceWithError<T> newInstanceWithNoError(T object) {
+    public static <T> ReferenceWithError<T> newInstanceWithoutError(T object) {
         return new ReferenceWithError<T>(object, null, false);
     }
     
     protected ReferenceWithError(@Nullable T object, @Nullable Throwable error, boolean throwErrorOnAccess) {
         this.object = object;
         this.error = error;
-        this.throwErrorOnAccess = throwErrorOnAccess;
+        this.maskError = throwErrorOnAccess;
     }
 
-    public boolean throwsErrorOnAccess() {
-        return throwErrorOnAccess;
+    /** whether this will mask any error on an attempt to {@link #get()};
+     * if false (if created with {@link #newInstanceThrowingError(Object, Throwable)}) a call to {@link #get()} will throw if there is an error;
+     * true if created with {@link #newInstanceMaskingError(Object, Throwable)} and {@link #get()} will not throw */
+    public boolean masksErrorIfPresent() {
+        return maskError;
     }
 
+    /** returns the underlying value, throwing if there is an error and {@link #throwsErrorOnAccess()} is set */
     public T get() {
-        if (throwsErrorOnAccess()) {
-            return getOrThrowError();
+        if (masksErrorIfPresent()) {
+            return getMaskingError();
         }
-        return getIgnoringError();
+        return getThrowingError();
     }
 
-    public T getIgnoringError() {
+    public T getMaskingError() {
         return object;
     }
 
-    public T getOrThrowError() {
+    public T getThrowingError() {
         checkNoError();
         return object;
     }
 
+    /** throws if there is an error (even if masked) */
     public void checkNoError() {
         if (hasError())
             Exceptions.propagate(error);
     }
-    
+
+    /** returns the error (not throwing) */
     public Throwable getError() {
         return error;
     }
     
+    /** true if there is an error (whether masked or not) */
     public boolean hasError() {
         return error!=null;
     }

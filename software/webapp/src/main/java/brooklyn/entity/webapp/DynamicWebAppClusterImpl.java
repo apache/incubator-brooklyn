@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
-import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -68,7 +66,7 @@ import com.google.common.collect.Iterables;
 public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements DynamicWebAppCluster {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicWebAppClusterImpl.class);
-    private static final FilenameToWebContextMapper filenameToWebContextMapper = new FilenameToWebContextMapper();
+    private static final FilenameToWebContextMapper FILENAME_TO_WEB_CONTEXT_MAPPER = new FilenameToWebContextMapper();
     
     /**
      * Instantiate a new DynamicWebAppCluster.  Parameters as per {@link DynamicCluster#DynamicCluster()}
@@ -160,6 +158,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
     }
     
     // TODO this will probably be useful elsewhere ... but where to put it?
+    // TODO add support for this in DependentConfiguration (see TODO there)
     /** Waits for the given target to report service up, then runs the given task
      * (often an invocation on that entity), with the given name.
      * If the target goes away, this task marks itself inessential
@@ -174,7 +173,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
                             Tasks.markInessential();
                             throw new IllegalStateException("Target "+target+" is no longer managed");
                         }
-                        if (target.getAttribute(Attributes.SERVICE_UP)) {
+                        if (Boolean.TRUE.equals(target.getAttribute(Attributes.SERVICE_UP))) {
                             Tasks.resetBlockingDetails();
                             TaskTags.markInessential(task);
                             DynamicTasks.queue(task);
@@ -202,13 +201,10 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
     }
 
     @Override
-    @Effector(description="Deploys the given artifact, from a source URL, to a given deployment filename/context")
-    public void deploy(
-            @EffectorParam(name="url", description="URL of WAR file") String url, 
-            @EffectorParam(name="targetName", description="context path where WAR should be deployed (/ for ROOT)") String targetName) {
+    public void deploy(String url, String targetName) {
         checkNotNull(url, "url");
         checkNotNull(targetName, "targetName");
-        targetName = filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName);
+        targetName = FILENAME_TO_WEB_CONTEXT_MAPPER.convertDeploymentTargetNameToContext(targetName);
 
         // set it up so future nodes get the right wars
         addToWarsByContext(this, url, targetName);
@@ -224,19 +220,21 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         DynamicTasks.queueIfPossible(tb.build()).orSubmitAsync(this).asTask().getUnchecked();
 
         // Update attribute
+        // TODO support for atomic sensor update (should be part of standard tooling; NB there is some work towards this, according to @aledsage)
         Set<String> deployedWars = MutableSet.copyOf(getAttribute(DEPLOYED_WARS));
         deployedWars.add(targetName);
         setAttribute(DEPLOYED_WARS, deployedWars);
     }
     
     @Override
-    @Effector(description="Undeploys the given context/artifact")
-    public void undeploy(@EffectorParam(name="targetName") String targetName) {
+    public void undeploy(String targetName) {
         checkNotNull(targetName, "targetName");
-        targetName = filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName);
+        targetName = FILENAME_TO_WEB_CONTEXT_MAPPER.convertDeploymentTargetNameToContext(targetName);
         
         // set it up so future nodes get the right wars
-        removeFromWarsByContext(this, targetName);
+        if (!removeFromWarsByContext(this, targetName)) {
+            DynamicTasks.submit(Tasks.warning("Context "+targetName+" not known at "+this+"; attempting to undeploy regardless", null), this);
+        }
         
         log.debug("Undeploying "+targetName+" across cluster "+this+"; WARs now "+getConfig(WARS_BY_CONTEXT));
 
@@ -250,12 +248,13 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
 
         // Update attribute
         Set<String> deployedWars = MutableSet.copyOf(getAttribute(DEPLOYED_WARS));
-        deployedWars.remove( filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName) );
+        deployedWars.remove( FILENAME_TO_WEB_CONTEXT_MAPPER.convertDeploymentTargetNameToContext(targetName) );
         setAttribute(DEPLOYED_WARS, deployedWars);
     }
 
     static void addToWarsByContext(Entity entity, String url, String targetName) {
-        targetName = filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName);
+        targetName = FILENAME_TO_WEB_CONTEXT_MAPPER.convertDeploymentTargetNameToContext(targetName);
+        // TODO a better way to do atomic updates, see comment above
         synchronized (entity) {
             Map<String,String> newWarsMap = MutableMap.copyOf(entity.getConfig(WARS_BY_CONTEXT));
             newWarsMap.put(targetName, url);
@@ -263,18 +262,20 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         }
     }
 
-    static void removeFromWarsByContext(Entity entity, String targetName) {
-        targetName = filenameToWebContextMapper.convertDeploymentTargetNameToContext(targetName);
+    static boolean removeFromWarsByContext(Entity entity, String targetName) {
+        targetName = FILENAME_TO_WEB_CONTEXT_MAPPER.convertDeploymentTargetNameToContext(targetName);
+        // TODO a better way to do atomic updates, see comment above
         synchronized (entity) {
             Map<String,String> newWarsMap = MutableMap.copyOf(entity.getConfig(WARS_BY_CONTEXT));
             String url = newWarsMap.remove(targetName);
             if (url==null) {
-                DynamicTasks.submit(Tasks.warning("Context "+targetName+" not known at "+entity+"; attempting to undeploy regardless", null), entity);
+                return false;
             }
             ((EntityInternal)entity).setConfig(WARS_BY_CONTEXT, newWarsMap);
+            return true;
         }
     }
-
+    
     @Override
     public void redeployAll() {
         Map<String, String> wars = MutableMap.copyOf(getConfig(WARS_BY_CONTEXT));
@@ -282,14 +283,14 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
 
         log.debug("Redeplying all WARs across cluster "+this+": "+getConfig(WARS_BY_CONTEXT));
         
-        Iterable<CanDeployAndUndeploy> targets = Iterables.filter(getChildren(), CanDeployAndUndeploy.class);
-        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).name(redeployPrefix+" across cluster (size "+Iterables.size(targets)+")");
-        for (Entity target: targets) {
-            TaskBuilder<Void> redeployAllToTarget = Tasks.<Void>builder().name(redeployPrefix+" at "+target+" (after ready check)");
-            for (String targetName: wars.keySet()) {
-                redeployAllToTarget.add(Effectors.invocation(target, DEPLOY, MutableMap.of("url", wars.get(targetName), "targetName", targetName)));
+        Iterable<CanDeployAndUndeploy> targetEntities = Iterables.filter(getChildren(), CanDeployAndUndeploy.class);
+        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).name(redeployPrefix+" across cluster (size "+Iterables.size(targetEntities)+")");
+        for (Entity targetEntity: targetEntities) {
+            TaskBuilder<Void> redeployAllToTarget = Tasks.<Void>builder().name(redeployPrefix+" at "+targetEntity+" (after ready check)");
+            for (String warContextPath: wars.keySet()) {
+                redeployAllToTarget.add(Effectors.invocation(targetEntity, DEPLOY, MutableMap.of("url", wars.get(warContextPath), "targetName", warContextPath)));
             }
-            tb.add(whenServiceUp(target, redeployAllToTarget.build(), redeployPrefix+" at "+target+" when ready"));
+            tb.add(whenServiceUp(targetEntity, redeployAllToTarget.build(), redeployPrefix+" at "+targetEntity+" when ready"));
         }
         DynamicTasks.queueIfPossible(tb.build()).orSubmitAsync(this).asTask().getUnchecked();
     }  

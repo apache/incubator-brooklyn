@@ -151,6 +151,9 @@ public class DependentConfiguration {
         return waitInTaskForAttributeReady(source, sensor, ready, ImmutableList.<AttributeAndSensorCondition<?>>of());
     }
     
+    // TODO would be nice to have an easy semantics for whenServiceUp (cf DynamicWebAppClusterImpl.whenServiceUp)
+    // and TODO would be nice to have it stop when source is unmanaged (with ability to define post-processing)
+    // probably using the builder for both of these...
     public static <T> T waitInTaskForAttributeReady(final Entity source, final AttributeSensor<T> sensor, Predicate<? super T> ready, List<AttributeAndSensorCondition<?>> abortConditions) {
         T value = source.getAttribute(sensor);
         final List<Exception> abortion = Lists.newCopyOnWriteArrayList();

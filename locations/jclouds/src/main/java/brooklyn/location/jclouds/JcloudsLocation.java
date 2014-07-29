@@ -1742,7 +1742,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             .limitTimeTo(delayMs, MILLISECONDS)
             .runKeepingError();
 
-        if (!reachable.getIgnoringError()) {
+        if (!reachable.getMaskingError()) {
             throw new IllegalStateException("SSH failed for "+
                     user+"@"+vmIp+" ("+setup.getDescription()+") after waiting "+
                     Time.makeTimeStringRounded(delayMs), reachable.getError());

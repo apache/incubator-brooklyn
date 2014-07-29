@@ -16,15 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.javalang;
+package brooklyn.util.concurrent;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
-public class RunnableAdapter<T> implements Callable<T> {
-    final Runnable task;
-    final T result;
+import com.google.common.annotations.Beta;
+
+/** Wraps a Runnable as a Callable. Like {@link Executors#callable(Runnable, Object)} but including the underlying toString. */
+@Beta
+public class CallableFromRunnable<T> implements Callable<T> {
     
-    public RunnableAdapter(Runnable task, T result) {
+    public static <T> CallableFromRunnable<T> newInstance(Runnable task, T result) {
+        return new CallableFromRunnable<T>(task, result);
+    }
+    
+    private final Runnable task;
+    private final T result;
+    
+    protected CallableFromRunnable(Runnable task, T result) {
         this.task = task;
         this.result = result;
     }
@@ -37,7 +47,7 @@ public class RunnableAdapter<T> implements Callable<T> {
     @Override
     public String toString() {
         if (result!=null)
-            return "RunnableAdapter["+task+(result!=null ? "->"+result : "")+"]";
+            return "CallableFromRunnable["+task+(result!=null ? "->"+result : "")+"]";
         else
             return ""+task;
     }

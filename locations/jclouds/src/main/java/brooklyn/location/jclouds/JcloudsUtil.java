@@ -76,6 +76,7 @@ import brooklyn.location.jclouds.config.BrooklynStandardJcloudsGuiceModule;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;
@@ -391,6 +392,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         try {
             client = context.utils().sshForNode().apply(node);
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             /* i've seen: java.lang.IllegalStateException: Optional.get() cannot be called on an absent value
              * from org.jclouds.crypto.ASN1Codec.createASN1Sequence(ASN1Codec.java:86), if the ssh key has a passphrase, against AWS.
              * 
