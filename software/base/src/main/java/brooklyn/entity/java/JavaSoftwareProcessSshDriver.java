@@ -315,7 +315,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         }
     }
 
-    private int tryJavaInstall(String version, String command) {
+    protected int tryJavaInstall(String version, String command) {
         try {
             getLocation().acquireMutex("installing", "installing Java at " + getLocation());
             log.debug("Installing Java {} at {}@{}", new Object[]{version, getEntity(), getLocation()});
@@ -351,6 +351,27 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         } else {
             log.debug("Found no Java installed at {}@{}", getEntity(), getLocation());
             return Optional.absent();
+        }
+    }
+
+    /**
+     * Answers one of "OpenJDK", "Oracle", or other vendor info.
+     */
+    protected Optional<String> getCurrentJavaVendor() {
+        // TODO Also handle IBM jvm
+        log.debug("Checking Java vendor at {}@{}", getEntity(), getLocation());
+        ProcessTaskWrapper<Integer> versionCommand = Entities.submit(getEntity(), SshTasks.newSshExecTaskFactory(
+                getLocation(), "java -version 2>&1 | awk 'NR==2 {print $1}'"));
+        versionCommand.get();
+        String stdOut = versionCommand.getStdout().trim();
+        if (Strings.isBlank(stdOut)) {
+            log.debug("Found no Java installed at {}@{}", getEntity(), getLocation());
+            return Optional.absent();
+        } else if ("Java(TM)".equals(stdOut)) {
+            log.debug("Found Java version at {}@{}: {}", new Object[] {getEntity(), getLocation(), stdOut});
+            return Optional.of("Oracle");
+        } else {
+            return Optional.of(stdOut);
         }
     }
 
