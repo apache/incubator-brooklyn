@@ -72,7 +72,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
 
     private static final Pattern PATTERN = Pattern.compile("("+BYON+"|"+BYON.toUpperCase()+")" + ":" + "\\((.*)\\)$");
 
-    private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("provider", "region", "endpoint", "hosts", "name", "user");
+    private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("provider", "region", "endpoint", "hosts", "name", "user", "privateKeyFile");
 
     private ManagementContext managementContext;
 
@@ -110,6 +110,8 @@ public class JcloudsByonLocationResolver implements LocationResolver {
 
         String user = argsMap.containsKey("user") ? argsMap.get("user") : (String)locationFlags.get("user");
 
+        String privateKeyFile = argsMap.containsKey("privateKeyFile") ? argsMap.get("privateKeyFile") : (String)locationFlags.get("privateKeyFile");
+        
         String hosts = argsMap.get("hosts");
         
         if (!ACCEPTABLE_ARGS.containsAll(argsMap.keySet())) {
@@ -143,8 +145,9 @@ public class JcloudsByonLocationResolver implements LocationResolver {
         
         for (String hostIdentifier : hostIdentifiers) {
             Map<?, ?> machineFlags = MutableMap.builder()
-                    .put("id", hostIdentifier) 
+                    .put("id", hostIdentifier)
                     .putIfNotNull("user", user)
+                    .putIfNotNull("privateKeyFile", privateKeyFile)
                     .build();
             try {
                 JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.getAllConfigBag().putAll(machineFlags));
