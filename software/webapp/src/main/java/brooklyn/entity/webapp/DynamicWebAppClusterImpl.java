@@ -76,7 +76,8 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
     }
     
     @Override
-    public void onManagementBecomingMaster() {
+    public void init() {
+        super.init();
         // Enricher attribute setup.  A way of automatically discovering these (but avoiding
         // averaging things like HTTP port and response codes) would be neat.
         List<? extends List<? extends AttributeSensor<? extends Number>>> summingEnricherSetup = ImmutableList.of(
@@ -120,7 +121,11 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
                     .computingAverage()
                     .build());
         }
-
+    }
+    
+    public void onManagementStarted() {
+        super.onManagementStarted();
+        
         subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
                 if (!isRebinding()) {

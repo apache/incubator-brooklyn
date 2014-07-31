@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
@@ -42,6 +42,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.management.Task;
+import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
@@ -109,6 +110,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         if (serverPoolMemberTrackerPolicy != null) {
             LOG.warn("Call to addServerPoolMemberTrackingPolicy when serverPoolMemberTrackingPolicy already exists, in {}", this);
             removeServerPoolMemberTrackingPolicy();
+        }
+        for (Policy p: getPolicies()) {
+            if (p instanceof ServerPoolMemberTrackerPolicy) {
+                // TODO want a more elegant idiom for this!
+                LOG.info(this+" picking up "+p+" as the tracker (already set, often due to rebind)");
+                serverPoolMemberTrackerPolicy = (ServerPoolMemberTrackerPolicy) p;
+                return;
+            }
         }
         
         AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
