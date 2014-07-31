@@ -82,7 +82,7 @@
                                 <!-- these can fail in eclipse trying to copy _from_ target/classes.
                                          see http://jira.codehaus.org/browse/MDEP-259 -->
                                 <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
+                                    <groupId>io.brooklyn.example</groupId>
                                     <artifactId>brooklyn-example-hello-world-webapp</artifactId>
                                     <version>${project.version}</version>
                                     <type>war</type>
@@ -91,7 +91,7 @@
                                     <destFileName>hello-world-webapp.war</destFileName>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
+                                    <groupId>io.brooklyn.example</groupId>
                                     <artifactId>brooklyn-example-hello-world-sql-webapp</artifactId>
                                     <version>${project.version}</version>
                                     <type>war</type>

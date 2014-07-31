@@ -40,9 +40,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-utils-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.external</groupId>
             <artifactId>opendmk_jmxremote_optional_jar</artifactId>
-            <version>${opendmk_jmxremote_optional_jar.version}</version>
 <!-- this is no longer avail on maven central!?
             <groupId>javax.management</groupId>
             <artifactId>jmxremote_optional</artifactId>
@@ -53,12 +57,23 @@
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-ext-jdk15on</artifactId>
         </dependency>
     </dependencies>
 

@@ -61,7 +61,6 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
-            <version>0.10</version>
             <configuration>
               <excludes combine.children="append">
                 <exclude>**/simple-open-loop-policy/localrepo/io/brooklyn/org.marre.smsj/1.0.0-20051126/org.marre.smsj-1.0.0-20051126.pom</exclude>

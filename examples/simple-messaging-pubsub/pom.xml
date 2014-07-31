@@ -126,7 +126,6 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
-            <version>0.10</version>
             <configuration>
               <excludes combine.children="append">
                 <exclude>**/src/main/resources/passwd</exclude>

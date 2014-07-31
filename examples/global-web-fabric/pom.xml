@@ -37,6 +37,14 @@
             <version>${project.version}</version>
             <classifier>with-dependencies</classifier>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -56,7 +64,7 @@
                                 <artifactItem>
                                     <!-- this can fail in eclipse trying to copy _from_ target/classes.
                                          see http://jira.codehaus.org/browse/MDEP-259 -->
-                                    <groupId>${project.groupId}</groupId>
+                                    <groupId>io.brooklyn.example</groupId>
                                     <artifactId>brooklyn-example-hello-world-webapp</artifactId>
                                     <version>${project.version}</version>
                                     <type>war</type>
