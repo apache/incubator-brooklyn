@@ -23,8 +23,11 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Collection;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -33,17 +36,21 @@ import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.StringFunctions;
 
@@ -54,6 +61,8 @@ import com.google.common.collect.Iterables;
 
 public class RebindEnricherTest extends RebindTestFixtureWithApp {
 
+    private static final Logger log = LoggerFactory.getLogger(RebindEnricherTest.class);
+    
     public static AttributeSensor<String> METRIC1 = Sensors.newStringSensor("RebindEnricherTest.metric1");
     public static AttributeSensor<String> METRIC2 = Sensors.newStringSensor("RebindEnricherTest.metric2");
     
@@ -155,6 +164,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
     @Test
     public void testRestoresConfig() throws Exception {
         origApp.addEnricher(EnricherSpec.create(MyEnricher.class)
+                .displayName("My Enricher")
                 .configure(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME, "myVal for with setFromFlag noShortName")
                 .configure(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME, "myVal for setFromFlag withShortName")
                 .configure(MyEnricher.MY_CONFIG_WITHOUT_SETFROMFLAG, "myVal for witout setFromFlag"));
@@ -162,6 +172,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         newApp = (TestApplication) rebind();
         MyEnricher newEnricher = (MyEnricher) Iterables.getOnlyElement(newApp.getEnrichers());
         
+        assertEquals(newEnricher.getName(), "My Enricher");
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME), "myVal for with setFromFlag noShortName");
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME), "myVal for setFromFlag withShortName");
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITHOUT_SETFROMFLAG), "myVal for witout setFromFlag");
@@ -249,4 +260,31 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
             super(flags);
         }
     }
+    
+    public static class MyTestEntityWithEnricher extends TestEntityImpl {
+        @Override
+        public void init() {
+            super.init();
+            addEnricher(EnricherSpec.create(MyEnricher.class));
+        }
+    }
+
+    @Test
+    // this was never a problem, but wanted to confirm
+    // we were seeing enrichers and policies added multiple times, but that was due to 
+    // SoftwareProcessImpl.callRebindHooks calling connectSensors an extra time
+    // as a workaround for when sensors, enrichers, and policies were not being persisted
+    public void testEntityCreatingItsEnricherDoesNotReCreateIt() throws Exception {
+        TestEntity e1 = origApp.createAndManageChild(EntitySpec.create(TestEntity.class, MyTestEntityWithEnricher.class));
+        Collection<Enricher> e1e = e1.getEnrichers();
+        log.info("enrichers1: "+e1e);
+
+        newApp = (TestApplication) rebind();
+        Entity e2 = Iterables.getOnlyElement( Entities.descendants(newApp, EntityPredicates.idEqualTo(e1.getId())) );
+        Collection<Enricher> e2e = e2.getEnrichers();
+        log.info("enrichers2: "+e2e);
+        
+        assertEquals(e1e.size(), e2e.size());
+    }
+
 }
