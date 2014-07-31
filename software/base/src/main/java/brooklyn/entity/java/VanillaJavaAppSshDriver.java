@@ -88,7 +88,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
         for (String entry : entity.getClasspath()) {
             // If a local folder, then create archive from contents first
             if (Urls.isDirectory(entry)) {
-                File jarFile = ArchiveBuilder.jar().add(entry).create();
+                File jarFile = ArchiveBuilder.jar().addDirContentsAt(new File(entry), "").create();
                 entry = jarFile.getAbsolutePath();
             }
 
@@ -126,6 +126,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
     }
 
     public String getClasspath() {
+        @SuppressWarnings("unchecked")
         List<String> files = getEntity().getAttribute(VanillaJavaApp.CLASSPATH_FILES);
         if (files == null || files.isEmpty()) {
             return null;

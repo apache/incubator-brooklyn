@@ -92,7 +92,7 @@ public class VanillaJavaAppTest {
             BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
         app = TestApplication.Factory.newManagedInstanceForTests();
-        loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
+        loc = app.newLocalhostProvisioningLocation(MutableMap.of("address", "localhost"));
     }
 
     @AfterMethod(alwaysRun = true)
@@ -126,7 +126,6 @@ public class VanillaJavaAppTest {
         final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
-        Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
         assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.RUNNING);
 
@@ -140,7 +139,6 @@ public class VanillaJavaAppTest {
         final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
-        Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
         
         // Memory MXBean
@@ -198,7 +196,6 @@ public class VanillaJavaAppTest {
         final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
-        Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
 
         JavaAppUtils.connectJavaAppServerPolicies((EntityLocal)javaProcess);
@@ -244,7 +241,6 @@ public class VanillaJavaAppTest {
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
         ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
-        Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
 
         assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), (Integer)port);
@@ -261,7 +257,6 @@ public class VanillaJavaAppTest {
         ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
         ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_SSL_ENABLED, true);
         
-        Entities.startManagement(app);
         app.start(ImmutableList.of(loc));
         // will fail above if JMX can't connect, but also do some add'l checks
         

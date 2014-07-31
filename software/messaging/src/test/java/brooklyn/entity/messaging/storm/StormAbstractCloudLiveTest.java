@@ -52,9 +52,10 @@ import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.EntityTestUtils;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveBuilder;
-import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -149,9 +150,10 @@ public abstract class StormAbstractCloudLiveTest extends BrooklynAppLiveTestSupp
         conf.setDebug(debug);
         conf.setNumWorkers(numOfWorkers);
 
-        // FIXME - won't work for anyone but andrea turli
-        // also, the JAR needs to be with ref to src/test/java to have the right package, no?
-        String jar = createJar("/Users/andrea/git/andreaturli/brooklyn/software/messaging/src/test/java/brooklyn/entity/messaging/storm/topologies");
+        // TODO - confirm this creats the JAR correctly
+        String jar = createJar(
+            new File(Os.mergePaths(ResourceUtils.create(this).getClassLoaderDir(), "brooklyn/entity/messaging/storm/topologies")),
+            "brooklyn/entity/messaging/storm/");
         System.setProperty("storm.jar", jar);
         long startMs = System.currentTimeMillis();
         long endMs = (timeoutMs == -1) ? Long.MAX_VALUE : (startMs + timeoutMs);
@@ -186,12 +188,12 @@ public abstract class StormAbstractCloudLiveTest extends BrooklynAppLiveTestSupp
         return false;
     }
     
-    private String createJar(String packageName) {
-        if (Urls.isDirectory(packageName)) {
-            File jarFile = ArchiveBuilder.jar().add(packageName).create("topologies.jar");
+    private String createJar(File dir, String parentDirInJar) {
+        if (dir.isDirectory()) {
+            File jarFile = ArchiveBuilder.jar().addAt(dir, parentDirInJar).create(Os.newTempDir(getClass())+"/topologies.jar");
             return jarFile.getAbsolutePath();
         } else {
-            return packageName; // An existing Jar archive?
+            return dir.getAbsolutePath(); // An existing Jar archive?
         }
     }
 

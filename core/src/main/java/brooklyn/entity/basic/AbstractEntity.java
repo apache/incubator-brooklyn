@@ -1212,7 +1212,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     /**
      * Invoked by {@link EntityManagementSupport} when this entity is becoming managed (i.e. it has a working
-     * management context, but before the entity is visible to other entities).
+     * management context, but before the entity is visible to other entities), including during a rebind.
      */
     public void onManagementStarting() {
         if (isLegacyConstruction()) {
@@ -1227,24 +1227,26 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     public void onManagementStarted() {}
     
-    // FIXME Really deprecated? I don't want folk to have to override createManagementSupport for simple use-cases
     /**
      * Invoked by {@link ManagementContext} when this entity becomes managed at a particular management node,
      * including the initial management started and subsequent management node master-change for this entity.
-     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStarting if customization needed
+     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStarted if customization needed
      */
     public void onManagementBecomingMaster() {}
     
-    // FIXME Really deprecated? I don't want folk to have to override createManagementSupport for simple use-cases
     /**
      * Invoked by {@link ManagementContext} when this entity becomes mastered at a particular management node,
      * including the final management end and subsequent management node master-change for this entity.
-     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStopping if customization needed
+     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStopped if customization needed
      */
     public void onManagementNoLongerMaster() {}
 
     /**
      * Invoked by {@link EntityManagementSupport} when this entity is fully unmanaged.
+     * <p>
+     * Note that the activies possible here (when unmanaged) are limited, 
+     * and that this event may be caused by either a brooklyn node itself being demoted
+     * (so the entity is managed elsewhere) or by a controlled shutdown.
      */
     public void onManagementStopped() {
         if (getManagementContext().isRunning()) {

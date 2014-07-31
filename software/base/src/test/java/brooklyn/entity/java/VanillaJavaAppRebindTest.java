@@ -36,7 +36,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 
@@ -49,8 +48,6 @@ public class VanillaJavaAppRebindTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(VanillaJavaAppRebindTest.class);
     
-    private static final long TIMEOUT_MS = 10*1000;
-
     private static String BROOKLYN_THIS_CLASSPATH = null;
     private static Class<?> MAIN_CLASS = ExampleVanillaMain.class;
 
@@ -68,9 +65,8 @@ public class VanillaJavaAppRebindTest {
         if (BROOKLYN_THIS_CLASSPATH==null) {
             BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
-        app = new TestApplicationImpl();
-        loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
-        Entities.startManagement(app, managementContext);
+        app = TestApplication.Factory.newManagedInstanceForTests(managementContext);
+        loc = app.newLocalhostProvisioningLocation(MutableMap.of("address", "localhost"));
     }
 
     @AfterMethod(alwaysRun = true)

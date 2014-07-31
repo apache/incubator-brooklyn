@@ -29,6 +29,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.util.logging.LoggingSetup;
@@ -76,8 +77,14 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
         return "Application["+id.substring(Math.max(0, id.length()-8))+"]";
     }
 
+    @Override
     public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation() {
         return (LocalhostMachineProvisioningLocation) getManagementContext().getLocationRegistry().resolve("localhost");
+    }
+    @Override
+    public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation(Map<?,?> flags) {
+        return (LocalhostMachineProvisioningLocation) getManagementContext().getLocationManager().createLocation(
+            LocationSpec.create(LocalhostMachineProvisioningLocation.class).configure(flags));
     }
 
     @Override
