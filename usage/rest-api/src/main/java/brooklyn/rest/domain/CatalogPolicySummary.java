@@ -37,7 +37,7 @@ public class CatalogPolicySummary extends CatalogItemSummary {
             @JsonProperty("config") Set<PolicyConfigSummary> config,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(id, name, type, type, type, null, description, iconUrl, links);
+        super(id, "", name, type, type, type, null, description, iconUrl, links);
         // TODO expose config from policies
         this.config = config;
     }

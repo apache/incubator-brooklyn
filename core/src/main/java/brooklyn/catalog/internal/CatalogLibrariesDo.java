@@ -18,12 +18,13 @@
  */
 package brooklyn.catalog.internal;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -45,7 +46,7 @@ public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
     }
 
     @Override
-    public List<String> getBundles() {
+    public Collection<CatalogBundle> getBundles() {
         return librariesDto.getBundles();
     }
 
@@ -55,7 +56,7 @@ public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
     void load(ManagementContext managementContext) {
         ManagementContextInternal mgmt = (ManagementContextInternal) managementContext;
         Maybe<OsgiManager> osgi = mgmt.getOsgiManager();
-        List<String> bundles = getBundles();
+        Collection<CatalogBundle> bundles = getBundles();
         if (osgi.isAbsent()) {
             LOG.warn("{} not loading bundles in {} because osgi manager is unavailable. Bundles: {}",
                     new Object[]{this, managementContext, Joiner.on(", ").join(bundles)});
@@ -65,8 +66,8 @@ public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
                     new Object[]{this, managementContext, Joiner.on(", ").join(bundles)});
         }
         Stopwatch timer = Stopwatch.createStarted();
-        for (String bundleUrl : bundles) {
-            osgi.get().registerBundle(bundleUrl);
+        for (CatalogBundle bundle : bundles) {
+            osgi.get().registerBundle(bundle);
         }
         LOG.debug("{} registered {} bundles in {}",
                 new Object[]{this, bundles.size(), Time.makeTimeStringRounded(timer)});

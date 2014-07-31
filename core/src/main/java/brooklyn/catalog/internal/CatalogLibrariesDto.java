@@ -18,6 +18,7 @@
  */
 package brooklyn.catalog.internal;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,27 +27,35 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogBundle;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import brooklyn.catalog.CatalogItem;
 
 public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
 
     private static Logger LOG = LoggerFactory.getLogger(CatalogLibrariesDto.class);
 
-    // TODO: Incorporate name and version into entries
-    private List<String> bundles = new CopyOnWriteArrayList<String>();
+    private Collection<CatalogBundle> bundles = new CopyOnWriteArrayList<CatalogBundle>();
 
-    public void addBundle(String url) {
+    public void addBundle(String name, String version, String url) {
         Preconditions.checkNotNull(bundles, "Cannot add a bundle to a deserialized DTO");
-        bundles.add(Preconditions.checkNotNull(url, "url"));
+        if (name == null && version == null) {
+            Preconditions.checkNotNull(url, "url");
+        } else {
+            Preconditions.checkNotNull(name, "name");
+            Preconditions.checkNotNull(version, "version");
+        }
+        
+        bundles.add(new CatalogBundleDto(name, version, url));
     }
 
     /**
      * @return An immutable copy of the bundle URLs referenced by this object
      */
-    public List<String> getBundles() {
+    @Override
+    public Collection<CatalogBundle> getBundles() {
         if (bundles == null) {
             // can be null on deserialization
             return Collections.emptyList();
@@ -62,11 +71,11 @@ public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
         CatalogLibrariesDto dto = new CatalogLibrariesDto();
         for (Object object : possibleLibraries) {
             if (object instanceof Map) {
-                Map entry = (Map) object;
+                Map<?, ?> entry = (Map<?, ?>) object;
                 String name = stringValOrNull(entry, "name");
                 String version = stringValOrNull(entry, "version");
                 String url = stringValOrNull(entry, "url");
-                dto.addBundle(url);
+                dto.addBundle(name, version, url);
             } else {
                 LOG.debug("Unexpected entry in libraries list not instance of map: " + object);
             }
@@ -75,7 +84,7 @@ public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
         return dto;
     }
 
-    private static String stringValOrNull(Map map, String key) {
+    private static String stringValOrNull(Map<?, ?> map, String key) {
         Object val = map.get(key);
         return val != null ? String.valueOf(val) : null;
     }

@@ -29,6 +29,7 @@ import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.util.collections.MutableMap;
@@ -79,61 +80,73 @@ public class OsgiManager {
         framework = null;
     }
 
-    public void registerBundle(String bundleUrl) {
+    public void registerBundle(CatalogBundle bundle) {
         try {
-            String nv = bundleUrlToNameVersionString.get(bundleUrl);
-            if (nv!=null) {
-                if (Osgis.getBundle(framework, nv).isPresent()) {
-                    log.debug("Bundle from "+bundleUrl+" already installed as "+nv+"; not re-registering");
-                    return;
-                }
+            Maybe<Bundle> osgiBundle = getRegisteredBundle(bundle);
+            if(osgiBundle.isPresent()) {
+                log.debug("Bundle " + osgiBundle + " already installed; not re-registering");
+                return;
+            } else if (bundle.getUrl() == null) {
+                throw new IllegalStateException("Bundle " + bundle + " not already registered by name:version, but URL is empty.");
             }
-            Bundle b = Osgis.install(framework, bundleUrl);
-            log.debug("Bundle from "+bundleUrl+" successfully installed as "+nv);
-            bundleUrlToNameVersionString.put(bundleUrl, b.getSymbolicName()+":"+b.getVersion().toString());
+
+            Bundle b = Osgis.install(framework, bundle.getUrl());
+            log.debug("Bundle from "+bundle+" successfully installed.");
+            bundleUrlToNameVersionString.put(bundle.getUrl(), b.getSymbolicName()+":"+b.getVersion().toString());
         } catch (BundleException e) {
-            log.debug("Bundle from "+bundleUrl+" failed to install (rethrowing): "+e);
+            log.debug("Bundle from "+bundle+" failed to install (rethrowing): "+e);
             throw Throwables.propagate(e);
         }
     }
 
-    public <T> Maybe<Class<T>> tryResolveClass(String type, String... bundleUrlsOrNameVersionString) {
-        return tryResolveClass(type, Arrays.asList(bundleUrlsOrNameVersionString));
-    }
-    public <T> Maybe<Class<T>> tryResolveClass(String type, Iterable<String> bundleUrlsOrNameVersionString) {
-        Map<String,Throwable> bundleProblems = MutableMap.of();
-        for (String bundleUrlOrNameVersionString: bundleUrlsOrNameVersionString) {
-            try {
-                String bundleNameVersion = bundleUrlToNameVersionString.get(bundleUrlOrNameVersionString);
-                if (bundleNameVersion==null) {
-                    bundleNameVersion = bundleUrlOrNameVersionString;
+    private Maybe<Bundle> getRegisteredBundle(CatalogBundle catalogBundle) {
+        if (catalogBundle.isNamed()) {
+            Maybe<Bundle> osgiBundle = Osgis.getBundle(framework, catalogBundle.getName(), catalogBundle.getVersion());
+            if (osgiBundle.isPresent()) {
+                return osgiBundle;
+            }
+        }
+        
+        if (catalogBundle.getUrl() != null) {
+            String nv = bundleUrlToNameVersionString.get(catalogBundle.getUrl());
+            if (nv!=null) {
+                Maybe<Bundle> osgiBundle = Osgis.getBundle(framework, nv);
+                if (osgiBundle.isPresent()) {
+                    return osgiBundle;
                 }
-                
-                Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleNameVersion);
+            }
+        }
+        
+        return Maybe.absent("The bundle " + catalogBundle + " is not registered.");
+    }
+
+    public <T, BundleType extends CatalogBundle> Maybe<Class<T>> tryResolveClass(String type, BundleType... catalogBundles) {
+        return tryResolveClass(type, Arrays.asList(catalogBundles));
+    }
+    public <T, BundleType extends CatalogBundle> Maybe<Class<T>> tryResolveClass(String type, Iterable<BundleType> catalogBundles) {
+        Map<CatalogBundle,Throwable> bundleProblems = MutableMap.of();
+        for (CatalogBundle catalogBundle: catalogBundles) {
+            try {
+                Maybe<Bundle> bundle = getRegisteredBundle(catalogBundle);
                 if (bundle.isPresent()) {
                     @SuppressWarnings("unchecked")
                     Class<T> clazz = (Class<T>) bundle.get().loadClass(type);
                     return Maybe.of(clazz);
                 } else {
-                    bundleProblems.put(bundleUrlOrNameVersionString, new IllegalStateException("Unable to find bundle "+bundleUrlOrNameVersionString));
+                    bundleProblems.put(catalogBundle, new IllegalStateException("Unable to find bundle "+catalogBundle));
                 }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                bundleProblems.put(bundleUrlOrNameVersionString, e);
+                bundleProblems.put(catalogBundle, e);
             }
         }
         return Maybe.absent("Unable to resolve class "+type+": "+bundleProblems);
     }
 
-    public URL getResource(String name, Iterable<String> bundleUrlsOrNameVersionString) {
-        for (String bundleUrlOrNameVersionString: bundleUrlsOrNameVersionString) {
+    public URL getResource(String name, Iterable<CatalogBundle> catalogBundles) {
+        for (CatalogBundle catalogBundle: catalogBundles) {
             try {
-                String bundleNameVersion = bundleUrlToNameVersionString.get(bundleUrlOrNameVersionString);
-                if (bundleNameVersion==null) {
-                    bundleNameVersion = bundleUrlOrNameVersionString;
-                }
-                
-                Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleNameVersion);
+                Maybe<Bundle> bundle = getRegisteredBundle(catalogBundle);
                 if (bundle.isPresent()) {
                     URL result = bundle.get().getResource(name);
                     if (result!=null) return result;

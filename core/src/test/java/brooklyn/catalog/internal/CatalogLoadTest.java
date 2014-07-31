@@ -20,15 +20,16 @@ package brooklyn.catalog.internal;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.CatalogItem.CatalogBundle;
+import brooklyn.util.ResourceUtils;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-
-import brooklyn.util.ResourceUtils;
 
 public class CatalogLoadTest {
 
@@ -57,8 +58,18 @@ public class CatalogLoadTest {
         assertEquals(template.getJavaType(), "com.example.ExampleApp");
         assertEquals(template.getLibraries().getBundles().size(), 2,
                 "Template bundles=" + Joiner.on(", ").join(template.getLibraries().getBundles()));
-        assertEquals(Sets.newHashSet(template.getLibraries().getBundles()),
-                Sets.newHashSet("file://path/to/bundle.jar", "http://www.url.com/for/bundle.jar"));
+        
+        boolean foundBundle1 = false, foundBundle2 = false;
+        for (CatalogBundle bundle : template.getLibraries().getBundles()) {
+            if (bundle.getUrl().equals("file://path/to/bundle.jar")) {
+                foundBundle1 = true;
+            }
+            if (bundle.getUrl().equals("http://www.url.com/for/bundle.jar")) {
+                foundBundle2 = true;
+            }
+        }
+        assertTrue(foundBundle1);
+        assertTrue(foundBundle2);
     }
 
 }

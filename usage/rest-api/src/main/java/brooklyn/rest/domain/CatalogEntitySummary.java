@@ -31,7 +31,8 @@ public class CatalogEntitySummary extends CatalogItemSummary {
     private final Set<EffectorSummary> effectors;
 
     public CatalogEntitySummary(
-            @JsonProperty("id") String id,
+            @JsonProperty("catalogId") String catalogId,
+            @JsonProperty("version") String version,
             @JsonProperty("name") String name,
             @JsonProperty("registeredType") String registeredType,
             @JsonProperty("javaType") String javaType,
@@ -44,7 +45,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("effectors") Set<EffectorSummary> effectors,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(id, name, registeredType, javaType, type, planYaml, description, iconUrl, links);
+        super(catalogId, version, name, registeredType, javaType, type, planYaml, description, iconUrl, links);
         this.config = config;
         this.sensors = sensors;
         this.effectors = effectors;
