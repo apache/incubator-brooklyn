@@ -179,7 +179,15 @@ public class LocalhostLocationResolverTest {
     @Test(expectedExceptions={IllegalArgumentException.class})
     public void testRegistryCommaResolutionInListNotAllowed2() throws NoMachinesAvailableException {
         // disallowed since 0.7.0
-        getLocationResolver().resolve(ImmutableList.of("byon:(hosts=\"192.168.0.1\",user=bob),byon:(hosts=\"192.168.0.2\",user=bob2)"));
+        // fails because it interprets the entire string as a single spec, which does not parse
+        getLocationResolver().resolve(ImmutableList.of("localhost:(),localhost:()"));
+    }
+
+    @Test(expectedExceptions={IllegalArgumentException.class})
+    public void testRegistryCommaResolutionInListNotAllowed3() throws NoMachinesAvailableException {
+        // disallowed since 0.7.0
+        // fails because it interprets the entire string as a single spec, which does not parse
+        getLocationResolver().resolve(ImmutableList.of("localhost:(name=a),localhost:(name=b)"));
     }
 
     @Test(expectedExceptions={IllegalArgumentException.class})
@@ -192,6 +200,14 @@ public class LocalhostLocationResolverTest {
         Location location = resolve("localhost:(name=myname)");
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "myname");
+    }
+    
+    @Test
+    public void testResolvesPropertiesInSpec() throws Exception {
+        Location location = resolve("localhost:(privateKeyFile=myprivatekeyfile,name=myname)");
+        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location.getDisplayName(), "myname");
+        assertEquals(location.getAllConfig(true).get("privateKeyFile"), "myprivatekeyfile");
     }
     
     @Test

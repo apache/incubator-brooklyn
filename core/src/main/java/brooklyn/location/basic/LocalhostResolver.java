@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,9 +37,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.KeyValueParser;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 /**
  * Examples of valid specs:
@@ -60,7 +56,6 @@ public class LocalhostResolver implements LocationResolver, EnableableLocationRe
     public static final String LOCALHOST = "localhost";
     
     private static final Pattern PATTERN = Pattern.compile("("+LOCALHOST+"|"+LOCALHOST.toUpperCase()+")" + "(:\\((.*)\\))?$");
-    private static final Set<String> ACCEPTABLE_ARGS = ImmutableSet.of("name");
     
     private ManagementContext managementContext;
 
@@ -92,19 +87,22 @@ public class LocalhostResolver implements LocationResolver, EnableableLocationRe
         
         String argsPart = matcher.group(3);
         Map<String, String> argsMap = (argsPart != null) ? KeyValueParser.parseMap(argsPart) : Collections.<String,String>emptyMap();
-        String namePart = argsMap.get("name");
         
-        if (!ACCEPTABLE_ARGS.containsAll(argsMap.keySet())) {
-            Set<String> illegalArgs = Sets.difference(argsMap.keySet(), ACCEPTABLE_ARGS);
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; illegal args "+illegalArgs+"; acceptable args are "+ACCEPTABLE_ARGS);
+        // If someone tries "localhost:(),localhost:()" as a single spec, we get weird key-values!
+        for (String key : argsMap.keySet()) {
+            if (key.contains(":") || key.contains("{") || key.contains("}") || key.contains("(") || key.contains(")")) {
+                throw new IllegalArgumentException("Invalid localhost spec: "+spec);
+            }
         }
+        
+        String namePart = argsMap.get("name");
         if (argsMap.containsKey("name") && (namePart == null || namePart.isEmpty())) {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
         }
 
         Map<String, Object> filteredProperties = new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, globalProperties);
         // TODO filteredProperties stuff above should not be needed as named location items will already be passed in
-        ConfigBag flags = ConfigBag.newInstance(locationFlags).putIfAbsent(filteredProperties);
+        ConfigBag flags = ConfigBag.newInstance(argsMap).putIfAbsent(locationFlags).putIfAbsent(filteredProperties);
         
         flags.putStringKey("name", Maybe.fromNullable(namePart).or("localhost"));
         

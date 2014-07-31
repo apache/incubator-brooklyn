@@ -41,11 +41,13 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
+import brooklyn.util.net.Networking;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
@@ -104,6 +106,15 @@ public class ByonLocationResolverTest {
     }
 
     @Test
+    public void testPropertiesInSpec() throws Exception {
+        FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("byon:(privateKeyFile=myprivatekeyfile,hosts=\"1.1.1.1\")");
+        SshMachineLocation machine = loc.obtain();
+        
+        assertEquals(machine.getAllConfig(true).get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(machine.getAddress(), Networking.getInetAddressWithFixedName("1.1.1.1"));
+    }
+
+    @Test
     public void testPropertyScopePrecedence() throws Exception {
         brooklynProperties.put("brooklyn.location.named.mynamed", "byon:(hosts=\"1.1.1.1\")");
         
@@ -137,6 +148,13 @@ public class ByonLocationResolverTest {
         assertThrowsIllegalArgument("byon:(hosts=\"1.1.1.1\", name=)"); // no value for name
     }
     
+    @Test(expectedExceptions={IllegalArgumentException.class})
+    public void testRegistryCommaResolutionInListNotAllowed() throws NoMachinesAvailableException {
+        // disallowed since 0.7.0
+        // fails because it interprets the entire string as a single byon spec, which does not parse
+        managementContext.getLocationRegistry().resolve(ImmutableList.of("byon:(hosts=\"192.168.0.1\",user=bob),byon:(hosts=\"192.168.0.2\",user=bob2)"));
+    }
+
     @Test
     public void testResolvesHosts() throws Exception {
         assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"));
