@@ -84,7 +84,6 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                     .build());
 
             jmxFeedMx = JavaAppUtils.connectMXBeanSensors(this);
-            JavaAppUtils.connectJavaAppServerPolicies(this);
         } else {
             // if not using JMX
             log.warn("Jetty running without JMX monitoring; limited visibility of service available");
