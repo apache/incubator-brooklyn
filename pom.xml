@@ -1033,6 +1033,7 @@
                   <!-- see https://issues.apache.org/jira/browse/RAT-107 -->
                   <exclude>**/.git/**</exclude>
                   <exclude>**/.gitignore</exclude>
+                  <exclude>**/.repository/**</exclude>
                   <exclude>**/.idea/**</exclude>
                   <exclude>**/*.iml</exclude>
                   <exclude>**/.classpath/**</exclude>
