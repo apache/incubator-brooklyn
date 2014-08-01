@@ -37,6 +37,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveUtils.ArchiveType;
 import brooklyn.util.os.Os;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -50,21 +51,17 @@ import com.google.common.io.Files;
  * specified. The created file must be a Java archive type, with the extension {@code .zip},
  * {@code .jar}, {@code .war} or {@code .ear}.
  * <p>
- * Examples:
+ * Example:
  * <pre> File zip = ArchiveBuilder.archive("data/archive.zip")
- *         .entry("src", applicationDir + "/deploy/" + version + "/src/")
- *         .entry("lib", applicationDir + "/deploy/" + version + "/lib/")
- *         .entry("etc/config.ini", applicationDir + "/config.ini")
+ *         .addAt(new File("./pom.xml"), "")
+ *         .addDirContentsAt(new File("./src"), "src/")
+ *         .addAt(new File("/tmp/Extra.java"), "src/main/java/")
+ *         .addDirContentsAt(new File("/tmp/overlay/"), "")
  *         .create();
  * </pre>
- * <pre> OutputStream remote = ...;
- * Map&lt;String, File&gt; entries = ...;
- * ArchiveBuilder.zip()
- *         .add("resources/data.csv")
- *         .addAll(entries)
- *         .stream(remote);
- * </pre>
+ * <p>
  */
+@Beta
 public class ArchiveBuilder {
 
     /**
@@ -178,28 +175,32 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the file located at the {@code filePath}, relative to the {@code baseDir},
+     * Add the file located at the {@code fileSubPath}, relative to the {@code baseDir} on the local system,
      * to the archive.
      * <p>
-     * Uses the {@code filePath} as the name of the file in the archive. Note that the
-     * file is found by concatenating the two path components using {@link Os#mergePaths(String...)}
-     * which may not behave as expected if the {@code filePath} is absolute or points to
-     * a location above the current directory.
+     * Uses the {@code fileSubPath} as the name of the file in the archive. Note that the
+     * file is found by concatenating the two path components using {@link Os#mergePaths(String...)},
+     * thus {@code fileSubPath} should not be absolute or point to a location above the current directory.
      * <p>
      * Use {@link #entry(String, String)} directly or {@link #entries(Map)} for complete
      * control over file locations and names in the archive.
      *
      * @see #entry(String, String)
      */
-    public ArchiveBuilder addRelativeToBaseDir(String baseDir, String filePath) {
+    public ArchiveBuilder addFromLocalBaseDir(File baseDir, String fileSubPath) {
         checkNotNull(baseDir, "baseDir");
-        checkNotNull(filePath, "filePath");
-        return entry(Os.mergePaths(".", filePath), Os.mergePaths(baseDir, filePath));
+        checkNotNull(fileSubPath, "filePath");
+        return entry(Os.mergePaths(".", fileSubPath), Os.mergePaths(baseDir.getPath(), fileSubPath));
     }
-    /** @deprecated since 0.7.0 use {@link #addRelativeToBaseDir(String, String)}, or
+    /** @deprecated since 0.7.0 use {@link #addFromLocalBaseDir(File, String)}, or
      * one of the other add methods if adding relative to baseDir was not intended */ @Deprecated
-    public ArchiveBuilder add(String baseDir, String filePath) {
-        return addRelativeToBaseDir(baseDir, filePath);
+    public ArchiveBuilder addFromLocalBaseDir(String baseDir, String fileSubPath) {
+        return addFromLocalBaseDir(new File(baseDir), fileSubPath);
+    }
+    /** @deprecated since 0.7.0 use {@link #addFromLocalBaseDir(File, String)}, or
+     * one of the other add methods if adding relative to baseDir was not intended */ @Deprecated
+    public ArchiveBuilder add(String baseDir, String fileSubPath) {
+        return addFromLocalBaseDir(baseDir, fileSubPath);
     }
      
     /** adds the given file to the archive, preserving its name but putting under the given directory in the archive (may be <code>""</code> or <code>"./"</code>) */
