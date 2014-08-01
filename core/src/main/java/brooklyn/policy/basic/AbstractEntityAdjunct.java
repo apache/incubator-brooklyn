@@ -403,7 +403,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return Objects.toStringHelper(getClass())
                 .add("name", name)
                 .add("running", isRunning())
-                .add("id", id)
+                .add("id", getId())
                 .toString();
     }
 }
