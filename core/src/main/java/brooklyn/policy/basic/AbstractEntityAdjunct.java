@@ -396,6 +396,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
         return Objects.toStringHelper(getClass())
                 .add("name", name)
                 .add("running", isRunning())
+                .add("id", id)
                 .toString();
     }
 }

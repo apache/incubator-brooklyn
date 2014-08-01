@@ -202,7 +202,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         for (String entry : getEntity().getClasspath()) {
             // If a local folder, then create archive from contents first
             if (Urls.isDirectory(entry)) {
-                File jarFile = ArchiveBuilder.jar().add(entry).create();
+                File jarFile = ArchiveBuilder.jar().addDirContentsAt(new File(entry), "").create();
                 entry = jarFile.getAbsolutePath();
             }
 

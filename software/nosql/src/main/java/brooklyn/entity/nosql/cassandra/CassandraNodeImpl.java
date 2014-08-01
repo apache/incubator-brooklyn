@@ -328,6 +328,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         
         Entities.getRequiredUrlConfig(this, CASSANDRA_CONFIG_TEMPLATE_URL);
         Entities.getRequiredUrlConfig(this, CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL);
+        
+        connectEnrichers();
     }
     
     private volatile JmxFeed jmxFeed;
@@ -464,15 +466,14 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                         }))
                 .build();
         
-        connectEnrichers();
+        jmxMxBeanFeed = JavaAppUtils.connectMXBeanSensors(this);
     }
-
+    
     protected void connectEnrichers() {
         connectEnrichers(Duration.TEN_SECONDS);
     }
     
     protected void connectEnrichers(Duration windowPeriod) {
-        jmxMxBeanFeed = JavaAppUtils.connectMXBeanSensors(this);
         JavaAppUtils.connectJavaAppServerPolicies(this);
 
         addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, READ_COMPLETED, READS_PER_SECOND_LAST));

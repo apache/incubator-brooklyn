@@ -24,21 +24,25 @@ import java.io.File;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaOptsTest.TestingJavaOptsVanillaJavaAppImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -49,8 +53,6 @@ public class VanillaJavaAppRebindTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(VanillaJavaAppRebindTest.class);
     
-    private static final long TIMEOUT_MS = 10*1000;
-
     private static String BROOKLYN_THIS_CLASSPATH = null;
     private static Class<?> MAIN_CLASS = ExampleVanillaMain.class;
 
@@ -68,9 +70,8 @@ public class VanillaJavaAppRebindTest {
         if (BROOKLYN_THIS_CLASSPATH==null) {
             BROOKLYN_THIS_CLASSPATH = ResourceUtils.create(MAIN_CLASS).getClassLoaderDir();
         }
-        app = new TestApplicationImpl();
-        loc = new LocalhostMachineProvisioningLocation(MutableMap.of("address", "localhost"));
-        Entities.startManagement(app, managementContext);
+        app = TestApplication.Factory.newManagedInstanceForTests(managementContext);
+        loc = app.newLocalhostProvisioningLocation(MutableMap.of("address", "localhost"));
     }
 
     @AfterMethod(alwaysRun = true)
@@ -117,7 +118,55 @@ public class VanillaJavaAppRebindTest {
         VanillaJavaApp javaProcess2 = (VanillaJavaApp) Iterables.find(app.getChildren(), Predicates.instanceOf(VanillaJavaApp.class));
         EntityTestUtils.assertAttributeEqualsEventually(javaProcess2, VanillaJavaApp.SERVICE_UP, false);
         
-        // check that it was quick (previously it hung for 
+        // check that it was quick (previously it hung)
         assertTrue(rebindTime < 30*1000, "rebindTime="+rebindTime);
     }
+    
+    
+    @Test(groups="Integration")
+    public void testEnrichersOnRebindJavaApp() throws Exception {
+        VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, EnrichedVanillaJavaAppImpl.class)
+            .configure("main", MAIN_CLASS.getCanonicalName()).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)));
+
+        Entities.manage(javaProcess);
+        app.start(ImmutableList.of(loc));
+
+        EntityTestUtils.assertAttributeEventuallyNonNull(javaProcess, EnrichedVanillaJavaAppImpl.AVG1);
+        EntityTestUtils.assertAttributeEventuallyNonNull(javaProcess, EnrichedVanillaJavaAppImpl.AVG2);
+        LOG.info("Got avg "+javaProcess.getAttribute(EnrichedVanillaJavaAppImpl.AVG1));
+
+        rebind();
+        VanillaJavaApp javaProcess2 = (VanillaJavaApp) Iterables.find(app.getChildren(), Predicates.instanceOf(VanillaJavaApp.class));
+
+        // check sensors working
+        EntityTestUtils.assertAttributeChangesEventually(javaProcess2, EnrichedVanillaJavaAppImpl.PROCESS_CPU_TIME); 
+        LOG.info("Avg now "+javaProcess2.getAttribute(EnrichedVanillaJavaAppImpl.AVG1));
+        
+        // check enrichers are functioning
+        EntityTestUtils.assertAttributeChangesEventually(javaProcess2, EnrichedVanillaJavaAppImpl.AVG1); 
+        EntityTestUtils.assertAttributeChangesEventually(javaProcess2, EnrichedVanillaJavaAppImpl.AVG2);
+        LOG.info("Avg now "+javaProcess2.getAttribute(EnrichedVanillaJavaAppImpl.AVG1));
+        
+        // and check we don't have too many
+        Assert.assertEquals(javaProcess2.getEnrichers().size(), javaProcess.getEnrichers().size());
+    }
+
+    public static class EnrichedVanillaJavaAppImpl extends VanillaJavaAppImpl {
+        private static final AttributeSensor<Double> AVG1 = Sensors.newDoubleSensor("avg1");
+        private static final AttributeSensor<Double> AVG2 = Sensors.newDoubleSensor("avg2");
+        
+        @Override
+        public void onManagementStarted() {
+            super.onManagementStarted();
+            LOG.info("mgmt started for "+this);
+            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, PROCESS_CPU_TIME, AVG1, Duration.TEN_SECONDS));
+        }
+        @Override
+        protected void connectSensors() {
+            super.connectSensors();
+            LOG.info("connecting sensors for "+this);
+            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, PROCESS_CPU_TIME, AVG2, Duration.TEN_SECONDS));
+        }
+    }
+
 }

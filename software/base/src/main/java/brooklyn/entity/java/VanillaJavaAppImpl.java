@@ -80,7 +80,7 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
         super.connectSensors();
 
         if (((VanillaJavaAppDriver) getDriver()).isJmxEnabled()) {
-            jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 500;
+            jmxPollPeriod = (jmxPollPeriod > 0) ? jmxPollPeriod : 3000;
             jmxFeed = JavaAppUtils.connectMXBeanSensors(this, jmxPollPeriod);
         }
 

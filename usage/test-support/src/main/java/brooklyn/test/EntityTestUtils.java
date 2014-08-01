@@ -35,6 +35,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionHandle;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -125,7 +126,8 @@ public class EntityTestUtils {
                 assertEquals(members.size(), expected, "members="+members);
             }});
     }
-    
+
+    /** checks that the entity's value for this attribute changes, by registering a subscription and checking the value */
     public static void assertAttributeChangesEventually(final Entity entity, final AttributeSensor<?> attribute) {
         final Object origValue = entity.getAttribute(attribute);
         final AtomicBoolean changed = new AtomicBoolean();
@@ -143,5 +145,13 @@ public class EntityTestUtils {
         } finally {
             ((EntityLocal)entity).unsubscribe(entity, handle);
         }
+    }
+    
+    /** alternate version of {@link #assertAttributeChangesEventually(Entity, AttributeSensor)} not using subscriptions and 
+     * with simpler code, for comparison */
+    @Beta
+    public static <T> void assertAttributeChangesEventually2(final Entity entity, final AttributeSensor<T> attribute) {
+        assertAttributeEventually(entity, attribute, 
+            Predicates.not(Predicates.equalTo(entity.getAttribute(attribute))));
     }
 }

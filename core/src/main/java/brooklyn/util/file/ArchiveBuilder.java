@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -36,7 +37,9 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveUtils.ArchiveType;
 import brooklyn.util.os.Os;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
@@ -85,10 +88,10 @@ public class ArchiveBuilder {
         return new ArchiveBuilder(ArchiveType.JAR);
     }
 
-    private ArchiveType type;
+    private final ArchiveType type;
     private File archive;
     private Manifest manifest;
-    private Map<String, File> entries = Maps.newHashMap();
+    private Multimap<String, File> entries = LinkedHashMultimap.create();
 
     private ArchiveBuilder() {
         this(ArchiveType.ZIP);
@@ -142,10 +145,10 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the file located at the {@code filePath} to the archive.
+     * Add the file located at the {@code filePath} to the archive, 
+     * with some complicated base-name strategies.
      *
-     * @see #add(File)
-     */
+     * @deprecated since 0.7.0 use one of the other add methods which makes the strategy explicit */ @Deprecated
     public ArchiveBuilder add(String filePath) {
         checkNotNull(filePath, "filePath");
         return add(new File(Os.tidyPath(filePath)));
@@ -163,7 +166,7 @@ public class ArchiveBuilder {
      * No checks for file existence are made at this stage.
      *
      * @see #entry(String, File)
-     */
+     * @deprecated since 0.7.0 use one of the other add methods which makes the strategy explicit */ @Deprecated
     public ArchiveBuilder add(File file) {
         checkNotNull(file, "file");
         String filePath = Os.tidyPath(file.getPath());
@@ -179,7 +182,7 @@ public class ArchiveBuilder {
      * to the archive.
      * <p>
      * Uses the {@code filePath} as the name of the file in the archive. Note that the
-     * two path components are simply concatenated using {@link Os#mergePaths(String...)}
+     * file is found by concatenating the two path components using {@link Os#mergePaths(String...)}
      * which may not behave as expected if the {@code filePath} is absolute or points to
      * a location above the current directory.
      * <p>
@@ -188,17 +191,29 @@ public class ArchiveBuilder {
      *
      * @see #entry(String, String)
      */
-    public ArchiveBuilder add(String baseDir, String filePath) {
+    public ArchiveBuilder addRelativeToBaseDir(String baseDir, String filePath) {
         checkNotNull(baseDir, "baseDir");
         checkNotNull(filePath, "filePath");
         return entry(Os.mergePaths(".", filePath), Os.mergePaths(baseDir, filePath));
+    }
+    /** @deprecated since 0.7.0 use {@link #addRelativeToBaseDir(String, String)}, or
+     * one of the other add methods if adding relative to baseDir was not intended */ @Deprecated
+    public ArchiveBuilder add(String baseDir, String filePath) {
+        return addRelativeToBaseDir(baseDir, filePath);
+    }
+     
+    /** adds the given file to the archive, preserving its name but putting under the given directory in the archive (may be <code>""</code> or <code>"./"</code>) */
+    public ArchiveBuilder addAt(File file, String archiveParentDir) {
+        checkNotNull(archiveParentDir, "archiveParentDir");
+        checkNotNull(file, "file");
+        return entry(Os.mergePaths(archiveParentDir, file.getName()), file);
     }
 
     /**
      * Add the contents of the directory named {@code dirName} to the archive.
      *
      * @see #addDir(File)
-     */
+     * @deprecated since 0.7.0 use {@link #addDirContentsAt(File, String) */ @Deprecated
     public ArchiveBuilder addDir(String dirName) {
         checkNotNull(dirName, "dirName");
         return addDir(new File(Os.tidyPath(dirName)));
@@ -206,21 +221,33 @@ public class ArchiveBuilder {
 
     /**
      * Add the contents of the directory {@code dir} to the archive.
+     * The directory's name is not included; use {@link #addAtRoot(File)} if you want that behaviour. 
      * <p>
      * Uses {@literal .} as the parent directory name for the contents.
      *
      * @see #entry(String, File)
      */
-    public ArchiveBuilder addDir(File dir) {
+    public ArchiveBuilder addDirContentsAt(File dir, String archiveParentDir) {
         checkNotNull(dir, "dir");
-        return entry(".", dir);
+        if (!dir.isDirectory()) throw new IllegalArgumentException(dir+" is not a directory; cannot add contents to archive");
+        return entry(archiveParentDir, dir);
+    }
+    /**
+     * As {@link #addDirContentsAt(File, String)}, 
+     * using {@literal .} as the parent directory name for the contents.
+     * 
+     * @deprecated since 0.7.0 use {@link #addDirContentsAt(File, String)
+     * to clarify API, argument types, and be explicit about where it should be installed,
+     * because JARs seem to require <code>""<code> whereas ZIPs might want <code>"./"</code>. */ @Deprecated
+    public ArchiveBuilder addDir(File dir) {
+        return addDirContentsAt(dir, ".");
     }
 
     /**
      * Add the collection of {@code files} to the archive.
      *
      * @see #add(String)
-     */
+     * @deprecated since 0.7.0 use one of the other add methods if keeping this file's path was not intended */ @Deprecated
     public ArchiveBuilder add(Iterable<String> files) {
         checkNotNull(files, "files");
         for (String filePath : files) {
@@ -234,7 +261,7 @@ public class ArchiveBuilder {
      * the archive.
      *
      * @see #add(String, String)
-     */
+     * @deprecated since 0.7.0 use one of the other add methods if keeping this file's path was not intended */ @Deprecated
     public ArchiveBuilder add(String baseDir, Iterable<String> files) {
         checkNotNull(baseDir, "baseDir");
         checkNotNull(files, "files");
@@ -277,14 +304,15 @@ public class ArchiveBuilder {
      */
     public ArchiveBuilder entries(Map<String, File> entries) {
         checkNotNull(entries, "entries");
-        this.entries.putAll(entries);
+        for (Map.Entry<String, File> entry: entries.entrySet())
+            this.entries.put(entry.getKey(), entry.getValue());
         return this;
     }
 
     /**
-     * Generates the archive and ouputs it to the given stream, ignoring any file name.
+     * Generates the archive and outputs it to the given stream, ignoring any file name.
      * <p>
-     * This will add a manifest filw if the type is a Jar archive.
+     * This will add a manifest file if the type is a Jar archive.
      */
     public void stream(OutputStream output) {
         try {
@@ -296,7 +324,7 @@ public class ArchiveBuilder {
                 target = new JarOutputStream(output, manifest);
             }
             for (String entry : entries.keySet()) {
-                entry(entry, entries.get(entry), target);
+                addToArchive(entry, entries.get(entry), target);
             }
             target.close();
         } catch (IOException ioe) {
@@ -319,7 +347,7 @@ public class ArchiveBuilder {
      */
     public File create() {
         if (archive == null) {
-            File temp = Os.newTempFile("brooklyn-archive", "");
+            File temp = Os.newTempFile("brooklyn-archive", type.toString());
             temp.deleteOnExit();
             named(temp);
         }
@@ -343,26 +371,50 @@ public class ArchiveBuilder {
      * tree. In this case, iterables created by this traverser could contain files that are
      * outside of the given directory or even be infinite if there is a symbolic link loop.
      */
-    private void entry(String path, File source, ZipOutputStream target) throws IOException {
+    private void addToArchive(String path, Iterable<File> sources, ZipOutputStream target) throws IOException {
+        int size = Iterables.size(sources);
+        if (size==0) return;
+        boolean isDirectory;
+        if (size>1) {
+            // it must be directories if we are putting multiple things here 
+            isDirectory = true;
+        } else {
+            isDirectory = Iterables.getOnlyElement(sources).isDirectory();
+        }
+        
         String name = path.replace("\\", "/");
-        if (source.isDirectory()) {
+        if (isDirectory) {
             name += "/";
             JarEntry entry = new JarEntry(name);
-            entry.setTime(source.lastModified());
+            
+            long lastModified=-1;
+            for (File source: sources)
+                if (source.lastModified()>lastModified)
+                    lastModified = source.lastModified();
+            
+            entry.setTime(lastModified);
             target.putNextEntry(entry);
             target.closeEntry();
 
-            Iterable<File> children = Files.fileTreeTraverser().children(source);
-            for (File child : children) {
-                entry(Os.mergePaths(path, child.getName()), child, target);
+            for (File source: sources) {
+                if (!source.isDirectory()) {
+                    throw new IllegalStateException("Cannot add multiple items at a path in archive unless they are directories: "+sources+" at "+path+" is not valid.");
+                }
+                Iterable<File> children = Files.fileTreeTraverser().children(source);
+                for (File child : children) {
+                    addToArchive(Os.mergePaths(path, child.getName()), Collections.singleton(child), target);
+                }
             }
             return;
         }
 
+        File source = Iterables.getOnlyElement(sources);
         JarEntry entry = new JarEntry(name);
         entry.setTime(source.lastModified());
         target.putNextEntry(entry);
         ByteStreams.copy(Files.newInputStreamSupplier(source), target);
         target.closeEntry();
     }
+    
+
 }

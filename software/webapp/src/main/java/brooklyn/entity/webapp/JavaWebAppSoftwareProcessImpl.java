@@ -64,13 +64,13 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
     }
 
     @Override
-    protected void connectSensors() {
-        super.connectSensors();
-
+    public void init() {
+        super.init();
+        
         WebAppServiceMethods.connectWebAppServerPolicies(this);
         JavaAppUtils.connectJavaAppServerPolicies(this);
     }
-
+    
     //just provide better typing
     public JavaWebAppDriver getDriver() {
         return (JavaWebAppDriver) super.getDriver();

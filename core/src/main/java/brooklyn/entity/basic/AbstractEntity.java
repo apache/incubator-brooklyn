@@ -26,12 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.enricher.basic.Aggregator;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -68,8 +70,10 @@ import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
+import brooklyn.policy.EntityAdjunct;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
+import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
@@ -1085,11 +1089,15 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public void addPolicy(Policy policy) {
+        List<Policy> old = MutableList.<Policy>copyOf(policies);
+
         policies.add((AbstractPolicy)policy);
         ((AbstractPolicy)policy).setEntity(this);
         
         getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
         emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+        
+        if (hasApparentlyEqualsAndWarn(old, policy)) removePolicy(policy);
     }
 
     @Override
@@ -1135,11 +1143,56 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     @Override
     public void addEnricher(Enricher enricher) {
+        List<Enricher> old = MutableList.<Enricher>copyOf(enrichers);
+        
         enrichers.add((AbstractEnricher) enricher);
         ((AbstractEnricher)enricher).setEntity(this);
         
         getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
         // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+        
+        if (hasApparentlyEqualsAndWarn(old, enricher)) removeEnricher(enricher);
+    }
+    
+    private <T> boolean hasApparentlyEqualsAndWarn(Collection<? extends T> items, T newItem) {
+        T oldItem = findApparentlyEquals(items, newItem);
+        if (oldItem!=null) {
+            if (isRebinding()) {
+                LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; will remove after adding. "
+                    + "Underlying addition should be checked as this behavior will likely be removed without further notice.");
+                return true;
+            } else {
+                LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; may get removed on rebind. "
+                    + "If unintended, addition should be removed. If intended, enricher should be modified so difference is apparent.");
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    private <T> T findApparentlyEquals(Collection<? extends T> itemsCopy, T newItem) {
+        // FIXME workaround for issue where enrichers can get added multiple times on rebind,
+        // if it's added in onBecomingManager or connectSensors; the right fix will be more disciplined about how/where these are added
+        // (easier done when sensor feeds are persisted)
+        Class<?> beforeEntityAdjunct = newItem.getClass();
+        while (beforeEntityAdjunct.getSuperclass()!=null && !beforeEntityAdjunct.getSuperclass().equals(AbstractEntityAdjunct.class))
+            beforeEntityAdjunct = beforeEntityAdjunct.getSuperclass();
+        
+        for (T oldItem: itemsCopy) {
+            if (oldItem.getClass().equals(newItem.getClass())) {
+                if (EqualsBuilder.reflectionEquals(oldItem, newItem, false,
+                        // internal admin in 'beforeEntityAdjunct' should be ignored
+                        beforeEntityAdjunct,
+                        // known fields which shouldn't block equality checks:
+                        // from aggregator
+                        "transformation",
+                        // from averager
+                        "values", "timestamps", "lastAverage")) {
+                    return oldItem;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -1212,7 +1265,7 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
 
     /**
      * Invoked by {@link EntityManagementSupport} when this entity is becoming managed (i.e. it has a working
-     * management context, but before the entity is visible to other entities).
+     * management context, but before the entity is visible to other entities), including during a rebind.
      */
     public void onManagementStarting() {
         if (isLegacyConstruction()) {
@@ -1227,24 +1280,26 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
      */
     public void onManagementStarted() {}
     
-    // FIXME Really deprecated? I don't want folk to have to override createManagementSupport for simple use-cases
     /**
      * Invoked by {@link ManagementContext} when this entity becomes managed at a particular management node,
      * including the initial management started and subsequent management node master-change for this entity.
-     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStarting if customization needed
+     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStarted if customization needed
      */
     public void onManagementBecomingMaster() {}
     
-    // FIXME Really deprecated? I don't want folk to have to override createManagementSupport for simple use-cases
     /**
      * Invoked by {@link ManagementContext} when this entity becomes mastered at a particular management node,
      * including the final management end and subsequent management node master-change for this entity.
-     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStopping if customization needed
+     * @deprecated since 0.4.0 override EntityManagementSupport.onManagementStopped if customization needed
      */
     public void onManagementNoLongerMaster() {}
 
     /**
      * Invoked by {@link EntityManagementSupport} when this entity is fully unmanaged.
+     * <p>
+     * Note that the activies possible here (when unmanaged) are limited, 
+     * and that this event may be caused by either a brooklyn node itself being demoted
+     * (so the entity is managed elsewhere) or by a controlled shutdown.
      */
     public void onManagementStopped() {
         if (getManagementContext().isRunning()) {
