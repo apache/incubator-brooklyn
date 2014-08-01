@@ -1157,8 +1157,15 @@ public abstract class AbstractEntity implements EntityLocal, EntityInternal {
     private <T> boolean hasApparentlyEqualsAndWarn(Collection<? extends T> items, T newItem) {
         T oldItem = findApparentlyEquals(items, newItem);
         if (oldItem!=null) {
-            LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; will remove after adding");
-            return true;
+            if (isRebinding()) {
+                LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; will remove after adding. "
+                    + "Underlying addition should be checked as this behavior will likely be removed without further notice.");
+                return true;
+            } else {
+                LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; may get removed on rebind. "
+                    + "If unintended, addition should be removed. If intended, enricher should be modified so difference is apparent.");
+                return false;
+            }
         } else {
             return false;
         }

@@ -43,7 +43,6 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -140,15 +139,12 @@ public class VanillaJavaAppRebindTest {
         VanillaJavaApp javaProcess2 = (VanillaJavaApp) Iterables.find(app.getChildren(), Predicates.instanceOf(VanillaJavaApp.class));
 
         // check sensors working
-        EntityTestUtils.assertAttributeEventually(javaProcess2, EnrichedVanillaJavaAppImpl.PROCESS_CPU_TIME, 
-            Predicates.not(Predicates.equalTo(javaProcess2.getAttribute(EnrichedVanillaJavaAppImpl.PROCESS_CPU_TIME))));
+        EntityTestUtils.assertAttributeChangesEventually(javaProcess2, EnrichedVanillaJavaAppImpl.PROCESS_CPU_TIME); 
         LOG.info("Avg now "+javaProcess2.getAttribute(EnrichedVanillaJavaAppImpl.AVG1));
         
         // check enrichers are functioning
-        EntityTestUtils.assertAttributeEventually(javaProcess2, EnrichedVanillaJavaAppImpl.AVG1, 
-            Predicates.not(Predicates.equalTo(javaProcess2.getAttribute(EnrichedVanillaJavaAppImpl.AVG1))));
-        EntityTestUtils.assertAttributeEventually(javaProcess2, EnrichedVanillaJavaAppImpl.AVG2,
-            Predicates.not(Predicates.equalTo(javaProcess2.getAttribute(EnrichedVanillaJavaAppImpl.AVG2))));
+        EntityTestUtils.assertAttributeChangesEventually(javaProcess2, EnrichedVanillaJavaAppImpl.AVG1); 
+        EntityTestUtils.assertAttributeChangesEventually(javaProcess2, EnrichedVanillaJavaAppImpl.AVG2);
         LOG.info("Avg now "+javaProcess2.getAttribute(EnrichedVanillaJavaAppImpl.AVG1));
         
         // and check we don't have too many
