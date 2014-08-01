@@ -18,25 +18,17 @@
  */
 package brooklyn.location.basic;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.location.LocationRegistry;
-import brooklyn.location.LocationResolver;
+import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
@@ -55,66 +47,52 @@ import com.google.common.collect.Lists;
  * 
  * @author aled
  */
-@SuppressWarnings({"unchecked","rawtypes"})
-public class ByonLocationResolver implements LocationResolver {
+@SuppressWarnings({"rawtypes"})
+public class ByonLocationResolver extends AbstractLocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(ByonLocationResolver.class);
     
     public static final String BYON = "byon";
 
-    private static final Pattern PATTERN = Pattern.compile("(?i)" + BYON + "(?::\\((.*)\\))?$");
-
-    private volatile ManagementContext managementContext;
-
     @Override
-    public void init(ManagementContext managementContext) {
-        this.managementContext = checkNotNull(managementContext, "managementContext");
+    public String getPrefix() {
+        return BYON;
     }
-    
+
     @Override
-    public FixedListMachineProvisioningLocation<SshMachineLocation> newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        Map globalProperties = registry.getProperties();
+    protected Class<? extends Location> getLocationType() {
+        return FixedListMachineProvisioningLocation.class;
+    }
 
-        Matcher matcher = PATTERN.matcher(spec);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like byon(hosts=\"addr1,addr2\")");
-        }
-        
-        String argsPart = matcher.group(1);
-        Map<String, String> argsMap = KeyValueParser.parseMap(argsPart);
-        
-        // If someone tries "byon:(),byon:()" as a single spec, we get weird key-values!
-        for (String key : argsMap.keySet()) {
-            if (key.contains(":") || key.contains("{") || key.contains("}") || key.contains("(") || key.contains(")")) {
-                throw new IllegalArgumentException("Invalid byon spec: "+spec);
-            }
-        }
+    @Override
+    protected SpecParser getSpecParser() {
+        return new AbstractLocationResolver.SpecParser(getPrefix()).setExampleUsage("\"byon(hosts='addr1,addr2')\"");
+    }
 
-        // prefer args map over location flags
-        
-        String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
-        String name = argsMap.containsKey("name") ? argsMap.get("name") : (String)locationFlags.get("name");
-        
-        Object hosts = argsMap.containsKey("hosts") ? argsMap.get("hosts") : locationFlags.get("hosts");
-        
-        String user = argsMap.containsKey("user") ? argsMap.get("user") : (String)locationFlags.get("user");
-        
-        if (hosts == null || hosts.toString().isEmpty()) {
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; at least one host must be defined");
-        }
-        if (argsMap.containsKey("name") && (name == null || name.isEmpty())) {
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
-        }
+    @Override
+    protected ConfigBag extractConfig(Map<?,?> locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
+        ConfigBag config = super.extractConfig(locationFlags, spec, registry);
+
+        Object hosts = config.getStringKey("hosts");
+        config.remove("hosts");
+        String user = (String)config.getStringKey("user");
         
         List<String> hostAddresses;
         
         if (hosts instanceof String) {
-            hostAddresses = WildcardGlobs.getGlobsAfterBraceExpansion("{"+hosts+"}",
-                    true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);
+            if (((String) hosts).isEmpty()) {
+                hostAddresses = ImmutableList.of();
+            } else {
+                hostAddresses = WildcardGlobs.getGlobsAfterBraceExpansion("{"+hosts+"}",
+                        true /* numeric */, /* no quote support though */ PhraseTreatment.NOT_A_SPECIAL_CHAR, PhraseTreatment.NOT_A_SPECIAL_CHAR);
+            }
         } else if (hosts instanceof Iterable) {
-            hostAddresses = ImmutableList.copyOf((List)hosts);
+            hostAddresses = ImmutableList.copyOf((Iterable<String>)hosts);
         } else {
-            throw new IllegalStateException("Illegal parameter for 'hosts'; must be a string or map (but got " + hosts + ")");
+            throw new IllegalArgumentException("Invalid location '"+spec+"'; at least one host must be defined");
+        }
+        if (hostAddresses.isEmpty()) {
+            throw new IllegalArgumentException("Invalid location '"+spec+"'; at least one host must be defined");
         }
         
         List<SshMachineLocation> machines = Lists.newArrayList();
@@ -132,38 +110,18 @@ public class ByonLocationResolver implements LocationResolver {
                 throw new IllegalArgumentException("Invalid host '"+hostHere+"' specified in '"+spec+"': "+e);
             }
             if (JavaGroovyEquivalents.groovyTruth(userHere)) {
-                machine = managementContext.getLocationManager().createLocation(MutableMap.of("user", userHere.trim(), "address", hostHere.trim()), SshMachineLocation.class);    
+                machine = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                        .configure("user", userHere.trim())
+                        .configure("address", hostHere.trim()));    
             } else {
-                machine = managementContext.getLocationManager().createLocation(MutableMap.of("address", hostHere.trim()), SshMachineLocation.class);
+                machine = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                        .configure("address", hostHere.trim()));    
             }
             machines.add(machine);
         }
         
-        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties("byon", namedLocation, globalProperties);
-        ConfigBag flags = ConfigBag.newInstance(argsMap).putIfAbsent(locationFlags).putIfAbsent(filteredProperties);
+        config.putStringKey("machines", machines);
 
-        flags.putStringKey("machines", machines);
-        flags.putIfNotNull(LocationConfigKeys.USER, user);
-        flags.putStringKeyIfNotNull("name", name);
-        
-        if (registry != null) 
-            LocationPropertiesFromBrooklynProperties.setLocalTempDir(registry.getProperties(), flags);
-
-        log.debug("Created BYON location "+name+": "+machines);
-
-        return managementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
-                .configure(flags.getAllConfigRaw())
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
+        return config;
     }
-    
-    @Override
-    public String getPrefix() {
-        return BYON;
-    }
-    
-    @Override
-    public boolean accepts(String spec, LocationRegistry registry) {
-        return BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true);
-    }
-
 }

@@ -18,56 +18,53 @@
  */
 package brooklyn.location.basic;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
-import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.location.basic.AbstractLocationResolver.SpecParser.ParsedSpec;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.text.KeyValueParser;
 
-public class HostLocationResolver implements LocationResolver {
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+
+public class HostLocationResolver extends AbstractLocationResolver {
     
     private static final String HOST = "host";
     
-    private static final Pattern PATTERN = Pattern.compile("(" + HOST + "|" + HOST.toUpperCase() + ")" + ":" + "\\((.+)\\)$");
-    
-    private volatile ManagementContext managementContext;
-
-    @Override
-    public void init(ManagementContext managementContext) {
-        this.managementContext = checkNotNull(managementContext, "managementContext");
-    }
-
     @SuppressWarnings("rawtypes")
     @Override
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
-        Map globalProperties = registry.getProperties();
-        
-        Matcher matcher = PATTERN.matcher(spec);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like host:(\"1.1.1.1\")");
+        // Extract args from spec
+        ParsedSpec parsedSpec = specParser.parse(spec);
+        Map<String, String> argsMap = parsedSpec.argsMap;
+        if (argsMap.isEmpty()) {
+            throw new IllegalArgumentException("Invalid host spec (no host supplied): "+spec);
+        } else if (argsMap.size() == 1 && Iterables.get(argsMap.values(), 0) == null) {
+            // only given ip or hostname
+            argsMap = ImmutableMap.of("hosts", Iterables.get(argsMap.keySet(), 0));
+        } else if (!(argsMap.containsKey("host") || argsMap.containsKey("hosts"))) {
+            throw new IllegalArgumentException("Invalid host spec (no host supplied): "+spec);
         }
-        
-        String namedLocation = (String) locationFlags.get("named");
 
+        // Find generic applicable properties
+        Map globalProperties = registry.getProperties();
+        String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
         Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, globalProperties);
-        MutableMap<String, Object> flags = MutableMap.<String, Object>builder().putAll(filteredProperties).putAll(locationFlags).removeAll("named").build();
+        ConfigBag flags = ConfigBag.newInstance(locationFlags).putIfAbsent(filteredProperties);
+        flags.remove(LocationInternal.NAMED_SPEC_NAME);
 
-        String args = matcher.group(2);
-        String target = "byon:(hosts=" + args + ")";
+        // Generate target spec
+        String target = "byon("+KeyValueParser.toLine(argsMap)+")";
         if (!managementContext.getLocationRegistry().canMaybeResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SingleMachineProvisioningLocation.class)
                 .configure("location", target)
-                .configure("locationFlags", flags)
+                .configure("locationFlags", flags.getAllConfig())
                 .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
     }
     
@@ -77,8 +74,12 @@ public class HostLocationResolver implements LocationResolver {
     }
     
     @Override
-    public boolean accepts(String spec, LocationRegistry registry) {
-        return BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true);
+    protected Class<? extends Location> getLocationType() {
+        return SingleMachineProvisioningLocation.class;
     }
 
+    @Override
+    protected SpecParser getSpecParser() {
+        return new SpecParser(getPrefix()).setExampleUsage("\"host(1.1.1.1)\" or \"host(host=1.1.1.1,name=myname)\"");
+    }
 }

@@ -137,9 +137,9 @@ public class LocalhostLocationResolverTest {
     @Test
     public void testThrowsOnInvalid() throws Exception {
         assertThrowsNoSuchElement("wrongprefix");
-        assertThrowsIllegalArgument("localhost:(name=abc"); // no closing bracket
-        assertThrowsIllegalArgument("localhost:(name)"); // no value for name
-        assertThrowsIllegalArgument("localhost:(name=)"); // no value for name
+        assertThrowsIllegalArgument("localhost(name=abc"); // no closing bracket
+        assertThrowsIllegalArgument("localhost(name)"); // no value for name
+        assertThrowsIllegalArgument("localhost(name=)"); // no value for name
     }
     
 
@@ -180,14 +180,14 @@ public class LocalhostLocationResolverTest {
     public void testRegistryCommaResolutionInListNotAllowed2() throws NoMachinesAvailableException {
         // disallowed since 0.7.0
         // fails because it interprets the entire string as a single spec, which does not parse
-        getLocationResolver().resolve(ImmutableList.of("localhost:(),localhost:()"));
+        getLocationResolver().resolve(ImmutableList.of("localhost(),localhost()"));
     }
 
     @Test(expectedExceptions={IllegalArgumentException.class})
     public void testRegistryCommaResolutionInListNotAllowed3() throws NoMachinesAvailableException {
         // disallowed since 0.7.0
         // fails because it interprets the entire string as a single spec, which does not parse
-        getLocationResolver().resolve(ImmutableList.of("localhost:(name=a),localhost:(name=b)"));
+        getLocationResolver().resolve(ImmutableList.of("localhost(name=a),localhost(name=b)"));
     }
 
     @Test(expectedExceptions={IllegalArgumentException.class})
@@ -197,6 +197,13 @@ public class LocalhostLocationResolverTest {
 
     @Test
     public void testResolvesExplicitName() throws Exception {
+        Location location = resolve("localhost(name=myname)");
+        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location.getDisplayName(), "myname");
+    }
+    
+    @Test
+    public void testWithOldStyleColon() throws Exception {
         Location location = resolve("localhost:(name=myname)");
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "myname");
@@ -204,7 +211,7 @@ public class LocalhostLocationResolverTest {
     
     @Test
     public void testResolvesPropertiesInSpec() throws Exception {
-        Location location = resolve("localhost:(privateKeyFile=myprivatekeyfile,name=myname)");
+        Location location = resolve("localhost(privateKeyFile=myprivatekeyfile,name=myname)");
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "myname");
         assertEquals(location.getAllConfig(true).get("privateKeyFile"), "myprivatekeyfile");
@@ -216,7 +223,7 @@ public class LocalhostLocationResolverTest {
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "localhost");
 
-        Location location2 = resolve("localhost:()");
+        Location location2 = resolve("localhost()");
         assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location2.getDisplayName(), "localhost");
     }

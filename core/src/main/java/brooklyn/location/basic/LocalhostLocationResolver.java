@@ -18,52 +18,27 @@
  */
 package brooklyn.location.basic;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Collections;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
-import brooklyn.location.LocationRegistry;
-import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationResolver.EnableableLocationResolver;
-import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.KeyValueParser;
 
 /**
  * Examples of valid specs:
  *   <ul>
  *     <li>localhost
- *     <li>localhost:()
- *     <li>localhost:(name=abc)
- *     <li>localhost:(name="abc")
+ *     <li>localhost()
+ *     <li>localhost(name=abc)
+ *     <li>localhost(name="abc")
  *   </ul>
  * 
  * @author alex, aled
  */
-public class LocalhostLocationResolver implements LocationResolver, EnableableLocationResolver {
+public class LocalhostLocationResolver extends AbstractLocationResolver implements EnableableLocationResolver {
 
-    private static final Logger log = LoggerFactory.getLogger(LocalhostLocationResolver.class);
-    
     public static final String LOCALHOST = "localhost";
-    
-    private static final Pattern PATTERN = Pattern.compile("("+LOCALHOST+"|"+LOCALHOST.toUpperCase()+")" + "(:\\((.*)\\))?$");
-    
-    private ManagementContext managementContext;
 
-    @Override
-    public void init(ManagementContext managementContext) {
-        this.managementContext = checkNotNull(managementContext, "managementContext");
-    }
-    
     @Override
     public String getPrefix() {
         return LOCALHOST;
@@ -73,50 +48,25 @@ public class LocalhostLocationResolver implements LocationResolver, EnableableLo
     public boolean isEnabled() {
         return LocationConfigUtils.isEnabled(managementContext, "brooklyn.location.localhost");
     }
-    
-    @Override
-    public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        Map globalProperties = registry.getProperties();
-    
-        String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
-        
-        Matcher matcher = PATTERN.matcher(spec);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; must specify something like localhost or localhost(name=abc)");
-        }
-        
-        String argsPart = matcher.group(3);
-        Map<String, String> argsMap = (argsPart != null) ? KeyValueParser.parseMap(argsPart) : Collections.<String,String>emptyMap();
-        
-        // If someone tries "localhost:(),localhost:()" as a single spec, we get weird key-values!
-        for (String key : argsMap.keySet()) {
-            if (key.contains(":") || key.contains("{") || key.contains("}") || key.contains("(") || key.contains(")")) {
-                throw new IllegalArgumentException("Invalid localhost spec: "+spec);
-            }
-        }
-        
-        String namePart = argsMap.get("name");
-        if (argsMap.containsKey("name") && (namePart == null || namePart.isEmpty())) {
-            throw new IllegalArgumentException("Invalid location '"+spec+"'; if name supplied then value must be non-empty");
-        }
 
-        Map<String, Object> filteredProperties = new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, globalProperties);
-        // TODO filteredProperties stuff above should not be needed as named location items will already be passed in
-        ConfigBag flags = ConfigBag.newInstance(argsMap).putIfAbsent(locationFlags).putIfAbsent(filteredProperties);
-        
-        flags.putStringKey("name", Maybe.fromNullable(namePart).or("localhost"));
-        
-        if (registry != null) 
-            LocationPropertiesFromBrooklynProperties.setLocalTempDir(registry.getProperties(), flags);
-        
-        return managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
-            .configure(flags.getAllConfig())
-            .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
+    @Override
+    protected Class<? extends Location> getLocationType() {
+        return LocalhostMachineProvisioningLocation.class;
     }
 
     @Override
-    public boolean accepts(String spec, LocationRegistry registry) {
-        return BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true);
+    protected SpecParser getSpecParser() {
+        return new AbstractLocationResolver.SpecParser(getPrefix()).setExampleUsage("\"localhost\" or \"localhost(displayName=abc)\"");
+    }
+    
+    protected Map<String, Object> getFilteredLocationProperties(String provider, String namedLocation, Map<String, ?> globalProperties) {
+        return new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, globalProperties);
     }
 
+    @Override
+    protected ConfigBag extractConfig(Map<?,?> locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
+        ConfigBag config = super.extractConfig(locationFlags, spec, registry);
+        config.putAsStringKeyIfAbsent("name", "localhost");
+        return config;
+    }
 }

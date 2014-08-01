@@ -271,8 +271,10 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
 
     protected LocationResolver getSpecResolver(String spec) {
-        int colon = spec.indexOf(':');
-        String prefix = colon>=0 ? spec.substring(0, colon) : spec;
+        int colonIndex = spec.indexOf(':');
+        int bracketIndex = spec.indexOf("(");
+        int dividerIndex = (colonIndex < 0) ? bracketIndex : (bracketIndex < 0 ? colonIndex : Math.min(bracketIndex, colonIndex));
+        String prefix = dividerIndex >= 0 ? spec.substring(0, dividerIndex) : spec;
         LocationResolver resolver = resolvers.get(prefix);
        
         if (resolver == null)

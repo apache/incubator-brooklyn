@@ -46,8 +46,8 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.os.Os;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
@@ -88,7 +88,7 @@ public class ByonLocationResolverTest {
         brooklynProperties.put("brooklyn.location.byon.publicKeyData", "myPublicKeyData");
         brooklynProperties.put("brooklyn.location.byon.privateKeyPassphrase", "myprivateKeyPassphrase");
 
-        Map<String, Object> conf = resolve("byon:(hosts=\"1.1.1.1\")").getAllConfig(true);
+        Map<String, Object> conf = resolve("byon(hosts=\"1.1.1.1\")").getAllConfig(true);
         
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -99,7 +99,7 @@ public class ByonLocationResolverTest {
 
     @Test
     public void testNamedByonLocation() throws Exception {
-        brooklynProperties.put("brooklyn.location.named.mynamed", "byon:(hosts=\"1.1.1.1\")");
+        brooklynProperties.put("brooklyn.location.named.mynamed", "byon(hosts=\"1.1.1.1\")");
         
         FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("named:mynamed");
         assertEquals(loc.obtain().getAddress(), InetAddress.getByName("1.1.1.1"));
@@ -107,7 +107,7 @@ public class ByonLocationResolverTest {
 
     @Test
     public void testPropertiesInSpec() throws Exception {
-        FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("byon:(privateKeyFile=myprivatekeyfile,hosts=\"1.1.1.1\")");
+        FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("byon(privateKeyFile=myprivatekeyfile,hosts=\"1.1.1.1\")");
         SshMachineLocation machine = loc.obtain();
         
         assertEquals(machine.getAllConfig(true).get("privateKeyFile"), "myprivatekeyfile");
@@ -116,7 +116,7 @@ public class ByonLocationResolverTest {
 
     @Test
     public void testPropertyScopePrecedence() throws Exception {
-        brooklynProperties.put("brooklyn.location.named.mynamed", "byon:(hosts=\"1.1.1.1\")");
+        brooklynProperties.put("brooklyn.location.named.mynamed", "byon(hosts=\"1.1.1.1\")");
         
         // prefer those in "named" over everything else
         brooklynProperties.put("brooklyn.location.named.mynamed.privateKeyFile", "privateKeyFile-inNamed");
@@ -141,40 +141,46 @@ public class ByonLocationResolverTest {
     public void testThrowsOnInvalid() throws Exception {
         assertThrowsNoSuchElement("wrongprefix:(hosts=\"1.1.1.1\")");
         assertThrowsIllegalArgument("byon"); // no hosts
-        assertThrowsIllegalArgument("byon:()"); // no hosts
-        assertThrowsIllegalArgument("byon:(hosts=\"\")"); // empty hosts
-        assertThrowsIllegalArgument("byon:(hosts=\"1.1.1.1\""); // no closing bracket
-        assertThrowsIllegalArgument("byon:(hosts=\"1.1.1.1\", name)"); // no value for name
-        assertThrowsIllegalArgument("byon:(hosts=\"1.1.1.1\", name=)"); // no value for name
+        assertThrowsIllegalArgument("byon()"); // no hosts
+        assertThrowsIllegalArgument("byon(hosts=\"\")"); // empty hosts
+        assertThrowsIllegalArgument("byon(hosts=\"1.1.1.1\""); // no closing bracket
+        assertThrowsIllegalArgument("byon(hosts=\"1.1.1.1\", name)"); // no value for name
+        assertThrowsIllegalArgument("byon(hosts=\"1.1.1.1\", name=)"); // no value for name
     }
     
     @Test(expectedExceptions={IllegalArgumentException.class})
     public void testRegistryCommaResolutionInListNotAllowed() throws NoMachinesAvailableException {
         // disallowed since 0.7.0
         // fails because it interprets the entire string as a single byon spec, which does not parse
-        managementContext.getLocationRegistry().resolve(ImmutableList.of("byon:(hosts=\"192.168.0.1\",user=bob),byon:(hosts=\"192.168.0.2\",user=bob2)"));
+        managementContext.getLocationRegistry().resolve(ImmutableList.of("byon(hosts=\"192.168.0.1\",user=bob),byon(hosts=\"192.168.0.2\",user=bob2)"));
     }
 
     @Test
     public void testResolvesHosts() throws Exception {
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"));
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"));
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1,1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1, 1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
+    }
+
+    @Test
+    public void testWithOldStyleColon() throws Exception {
         assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"));
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\")"), ImmutableSet.of("1.1.1.1"));
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1,1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1, 1.1.1.2\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
+        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\", name=myname)"), ImmutableSet.of("1.1.1.1"), "myname");
     }
 
     @Test
     public void testUsesDisplayName() throws Exception {
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\", name=myname)"), ImmutableSet.of("1.1.1.1"), "myname");
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.1\", name=\"myname\")"), ImmutableSet.of("1.1.1.1"), "myname");
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\", name=myname)"), ImmutableSet.of("1.1.1.1"), "myname");
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.1\", name=\"myname\")"), ImmutableSet.of("1.1.1.1"), "myname");
     }
 
     @Test
     public void testResolvesHostsGlobExpansion() throws Exception {
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.1.{1,2}\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.{1.1,2.{1,2}}\")"), 
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.1.{1,2}\")"), ImmutableSet.of("1.1.1.1","1.1.1.2"));
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.{1.1,2.{1,2}}\")"), 
                 ImmutableSet.of("1.1.1.1","1.1.2.1","1.1.2.2"));
-        assertByonClusterEquals(resolve("byon:(hosts=\"1.1.{1,2}.{1,2}\")"), 
+        assertByonClusterEquals(resolve("byon(hosts=\"1.1.{1,2}.{1,2}\")"), 
                 ImmutableSet.of("1.1.1.1","1.1.1.2","1.1.2.1","1.1.2.2"));
     }
 
@@ -183,7 +189,7 @@ public class ByonLocationResolverTest {
         Asserts.assertFailsWith(new Runnable() {
             @Override public void run() {
                 FixedListMachineProvisioningLocation<SshMachineLocation> x = 
-                        resolve("byon:(hosts=\"1.1.1.{1,2}}\")");
+                        resolve("byon(hosts=\"1.1.1.{1,2}}\")");
                 log.error("got "+x+" but should have failed (your DNS is giving an IP for hostname '1.1.1.1}' (with the extra '}')");
             }
         }, new Predicate<Throwable>() {
@@ -203,21 +209,21 @@ public class ByonLocationResolverTest {
 
     @Test
     public void testResolvesUsernameAtHost() throws Exception {
-        assertByonClusterWithUsersEquals(resolve("byon:(hosts=\"myuser@1.1.1.1\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1")));
-        assertByonClusterWithUsersEquals(resolve("byon:(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.1\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("myuser2", "1.1.1.1")));
-        assertByonClusterWithUsersEquals(resolve("byon:(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.2\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("myuser2", "1.1.1.2")));
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1")));
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.1\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("myuser2", "1.1.1.1")));
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.2\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("myuser2", "1.1.1.2")));
     }
 
     @Test
     public void testResolvesUserArg() throws Exception {
-        assertByonClusterWithUsersEquals(resolve("byon:(hosts=\"1.1.1.1\",user=bob)"), ImmutableSet.of(new UserHostTuple("bob", "1.1.1.1")));
-        assertByonClusterWithUsersEquals(resolve("byon:(user=\"bob\",hosts=\"myuser@1.1.1.1,1.1.1.1\")"), 
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"1.1.1.1\",user=bob)"), ImmutableSet.of(new UserHostTuple("bob", "1.1.1.1")));
+        assertByonClusterWithUsersEquals(resolve("byon(user=\"bob\",hosts=\"myuser@1.1.1.1,1.1.1.1\")"), 
                 ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("bob", "1.1.1.1")));
     }
 
     @Test
     public void testResolvesUserArg2() throws Exception {
-        String spec = "byon:(hosts=\"1.1.1.1\",user=bob)";
+        String spec = "byon(hosts=\"1.1.1.1\",user=bob)";
         FixedListMachineProvisioningLocation<SshMachineLocation> ll = resolve(spec);
         SshMachineLocation l = ll.obtain();
         Assert.assertEquals("bob", l.getUser());
@@ -226,7 +232,7 @@ public class ByonLocationResolverTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testResolvesUserArg3() throws Exception {
-        String spec = "byon:(hosts=\"1.1.1.1\")";
+        String spec = "byon(hosts=\"1.1.1.1\")";
         managementContext.getLocationRegistry().getProperties().putAll(MutableMap.of(
                 "brooklyn.location.named.foo", spec,
                 "brooklyn.location.named.foo.user", "bob"));
@@ -242,7 +248,7 @@ public class ByonLocationResolverTest {
     @Test
     /** private key should be inherited, so confirm that happens correctly */
     public void testResolvesPrivateKeyArgInheritance() throws Exception {
-        String spec = "byon:(hosts=\"1.1.1.1\")";
+        String spec = "byon(hosts=\"1.1.1.1\")";
         managementContext.getLocationRegistry().getProperties().putAll(MutableMap.of(
                 "brooklyn.location.named.foo", spec,
                 "brooklyn.location.named.foo.user", "bob",
@@ -275,7 +281,7 @@ public class ByonLocationResolverTest {
         String localTempDir = Os.mergePaths(Os.tmp(), "testResolvesUsernameAtHost");
         brooklynProperties.put("brooklyn.location.byon.localTempDir", localTempDir);
 
-        FixedListMachineProvisioningLocation<SshMachineLocation> byon = resolve("byon:(hosts=\"1.1.1.1\")");
+        FixedListMachineProvisioningLocation<SshMachineLocation> byon = resolve("byon(hosts=\"1.1.1.1\")");
         SshMachineLocation machine = byon.obtain();
         assertEquals(machine.getConfig(SshMachineLocation.LOCAL_TEMP_DIR), localTempDir);
     }
@@ -283,7 +289,7 @@ public class ByonLocationResolverTest {
     @Test
     public void testMachinesObtainedInOrder() throws Exception {
         List<String> ips = ImmutableList.of("1.1.1.1", "1.1.1.6", "1.1.1.3", "1.1.1.4", "1.1.1.5");
-        String spec = "byon:(hosts=\""+Joiner.on(",").join(ips)+"\")";
+        String spec = "byon(hosts=\""+Joiner.on(",").join(ips)+"\")";
         
         MachineProvisioningLocation<SshMachineLocation> ll = resolve(spec);
 
