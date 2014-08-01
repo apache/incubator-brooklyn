@@ -157,7 +157,7 @@ public class ServerPoolTest extends AbstractServerPoolTest {
         assertAvailableCountEventuallyEquals(0);
     }
 
-    @Test
+    @Test(groups = "Integration")
     public void testAddExistingMachineFromSpec() {
         TestApplication app = createAppWithChildren(getInitialPoolSize());
         app.start(ImmutableList.of(pool.getDynamicLocation()));
