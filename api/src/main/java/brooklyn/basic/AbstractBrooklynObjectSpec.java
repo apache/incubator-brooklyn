@@ -1,0 +1,92 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package brooklyn.basic;
+
+import java.io.Serializable;
+import java.lang.reflect.Modifier;
+
+import brooklyn.util.exceptions.Exceptions;
+
+import com.google.common.base.Objects;
+
+public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObjectSpec<T,K>> implements Serializable {
+
+    private static final long serialVersionUID = 3010955277740333030L;
+    
+    private final Class<T> type;
+    private String displayName;
+
+    protected AbstractBrooklynObjectSpec(Class<T> type) {
+        checkValidType(type);
+        this.type = type;
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected final K self() {
+        return (K) this;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("type", getType()).toString();
+    }
+
+    protected abstract void checkValidType(Class<T> type);
+    
+    public K displayName(String val) {
+        displayName = val;
+        return self();
+    }
+    
+    /**
+     * @return The type of the enricher
+     */
+    public final Class<T> getType() {
+        return type;
+    }
+    
+    /**
+     * @return The display name of the enricher
+     */
+    public final String getDisplayName() {
+        return displayName;
+    }
+
+    // TODO Duplicates method in BasicEntityTypeRegistry and InternalEntityFactory.isNewStyleEntity
+    protected final void checkIsNewStyleImplementation(Class<?> implClazz) {
+        try {
+            implClazz.getConstructor(new Class[0]);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("Implementation "+implClazz+" must have a no-argument constructor");
+        } catch (SecurityException e) {
+            throw Exceptions.propagate(e);
+        }
+        
+        if (implClazz.isInterface()) throw new IllegalStateException("Implementation "+implClazz+" is an interface, but must be a non-abstract class");
+        if (Modifier.isAbstract(implClazz.getModifiers())) throw new IllegalStateException("Implementation "+implClazz+" is abstract, but must be a non-abstract class");
+    }
+    
+    // TODO Duplicates method in BasicEntityTypeRegistry
+    protected final void checkIsImplementation(Class<?> val, Class<? super T> requiredInterface) {
+        if (!requiredInterface.isAssignableFrom(val)) throw new IllegalStateException("Implementation "+val+" does not implement "+requiredInterface.getName());
+        if (val.isInterface()) throw new IllegalStateException("Implementation "+val+" is an interface, but must be a non-abstract class");
+        if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
+    }
+
+}

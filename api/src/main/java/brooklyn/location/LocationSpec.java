@@ -20,20 +20,17 @@ package brooklyn.location;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.Serializable;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.management.Task;
-import brooklyn.util.exceptions.Exceptions;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 
 /**
@@ -46,7 +43,7 @@ import com.google.common.collect.Maps;
  * 
  * @author aled
  */
-public class LocationSpec<T extends Location> implements Serializable {
+public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec<T,LocationSpec<T>> {
 
     // TODO Would like to add `configure(ConfigBag)`, but `ConfigBag` is in core rather than api
     
@@ -76,18 +73,19 @@ public class LocationSpec<T extends Location> implements Serializable {
         return LocationSpec.create(type).configure(config);
     }
     
-    private final Class<T> type;
     private String id;
-    private String displayName;
     private Location parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final Map<Class<?>, Object> extensions = Maps.newLinkedHashMap();
 
     protected LocationSpec(Class<T> type) {
-        checkIsImplementation(type);
+        super(type);
+    }
+     
+    protected void checkValidType(java.lang.Class<T> type) {
+        checkIsImplementation(type, Location.class);
         checkIsNewStyleImplementation(type);
-        this.type = type;
     }
 
     /**
@@ -96,11 +94,6 @@ public class LocationSpec<T extends Location> implements Serializable {
     @Deprecated
     public LocationSpec<T> id(String val) {
         id = val;
-        return this;
-    }
-
-    public LocationSpec<T> displayName(String val) {
-        displayName = val;
         return this;
     }
 
@@ -165,13 +158,6 @@ public class LocationSpec<T extends Location> implements Serializable {
     }
     
     /**
-     * @return The type of the location
-     */
-    public Class<T> getType() {
-        return type;
-    }
-    
-    /**
      * @return The id of the location to be created, or null if brooklyn can auto-generate an id
      * 
      * @deprecated since 0.7.0; instead let the management context pick a random+unique id
@@ -179,13 +165,6 @@ public class LocationSpec<T extends Location> implements Serializable {
     @Deprecated
     public String getId() {
         return id;
-    }
-    
-    /**
-     * @return The display name of the location
-     */
-    public String getDisplayName() {
-        return displayName;
     }
     
     /**
@@ -216,31 +195,5 @@ public class LocationSpec<T extends Location> implements Serializable {
     public Map<Class<?>, Object> getExtensions() {
         return Collections.unmodifiableMap(extensions);
     }
-        
-    
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this).add("type", type).toString();
-    }
-    
-    // TODO Duplicates method in EntitySpec and BasicEntityTypeRegistry
-    private void checkIsImplementation(Class<?> val) {
-        if (!Location.class.isAssignableFrom(val)) throw new IllegalStateException("Implementation "+val+" does not implement "+Location.class.getName());
-        if (val.isInterface()) throw new IllegalStateException("Implementation "+val+" is an interface, but must be a non-abstract class");
-        if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
-    }
 
-    // TODO Duplicates method in EntitySpec, BasicEntityTypeRegistry, and InternalEntityFactory.isNewStyleEntity
-    private void checkIsNewStyleImplementation(Class<?> implClazz) {
-        try {
-            implClazz.getConstructor(new Class[0]);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("Implementation "+implClazz+" must have a no-argument constructor");
-        } catch (SecurityException e) {
-            throw Exceptions.propagate(e);
-        }
-        
-        if (implClazz.isInterface()) throw new IllegalStateException("Implementation "+implClazz+" is an interface, but must be a non-abstract class");
-        if (Modifier.isAbstract(implClazz.getModifiers())) throw new IllegalStateException("Implementation "+implClazz+" is abstract, but must be a non-abstract class");
-    }
 }
