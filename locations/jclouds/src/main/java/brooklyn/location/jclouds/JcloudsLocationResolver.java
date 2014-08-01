@@ -46,9 +46,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 @SuppressWarnings("rawtypes")
-public class JcloudsResolver implements LocationResolver {
+public class JcloudsLocationResolver implements LocationResolver {
 
-    public static final Logger log = LoggerFactory.getLogger(JcloudsResolver.class);
+    public static final Logger log = LoggerFactory.getLogger(JcloudsLocationResolver.class);
     
     public static final String JCLOUDS = "jclouds";
     
