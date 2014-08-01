@@ -18,14 +18,28 @@
  */
 package brooklyn.basic;
 
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
 import brooklyn.entity.trait.Identifiable;
 
 /**
  * Super-type of entity, location, policy and enricher.
  */
 public interface BrooklynObject extends Identifiable {
+    
     /**
      * A display name; recommended to be a concise single-line description.
      */
     String getDisplayName();
+    
+    /**
+     * A set of tags associated to this adjunct.
+     */
+    @Nonnull Set<Object> getTags();
+
+    /** whether the given object is contained as a tag */
+    boolean containsTag(Object tag);
+    
 }

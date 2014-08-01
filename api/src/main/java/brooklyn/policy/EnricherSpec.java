@@ -84,6 +84,11 @@ public class EnricherSpec<T extends Enricher> extends AbstractBrooklynObjectSpec
         checkIsNewStyleImplementation(type);
     }
     
+    public EnricherSpec<T> uniqueTag(String uniqueTag) {
+        flags.put("uniqueTag", uniqueTag);
+        return this;
+    }
+    
     public EnricherSpec<T> configure(Map<?,?> val) {
         for (Map.Entry<?, ?> entry: val.entrySet()) {
             if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");

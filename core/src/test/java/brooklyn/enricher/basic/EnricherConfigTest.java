@@ -16,47 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy.basic;
+package brooklyn.enricher.basic;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import java.util.Map;
-
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.enricher.basic.BasicEnricherTest.MyEnricher;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Test that configuration properties are usable and inherited correctly.
  */
 public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
     
-    // TODO These tests are a copy of PolicyConfigMapUsageTest, which is a code smell.
+    // TODO These tests are a copy of PolicyConfigTest, which is a code smell.
     // However, the src/main/java code does not contain as much duplication.
-    
-    public static class MyEnricher extends AbstractEnricher {
-        @SetFromFlag("intKey")
-        public static final BasicConfigKey<Integer> INT_KEY = new BasicConfigKey<Integer>(Integer.class, "bkey", "b key");
-        
-        @SetFromFlag("strKey")
-        public static final ConfigKey<String> STR_KEY = new BasicConfigKey<String>(String.class, "akey", "a key");
-        public static final ConfigKey<Integer> INT_KEY_WITH_DEFAULT = new BasicConfigKey<Integer>(Integer.class, "ckey", "c key", 1);
-        public static final ConfigKey<String> STR_KEY_WITH_DEFAULT = new BasicConfigKey<String>(String.class, "strKey", "str key", "str key default");
-        
-        MyEnricher(Map flags) {
-            super(flags);
-        }
-        
-        MyEnricher() {
-            super();
-        }
-    }
     
     private BasicConfigKey<String> differentKey = new BasicConfigKey<String>(String.class, "differentkey", "diffval");
 
@@ -166,4 +144,5 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY_WITH_DEFAULT), "str key default");
     }
+    
 }

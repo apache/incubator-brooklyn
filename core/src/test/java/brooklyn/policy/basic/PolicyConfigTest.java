@@ -22,47 +22,27 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.policy.basic.BasicPolicyTest.MyPolicy;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.util.concurrent.Callables;
 
 /**
  * Test that configuration properties are usable and inherited correctly.
  */
-public class PolicyConfigMapUsageTest extends BrooklynAppUnitTestSupport {
+public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
     private static final int EARLY_RETURN_GRACE = 10;
 
-    public static class MyPolicy extends AbstractPolicy {
-        @SetFromFlag("intKey")
-        public static final BasicConfigKey<Integer> INT_KEY = new BasicConfigKey<Integer>(Integer.class, "bkey", "b key");
-        
-        @SetFromFlag("strKey")
-        public static final ConfigKey<String> STR_KEY = new BasicConfigKey<String>(String.class, "akey", "a key");
-        public static final ConfigKey<Integer> INT_KEY_WITH_DEFAULT = new BasicConfigKey<Integer>(Integer.class, "ckey", "c key", 1);
-        public static final ConfigKey<String> STR_KEY_WITH_DEFAULT = new BasicConfigKey<String>(String.class, "strKey", "str key", "str key default");
-        
-        MyPolicy(Map flags) {
-            super(flags);
-        }
-        
-        MyPolicy() {
-            super();
-        }
-    }
-    
     private BasicConfigKey<String> differentKey = new BasicConfigKey<String>(String.class, "differentkey", "diffval");
 
     @Test

@@ -18,6 +18,10 @@
  */
 package brooklyn.util.guava;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import javax.annotation.Nullable;
 
 import com.google.common.reflect.TypeToken;
@@ -67,6 +71,21 @@ public class TypeTokens {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static <T> Class<T> getRawRawType(TypeToken<T> token) {
         return (Class)token.getRawType();
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <T> TypeToken<Set<T>> setOf(Class<T> type) {
+        return (TypeToken) TypeToken.of(Set.class);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <K,V> TypeToken<Map<K,V>> mapOf(Class<K> key, Class<V> value) {
+        return (TypeToken) TypeToken.of(Map.class);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <T> TypeToken<List<T>> listOf(Class<T> type) {
+        return (TypeToken) TypeToken.of(List.class);
     }
     
 }

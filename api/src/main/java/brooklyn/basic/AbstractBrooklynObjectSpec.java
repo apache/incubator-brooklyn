@@ -20,10 +20,14 @@ package brooklyn.basic;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
+import java.util.Set;
 
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObjectSpec<T,K>> implements Serializable {
 
@@ -31,6 +35,7 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
     
     private final Class<T> type;
     private String displayName;
+    private Set<Object> tags = MutableSet.of();
 
     protected AbstractBrooklynObjectSpec(Class<T> type) {
         checkValidType(type);
@@ -54,6 +59,17 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
         return self();
     }
     
+    public K tag(Object tag) {
+        tags.add(tag);
+        return self();
+    }
+
+    /** adds the given tags */
+    public K tags(Iterable<Object> tagsToAdd) {
+        Iterables.addAll(this.tags, tagsToAdd);
+        return self();
+    }
+
     /**
      * @return The type of the enricher
      */
@@ -66,6 +82,10 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
      */
     public final String getDisplayName() {
         return displayName;
+    }
+
+    public final Set<Object> getTags() {
+        return ImmutableSet.copyOf(tags);
     }
 
     // TODO Duplicates method in BasicEntityTypeRegistry and InternalEntityFactory.isNewStyleEntity

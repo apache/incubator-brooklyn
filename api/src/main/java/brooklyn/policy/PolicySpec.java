@@ -84,6 +84,11 @@ public class PolicySpec<T extends Policy> extends AbstractBrooklynObjectSpec<T,P
         checkIsNewStyleImplementation(type);
     }
     
+    public PolicySpec<T> uniqueTag(String uniqueTag) {
+        flags.put("uniqueTag", uniqueTag);
+        return this;
+    }
+
     public PolicySpec<T> configure(Map<?,?> val) {
         for (Map.Entry<?, ?> entry: val.entrySet()) {
             if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");

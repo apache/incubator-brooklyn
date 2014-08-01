@@ -106,6 +106,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     public static <T extends Entity> EntitySpec<T> create(EntitySpec<T> spec) {
         EntitySpec<T> result = create(spec.getType())
                 .displayName(spec.getDisplayName())
+                .tags(spec.getTags())
                 .additionalInterfaces(spec.getAdditionalInterfaces())
                 .configure(spec.getConfig())
                 .configure(spec.getFlags())

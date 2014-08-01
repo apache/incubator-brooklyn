@@ -95,7 +95,9 @@ public class InternalLocationFactory extends InternalFactory {
             managementContext.prePreManage(loc);
 
             if (spec.getDisplayName()!=null)
-                ((AbstractLocation)loc).setName(spec.getDisplayName());
+                ((AbstractLocation)loc).setDisplayName(spec.getDisplayName());
+            
+            ((AbstractLocation)loc).addTags(spec.getTags());
             
             if (isNewStyleLocation(clazz)) {
                 ((AbstractLocation)loc).setManagementContext(managementContext);
