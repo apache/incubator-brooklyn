@@ -29,10 +29,10 @@ import io.airlift.command.Option;
 import io.airlift.command.OptionType;
 import io.airlift.command.ParseException;
 
-import java.io.BufferedReader;
 import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -132,6 +132,15 @@ public class Main {
         @Option(type = OptionType.GLOBAL, name = { "-q", "--quiet" }, description = "Quiet mode")
         public boolean quiet = false;
 
+        @VisibleForTesting
+        protected PrintStream stdout = System.out;
+        
+        @VisibleForTesting
+        protected PrintStream stderr = System.err;
+
+        @VisibleForTesting
+        protected InputStream stdin = System.in;
+
         public ToStringHelper string() {
             return Objects.toStringHelper(getClass())
                     .add("verbose", verbose)
@@ -152,14 +161,14 @@ public class Main {
         public List<String> arguments = new ArrayList<String>();
         
         /** @return true iff there are arguments; it also sys.errs a warning in that case  */
-        protected boolean warnIfNoArguments() {
+        protected boolean warnIfArguments() {
             if (arguments.isEmpty()) return false;
-            System.err.println("Invalid subcommand arguments: "+Strings.join(arguments, " "));
+            stderr.println("Invalid subcommand arguments: "+Strings.join(arguments, " "));
             return true;
         }
         
         /** throw {@link ParseException} iff there are arguments */
-        protected void failIfNoArguments() {
+        protected void failIfArguments() {
             if (arguments.isEmpty()) return ;
             throw new ParseException("Invalid subcommand arguments '"+Strings.join(arguments, " ")+"'");
         }
@@ -190,7 +199,7 @@ public class Main {
         @Override
         public Void call() throws Exception {
             if (log.isDebugEnabled()) log.debug("Invoked info command: {}", this);
-            warnIfNoArguments();
+            warnIfArguments();
 
             System.out.println(BANNER);
             System.out.println("Version:  " + BrooklynVersion.get());
@@ -422,17 +431,17 @@ public class Main {
         public Void call() throws Exception {
             // Configure launcher
             BrooklynLauncher launcher;
-            failIfNoArguments();
+            failIfArguments();
             try {
                 if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
                 
-                if (!quiet) System.out.println(BANNER);
+                if (!quiet) stdout.println(BANNER);
     
                 if (verbose) {
                     if (app != null) {
-                        System.out.println("Launching brooklyn app: " + app + " in " + locations);
+                        stdout.println("Launching brooklyn app: " + app + " in " + locations);
                     } else {
-                        System.out.println("Launching brooklyn server (no app)");
+                        stdout.println("Launching brooklyn server (no app)");
                     }
                 }
     
@@ -661,7 +670,7 @@ public class Main {
             if (stopOnKeyPress) {
                 // Wait for the user to type a key
                 log.info("Server started. Press return to stop.");
-                System.in.read();
+                stdin.read();
                 stopAllApps(ctx.getApplications());
             } else {
                 // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
