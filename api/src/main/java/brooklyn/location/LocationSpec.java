@@ -90,6 +90,10 @@ public class LocationSpec<T extends Location> implements Serializable {
         this.type = type;
     }
 
+    /**
+     * @deprecated since 0.7.0; instead let the management context pick a random+unique id
+     */
+    @Deprecated
     public LocationSpec<T> id(String val) {
         id = val;
         return this;
@@ -169,7 +173,10 @@ public class LocationSpec<T extends Location> implements Serializable {
     
     /**
      * @return The id of the location to be created, or null if brooklyn can auto-generate an id
+     * 
+     * @deprecated since 0.7.0; instead let the management context pick a random+unique id
      */
+    @Deprecated
     public String getId() {
         return id;
     }

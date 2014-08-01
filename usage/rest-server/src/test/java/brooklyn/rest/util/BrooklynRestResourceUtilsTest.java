@@ -100,7 +100,7 @@ public class BrooklynRestResourceUtilsTest {
         assertEquals(subentityRetrieved.getDisplayName(), "subentity");
         
         Policy subappPolicy = util.getPolicy(app.getId(), subentity.getId(), "mypolicy");
-        assertEquals(subappPolicy.getName(), "mypolicy");
+        assertEquals(subappPolicy.getDisplayName(), "mypolicy");
     }
 
     public interface MyInterface {

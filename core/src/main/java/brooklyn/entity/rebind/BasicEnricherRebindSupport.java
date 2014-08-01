@@ -48,7 +48,7 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
     public void reconstruct(RebindContext rebindContext, EnricherMemento memento) {
         if (LOG.isTraceEnabled()) LOG.trace("Reconstructing enricher: {}", memento.toVerboseString());
 
-        enricher.setName(memento.getDisplayName());
+        enricher.setDisplayName(memento.getDisplayName());
         
         // TODO entity does config-lookup differently; the memento contains the config keys.
         // BasicEntityMemento.postDeserialize uses the injectTypeClass to call EntityTypes.getDefinedConfigKeys(clazz)

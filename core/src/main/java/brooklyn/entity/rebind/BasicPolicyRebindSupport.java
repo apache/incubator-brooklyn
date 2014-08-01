@@ -48,7 +48,7 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
     public void reconstruct(RebindContext rebindContext, PolicyMemento memento) {
         if (LOG.isTraceEnabled()) LOG.trace("Reconstructing policy: {}", memento.toVerboseString());
 
-        policy.setName(memento.getDisplayName());
+        policy.setDisplayName(memento.getDisplayName());
 
         // TODO entity does config-lookup differently; the memento contains the config keys.
         // BasicEntityMemento.postDeserialize uses the injectTypeClass to call EntityTypes.getDefinedConfigKeys(clazz)

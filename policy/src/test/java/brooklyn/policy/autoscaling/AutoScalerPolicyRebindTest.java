@@ -91,7 +91,7 @@ public class AutoScalerPolicyRebindTest extends RebindTestFixtureWithApp {
         DynamicCluster newCluster = (DynamicCluster) Iterables.getOnlyElement(newApp.getChildren());
         AutoScalerPolicy newPolicy = (AutoScalerPolicy) Iterables.getOnlyElement(newCluster.getPolicies());
 
-        assertEquals(newPolicy.getName(), "myname");
+        assertEquals(newPolicy.getDisplayName(), "myname");
         assertEquals(newPolicy.getConfig(AutoScalerPolicy.METRIC), METRIC_SENSOR);
         assertEquals(newPolicy.getConfig(AutoScalerPolicy.ENTITY_WITH_METRIC), newCluster);
         assertEquals(newPolicy.getConfig(AutoScalerPolicy.METRIC_UPPER_BOUND), 1);

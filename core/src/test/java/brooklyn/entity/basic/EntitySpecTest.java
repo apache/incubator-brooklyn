@@ -89,7 +89,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
         
         Policy policy = Iterables.getOnlyElement(entity.getPolicies());
         assertTrue(policy instanceof MyPolicy, "policy="+policy);
-        assertEquals(policy.getName(), "mypolicyname");
+        assertEquals(policy.getDisplayName(), "mypolicyname");
         assertEquals(policy.getConfig(MyPolicy.CONF1), "myconf1val");
     }
     
@@ -112,7 +112,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
         
         Enricher enricher = Iterables.getOnlyElement(entity.getEnrichers());
         assertTrue(enricher instanceof MyEnricher, "enricher="+enricher);
-        assertEquals(enricher.getName(), "myenrichername");
+        assertEquals(enricher.getDisplayName(), "myenrichername");
         assertEquals(enricher.getConfig(MyEnricher.CONF1), "myconf1val");
     }
     

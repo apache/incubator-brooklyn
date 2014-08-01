@@ -16,26 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.basic;
 
-import brooklyn.basic.BrooklynObject;
-import brooklyn.mementos.Memento;
+import brooklyn.entity.rebind.Rebindable;
 
-import com.google.common.annotations.Beta;
-
-/**
- * Handler called on all exceptions to do with persistence.
- * 
- * @author aled
- */
-@Beta
-public interface PersistenceExceptionHandler {
-
-    void stop();
-
-    void onGenerateMementoFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
-    
-    void onPersistMementoFailed(Memento memento, Exception e);
-    
-    void onDeleteMementoFailed(String id, Exception e);
+public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
 }

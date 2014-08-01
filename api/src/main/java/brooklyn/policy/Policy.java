@@ -43,7 +43,10 @@ public interface Policy extends EntityAdjunct, Rebindable, Configurable {
      * Get the name assigned to this policy.
      *
      * @return the name assigned to the policy.
+     * 
+     * @deprecated since 0.7; use {@link #getDisplayName()}
      */
+    @Deprecated
     @Override
     String getName();
 

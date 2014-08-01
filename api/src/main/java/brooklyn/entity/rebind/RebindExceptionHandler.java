@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.rebind;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
@@ -34,15 +35,7 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface RebindExceptionHandler {
 
-    void onLoadBrooklynMementoFailed(String msg, Exception e);
-    
-    void onLoadLocationMementoFailed(String msg, Exception e);
-
-    void onLoadEntityMementoFailed(String msg, Exception e);
-    
-    void onLoadPolicyMementoFailed(String msg, Exception e);
-    
-    void onLoadEnricherMementoFailed(String msg, Exception e);
+    void onLoadMementoFailed(BrooklynObjectType type, String msg, Exception e);
     
     /**
      * @return the entity to use in place of the missing one, or null (if hasn't thrown an exception)
@@ -64,41 +57,17 @@ public interface RebindExceptionHandler {
      */
     Enricher onDanglingEnricherRef(String id);
 
-    void onCreateLocationFailed(String locId, String locType, Exception e);
+    void onCreateFailed(BrooklynObjectType type, String id, String instanceType, Exception e);
 
-    void onCreateEntityFailed(String entityId, String entityType, Exception e);
+    void onNotFound(BrooklynObjectType type, String id);
 
-    void onCreatePolicyFailed(String id, String type, Exception e);
-
-    void onCreateEnricherFailed(String id, String type, Exception e);
-
-    void onLocationNotFound(String id);
-    
-    void onEntityNotFound(String id);
-    
-    void onPolicyNotFound(String id);
-
-    void onPolicyNotFound(String id, String context);
-
-    void onEnricherNotFound(String id);
-
-    void onEnricherNotFound(String id, String context);
-
-    void onRebindEntityFailed(Entity entity, Exception e);
-
-    void onRebindLocationFailed(Location location, Exception e);
-
-    void onRebindPolicyFailed(Policy policy, Exception e);
-
-    void onRebindEnricherFailed(Enricher enricher, Exception e);
+    void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
 
     void onAddPolicyFailed(EntityLocal entity, Policy policy, Exception e);
 
     void onAddEnricherFailed(EntityLocal entity, Enricher enricher, Exception e);
 
-    void onManageLocationFailed(Location location, Exception e);
-
-    void onManageEntityFailed(Entity entity, Exception e);
+    void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
 
     void onDone();
     

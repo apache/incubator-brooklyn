@@ -31,7 +31,7 @@ public class PolicyDescriptor {
     public PolicyDescriptor(Policy policy) {
         this.id = policy.getId();
         this.type = policy.getPolicyType().getName();
-        this.name = policy.getName();
+        this.name = policy.getDisplayName();
     }
     public String getId() {
         return id;

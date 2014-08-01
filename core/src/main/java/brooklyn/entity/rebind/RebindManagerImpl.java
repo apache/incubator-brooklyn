@@ -39,8 +39,8 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
+import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.internal.BrooklynFeatureEnablement;
@@ -314,7 +314,7 @@ public class RebindManagerImpl implements RebindManager {
                     locations.put(locId, location);
                     rebindContext.registerLocation(locId, location);
                 } catch (Exception e) {
-                    exceptionHandler.onCreateLocationFailed(locId, locType, e);
+                    exceptionHandler.onCreateFailed(BrooklynObjectType.LOCATION, locId, locType, e);
                 }
             }
             
@@ -330,7 +330,7 @@ public class RebindManagerImpl implements RebindManager {
                     entities.put(entityId, entity);
                     rebindContext.registerEntity(entityId, entity);
                 } catch (Exception e) {
-                    exceptionHandler.onCreateEntityFailed(entityId, entityType, e);
+                    exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityType, e);
                 }
             }
             
@@ -347,7 +347,7 @@ public class RebindManagerImpl implements RebindManager {
                         policies.put(policyMemento.getId(), policy);
                         rebindContext.registerPolicy(policyMemento.getId(), policy);
                     } catch (Exception e) {
-                        exceptionHandler.onCreatePolicyFailed(policyMemento.getId(), policyMemento.getType(), e);
+                        exceptionHandler.onCreateFailed(BrooklynObjectType.POLICY, policyMemento.getId(), policyMemento.getType(), e);
                     }
                 }
             } else {
@@ -365,7 +365,7 @@ public class RebindManagerImpl implements RebindManager {
                         enrichers.put(enricherMemento.getId(), enricher);
                         rebindContext.registerEnricher(enricherMemento.getId(), enricher);
                     } catch (Exception e) {
-                        exceptionHandler.onCreateEnricherFailed(enricherMemento.getId(), enricherMemento.getType(), e);
+                        exceptionHandler.onCreateFailed(BrooklynObjectType.ENRICHER, enricherMemento.getId(), enricherMemento.getType(), e);
                     }
                 }
             } else {
@@ -383,12 +383,12 @@ public class RebindManagerImpl implements RebindManager {
                 if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
                 if (location == null) {
                     // usually because of creation-failure, when not using fail-fast
-                    exceptionHandler.onLocationNotFound(locMemento.getId());
+                    exceptionHandler.onNotFound(BrooklynObjectType.LOCATION, locMemento.getId());
                 } else {
                     try {
                         ((LocationInternal)location).getRebindSupport().reconstruct(rebindContext, locMemento);
                     } catch (Exception e) {
-                        exceptionHandler.onRebindLocationFailed(location, e);
+                        exceptionHandler.onRebindFailed(BrooklynObjectType.LOCATION, location, e);
                     }
                 }
             }
@@ -402,12 +402,12 @@ public class RebindManagerImpl implements RebindManager {
     
                     if (policy == null) {
                         // usually because of creation-failure, when not using fail-fast
-                        exceptionHandler.onPolicyNotFound(policyMemento.getId());
+                        exceptionHandler.onNotFound(BrooklynObjectType.POLICY, policyMemento.getId());
                     } else {
                         try {
                             policy.getRebindSupport().reconstruct(rebindContext, policyMemento);
                         } catch (Exception e) {
-                            exceptionHandler.onRebindPolicyFailed(policy, e);
+                            exceptionHandler.onRebindFailed(BrooklynObjectType.POLICY, policy, e);
                             rebindContext.unregisterPolicy(policy);
                         }
                     }
@@ -423,12 +423,12 @@ public class RebindManagerImpl implements RebindManager {
         
                     if (enricher == null) {
                         // usually because of creation-failure, when not using fail-fast
-                        exceptionHandler.onEnricherNotFound(enricherMemento.getId());
+                        exceptionHandler.onNotFound(BrooklynObjectType.ENRICHER, enricherMemento.getId());
                     } else {
                         try {
                             enricher.getRebindSupport().reconstruct(rebindContext, enricherMemento);
                         } catch (Exception e) {
-                            exceptionHandler.onRebindEnricherFailed(enricher, e);
+                            exceptionHandler.onRebindFailed(BrooklynObjectType.ENRICHER, enricher, e);
                             rebindContext.unregisterEnricher(enricher);
                         }
                     }
@@ -444,13 +444,13 @@ public class RebindManagerImpl implements RebindManager {
     
                 if (entity == null) {
                     // usually because of creation-failure, when not using fail-fast
-                    exceptionHandler.onEntityNotFound(entityMemento.getId());
+                    exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, entityMemento.getId());
                 } else {
                     try {
                         entityMemento.injectTypeClass(entity.getClass());
                         ((EntityInternal)entity).getRebindSupport().reconstruct(rebindContext, entityMemento);
                     } catch (Exception e) {
-                        exceptionHandler.onRebindEntityFailed(entity, e);
+                        exceptionHandler.onRebindFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
                 }
             }
@@ -467,14 +467,14 @@ public class RebindManagerImpl implements RebindManager {
     
                 if (entity == null) {
                     // usually because of creation-failure, when not using fail-fast
-                    exceptionHandler.onEntityNotFound(entityMemento.getId());
+                    exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, entityMemento.getId());
                 } else {
                     try {
                         entityMemento.injectTypeClass(entity.getClass());
                         ((EntityInternal)entity).getRebindSupport().addPolicies(rebindContext, entityMemento);
                         ((EntityInternal)entity).getRebindSupport().addEnrichers(rebindContext, entityMemento);
                     } catch (Exception e) {
-                        exceptionHandler.onRebindEntityFailed(entity, e);
+                        exceptionHandler.onRebindFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
                 }
             }
@@ -491,7 +491,7 @@ public class RebindManagerImpl implements RebindManager {
                     try {
                         managementContext.getLocationManager().manage(location);
                     } catch (Exception e) {
-                        exceptionHandler.onManageLocationFailed(location, e);
+                        exceptionHandler.onManageFailed(BrooklynObjectType.LOCATION, location, e);
                     }
                 }
             }
@@ -503,12 +503,12 @@ public class RebindManagerImpl implements RebindManager {
                 Entity entity = rebindContext.getEntity(appId);
                 if (entity == null) {
                     // usually because of creation-failure, when not using fail-fast
-                    exceptionHandler.onEntityNotFound(appId);
+                    exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, appId);
                 } else {
                     try {
                         Entities.startManagement((Application)entity, managementContext);
                     } catch (Exception e) {
-                        exceptionHandler.onManageEntityFailed(entity, e);
+                        exceptionHandler.onManageFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
                     apps.add((Application)entity);
                 }
@@ -566,41 +566,11 @@ public class RebindManagerImpl implements RebindManager {
     private Entity newEntity(String entityId, String entityType, Reflections reflections) {
         Class<? extends Entity> entityClazz = (Class<? extends Entity>) reflections.loadClass(entityType);
         
-        if (InternalEntityFactory.isNewStyleEntity(managementContext, entityClazz)) {
-            // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called
-            // TODO Need to rationalise this to move code into methods of InternalEntityFactory.
-            //      The InternalEntityFactory.constructEntity is used in three places:
-            //       1. normal entity creation (through entityManager.createEntity)
-            //       2. rebind (i.e. here)
-            //       3. yaml parsing
-            //      Purpose is to create a new (unconfigured/uninitialised) entity, but that is
-            //      known about by the managementContext and that has things like the right id and 
-            //      a proxy for if another entity needs to reference it during the init phase.
+        if (InternalFactory.isNewStyle(entityClazz)) {
+            // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called.
+            // Creates an uninitialized entity, but that has correct id + proxy.
             InternalEntityFactory entityFactory = managementContext.getEntityFactory();
-            Entity entity = entityFactory.constructEntity(entityClazz);
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
-            if (entity instanceof AbstractApplication) {
-                FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
-            }
-            managementContext.prePreManage(entity);
-            ((AbstractEntity)entity).setManagementContext(managementContext);
-            
-            Class<?> entityInterface;
-            List<Class<?>> additionalInterfaces;
-            try {
-                entityInterface = managementContext.getEntityManager().getEntityTypeRegistry().getEntityTypeOf((Class)entityClazz);
-                additionalInterfaces = Reflections.getAllInterfaces(entityClazz);
-            } catch (IllegalArgumentException e) {
-                // TODO this can happen if it's an app with no annotation, for example; not nice catching exception
-                entityInterface = Entity.class;
-                additionalInterfaces = Reflections.getAllInterfaces(entityClazz);
-            }
-            EntitySpec<Entity> entitySpec = EntitySpec.create((Class)entityInterface)
-                    .additionalInterfaces(additionalInterfaces)
-                    .impl((Class)entityClazz)
-                    .id(entityId);
-
-            ((AbstractEntity)entity).setProxy(entityFactory.createEntityProxy(entitySpec, entity));
+            Entity entity = entityFactory.constructEntity(entityClazz, Reflections.getAllInterfaces(entityClazz), entityId);
             
             return entity;
 

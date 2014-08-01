@@ -127,7 +127,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
         this.lowThresholdConfigKeyName = metric.getName()+".threshold.low";
         this.highThresholdConfigKeyName = metric.getName()+".threshold.high";
         this.model = model;
-        this.strategy = new BalancingStrategy(getName(), model); // TODO: extract interface, inject impl
+        this.strategy = new BalancingStrategy(getDisplayName(), model); // TODO: extract interface, inject impl
         
         // TODO Should re-use the execution manager's thread pool, somehow
         executor = Executors.newSingleThreadScheduledExecutor(newThreadFactory());

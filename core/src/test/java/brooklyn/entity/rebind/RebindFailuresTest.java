@@ -40,6 +40,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
+import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.EntityManager;
 import brooklyn.management.internal.LocalManagementContext;
@@ -101,10 +102,10 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         }
 
         // exception handler should have been told about failure
-        assertEquals(toEntityIds(exceptionHandler.rebindEntityFailures.keySet()), ImmutableSet.of(origFailingE.getId()));
+        assertEquals(toIds(exceptionHandler.rebindFailures.keySet()), ImmutableSet.of(origFailingE.getId()));
 
         // Expect that on failure will have continued with rebind, and then report all problems
-        assertEquals(toEntityIds(newEntityManager.getEntities()), ImmutableSet.of(origApp.getId(), origFailingE.getId()));
+        assertEquals(toIds(newEntityManager.getEntities()), ImmutableSet.of(origApp.getId(), origFailingE.getId()));
     }
     
     @Test
@@ -127,10 +128,10 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         }
 
         // exception handler should have been told about failure
-        assertEquals(toEntityIds(exceptionHandler.rebindEntityFailures.keySet()), ImmutableSet.of(origFailingE.getId()));
+        assertEquals(toIds(exceptionHandler.rebindFailures.keySet()), ImmutableSet.of(origFailingE.getId()));
         
         // entities will not have been managed
-        assertEquals(toEntityIds(newEntityManager.getEntities()), ImmutableSet.of());
+        assertEquals(toIds(newEntityManager.getEntities()), ImmutableSet.of());
     }
     
     @Test
@@ -148,10 +149,10 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         newApp = rebind(newManagementContext, exceptionHandler);
 
         // exception handler should have been told about failure
-        assertEquals(toEntityIds(exceptionHandler.rebindEntityFailures.keySet()), ImmutableSet.of(origFailingE.getId()));
+        assertEquals(toIds(exceptionHandler.rebindFailures.keySet()), ImmutableSet.of(origFailingE.getId()));
         
         // TODO How should brooklyn indicate that this entity's rebind failed? What can we assert?
-        assertEquals(toEntityIds(newEntityManager.getEntities()), ImmutableSet.of(origApp.getId(), origFailingE.getId()));
+        assertEquals(toIds(newEntityManager.getEntities()), ImmutableSet.of(origApp.getId(), origFailingE.getId()));
     }
     
     @Test
@@ -203,8 +204,8 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         assertFalse(newEnricher.isPresent(), "enricher="+newEnricher);
     }
 
-    private Set<String> toEntityIds(Iterable<? extends Entity> entities) {
-        return ImmutableSet.copyOf(Iterables.transform(entities, EntityFunctions.id()));
+    private Set<String> toIds(Iterable<? extends Identifiable> instances) {
+        return ImmutableSet.copyOf(Iterables.transform(instances, EntityFunctions.id()));
     }
     
     public static class MyPolicyFailingImpl extends AbstractPolicy {

@@ -16,26 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.basic;
 
-import brooklyn.basic.BrooklynObject;
-import brooklyn.mementos.Memento;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.Identifiers;
 
-import com.google.common.annotations.Beta;
+public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
 
-/**
- * Handler called on all exceptions to do with persistence.
- * 
- * @author aled
- */
-@Beta
-public interface PersistenceExceptionHandler {
-
-    void stop();
-
-    void onGenerateMementoFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
+    @SetFromFlag(value="id")
+    private String id = Identifiers.makeRandomId(8);
     
-    void onPersistMementoFailed(Memento memento, Exception e);
-    
-    void onDeleteMementoFailed(String id, Exception e);
+    @Override
+    public String getId() {
+        return id;
+    }
 }

@@ -43,7 +43,10 @@ public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
 
     /**
      * Get the name assigned to this enricher.
+     * 
+     * @deprecated since 0.7; use {@link #getDisplayName()}
      */
+    @Deprecated
     @Override
     String getName();
 

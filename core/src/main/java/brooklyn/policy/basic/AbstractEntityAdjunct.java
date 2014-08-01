@@ -31,13 +31,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.AbstractBrooklynObject;
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.AttributeSensor;
@@ -53,7 +55,6 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
@@ -64,7 +65,7 @@ import com.google.common.collect.Maps;
 /**
  * Common functionality for policies and enrichers
  */
-public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurable {
+public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject implements BrooklynObjectInternal, EntityAdjunct, Configurable {
     private static final Logger log = LoggerFactory.getLogger(AbstractEntityAdjunct.class);
 
     private volatile ManagementContext managementContext;
@@ -88,9 +89,6 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     protected final AdjunctType adjunctType = new AdjunctType(this);
 
     @SetFromFlag
-    protected String id = Identifiers.makeRandomId(8);
-    
-    @SetFromFlag
     protected String name;
     
     protected transient EntityLocal entity;
@@ -106,7 +104,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     
     public AbstractEntityAdjunct(@SuppressWarnings("rawtypes") Map flags) {
         inConstruction = true;
-        _legacyConstruction = !InternalPolicyFactory.FactoryConstructionTracker.isConstructing();
+        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
         _legacyNoConstructionInit = (flags != null) && Boolean.TRUE.equals(flags.get("noConstructionInit"));
         
         if (!_legacyConstruction && flags!=null && !flags.isEmpty()) {
@@ -173,7 +171,7 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
             //TODO inconsistent with entity and location, where name is legacy and displayName is encouraged!
             //'displayName' is a legacy way to refer to a policy's name
             Preconditions.checkArgument(flags.get("displayName") instanceof CharSequence, "'displayName' property should be a string");
-            setName(flags.remove("displayName").toString());
+            setDisplayName(flags.remove("displayName").toString());
         }
     }
     
@@ -271,18 +269,27 @@ public abstract class AbstractEntityAdjunct implements EntityAdjunct, Configurab
     }
     
     @Override
-    public String getName() { 
+    public String getDisplayName() {
         if (name!=null && name.length()>0) return name;
         return getClass().getCanonicalName();
     }
     
-    public void setName(String name) { this.name = name; }
-
     @Override
-    public String getId() { return id; }
+    @Deprecated
+    public String getName() {
+        return getDisplayName();
+    }
     
-    public void setId(String id) { this.id = id; }
- 
+    public void setDisplayName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @deprecated since 0.7.0; see {@link #setDisplayName(String)}
+     */
+    @Deprecated
+    public void setName(String name) { setDisplayName(name); }
+
     public void setEntity(EntityLocal entity) {
         if (destroyed.get()) throw new IllegalStateException("Cannot set entity on a destroyed entity adjunct");
         this.entity = entity;

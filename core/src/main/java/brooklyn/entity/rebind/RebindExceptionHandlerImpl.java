@@ -27,6 +27,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
@@ -52,10 +53,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<String> missingLocations = Sets.newConcurrentHashSet();
     protected final Set<String> missingPolicies = Sets.newConcurrentHashSet();
     protected final Set<String> missingEnrichers = Sets.newConcurrentHashSet();
-    protected final Set<String> creationFailedEntities = Sets.newConcurrentHashSet();
-    protected final Set<String> creationFailedLocations = Sets.newConcurrentHashSet();
-    protected final Set<String> creationFailedPolicies = Sets.newConcurrentHashSet();
-    protected final Set<String> creationFailedEnrichers = Sets.newConcurrentHashSet();
+    protected final Set<String> creationFailedIds = Sets.newConcurrentHashSet();
     protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
     protected final Set<Exception> loadPolicyFailures = Sets.newConcurrentHashSet();
     protected final List<Exception> exceptions = Collections.synchronizedList(Lists.<Exception>newArrayList());
@@ -99,63 +97,30 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
     
     @Override
-    public void onLoadBrooklynMementoFailed(String msg, Exception e) {
-        onLoadMementoFailure(msg, e);
-    }
-    
-    @Override
-    public void onLoadLocationMementoFailed(String msg, Exception e) {
-        onLoadMementoFailure(msg, e);
-    }
-    
-    @Override
-    public void onLoadEntityMementoFailed(String msg, Exception e) {
-        onLoadMementoFailure(msg, e);
-    }
-    
-    @Override
-    public void onLoadPolicyMementoFailed(String msg, Exception e) {
+    public void onLoadMementoFailed(BrooklynObjectType type, String msg, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem loading memento: "+msg;
         
-        switch (loadPolicyFailureMode) {
-        case FAIL_FAST:
-            throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
-        case FAIL_AT_END:
-            loadPolicyFailures.add(new IllegalStateException(errmsg, e));
-            break;
-        case CONTINUE:
-            LOG.warn(errmsg+"; continuing", e);
-            break;
-        default:
-            throw new IllegalStateException("Unexpected state '"+loadPolicyFailureMode+"' for loadPolicyFailureMode");
+        switch (type) {
+            case POLICY:
+            case ENRICHER:
+                switch (loadPolicyFailureMode) {
+                    case FAIL_FAST:
+                        throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
+                    case FAIL_AT_END:
+                        loadPolicyFailures.add(new IllegalStateException(errmsg, e));
+                        break;
+                    case CONTINUE:
+                        LOG.warn(errmsg+"; continuing", e);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected state '"+loadPolicyFailureMode+"' for loadPolicyFailureMode");
+                }
+                break;
+            default:
+                exceptions.add(new IllegalStateException(errmsg, e));
+                onErrorImpl(errmsg, e);
         }
-    }
-    
-    @Override
-    public void onLoadEnricherMementoFailed(String msg, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem loading memento: "+msg;
-        
-        switch (loadPolicyFailureMode) {
-        case FAIL_FAST:
-            throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
-        case FAIL_AT_END:
-            loadPolicyFailures.add(new IllegalStateException(errmsg, e));
-            break;
-        case CONTINUE:
-            LOG.warn(errmsg+"; continuing", e);
-            break;
-        default:
-            throw new IllegalStateException("Unexpected state '"+loadPolicyFailureMode+"' for loadPolicyFailureMode");
-        }
-    }
-    
-    protected void onLoadMementoFailure(String msg, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem loading memento: "+msg;
-        exceptions.add(new IllegalStateException(errmsg, e));
-        onErrorImpl(errmsg, e);
     }
 
     @Override
@@ -203,151 +168,51 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
 
     @Override
-    public void onCreateLocationFailed(String id, String type, Exception e) {
+    public void onCreateFailed(BrooklynObjectType type, String id, String instanceType, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem creating location "+id+" of type "+type;
-        creationFailedLocations.add(id);
+        String errmsg = "problem creating "+type+" "+id+" of type "+instanceType;
+        creationFailedIds.add(id);
         exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
     @Override
-    public void onCreateEntityFailed(String id, String type, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem creating entity "+id+" of type "+type;
-        creationFailedEntities.add(id);
-        exceptions.add(new IllegalStateException(errmsg, e));
-        onErrorImpl(errmsg, e);
-    }
-
-
-    @Override
-    public void onCreatePolicyFailed(String id, String type, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem creating policy "+id+" of type "+type;
-        creationFailedPolicies.add(id);
-        exceptions.add(new IllegalStateException(errmsg, e));
-        onErrorImpl(errmsg, e);
-    }
-    
-    @Override
-    public void onCreateEnricherFailed(String id, String type, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem creating policy "+id+" of type "+type;
-        creationFailedEnrichers.add(id);
-        exceptions.add(new IllegalStateException(errmsg, e));
-        onErrorImpl(errmsg, e);
-    }
-
-    @Override
-    public void onLocationNotFound(String id) {
-        if (creationFailedLocations.contains(id)) {
+    public void onNotFound(BrooklynObjectType type, String id) {
+        if (creationFailedIds.contains(id)) {
             // already know about this; ignore
         } else {
-            String errmsg = "location '"+id+"' not found";
+            String errmsg = type+" '"+id+"' not found";
             exceptions.add(new IllegalStateException(errmsg));
             onErrorImpl(errmsg);
         }
     }
     
     @Override
-    public void onEntityNotFound(String id) {
-        if (creationFailedEntities.contains(id)) {
-            // already know about this; ignore
-        } else {
-            String errmsg = "entity '"+id+"' not found";
-            exceptions.add(new IllegalStateException(errmsg));
-            onErrorImpl(errmsg);
-        }
-    }
-
-    @Override
-    public void onPolicyNotFound(String id) {
-        onPolicyNotFound(id, null);
-    }
-    
-    @Override
-    public void onPolicyNotFound(String id, String context) {
-        if (creationFailedPolicies.contains(id)) {
-            // already know about this; ignore
-        } else {
-            String errmsg = "policy '"+id+"' not found" + (context == null ? "" : "("+context+")");
-            exceptions.add(new IllegalStateException(errmsg));
-            onErrorImpl(errmsg);
-        }
-    }
-
-    @Override
-    public void onEnricherNotFound(String id) {
-        onEnricherNotFound(id, null);
-    }
-    
-    @Override
-    public void onEnricherNotFound(String id, String context) {
-        if (creationFailedEnrichers.contains(id)) {
-            // already know about this; ignore
-        } else {
-            String errmsg = "enricher '"+id+"' not found" + (context == null ? "" : "("+context+")");
-            exceptions.add(new IllegalStateException(errmsg));
-            onErrorImpl(errmsg);
-        }
-    }
-
-    @Override
-    public void onRebindLocationFailed(Location location, Exception e) {
+    public void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding location "+location.getId()+" ("+location+")";
+        String errmsg = "problem rebinding "+type+" "+instance.getId()+" ("+instance+")";
         
-        exceptions.add(new IllegalStateException(errmsg, e));
-        onErrorImpl(errmsg, e);
-    }
-
-    @Override
-    public void onRebindEntityFailed(Entity entity, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding entity "+entity.getId()+" ("+entity+")";
-        
-        exceptions.add(new IllegalStateException(errmsg, e));
-        onErrorImpl(errmsg, e);
-    }
-
-    @Override
-    public void onRebindPolicyFailed(Policy policy, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding plicy "+policy.getId()+" ("+policy+")";
-        
-        switch (addPolicyFailureMode) {
-        case FAIL_FAST:
-            throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
-        case FAIL_AT_END:
-            addPolicyFailures.add(new IllegalStateException(errmsg, e));
-            break;
-        case CONTINUE:
-            LOG.warn(errmsg+"; continuing", e);
-            creationFailedPolicies.add(policy.getId());
+        switch (type) {
+        case ENRICHER:
+        case POLICY:
+            switch (addPolicyFailureMode) {
+            case FAIL_FAST:
+                throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
+            case FAIL_AT_END:
+                addPolicyFailures.add(new IllegalStateException(errmsg, e));
+                break;
+            case CONTINUE:
+                LOG.warn(errmsg+"; continuing", e);
+                creationFailedIds.add(instance.getId());
+                break;
+            default:
+                throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
+            }
             break;
         default:
-            throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
-        }
-    }
-
-    @Override
-    public void onRebindEnricherFailed(Enricher enricher, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding enricher "+enricher.getId()+" ("+enricher+")";
-        
-        switch (addPolicyFailureMode) {
-        case FAIL_FAST:
-            throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
-        case FAIL_AT_END:
-            addPolicyFailures.add(new IllegalStateException(errmsg, e));
+            exceptions.add(new IllegalStateException(errmsg, e));
+            onErrorImpl(errmsg, e);
             break;
-        case CONTINUE:
-            LOG.warn(errmsg+"; continuing", e);
-            creationFailedEnrichers.add(enricher.getId());
-            break;
-        default:
-            throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
         }
     }
 
@@ -390,23 +255,14 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
 
     @Override
-    public void onManageLocationFailed(Location location, Exception e) {
+    public void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem managing location "+location.getId()+" ("+location+")";
+        String errmsg = "problem managing "+type+" "+instance.getId()+" ("+instance+")";
         
         exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);
     }
 
-    @Override
-    public void onManageEntityFailed(Entity entity, Exception e) {
-        Exceptions.propagateIfFatal(e);
-        String errmsg = "problem managing entity "+entity.getId()+" ("+entity+")";
-        
-        exceptions.add(new IllegalStateException(errmsg, e));
-        onErrorImpl(errmsg, e);
-    }
-    
     protected void onErrorImpl(String errmsg) {
         onErrorImpl(errmsg, null);
     }

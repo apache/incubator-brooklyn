@@ -163,7 +163,10 @@ public class EntitySpec<T extends Entity> implements Serializable {
     
     /**
      * @return The id to use when creating the entity, or null if allow brooklyn to generate a unique id.
+    /**
+     * @deprecated since 0.7.0; instead let the management context pick a random+unique id
      */
+    @Deprecated
     public String getId() {
         return id;
     }
@@ -253,6 +256,10 @@ public class EntitySpec<T extends Entity> implements Serializable {
         return locations;
     }
 
+    /**
+     * @deprecated since 0.7.0; instead let the management context pick a random+unique id
+     */
+    @Deprecated
     public EntitySpec<T> id(String val) {
         checkMutable();
         id = val;
