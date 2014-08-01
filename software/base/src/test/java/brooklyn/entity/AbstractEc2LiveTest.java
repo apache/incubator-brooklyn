@@ -100,8 +100,8 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
 
     @Test(groups = {"Live"})
     public void test_CentOS_6_3() throws Exception {
-        // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-7d7bfc14", "hardwareId", SMALL_HARDWARE_ID));
+        // Image: {id=us-east-1/ami-a96b01c0, providerId=ami-a96b01c0, name=CentOS-6.3-x86_64-GA-EBS-02-85586466-5b6c-4495-b580-14f72b4bcf51-ami-bb9af1d2.1, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.3, description=aws-marketplace/CentOS-6.3-x86_64-GA-EBS-02-85586466-5b6c-4495-b580-14f72b4bcf51-ami-bb9af1d2.1, is64Bit=true}, description=CentOS-6.3-x86_64-GA-EBS-02 on EBS x86_64 20130527:1219, version=bb9af1d2.1, status=AVAILABLE[available], loginUser=root, userMetadata={owner=679593333241, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}})
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-a96b01c0", "hardwareId", SMALL_HARDWARE_ID));
     }
 
     @Test(groups = {"Live"})
