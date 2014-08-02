@@ -106,9 +106,10 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             boolean changed = members.add(member);
             if (changed) {
                 log.debug("Group {} got new member {}", this, member);
-                emit(MEMBER_ADDED, member);
                 setAttribute(GROUP_SIZE, getCurrentSize());
                 setAttribute(GROUP_MEMBERS, getMembers());
+                // emit after the above so listeners can use getMembers() and getCurrentSize()
+                emit(MEMBER_ADDED, member);
 
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
                     Optional<Entity> result = Iterables.tryFind(getChildren(), Predicates.equalTo(member));
@@ -137,9 +138,11 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             boolean changed = (member != null && members.remove(member));
             if (changed) {
                 log.debug("Group {} lost member {}", this, member);
-                emit(MEMBER_REMOVED, member);
+                // TODO ideally the following 3 are synched
                 setAttribute(GROUP_SIZE, getCurrentSize());
                 setAttribute(GROUP_MEMBERS, getMembers());
+                // emit after the above so listeners can use getMembers() and getCurrentSize()
+                emit(MEMBER_REMOVED, member);
 
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
                     Optional<Entity> result = Iterables.tryFind(getChildren(), new Predicate<Entity>() {
