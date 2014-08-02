@@ -179,6 +179,30 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
+    public void resizeDownByTwoAndDownByOne() throws Exception {
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure("factory", new EntityFactory() {
+                    @Override public Entity newEntity(Map flags, Entity parent) {
+                        return new TestEntityImpl(flags);
+                    }}));
+
+        cluster.start(ImmutableList.of(loc));
+
+        cluster.resize(4);
+        assertEquals(Iterables.size(Entities.descendants(cluster, TestEntity.class)), 4);
+        
+        // check delta of 2 and delta of 1, because >1 is handled differently to =1
+        cluster.resize(2);
+        assertEquals(Iterables.size(Entities.descendants(cluster, TestEntity.class)), 2);
+        cluster.resize(1);
+        assertEquals(Iterables.size(Entities.descendants(cluster, TestEntity.class)), 1);
+        cluster.resize(1);
+        assertEquals(Iterables.size(Entities.descendants(cluster, TestEntity.class)), 1);
+        cluster.resize(0);
+        assertEquals(Iterables.size(Entities.descendants(cluster, TestEntity.class)), 0);
+    }
+
+    @Test
     public void currentSizePropertyReflectsActualClusterSize() throws Exception {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("factory", new EntityFactory() {

@@ -99,8 +99,9 @@ public abstract class CompoundTask<T> extends BasicTask<List<T>> implements HasT
             children.add(subtask);
         }
         
-        for (Task<?> t: getChildren())
+        for (Task<?> t: getChildren()) {
             ((TaskInternal<?>)t).markQueued();
+        }
     }
 
     /** return value needs to be specified by subclass; subclass should also setBlockingDetails 

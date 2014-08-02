@@ -186,9 +186,9 @@ public class Entities {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
         TaskTags.markInessential(t);
         
-        // we pass to callingEntity for consistency above, but in exec-context it should be
-        // re-dispatched to targetEntity
-        ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(
+        // we pass to callingEntity for consistency above, but in exec-context it should be re-dispatched to targetEntity
+        // reassign t as the return value may be a wrapper, if it is switching execution contexts; see submitInternal's javadoc
+        t = ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(
                 MutableMap.of("tag", BrooklynTaskTags.tagForCallerEntity(callingEntity)), t);
         
         if (DynamicTasks.getTaskQueuingContext()!=null) {

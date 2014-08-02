@@ -63,6 +63,8 @@ public abstract class AbstractExecutionContext implements ExecutionContext {
      */
     public void execute(Runnable r) { submit(r); }
 
+    /** does the work internally of submitting the task; note that the return value may be a wrapper task even if a task is passed in,
+     * if the execution context where the target should run is different (e.g. submitting an effector task cross-context) */
     protected abstract <T> Task<T> submitInternal(Map<?,?> properties, Object task);
     
 }

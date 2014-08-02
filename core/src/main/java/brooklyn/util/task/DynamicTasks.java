@@ -34,6 +34,7 @@ import brooklyn.management.TaskQueueingContext;
 import brooklyn.management.TaskWrapper;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -233,8 +234,9 @@ public class DynamicTasks {
             Preconditions.checkNotNull(task, "Task to queue cannot be null");
             Preconditions.checkState(!Tasks.isQueued(task), "Task to queue must not yet be queued: %s", task);
             TaskQueueingContext adder = getTaskQueuingContext();
-            if (adder==null) 
+            if (adder==null) {
                 throw new IllegalStateException("Task "+task+" cannot be queued here; no queueing context available");
+            }
             adder.queue(task.asTask());
             return task;
         } catch (Throwable e) {

@@ -131,7 +131,8 @@ public class BasicExecutionContext extends AbstractExecutionContext {
                     // when browsing in the context of the parent)
                     return submit(Tasks.<T>builder().name("Cross-context execution: "+t.getDescription()).dynamic(true).body(new Callable<T>() {
                         public T call() { 
-                            return DynamicTasks.get(t); }
+                            return DynamicTasks.get(t); 
+                        }
                     }).build());
                 } else {
                     // if we are already tracked by parent, just submit it 

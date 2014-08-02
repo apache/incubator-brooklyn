@@ -40,6 +40,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
@@ -137,7 +138,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     public void queue(Task<?> t) {
         synchronized (jobTransitionLock) {
             if (primaryFinished)
-                throw new IllegalStateException("Cannot add a task to "+this+" when it is already finished (trying to add "+t+")");
+                throw new IllegalStateException("Cannot add a task to "+this+" which is already finished (trying to add "+t+")");
             secondaryJobsAll.add(t);
             secondaryJobsRemaining.add(t);
             BrooklynTaskTags.addTagsDynamically(t, ManagementContextInternal.SUB_TASK_TAG);
