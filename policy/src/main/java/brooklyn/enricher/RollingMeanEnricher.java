@@ -25,6 +25,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
 
 
 /**
@@ -44,6 +45,8 @@ public class RollingMeanEnricher<T extends Number> extends AbstractTypeTransform
             int windowSize) {
         super(producer, source, target);
         this.windowSize = windowSize;
+        if (source!=null && target!=null)
+            this.uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+source.getName()+"->"+target.getName();
     }
     
     /** @returns null when no data has been received or windowSize is 0 */
