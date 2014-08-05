@@ -93,6 +93,12 @@ public class EntityTestUtils {
         return result.get();
     }
 
+    public static <T> T assertAttribute(final Entity entity, final AttributeSensor<T> attribute, final Predicate<? super T> predicate) {
+        T val = entity.getAttribute(attribute);
+        assertTrue(predicate.apply(val), "val="+val);
+        return val;
+    }
+
     public static <T extends Entity> void assertPredicateEventuallyTrue(final T entity, final Predicate<? super T> predicate) {
         assertPredicateEventuallyTrue(Maps.newLinkedHashMap(), entity, predicate);
     }

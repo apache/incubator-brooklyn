@@ -20,71 +20,40 @@ package brooklyn.entity.nosql.cassandra;
 
 import static org.testng.Assert.assertNotNull;
 
-import java.io.File;
 import java.math.BigInteger;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
 /**
  * Test the operation of the {@link NginxController} class.
  */
-public class CassandraDatacenterRebindIntegrationTest {
+public class CassandraDatacenterRebindIntegrationTest extends RebindTestFixtureWithApp {
     private static final Logger LOG = LoggerFactory.getLogger(CassandraDatacenterRebindIntegrationTest.class);
 
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
-    private ClassLoader classLoader = getClass().getClassLoader();
-    private LocalManagementContext origManagementContext;
-    private File mementoDir;
-    private TestApplication origApp;
-    private TestApplication newApp;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        mementoDir = Files.createTempDir();
-        origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
-        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
-
+    public void setUp() throws Exception {
+        super.setUp();
         localhostProvisioningLocation = origApp.newLocalhostProvisioningLocation();
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (newApp != null) Entities.destroyAllCatching(newApp.getManagementContext());
-        if (origApp != null && origManagementContext.isRunning()) Entities.destroyAll(origManagementContext);
-        if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
-    }
-
-    private TestApplication rebind() throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        RebindTestUtils.checkCurrentMementoSerializable(origApp);
-        
-        // Stop the old management context, so original entities won't interfere
-        origManagementContext.terminate();
-        
-        return (TestApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     }
 
     /**
@@ -99,41 +68,23 @@ public class CassandraDatacenterRebindIntegrationTest {
         CassandraNode origNode = (CassandraNode) Iterables.get(origDatacenter.getMembers(), 0);
 
         EntityTestUtils.assertAttributeEqualsEventually(origDatacenter, CassandraDatacenter.GROUP_SIZE, 1);
-        EntityTestUtils.assertAttributeEqualsEventually(origNode, Startable.SERVICE_UP, true);
-        assertConsistentVersionAndPeersEventually(origNode);
-        EntityTestUtils.assertAttributeEquals(origNode, CassandraNode.PEERS, 1);
-        CassandraDatacenterLiveTest.checkConnectionRepeatedly(2, 5, origNode, origNode);
+        CassandraDatacenterLiveTest.assertNodesConsistent(ImmutableList.of(origNode));
+        CassandraDatacenterLiveTest.assertSingleTokenConsistent(ImmutableList.of(origNode));
+        CassandraDatacenterLiveTest.checkConnectionRepeatedly(2, 5, ImmutableList.of(origNode));
         BigInteger origToken = origNode.getAttribute(CassandraNode.TOKEN);
+        Set<BigInteger> origTokens = origNode.getAttribute(CassandraNode.TOKENS);
         assertNotNull(origToken);
         
-        newApp = rebind();
+        newApp = rebind(false, true);
         final CassandraDatacenter newDatacenter = (CassandraDatacenter) Iterables.find(newApp.getChildren(), Predicates.instanceOf(CassandraDatacenter.class));
         final CassandraNode newNode = (CassandraNode) Iterables.find(newDatacenter.getMembers(), Predicates.instanceOf(CassandraNode.class));
         
         EntityTestUtils.assertAttributeEqualsEventually(newDatacenter, CassandraDatacenter.GROUP_SIZE, 1);
         EntityTestUtils.assertAttributeEqualsEventually(newNode, Startable.SERVICE_UP, true);
         EntityTestUtils.assertAttributeEqualsEventually(newNode, CassandraNode.TOKEN, origToken);
-        assertConsistentVersionAndPeersEventually(newNode);
-        EntityTestUtils.assertAttributeEquals(newNode, CassandraNode.PEERS, 1);
-        CassandraDatacenterLiveTest.checkConnectionRepeatedly(2, 5, newNode, newNode);
-    }
-    
-    protected void assertConsistentVersionAndPeersEventually(CassandraNode node) {
-        // may take some time to be consistent (with new thrift_latency checks on the node,
-        // contactability should not be an issue, but consistency still might be)
-        for (int i=0; ; i++) {
-            boolean open = CassandraDatacenterLiveTest.isSocketOpen(node);
-            Boolean consistant = open ? CassandraDatacenterLiveTest.areVersionsConsistent(node) : null;
-            Integer numPeers = node.getAttribute(CassandraNode.PEERS);
-            String msg = "consistency:  "
-                    + (!open ? "unreachable" : consistant==null ? "error" : consistant)+"; "
-                    + "peer group sizes: "+numPeers;
-            LOG.info(msg);
-            if (open && Boolean.TRUE.equals(consistant) && numPeers==1)
-                break;
-            if (i == 0) LOG.warn("NOT yet consistent, waiting");
-            if (i >= 120) Assert.fail("Did not become consistent in time: "+msg);
-            Time.sleep(Duration.ONE_SECOND);
-        }
+        EntityTestUtils.assertAttributeEqualsEventually(newNode, CassandraNode.TOKENS, origTokens);
+        CassandraDatacenterLiveTest.assertNodesConsistent(ImmutableList.of(newNode));
+        CassandraDatacenterLiveTest.assertSingleTokenConsistent(ImmutableList.of(newNode));
+        CassandraDatacenterLiveTest.checkConnectionRepeatedly(2, 5, ImmutableList.of(newNode));
     }
 }

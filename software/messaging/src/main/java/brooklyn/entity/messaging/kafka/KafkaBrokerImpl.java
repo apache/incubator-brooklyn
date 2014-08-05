@@ -90,7 +90,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
             try {
                 helper.assertMBeanExistsEventually(SOCKET_SERVER_STATS_MBEAN, units.toMillis(duration));
             } finally {
-                helper.disconnect();
+                helper.terminate();
             }
         }
     }

@@ -275,7 +275,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
      */
     protected boolean checkForAndInstallJava6or7() {
         Optional<String> version = getCurrentJavaVersion();
-        if (version.isPresent() && (version.get().startsWith("1.7") || version.get().startsWith("1.6"))) {
+        if (version.isPresent() && (version.get().startsWith("1.8") || version.get().startsWith("1.7") || version.get().startsWith("1.6"))) {
             log.debug("Java version {} already installed at {}@{}", new Object[]{version.get(), getEntity(), getLocation()});
             return true;
         } else {
@@ -285,6 +285,25 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                         new Object[]{version.get(), getEntity(), getLocation()});
             }
             return tryJavaInstall("latest", BashCommands.installJava7Or6OrFail()) == 0;
+        }
+    }
+
+    /**
+     * Checks for the presence of Java 7 or 8 on the entity's location, installing if necessary.
+     * @return true if Java 7 or 8 was found on the machine or if it was installed correctly, otherwise false.
+     */
+    protected boolean checkForAndInstallJava7or8() {
+        Optional<String> version = getCurrentJavaVersion();
+        if (version.isPresent() && (version.get().startsWith("1.8") || version.get().startsWith("1.7"))) {
+            log.debug("Java version {} already installed at {}@{}", new Object[]{version.get(), getEntity(), getLocation()});
+            return true;
+        } else {
+            // Let's hope not!
+            if (version.isPresent()) {
+                log.debug("Found old Java version {} on {}@{}. Going to install latest Java version.",
+                        new Object[]{version.get(), getEntity(), getLocation()});
+            }
+            return tryJavaInstall("latest", BashCommands.installJava7OrFail()) == 0;
         }
     }
 

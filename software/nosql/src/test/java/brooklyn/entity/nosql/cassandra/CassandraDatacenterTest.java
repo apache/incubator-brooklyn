@@ -138,15 +138,43 @@ public class CassandraDatacenterTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(loc));
 
         Set<BigInteger> tokens = Sets.newLinkedHashSet();
+        Set<BigInteger> tokens2 = Sets.newLinkedHashSet();
         for (Entity member : cluster.getMembers()) {
-            tokens.add(member.getConfig(CassandraNode.TOKEN));
+            BigInteger memberToken = member.getConfig(CassandraNode.TOKEN);
+            Set<BigInteger > memberTokens = member.getConfig(CassandraNode.TOKENS);
+            if (memberToken != null) tokens.add(memberToken);
+            if (memberTokens != null) tokens2.addAll(memberTokens);
         }
         assertEquals(tokens, ImmutableSet.of(new BigInteger("-9223372036854775808"), BigInteger.ZERO));
+        assertEquals(tokens2, ImmutableSet.of());
+    }
+    
+    @Test
+    public void testDoesNotPopulateInitialTokens() throws Exception {
+        cluster = app.createAndManageChild(EntitySpec.create(CassandraDatacenter.class)
+                .configure(CassandraDatacenter.INITIAL_SIZE, 2)
+                .configure(CassandraDatacenter.USE_VNODES, true)
+                .configure(CassandraDatacenter.DELAY_BEFORE_ADVERTISING_CLUSTER, Duration.ZERO)
+                .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
+
+        app.start(ImmutableList.of(loc));
+
+        Set<BigInteger> tokens = Sets.newLinkedHashSet();
+        Set<BigInteger> tokens2 = Sets.newLinkedHashSet();
+        for (Entity member : cluster.getMembers()) {
+            BigInteger memberToken = member.getConfig(CassandraNode.TOKEN);
+            Set<BigInteger > memberTokens = member.getConfig(CassandraNode.TOKENS);
+            if (memberToken != null) tokens.add(memberToken);
+            if (memberTokens != null) tokens2.addAll(memberTokens);
+        }
+        assertEquals(tokens, ImmutableSet.of());
+        assertEquals(tokens2, ImmutableSet.of());
     }
     
     public static class MockInputForTemplate {
         public BigInteger getToken() { return new BigInteger("-9223372036854775808"); }
-        public String getTokenAsString() { return "" + getToken(); }
+        public String getTokensAsString() { return "" + getToken(); }
+        public int getNumTokensPerNode() { return 1; }
         public String getSeeds() { return ""; }
         public int getGossipPort() { return 1234; }
         public int getSslGossipPort() { return 1234; }
@@ -167,10 +195,12 @@ public class CassandraDatacenterTest extends BrooklynAppUnitTestSupport {
                 .put("driver", new MockInputForTemplate())
                 .build();
 
-        String templateContents = new ResourceUtils(this).getResourceAsString(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL.getDefaultValue());
+        String templatedUrl = CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL.getDefaultValue();
+        String url = TemplateProcessor.processTemplateContents(templatedUrl, ImmutableMap.of("entity", ImmutableMap.of("majorMinorVersion", "1.2")));
+        String templateContents = new ResourceUtils(this).getResourceAsString(url);
         String processedTemplate = TemplateProcessor.processTemplateContents(templateContents, substitutions);
         Assert.assertEquals(processedTemplate.indexOf("775,808"), -1);
-        Assert.assertTrue(processedTemplate.indexOf("775808") > 0);
+        Assert.assertTrue(processedTemplate.indexOf("-9223372036854775808") > 0);
     }
     
     @Test(groups="Integration") // because takes approx 30 seconds

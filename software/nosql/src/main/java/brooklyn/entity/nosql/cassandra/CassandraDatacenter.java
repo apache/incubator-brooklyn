@@ -84,7 +84,18 @@ public interface CassandraDatacenter extends DynamicCluster, DatastoreMixins.Has
         + "useful when configuring multiple datacenters which should be shifted; "
         + "if not set, a random shift is applied. (Pass 0 to prevent any shift.)", null);
 
+    ConfigKey<Boolean> USE_VNODES = ConfigKeys.newBooleanConfigKey(
+            "cassandra.cluster.useVnodes",
+            "Determines whether to use vnodes; if doing so, tokens will not be explicitly assigned to nodes in the cluster",
+            false);
 
+    /**
+     * num_tokens will automatically be reset to 1 for each node if {@link #USE_VNODES} is false. 
+     */
+    ConfigKey<Integer> NUM_TOKENS_PER_NODE = ConfigKeys.newIntegerConfigKey("cassandra.numTokensPerNode",
+            "Number of tokens per node; if using vnodes, should set this to a value like 256; will be overridden to 1 if USE_VNODES==false",
+            256);
+    
     /**
      * Additional time after the nodes in the cluster are up when starting
      * before announcing the cluster as up.

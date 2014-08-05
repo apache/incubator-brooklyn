@@ -80,6 +80,16 @@ public class TokenGenerators {
         }
 
         @Override
+        public synchronized Set<BigInteger> getTokensForReplacementNode(Set<BigInteger> oldTokens) {
+            checkNotNull(oldTokens, "oldToken");
+            Set<BigInteger> result = Sets.newLinkedHashSet();
+            for (BigInteger oldToken : oldTokens) {
+                result.add(getTokenForReplacementNode(oldToken));
+            }
+            return result;
+        }
+        
+        @Override
         public synchronized void growingCluster(int numNewNodes) {
             if (currentTokens.isEmpty() && nextTokens.isEmpty()) {
                 nextTokens.addAll(generateEquidistantTokens(numNewNodes));

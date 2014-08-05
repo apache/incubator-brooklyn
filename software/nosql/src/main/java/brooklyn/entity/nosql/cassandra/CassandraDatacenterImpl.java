@@ -113,22 +113,22 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                     Set<Entity> currentSeeds = getAttribute(CURRENT_SEEDS);
                     if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) {
                         if (Sets.intersection(currentSeeds, potentialSeeds).isEmpty()) {
-                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {this, currentSeeds});
+                            log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {CassandraDatacenterImpl.this, currentSeeds});
                         }
                         return currentSeeds;
                     } else if (potentialRunningSeeds.isEmpty()) {
                         // TODO Could be race where nodes have only just returned from start() and are about to 
                         // transition to serviceUp; so don't just abandon all our seeds!
-                        log.warn("Cluster {} has no running seeds (yet?); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {this});
+                        log.warn("Cluster {} has no running seeds (yet?); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraDatacenterImpl.this});
                         return currentSeeds;
                     } else {
                         Set<Entity> result = trim(quorumSize, potentialRunningSeeds);
-                        log.debug("Cluster {} updating seeds: chosen={}; potentialRunning={}", new Object[] {this, result, potentialRunningSeeds});
+                        log.debug("Cluster {} updating seeds: chosen={}; potentialRunning={}", new Object[] {CassandraDatacenterImpl.this, result, potentialRunningSeeds});
                         return result;
                     }
                 } else {
                     Set<Entity> result = trim(quorumSize, potentialSeeds);
-                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {this, result});
+                    if (log.isDebugEnabled()) log.debug("Cluster {} has reached seed quorum: seeds={}", new Object[] {CassandraDatacenterImpl.this, result});
                     return result;
                 }
             }
@@ -229,6 +229,10 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         return (seedSupplier == null) ? defaultSeedSupplier : seedSupplier;
     }
     
+    protected boolean useVnodes() {
+        return Boolean.TRUE.equals(getConfig(USE_VNODES));
+    }
+    
     protected synchronized TokenGenerator getTokenGenerator() {
         if (tokenGenerator!=null) 
             return tokenGenerator;
@@ -281,20 +285,34 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
 
     @Override
     public Collection<Entity> grow(int delta) {
-        if (getCurrentSize() == 0) {
-            getTokenGenerator().growingCluster(delta);
+        if (useVnodes()) {
+            // nothing to do for token generator
+        } else {
+            if (getCurrentSize() == 0) {
+                getTokenGenerator().growingCluster(delta);
+            }
         }
         return super.grow(delta);
     }
     
     @Override
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
-        Map<?,?> allflags; 
-        if (flags.containsKey(CassandraNode.TOKEN) || flags.containsKey("token")) {
-            allflags = flags;
-        } else {
+        Map<Object, Object> allflags = MutableMap.copyOf(flags);
+        
+        if ((flags.containsKey(CassandraNode.TOKEN) || flags.containsKey("token")) || (flags.containsKey(CassandraNode.TOKENS) || flags.containsKey("tokens"))) {
+            // leave token config as-is
+        } else if (!useVnodes()) {
             BigInteger token = getTokenGenerator().newToken();
-            allflags = (token == null) ? flags : MutableMap.builder().putAll(flags).put(CassandraNode.TOKEN, token).build();
+            allflags.put(CassandraNode.TOKEN, token);
+        }
+
+        if ((flags.containsKey(CassandraNode.NUM_TOKENS_PER_NODE) || flags.containsKey("numTokensPerNode"))) {
+            // leave num_tokens as-is
+        } else if (useVnodes()) {
+            Integer numTokensPerNode = getConfig(NUM_TOKENS_PER_NODE);
+            allflags.put(CassandraNode.NUM_TOKENS_PER_NODE, numTokensPerNode);
+        } else {
+            allflags.put(CassandraNode.NUM_TOKENS_PER_NODE, 1);
         }
         
         return super.createNode(loc, allflags);
@@ -302,9 +320,9 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
 
     @Override
     protected Entity replaceMember(Entity member, Location memberLoc, Map<?, ?> extraFlags) {
-        BigInteger oldToken = ((CassandraNode) member).getToken();
-        BigInteger newToken = (oldToken != null) ? getTokenGenerator().getTokenForReplacementNode(oldToken) : null;
-        return super.replaceMember(member, memberLoc,  MutableMap.copyOf(extraFlags).add(CassandraNode.TOKEN, newToken));
+        Set<BigInteger> oldTokens = ((CassandraNode) member).getTokens();
+        Set<BigInteger> newTokens = (oldTokens != null && oldTokens.size() > 0) ? getTokenGenerator().getTokensForReplacementNode(oldTokens) : null;
+        return super.replaceMember(member, memberLoc,  MutableMap.copyOf(extraFlags).add(CassandraNode.TOKENS, newTokens));
     }
 
     @Override
