@@ -424,6 +424,6 @@ public class ZabbixFeed extends AbstractFeed {
 
     @SuppressWarnings("unchecked")
     protected Poller<HttpToolResponse> getPoller() {
-        return (Poller<HttpToolResponse>) poller;
+        return (Poller<HttpToolResponse>) super.getPoller();
     }
 }

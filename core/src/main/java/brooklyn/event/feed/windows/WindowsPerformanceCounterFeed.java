@@ -182,10 +182,15 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
             }
         };
 
-        ((Poller<SshPollValue>) poller).scheduleAtFixedRate(
+        getPoller().scheduleAtFixedRate(
                 new CallInEntityExecutionContext<SshPollValue>(entity, queryForCounterValues),
                 new SendPerfCountersToSensors(entity, attributeSensors),
                 periodUnits.toMillis(period));
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Poller<SshPollValue> getPoller() {
+        return (Poller<SshPollValue>) super.getPoller();
     }
 
     /**

@@ -532,6 +532,7 @@ public class RebindManagerImpl implements RebindManager {
                         entityMemento.injectTypeClass(entity.getClass());
                         ((EntityInternal)entity).getRebindSupport().addPolicies(rebindContext, entityMemento);
                         ((EntityInternal)entity).getRebindSupport().addEnrichers(rebindContext, entityMemento);
+                        ((EntityInternal)entity).getRebindSupport().addFeeds(rebindContext, entityMemento);
                     } catch (Exception e) {
                         exceptionHandler.onRebindFailed(BrooklynObjectType.ENTITY, entity, e);
                     }

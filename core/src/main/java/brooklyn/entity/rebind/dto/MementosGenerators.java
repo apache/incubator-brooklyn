@@ -30,6 +30,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityInternal;
@@ -124,7 +125,8 @@ public class MementosGenerators {
      * @deprecated since 0.7.0; use {@link #newMemento(BrooklynObject)} instead
      */
     @Deprecated
-    public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entity) {
+    public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entityRaw) {
+        EntityInternal entity = (EntityInternal) entityRaw;
         BasicEntityMemento.Builder builder = BasicEntityMemento.builder();
         populateBrooklynObjectMementoBuilder(entity, builder);
         
@@ -138,14 +140,14 @@ public class MementosGenerators {
         
         builder.isTopLevelApp = (entity instanceof Application && entity.getParent() == null);
 
-        Map<ConfigKey<?>, Object> localConfig = ((EntityInternal)entity).getConfigMap().getLocalConfig();
+        Map<ConfigKey<?>, Object> localConfig = entity.getConfigMap().getLocalConfig();
         for (Map.Entry<ConfigKey<?>, Object> entry : localConfig.entrySet()) {
             ConfigKey<?> key = checkNotNull(entry.getKey(), localConfig);
             Object value = configValueToPersistable(entry.getValue());
             builder.config.put(key, value); 
         }
         
-        Map<String, Object> localConfigUnmatched = MutableMap.copyOf(((EntityInternal)entity).getConfigMap().getLocalConfigBag().getAllConfig());
+        Map<String, Object> localConfigUnmatched = MutableMap.copyOf(entity.getConfigMap().getLocalConfigBag().getAllConfig());
         for (ConfigKey<?> key : localConfig.keySet()) {
             localConfigUnmatched.remove(key.getName());
         }
@@ -157,7 +159,7 @@ public class MementosGenerators {
         }
         
         @SuppressWarnings("rawtypes")
-        Map<AttributeSensor, Object> allAttributes = ((EntityInternal)entity).getAllAttributes();
+        Map<AttributeSensor, Object> allAttributes = entity.getAllAttributes();
         for (@SuppressWarnings("rawtypes") Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
             AttributeSensor<?> key = checkNotNull(entry.getKey(), allAttributes);
             Object value = entry.getValue();
@@ -178,6 +180,10 @@ public class MementosGenerators {
         
         for (Enricher enricher : entity.getEnrichers()) {
             builder.enrichers.add(enricher.getId()); 
+        }
+        
+        for (Feed feed : entity.getFeedSupport().getFeeds()) {
+            builder.feeds.add(feed); 
         }
         
         Entity parentEntity = entity.getParent();

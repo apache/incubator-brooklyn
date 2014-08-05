@@ -32,7 +32,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
-import brooklyn.event.feed.Poller;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
@@ -179,10 +178,5 @@ public class FunctionFeed extends AbstractFeed {
                     new DelegatingPollHandler(handlers), 
                     minPeriod);
         }
-    }
-    
-    @SuppressWarnings("unchecked")
-    private Poller<Object> getPoller() {
-        return (Poller<Object>) poller;
     }
 }

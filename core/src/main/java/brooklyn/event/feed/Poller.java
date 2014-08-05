@@ -175,10 +175,10 @@ public class Poller<V> {
         
         running = false;
         for (Task<?> task : oneOffTasks) {
-            task.cancel(true);
+            if (task != null) task.cancel(true);
         }
         for (ScheduledTask task : tasks) {
-            task.cancel();
+            if (task != null) task.cancel();
         }
         oneOffTasks.clear();
         tasks.clear();

@@ -30,6 +30,7 @@ import brooklyn.basic.BrooklynTypes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindSupport;
@@ -70,6 +71,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         protected List<String> enrichers = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
         protected List<Effector<?>> effectors = Lists.newArrayList();
+        protected List<Feed> feeds = Lists.newArrayList();
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
@@ -83,6 +85,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             enrichers.addAll(other.getEnrichers());
             members.addAll(other.getMembers());
             effectors.addAll(other.getEffectors());
+            feeds.addAll(other.getFeeds());
             tags.addAll(other.getTags());
             return this;
         }
@@ -103,6 +106,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private Map<String, Object> attributes;
     private List<String> policies;
     private List<String> enrichers;
+    private List<Feed> feeds;
     
     // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
     private Map<String, ConfigKey<?>> configKeys;
@@ -130,6 +134,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         locations = toPersistedList(builder.locations);
         policies = toPersistedList(builder.policies);
         enrichers = toPersistedList(builder.enrichers);
+        feeds = toPersistedList(builder.feeds);
         members = toPersistedList(builder.members);
         
         effectors = toPersistedList(builder.effectors);
@@ -280,6 +285,12 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         return fromPersistedList(locations);
     }
 
+    @Override
+    public List<Feed> getFeeds() {
+        if (configByKey == null) postDeserialize();
+        return fromPersistedList(feeds);
+    }
+    
     @Override
     protected ToStringHelper newVerboseStringHelper() {
         return super.newVerboseStringHelper()

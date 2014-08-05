@@ -187,10 +187,9 @@ public class JmxFeed extends AbstractFeed {
         return jmxUri;
     }
     
-    @VisibleForTesting
     @SuppressWarnings("unchecked")
     protected Poller<Object> getPoller() {
-        return (Poller<Object>) poller;
+        return (Poller<Object>) super.getPoller();
     }
     
     @Override

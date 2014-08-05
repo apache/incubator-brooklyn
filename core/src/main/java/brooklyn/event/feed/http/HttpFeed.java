@@ -354,7 +354,7 @@ public class HttpFeed extends AbstractFeed {
     }
 
     @SuppressWarnings("unchecked")
-    private Poller<HttpToolResponse> getPoller() {
-        return (Poller<HttpToolResponse>) poller;
+    protected Poller<HttpToolResponse> getPoller() {
+        return (Poller<HttpToolResponse>) super.getPoller();
     }
 }

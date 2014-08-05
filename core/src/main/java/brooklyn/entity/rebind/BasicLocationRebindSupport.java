@@ -109,6 +109,11 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
         location.init(); // TODO deprecated calling init; will be deleted
     }
 
+    @Override
+    public void addFeeds(RebindContext rebindContext, LocationMemento Memento) {
+        throw new UnsupportedOperationException();
+    }
+
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
         for (String childId : memento.getChildren()) {
             Location child = rebindContext.getLocation(childId);

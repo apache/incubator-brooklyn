@@ -30,6 +30,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
@@ -141,6 +142,23 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
             } else {
                 LOG.warn("Enricher not found; discarding enricher {} of entity {}({})",
                         new Object[] {enricherId, memento.getType(), memento.getId()});
+            }
+        }
+    }
+    
+    @Override
+    public void addFeeds(RebindContext rebindContext, EntityMemento memento) {
+        for (Feed feed : memento.getFeeds()) {
+            if (feed != null) {
+                try {
+                    feed.start();
+                    ((EntityInternal)entity).getFeedSupport().addFeed(feed);
+                } catch (Exception e) {
+                    rebindContext.getExceptionHandler().onRebindFailed(BrooklynObjectType.ENTITY, entity, e);
+                }
+            } else {
+                LOG.warn("Feed not found; discarding feed of entity {}({})",
+                        new Object[] {memento.getType(), memento.getId()});
             }
         }
     }

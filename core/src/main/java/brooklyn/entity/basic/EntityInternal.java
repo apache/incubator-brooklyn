@@ -24,6 +24,7 @@ import java.util.Map;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.Feed;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
@@ -132,6 +133,8 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     @Beta
     Effector<?> getEffector(String effectorName);
     
+    FeedSupport getFeedSupport();
+    
     Map<String, String> toMetadataRecord();
     
     @Override
@@ -142,4 +145,26 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
      * This persistence may happen asynchronously, or may not happen at all if persistence is disabled.
      */
     void requestPersist();
+    
+    public interface FeedSupport {
+        Collection<Feed> getFeeds();
+        
+        /**
+         * Adds the given feed to this entity. The feed will automatically be re-added on brooklyn restart.
+         */
+        <T extends Feed> T addFeed(T feed);
+        
+        /**
+         * Removes the given feed from this entity. 
+         * @return True if the feed existed at this entity; false otherwise
+         */
+        boolean removeFeed(Feed feed);
+        
+        /**
+         * Removes all feeds from this entity.
+         * Use with caution as some entities automatically register feeds; this will remove those feeds as well.
+         * @return True if any feeds existed at this entity; false otherwise
+         */
+        boolean removeAllFeeds();
+    }
 }

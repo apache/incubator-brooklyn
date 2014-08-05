@@ -180,7 +180,6 @@ public class ChefAttributeFeed extends AbstractFeed {
         knifeTaskFactory = new KnifeNodeAttributeQueryTaskFactory(nodeName);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void preStart() {
         final Callable<SshPollValue> getAttributesFromKnife = new Callable<SshPollValue>() {
@@ -195,10 +194,15 @@ public class ChefAttributeFeed extends AbstractFeed {
             }
         };
 
-        ((Poller<SshPollValue>) poller).scheduleAtFixedRate(
+        getPoller().scheduleAtFixedRate(
                 new CallInEntityExecutionContext<SshPollValue>(entity, getAttributesFromKnife),
                 new SendChefAttributesToSensors(entity, chefAttributeSensors),
                 periodUnits.toMillis(period));
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Poller<SshPollValue> getPoller() {
+        return (Poller<SshPollValue>) super.getPoller();
     }
 
     /**

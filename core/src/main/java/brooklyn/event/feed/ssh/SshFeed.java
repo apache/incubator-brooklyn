@@ -235,8 +235,8 @@ public class SshFeed extends AbstractFeed {
     }
     
     @SuppressWarnings("unchecked")
-    private Poller<SshPollValue> getPoller() {
-        return (Poller<SshPollValue>) poller;
+    protected Poller<SshPollValue> getPoller() {
+        return (Poller<SshPollValue>) super.getPoller();
     }
     
     private SshPollValue exec(String command, Map<String,String> env) throws IOException {

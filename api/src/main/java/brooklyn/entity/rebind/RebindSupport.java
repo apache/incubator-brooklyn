@@ -52,4 +52,6 @@ public interface RebindSupport<T extends Memento> {
     void addPolicies(RebindContext rebindContext, T Memento);
     
     void addEnrichers(RebindContext rebindContext, T Memento);
+    
+    void addFeeds(RebindContext rebindContext, T Memento);
 }
