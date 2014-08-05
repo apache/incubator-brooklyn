@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.database.mysql;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.ok;
@@ -192,7 +192,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public String getMySqlServerOptionsString() {
         Map<String, Object> options = entity.getConfig(MySqlNode.MYSQL_SERVER_CONF);
         StringBuilder result = new StringBuilder();
-        if (truth(options)) {
+        if (groovyTruth(options)) {
             for (Map.Entry<String, Object> entry : options.entrySet()) {
                 result.append(entry.getKey());
                 String value = entry.getValue().toString();

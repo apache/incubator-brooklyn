@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
@@ -582,8 +582,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
 
         ScriptHelper s = new ScriptHelper(this, phase+" "+elvis(entity,this));
-        if (!truth(flags.get(NON_STANDARD_LAYOUT))) {
-            if (truth(flags.get(DEBUG))) {
+        if (!groovyTruth(flags.get(NON_STANDARD_LAYOUT))) {
+            if (groovyTruth(flags.get(DEBUG))) {
                 s.header.prepend("set -x");
             }
             if (INSTALLING.equals(phase)) {
@@ -596,7 +596,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                         "test -f BROOKLYN && exit 0"
                         );
 
-                if (!truth(flags.get(INSTALL_INCOMPLETE))) {
+                if (!groovyTruth(flags.get(INSTALL_INCOMPLETE))) {
                     s.footer.append("date > $INSTALL_DIR/BROOKLYN");
                 }
             }
@@ -614,7 +614,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
         if (ImmutableSet.of(STOPPING, KILLING).contains(phase)) {
             // stopping and killing allowed to have empty body if pid file set
-            if (!truth(flags.get(USE_PID_FILE)))
+            if (!groovyTruth(flags.get(USE_PID_FILE)))
                 s.failIfBodyEmpty();
         }
         if (ImmutableSet.of(INSTALLING, LAUNCHING).contains(phase)) {
@@ -628,7 +628,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             s.setFlag(SshTool.PROP_SSH_TRIES, 1);
         }
 
-        if (truth(flags.get(USE_PID_FILE))) {
+        if (groovyTruth(flags.get(USE_PID_FILE))) {
             Object usePidFile = flags.get(USE_PID_FILE);
             String pidFile = (usePidFile instanceof CharSequence ? usePidFile : Os.mergePathsUnix(getRunDir(), PID_FILENAME)).toString();
             String processOwner = (String) flags.get(PROCESS_OWNER);

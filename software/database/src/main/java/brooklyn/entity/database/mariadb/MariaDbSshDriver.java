@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.database.mariadb;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.ok;
@@ -193,7 +193,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     public String getMariaDbServerOptionsString() {
         Map<String, Object> options = entity.getConfig(MariaDbNode.MARIADB_SERVER_CONF);
         StringBuilder result = new StringBuilder();
-        if (truth(options)) {
+        if (groovyTruth(options)) {
             for (Map.Entry<String, Object> entry : options.entrySet()) {
                 result.append(entry.getKey());
                 String value = entry.getValue().toString();

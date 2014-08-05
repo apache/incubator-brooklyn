@@ -18,7 +18,7 @@
  */
 package brooklyn.policy.autoscaling;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
 
@@ -959,6 +959,6 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + (truth(name) ? "("+name+")" : "");
+        return getClass().getSimpleName() + (groovyTruth(name) ? "("+name+")" : "");
     }
 }

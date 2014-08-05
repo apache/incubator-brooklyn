@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.monitoring.monit;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 

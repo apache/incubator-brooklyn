@@ -18,7 +18,7 @@
  */
 package brooklyn.location.jclouds;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -183,7 +183,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     }
 
     protected Optional<String> getPrivateAddress() {
-        if (truth(node.getPrivateAddresses())) {
+        if (groovyTruth(node.getPrivateAddresses())) {
             Iterator<String> pi = node.getPrivateAddresses().iterator();
             while (pi.hasNext()) {
                 String p = pi.next();

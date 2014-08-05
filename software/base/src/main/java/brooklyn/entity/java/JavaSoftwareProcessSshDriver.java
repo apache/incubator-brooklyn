@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.java;
 
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -36,7 +38,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
@@ -84,7 +85,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     public boolean isJmxSslEnabled() {
-        return isJmxEnabled() && GroovyJavaMethods.truth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED));
+        return isJmxEnabled() && groovyTruth(entity.getConfig(UsesJmx.JMX_SSL_ENABLED));
     }
 
     /**

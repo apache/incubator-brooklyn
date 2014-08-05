@@ -18,8 +18,8 @@
  */
 package brooklyn.policy.followthesun;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static brooklyn.util.JavaGroovyEquivalents.elvis;
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Collection;
@@ -272,6 +272,6 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + (truth(name) ? "("+name+")" : "");
+        return getClass().getSimpleName() + (groovyTruth(name) ? "("+name+")" : "");
     }
 }
