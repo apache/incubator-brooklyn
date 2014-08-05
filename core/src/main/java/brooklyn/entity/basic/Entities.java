@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -68,6 +69,7 @@ import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.NonDeploymentManagementContext;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.ResourceUtils;
@@ -335,9 +337,18 @@ public class Entities {
             out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
         }
 
-        out.append(currentIndentation+tab+tab+"Policies:\n");
-        for (Policy policy : e.getPolicies()) {
-            dumpInfo(policy, out, currentIndentation+tab+tab+tab, tab);
+        if (!e.getPolicies().isEmpty()) {
+            out.append(currentIndentation+tab+tab+"Policies:\n");
+            for (Policy policy : e.getPolicies()) {
+                dumpInfo(policy, out, currentIndentation+tab+tab+tab, tab);
+            }
+        }
+
+        if (!e.getEnrichers().isEmpty()) {
+            out.append(currentIndentation+tab+tab+"Enrichers:\n");
+            for (Enricher enricher : e.getEnrichers()) {
+                dumpInfo(enricher, out, currentIndentation+tab+tab+tab, tab);
+            }
         }
 
         for (Entity it : e.getChildren()) {
@@ -398,6 +409,37 @@ public class Entities {
 
         for (Location it : loc.getChildren()) {
             dumpInfo(it, out, currentIndentation+tab, tab);
+        }
+
+        out.flush();
+    }
+
+    public static void dumpInfo(Enricher enr) {
+        try {
+            dumpInfo(enr, new PrintWriter(System.out), "", "  ");
+        } catch (IOException exc) {
+            // system.out throwing an exception is odd, so don't have IOException on signature
+            throw new RuntimeException(exc);
+        }
+    }
+    public static void dumpInfo(Enricher enr, Writer out) throws IOException {
+        dumpInfo(enr, out, "", "  ");
+    }
+    public static void dumpInfo(Enricher enr, String currentIndentation, String tab) throws IOException {
+        dumpInfo(enr, new PrintWriter(System.out), currentIndentation, tab);
+    }
+    public static void dumpInfo(Enricher enr, Writer out, String currentIndentation, String tab) throws IOException {
+        out.append(currentIndentation+enr.toString()+"\n");
+
+        for (ConfigKey<?> key : sortConfigKeys(enr.getEnricherType().getConfigKeys())) {
+            Maybe<Object> val = ((AbstractEnricher)enr).getConfigMap().getConfigRaw(key, true);
+            if (!isTrivial(val)) {
+                out.append(currentIndentation+tab+tab+key);
+                out.append(" = ");
+                if (isSecret(key.getName())) out.append("xxxxxxxx");
+                else out.append(""+val.get());
+                out.append("\n");
+            }
         }
 
         out.flush();
