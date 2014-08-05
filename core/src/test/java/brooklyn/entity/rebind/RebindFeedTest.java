@@ -38,11 +38,18 @@ import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.event.feed.ssh.SshFeed;
+import brooklyn.event.feed.ssh.SshPollConfig;
+import brooklyn.event.feed.ssh.SshValueFunctions;
+import brooklyn.location.Location;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.http.BetterMockWebServer;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Callables;
 import com.google.mockwebserver.MockResponse;
@@ -112,6 +119,30 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_INT, (Integer)1);
     }
     
+    @Test(groups="Integration")
+    public void testSshFeedRegisteredInStartIsPersisted() throws Exception {
+        LocalhostMachineProvisioningLocation origLoc = origApp.newLocalhostProvisioningLocation();
+        SshMachineLocation origMachine = origLoc.obtain();
+
+        TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithSshFeedImpl.class)
+                .location(origMachine));
+        
+        origApp.start(ImmutableList.<Location>of());
+
+        EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)0);
+        assertEquals(origEntity.getFeedSupport().getFeeds().size(), 1);
+
+        newApp = rebind(false);
+        TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
+        
+        Collection<Feed> newFeeds = newEntity.getFeedSupport().getFeeds();
+        assertEquals(newFeeds.size(), 1);
+        
+        // Expect the feed to still be polling
+        newEntity.setAttribute(SENSOR_INT, null);
+        EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_INT, (Integer)0);
+    }
+
     public static class MyEntityWithHttpFeedImpl extends TestEntityImpl {
         public static final ConfigKey<URL> BASE_URL = ConfigKeys.newConfigKey(URL.class, "rebindFeedTest.baseUrl");
         
@@ -140,6 +171,20 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
                     .poll(FunctionPollConfig.forSensor(SENSOR_INT)
                             .period(100)
                             .callable(Callables.returning(1)))
+                    .build());
+        }
+    }
+    
+    public static class MyEntityWithSshFeedImpl extends TestEntityImpl {
+        @Override
+        public void start(Collection<? extends Location> locs) {
+            // TODO Auto-generated method stub
+            super.start(locs);
+            addFeed(SshFeed.builder()
+                    .entity(this)
+                    .poll(new SshPollConfig<Integer>(SENSOR_INT)
+                        .command("true")
+                        .onSuccess(SshValueFunctions.exitStatus()))
                     .build());
         }
     }
