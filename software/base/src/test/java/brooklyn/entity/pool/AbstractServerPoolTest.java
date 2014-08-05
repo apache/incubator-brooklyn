@@ -32,6 +32,7 @@ import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -47,6 +48,9 @@ import brooklyn.util.exceptions.Exceptions;
 
 public abstract class AbstractServerPoolTest {
 
+    // Note not extending BrooklynAppUnitTestSupport because sub-classes of this are for live and for unit tests.
+    // Instead, we have to repeat that logic for setting SKIP_ON_BOX_BASE_DIR_RESOLUTION
+    
     private static final int DEFAULT_POOL_SIZE = 3;
 
     protected Location location;
@@ -60,7 +64,10 @@ public abstract class AbstractServerPoolTest {
         createdApps.clear();
         mgmt = createManagementContext();
         location = createLocation();
-        poolApp = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
+        poolApp = ApplicationBuilder.newManagedApp(appSpec, mgmt);
+
         pool = poolApp.createAndManageChild(EntitySpec.create(ServerPool.class)
                 .configure(ServerPool.INITIAL_SIZE, getInitialPoolSize())
                 .configure(ServerPool.MEMBER_SPEC, EntitySpec.create(EmptySoftwareProcess.class)));
@@ -86,6 +93,10 @@ public abstract class AbstractServerPoolTest {
 
     protected ManagementContext createManagementContext() {
         return new LocalManagementContextForTests();
+    }
+    
+    protected boolean shouldSkipOnBoxBaseDirResolution() {
+        return true;
     }
 
     /** @return Creates a LocalhostMachineProvisioningLocation */
@@ -127,7 +138,9 @@ public abstract class AbstractServerPoolTest {
 
     protected TestApplication createAppWithChildren(int numChildren) {
         if (numChildren < 0) fail("Invalid number of children for app: " + numChildren);
-        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
+        TestApplication app = ApplicationBuilder.newManagedApp(appSpec, mgmt);
         while (numChildren-- > 0) {
             app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class));
         }
