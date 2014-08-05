@@ -86,8 +86,11 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             if (seeds == null || seeds.size() < quorumSize || containsDownEntity(seeds)) {
                 Set<Entity> newseeds;
                 Map<CassandraDatacenter,Set<Entity>> potentialSeeds = MutableMap.of();
+                int potentialSeedCount = 0;
                 for (CassandraDatacenter member : Iterables.filter(getMembers(), CassandraDatacenter.class)) {
-                    potentialSeeds.put(member, member.gatherPotentialSeeds());
+                    Set<Entity> dcPotentialSeeds = member.gatherPotentialSeeds();
+                    potentialSeeds.put(member, dcPotentialSeeds);
+                    potentialSeedCount += dcPotentialSeeds.size();
                 }
                 
                 if (hasPublishedSeeds) {
@@ -101,7 +104,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                     } else if (serviceState == Lifecycle.STOPPING || serviceState == Lifecycle.STOPPED) {
                         if (log.isTraceEnabled()) log.trace("Fabric {} ignoring any potential seed-changes, because {}: seeds={}", new Object[] {CassandraFabricImpl.this, serviceState, currentSeeds});
                         newseeds = currentSeeds;
-                    } else if (potentialSeeds.isEmpty()) {
+                    } else if (potentialSeedCount == 0) {
                         // TODO Could be race where nodes have only just returned from start() and are about to 
                         // transition to serviceUp; so don't just abandon all our seeds!
                         log.warn("Fabric {} has no seeds (after startup); leaving seeds as-is; but risks split-brain if these seeds come back up!", new Object[] {CassandraFabricImpl.this});
@@ -116,8 +119,8 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                         }
                         newseeds = result;
                     }
-                } else if (potentialSeeds.size() < quorumSize) {
-                    if (log.isDebugEnabled()) log.debug("Not setting seeds of fabric {} yet, because still waiting for quorum (need {}; have {} potentials from {} members)", new Object[] {CassandraFabricImpl.this, quorumSize, potentialSeeds.size(), getMembers()});
+                } else if (potentialSeedCount < quorumSize) {
+                    if (log.isDebugEnabled()) log.debug("Not setting seeds of fabric {} yet, because still waiting for quorum (need {}; have {} potentials from {} members)", new Object[] {CassandraFabricImpl.this, quorumSize, potentialSeedCount, getMembers()});
                     newseeds = ImmutableSet.of();
                 } else if (!allNonEmpty(potentialSeeds.values())) {
                     if (log.isDebugEnabled()) {
