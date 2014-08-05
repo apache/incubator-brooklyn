@@ -138,6 +138,7 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     public void testNotifiedOfExtraTrackedSensors() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
 
+        app.removeAllPolicies();
         RecordingMembershipTrackingPolicy policy2 = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure("group", group)
                 .configure("sensorsToTrack", ImmutableSet.of(TestEntity.NAME)));
@@ -164,6 +165,7 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     public void testNotNotifiedOfExtraTrackedSensorsIfNonDuplicate() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
         
+        app.removeAllPolicies();
         RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
                 .configure(AbstractMembershipTrackingPolicy.NOTIFY_ON_DUPLICATES, false)
@@ -183,7 +185,8 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testDefaultNotNotifiedOfExtraTrackedSensorsIfDuplicate() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
-        
+
+        app.removeAllPolicies();
         RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
                 .configure(AbstractMembershipTrackingPolicy.GROUP, group));
@@ -201,7 +204,8 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testNotifiedOfExtraTrackedSensorsIfDuplicate() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
-        
+
+        app.removeAllPolicies();
         RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
                 .configure(AbstractMembershipTrackingPolicy.NOTIFY_ON_DUPLICATES, true)

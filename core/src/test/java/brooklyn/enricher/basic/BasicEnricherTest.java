@@ -25,7 +25,6 @@ import java.util.Map;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.policy.EnricherSpec;
@@ -88,6 +87,14 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
 
         assertEquals(enricher.getTags(), MutableSet.of("x", 99));
         assertEquals(enricher.getUniqueTag(), "x");
+    }
+
+    @Test
+    public void testSameUniqueTagEnricherNotAddedTwice() throws Exception {
+        MyEnricher enricher1 = app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
+        MyEnricher enricher2 = app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(94).uniqueTag("x"));
+        assertEquals(enricher2, enricher1);
+        assertEquals(app.getEnrichers().size(), 1);
     }
 
 }
