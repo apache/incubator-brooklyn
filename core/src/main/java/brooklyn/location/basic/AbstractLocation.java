@@ -57,7 +57,6 @@ import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
@@ -68,6 +67,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * A basic implementation of the {@link Location} interface.
@@ -238,6 +238,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
      * method is invoked.) If you require fields to be initialized you must do that in 
      * this method with a guard (as in FixedListMachineProvisioningLocation).
      */
+    @SuppressWarnings("serial")
     public void configure(Map<?,?> properties) {
         assertNotYetManaged();
         
@@ -276,7 +277,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
             if (rawCodes instanceof CharSequence) {
                 codes = ImmutableSet.copyOf(Splitter.on(",").trimResults().split((CharSequence)rawCodes));
             } else {
-                codes = TypeCoercions.coerce(rawCodes, TypeTokens.setOf(String.class));
+                codes = TypeCoercions.coerce(rawCodes, new TypeToken<Set<String>>() {});
             }
             configBag.put(LocationConfigKeys.ISO_3166, codes);
         }

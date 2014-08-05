@@ -44,7 +44,6 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.javalang.AtomicReferences;
 import brooklyn.util.javalang.Boxing;
 import brooklyn.util.javalang.JavaClassNames;
@@ -78,9 +77,10 @@ public class HttpLatencyDetector extends AbstractEnricher {
     @SetFromFlag("urlSensor")
     public static final ConfigKey<AttributeSensor<String>> URL_SENSOR = ConfigKeys.newConfigKey(new TypeToken<AttributeSensor<String>>() {}, "latencyDetector.urlSensor");
 
+    @SuppressWarnings("serial")
     @SetFromFlag("urlPostProcessing")
     public static final ConfigKey<Function<String,String>> URL_POST_PROCESSING = ConfigKeys.newConfigKey(
-            TypeTokens.functionOf(String.class, String.class), 
+            new TypeToken<Function<String,String>>() {}, 
             "latencyDetector.urlPostProcessing",
             "Function applied to the urlSensor value, to determine the URL to use");
 
