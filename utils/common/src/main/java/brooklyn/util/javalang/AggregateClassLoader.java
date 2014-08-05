@@ -30,7 +30,11 @@ public class AggregateClassLoader extends ClassLoader {
 
     private final List<ClassLoader> classLoaders = new CopyOnWriteArrayList<ClassLoader>();
 
-    private AggregateClassLoader() {}
+    private AggregateClassLoader() {
+        //Don't pass load requests to the app classloader,
+        //always relay to the classLoaders list.
+        super(null);
+    }
     
     /** creates default instance, with classloaders of Object and AggregateClassLoader */
     public static AggregateClassLoader newInstanceWithDefaultLoaders() {

@@ -407,14 +407,7 @@ public class Os {
     public static File writeToTempFile(InputStream is, File tempDir, String prefix, String suffix) {
         Preconditions.checkNotNull(is, "Input stream required to create temp file for %s*%s", prefix, suffix);
         mkdirs(tempDir);
-        File tempFile;
-        try {
-            tempFile = File.createTempFile(prefix, suffix, tempDir);
-        } catch (IOException e) {
-            throw Throwables.propagate(new IOException("Unable to create temp file in "+tempDir+" of form "+prefix+"-"+suffix, e));
-        }
-        tempFile.deleteOnExit();
-
+        File tempFile = newTempFile(prefix, suffix);
         OutputStream out = null;
         try {
             out = new FileOutputStream(tempFile);

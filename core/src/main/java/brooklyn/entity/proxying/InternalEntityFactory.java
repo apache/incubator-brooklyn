@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -109,10 +110,20 @@ public class InternalEntityFactory extends InternalFactory {
         //    NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities
         // Building our own aggregating class loader gets around this.
         // But we really should not have to do this! What are the consequences?
+        //
+        // The reason for the error is that the proxy tries to load all classes
+        // referenced from the entity and its interfaces with the single passed loader
+        // while a normal class loading would nest the class loaders (loading interfaces'
+        // references with their own class loaders which in our case are different).
+        Collection<ClassLoader> loaders = Sets.newLinkedHashSet();
+        addClassLoaders(entity.getClass(), loaders);
+        for (Class<?> iface : allInterfaces) {
+            loaders.add(iface.getClassLoader());
+        }
+
         AggregateClassLoader aggregateClassLoader =  AggregateClassLoader.newInstanceWithNoLoaders();
-        aggregateClassLoader.addFirst(entity.getClass().getClassLoader());
-        for(Class<?> iface : allInterfaces) {
-            aggregateClassLoader.addLast(iface.getClassLoader());
+        for (ClassLoader cl : loaders) {
+            aggregateClassLoader.addLast(cl);
         }
 
         return (T) java.lang.reflect.Proxy.newProxyInstance(
@@ -120,7 +131,24 @@ public class InternalEntityFactory extends InternalFactory {
                 allInterfaces.toArray(new Class[allInterfaces.size()]),
                 new EntityProxyImpl(entity));
     }
-    
+
+    private void addClassLoaders(Class<?> type, Collection<ClassLoader> loaders) {
+        ClassLoader cl = type.getClassLoader();
+
+        //java.lang.Object.getClassLoader() = null
+        if (cl != null) {
+            loaders.add(cl);
+        }
+
+        Class<?> superType = type.getSuperclass();
+        if (superType != null) {
+            addClassLoaders(superType, loaders);
+        }
+        for (Class<?> iface : type.getInterfaces()) {
+            addClassLoaders(iface, loaders);
+        }
+    }
+
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
         /* Order is important here. Changed Jul 2014 when supporting children in spec.
          * (Previously was much simpler, and parent was set right after running initializers; and there were no children.)

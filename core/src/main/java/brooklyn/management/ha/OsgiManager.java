@@ -108,11 +108,22 @@ public class OsgiManager {
                 if (bundleNameVersion==null) {
                     bundleNameVersion = bundleUrlOrNameVersionString;
                 }
-                
+
                 Maybe<Bundle> bundle = Osgis.getBundle(framework, bundleNameVersion);
                 if (bundle.isPresent()) {
-                    @SuppressWarnings("unchecked")
-                    Class<T> clazz = (Class<T>) bundle.get().loadClass(type);
+                    Bundle b = bundle.get();
+                    Class<T> clazz;
+                    //Extension bundles don't support loadClass.
+                    //Instead load from the app classpath.
+                    if (Osgis.isExtensionBundle(b)) {
+                        @SuppressWarnings("unchecked")
+                        Class<T> c = (Class<T>)Class.forName(type);
+                        clazz = c;
+                    } else {
+                        @SuppressWarnings("unchecked")
+                        Class<T> c = (Class<T>)b.loadClass(type);
+                        clazz = c;
+                    }
                     return Maybe.of(clazz);
                 } else {
                     bundleProblems.put(bundleUrlOrNameVersionString, new IllegalStateException("Unable to find bundle "+bundleUrlOrNameVersionString));
@@ -120,6 +131,12 @@ public class OsgiManager {
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 bundleProblems.put(bundleUrlOrNameVersionString, e);
+
+                Throwable cause = e.getCause();
+                if (cause != null && cause.getMessage().contains("Unresolved constraint in bundle")) {
+                    log.warn("Unresolved constraint resolving OSGi bundle "+bundleUrlOrNameVersionString+" to load "+type+": "+cause.getMessage());
+                    if (log.isDebugEnabled()) log.debug("Trace for OSGi resolution failure", e);
+                }
             }
         }
         return Maybe.absent("Unable to resolve class "+type+": "+bundleProblems);

@@ -86,7 +86,7 @@ public class MavenRetriever {
     /** returns a URL for accessing the given artifact, preferring a local file if available,
      * else generating a hosted URL (but not checking) */
     public String getLocalUrl(MavenArtifact artifact) {
-        if (isInstalledLocally(artifact)) return "file://"+getLocalPath(artifact);
+        if (isInstalledLocally(artifact)) return new File(getLocalPath(artifact)).toURI().toString();
         if (artifact.isSnapshot()) return snapshotUrlGenerator.apply(artifact);
         else return releaseUrlGenerator.apply(artifact);
     }
