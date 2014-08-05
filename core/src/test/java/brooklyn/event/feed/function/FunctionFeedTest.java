@@ -48,6 +48,7 @@ import brooklyn.test.entity.TestEntity;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Callables;
 
@@ -189,6 +190,30 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 assertEquals(ints.subList(0, 2), ImmutableList.of(0, 1));
                 assertEquals(strings.subList(0, 2), ImmutableList.of("0", "1"));
             }});
+    }
+    
+    @Test
+    @SuppressWarnings("unused")
+    public void testFunctionPollConfigBuilding() throws Exception {
+        FunctionPollConfig<Integer, Integer> typeFromCallable = FunctionPollConfig.forSensor(SENSOR_INT)
+                .period(1)
+                .callable(Callables.returning(1))
+                .onSuccess(Functions.constant(-1));
+
+        FunctionPollConfig<Integer, Integer> typeFromSupplier = FunctionPollConfig.forSensor(SENSOR_INT)
+                .period(1)
+                .supplier(Suppliers.ofInstance(1))
+                .onSuccess(Functions.constant(-1));
+
+        FunctionPollConfig<Integer, Integer> usingConstructor = new FunctionPollConfig<Integer, Integer>(SENSOR_INT)
+                .period(1)
+                .supplier(Suppliers.ofInstance(1))
+                .onSuccess(Functions.constant(-1));
+
+        FunctionPollConfig<Integer, Integer> usingConstructorWithFailureOrException = new FunctionPollConfig<Integer, Integer>(SENSOR_INT)
+                .period(1)
+                .supplier(Suppliers.ofInstance(1))
+                .onFailureOrException(Functions.<Integer>constant(null));
     }
     
     private static class IncrementingCallable implements Callable<Integer> {
