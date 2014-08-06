@@ -19,6 +19,7 @@
 package brooklyn.enricher;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import org.testng.annotations.BeforeMethod;
@@ -33,8 +34,9 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.guava.TypeTokens;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Function;
@@ -45,6 +47,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
+@SuppressWarnings("serial")
 public class EnrichersTest extends BrooklynAppUnitTestSupport {
 
     public static final AttributeSensor<Integer> NUM1 = Sensors.newIntegerSensor("test.num1");
@@ -54,6 +57,9 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     public static final AttributeSensor<String> STR2 = Sensors.newStringSensor("test.str2");
     public static final AttributeSensor<Set<Object>> SET1 = Sensors.newSensor(new TypeToken<Set<Object>>() {}, "test.set1", "set1 descr");
     public static final AttributeSensor<Long> LONG1 = Sensors.newLongSensor("test.long1");
+    public static final AttributeSensor<Map<String,String>> MAP1 = Sensors.newSensor(new TypeToken<Map<String,String>>() {}, "test.map1", "map1 descr");
+    @SuppressWarnings("rawtypes")
+    public static final AttributeSensor<Map> MAP2 = Sensors.newSensor(Map.class, "test.map2");
     
     private TestEntity entity;
     private TestEntity entity2;
@@ -68,6 +74,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void testAdding() {
         entity.addEnricher(Enrichers.builder()
@@ -81,6 +88,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(entity, NUM3, 5);
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void testCombiningWithCustomFunction() {
         entity.addEnricher(Enrichers.builder()
@@ -94,6 +102,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(entity, NUM3, 1);
     }
     
+    @SuppressWarnings("unchecked")
     @Test(groups="Integration") // because takes a second
     public void testCombiningRespectsUnchanged() {
         entity.addEnricher(Enrichers.builder()
@@ -147,7 +156,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.addEnricher(Enrichers.builder()
                 .transforming(NUM1)
                 .publishing(LONG1)
-                .computing((Function)Functions.constant(Integer.valueOf(1)))
+                .computing(Functions.constant(Integer.valueOf(1)))
                 .build());
         
         entity.setAttribute(NUM1, 123);
@@ -312,7 +321,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
                 .aggregating(NUM1)
                 .publishing(LONG1)
                 .fromMembers()
-                .computing((Function)Functions.constant(Integer.valueOf(1)))
+                .computing(Functions.constant(Integer.valueOf(1)))
                 .build());
         
         entity.setAttribute(NUM1, 123);
@@ -342,4 +351,51 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.setAttribute(NUM1, 987654);
         EntityTestUtils.assertAttributeEqualsContinually(group, LONG1, Long.valueOf(123));
     }
+    
+    // FIXME we should not need to supply any casts, if we ensure 'from' returns the right type of builder
+    @Test
+    public void testUpdatingMap1v1() {
+        entity.addEnricher(Enrichers.builder()
+                .updatingMap(MAP1)
+                .from(LONG1)
+                .computing(Functionals.<Object>when(-1L).value("-1 is not allowed"))
+                .build());
+        
+        doUpdatingMapChecks(MAP1);
+    }
+    @Test
+    public void testUpdatingMap1v2() {
+        entity.addEnricher(Enrichers.builder()
+                .<Long,String,String>updatingMap(MAP1)
+                .from(LONG1)
+                .computing(Functionals.when(-1L).value("-1 is not allowed"))
+                .build());
+        
+        doUpdatingMapChecks(MAP1);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testUpdatingMap2() {
+        entity.addEnricher(Enrichers.builder()
+                .updatingMap((AttributeSensor)MAP2)
+                .from(LONG1)
+                .computing(Functionals.when(-1L).value("-1 is not allowed"))
+                .build());
+        
+        doUpdatingMapChecks(MAP2);
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected void doUpdatingMapChecks(AttributeSensor mapSensor) {
+        EntityTestUtils.assertAttributeEqualsEventually(entity, mapSensor, MutableMap.<String,String>of());
+        
+        entity.setAttribute(LONG1, -1L);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, mapSensor, MutableMap.<String,String>of(
+            LONG1.getName(), "-1 is not allowed"));
+        
+        entity.setAttribute(LONG1, 1L);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, mapSensor, MutableMap.<String,String>of());
+    }
+
 }
