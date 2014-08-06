@@ -20,20 +20,17 @@ package brooklyn.policy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.Serializable;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.management.Task;
-import brooklyn.util.exceptions.Exceptions;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 
 /**
@@ -46,7 +43,7 @@ import com.google.common.collect.Maps;
  * 
  * @author aled
  */
-public class EnricherSpec<T extends Enricher> implements Serializable {
+public class EnricherSpec<T extends Enricher> extends AbstractBrooklynObjectSpec<T,EnricherSpec<T>> {
 
     private static final Logger log = LoggerFactory.getLogger(EnricherSpec.class);
 
@@ -75,22 +72,23 @@ public class EnricherSpec<T extends Enricher> implements Serializable {
         return EnricherSpec.create(type).configure(config);
     }
     
-    private final Class<T> type;
-    private String displayName;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
 
     protected EnricherSpec(Class<T> type) {
-        checkIsImplementation(type);
-        checkIsNewStyleImplementation(type);
-        this.type = type;
+        super(type);
     }
     
-    public EnricherSpec<T> displayName(String val) {
-        displayName = val;
+    protected void checkValidType(Class<T> type) {
+        checkIsImplementation(type, Enricher.class);
+        checkIsNewStyleImplementation(type);
+    }
+    
+    public EnricherSpec<T> uniqueTag(String uniqueTag) {
+        flags.put("uniqueTag", uniqueTag);
         return this;
     }
-
+    
     public EnricherSpec<T> configure(Map<?,?> val) {
         for (Map.Entry<?, ?> entry: val.entrySet()) {
             if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
@@ -137,20 +135,6 @@ public class EnricherSpec<T extends Enricher> implements Serializable {
     }
 
     /**
-     * @return The type of the enricher
-     */
-    public Class<T> getType() {
-        return type;
-    }
-    
-    /**
-     * @return The display name of the enricher
-     */
-    public String getDisplayName() {
-        return displayName;
-    }
-    
-    /**
      * @return Read-only construction flags
      * @see SetFromFlag declarations on the enricher type
      */
@@ -164,30 +148,5 @@ public class EnricherSpec<T extends Enricher> implements Serializable {
     public Map<ConfigKey<?>, Object> getConfig() {
         return Collections.unmodifiableMap(config);
     }
-        
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this).add("type", type).toString();
-    }
-    
-    // TODO Duplicates method in EntitySpec and BasicEntityTypeRegistry
-    private void checkIsImplementation(Class<?> val) {
-        if (!Enricher.class.isAssignableFrom(val)) throw new IllegalStateException("Implementation "+val+" does not implement "+Enricher.class.getName());
-        if (val.isInterface()) throw new IllegalStateException("Implementation "+val+" is an interface, but must be a non-abstract class");
-        if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
-    }
 
-    // TODO Duplicates method in EntitySpec, BasicEntityTypeRegistry, and InternalEntityFactory.isNewStyleEntity
-    private void checkIsNewStyleImplementation(Class<?> implClazz) {
-        try {
-            implClazz.getConstructor(new Class[0]);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("Implementation "+implClazz+" must have a no-argument constructor");
-        } catch (SecurityException e) {
-            throw Exceptions.propagate(e);
-        }
-        
-        if (implClazz.isInterface()) throw new IllegalStateException("Implementation "+implClazz+" is an interface, but must be a non-abstract class");
-        if (Modifier.isAbstract(implClazz.getModifiers())) throw new IllegalStateException("Implementation "+implClazz+" is abstract, but must be a non-abstract class");
-    }
 }

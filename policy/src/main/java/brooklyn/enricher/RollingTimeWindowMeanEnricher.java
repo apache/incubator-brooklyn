@@ -29,6 +29,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
 /**
@@ -79,6 +80,9 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
         AttributeSensor<Double> target, Duration timePeriod) {
         super(producer, source, target);
         this.timePeriod = Preconditions.checkNotNull(timePeriod, "timePeriod");
+        
+        if (source!=null && target!=null)
+            this.uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+source.getName()+"/"+timePeriod+"->"+target.getName();
     }
 
     /** @deprecated since 0.6.0 use Duration parameter rather than long with millis */

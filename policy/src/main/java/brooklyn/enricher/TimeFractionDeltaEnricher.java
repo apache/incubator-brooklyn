@@ -29,6 +29,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.time.Duration;
 
 /**
  * Converts an absolute measure of time into a fraction of time, based on the delta between consecutive values 
@@ -58,6 +60,9 @@ public class TimeFractionDeltaEnricher<T extends Number> extends AbstractTypeTra
     public TimeFractionDeltaEnricher(Entity producer, Sensor<T> source, Sensor<Double> target, long nanosPerOrigUnit) {
         super(producer, source, target);
         this.nanosPerOrigUnit = nanosPerOrigUnit;
+        
+        if (source!=null && target!=null)
+            this.uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+source.getName()+"*"+Duration.nanos(nanosPerOrigUnit)+"->"+target.getName();
     }
     
     @Override

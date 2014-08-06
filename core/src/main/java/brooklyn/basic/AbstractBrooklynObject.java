@@ -18,16 +18,69 @@
  */
 package brooklyn.basic;
 
+import java.util.Set;
+
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
 
     @SetFromFlag(value="id")
     private String id = Identifiers.makeRandomId(8);
     
+    /** subclasses should synchronize on this for all access */
+    @SetFromFlag(value="tags")
+    protected Set<Object> tags = Sets.newLinkedHashSet();
+    
     @Override
     public String getId() {
         return id;
     }
+    
+    @Override
+    public Set<Object> getTags() {
+        synchronized (tags) {
+            return ImmutableSet.copyOf(tags);
+        }
+    }
+
+    public boolean addTag(Object tag) {
+        boolean result;
+        synchronized (tags) {
+            result = tags.add(tag);
+        }
+        onTagsChanged();
+        return result;
+    }    
+
+    public boolean addTags(Iterable<Object> tags) {
+        boolean result;
+        synchronized (tags) {
+            result = Iterables.addAll(this.tags, tags);
+        }
+        onTagsChanged();
+        return result;
+    }    
+
+    public boolean removeTag(Object tag) {
+        boolean result;
+        synchronized (tags) {
+            result = tags.remove(tag);
+        }
+        onTagsChanged();
+        return result;
+    }    
+
+    public boolean containsTag(Object tag) {
+        synchronized (tags) {
+            return tags.contains(tag);
+        }
+    }    
+
+    protected abstract void onTagsChanged();
+    
 }

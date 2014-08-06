@@ -36,11 +36,13 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -190,6 +192,7 @@ public class Enrichers {
             }
             // FIXME excludingBlank; use valueFilter? exclude means ignored entirely or substituted for defaultMemberValue?
             return EnricherSpec.create(Aggregator.class)
+                    .uniqueTag("aggregator:"+publishing)
                     .configure(MutableMap.builder()
                             .putIfNotNull(Aggregator.PRODUCER, fromEntity)
                             .put(Aggregator.TARGET_SENSOR, publishing)
@@ -288,6 +291,7 @@ public class Enrichers {
         }
         public EnricherSpec<?> build() {
             return EnricherSpec.create(Combiner.class)
+                    .uniqueTag("combiner:"+publishing)
                     .configure(MutableMap.builder()
                             .putIfNotNull(Combiner.PRODUCER, fromEntity)
                             .put(Combiner.TARGET_SENSOR, publishing)
@@ -347,6 +351,7 @@ public class Enrichers {
         }
         public EnricherSpec<?> build() {
             return EnricherSpec.create(Transformer.class)
+                    .uniqueTag("transformer:"+publishing)
                     .configure(MutableMap.builder()
                             .putIfNotNull(Transformer.PRODUCER, fromEntity)
                             .put(Transformer.TARGET_SENSOR, publishing)
@@ -399,7 +404,25 @@ public class Enrichers {
             return self();
         }
         public EnricherSpec<? extends Enricher> build() {
+            List<String> summary = MutableList.of();
+            if (propagating!=null) {
+                for (Map.Entry<? extends Sensor<?>, ? extends Sensor<?>> entry: propagating.entrySet()) {
+                    if (entry.getKey().getName().equals(entry.getValue().getName()))
+                        summary.add(entry.getKey().getName());
+                    else
+                        summary.add(entry.getKey().getName()+"->"+entry.getValue().getName());
+                }
+            }
+            if (Boolean.TRUE.equals(propagatingAll))
+                summary.add("ALL");
+            if (propagatingAllBut!=null && !Iterables.isEmpty(propagatingAllBut)) {
+                List<String> allBut = MutableList.of();
+                for (Sensor<?> s: propagatingAllBut) allBut.add(s.getName());
+                summary.add("ALL_BUT:"+Joiner.on(",").join(allBut));
+            }
+            
             return EnricherSpec.create(Propagator.class)
+                    .uniqueTag("propagating["+fromEntity.getId()+":"+Joiner.on(",").join(summary)+"]")
                     .configure(MutableMap.builder()
                             .putIfNotNull(Propagator.PRODUCER, fromEntity)
                             .putIfNotNull(Propagator.SENSOR_MAPPING, propagating)

@@ -30,6 +30,8 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -73,6 +75,9 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
         super(producer, source, target);
         this.unitMillis = unitMillis;
         this.postProcessor = postProcessor;
+        
+        if (source!=null && target!=null)
+            this.uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+source.getName()+"/"+Duration.millis(unitMillis)+"->"+target.getName();
     }
     
     @Override

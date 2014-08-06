@@ -41,7 +41,7 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
         this(Maps.newLinkedHashMap());
     }
     
-    public AbstractEnricher(Map flags) {
+    public AbstractEnricher(Map<?,?> flags) {
         super(flags);
         enricherType = new EnricherTypeImpl(getAdjunctType());
         
@@ -62,9 +62,10 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
 
     @Override
     protected void onChanged() {
-        // TODO Could add EnricherChangeListener, similar to EntityChangeListener; should we do that?
+        // currently changes simply trigger re-persistence; there is no intermediate listener as we do for EntityChangeListener
         if (getManagementContext() != null) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(this);
         }
     }
+    
 }

@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -59,6 +60,7 @@ import brooklyn.util.flags.TypeCoercions;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 
@@ -97,6 +99,9 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     protected transient SubscriptionTracker _subscriptionTracker;
     
     private AtomicBoolean destroyed = new AtomicBoolean(false);
+    
+    @SetFromFlag(value="uniqueTag")
+    protected String uniqueTag;
 
     public AbstractEntityAdjunct() {
         this(Collections.emptyMap());
@@ -262,6 +267,11 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
     }
     
+    @Override
+    protected void onTagsChanged() {
+        onChanged();
+    }
+    
     protected abstract void onChanged();
     
     protected AdjunctType getAdjunctType() {
@@ -397,11 +407,25 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     public boolean isRunning() {
         return !isDestroyed();
     }
+
+    @Override
+    public String getUniqueTag() {
+        return uniqueTag;
+    }
+    
+    @Override
+    public Set<Object> getTags() {
+        if (getUniqueTag()==null) return super.getTags();
+        synchronized (tags) {
+            return ImmutableSet.builder().addAll(tags).add(getUniqueTag()).build();
+        }
+    }
     
     @Override
     public String toString() {
-        return Objects.toStringHelper(getClass())
+        return Objects.toStringHelper(getClass()).omitNullValues()
                 .add("name", name)
+                .add("uniqueTag", uniqueTag)
                 .add("running", isRunning())
                 .add("id", getId())
                 .toString();

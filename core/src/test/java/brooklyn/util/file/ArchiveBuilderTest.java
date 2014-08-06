@@ -167,7 +167,7 @@ public class ArchiveBuilderTest {
         ArchiveBuilder builder = ArchiveBuilder.zip();
         String baseDir = tmpDir.getName();
         for (String fileName : Arrays.asList("data01.txt", "data02.txt", "data03.txt")) {
-            builder.addRelativeToBaseDir(parentDir.getPath(), Os.mergePaths(baseDir, fileName));
+            builder.addFromLocalBaseDir(parentDir, Os.mergePaths(baseDir, fileName));
         }
         File archive = builder.create();
         archive.deleteOnExit();

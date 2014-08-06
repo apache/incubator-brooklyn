@@ -34,7 +34,6 @@ import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.enricher.basic.Aggregator;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -91,7 +90,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -175,7 +173,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
     Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
     Collection<AbstractEnricher> enrichers = Lists.newCopyOnWriteArrayList();
-    Set<Object> tags = Sets.newLinkedHashSet();
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
     // orphaning (i.e. removing ownership). This flag notes if the entity has previously had a parent, and if an attempt is made to
@@ -1079,7 +1076,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
-    public void addPolicy(Policy policy) {
+    public Policy addPolicy(Policy policy) {
         List<Policy> old = MutableList.<Policy>copyOf(policies);
 
         policies.add((AbstractPolicy)policy);
@@ -1088,21 +1085,26 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
         emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
         
-        if (hasApparentlyEqualsAndWarn(old, policy)) removePolicy(policy);
-    }
-
-    @Override
-    public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
-        T policy = getManagementContext().getEntityManager().createPolicy(spec);
-        addPolicy(policy);
+        Policy actual = findApparentlyEqualsAndWarn(old, policy);
+        if (actual!=null) {
+            removePolicy(policy);
+            return actual;
+        }
         return policy;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
+        T policy = getManagementContext().getEntityManager().createPolicy(spec);
+        return (T) addPolicy(policy);
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
         T enricher = getManagementContext().getEntityManager().createEnricher(spec);
-        addEnricher(enricher);
-        return enricher;
+        return (T) addEnricher(enricher);
     }
 
     @Override
@@ -1133,7 +1135,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
-    public void addEnricher(Enricher enricher) {
+    public Enricher addEnricher(Enricher enricher) {
         List<Enricher> old = MutableList.<Enricher>copyOf(enrichers);
         
         enrichers.add((AbstractEnricher) enricher);
@@ -1142,26 +1144,39 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
         // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
         
-        if (hasApparentlyEqualsAndWarn(old, enricher)) removeEnricher(enricher);
+        Enricher actual = findApparentlyEqualsAndWarn(old, enricher);
+        if (actual!=null) {
+            removeEnricher(enricher);
+            return actual;
+        }
+        return enricher;
     }
     
-    private <T> boolean hasApparentlyEqualsAndWarn(Collection<? extends T> items, T newItem) {
+    private <T extends EntityAdjunct> T findApparentlyEqualsAndWarn(Collection<? extends T> items, T newItem) {
         T oldItem = findApparentlyEquals(items, newItem);
+        
         if (oldItem!=null) {
+            String newItemTag = newItem.getUniqueTag();
+            if (newItemTag!=null) {
+                // old item has same tag; don't add
+                LOG.warn("Adding to "+this+", "+newItem+" has identical uniqueTag as existing "+oldItem+"; will remove after adding. "
+                    + "Underlying addition should be modified so it is not added twice.");
+                return oldItem;
+            }
             if (isRebinding()) {
                 LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; will remove after adding. "
-                    + "Underlying addition should be checked as this behavior will likely be removed without further notice.");
-                return true;
+                    + "Underlying addition should be modified so it is not added twice during rebind.");
+                return oldItem;
             } else {
                 LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; may get removed on rebind. "
-                    + "If unintended, addition should be removed. If intended, enricher should be modified so difference is apparent.");
-                return false;
+                    + "Underlying addition should be modified so it is not added twice.");
+                return null;
             }
         } else {
-            return false;
+            return null;
         }
     }
-    private <T> T findApparentlyEquals(Collection<? extends T> itemsCopy, T newItem) {
+    private <T extends EntityAdjunct> T findApparentlyEquals(Collection<? extends T> itemsCopy, T newItem) {
         // FIXME workaround for issue where enrichers can get added multiple times on rebind,
         // if it's added in onBecomingManager or connectSensors; the right fix will be more disciplined about how/where these are added
         // (easier done when sensor feeds are persisted)
@@ -1169,8 +1184,12 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         while (beforeEntityAdjunct.getSuperclass()!=null && !beforeEntityAdjunct.getSuperclass().equals(AbstractEntityAdjunct.class))
             beforeEntityAdjunct = beforeEntityAdjunct.getSuperclass();
         
+        String newItemTag = newItem.getUniqueTag();
         for (T oldItem: itemsCopy) {
-            if (oldItem.getClass().equals(newItem.getClass())) {
+            if (oldItem.getUniqueTag()!=null) {
+                if ((oldItem.getUniqueTag().equals(newItemTag)))
+                    return oldItem;
+            } else if (newItemTag==null && oldItem.getClass().equals(newItem.getClass())) {
                 if (EqualsBuilder.reflectionEquals(oldItem, newItem, false,
                         // internal admin in 'beforeEntityAdjunct' should be ignored
                         beforeEntityAdjunct,
@@ -1330,38 +1349,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
-    public Set<Object> getTags() {
-        synchronized (tags) {
-            return ImmutableSet.copyOf(tags);
-        }
+    protected void onTagsChanged() {
+        getManagementSupport().getEntityChangeListener().onTagsChanged();
     }
-
-    @Override
-    public boolean addTag(Object tag) {
-        boolean result;
-        synchronized (tags) {
-            result = tags.add(tag);
-        }
-        getManagementSupport().getEntityChangeListener().onTagsChanged();
-        return result;
-    }    
-
-    @Override
-    public boolean removeTag(Object tag) {
-        boolean result;
-        synchronized (tags) {
-            result = tags.remove(tag);
-        }
-        getManagementSupport().getEntityChangeListener().onTagsChanged();
-        return result;
-    }    
-
-    @Override
-    public boolean containsTag(Object tag) {
-        synchronized (tags) {
-            return tags.contains(tag);
-        }
-    }    
     
     @Override
     protected void finalize() throws Throwable {

@@ -54,7 +54,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         this(Collections.emptyMap());
     }
     
-    public AbstractPolicy(Map flags) {
+    public AbstractPolicy(Map<?,?> flags) {
         super(flags);
         policyType = new PolicyTypeImpl(getAdjunctType());
         
@@ -80,6 +80,10 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
 
     @Override
     public boolean isSuspended() {
+        if (suspended==null) {
+            // only if accessed during construction in super, e.g. by a call to toString in configure
+            return true;
+        }
         return suspended.get();
     }
 
@@ -96,7 +100,7 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
 
     @Override
     protected void onChanged() {
-        // TODO Could add PolicyChangeListener, similar to EntityChangeListener; should we do that?
+        // currently changes simply trigger re-persistence; there is no intermediate listener as we do for EntityChangeListener
         if (getManagementContext() != null) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(this);
         }
