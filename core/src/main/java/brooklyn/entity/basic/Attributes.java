@@ -31,6 +31,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.net.UserAndHostAndPort;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 
 /**
  * This interface should be used to access {@link Sensor} definitions.
@@ -91,6 +92,11 @@ public interface Attributes {
      */
     AttributeSensor<Boolean> SERVICE_UP = Sensors.newBooleanSensor("service.isUp", 
             "Whether the service is active and availability (confirmed and monitored)");
+    @SuppressWarnings("serial")
+    AttributeSensor<Map<String,Object>> SERVICE_NOT_UP_INDICATORS = Sensors.newSensor(
+        new TypeToken<Map<String,Object>>() {},
+        "service.notUp.indicators", 
+        "A map of namespaced indicators that the service is not up");
     
     AttributeSensor<Lifecycle> SERVICE_STATE = Sensors.newSensor(Lifecycle.class,
             "service.state", "Expected lifecycle state of the service");

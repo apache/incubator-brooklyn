@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -45,6 +46,7 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
+import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
@@ -55,6 +57,7 @@ import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -72,7 +75,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	private transient SoftwareProcessDriver driver;
 
     /** @see #connectServiceUpIsRunning() */
-    private volatile FunctionFeed serviceUp;
+    private volatile FunctionFeed serviceProcessIsRunning;
 
     private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
             new SoftwareProcessDriverLifecycleEffectorTasks();
@@ -148,10 +151,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * @see #disconnectServiceUpIsRunning()
      */
     protected void connectServiceUpIsRunning() {
-        serviceUp = FunctionFeed.builder()
+        serviceProcessIsRunning = FunctionFeed.builder()
                 .entity(this)
                 .period(5000)
-                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
+                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_PROCESS_IS_RUNNING)
                         .onException(Functions.constant(Boolean.FALSE))
                         .callable(new Callable<Boolean>() {
                             public Boolean call() {
@@ -159,6 +162,29 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                             }
                         }))
                 .build();
+
+        // FIXME quick-and-dirty change
+        Function<Boolean, Map<String,Object>> f = new Function<Boolean, Map<String,Object>>() {
+            @Override
+            public Map<String, Object> apply(Boolean input) {
+                Map<String, Object> result = getAttribute(Attributes.SERVICE_NOT_UP_INDICATORS);
+                if (result==null) result = MutableMap.of();
+                // TODO only change/publish if it needs changing...
+                if (Boolean.TRUE.equals(input)) {
+                    result.remove(SERVICE_PROCESS_IS_RUNNING.getName());
+                    return result;
+                } else {
+                    result.put(SERVICE_PROCESS_IS_RUNNING.getName(), "Process not running (according to driver checkRunning)");                    
+                    return result;
+                }
+            }
+        };
+        addEnricher(Enrichers.builder().transforming(SERVICE_PROCESS_IS_RUNNING).publishing(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .computing(f).build());
+        
+        // FIXME lives elsewhere
+        addEnricher(Enrichers.builder().transforming(Attributes.SERVICE_NOT_UP_INDICATORS).publishing(Attributes.SERVICE_UP)
+            .computing( Functions.forPredicate(CollectionFunctionals.<String>mapSizeEquals(0)) ).build());
     }
 
     /**
@@ -169,7 +195,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * @see #connectServiceUpIsRunning()
      */
     protected void disconnectServiceUpIsRunning() {
-        if (serviceUp != null) serviceUp.stop();
+        if (serviceProcessIsRunning != null) serviceProcessIsRunning.stop();
     }
 
     /**
