@@ -20,6 +20,8 @@ package brooklyn.basic;
 
 import java.util.Set;
 
+import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
 
@@ -33,7 +35,17 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     
     private final Set<Object> tags = Sets.newLinkedHashSet();
 
+    private volatile ManagementContext managementContext;
+
     protected abstract void requestPersist();
+
+    public void setManagementContext(ManagementContextInternal managementContext) {
+        this.managementContext = managementContext;
+    }
+    
+    public ManagementContext getManagementContext() {
+        return managementContext;
+    }
 
     @Override
     public String getId() {

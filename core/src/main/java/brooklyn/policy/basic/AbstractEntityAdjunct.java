@@ -68,8 +68,6 @@ import com.google.common.collect.Maps;
 public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject implements BrooklynObjectInternal, EntityAdjunct, Configurable {
     private static final Logger log = LoggerFactory.getLogger(AbstractEntityAdjunct.class);
 
-    private volatile ManagementContext managementContext;
-
     protected Map<String,Object> leftoverProperties = Maps.newLinkedHashMap();
 
     private boolean _legacyConstruction;
@@ -178,14 +176,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     
     protected boolean isLegacyConstruction() {
         return _legacyConstruction;
-    }
-
-    public void setManagementContext(ManagementContext managementContext) {
-        this.managementContext = managementContext;
-    }
-    
-    protected ManagementContext getManagementContext() {
-        return managementContext;
     }
 
     /**
