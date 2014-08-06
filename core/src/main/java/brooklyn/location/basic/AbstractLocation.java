@@ -565,6 +565,14 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     }
 
     @Override
+    public void requestPersist() {
+        // TODO Could add LocationChangeListener, similar to EntityChangeListener; should we do that?
+        if (getManagementContext() != null) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+        }
+    }
+
+    @Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
     }

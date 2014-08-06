@@ -18,8 +18,8 @@
  */
 package brooklyn.rest.resources;
 
-import static javax.ws.rs.core.Response.Status.ACCEPTED;
 import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import java.net.URI;
 import java.util.LinkedList;
@@ -30,11 +30,6 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import com.google.common.collect.Collections2;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
@@ -54,6 +49,11 @@ import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
+
+import com.google.common.collect.Collections2;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
 
@@ -104,7 +104,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   @Override
   public List<Object> listTags(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
-      return MutableList.copyOf(entity.getTags());
+      return MutableList.copyOf(entity.getTagSupport().getTags());
   }
 
   @Override

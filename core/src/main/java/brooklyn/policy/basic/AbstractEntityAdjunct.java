@@ -69,6 +69,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     private static final Logger log = LoggerFactory.getLogger(AbstractEntityAdjunct.class);
 
     private volatile ManagementContext managementContext;
+
     protected Map<String,Object> leftoverProperties = Maps.newLinkedHashMap();
 
     private boolean _legacyConstruction;
@@ -179,6 +180,14 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return _legacyConstruction;
     }
 
+    public void setManagementContext(ManagementContext managementContext) {
+        this.managementContext = managementContext;
+    }
+    
+    protected ManagementContext getManagementContext() {
+        return managementContext;
+    }
+
     /**
      * Used for legacy-style policies/enrichers on rebind, to indicate that init() should not be called.
      * Will likely be deleted in a future release; should not be called apart from by framework code.
@@ -188,14 +197,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return _legacyNoConstructionInit;
     }
     
-    public void setManagementContext(ManagementContext managementContext) {
-        this.managementContext = managementContext;
-    }
-    
-    protected ManagementContext getManagementContext() {
-        return managementContext;
-    }
-
     /**
      * Called by framework (in new-style policies where PolicySpec was used) after configuring etc,
      * but before a reference to this policy is shared.

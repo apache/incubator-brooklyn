@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.dto.MementosGenerators;
+import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.config.ConfigBag;
@@ -39,7 +40,7 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
     
     @Override
     public PolicyMemento getMemento() {
-        PolicyMemento memento = MementosGenerators.newPolicyMementoBuilder(policy).build();
+        PolicyMemento memento = MementosGenerators.newPolicyMemento(policy);
         if (LOG.isTraceEnabled()) LOG.trace("Creating memento for policy: {}", memento.toVerboseString());
         return memento;
     }
@@ -57,11 +58,18 @@ public class BasicPolicyRebindSupport implements RebindSupport<PolicyMemento> {
         ConfigBag configBag = ConfigBag.newInstance(memento.getConfig());
         FlagUtils.setFieldsFromFlags(policy, configBag);
         FlagUtils.setAllConfigKeys(policy, configBag, false);
+        addTags(rebindContext, memento);
         
         doReconstruct(rebindContext, memento);
         ((AbstractPolicy)policy).rebind();
     }
 
+    protected void addTags(RebindContext rebindContext, Memento memento) {
+        for (Object tag : memento.getTags()) {
+            policy.getTagSupport().addTag(tag);
+        }
+    }
+    
     @Override
     public void addPolicies(RebindContext rebindContext, PolicyMemento Memento) {
         throw new UnsupportedOperationException();

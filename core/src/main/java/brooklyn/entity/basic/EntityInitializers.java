@@ -36,7 +36,7 @@ public class EntityInitializers {
         @Override
         public void apply(EntityLocal entity) {
             for (Object tag: tags)
-                entity.addTag(tag);
+                entity.getTagSupport().addTag(tag);
         }
     }
 

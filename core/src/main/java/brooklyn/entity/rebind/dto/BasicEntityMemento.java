@@ -70,7 +70,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         protected List<String> enrichers = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
         protected List<Effector<?>> effectors = Lists.newArrayList();
-        protected List<Object> tags = Lists.newArrayList();
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
@@ -104,7 +103,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private Map<String, Object> attributes;
     private List<String> policies;
     private List<String> enrichers;
-    private List<Object> tags;
     
     // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
     private Map<String, ConfigKey<?>> configKeys;
@@ -133,7 +131,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         policies = toPersistedList(builder.policies);
         enrichers = toPersistedList(builder.enrichers);
         members = toPersistedList(builder.members);
-        tags = toPersistedList(builder.tags);
         
         effectors = toPersistedList(builder.effectors);
         
@@ -276,10 +273,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     @Override
     public List<String> getMembers() {
         return fromPersistedList(members);
-    }
-    
-    public List<Object> getTags() {
-        return fromPersistedList(tags);
     }
     
     @Override

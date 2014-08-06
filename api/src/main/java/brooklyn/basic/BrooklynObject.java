@@ -18,7 +18,13 @@
  */
 package brooklyn.basic;
 
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
 import brooklyn.entity.trait.Identifiable;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Super-type of entity, location, policy and enricher.
@@ -28,4 +34,26 @@ public interface BrooklynObject extends Identifiable {
      * A display name; recommended to be a concise single-line description.
      */
     String getDisplayName();
+    
+    /** 
+     * Tags are arbitrary objects which can be attached to an entity for subsequent reference.
+     * They must not be null (as {@link ImmutableMap} may be used under the covers; also there is little point!);
+     * and they should be amenable to our persistence (on-disk serialization) and our JSON serialization in the REST API.
+     */
+    TagSupport getTagSupport();
+    
+    public static interface TagSupport {
+        /**
+         * @return An immutable copy of the set of tags on this entity. 
+         * Note {@link #containsTag(Object)} will be more efficient,
+         * and {@link #addTag(Object)} and {@link #removeTag(Object)} will not work on the returned set.
+         */
+        Set<Object> getTags();
+        
+        boolean containsTag(@Nonnull Object tag);
+        
+        boolean addTag(@Nonnull Object tag);
+        
+        boolean removeTag(@Nonnull Object tag);
+    }
 }

@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynTypes;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
@@ -60,7 +61,10 @@ public class MementosGenerators {
     
     /**
      * Walks the contents of a ManagementContext, to create a corresponding memento.
+     * 
+     * @deprecated since 0.7.0; will be moved to test code; generate each entity/location memento separately
      */
+    @Deprecated
     public static BrooklynMemento newBrooklynMemento(ManagementContext managementContext) {
         BrooklynMementoImpl.Builder builder = BrooklynMementoImpl.builder();
                 
@@ -97,16 +101,17 @@ public class MementosGenerators {
     public static EntityMemento newEntityMemento(Entity entity) {
         return newEntityMementoBuilder(entity).build();
     }
-    
-    public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entity) {
-        EntityDynamicType definedType = BrooklynTypes.getDefinedEntityType(entity.getClass());
-        BasicEntityMemento.Builder builder = BasicEntityMemento.builder();
-                
-        builder.id = entity.getId();
-        builder.displayName = entity.getDisplayName();
-        builder.type = entity.getClass().getName();
-        builder.typeClass = entity.getClass();
 
+    /**
+     * @deprecated since 0.7.0; use {@link #newEntityMemento(Enricher)} instead
+     */
+    @Deprecated
+    public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entity) {
+        BasicEntityMemento.Builder builder = BasicEntityMemento.builder();
+        populateBrooklynObjectMementoBuilder(entity, builder);
+        
+        EntityDynamicType definedType = BrooklynTypes.getDefinedEntityType(entity.getClass());
+                
         // TODO the dynamic attributeKeys and configKeys are computed in the BasicEntityMemento
         // whereas effectors are computed here -- should be consistent! 
         // (probably best to compute attrKeys and configKeys here)
@@ -157,10 +162,6 @@ public class MementosGenerators {
             builder.enrichers.add(enricher.getId()); 
         }
         
-        for (Object tag : entity.getTags()) {
-            builder.tags.add(tag); 
-        }
-        
         Entity parentEntity = entity.getParent();
         builder.parent = (parentEntity != null) ? parentEntity.getId() : null;
 
@@ -195,8 +196,13 @@ public class MementosGenerators {
         return newLocationMementoBuilder(location).build();
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link #newLocationMemento(Enricher)} instead
+     */
+    @Deprecated
     public static BasicLocationMemento.Builder newLocationMementoBuilder(Location location) {
         BasicLocationMemento.Builder builder = BasicLocationMemento.builder();
+        populateBrooklynObjectMementoBuilder(location, builder);
 
         Set<String> nonPersistableFlagNames = MutableMap.<String,Object>builder()
                 .putAll(FlagUtils.getFieldsWithFlagsWithModifiers(location, Modifier.TRANSIENT))
@@ -211,10 +217,6 @@ public class MementosGenerators {
                 .build();
         ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getLocalConfigBag() ).removeAll(nonPersistableFlagNames);
 
-        builder.type = location.getClass().getName();
-        builder.typeClass = location.getClass();
-        builder.id = location.getId();
-        builder.displayName = location.getDisplayName();
         builder.copyConfig(persistableConfig);
         builder.locationConfig.putAll(persistableFlags);
 
@@ -242,16 +244,8 @@ public class MementosGenerators {
      * Given a policy, extracts its state for serialization.
      */
     public static PolicyMemento newPolicyMemento(Policy policy) {
-        return newPolicyMementoBuilder(policy).build();
-    }
-    
-    public static BasicPolicyMemento.Builder newPolicyMementoBuilder(Policy policy) {
         BasicPolicyMemento.Builder builder = BasicPolicyMemento.builder();
-        
-        builder.type = policy.getClass().getName();
-        builder.typeClass = policy.getClass();
-        builder.id = policy.getId();
-        builder.displayName = policy.getDisplayName();
+        populateBrooklynObjectMementoBuilder(policy, builder);
 
         // TODO persist config keys as well? Or only support those defined on policy class;
         // current code will lose the ConfigKey type on rebind for anything not defined on class.
@@ -271,7 +265,7 @@ public class MementosGenerators {
                 .build();
         builder.config.putAll(persistableFlags);
 
-        return builder;
+        return builder.build();
     }
     
     public static Function<Policy, PolicyMemento> policyMementoFunction() {
@@ -288,17 +282,9 @@ public class MementosGenerators {
      * Given an enricher, extracts its state for serialization.
      */
     public static EnricherMemento newEnricherMemento(Enricher enricher) {
-        return newEnricherMementoBuilder(enricher).build();
-    }
-    
-    public static BasicEnricherMemento.Builder newEnricherMementoBuilder(Enricher enricher) {
         BasicEnricherMemento.Builder builder = BasicEnricherMemento.builder();
+        populateBrooklynObjectMementoBuilder(enricher, builder);
         
-        builder.type = enricher.getClass().getName();
-        builder.typeClass = enricher.getClass();
-        builder.id = enricher.getId();
-        builder.displayName = enricher.getDisplayName();
-
         // TODO persist config keys as well? Or only support those defined on policy class;
         // current code will lose the ConfigKey type on rebind for anything not defined on class.
         // Whereas entities support that.
@@ -317,9 +303,20 @@ public class MementosGenerators {
                 .build();
         builder.config.putAll(persistableFlags);
 
-        return builder;
+        return builder.build();
     }
     
+    private static void populateBrooklynObjectMementoBuilder(BrooklynObject instance, AbstractMemento.Builder<?> builder) {
+        builder.id = instance.getId();
+        builder.displayName = instance.getDisplayName();
+        builder.type = instance.getClass().getName();
+        builder.typeClass = instance.getClass();
+        
+        for (Object tag : instance.getTagSupport().getTags()) {
+            builder.tags.add(tag); 
+        }
+    }
+
     protected static Object configValueToPersistable(Object value) {
         // TODO Swapping an attributeWhenReady task for the actual value, if completed.
         // Long-term, want to just handle task-persistence properly.

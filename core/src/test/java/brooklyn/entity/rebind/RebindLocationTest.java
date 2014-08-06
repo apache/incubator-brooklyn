@@ -40,6 +40,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
@@ -47,6 +48,7 @@ import brooklyn.util.flags.SetFromFlag;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class RebindLocationTest extends RebindTestFixtureWithApp {
@@ -236,7 +238,7 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
         MyLocation origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class));
         origApp.start(ImmutableList.of(origLoc));
 
-        newApp = (TestApplication) rebind();
+        newApp = rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
 
         assertNull(newLoc.getAllConfigBag().getStringKey("id"));
@@ -254,6 +256,19 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
         assertFalse(newLoc.isRebinding());
     }
     
+    @Test
+    public void testLocationTags() throws Exception {
+        Location origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class));
+        origLoc.getTagSupport().addTag("foo");
+        origLoc.getTagSupport().addTag(origApp);
+        origApp.start(ImmutableList.of(origLoc));
+
+        newApp = rebind();
+        Location newLoc = (Location) newManagementContext.getLocationManager().getLocation(origLoc.getId());
+
+        Asserts.assertEqualsIgnoringOrder(newLoc.getTagSupport().getTags(), ImmutableSet.of("foo", newApp));
+    }
+
     public static class LocationChecksIsRebinding extends AbstractLocation {
         boolean isRebindingValWhenRebinding;
         

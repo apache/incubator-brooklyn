@@ -109,20 +109,20 @@ public class EntitiesTest extends BrooklynAppUnitTestSupport {
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
             .addInitializer(EntityInitializers.addingTags("foo")));
         
-        entity.addTag(app);
+        entity.getTagSupport().addTag(app);
         
-        Assert.assertTrue(entity.containsTag("foo"));
-        Assert.assertFalse(entity.containsTag("bar"));
+        Assert.assertTrue(entity.getTagSupport().containsTag("foo"));
+        Assert.assertFalse(entity.getTagSupport().containsTag("bar"));
         
-        Assert.assertEquals(entity.getTags(), MutableSet.of(app, "foo"));
+        Assert.assertEquals(entity.getTagSupport().getTags(), MutableSet.of(app, "foo"));
         
-        entity.removeTag("foo");
-        Assert.assertFalse(entity.containsTag("foo"));
+        entity.getTagSupport().removeTag("foo");
+        Assert.assertFalse(entity.getTagSupport().containsTag("foo"));
         
-        Assert.assertTrue(entity.containsTag(entity.getParent()));
-        Assert.assertFalse(entity.containsTag(entity));
+        Assert.assertTrue(entity.getTagSupport().containsTag(entity.getParent()));
+        Assert.assertFalse(entity.getTagSupport().containsTag(entity));
         
-        Assert.assertEquals(entity.getTags(), MutableSet.of(app));
+        Assert.assertEquals(entity.getTagSupport().getTags(), MutableSet.of(app));
     }
     
 }

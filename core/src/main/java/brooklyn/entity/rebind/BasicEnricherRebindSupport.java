@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.mementos.EnricherMemento;
+import brooklyn.mementos.Memento;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
@@ -39,7 +40,7 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
     
     @Override
     public EnricherMemento getMemento() {
-        EnricherMemento memento = MementosGenerators.newEnricherMementoBuilder(enricher).build();
+        EnricherMemento memento = MementosGenerators.newEnricherMemento(enricher);
         if (LOG.isTraceEnabled()) LOG.trace("Creating memento for enricher: {}", memento.toVerboseString());
         return memento;
     }
@@ -57,11 +58,17 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
         ConfigBag configBag = ConfigBag.newInstance(memento.getConfig());
         FlagUtils.setFieldsFromFlags(enricher, configBag);
         FlagUtils.setAllConfigKeys(enricher, configBag, false);
-        
+        addTags(rebindContext, memento);
         doReconstruct(rebindContext, memento);
         ((AbstractEnricher)enricher).rebind();
     }
 
+    protected void addTags(RebindContext rebindContext, Memento memento) {
+        for (Object tag : memento.getTags()) {
+            enricher.getTagSupport().addTag(tag);
+        }
+    }
+    
     @Override
     public void addPolicies(RebindContext rebindContext, EnricherMemento Memento) {
         throw new UnsupportedOperationException();

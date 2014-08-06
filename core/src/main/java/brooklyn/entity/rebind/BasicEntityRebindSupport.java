@@ -175,7 +175,7 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
     
     protected void addTags(RebindContext rebindContext, EntityMemento memento) {
         for (Object tag : memento.getTags()) {
-            entity.addTag(tag);
+            entity.getTagSupport().addTag(tag);
         }
     }
     

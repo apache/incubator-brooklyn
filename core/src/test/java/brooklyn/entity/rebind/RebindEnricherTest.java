@@ -47,6 +47,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -57,6 +58,7 @@ import brooklyn.util.text.StringFunctions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class RebindEnricherTest extends RebindTestFixtureWithApp {
@@ -200,6 +202,18 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         assertFalse(newEnricher.isRebinding());
     }
     
+    @Test
+    public void testPolicyTags() throws Exception {
+        Enricher origEnricher = origApp.addEnricher(EnricherSpec.create(MyEnricher.class));
+        origEnricher.getTagSupport().addTag("foo");
+        origEnricher.getTagSupport().addTag(origApp);
+
+        newApp = rebind();
+        Enricher newEnricher = Iterables.getOnlyElement(newApp.getEnrichers());
+
+        Asserts.assertEqualsIgnoringOrder(newEnricher.getTagSupport().getTags(), ImmutableSet.of("foo", newApp));
+    }
+
     public static class EnricherChecksIsRebinding extends AbstractEnricher {
         boolean isRebindingValWhenRebinding;
         

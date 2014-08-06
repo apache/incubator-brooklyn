@@ -104,10 +104,17 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
+        addTags(rebindContext, memento);
         location.init(); // TODO deprecated calling init; will be deleted
         location.rebind();
         
         doReconstruct(rebindContext, memento);
+    }
+
+    protected void addTags(RebindContext rebindContext, LocationMemento memento) {
+        for (Object tag : memento.getTags()) {
+            location.getTagSupport().addTag(tag);
+        }
     }
 
     @Override

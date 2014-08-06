@@ -79,16 +79,12 @@ public abstract class BrooklynDynamicType<T extends BrooklynObject, AbstractT ex
     protected BrooklynDynamicType(Class<? extends T> clazz, AbstractT instance) {
         this.brooklynClass = checkNotNull(clazz, "brooklyn class");
         this.instance = instance;
-        // NB: official name is usu injected later, e.g. from AbstractEntity.setManagementContext
-        setName((clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName());
-        
-        String id = instance==null ? clazz.getName() : instance.getId();
+        // NB: official name is usually injected later, e.g. from AbstractEntity.setManagementContext
+        this.name = (clazz.getCanonicalName() == null) ? clazz.getName() : clazz.getCanonicalName();
         
         buildConfigKeys(clazz, null, configKeys);
         if (LOG.isTraceEnabled())
-            LOG.trace("Entity {} config keys: {}", id, Joiner.on(", ").join(configKeys.keySet()));
-
-        refreshSnapshot();
+            LOG.trace("Entity {} config keys: {}", (instance==null ? clazz.getName() : instance.getId()), Joiner.on(", ").join(configKeys.keySet()));
     }
     
     protected abstract BrooklynTypeSnapshot newSnapshot();
