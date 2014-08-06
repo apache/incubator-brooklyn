@@ -61,12 +61,13 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Stopwatch;
 
 /** 
  * utilities for working with osgi.
@@ -168,7 +169,7 @@ public class Osgis {
         if (felixCacheDir!=null) cfg.put(Constants.FRAMEWORK_STORAGE, felixCacheDir);
         FrameworkFactory factory = newFrameworkFactory();
 
-        long frameworkInitStart = System.currentTimeMillis();
+        Stopwatch timer = Stopwatch.createStarted();
         Framework framework = factory.newFramework(cfg);
         try {
             framework.init();
@@ -178,9 +179,7 @@ public class Osgis {
             // framework bundle start exceptions are not interesting to caller...
             throw Exceptions.propagate(e);
         }
-        long frameworkInitEnd = System.currentTimeMillis();
-        double frameworkInitSeconds = ((double)frameworkInitEnd - frameworkInitStart) / 1000;
-        LOG.info("OSGi framework started in " + Strings.makeRealString(frameworkInitSeconds, -1, 2, -1) + " seconds.");
+        LOG.debug("OSGi framework started in " + Duration.of(timer) + " seconds.");
 
         return framework;
     }
@@ -214,16 +213,8 @@ public class Osgis {
         if("felix.extensions".equals(manifestUrl.getHost())) return;
 
         try {
-            Manifest manifest;
-            try {
-                manifest = readManifest(manifestUrl);
-                if (!isValidBundle(manifest)) return;
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                // assume invalid manifest (however it normally follows the above path)
-                LOG.warn("Not able to install extension bundle from " + manifestUrl + "; probably it is not a bundle, ignoring: "+e, e);
-                return;
-            }
+            Manifest manifest = readManifest(manifestUrl);
+            if (!isValidBundle(manifest)) return;
             
             String versionedId = getVersionedId(manifest);
             URL bundleUrl = ResourceUtils.getContainerUrl(manifestUrl, MANIFEST_PATH);
@@ -233,7 +224,7 @@ public class Osgis {
                 if (!bundleUrl.equals(existingBundle.getLocation()) &&
                         //the framework bundle is always pre-installed, don't display duplicate info
                         !versionedId.equals(frameworkVersionedId)) {
-                    LOG.warn("Ignoring duplicate " + versionedId + " from manifest " + manifestUrl + ", already loaded from " + existingBundle.getLocation());
+                    LOG.info("Ignoring duplicate " + versionedId + " from manifest " + manifestUrl + ", already loaded from " + existingBundle.getLocation());
                 }
                 return;
             }

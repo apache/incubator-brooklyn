@@ -36,4 +36,6 @@ public interface BrooklynMementoManifest extends Serializable {
 
     public Map<String, String> getEnricherIdToType();
 
+    public boolean isEmpty();
+    
 }

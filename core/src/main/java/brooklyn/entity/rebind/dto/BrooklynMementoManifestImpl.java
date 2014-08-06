@@ -104,4 +104,10 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     public Map<String, String> getEnricherIdToType() {
         return Collections.unmodifiableMap(enricherIdToType);
     }
+    
+    @Override
+    public boolean isEmpty() {
+        return entityIdToType.isEmpty() && locationIdToType.isEmpty() && policyIdToType.isEmpty() && enricherIdToType.isEmpty();
+    }
+    
 }

@@ -71,6 +71,8 @@ public interface BrooklynMementoPersister {
     @VisibleForTesting
     void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
 
+    String getBackingStoreDescription();
+    
     public interface Delta {
         Collection<LocationMemento> locations();
         Collection<EntityMemento> entities();
@@ -81,4 +83,5 @@ public interface BrooklynMementoPersister {
         Collection<String> removedPolicyIds();
         Collection<String> removedEnricherIds();
     }
+
 }

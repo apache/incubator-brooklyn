@@ -301,6 +301,13 @@ public class RebindManagerImpl implements RebindManager {
             //
             
             BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
+            
+            boolean isEmpty = mementoManifest.isEmpty();
+            if (!isEmpty) {
+                LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
+            } else {
+                LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
+            }
 
             // Instantiate locations
             LOG.debug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
@@ -516,12 +523,14 @@ public class RebindManagerImpl implements RebindManager {
             
             exceptionHandler.onDone();
 
-            LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}", new Object[]{
-                apps.size(), Strings.s(apps),
-                entities.size(), Strings.ies(entities),
-                locations.size(), Strings.s(locations),
-                policies.size(), Strings.ies(policies),
-                enrichers.size(), Strings.s(enrichers) });
+            if (!isEmpty) {
+                LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}", new Object[]{
+                    apps.size(), Strings.s(apps),
+                    entities.size(), Strings.ies(entities),
+                    locations.size(), Strings.s(locations),
+                    policies.size(), Strings.ies(policies),
+                    enrichers.size(), Strings.s(enrichers) });
+            }
 
             // Return the top-level applications
             LOG.debug("RebindManager complete; return apps: {}", memento.getApplicationIds());
