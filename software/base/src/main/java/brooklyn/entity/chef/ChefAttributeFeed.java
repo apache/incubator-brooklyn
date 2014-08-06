@@ -163,7 +163,6 @@ public class ChefAttributeFeed extends AbstractFeed {
         }
     }
 
-    private final EntityLocal entity;
     private final String nodeName;
     private final long period;
     private final TimeUnit periodUnits;
@@ -171,8 +170,7 @@ public class ChefAttributeFeed extends AbstractFeed {
     private final KnifeTaskFactory<String> knifeTaskFactory;
 
     protected ChefAttributeFeed(Builder builder) {
-        super(checkNotNull(builder.entity, "builder.entity"), builder.onlyIfServiceUp);
-        entity = builder.entity;
+        super(checkNotNull(builder.entity, "entity"), builder.onlyIfServiceUp);
         nodeName = checkNotNull(builder.nodeName, "builder.nodeName");
         period = builder.period;
         periodUnits = builder.periodUnits;
@@ -366,5 +364,4 @@ public class ChefAttributeFeed extends AbstractFeed {
             return ""+chefAttributeSensors;
         }
     }
-    
 }
