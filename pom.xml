@@ -137,7 +137,6 @@
         <mockwebserver.version>20121111</mockwebserver.version>
         <httpclient.version>4.2.5</httpclient.version>
         <freemarker.version>2.3.19</freemarker.version>
-        <osgi-core.version>4.3.0</osgi-core.version>
         <commons-io.version>2.4</commons-io.version>
         <hazelcast.version>3.0</hazelcast.version>
         <jsonPath.version>0.9.1</jsonPath.version>
@@ -525,11 +524,6 @@
                 <groupId>net.sf.jopt-simple</groupId>
                 <artifactId>jopt-simple</artifactId>
                 <version>${jopt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.core</artifactId>
-                <version>${osgi-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.googlecode.concurrentlinkedhashmap</groupId>

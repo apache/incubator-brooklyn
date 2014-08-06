@@ -214,8 +214,17 @@ public class Osgis {
         if("felix.extensions".equals(manifestUrl.getHost())) return;
 
         try {
-            Manifest manifest = readManifest(manifestUrl);
-            if (!isValidBundle(manifest)) return;
+            Manifest manifest;
+            try {
+                manifest = readManifest(manifestUrl);
+                if (!isValidBundle(manifest)) return;
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                // assume invalid manifest (however it normally follows the above path)
+                LOG.warn("Not able to install extension bundle from " + manifestUrl + "; probably it is not a bundle, ignoring: "+e, e);
+                return;
+            }
+            
             String versionedId = getVersionedId(manifest);
             URL bundleUrl = ResourceUtils.getContainerUrl(manifestUrl, MANIFEST_PATH);
 
@@ -224,7 +233,7 @@ public class Osgis {
                 if (!bundleUrl.equals(existingBundle.getLocation()) &&
                         //the framework bundle is always pre-installed, don't display duplicate info
                         !versionedId.equals(frameworkVersionedId)) {
-                    LOG.info("Ignoring duplicate " + versionedId + " from manifest " + manifestUrl + ", already loaded from " + existingBundle.getLocation());
+                    LOG.warn("Ignoring duplicate " + versionedId + " from manifest " + manifestUrl + ", already loaded from " + existingBundle.getLocation());
                 }
                 return;
             }
@@ -236,9 +245,9 @@ public class Osgis {
             Bundle newBundle = bundleContext.installBundle(EXTENSION_PROTOCOL + ":" + bundleUrl.toString(), new ByteArrayInputStream(jar));
             installedBundles.put(versionedId, newBundle);
         } catch (IOException e) {
-            LOG.warn("Unable to load manifest from " + manifestUrl + ", ignoring.", e);
+            LOG.warn("Error installing extension bundle " + manifestUrl + ", ignoring: "+e, e);
         } catch (BundleException e) {
-            LOG.warn("Unable to load manifest from " + manifestUrl + ", ignoring.", e);
+            LOG.warn("Error installing extension bundle " + manifestUrl + ", ignoring: "+e, e);
         }
     }
 
