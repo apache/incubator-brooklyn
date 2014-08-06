@@ -18,8 +18,13 @@
  */
 package brooklyn.util.guava;
 
+import brooklyn.util.guava.WhenFunctions.WhenFunctionBuilder;
+import brooklyn.util.guava.WhenFunctions.WhenFunctionBuilderWhenFirst;
+
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 
 public class Functionals {
 
@@ -38,4 +43,24 @@ public class Functionals {
         return chain(f1, chain(f2, chain(f3, f4)));
     }
 
+    /** @see WhenFunctions */
+    public static <I> WhenFunctionBuilderWhenFirst<I> when(I test) {
+        return WhenFunctions.when(test);
+    }
+    
+    /** @see WhenFunctions */
+    public static <I> WhenFunctionBuilderWhenFirst<I> when(Predicate<I> test) {
+        return WhenFunctions.when(test);
+    }
+
+    /** @see WhenFunctions */
+    public static <I,O> WhenFunctionBuilder<I,O> when(Predicate<I> test, Supplier<O> supplier) {
+        return WhenFunctions.when(test, supplier);
+    }
+    
+    /** @see WhenFunctions */
+    public static <I,O> WhenFunctionBuilder<I,O> when(Predicate<I> test, O value) {
+        return WhenFunctions.when(test, value);
+    }
+    
 }
