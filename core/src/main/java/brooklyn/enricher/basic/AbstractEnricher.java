@@ -64,12 +64,4 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     protected void onChanged() {
         requestPersist();
     }
-    
-    @Override
-    protected void requestPersist() {
-        // TODO Could add PolicyChangeListener, similar to EntityChangeListener; should we do that?
-        if (getManagementContext() != null) {
-            getManagementContext().getRebindManager().getChangeListener().onChanged(this);
-        }
-    }
 }

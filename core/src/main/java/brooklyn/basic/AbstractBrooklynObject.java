@@ -37,8 +37,6 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
 
     private volatile ManagementContext managementContext;
 
-    protected abstract void requestPersist();
-
     public void setManagementContext(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
     }
@@ -47,6 +45,13 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
         return managementContext;
     }
 
+    protected void requestPersist() {
+        // TODO Could add PolicyChangeListener, similar to EntityChangeListener; should we do that?
+        if (getManagementContext() != null) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+        }
+    }
+    
     @Override
     public String getId() {
         return id;

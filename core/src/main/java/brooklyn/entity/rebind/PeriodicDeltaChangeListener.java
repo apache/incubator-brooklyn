@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.internal.BrooklynFeatureEnablement;
@@ -280,120 +281,74 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     }
     
     @Override
-    public synchronized void onManaged(Entity entity) {
-        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", entity);
-        onChanged(entity);
+    public synchronized void onManaged(BrooklynObject instance) {
+        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", instance);
+        onChanged(instance);
     }
 
     @Override
-    public synchronized void onManaged(Location location) {
-        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", location);
-        onChanged(location);
-    }
-    
-    @Override
-    public synchronized void onManaged(Policy policy) {
-        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", policy);
-        onChanged(policy);
-    }
-    
-    @Override
-    public synchronized void onManaged(Enricher enricher) {
-        if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", enricher);
-        onChanged(enricher);
-    }
-    
-    @Override
-    public synchronized void onChanged(Entity entity) {
-        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", entity);
+    public synchronized void onUnmanaged(BrooklynObject instance) {
+        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", instance);
         if (!isStopped()) {
-            deltaCollector.entities.add(entity);
-
-            // FIXME How to let the policy/location tell us about changes? Don't do this every time!
-            for (Location location : entity.getLocations()) {
-                deltaCollector.locations.addAll(TreeUtils.findLocationsInHierarchy(location));
-            }
-
-            if (persistPoliciesEnabled) {
+            if (instance instanceof Entity) {
+                Entity entity = (Entity) instance;
+                deltaCollector.removedEntityIds.add(entity.getId());
+                deltaCollector.entities.remove(entity);
+                
                 for (Policy policy : entity.getPolicies()) {
-                    deltaCollector.policies.add(policy);
+                    deltaCollector.removedPolicyIds.add(policy.getId());
+                    deltaCollector.policies.remove(policy);
                 }
-            }
-
-            if (persistEnrichersEnabled) {
                 for (Enricher enricher : entity.getEnrichers()) {
-                    deltaCollector.enrichers.add(enricher);
+                    deltaCollector.removedEnricherIds.add(enricher.getId());
+                    deltaCollector.enrichers.remove(enricher);
                 }
-            }
-        }
-    }
-    
-    @Override
-    public synchronized void onUnmanaged(Entity entity) {
-        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", entity);
-        if (!isStopped()) {
-            deltaCollector.removedEntityIds.add(entity.getId());
-            deltaCollector.entities.remove(entity);
-            
-            for (Policy policy : entity.getPolicies()) {
-                deltaCollector.removedPolicyIds.add(policy.getId());
-                deltaCollector.policies.remove(policy);
-            }
-            for (Enricher enricher : entity.getEnrichers()) {
-                deltaCollector.removedEnricherIds.add(enricher.getId());
-                deltaCollector.enrichers.remove(enricher);
+            } else if (instance instanceof Location) {
+                deltaCollector.removedLocationIds.add(instance.getId());
+                deltaCollector.locations.remove(instance);
+            } else if (instance instanceof Policy) {
+                deltaCollector.removedPolicyIds.add(instance.getId());
+                deltaCollector.policies.remove(instance);
+            } else if (instance instanceof Enricher) {
+                deltaCollector.removedEnricherIds.add(instance.getId());
+                deltaCollector.enrichers.remove(instance);
+            } else {
+                throw new IllegalStateException("Unexpected brooklyn type: "+instance);
             }
         }
     }
 
     @Override
-    public synchronized void onUnmanaged(Location location) {
-        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", location);
+    public synchronized void onChanged(BrooklynObject instance) {
+        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", instance);
         if (!isStopped()) {
-            deltaCollector.removedLocationIds.add(location.getId());
-            deltaCollector.locations.remove(location);
-        }
-    }
+            if (instance instanceof Entity) {
+                Entity entity = (Entity) instance;
+                deltaCollector.entities.add(entity);
 
-    @Override
-    public synchronized void onUnmanaged(Policy policy) {
-        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", policy);
-        if (!isStopped()) {
-            deltaCollector.removedPolicyIds.add(policy.getId());
-            deltaCollector.policies.remove(policy);
-        }
-    }
-
-    @Override
-    public synchronized void onUnmanaged(Enricher enricher) {
-        if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", enricher);
-        if (!isStopped()) {
-            deltaCollector.removedEnricherIds.add(enricher.getId());
-            deltaCollector.enrichers.remove(enricher);
-        }
-    }
-
-    @Override
-    public synchronized void onChanged(Location location) {
-        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", location);
-        if (!isStopped()) {
-            deltaCollector.locations.add(location);
-        }
-    }
-    
-    @Override
-    public synchronized void onChanged(Policy policy) {
-        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", policy);
-        if (!isStopped()) {
-            deltaCollector.policies.add(policy);
-        }
-    }
-    
-    @Override
-    public synchronized void onChanged(Enricher enricher) {
-        if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", enricher);
-        if (!isStopped()) {
-            deltaCollector.enrichers.add(enricher);
+                // FIXME How to let the policy/location tell us about changes? Don't do this every time!
+                for (Location location : entity.getLocations()) {
+                    deltaCollector.locations.addAll(TreeUtils.findLocationsInHierarchy(location));
+                }
+                if (persistPoliciesEnabled) {
+                    for (Policy policy : entity.getPolicies()) {
+                        deltaCollector.policies.add(policy);
+                    }
+                }
+                if (persistEnrichersEnabled) {
+                    for (Enricher enricher : entity.getEnrichers()) {
+                        deltaCollector.enrichers.add(enricher);
+                    }
+                }
+            } else if (instance instanceof Location) {
+                deltaCollector.locations.add((Location) instance);
+            } else if (instance instanceof Policy) {
+                deltaCollector.policies.add((Policy) instance);
+            } else if (instance instanceof Enricher) {
+                deltaCollector.enrichers.add((Enricher) instance);
+            } else {
+                throw new IllegalStateException("Unexpected brooklyn type: "+instance);
+            }
         }
     }
 }

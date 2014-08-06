@@ -101,14 +101,6 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
     }
     
     @Override
-    protected void requestPersist() {
-        // TODO Could add PolicyChangeListener, similar to EntityChangeListener; should we do that?
-        if (getManagementContext() != null) {
-            getManagementContext().getRebindManager().getChangeListener().onChanged(this);
-        }
-    }
-
-    @Override
     public RebindSupport<PolicyMemento> getRebindSupport() {
         return new BasicPolicyRebindSupport(this);
     }
