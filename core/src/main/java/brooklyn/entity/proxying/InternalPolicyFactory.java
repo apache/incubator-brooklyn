@@ -51,7 +51,10 @@ public class InternalPolicyFactory extends InternalFactory {
      * 
      * @param managementContext
      * @param clazz
+     * 
+     * @deprecated since 0.7.0; use {@link InternalFactory#isNewStyle(Class)}
      */
+    @Deprecated
     public static boolean isNewStylePolicy(ManagementContext managementContext, Class<?> clazz) {
         try {
             return isNewStylePolicy(clazz);
@@ -60,6 +63,10 @@ public class InternalPolicyFactory extends InternalFactory {
         }
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link InternalFactory#isNewStyle(Class)}
+     */
+    @Deprecated
     public static boolean isNewStylePolicy(Class<?> clazz) {
         if (!Policy.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Class "+clazz+" is not a policy");
@@ -68,6 +75,10 @@ public class InternalPolicyFactory extends InternalFactory {
         return InternalFactory.isNewStyle(clazz);
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link InternalFactory#isNewStyle(Class)}
+     */
+    @Deprecated
     public static boolean isNewStyleEnricher(Class<?> clazz) {
         if (!Enricher.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Class "+clazz+" is not an enricher");
@@ -94,7 +105,7 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setDisplayName(spec.getDisplayName());
             
-            if (isNewStylePolicy(clazz)) {
+            if (isNewStyle(clazz)) {
                 ((AbstractPolicy)pol).setManagementContext(managementContext);
                 Map<String, Object> config = ConfigBag.newInstance().putAll(spec.getFlags()).putAll(spec.getConfig()).getAllConfig();
                 ((AbstractPolicy)pol).configure(MutableMap.copyOf(config)); // TODO AbstractPolicy.configure modifies the map
@@ -129,7 +140,7 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractEnricher)enricher).setDisplayName(spec.getDisplayName());
             
-            if (isNewStyleEnricher(clazz)) {
+            if (isNewStyle(clazz)) {
                 ((AbstractEnricher)enricher).setManagementContext(managementContext);
                 Map<String, Object> config = ConfigBag.newInstance().putAll(spec.getFlags()).putAll(spec.getConfig()).getAllConfig();
                 ((AbstractEnricher)enricher).configure(MutableMap.copyOf(config)); // TODO AbstractEnricher.configure modifies the map

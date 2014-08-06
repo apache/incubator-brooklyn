@@ -645,7 +645,7 @@ public class RebindManagerImpl implements RebindManager {
         String policyType = checkNotNull(memento.getType(), "policy type of %s must not be null in memento", id);
         Class<? extends Policy> policyClazz = (Class<? extends Policy>) reflections.loadClass(policyType);
 
-        if (InternalPolicyFactory.isNewStylePolicy(policyClazz)) {
+        if (InternalFactory.isNewStyle(policyClazz)) {
             InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
             Policy policy = policyFactory.constructPolicy(policyClazz);
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), policy);
@@ -677,7 +677,7 @@ public class RebindManagerImpl implements RebindManager {
         String enricherType = checkNotNull(memento.getType(), "enricher type of %s must not be null in memento", id);
         Class<? extends Enricher> enricherClazz = (Class<? extends Enricher>) reflections.loadClass(enricherType);
 
-        if (InternalPolicyFactory.isNewStyleEnricher(enricherClazz)) {
+        if (InternalFactory.isNewStyle(enricherClazz)) {
             InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
             Enricher enricher = policyFactory.constructEnricher(enricherClazz);
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), enricher);
