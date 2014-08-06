@@ -24,6 +24,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 
@@ -38,21 +40,19 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
     public SensorTransformingEnricher(Entity producer, Sensor<T> source, Sensor<U> target, Function<? super T, ? extends U> transformation) {
         super(producer, source, target);
         this.transformation = transformation;
+        this.uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+source.getName()+"*->"+target.getName();;
     }
 
     public SensorTransformingEnricher(Entity producer, Sensor<T> source, Sensor<U> target, Closure transformation) {
-        super(producer, source, target);
-        this.transformation = GroovyJavaMethods.functionFromClosure(transformation);
+        this(producer, source, target, GroovyJavaMethods.functionFromClosure(transformation));
     }
 
     public SensorTransformingEnricher(Sensor<T> source, Sensor<U> target, Function<T,U> transformation) {
-        super(null, source, target);
-        this.transformation = transformation;
+        this(null, source, target, transformation);
     }
 
     public SensorTransformingEnricher(Sensor<T> source, Sensor<U> target, Closure transformation) {
-        super(null, source, target);
-        this.transformation = GroovyJavaMethods.functionFromClosure(transformation);
+        this(null, source, target, GroovyJavaMethods.functionFromClosure(transformation));
     }
 
     @Override

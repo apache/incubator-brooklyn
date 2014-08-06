@@ -46,6 +46,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.javalang.AtomicReferences;
 import brooklyn.util.javalang.Boxing;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.math.MathFunctions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.StringFunctions;
@@ -72,9 +73,11 @@ public class HttpLatencyDetector extends AbstractEnricher {
     @SetFromFlag("url")
     public static final ConfigKey<String> URL = ConfigKeys.newStringConfigKey("latencyDetector.url");
     
+    @SuppressWarnings("serial")
     @SetFromFlag("urlSensor")
     public static final ConfigKey<AttributeSensor<String>> URL_SENSOR = ConfigKeys.newConfigKey(new TypeToken<AttributeSensor<String>>() {}, "latencyDetector.urlSensor");
 
+    @SuppressWarnings("serial")
     @SetFromFlag("urlPostProcessing")
     public static final ConfigKey<Function<String,String>> URL_POST_PROCESSING = ConfigKeys.newConfigKey(
             new TypeToken<Function<String,String>>() {}, 
@@ -103,7 +106,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
     public HttpLatencyDetector() { // for rebinding, and for EnricherSpec usage
     }
     
-    protected HttpLatencyDetector(Map flags) {
+    protected HttpLatencyDetector(Map<?,?> flags) {
         super(flags);
     }
     
@@ -139,6 +142,10 @@ public class HttpLatencyDetector extends AbstractEnricher {
                         .setOnException(null))
                 .suspended()
                 .build();
+        
+        if (getUniqueTag()==null) 
+            uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+
+                (getConfig(URL)!=null ? getConfig(URL) : getConfig(URL_SENSOR));
     }
 
     protected void startSubscriptions(EntityLocal entity) {

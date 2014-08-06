@@ -176,6 +176,7 @@ public class LocationConfigTest {
         assertEquals(subloc.getConfig(MyLocation.MY_CONFIG_WITH_DEFAULT), "mysubdefault");
     }
     
+    @SuppressWarnings("serial")
     public static class MyLocation extends AbstractLocation {
         public static final ConfigKey<String> MY_CONFIG = ConfigKeys.newStringConfigKey("mylocation.myconfig");
 
@@ -185,6 +186,7 @@ public class LocationConfigTest {
         public static final ConfigKey<String> MY_CONFIG_WITH_DEFAULT = ConfigKeys.newStringConfigKey("mylocation.myconfigwithdefault", "", "mydefault");
     }
     
+    @SuppressWarnings("serial")
     public static class MyChildLocation extends AbstractLocation {
         public static final ConfigKey<String> MY_CHILD_CONFIG = ConfigKeys.newStringConfigKey("mychildlocation.myconfig");
 
@@ -192,6 +194,7 @@ public class LocationConfigTest {
         public static final ConfigKey<String> MY_CHILD_CONFIG_WITH_FLAGNAME = ConfigKeys.newStringConfigKey("mychildlocation.myconfigwithflagname");
     }
     
+    @SuppressWarnings("serial")
     public static class MySubLocation extends MyLocation {
         public static final ConfigKey<String> MY_CONFIG_WITH_DEFAULT = ConfigKeys.newConfigKeyWithDefault(MyLocation.MY_CONFIG_WITH_DEFAULT, "mysubdefault");
     }

@@ -142,6 +142,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             // if promoted, apply the transformations done to the app
             // (normally this will be done by the resolveSpec call above)
             if (app.getDisplayName()==null) app.displayName(oldApp.getDisplayName());
+            app.tags(oldApp.getTags());
             app.locations(oldApp.getLocations());
         }
         

@@ -169,6 +169,7 @@ public class InternalEntityFactory extends InternalFactory {
         return entity;
     }
     
+    @SuppressWarnings("deprecation")
     protected <T extends Entity> T createEntityAndDescendantsUninitialized(EntitySpec<T> spec, Map<String,Entity> entitiesByEntityId, Map<String,EntitySpec<?>> specsByEntityId) {
         if (spec.getFlags().containsKey("parent") || spec.getFlags().containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+spec);
@@ -230,6 +231,7 @@ public class InternalEntityFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
             
+            ((AbstractEntity)entity).addTags(spec.getTags());
             ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
@@ -320,6 +322,7 @@ public class InternalEntityFactory extends InternalFactory {
      * but that behaviour is deprecated.
      */
     public <T extends Entity> T constructEntity(Class<? extends T> clazz, EntitySpec<T> spec) {
+        @SuppressWarnings("deprecation")
         T entity = constructEntityImpl(clazz, spec.getFlags(), spec.getId());
         if (((AbstractEntity)entity).getProxy() == null) ((AbstractEntity)entity).setProxy(createEntityProxy(spec, entity));
         return entity;

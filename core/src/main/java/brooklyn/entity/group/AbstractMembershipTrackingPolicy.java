@@ -38,6 +38,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -85,6 +86,9 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         super.setEntity(entity);
         Group group = getGroup();
         if (group != null) {
+            if (uniqueTag==null) {
+                uniqueTag = JavaClassNames.simpleClassName(this)+":"+group;
+            }
             subscribeToGroup(group);
         } else {
             LOG.warn("Deprecated use of "+AbstractMembershipTrackingPolicy.class.getSimpleName()+"; group should be set as config");

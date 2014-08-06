@@ -216,7 +216,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      */
-    void addPolicy(Policy policy);
+    Policy addPolicy(Policy policy);
     
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
@@ -232,7 +232,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      */
-    void addEnricher(Enricher enricher);
+    Enricher addEnricher(Enricher enricher);
     
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.

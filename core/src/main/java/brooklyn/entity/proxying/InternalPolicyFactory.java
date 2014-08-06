@@ -94,6 +94,8 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setDisplayName(spec.getDisplayName());
             
+            ((AbstractPolicy)pol).addTags(spec.getTags());
+            
             if (isNewStylePolicy(clazz)) {
                 ((AbstractPolicy)pol).setManagementContext(managementContext);
                 Map<String, Object> config = ConfigBag.newInstance().putAll(spec.getFlags()).putAll(spec.getConfig()).getAllConfig();
@@ -128,6 +130,8 @@ public class InternalPolicyFactory extends InternalFactory {
             
             if (spec.getDisplayName()!=null)
                 ((AbstractEnricher)enricher).setDisplayName(spec.getDisplayName());
+            
+            ((AbstractEnricher)enricher).addTags(spec.getTags());
             
             if (isNewStyleEnricher(clazz)) {
                 ((AbstractEnricher)enricher).setManagementContext(managementContext);

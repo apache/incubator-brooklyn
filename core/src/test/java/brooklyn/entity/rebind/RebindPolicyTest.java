@@ -45,6 +45,7 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Predicates;
@@ -103,12 +104,20 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     @Test
     public void testRestoresConfig() throws Exception {
         origApp.addPolicy(PolicySpec.create(MyPolicy.class)
+                .displayName("My Policy")
+                .uniqueTag("tagU")
+                .tag("tag1").tag("tag2")
                 .configure(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME, "myVal for with setFromFlag noShortName")
                 .configure(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME, "myVal for setFromFlag withShortName")
                 .configure(MyPolicy.MY_CONFIG_WITHOUT_SETFROMFLAG, "myVal for witout setFromFlag"));
 
         newApp = (TestApplication) rebind();
         MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
+        
+        assertEquals(newPolicy.getDisplayName(), "My Policy");
+        
+        assertEquals(newPolicy.getUniqueTag(), "tagU");
+        assertEquals(newPolicy.getTags(), MutableSet.of("tagU", "tag1", "tag2"));
         
         assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME), "myVal for with setFromFlag noShortName");
         assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME), "myVal for setFromFlag withShortName");
