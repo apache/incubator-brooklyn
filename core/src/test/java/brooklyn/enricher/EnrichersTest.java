@@ -351,22 +351,10 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.setAttribute(NUM1, 987654);
         EntityTestUtils.assertAttributeEqualsContinually(group, LONG1, Long.valueOf(123));
     }
-    
-    // FIXME we should not need to supply any casts, if we ensure 'from' returns the right type of builder
     @Test
-    public void testUpdatingMap1v1() {
+    public void testUpdatingMap1() {
         entity.addEnricher(Enrichers.builder()
                 .updatingMap(MAP1)
-                .from(LONG1)
-                .computing(Functionals.<Object>when(-1L).value("-1 is not allowed"))
-                .build());
-        
-        doUpdatingMapChecks(MAP1);
-    }
-    @Test
-    public void testUpdatingMap1v2() {
-        entity.addEnricher(Enrichers.builder()
-                .<Long,String,String>updatingMap(MAP1)
                 .from(LONG1)
                 .computing(Functionals.when(-1L).value("-1 is not allowed"))
                 .build());

@@ -165,7 +165,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(SERVICE_PROCESS_IS_RUNNING)
-            .computing(Functionals.<Object>when(false).value("Process not running (according to driver checkRunning)"))
+            .computing(Functionals.when(false).value("Process not running (according to driver checkRunning)"))
             .build());
 
         // FIXME lives elsewhere

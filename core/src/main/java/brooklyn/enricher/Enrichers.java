@@ -98,8 +98,8 @@ public class Enrichers {
         public <S> AggregatorBuilder<S, Object, ?> aggregating(AttributeSensor<S> val) {
             return new ConcreteAggregatorBuilder<S,Object>(val);
         }
-        public <S,TKey,TVal> UpdatingMapBuilder<S, TKey, TVal, ?> updatingMap(AttributeSensor<Map<TKey,TVal>> target) {
-            return new ConcreteUpdatingMapBuilder<S, TKey, TVal>(target);
+        public <S,TKey,TVal> UpdatingMapBuilder<S, TKey, TVal> updatingMap(AttributeSensor<Map<TKey,TVal>> target) {
+            return new UpdatingMapBuilder<S, TKey, TVal>(target);
         }
     }
 
@@ -121,6 +121,8 @@ public class Enrichers {
         public AggregatorBuilder(AttributeSensor<S> aggregating) {
             this.aggregating = aggregating;
         }
+        // TODO change the signature of this to have correct type info as done for UpdatingMapBuilder.from(Sensor)
+        // (including change *Builder to Abstract*Builder and Concrete*Builder to *Builder, for all other enricher types)
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public B publishing(AttributeSensor<? extends T> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
@@ -447,19 +449,20 @@ public class Enrichers {
         }
     }
 
-    public abstract static class UpdatingMapBuilder<S, TKey, TVal, B extends UpdatingMapBuilder<S, TKey, TVal, B>> extends Builder<B> {
+    public abstract static class AbstractUpdatingMapBuilder<S, TKey, TVal, B extends AbstractUpdatingMapBuilder<S, TKey, TVal, B>> extends Builder<B> {
         protected AttributeSensor<Map<TKey,TVal>> targetSensor;
         protected AttributeSensor<? extends S> fromSensor;
         protected TKey key;
         protected Function<S, ? extends TVal> computing;
         protected Boolean removingIfResultIsNull;
         
-        public UpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> target) {
+        public AbstractUpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> target) {
             this.targetSensor = target;
         }
-        public B from(AttributeSensor<? extends S> fromSensor) {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <S2 extends S> UpdatingMapBuilder<S2,TKey,TVal> from(AttributeSensor<S2> fromSensor) {
             this.fromSensor = checkNotNull(fromSensor);
-            return self();
+            return (UpdatingMapBuilder) this;
         }
         public B computing(Function<S,? extends TVal> val) {
             this.computing = checkNotNull(val);
@@ -537,8 +540,8 @@ public class Enrichers {
         }
     }
 
-    private static class ConcreteUpdatingMapBuilder<S, TKey, TVal> extends UpdatingMapBuilder<S, TKey, TVal, ConcreteUpdatingMapBuilder<S, TKey, TVal>> {
-        public ConcreteUpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> val) {
+    public static class UpdatingMapBuilder<S, TKey, TVal> extends AbstractUpdatingMapBuilder<S, TKey, TVal, UpdatingMapBuilder<S, TKey, TVal>> {
+        public UpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> val) {
             super(val);
         }
     }
