@@ -196,10 +196,12 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         HttpTestUtils.assertHttpStatusCodeEquals("http://localhost2:"+port+"/hello-world/notexists", 404);
         HttpTestUtils.assertHttpStatusCodeEquals("http://localhost3:"+port+"/", 404);
         
-        //make sure nginx default welcome page isn't displayed
-        HttpTestUtils.assertContentNotContainsText("http://localhost:"+port+"/", "ginx");
-        HttpTestUtils.assertContentNotContainsText("http://localhost2:"+port+"/", "ginx");
-        HttpTestUtils.assertContentNotContainsText("http://localhost3:"+port+"/", "ginx");
+        // TODO previously said "make sure nginx default welcome page isn't displayed",
+        // but the assertion only worked because threw exception on 404 trying to read
+        // stdin of http connection. If reading stderr of http connection, we do see
+        // "ginx" in the output. Why were we asserting this? Can we just delete it?
+        // Previous code was:
+        //     Asserts.assertFails { HttpTestUtils.assertContentContainsText([timeout:1], "http://localhost:${port}/", "ginx"); }
     }
 
     @Test(groups = "Integration")
