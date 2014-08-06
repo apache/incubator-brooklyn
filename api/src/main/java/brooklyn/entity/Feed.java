@@ -51,7 +51,9 @@ public interface Feed {
 
     /** suspends this feed (stops the poller, or indicates that the feed should start in a state where the poller is stopped) */
     void suspend();
-    
+
+    boolean isSuspended();
+
     /** resumes this feed if it has been suspended and not stopped */
     void resume();
     

@@ -23,34 +23,43 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Feed;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.rebind.BasicPolicyRebindSupport;
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.mementos.PolicyMemento;
+import brooklyn.policy.basic.AbstractEntityAdjunct;
 
 /** 
  * Captures common fields and processes for sensor feeds.
  * These generally poll or subscribe to get sensor values for an entity.
  * They make it easy to poll over http, jmx, etc.
  */
-public abstract class AbstractFeed implements Feed {
+public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFeed.class);
+
+    public static final ConfigKey<Boolean> ONLY_IF_SERVICE_UP = ConfigKeys.newBooleanConfigKey("feed.onlyIfServiceUp", "", false);
     
-    protected final EntityLocal entity;
-    protected final boolean onlyIfServiceUp; 
     private final Object pollerStateMutex = new Object();
     private transient volatile Poller<?> poller;
     private transient volatile boolean activated;
     private transient volatile boolean suspended;
 
+    public AbstractFeed() {
+    }
+    
     public AbstractFeed(EntityLocal entity) {
         this(entity, false);
     }
     
     public AbstractFeed(EntityLocal entity, boolean onlyIfServiceUp) {
         this.entity = checkNotNull(entity, "entity");
-        this.onlyIfServiceUp = onlyIfServiceUp;
+        setConfig(ONLY_IF_SERVICE_UP, onlyIfServiceUp);
     }
-    
+
     @Override
     public boolean isActivated() {
         return activated;
@@ -85,7 +94,7 @@ public abstract class AbstractFeed implements Feed {
             throw new IllegalStateException(String.format("Attempt to re-start feed %s of entity %s", this, entity));
         }
         
-        poller = new Poller<Object>(entity, onlyIfServiceUp);
+        poller = new Poller<Object>(entity, getConfig(ONLY_IF_SERVICE_UP));
         activated = true;
         preStart();
         synchronized (pollerStateMutex) {
@@ -117,6 +126,11 @@ public abstract class AbstractFeed implements Feed {
     }
     
     @Override
+    public void destroy() {
+        stop();
+    }
+
+    @Override
     public void stop() {
         if (!activated) { 
             log.debug("Ignoring attempt to stop feed {} of entity {} when not running", this, entity);
@@ -132,6 +146,27 @@ public abstract class AbstractFeed implements Feed {
             }
         }
         postStop();
+        super.destroy();
+    }
+
+    @Override
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    @Override
+    public boolean isRunning() {
+        return !isSuspended() && !isDestroyed();
+    }
+
+    @Override
+    public RebindSupport<FeedMemento> getRebindSupport() {
+        return new BasicFeedRebindSupport(this);
+    }
+
+    @Override
+    protected void onChanged() {
+        // TODO Auto-generated method stub
     }
 
     /**
