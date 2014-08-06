@@ -153,11 +153,11 @@ public class JmxHelper {
     final String user;
     final String password;
 
-    private volatile JMXConnector connector;
-    private volatile MBeanServerConnection connection;
-    private boolean triedConnecting;
-    private boolean failedReconnecting;
-    private long failedReconnectingTime;
+    private volatile transient JMXConnector connector;
+    private volatile transient MBeanServerConnection connection;
+    private transient boolean triedConnecting;
+    private transient boolean failedReconnecting;
+    private transient long failedReconnectingTime;
     private int minTimeBetweenReconnectAttempts = 1000;
     private final AtomicBoolean terminated = new AtomicBoolean();
     
