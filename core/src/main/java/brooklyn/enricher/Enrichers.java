@@ -30,6 +30,7 @@ import brooklyn.enricher.basic.Aggregator;
 import brooklyn.enricher.basic.Combiner;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.enricher.basic.Transformer;
+import brooklyn.enricher.basic.UpdatingMap;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -97,6 +98,12 @@ public class Enrichers {
         public <S> AggregatorBuilder<S, Object, ?> aggregating(AttributeSensor<S> val) {
             return new ConcreteAggregatorBuilder<S,Object>(val);
         }
+        /** creates an {@link UpdatingMap} enricher: 
+         * {@link UpdatingMapBuilder#from(AttributeSensor)} and {@link UpdatingMapBuilder#computing(Function)} are required
+         **/
+        public <S,TKey,TVal> UpdatingMapBuilder<S, TKey, TVal> updatingMap(AttributeSensor<Map<TKey,TVal>> target) {
+            return new UpdatingMapBuilder<S, TKey, TVal>(target);
+        }
     }
 
 
@@ -117,6 +124,8 @@ public class Enrichers {
         public AggregatorBuilder(AttributeSensor<S> aggregating) {
             this.aggregating = aggregating;
         }
+        // TODO change the signature of this to have correct type info as done for UpdatingMapBuilder.from(Sensor)
+        // (including change *Builder to Abstract*Builder and Concrete*Builder to *Builder, for all other enricher types)
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public B publishing(AttributeSensor<? extends T> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
@@ -443,6 +452,61 @@ public class Enrichers {
         }
     }
 
+    public abstract static class AbstractUpdatingMapBuilder<S, TKey, TVal, B extends AbstractUpdatingMapBuilder<S, TKey, TVal, B>> extends Builder<B> {
+        protected AttributeSensor<Map<TKey,TVal>> targetSensor;
+        protected AttributeSensor<? extends S> fromSensor;
+        protected TKey key;
+        protected Function<S, ? extends TVal> computing;
+        protected Boolean removingIfResultIsNull;
+        
+        public AbstractUpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> target) {
+            this.targetSensor = target;
+        }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <S2 extends S> UpdatingMapBuilder<S2,TKey,TVal> from(AttributeSensor<S2> fromSensor) {
+            this.fromSensor = checkNotNull(fromSensor);
+            return (UpdatingMapBuilder) this;
+        }
+        public B computing(Function<S,? extends TVal> val) {
+            this.computing = checkNotNull(val);
+            return self();
+        }
+        /** sets an explicit key to use; defaults to using the name of the source sensor specified in {@link #from(AttributeSensor)} */
+        public B key(TKey key) {
+            this.key = key;
+            return self();
+        }
+        /** sets explicit behaviour for treating <code>null</code> return values;
+         * default is to remove */
+        public B removingIfResultIsNull(boolean val) {
+            this.removingIfResultIsNull = val;
+            return self();
+        }
+        public EnricherSpec<?> build() {
+            return EnricherSpec.create(UpdatingMap.class)
+                    .uniqueTag("updating:"+targetSensor+"<-"+fromSensor)
+                    .configure(MutableMap.builder()
+                            .put(UpdatingMap.TARGET_SENSOR, targetSensor)
+                            .put(UpdatingMap.SOURCE_SENSOR, fromSensor)
+                            .putIfNotNull(UpdatingMap.KEY_IN_TARGET_SENSOR, key)
+                            .put(UpdatingMap.COMPUTING, computing)
+                            .putIfNotNull(UpdatingMap.REMOVING_IF_RESULT_IS_NULL, removingIfResultIsNull)
+                            .build());
+        }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .omitNullValues()
+                    .add("publishing", targetSensor)
+                    .add("fromSensor", fromSensor)
+                    .add("key", key)
+                    .add("computing", computing)
+                    .add("removingIfResultIsNull", removingIfResultIsNull)
+                    .toString();
+        }
+    }
+
     private static class ConcreteInitialBuilder extends InitialBuilder<ConcreteInitialBuilder> {
     }
 
@@ -478,6 +542,12 @@ public class Enrichers {
 
     private static class ConcreteTransformerBuilder<S, T> extends TransformerBuilder<S, T, ConcreteTransformerBuilder<S, T>> {
         public ConcreteTransformerBuilder(AttributeSensor<S> val) {
+            super(val);
+        }
+    }
+
+    public static class UpdatingMapBuilder<S, TKey, TVal> extends AbstractUpdatingMapBuilder<S, TKey, TVal, UpdatingMapBuilder<S, TKey, TVal>> {
+        public UpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> val) {
             super(val);
         }
     }
@@ -529,4 +599,6 @@ public class Enrichers {
         }
         return result;
     }
+    
+
 }

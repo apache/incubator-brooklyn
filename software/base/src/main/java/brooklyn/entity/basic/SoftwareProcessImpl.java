@@ -51,13 +51,13 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -163,25 +163,11 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                         }))
                 .build();
 
-        // FIXME quick-and-dirty change
-        Function<Boolean, Map<String,Object>> f = new Function<Boolean, Map<String,Object>>() {
-            @Override
-            public Map<String, Object> apply(Boolean input) {
-                Map<String, Object> result = getAttribute(Attributes.SERVICE_NOT_UP_INDICATORS);
-                if (result==null) result = MutableMap.of();
-                // TODO only change/publish if it needs changing...
-                if (Boolean.TRUE.equals(input)) {
-                    result.remove(SERVICE_PROCESS_IS_RUNNING.getName());
-                    return result;
-                } else {
-                    result.put(SERVICE_PROCESS_IS_RUNNING.getName(), "Process not running (according to driver checkRunning)");                    
-                    return result;
-                }
-            }
-        };
-        addEnricher(Enrichers.builder().transforming(SERVICE_PROCESS_IS_RUNNING).publishing(Attributes.SERVICE_NOT_UP_INDICATORS)
-            .computing(f).build());
-        
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(SERVICE_PROCESS_IS_RUNNING)
+            .computing(Functionals.when(false).value("Process not running (according to driver checkRunning)"))
+            .build());
+
         // FIXME lives elsewhere
         addEnricher(Enrichers.builder().transforming(Attributes.SERVICE_NOT_UP_INDICATORS).publishing(Attributes.SERVICE_UP)
             .computing( Functions.forPredicate(CollectionFunctionals.<String>mapSizeEquals(0)) ).build());
