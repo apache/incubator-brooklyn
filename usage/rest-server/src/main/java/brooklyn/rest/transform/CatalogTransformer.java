@@ -24,13 +24,13 @@ import java.util.Set;
 
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.policy.Policy;
@@ -56,7 +56,7 @@ public class CatalogTransformer {
     
     public static CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Entity,EntitySpec<?>> item) {
         EntitySpec<?> spec = b.getCatalog().createSpec(item);
-        EntityDynamicType typeMap = EntityTypes.getDefinedEntityType(spec.getType());
+        EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
         EntityType type = typeMap.getSnapshot();
 
         Set<EntityConfigSummary> config = Sets.newTreeSet(SummaryComparators.nameComparator());

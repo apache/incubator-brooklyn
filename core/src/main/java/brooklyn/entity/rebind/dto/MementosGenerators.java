@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.basic.BrooklynTypes;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
@@ -31,7 +32,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
@@ -99,7 +99,7 @@ public class MementosGenerators {
     }
     
     public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entity) {
-        EntityDynamicType definedType = EntityTypes.getDefinedEntityType(entity.getClass());
+        EntityDynamicType definedType = BrooklynTypes.getDefinedEntityType(entity.getClass());
         BasicEntityMemento.Builder builder = BasicEntityMemento.builder();
                 
         builder.id = entity.getId();

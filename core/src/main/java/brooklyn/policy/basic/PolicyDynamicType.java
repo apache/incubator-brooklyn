@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy;
+package brooklyn.policy.basic;
 
-import brooklyn.basic.BrooklynType;
+import brooklyn.basic.BrooklynDynamicType;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicyType;
 
-import com.google.common.annotations.Beta;
+public class PolicyDynamicType extends BrooklynDynamicType<Policy, AbstractPolicy> {
 
-/**
- * Gives type information for a {@link Policy}. It is immutable.
- * 
- * For policies that can support config keys etc being added on-the-fly,
- * then this PolicyType will be a snapshot and subsequent snapshots will
- * include the changes.
- * 
- * @since 0.5
- */
-@Beta
-public interface PolicyType extends BrooklynType {
+    public PolicyDynamicType(AbstractPolicy policy) {
+        super(policy);
+    }
+    
+    public PolicyType getSnapshot() {
+        return (PolicyType) super.getSnapshot();
+    }
+
+    @Override
+    protected PolicyTypeSnapshot newSnapshot() {
+        return new PolicyTypeSnapshot(name, value(configKeys));
+    }
 }

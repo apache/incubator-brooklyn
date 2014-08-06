@@ -18,10 +18,10 @@
  */
 package brooklyn.entity;
 
-import java.io.Serializable;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import brooklyn.basic.BrooklynType;
 import brooklyn.config.ConfigKey;
 import brooklyn.event.Sensor;
 import brooklyn.util.guava.Maybe;
@@ -34,23 +34,8 @@ import brooklyn.util.guava.Maybe;
  * snapshots. Therefore instances of a given class of entity could have different 
  * EntityTypes.
  */
-public interface EntityType extends Serializable {
+public interface EntityType extends BrooklynType {
 
-    /**
-     * The type name of this entity (normally the fully qualified class name).
-     */
-    String getName();
-    
-    /**
-     * The simple type name of this entity (normally the unqualified class name).
-     */
-    String getSimpleName();
-
-    /**
-     * ConfigKeys available on this entity.
-     */
-    Set<ConfigKey<?>> getConfigKeys();
-    
     /**
      * Sensors available on this entity.
      */
@@ -76,11 +61,6 @@ public interface EntityType extends Serializable {
     @Deprecated
     Effector<?> getEffector(String name, Class<?>... parameterTypes);
 
-    /**
-     * The ConfigKey with the given name, or null if not found.
-     */
-    ConfigKey<?> getConfigKey(String name);
-    
     /**
      * The Sensor with the given name, or null if not found.
      */

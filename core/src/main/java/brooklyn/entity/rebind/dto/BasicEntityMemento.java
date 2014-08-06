@@ -26,12 +26,12 @@ import java.util.Map;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
+import brooklyn.basic.BrooklynTypes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityTypes;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -176,7 +176,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         if (staticConfigKeys==null) {
             @SuppressWarnings("unchecked")
             Class<? extends Entity> clazz = (Class<? extends Entity>) getTypeClass();
-            staticConfigKeys = (clazz == null) ? EntityTypes.getDefinedConfigKeys(getType()) : EntityTypes.getDefinedConfigKeys(clazz);
+            staticConfigKeys = (clazz == null) ? BrooklynTypes.getDefinedConfigKeys(getType()) : BrooklynTypes.getDefinedConfigKeys(clazz);
         }
         return staticConfigKeys;
     }
@@ -193,7 +193,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         if (staticSensorKeys==null) {
             @SuppressWarnings("unchecked")
             Class<? extends Entity> clazz = (Class<? extends Entity>) getTypeClass();
-            staticSensorKeys = (clazz == null) ? EntityTypes.getDefinedSensors(getType()) : EntityTypes.getDefinedSensors(clazz);
+            staticSensorKeys = (clazz == null) ? BrooklynTypes.getDefinedSensors(getType()) : BrooklynTypes.getDefinedSensors(clazz);
         }
         return staticSensorKeys;
     }

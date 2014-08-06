@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy;
+package brooklyn.enricher.basic;
 
-import brooklyn.basic.BrooklynType;
+import java.util.Map;
 
-import com.google.common.annotations.Beta;
+import brooklyn.basic.BrooklynTypeSnapshot;
+import brooklyn.config.ConfigKey;
+import brooklyn.policy.EnricherType;
 
-/**
- * Gives type information for a {@link Policy}. It is immutable.
- * 
- * For policies that can support config keys etc being added on-the-fly,
- * then this PolicyType will be a snapshot and subsequent snapshots will
- * include the changes.
- * 
- * @since 0.5
- */
-@Beta
-public interface PolicyType extends BrooklynType {
+public class EnricherTypeSnapshot extends BrooklynTypeSnapshot implements EnricherType {
+    private static final long serialVersionUID = 4670930188951106009L;
+    
+    EnricherTypeSnapshot(String name, Map<String, ConfigKey<?>> configKeys) {
+        super(name, configKeys);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        return (obj instanceof EnricherTypeSnapshot) && super.equals(obj);
+    }
 }

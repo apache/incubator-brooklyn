@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy;
+package brooklyn.enricher.basic;
 
-import brooklyn.basic.BrooklynType;
+import brooklyn.basic.BrooklynDynamicType;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherType;
 
-import com.google.common.annotations.Beta;
+public class EnricherDynamicType extends BrooklynDynamicType<Enricher, AbstractEnricher> {
 
-/**
- * Gives type information for a {@link Policy}. It is immutable.
- * 
- * For policies that can support config keys etc being added on-the-fly,
- * then this PolicyType will be a snapshot and subsequent snapshots will
- * include the changes.
- * 
- * @since 0.5
- */
-@Beta
-public interface PolicyType extends BrooklynType {
+    public EnricherDynamicType(AbstractEnricher enricher) {
+        super(enricher);
+    }
+    
+    public EnricherType getSnapshot() {
+        return (EnricherType) super.getSnapshot();
+    }
+
+    @Override
+    protected EnricherTypeSnapshot newSnapshot() {
+        return new EnricherTypeSnapshot(name, value(configKeys));
+    }
 }
