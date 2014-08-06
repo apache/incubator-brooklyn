@@ -489,4 +489,10 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     private File getFileFor(EnricherMemento enricher) {
         return new File(enrichersDir, enricher.getId());
     }
+    
+    @Override
+    public String getBackingStoreDescription() {
+        return toString();
+    }
+    
 }

@@ -85,4 +85,10 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         memento.updatePolicyMementos(delta.policies());
         memento.updateEnricherMementos(delta.enrichers());
     }
+    
+    @Override
+    public String getBackingStoreDescription() {
+        return toString();
+    }
+    
 }

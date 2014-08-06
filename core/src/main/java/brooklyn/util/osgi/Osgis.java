@@ -61,12 +61,13 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Stopwatch;
 
 /** 
  * utilities for working with osgi.
@@ -168,7 +169,7 @@ public class Osgis {
         if (felixCacheDir!=null) cfg.put(Constants.FRAMEWORK_STORAGE, felixCacheDir);
         FrameworkFactory factory = newFrameworkFactory();
 
-        long frameworkInitStart = System.currentTimeMillis();
+        Stopwatch timer = Stopwatch.createStarted();
         Framework framework = factory.newFramework(cfg);
         try {
             framework.init();
@@ -178,9 +179,7 @@ public class Osgis {
             // framework bundle start exceptions are not interesting to caller...
             throw Exceptions.propagate(e);
         }
-        long frameworkInitEnd = System.currentTimeMillis();
-        double frameworkInitSeconds = ((double)frameworkInitEnd - frameworkInitStart) / 1000;
-        LOG.info("OSGi framework started in " + Strings.makeRealString(frameworkInitSeconds, -1, 2, -1) + " seconds.");
+        LOG.debug("OSGi framework started in " + Duration.of(timer) + " seconds.");
 
         return framework;
     }

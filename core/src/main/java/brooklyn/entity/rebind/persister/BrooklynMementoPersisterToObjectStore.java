@@ -562,5 +562,10 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     private String getPath(String subPath, String id) {
         return subPath+"/"+id;
     }
+
+    @Override
+    public String getBackingStoreDescription() {
+        return getObjectStore().getSummaryName();
+    }
     
 }
