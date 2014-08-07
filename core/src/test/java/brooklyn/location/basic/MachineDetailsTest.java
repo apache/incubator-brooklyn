@@ -29,7 +29,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineDetails;
@@ -37,8 +36,6 @@ import brooklyn.location.OsDetails;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.task.DynamicSequentialTask;
-import brooklyn.util.task.DynamicTasks;
 
 public class MachineDetailsTest {
 
@@ -50,7 +47,7 @@ public class MachineDetailsTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         mgmt = app.getManagementContext();
 
         LocalhostMachineProvisioningLocation localhost = mgmt.getLocationManager().createLocation(

@@ -71,7 +71,7 @@ public class DynamicGroupTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         group = app.createAndManageChild(EntitySpec.create(DynamicGroup.class));
         e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -101,7 +101,7 @@ public class DynamicGroupTest {
     
     @Test
     public void testCanUsePredicateAsFilter() throws Exception {
-        Predicate predicate = Predicates.equalTo(e1);
+        Predicate<Entity> predicate = Predicates.<Entity>equalTo(e1);
         group.setEntityFilter(predicate);
         assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of(e1));
     }

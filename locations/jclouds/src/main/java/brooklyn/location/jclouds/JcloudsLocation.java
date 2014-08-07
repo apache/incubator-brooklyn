@@ -93,7 +93,6 @@ import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.access.PortForwardManager;
-import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.BasicMachineMetadata;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
@@ -165,6 +164,7 @@ import com.google.common.primitives.Ints;
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
  * Configuration flags are defined in {@link JcloudsLocationConfig}.
  */
+@SuppressWarnings("serial")
 public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<SshMachineLocation> {
 
     // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting 

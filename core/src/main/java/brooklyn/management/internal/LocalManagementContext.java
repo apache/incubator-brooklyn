@@ -280,6 +280,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public synchronized Maybe<OsgiManager> getOsgiManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        if (osgiManager==null) return Maybe.absent("OSGi not available in this instance"); 
         return Maybe.of(osgiManager);
     }
 

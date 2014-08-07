@@ -30,7 +30,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.location.jclouds.AbstractJcloudsTest;
+import brooklyn.location.jclouds.AbstractJcloudsLiveTest;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
@@ -48,7 +48,7 @@ import com.google.common.net.HostAndPort;
 /**
  * Tests different login options for ssh keys, passwords, etc.
  */
-public class JcloudsPortForwardingLiveTest extends AbstractJcloudsTest {
+public class JcloudsPortForwardingLiveTest extends AbstractJcloudsLiveTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsPortForwardingLiveTest.class);
 

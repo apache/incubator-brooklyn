@@ -45,6 +45,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
@@ -77,7 +78,7 @@ public class EntityExecutionManagerTest {
 
     @Test
     public void testGetTasksOfEntity() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         e = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         final CountDownLatch latch = new CountDownLatch(1);
@@ -95,7 +96,7 @@ public class EntityExecutionManagerTest {
     
     @Test
     public void testUnmanagedEntityCanBeGcedEvenIfPreviouslyTagged() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         e = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         String eId = e.getId();
         
@@ -126,7 +127,7 @@ public class EntityExecutionManagerTest {
     
     @Test(groups="Integration")
     public void testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         
         BasicAttributeSensor<Object> byteArrayAttrib = new BasicAttributeSensor<Object>(Object.class, "test.byteArray", "");
 
@@ -155,7 +156,7 @@ public class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, new LocalManagementContext(brooklynProperties));
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, LocalManagementContextForTests.newInstance(brooklynProperties));
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         for (int i = 0; i < 1000; i++) {
@@ -185,7 +186,7 @@ public class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1000);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, new LocalManagementContext(brooklynProperties));
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, LocalManagementContextForTests.newInstance(brooklynProperties));
         final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         List<Task<?>> tasks = Lists.newArrayList();
@@ -220,7 +221,7 @@ public class EntityExecutionManagerTest {
         brooklynProperties.put(BrooklynGarbageCollector.GC_PERIOD, 1);
         brooklynProperties.put(BrooklynGarbageCollector.MAX_TASK_AGE, maxTaskAge);
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, new LocalManagementContext(brooklynProperties));
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, LocalManagementContextForTests.newInstance(brooklynProperties));
         final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         Stopwatch stopwatch = Stopwatch.createStarted();
@@ -253,7 +254,7 @@ public class EntityExecutionManagerTest {
         
         @Override
         public String toString() {
-            return "BigObject["+sizeBytes+"]";
+            return "BigObject["+sizeBytes+"/"+data.length+"]";
         }
     }
 }

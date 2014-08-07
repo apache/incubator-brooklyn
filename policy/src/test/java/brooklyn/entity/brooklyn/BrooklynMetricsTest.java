@@ -33,6 +33,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
@@ -49,7 +50,7 @@ public class BrooklynMetricsTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         brooklynMetrics = app.createAndManageChild(EntitySpec.create(BrooklynMetrics.class).configure("updatePeriod", 10L));
         Entities.manage(brooklynMetrics);
     }
@@ -90,7 +91,6 @@ public class BrooklynMetricsTest {
         final long tasksSubmitted = getAttribute(brooklynMetrics, BrooklynMetrics.TOTAL_TASKS_SUBMITTED, 0);
         final long eventsPublished = getAttribute(brooklynMetrics, BrooklynMetrics.TOTAL_EVENTS_PUBLISHED, 0);
         final long eventsDelivered = getAttribute(brooklynMetrics, BrooklynMetrics.TOTAL_EVENTS_DELIVERED, 0);
-        final long subscriptions = getAttribute(brooklynMetrics, BrooklynMetrics.NUM_SUBSCRIPTIONS, 0);
 
         // Invoking an effector increments effector/task count
         e.myEffector();

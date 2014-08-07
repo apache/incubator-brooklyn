@@ -34,7 +34,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
@@ -126,7 +125,7 @@ public class XmlMementoSerializerTest {
 
     @Test
     public void testEntity() throws Exception {
-        final TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
         try {
             serializer.setLookupContext(new LookupContextImpl(managementContext, ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(), ImmutableList.<Enricher>of(), true));
@@ -138,7 +137,7 @@ public class XmlMementoSerializerTest {
 
     @Test
     public void testLocation() throws Exception {
-        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
         try {
             @SuppressWarnings("deprecation")
@@ -155,7 +154,7 @@ public class XmlMementoSerializerTest {
         // If there's a dangling entity in an ImmutableList etc, then discard it entirely.
         // If we try to insert null then it fails, breaking the deserialization of that entire file.
         
-        final TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         final TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         ManagementContext managementContext = app.getManagementContext();
         try {
@@ -178,7 +177,7 @@ public class XmlMementoSerializerTest {
 
     @Test
     public void testFieldReffingEntity() throws Exception {
-        final TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ReffingEntity reffer = new ReffingEntity(app);
         ManagementContext managementContext = app.getManagementContext();
         try {
@@ -192,7 +191,7 @@ public class XmlMementoSerializerTest {
 
     @Test
     public void testUntypedFieldReffingEntity() throws Exception {
-        final TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ReffingEntity reffer = new ReffingEntity((Object)app);
         ManagementContext managementContext = app.getManagementContext();
         try {

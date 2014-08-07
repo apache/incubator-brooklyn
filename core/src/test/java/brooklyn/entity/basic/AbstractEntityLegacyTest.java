@@ -32,6 +32,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.collections.MutableMap;
@@ -147,7 +148,7 @@ public class AbstractEntityLegacyTest {
     
     @Test
     public void testNewStyleUsesCustomDisplayName() throws Exception {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("appname"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("appname"), LocalManagementContextForTests.newInstance());
         MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class).displayName("entityname"));
         
         assertEquals(app.getDisplayName(), "appname");

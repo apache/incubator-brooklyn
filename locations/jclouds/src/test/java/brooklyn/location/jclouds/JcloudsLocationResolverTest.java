@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 public class JcloudsLocationResolverTest {
 
@@ -45,7 +46,7 @@ public class JcloudsLocationResolverTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        managementContext = LocalManagementContextForTests.newInstance();
         brooklynProperties = managementContext.getBrooklynProperties();
 
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.identity", "aws-ec2-id");
