@@ -162,10 +162,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return _legacyNoConstructionInit;
     }
 
-    protected boolean isRebinding() {
-        return RebindManagerImpl.RebindTracker.isRebinding();
-    }
-    
     public <T> T getConfig(ConfigKey<T> key) {
         return configsInternal.getConfig(key);
     }

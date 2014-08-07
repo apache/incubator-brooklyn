@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.proxying.InternalFactory;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.config.ConfigBag;
@@ -138,6 +139,10 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
         return managementContext;
     }
 
+    protected boolean isRebinding() {
+        return RebindManagerImpl.RebindTracker.isRebinding();
+    }
+    
     protected void requestPersist() {
         // TODO Could add PolicyChangeListener, similar to EntityChangeListener; should we do that?
         if (getManagementContext() != null) {

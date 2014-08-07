@@ -355,10 +355,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                 (o instanceof Entity && Objects.equal(getId(), ((Entity)o).getId()));
     }
     
-    protected boolean isRebinding() {
-        return RebindManagerImpl.RebindTracker.isRebinding();
-    }
-    
     public void setProxy(Entity proxy) {
         if (selfProxy != null) throw new IllegalStateException("Proxy is already set; cannot reset proxy for "+toString());
         selfProxy = checkNotNull(proxy, "proxy");

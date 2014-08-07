@@ -37,7 +37,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
-import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
@@ -261,10 +260,6 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         } catch (Exception e) {
             return map.get(key);
         }
-    }
-    
-    protected boolean isRebinding() {
-        return RebindManagerImpl.RebindTracker.isRebinding();
     }
     
     public boolean isManaged() {
