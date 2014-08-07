@@ -49,6 +49,14 @@ public class BrooklynWebConfig {
         return new BasicConfigKey<String>(String.class, BASE_NAME_SECURITY+".user."+user+".password");
     }
     
+    public final static ConfigKey<String> SALT_FOR_USER(String user) {
+        return new BasicConfigKey<String>(String.class, BASE_NAME_SECURITY+".user."+user+".salt");
+    }
+    
+    public final static ConfigKey<String> SHA256_FOR_USER(String user) {
+        return new BasicConfigKey<String>(String.class, BASE_NAME_SECURITY+".user."+user+".sha256");
+    }
+    
     public final static ConfigKey<String> LDAP_URL = new BasicConfigKey<String>(String.class,
             BASE_NAME_SECURITY+".ldap.url");
 

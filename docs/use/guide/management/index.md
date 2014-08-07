@@ -175,10 +175,32 @@ This configuration could look like:
 
 {% highlight properties %}
 brooklyn.webconsole.security.users=admin
-brooklyn.webconsole.security.user.admin.password=password
+brooklyn.webconsole.security.user.admin.salt=OHDf
+brooklyn.webconsole.security.user.admin.sha256=91e16f94509fa8e3dd21c43d69cadfd7da6e7384051b18f168390fe378bb36f9
 {% endhighlight %}
 
 The `users` line should contain a comma-separated list. The special value `*` is accepted to permit all users.
+
+To generate this, the brooklyn CLI can be used:
+{% highlight bash %}
+brooklyn generate-password --user admin
+
+Enter password: 
+Re-enter password: 
+
+Please add the following to your brooklyn.properies:
+
+brooklyn.webconsole.security.users=admin
+brooklyn.webconsole.security.user.admin.salt=OHDf
+brooklyn.webconsole.security.user.admin.sha256=91e16f94509fa8e3dd21c43d69cadfd7da6e7384051b18f168390fe378bb36f9
+{% endhighlight %}
+
+For legacy and dev purposes, the password can also be stored in plain text:
+
+{% highlight properties %}
+brooklyn.webconsole.security.users=admin
+brooklyn.webconsole.security.user.admin.password=mypassword
+{% endhighlight %}
 
 If not using the web console, you can specify
 `brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.BlackholeSecurityProvider` to prevent inadvertant logins.

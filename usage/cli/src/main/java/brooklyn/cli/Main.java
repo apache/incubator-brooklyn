@@ -29,7 +29,10 @@ import io.airlift.command.Option;
 import io.airlift.command.OptionType;
 import io.airlift.command.ParseException;
 
+import java.io.BufferedReader;
+import java.io.Console;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -62,6 +65,7 @@ import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.rest.security.PasswordHasher;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
@@ -70,6 +74,7 @@ import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Networking;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
 
@@ -200,6 +205,76 @@ public class Main {
         }
     }
 
+    @Command(name = "generate-password", description = "Generates a hashed web-console password")
+    public static class GeneratePasswordCommand extends BrooklynCommandCollectingArgs {
+
+        @Option(name = { "--user" }, title = "username", required = true)
+        public String user;
+
+        @Option(name = { "--stdin" }, title = "read password from stdin, instead of console", 
+                description = "Before using stdin, read http://stackoverflow.com/a/715681/1393883 for discussion of security!")
+        public boolean useStdin;
+
+        @Override
+        public Void call() throws Exception {
+            checkCanReadPassword();
+            
+            System.out.print("Enter password: ");
+            System.out.flush();
+            String password = readPassword();
+            if (Strings.isBlank(password)) {
+                throw new UserFacingException("Password must not be blank; aborting");
+            }
+            
+            System.out.print("Re-enter password: ");
+            System.out.flush();
+            String password2 = readPassword();
+            if (!password.equals(password2)) {
+                throw new UserFacingException("Passwords did not match; aborting");
+            }
+
+            String salt = Identifiers.makeRandomId(4);
+            String sha256password = PasswordHasher.sha256(salt, new String(password));
+            
+            System.out.println();
+            System.out.println("Please add the following to your brooklyn.properties:");
+            System.out.println();
+            System.out.println("brooklyn.webconsole.security.users="+user);
+            System.out.println("brooklyn.webconsole.security.user."+user+".salt="+salt);
+            System.out.println("brooklyn.webconsole.security.user."+user+".sha256="+sha256password);
+
+            return null;
+        }
+        
+        private void checkCanReadPassword() {
+            if (useStdin) {
+                // yes; always
+            } else {
+                Console console = System.console();
+                if (console == null) {
+                    throw new FatalConfigurationRuntimeException("No console; cannot get password securely; aborting");
+                }
+            }
+        }
+        
+        private String readPassword() throws IOException {
+            if (useStdin) {
+                return readLine(System.in);
+            } else {
+                return new String(System.console().readPassword());
+            }
+        }
+        
+        private String readLine(InputStream in) throws IOException {
+            StringBuilder result = new StringBuilder();
+            char c;
+            while ((c = (char)in.read()) != '\n') {
+                result.append(c);
+            }
+            return result.toString();
+        }
+    }
+    
     @Command(name = "launch", description = "Starts a server, optionally with applications")
     public static class LaunchCommand extends BrooklynCommandCollectingArgs {
 
@@ -722,6 +797,7 @@ public class Main {
                 .withCommands(
                         HelpCommand.class,
                         InfoCommand.class,
+                        GeneratePasswordCommand.class,
                         cliLaunchCommand()
                 );
 
