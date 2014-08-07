@@ -518,34 +518,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
     
     /**
-     * Called by framework (in new-style entities) after configuring, setting parent, etc,
-     * but before a reference to this entity is shared with other entities.
-     * 
-     * To preserve backwards compatibility for if the entity is constructed directly, one
-     * can add to the start method the code below, but that means it will be called after
-     * references to this entity have been shared with other entities.
-     * <pre>
-     * {@code
-     * if (isLegacyConstruction()) {
-     *     init();
-     * }
-     * }
-     * </pre>
-     */
-    public void init() {
-        // no-op
-    }
-    
-    /**
-     * Called by framework (in new-style entities where EntitySpec was used) on rebind, 
-     * after configuring but before the entity is managed.
-     * Note that {@link #init()} will not be called on rebind.
-     */
-    public void rebind() {
-        // no-op
-    }
-    
-    /**
      * Adds this as a child of the given entity; registers with application if necessary.
      */
     @Override

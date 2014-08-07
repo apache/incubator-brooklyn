@@ -36,16 +36,18 @@ import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Sets;
 
-public class BasicLocationRebindSupport implements RebindSupport<LocationMemento> {
+public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupport<LocationMemento> {
 
     private static final Logger LOG = LoggerFactory.getLogger(BasicLocationRebindSupport.class);
     
     private final AbstractLocation location;
     
     public BasicLocationRebindSupport(AbstractLocation location) {
+        super(location);
         this.location = location;
     }
     
+    // Can rely on super-type once the deprecated getMementoWithProperties is deleted
     @Override
     public LocationMemento getMemento() {
         return getMementoWithProperties(Collections.<String,Object>emptyMap());
@@ -62,14 +64,11 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
     }
 
     @Override
-    public void reconstruct(RebindContext rebindContext, LocationMemento memento) {
-    	if (LOG.isTraceEnabled()) LOG.trace("Reconstructing location: {}", memento.toVerboseString());
-
-    	// FIXME Treat config like we do for entities; this code will disappear when locations become entities.
-    	
-    	// Note that the flags have been set in the constructor
+    protected void addConfig(RebindContext rebindContext, LocationMemento memento) {
+        // FIXME Treat config like we do for entities; this code will disappear when locations become entities.
+        
+        // Note that the flags have been set in the constructor
         // FIXME Relies on location.getLocalConfigBag being mutable (to modify the location's own config)
-        location.setName(memento.getDisplayName());
         
         location.getLocalConfigBag().putAll(memento.getLocationConfig()).markAll(
                 Sets.difference(memento.getLocationConfig().keySet(), memento.getLocationConfigUnused())).
@@ -101,30 +100,13 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
                 // FIXME How to do findFieldForFlag without throwing exception if it's not there?
             }
         }
-        
+    }
+    
+    @Override
+    protected void addCustoms(RebindContext rebindContext, LocationMemento memento) {
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
-        addTags(rebindContext, memento);
         location.init(); // TODO deprecated calling init; will be deleted
-        location.rebind();
-        
-        doReconstruct(rebindContext, memento);
-    }
-
-    protected void addTags(RebindContext rebindContext, LocationMemento memento) {
-        for (Object tag : memento.getTags()) {
-            location.getTagSupport().addTag(tag);
-        }
-    }
-
-    @Override
-    public void addPolicies(RebindContext rebindContext, LocationMemento Memento) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addEnrichers(RebindContext rebindContext, LocationMemento Memento) {
-        throw new UnsupportedOperationException();
     }
 
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
@@ -145,12 +127,5 @@ public class BasicLocationRebindSupport implements RebindSupport<LocationMemento
         } else if (memento.getParent() != null) {
         	LOG.warn("Ignoring parent {} of location {}({}), as cannot be found", new Object[] {memento.getParent(), memento.getType(), memento.getId()});
         }
-    }
-    
-    /**
-     * For overriding, to give custom reconsruct behaviour.
-     */
-    protected void doReconstruct(RebindContext rebindContext, LocationMemento memento) {
-        // default is no-op
     }
 }

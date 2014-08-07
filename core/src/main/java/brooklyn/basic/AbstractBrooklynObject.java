@@ -37,6 +37,37 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
 
     private volatile ManagementContext managementContext;
 
+    public abstract void setDisplayName(String newName);
+
+    /**
+     * Called by framework (in new-style instances where spec was used) after configuring etc,
+     * but before a reference to this instance is shared.
+     * 
+     * To preserve backwards compatibility for if the instance is constructed directly, one
+     * can call the code below, but that means it will be called after references to this 
+     * policy have been shared with other entities.
+     * <pre>
+     * {@code
+     * if (isLegacyConstruction()) {
+     *     init();
+     * }
+     * }
+     * </pre>
+     */
+    public void init() {
+        // no-op
+    }
+    
+    /**
+     * Called by framework on rebind (in new-style instances),
+     * after configuring but before the instance is managed (or is attached to an entity, depending on its type), 
+     * and before a reference to this policy is shared.
+     * Note that {@link #init()} will not be called on rebind.
+     */
+    public void rebind() {
+        // no-op
+    }
+    
     public void setManagementContext(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
     }

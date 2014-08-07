@@ -206,15 +206,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         // no-op
     }
     
-    /**
-     * Called by framework (in new-style policies/enrichers where PolicySpec/EnricherSpec was used) on rebind, 
-     * after configuring but before {@link #setEntity(EntityLocal)} and before a reference to this policy is shared.
-     * Note that {@link #init()} will not be called on rebind.
-     */
-    public void rebind() {
-        // no-op
-    }
-    
     protected boolean isRebinding() {
         return RebindManagerImpl.RebindTracker.isRebinding();
     }

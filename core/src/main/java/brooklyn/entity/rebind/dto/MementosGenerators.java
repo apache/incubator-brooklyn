@@ -44,6 +44,7 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -59,6 +60,23 @@ public class MementosGenerators {
 
     private MementosGenerators() {}
     
+    /**
+     * Inspects a brooklyn object to create a corresponding memento.
+     */
+    public static Memento newMemento(BrooklynObject instance) {
+        if (instance instanceof Entity) {
+            return newEntityMemento((Entity)instance);
+        } else if (instance instanceof Location) {
+            return newLocationMemento((Location)instance);
+        } else if (instance instanceof Policy) {
+            return newPolicyMemento((Policy)instance);
+        } else if (instance instanceof Enricher) {
+            return newEnricherMemento((Enricher)instance);
+        } else {
+            throw new IllegalArgumentException("Unexpected brooklyn type: "+(instance == null ? "null" : instance.getClass())+" ("+instance+")");
+        }
+    }
+
     /**
      * Walks the contents of a ManagementContext, to create a corresponding memento.
      * 
@@ -103,7 +121,7 @@ public class MementosGenerators {
     }
 
     /**
-     * @deprecated since 0.7.0; use {@link #newEntityMemento(Enricher)} instead
+     * @deprecated since 0.7.0; use {@link #newMemento(BrooklynObject)} instead
      */
     @Deprecated
     public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entity) {
@@ -197,7 +215,7 @@ public class MementosGenerators {
     }
     
     /**
-     * @deprecated since 0.7.0; use {@link #newLocationMemento(Enricher)} instead
+     * @deprecated since 0.7.0; use {@link #newMemento(BrooklynObject)} instead
      */
     @Deprecated
     public static BasicLocationMemento.Builder newLocationMementoBuilder(Location location) {
