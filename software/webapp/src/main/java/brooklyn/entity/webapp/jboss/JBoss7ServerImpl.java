@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
@@ -33,8 +34,10 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.policy.Enricher;
+import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Functions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 
@@ -43,7 +46,6 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 	public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
 
     private volatile HttpFeed httpFeed;
-    private Enricher serviceUpEnricher;
     
     public JBoss7ServerImpl(){
         super();
@@ -114,14 +116,16 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     protected void connectServiceUp() {
-        serviceUpEnricher = addEnricher(Enrichers.builder()
-                .propagating(ImmutableMap.of(MANAGEMENT_URL_UP, SERVICE_UP))
-                .from(this)
-                .build());
+        connectServiceUpIsRunning();
+        
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(MANAGEMENT_URL_UP)
+            .computing(Functionals.when(Predicates.not(Predicates.equalTo(true))).value("Management URL not reachable") )
+            .build());
     }
     
     protected void disconnectServiceUp() {
-        if (serviceUpEnricher != null) removeEnricher(serviceUpEnricher);
+        disconnectServiceUpIsRunning();
     }
     
     @Override

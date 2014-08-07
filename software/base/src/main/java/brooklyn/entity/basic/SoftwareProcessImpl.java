@@ -46,7 +46,6 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
-import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
@@ -153,7 +152,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected void connectServiceUpIsRunning() {
         serviceProcessIsRunning = FunctionFeed.builder()
                 .entity(this)
-                .period(5000)
+                .period(Duration.FIVE_SECONDS)
                 .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_PROCESS_IS_RUNNING)
                         .onException(Functions.constant(Boolean.FALSE))
                         .callable(new Callable<Boolean>() {
@@ -165,12 +164,11 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(SERVICE_PROCESS_IS_RUNNING)
-            .computing(Functionals.when(false).value("Process not running (according to driver checkRunning)"))
+            .computing(Functionals.when(false).value("Process not running (according to driver checkRunning)")
+                .when((Boolean)null).value("Process not running (no data for "+SERVICE_PROCESS_IS_RUNNING.getName()+")") )
             .build());
-
-        // FIXME lives elsewhere
-        addEnricher(Enrichers.builder().transforming(Attributes.SERVICE_NOT_UP_INDICATORS).publishing(Attributes.SERVICE_UP)
-            .computing( Functions.forPredicate(CollectionFunctionals.<String>mapSizeEquals(0)) ).build());
+        
+        addEnricher(ServiceStatusLogic.newEnricherForServiceUpIfNoNotUpIndicators());
     }
 
     /**
@@ -182,6 +180,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      */
     protected void disconnectServiceUpIsRunning() {
         if (serviceProcessIsRunning != null) serviceProcessIsRunning.stop();
+        ServiceStatusLogic.updateMapSensor(this, Attributes.SERVICE_NOT_UP_INDICATORS, SERVICE_PROCESS_IS_RUNNING.getName(), "Disabled checking whether service process is running");
     }
 
     /**
