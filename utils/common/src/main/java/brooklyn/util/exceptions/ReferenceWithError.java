@@ -31,12 +31,12 @@ public class ReferenceWithError<T> implements Supplier<T> {
 
     /** returns a reference which includes an error, and where attempts to get the content cause the error to throw */
     public static <T> ReferenceWithError<T> newInstanceThrowingError(T object, Throwable error) {
-        return new ReferenceWithError<T>(object, error, true);
+        return new ReferenceWithError<T>(object, error, false);
     }
     
     /** returns a reference which includes an error, but attempts to get the content do not cause the error to throw */
     public static <T> ReferenceWithError<T> newInstanceMaskingError(T object, Throwable error) {
-        return new ReferenceWithError<T>(object, error, false);
+        return new ReferenceWithError<T>(object, error, true);
     }
     
     /** returns a reference which includes an error, but attempts to get the content do not cause the error to throw */
@@ -44,10 +44,10 @@ public class ReferenceWithError<T> implements Supplier<T> {
         return new ReferenceWithError<T>(object, null, false);
     }
     
-    protected ReferenceWithError(@Nullable T object, @Nullable Throwable error, boolean throwErrorOnAccess) {
+    protected ReferenceWithError(@Nullable T object, @Nullable Throwable error, boolean maskError) {
         this.object = object;
         this.error = error;
-        this.maskError = throwErrorOnAccess;
+        this.maskError = maskError;
     }
 
     /** whether this will mask any error on an attempt to {@link #get()};
