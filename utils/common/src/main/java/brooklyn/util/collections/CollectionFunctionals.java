@@ -42,6 +42,7 @@ public class CollectionFunctionals {
             public Integer get() {
                 return Iterables.size(collection);
             }
+            @Override public String toString() { return "sizeSupplier("+collection+")"; }
         };
     }
     
@@ -51,6 +52,7 @@ public class CollectionFunctionals {
             public Integer apply(Iterable<?> input) {
                 return Iterables.size(input);
             }
+            @Override public String toString() { return "sizeFunction"; }
         };
     }
 
@@ -60,6 +62,7 @@ public class CollectionFunctionals {
             public Set<K> apply(Map<K, ?> input) {
                 return input.keySet();
             }
+            @Override public String toString() { return "keys"; }
         };
     }
 

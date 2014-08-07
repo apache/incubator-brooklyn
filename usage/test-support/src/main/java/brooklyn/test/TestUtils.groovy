@@ -24,7 +24,6 @@ import groovy.time.TimeDuration
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 import org.codehaus.groovy.runtime.InvokerInvocationException
 import org.slf4j.Logger
@@ -32,7 +31,8 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
-import brooklyn.util.time.Duration;
+import brooklyn.util.text.StringFunctions;
+import brooklyn.util.time.Duration
 
 import com.google.common.base.Predicate
 import com.google.common.base.Supplier
@@ -526,6 +526,10 @@ public class TestUtils {
         fail("Expected collection of size "+expectedSize+" but got size "+actualSize+": "+c);
     }
 
+    /**
+     * @deprecated since 0.7.0; use {@link Asserts#assertThat(Object, Predicate)} with {@link StringFunctions})}
+     */
+    @Deprecated
     public static void assertStringContainsLiteral(String string, String substring) {
         if (string==null) fail("String is null");
         if (substring==null) fail("Substring is null");
