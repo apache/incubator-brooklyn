@@ -40,6 +40,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.EntityTestUtils;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -88,20 +89,22 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
         @Override public Class<?> getDriverInterface() {
             return SimulatedInessentialIsRunningDriver.class;
         }
-        
+
         @Override
         public void connectServiceUpIsRunning() {
+            super.connectServiceUpIsRunning();
+            // run more often
             FunctionFeed.builder()
-                    .entity(this)
-                    .period(500)
-                    .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
-                            .onException(Functions.constant(Boolean.FALSE))
-                            .callable(new Callable<Boolean>() {
-                                public Boolean call() {
-                                    return getDriver().isRunning();
-                                }
-                            }))
-                    .build();
+                .entity(this)
+                .period(Duration.millis(10))
+                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_PROCESS_IS_RUNNING)
+                    .onException(Functions.constant(Boolean.FALSE))
+                    .callable(new Callable<Boolean>() {
+                        public Boolean call() {
+                            return getDriver().isRunning();
+                        }
+                    }))
+                .build();
         }
     }
     
