@@ -142,8 +142,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     
     public HighAvailabilityManagerImpl setPollPeriod(Duration val) {
         this.pollPeriod = checkNotNull(val, "pollPeriod");
-        if (running && pollingTask != null) {
-            pollingTask.cancel(true);
+        if (running) {
+            if (pollingTask!=null) {
+                pollingTask.cancel(true);
+            }
             registerPollTask();
         }
         return this;
@@ -244,6 +246,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     @Override
     public void stop() {
+        LOG.debug("Stopping "+this);
         boolean wasRunning = running; // ensure idempotent
         
         running = false;
@@ -294,6 +297,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         };
         
+        LOG.debug("Registering poll task for "+this+", period "+pollPeriod);
         if (pollPeriod==null || pollPeriod.equals(Duration.PRACTICALLY_FOREVER)) {
             // don't schedule - used for tests
             // (scheduling fires off one initial task in the background before the delay, 
@@ -369,7 +373,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     protected boolean isHeartbeatOk(ManagementNodeSyncRecord masterNode, ManagementNodeSyncRecord meNode) {
-        if (masterNode==null || meNode==null) return false;
+        if (masterNode==null) return false;
+        if (meNode==null) {
+            // we can't confirm it's healthy, but it appears so as far as we can tell
+            return true;
+        }
         Long timestampMaster = masterNode.getRemoteTimestamp();
         Long timestampMe = meNode.getRemoteTimestamp();
         if (timestampMaster==null || timestampMe==null) return false;
@@ -382,11 +390,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         String nodeId = memento.getMasterNodeId();
         ManagementNodeSyncRecord masterMemento = (nodeId == null) ? null : memento.getManagementNodes().get(nodeId);
         
+        ManagementNodeSyncRecord ourMemento = memento.getManagementNodes().get(ownNodeId);
         boolean result = masterMemento != null && masterMemento.getStatus() == ManagementNodeState.MASTER
-                && isHeartbeatOk(masterMemento, memento.getManagementNodes().get(ownNodeId));
+                && isHeartbeatOk(masterMemento, ourMemento);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Healthy-master check result={}; masterId={}; memento=",
-                new Object[] {result, nodeId, (masterMemento == null ? "<none>" : masterMemento.toVerboseString())});
+        if (LOG.isDebugEnabled()) LOG.debug("Healthy-master check result={}; masterId={}; masterMemento={}; ourMemento={}",
+                new Object[] {result, nodeId, (masterMemento == null ? "<none>" : masterMemento.toVerboseString()), (ourMemento == null ? "<none>" : ourMemento.toVerboseString())});
         
         return (result ? masterMemento : null);
     }
@@ -662,5 +671,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     .status(ManagementNodeState.FAILED)
                     .build();
         }
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString()+"[node:"+ownNodeId+";running="+running+"]";
     }
 }
