@@ -309,7 +309,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     @Override
-    public void configure(Map properties) {
+    public SshMachineLocation configure(Map properties) {
         super.configure(properties);
 
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
@@ -325,6 +325,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 setDisplayName((truth(user) ? user+"@" : "") + address.getHostName());
             }
         }
+        return this;
     }
 
     @Override

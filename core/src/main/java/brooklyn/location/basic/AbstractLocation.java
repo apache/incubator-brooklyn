@@ -36,7 +36,6 @@ import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
@@ -83,7 +82,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     public static final ConfigKey<Location> PARENT_LOCATION = new BasicConfigKey<Location>(Location.class, "parentLocation");
     
-    private final AtomicBoolean configured = new AtomicBoolean(false);
+    private final AtomicBoolean configured = new AtomicBoolean();
     
     private Reference<Long> creationTimeUtc = new BasicReference<Long>(System.currentTimeMillis());
     
@@ -101,8 +100,6 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     private ConfigBag configBag = new ConfigBag();
 
     private volatile boolean managed;
-
-    private boolean _legacyConstruction;
 
     private boolean inConstruction;
 
@@ -137,12 +134,8 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
      * </ul>
      */
     public AbstractLocation(Map properties) {
+        super(properties);
         inConstruction = true;
-        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
-        if (!_legacyConstruction && properties!=null && !properties.isEmpty()) {
-            LOG.warn("Forcing use of deprecated old-style location construction for "+getClass().getName()+" because properties were specified ("+properties+")");
-            _legacyConstruction = true;
-        }
         
         // When one calls getConfig(key), we want to use the default value specified on *this* location
         // if it overrides the default config. The easiest way to look up all our config keys is to 
@@ -150,13 +143,10 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         // entities). See {@link #getConfig(ConfigKey)}
         entityType = new EntityDynamicType((Class)getClass());
         
-        if (_legacyConstruction) {
-            LOG.warn("Deprecated use of old-style location construction for "+getClass().getName()+"; instead use LocationManager().createLocation(spec)");
-            if (LOG.isDebugEnabled())
-                LOG.debug("Source of use of old-style location construction", new Throwable("Source of use of old-style location construction"));
-            
-            configure(properties);
-            
+        if (isLegacyConstruction()) {
+            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
+
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
             if (!deferConstructionChecks) {
                 FlagUtils.checkRequiredFields(this);
@@ -213,21 +203,11 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     }
 
     /**
-     * Will set fields from flags. The unused configuration can be found via the 
-     * {@linkplain ConfigBag#getUnusedConfig()}.
-     * This can be overridden for custom initialization but note the following. 
-     * <p>
-     * For new-style locations (i.e. not calling constructor directly, this will
-     * be invoked automatically by brooklyn-core post-construction).
-     * <p>
-     * For legacy location use, this will be invoked by the constructor in this class.
-     * Therefore if over-riding you must *not* rely on field initializers because they 
-     * may not run until *after* this method (this method is invoked by the constructor 
-     * in this class, so initializers in subclasses will not have run when this overridden 
-     * method is invoked.) If you require fields to be initialized you must do that in 
-     * this method with a guard (as in FixedListMachineProvisioningLocation).
-     */ 
-    public void configure(Map properties) {
+     * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
+     */
+    @Override
+    @Deprecated
+    public AbstractLocation configure(Map properties) {
         assertNotYetManaged();
         
         boolean firstTime = !configured.getAndSet(true);
@@ -269,6 +249,8 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
             }
             configBag.put(LocationConfigKeys.ISO_3166, codes);
         }
+        
+        return this;
     }
 
     // TODO ensure no callers rely on 'remove' semantics, and don't remove;
@@ -305,10 +287,6 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
             storage.remove(getId()+"-displayName");
             storage.remove(getId()+"-config");
         }
-    }
-    
-    protected boolean isLegacyConstruction() {
-        return _legacyConstruction;
     }
     
     @Override

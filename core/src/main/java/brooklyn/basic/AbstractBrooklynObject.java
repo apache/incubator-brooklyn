@@ -18,17 +18,29 @@
  */
 package brooklyn.basic;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractBrooklynObject.class);
+
+    private boolean _legacyConstruction;
 
     @SetFromFlag(value="id")
     private String id = Identifiers.makeRandomId(8);
@@ -38,6 +50,56 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     private volatile ManagementContext managementContext;
 
     public abstract void setDisplayName(String newName);
+
+    public AbstractBrooklynObject() {
+        this(Maps.newLinkedHashMap());
+    }
+    
+    public AbstractBrooklynObject(Map<?,?> properties) {
+        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
+        
+        if (!_legacyConstruction && properties!=null && !properties.isEmpty()) {
+            log.warn("Forcing use of deprecated old-style location construction for "+getClass().getName()+" because properties were specified ("+properties+"); instead use specs (e.g. LocationSpec, EntitySpec, etc)");
+            if (log.isDebugEnabled())
+                log.debug("Source of use of old-style construction", new Throwable("Source of use of old-style construction"));
+            _legacyConstruction = true;
+        }
+        
+        // rely on sub-class to call configure(properties), because otherwise its fields will not have been initialised
+    }
+
+    /**
+     * See {@link #configure(Map)}
+     * 
+     * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
+     */ 
+    @Deprecated
+    protected AbstractBrooklynObject configure() {
+        return configure(Collections.emptyMap());
+    }
+    
+    /**
+     * Will set fields from flags, and put the remaining ones into the 'leftovers' map.
+     * For some types, you can find unused config via {@link ConfigBag#getUnusedConfig()}.
+     * <p>
+     * To be overridden by AbstractEntity, AbstractLoation, AbstractPolicy, AbstractEnricher, etc.
+     * <p>
+     * But should not be overridden by specific entity types. If you do, the entity may break in
+     * subsequent releases. Also note that if you require fields to be initialized you must do that 
+     * in this method. You must *not* rely on field initializers because they may not run until *after* 
+     * this method (this method is invoked by the constructor in this class, so initializers
+     * in subclasses will not have run when this overridden method is invoked.)
+     * 
+     * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
+     */ 
+    @Deprecated
+    protected AbstractBrooklynObject configure(Map flags) {
+        return this;
+    }
+    
+    protected boolean isLegacyConstruction() {
+        return _legacyConstruction;
+    }
 
     /**
      * Called by framework (in new-style instances where spec was used) after configuring etc,

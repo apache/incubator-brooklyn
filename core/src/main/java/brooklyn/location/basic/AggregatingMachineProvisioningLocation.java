@@ -78,13 +78,13 @@ public class AggregatingMachineProvisioningLocation<T extends MachineLocation> e
     }
 
     @Override
-    public void configure(Map properties) {
+    public AbstractLocation configure(Map properties) {
         if (lock == null) {
             lock = new Object();
             provisioners = Lists.<MachineProvisioningLocation<T>>newArrayList();
             inUse = Maps.<T, MachineProvisioningLocation<T>>newLinkedHashMap();
         }
-        super.configure(properties);
+        return super.configure(properties);
     }
     
     @Override

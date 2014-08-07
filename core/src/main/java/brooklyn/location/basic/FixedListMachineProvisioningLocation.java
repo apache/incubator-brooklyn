@@ -121,11 +121,11 @@ implements MachineProvisioningLocation<T>, Closeable {
     }
 
     @Override
-    public void configure(Map properties) {
+    public AbstractLocation configure(Map properties) {
         if (machines == null) machines = Sets.newLinkedHashSet();
         if (inUse == null) inUse = Sets.newLinkedHashSet();
         if (pendingRemoval == null) pendingRemoval = Sets.newLinkedHashSet();
-        super.configure(properties);
+        return super.configure(properties);
     }
     
     public FixedListMachineProvisioningLocation<T> newSubLocation(Map<?,?> newFlags) {
