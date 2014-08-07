@@ -40,7 +40,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.Group;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
@@ -81,6 +80,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Strings;
@@ -213,8 +213,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     protected transient SubscriptionTracker _subscriptionTracker;
 
-    private final boolean _legacyConstruction;
-    
     public AbstractEntity() {
         this(Maps.newLinkedHashMap(), null);
     }
@@ -241,8 +239,25 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
      */
     @Deprecated
     public AbstractEntity(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
+        super(checkConstructorFlags(flags, parent));
+
+        // TODO Don't let `this` reference escape during construction
+        entityType = new EntityDynamicType(this);
+        
+        if (isLegacyConstruction()) {
+            AbstractBrooklynObject checkWeGetThis = configure(flags);
+            assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
+
+            boolean deferConstructionChecks = (flags.containsKey("deferConstructionChecks") && TypeCoercions.coerce(flags.get("deferConstructionChecks"), Boolean.class));
+            if (!deferConstructionChecks) {
+                FlagUtils.checkRequiredFields(this);
+            }
+        }
+    }
+    
+    private static Map<?,?> checkConstructorFlags(Map flags, Entity parent) {
         if (flags==null) {
-            throw new IllegalArgumentException("Flags passed to entity "+this+" must not be null (try no-arguments or empty map)");
+            throw new IllegalArgumentException("Flags passed to entity must not be null (try no-arguments or empty map)");
         }
         if (flags.get("parent") != null && parent != null && flags.get("parent") != parent) {
             throw new IllegalArgumentException("Multiple parents supplied, "+flags.get("parent")+" and "+parent);
@@ -257,77 +272,18 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             flags.put("parent", parent);
         }
         if (flags.get("owner") != null) {
-            LOG.warn("Use of deprecated \"flags.owner\" instead of \"flags.parent\" for entity {}", this);
+            LOG.warn("Use of deprecated \"flags.owner\" instead of \"flags.parent\" for entity");
             flags.put("parent", flags.get("owner"));
             flags.remove("owner");
         }
-
-        // TODO Don't let `this` reference escape during construction
-        entityType = new EntityDynamicType(this);
-        
-        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
-        
-        if (_legacyConstruction) {
-            LOG.warn("Deprecated use of old-style entity construction for "+getClass().getName()+"; instead use EntityManager().createEntity(spec)");
-            AbstractEntity checkWeGetThis = configure(flags);
-            assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead";
-        }
-        
-        inConstruction = false;
+        return flags;
     }
 
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        return (o == this || o == selfProxy) || 
-                (o instanceof Entity && Objects.equal(getId(), ((Entity)o).getId()));
-    }
-    
-    protected boolean isLegacyConstruction() {
-        return _legacyConstruction;
-    }
-    
-    protected boolean isRebinding() {
-        return RebindManagerImpl.RebindTracker.isRebinding();
-    }
-    
-    public void setProxy(Entity proxy) {
-        if (selfProxy != null) throw new IllegalStateException("Proxy is already set; cannot reset proxy for "+toString());
-        selfProxy = checkNotNull(proxy, "proxy");
-    }
-    
-    public Entity getProxy() {
-        return selfProxy;
-    }
-    
     /**
-     * Returns the proxy, or if not available (because using legacy code) then returns the real entity.
-     * This method will be deleted in a future release; it will be kept while deprecated legacy code
-     * still exists that creates entities without setting the proxy.
+     * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
      */
-    @Beta
-    public Entity getProxyIfAvailable() {
-        return getProxy()!=null ? getProxy() : this;
-    }
-    
-    /** sets fields from flags; can be overridden if needed, subclasses should
-     * set custom fields before _invoking_ this super
-     * (and they nearly always should invoke the super)
-     * <p>
-     * note that it is usually preferred to use the SetFromFlag annotation on relevant fields
-     * so they get set automatically by this method and overriding it is unnecessary
-     *
-     * @return this entity, for fluent style initialization
-     */
-    public AbstractEntity configure() {
-        return configure(Maps.newLinkedHashMap());
-    }
-    
     @Override
+    @Deprecated
     public AbstractEntity configure(Map flags) {
         if (!inConstruction && getManagementSupport().isDeployed()) {
             LOG.warn("bulk/flag configuration being made to {} after deployment: may not be supported in future versions ({})", 
@@ -388,6 +344,36 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
         return this;
     }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        return (o == this || o == selfProxy) || 
+                (o instanceof Entity && Objects.equal(getId(), ((Entity)o).getId()));
+    }
+    
+    public void setProxy(Entity proxy) {
+        if (selfProxy != null) throw new IllegalStateException("Proxy is already set; cannot reset proxy for "+toString());
+        selfProxy = checkNotNull(proxy, "proxy");
+    }
+    
+    public Entity getProxy() {
+        return selfProxy;
+    }
+    
+    /**
+     * Returns the proxy, or if not available (because using legacy code) then returns the real entity.
+     * This method will be deleted in a future release; it will be kept while deprecated legacy code
+     * still exists that creates entities without setting the proxy.
+     */
+    @Beta
+    public Entity getProxyIfAvailable() {
+        return getProxy()!=null ? getProxy() : this;
+    }
     
     /**
      * Sets a config key value, and returns this Entity instance for use in fluent-API style coding.
@@ -410,6 +396,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     public void setManagementContext(ManagementContextInternal managementContext) {
+        super.setManagementContext(managementContext);
         getManagementSupport().setManagementContext(managementContext);
         entityType.setName(getEntityTypeName());
         if (displayNameAutoGenerated) displayName.set(getEntityType().getSimpleName()+":"+Strings.maxlen(getId(), 4));
@@ -515,34 +502,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             LOG.debug("Entity type interface not found for entity "+this+"; instead using "+typeName+" as entity type name");
             return typeName;
         }
-    }
-    
-    /**
-     * Called by framework (in new-style entities) after configuring, setting parent, etc,
-     * but before a reference to this entity is shared with other entities.
-     * 
-     * To preserve backwards compatibility for if the entity is constructed directly, one
-     * can add to the start method the code below, but that means it will be called after
-     * references to this entity have been shared with other entities.
-     * <pre>
-     * {@code
-     * if (isLegacyConstruction()) {
-     *     init();
-     * }
-     * }
-     * </pre>
-     */
-    public void init() {
-        // no-op
-    }
-    
-    /**
-     * Called by framework (in new-style entities where EntitySpec was used) on rebind, 
-     * after configuring but before the entity is managed.
-     * Note that {@link #init()} will not be called on rebind.
-     */
-    public void rebind() {
-        // no-op
     }
     
     /**
@@ -1350,8 +1309,28 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     protected void onTagsChanged() {
+        super.onTagsChanged();
         getManagementSupport().getEntityChangeListener().onTagsChanged();
     }
+
+    public Set<Object> getTags() {
+        return getTagSupport().getTags();
+    }
+
+    @Override
+    public boolean addTag(Object tag) {
+        return getTagSupport().addTag(tag);
+    }    
+
+    @Override
+    public boolean removeTag(Object tag) {
+        return getTagSupport().removeTag(tag);
+    }    
+
+    @Override
+    public boolean containsTag(Object tag) {
+        return getTagSupport().containsTag(tag);
+    }    
     
     @Override
     protected void finalize() throws Throwable {

@@ -24,16 +24,11 @@ import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import brooklyn.config.render.RendererHints;
-import brooklyn.config.render.TestRendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.AttributeSensor;
-import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
@@ -79,7 +74,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testTagsSanity() throws Exception {
-        entity.addTag("foo");
+        entity.getTagSupport().addTag("foo");
         
         ClientResponse response = client().resource(entityEndpoint + "/tags")
                 .accept(MediaType.APPLICATION_JSON)
@@ -93,8 +88,8 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
     // TODO any entity or complex object should be cleaned up as part of WebResourceUtils call
     @Test(groups="WIP")
     public void testTagsDoNotSerializeTooMuch() throws Exception {
-        entity.addTag("foo");
-        entity.addTag(entity.getParent());
+        entity.getTagSupport().addTag("foo");
+        entity.getTagSupport().addTag(entity.getParent());
 
         ClientResponse response = client().resource(entityEndpoint + "/tags")
                 .accept(MediaType.APPLICATION_JSON)

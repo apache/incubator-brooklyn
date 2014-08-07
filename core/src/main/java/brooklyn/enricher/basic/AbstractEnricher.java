@@ -26,7 +26,6 @@ import brooklyn.mementos.EnricherMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherType;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
-import brooklyn.policy.basic.EnricherTypeImpl;
 
 import com.google.common.collect.Maps;
 
@@ -35,15 +34,16 @@ import com.google.common.collect.Maps;
 */
 public abstract class AbstractEnricher extends AbstractEntityAdjunct implements Enricher {
 
-    private final EnricherType enricherType;
-    
+    private final EnricherDynamicType enricherType;
+
     public AbstractEnricher() {
         this(Maps.newLinkedHashMap());
     }
     
     public AbstractEnricher(Map<?,?> flags) {
         super(flags);
-        enricherType = new EnricherTypeImpl(getAdjunctType());
+        
+        enricherType = new EnricherDynamicType(this);
         
         if (isLegacyConstruction() && !isLegacyNoConstructionInit()) {
             init();
@@ -57,15 +57,12 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     
     @Override
     public EnricherType getEnricherType() {
-        return enricherType;
+        return enricherType.getSnapshot();
     }
 
     @Override
     protected void onChanged() {
-        // currently changes simply trigger re-persistence; there is no intermediate listener as we do for EntityChangeListener
-        if (getManagementContext() != null) {
-            getManagementContext().getRebindManager().getChangeListener().onChanged(this);
-        }
+        requestPersist();
     }
     
 }

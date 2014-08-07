@@ -18,9 +18,6 @@
  */
 package brooklyn.policy;
 
-import java.util.Set;
-
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.basic.BrooklynObject;
@@ -60,13 +57,5 @@ public interface EntityAdjunct extends BrooklynObject {
      * This will be included in the call to {@link #getTags()}.
      */
     @Nullable String getUniqueTag();
-    
-    /**
-     * A set of tags associated to this adjunct.
-     * <p>
-     * This will include {@link #getUniqueTag()} if that is set.
-     */
-    @Override
-    @Nonnull Set<Object> getTags();
 
 }

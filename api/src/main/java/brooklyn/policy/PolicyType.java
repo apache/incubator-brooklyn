@@ -18,10 +18,7 @@
  */
 package brooklyn.policy;
 
-import java.io.Serializable;
-import java.util.Set;
-
-import brooklyn.config.ConfigKey;
+import brooklyn.basic.BrooklynType;
 
 import com.google.common.annotations.Beta;
 
@@ -35,20 +32,5 @@ import com.google.common.annotations.Beta;
  * @since 0.5
  */
 @Beta
-public interface PolicyType extends Serializable {
-
-    /**
-     * The type name of this policy (normally the fully qualified class name).
-     */
-    String getName();
-    
-    /**
-     * ConfigKeys available on this policy.
-     */
-    Set<ConfigKey<?>> getConfigKeys();
-    
-    /**
-     * The ConfigKey with the given name, or null if not found.
-     */
-    ConfigKey<?> getConfigKey(String name);
+public interface PolicyType extends BrooklynType {
 }

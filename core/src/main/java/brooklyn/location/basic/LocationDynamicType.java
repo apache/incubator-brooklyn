@@ -16,29 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.location.basic;
 
-import brooklyn.basic.BrooklynObject;
+import brooklyn.basic.BrooklynDynamicType;
+import brooklyn.location.Location;
+import brooklyn.location.LocationType;
 
-/**
- * Listener to be notified of changes within brooklyn, so that the new state
- * of the entity/location/policy can be persisted.
- * 
- * Users are not expected to implement this class. It is for use by the {@link RebindManager}.
- * 
- * @author aled
- */
-public interface ChangeListener {
+public class LocationDynamicType extends BrooklynDynamicType<Location, AbstractLocation> {
 
-    public static final ChangeListener NOOP = new ChangeListener() {
-        @Override public void onChanged(BrooklynObject instance) {}
-        @Override public void onManaged(BrooklynObject instance) {}
-        @Override public void onUnmanaged(BrooklynObject instance) {}
-    };
-
-    void onManaged(BrooklynObject instance);
+    public LocationDynamicType(AbstractLocation location) {
+        super(location);
+    }
     
-    void onUnmanaged(BrooklynObject instance);
-    
-    void onChanged(BrooklynObject instance);
+    public LocationType getSnapshot() {
+        return (LocationType) super.getSnapshot();
+    }
+
+    @Override
+    protected LocationTypeSnapshot newSnapshot() {
+        return new LocationTypeSnapshot(name, value(configKeys));
+    }
 }

@@ -93,6 +93,7 @@ import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.access.PortForwardManager;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.BasicMachineMetadata;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
@@ -206,7 +207,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     @Override
-    public void configure(Map properties) {
+    public JcloudsLocation configure(Map properties) {
         super.configure(properties);
         
         if (getLocalConfigBag().containsKey("providerLocationId")) {
@@ -231,6 +232,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             setConfig(MACHINE_CREATION_SEMAPHORE, new Semaphore(maxConcurrent, true));
         }
+        return this;
     }
     
     @Override

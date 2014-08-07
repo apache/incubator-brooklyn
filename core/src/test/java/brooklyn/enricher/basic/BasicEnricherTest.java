@@ -85,7 +85,7 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
     public void testTagsFromSpec() throws Exception {
         MyEnricher enricher = app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
 
-        assertEquals(enricher.getTags(), MutableSet.of("x", 99));
+        assertEquals(enricher.getTagSupport().getTags(), MutableSet.of("x", 99));
         assertEquals(enricher.getUniqueTag(), "x");
     }
 

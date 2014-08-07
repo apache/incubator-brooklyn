@@ -231,7 +231,7 @@ public class InternalEntityFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
             
-            ((AbstractEntity)entity).addTags(spec.getTags());
+            entity.getTagSupport().addTags(spec.getTags());
             ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {

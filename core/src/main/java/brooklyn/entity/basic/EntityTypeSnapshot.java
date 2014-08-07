@@ -24,65 +24,34 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.ParameterType;
 import brooklyn.event.Sensor;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class EntityTypeSnapshot implements EntityType {
+public class EntityTypeSnapshot extends BrooklynTypeSnapshot implements EntityType {
     private static final long serialVersionUID = 4670930188951106009L;
     
-    private final String name;
-    private transient volatile String simpleName;
-    private final Map<String, ConfigKey<?>> configKeys;
     private final Map<String, Sensor<?>> sensors;
     private final Set<Effector<?>> effectors;
-    private final Set<ConfigKey<?>> configKeysSet;
     private final Set<Sensor<?>> sensorsSet;
 
     EntityTypeSnapshot(String name, Map<String, ConfigKey<?>> configKeys, Map<String, Sensor<?>> sensors, Collection<Effector<?>> effectors) {
-        this.name = name;
-        this.configKeys = ImmutableMap.copyOf(configKeys);
+        super(name, configKeys);
         this.sensors = ImmutableMap.copyOf(sensors);
         this.effectors = ImmutableSet.copyOf(effectors);
-        this.configKeysSet = ImmutableSet.copyOf(this.configKeys.values());
         this.sensorsSet = ImmutableSet.copyOf(this.sensors.values());
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-    
-    private String toSimpleName(String name) {
-        String simpleName = name.substring(name.lastIndexOf(".")+1);
-        if (Strings.isBlank(simpleName)) simpleName = name.trim();
-        return Strings.makeValidFilename(simpleName);
-    }
-
-    @Override
-    public String getSimpleName() {
-        String sn = simpleName;
-        if (sn==null) {
-            sn = toSimpleName(getName());
-            simpleName = sn;
-        }
-        return sn;
-    }
-    
-    @Override
-    public Set<ConfigKey<?>> getConfigKeys() {
-        return configKeysSet;
-    }
-    
     @Override
     public Set<Sensor<?>> getSensors() {
         return sensorsSet;
@@ -124,12 +93,6 @@ public class EntityTypeSnapshot implements EntityType {
         throw new NoSuchElementException("No matching effector "+name+"("+Joiner.on(", ").join(parameterTypes)+") on entity "+getName());
     }
 
-    
-    @Override
-    public ConfigKey<?> getConfigKey(String name) {
-        return configKeys.get(name);
-    }
-    
     @Override
     public Sensor<?> getSensor(String name) {
         return sensors.get(name);
@@ -142,7 +105,7 @@ public class EntityTypeSnapshot implements EntityType {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(name, configKeys, sensors, effectors);
+        return Objects.hashCode(super.hashCode(), sensors, effectors);
     }
     
     @Override
@@ -151,16 +114,13 @@ public class EntityTypeSnapshot implements EntityType {
         if (!(obj instanceof EntityTypeSnapshot)) return false;
         EntityTypeSnapshot o = (EntityTypeSnapshot) obj;
         
-        return Objects.equal(name, o.name) && Objects.equal(configKeys, o.configKeys) &&
-                Objects.equal(sensors, o.sensors) && Objects.equal(effectors, o.effectors);
+        return super.equals(obj) && Objects.equal(sensors, o.sensors) && Objects.equal(effectors, o.effectors);
     }
     
     @Override
-    public String toString() {
-        return Objects.toStringHelper(name)
-                .add("configKeys", configKeys)
+    protected ToStringHelper toStringHelper() {
+        return super.toStringHelper()
                 .add("sensors", sensors)
-                .add("effectors", effectors)
-                .toString();
+                .add("effectors", effectors);
     }
 }

@@ -16,29 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.location.basic;
 
-import brooklyn.basic.BrooklynObject;
+import java.util.Map;
 
-/**
- * Listener to be notified of changes within brooklyn, so that the new state
- * of the entity/location/policy can be persisted.
- * 
- * Users are not expected to implement this class. It is for use by the {@link RebindManager}.
- * 
- * @author aled
- */
-public interface ChangeListener {
+import brooklyn.basic.BrooklynTypeSnapshot;
+import brooklyn.config.ConfigKey;
+import brooklyn.policy.EnricherType;
 
-    public static final ChangeListener NOOP = new ChangeListener() {
-        @Override public void onChanged(BrooklynObject instance) {}
-        @Override public void onManaged(BrooklynObject instance) {}
-        @Override public void onUnmanaged(BrooklynObject instance) {}
-    };
-
-    void onManaged(BrooklynObject instance);
+public class LocationTypeSnapshot extends BrooklynTypeSnapshot implements EnricherType {
     
-    void onUnmanaged(BrooklynObject instance);
-    
-    void onChanged(BrooklynObject instance);
+    private static final long serialVersionUID = 9150132836104748237L;
+
+    LocationTypeSnapshot(String name, Map<String, ConfigKey<?>> configKeys) {
+        super(name, configKeys);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        return (obj instanceof LocationTypeSnapshot) && super.equals(obj);
+    }
 }

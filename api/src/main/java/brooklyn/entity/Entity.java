@@ -38,8 +38,6 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.guava.Maybe;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
  * The basic interface for a Brooklyn entity.
  * <p>
@@ -246,16 +244,27 @@ public interface Entity extends BrooklynObject {
     boolean removeEnricher(Enricher enricher);
     
     /** 
-     * Tags are arbitrary objects which can be attached to an entity for subsequent reference.
-     * They must not be null (as {@link ImmutableMap} may be used under the covers; also there is little point!);
-     * and they should be amenable to our persistence (on-disk serialization) and our JSON serialization in the REST API.
-     * 
-     * @return An immutable copy of the set of tags on this entity. 
-     * Note {@link #containsTag(Object)} will be more efficient,
-     * and {@link #addTag(Object)} and {@link #removeTag(Object)} will not work. */
+     * @since 0.7
+     * @deprecated since 0.7; see {@link #getTagSupport()}
+     */
+    @Deprecated
     Set<Object> getTags();
+    /** 
+     * @since 0.7
+     * @deprecated since 0.7; see {@link #getTagSupport()}
+     */
+    @Deprecated
     boolean addTag(@Nonnull Object tag);
+    /** 
+     * @since 0.7
+     * @deprecated since 0.7; see {@link #getTagSupport()}
+     */
+    @Deprecated
     boolean removeTag(@Nonnull Object tag);
+    /** 
+     * @since 0.7
+     * @deprecated since 0.7; see {@link #getTagSupport()}
+     */
+    @Deprecated
     boolean containsTag(@Nonnull Object tag);
-
 }

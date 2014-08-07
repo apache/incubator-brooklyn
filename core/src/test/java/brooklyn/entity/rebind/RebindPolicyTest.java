@@ -40,8 +40,10 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.Locations;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.policy.EnricherSpec;
+import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
@@ -49,6 +51,7 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class RebindPolicyTest extends RebindTestFixtureWithApp {
@@ -91,7 +94,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         assertTrue(origPolicy.initCalled);
         assertFalse(origPolicy.rebindCalled);
         
-        TestApplication newApp = rebind();
+        newApp = rebind();
         MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
         
         assertEquals(newPolicy.myfield, "myFieldVal");
@@ -111,13 +114,13 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
                 .configure(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME, "myVal for setFromFlag withShortName")
                 .configure(MyPolicy.MY_CONFIG_WITHOUT_SETFROMFLAG, "myVal for witout setFromFlag"));
 
-        newApp = (TestApplication) rebind();
+        newApp = rebind();
         MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
         
         assertEquals(newPolicy.getDisplayName(), "My Policy");
         
         assertEquals(newPolicy.getUniqueTag(), "tagU");
-        assertEquals(newPolicy.getTags(), MutableSet.of("tagU", "tag1", "tag2"));
+        assertEquals(newPolicy.getTagSupport().getTags(), MutableSet.of("tagU", "tag1", "tag2"));
         
         assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME), "myVal for with setFromFlag noShortName");
         assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME), "myVal for setFromFlag withShortName");
@@ -165,7 +168,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     public void testReboundConfigDoesNotContainId() throws Exception {
         MyPolicy policy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
         
-        newApp = (TestApplication) rebind();
+        newApp = rebind();
         MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
 
         assertNull(newPolicy.getConfig(ConfigKeys.newStringConfigKey("id")));
@@ -178,7 +181,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
                 .configure(MyPolicyReconfigurable.MY_CONFIG, "oldval"));
         policy.setConfig(MyPolicyReconfigurable.MY_CONFIG, "newval");
         
-        newApp = (TestApplication) rebind();
+        newApp = rebind();
         MyPolicyReconfigurable newPolicy = (MyPolicyReconfigurable) Iterables.getOnlyElement(newApp.getPolicies());
 
         assertEquals(newPolicy.getConfig(MyPolicyReconfigurable.MY_CONFIG), "newval");
@@ -188,13 +191,25 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     public void testIsRebinding() throws Exception {
         origApp.addPolicy(PolicySpec.create(PolicyChecksIsRebinding.class));
 
-        newApp = (TestApplication) rebind();
+        newApp = rebind();
         PolicyChecksIsRebinding newPolicy = (PolicyChecksIsRebinding) Iterables.getOnlyElement(newApp.getPolicies());
 
         assertTrue(newPolicy.isRebindingValWhenRebinding());
         assertFalse(newPolicy.isRebinding());
     }
     
+    @Test
+    public void testPolicyTags() throws Exception {
+        Policy origPolicy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
+        origPolicy.getTagSupport().addTag("foo");
+        origPolicy.getTagSupport().addTag(origApp);
+
+        newApp = rebind();
+        Policy newPolicy = Iterables.getOnlyElement(newApp.getPolicies());
+
+        Asserts.assertEqualsIgnoringOrder(newPolicy.getTagSupport().getTags(), ImmutableSet.of("foo", newApp));
+    }
+
     // Previously, policy+enricher was added to entity as part of entity.reconstitute, so other entities might not
     // have been initialised and the relationships not set. If a policy immediately looked at entity's children or
     // at another entity, then it might find those entities' state uninitialised.

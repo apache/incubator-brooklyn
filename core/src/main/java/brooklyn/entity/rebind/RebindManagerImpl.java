@@ -30,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
@@ -653,7 +654,7 @@ public class RebindManagerImpl implements RebindManager {
         String policyType = checkNotNull(memento.getType(), "policy type of %s must not be null in memento", id);
         Class<? extends Policy> policyClazz = (Class<? extends Policy>) reflections.loadClass(policyType);
 
-        if (InternalPolicyFactory.isNewStylePolicy(policyClazz)) {
+        if (InternalFactory.isNewStyle(policyClazz)) {
             InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
             Policy policy = policyFactory.constructPolicy(policyClazz);
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), policy);
@@ -685,7 +686,7 @@ public class RebindManagerImpl implements RebindManager {
         String enricherType = checkNotNull(memento.getType(), "enricher type of %s must not be null in memento", id);
         Class<? extends Enricher> enricherClazz = (Class<? extends Enricher>) reflections.loadClass(enricherType);
 
-        if (InternalPolicyFactory.isNewStyleEnricher(enricherClazz)) {
+        if (InternalFactory.isNewStyle(enricherClazz)) {
             InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
             Enricher enricher = policyFactory.constructEnricher(enricherClazz);
             FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), enricher);
@@ -756,110 +757,29 @@ public class RebindManagerImpl implements RebindManager {
         }
         
         @Override
-        public void onManaged(Entity entity) {
+        public void onManaged(BrooklynObject instance) {
             try {
-                delegate.onManaged(entity);
+                delegate.onManaged(instance);
             } catch (Throwable t) {
-                LOG.error("Error persisting mememento onManaged("+entity+"); continuing.", t);
+                LOG.error("Error persisting mememento onManaged("+instance+"); continuing.", t);
             }
         }
 
         @Override
-        public void onManaged(Location location) {
+        public void onChanged(BrooklynObject instance) {
             try {
-                delegate.onManaged(location);
+                delegate.onChanged(instance);
             } catch (Throwable t) {
-                LOG.error("Error persisting mememento onManaged("+location+"); continuing.", t);
+                LOG.error("Error persisting mememento onChanged("+instance+"); continuing.", t);
             }
         }
         
         @Override
-        public void onManaged(Policy policy) {
+        public void onUnmanaged(BrooklynObject instance) {
             try {
-                delegate.onManaged(policy);
+                delegate.onUnmanaged(instance);
             } catch (Throwable t) {
-                LOG.error("Error persisting mememento onManaged("+policy+"); continuing.", t);
-            }
-        }
-
-        @Override
-        public void onManaged(Enricher enricher) {
-            try {
-                delegate.onManaged(enricher);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onManaged("+enricher+"); continuing.", t);
-            }
-        }
-
-        @Override
-        public void onChanged(Entity entity) {
-            try {
-                delegate.onChanged(entity);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onChanged("+entity+"); continuing.", t);
-            }
-        }
-        
-        @Override
-        public void onUnmanaged(Entity entity) {
-            try {
-                delegate.onUnmanaged(entity);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onUnmanaged("+entity+"); continuing.", t);
-            }
-        }
-
-        @Override
-        public void onUnmanaged(Location location) {
-            try {
-                delegate.onUnmanaged(location);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onUnmanaged("+location+"); continuing.", t);
-            }
-        }
-
-        @Override
-        public void onUnmanaged(Policy policy) {
-            try {
-                delegate.onUnmanaged(policy);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onUnmanaged("+policy+"); continuing.", t);
-            }
-        }
-
-        @Override
-        public void onUnmanaged(Enricher enricher) {
-            try {
-                delegate.onUnmanaged(enricher);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onUnmanaged("+enricher+"); continuing.", t);
-            }
-        }
-
-        @Override
-        public void onChanged(Location location) {
-            try {
-                delegate.onChanged(location);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onChanged("+location+"); continuing.", t);
-            }
-        }
-        
-        @Override
-        public void onChanged(Policy policy) {
-            try {
-                delegate.onChanged(policy);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onChanged("+policy+"); continuing.", t);
-            }
-        }
-        
-        @Override
-        public void onChanged(Enricher enricher) {
-            try {
-                delegate.onChanged(enricher);
-            } catch (Throwable t) {
-                LOG.error("Error persisting mememento onChanged("+enricher+"); continuing.", t);
+                LOG.error("Error persisting mememento onUnmanaged("+instance+"); continuing.", t);
             }
         }
     }

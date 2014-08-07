@@ -16,29 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.enricher.basic;
 
-import brooklyn.basic.BrooklynObject;
+import brooklyn.basic.BrooklynDynamicType;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.EnricherType;
 
-/**
- * Listener to be notified of changes within brooklyn, so that the new state
- * of the entity/location/policy can be persisted.
- * 
- * Users are not expected to implement this class. It is for use by the {@link RebindManager}.
- * 
- * @author aled
- */
-public interface ChangeListener {
+public class EnricherDynamicType extends BrooklynDynamicType<Enricher, AbstractEnricher> {
 
-    public static final ChangeListener NOOP = new ChangeListener() {
-        @Override public void onChanged(BrooklynObject instance) {}
-        @Override public void onManaged(BrooklynObject instance) {}
-        @Override public void onUnmanaged(BrooklynObject instance) {}
-    };
-
-    void onManaged(BrooklynObject instance);
+    public EnricherDynamicType(AbstractEnricher enricher) {
+        super(enricher);
+    }
     
-    void onUnmanaged(BrooklynObject instance);
-    
-    void onChanged(BrooklynObject instance);
+    public EnricherType getSnapshot() {
+        return (EnricherType) super.getSnapshot();
+    }
+
+    @Override
+    protected EnricherTypeSnapshot newSnapshot() {
+        return new EnricherTypeSnapshot(name, value(configKeys));
+    }
 }

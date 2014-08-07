@@ -47,6 +47,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -59,6 +60,7 @@ import brooklyn.util.text.StringFunctions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class RebindEnricherTest extends RebindTestFixtureWithApp {
@@ -180,7 +182,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         assertEquals(newEnricher.getDisplayName(), "My Enricher");
         
         assertEquals(newEnricher.getUniqueTag(), "tagU");
-        assertEquals(newEnricher.getTags(), MutableSet.of("tagU", "tag1", "tag2"));
+        assertEquals(newEnricher.getTagSupport().getTags(), MutableSet.of("tagU", "tag1", "tag2"));
         
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME), "myVal for with setFromFlag noShortName");
         assertEquals(newEnricher.getConfig(MyEnricher.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME), "myVal for setFromFlag withShortName");
@@ -209,6 +211,18 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         assertFalse(newEnricher.isRebinding());
     }
     
+    @Test
+    public void testPolicyTags() throws Exception {
+        Enricher origEnricher = origApp.addEnricher(EnricherSpec.create(MyEnricher.class));
+        origEnricher.getTagSupport().addTag("foo");
+        origEnricher.getTagSupport().addTag(origApp);
+
+        newApp = rebind();
+        Enricher newEnricher = Iterables.getOnlyElement(newApp.getEnrichers());
+
+        Asserts.assertEqualsIgnoringOrder(newEnricher.getTagSupport().getTags(), ImmutableSet.of("foo", newApp));
+    }
+
     public static class EnricherChecksIsRebinding extends AbstractEnricher {
         boolean isRebindingValWhenRebinding;
         

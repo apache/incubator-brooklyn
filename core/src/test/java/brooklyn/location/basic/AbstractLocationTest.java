@@ -76,6 +76,7 @@ public class AbstractLocationTest {
     private ConcreteLocation createConcrete(Map<String,?> flags) {
         return createConcrete(null, flags);
     }
+    @SuppressWarnings("deprecation")
     private ConcreteLocation createConcrete(String id, Map<String,?> flags) {
         return mgmt.getLocationManager().createLocation( LocationSpec.create(ConcreteLocation.class).id(id).configure(flags) );
     }
@@ -177,7 +178,7 @@ public class AbstractLocationTest {
     @Test
     public void testLocationTags() throws Exception {
         LocationInternal loc = mgmt.getLocationManager().createLocation(LocationSpec.create(ConcreteLocation.class).tag("x"));
-        assertEquals(loc.getTags(), MutableSet.of("x"));
+        assertEquals(loc.getTagSupport().getTags(), MutableSet.of("x"));
     }
 
 }

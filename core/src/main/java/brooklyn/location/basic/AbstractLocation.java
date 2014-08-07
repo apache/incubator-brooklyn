@@ -35,10 +35,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
-import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
@@ -49,7 +46,6 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.LocationMemento;
@@ -87,7 +83,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     public static final ConfigKey<Location> PARENT_LOCATION = new BasicConfigKey<Location>(Location.class, "parentLocation");
     
-    private final AtomicBoolean configured = new AtomicBoolean(false);
+    private final AtomicBoolean configured = new AtomicBoolean();
     
     private Reference<Long> creationTimeUtc = new BasicReference<Long>(System.currentTimeMillis());
     
@@ -104,16 +100,13 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     private ConfigBag configBag = new ConfigBag();
 
-    private volatile ManagementContext managementContext;
     private volatile boolean managed;
-
-    private boolean _legacyConstruction;
 
     private boolean inConstruction;
 
     private final Map<Class<?>, Object> extensions = Maps.newConcurrentMap();
     
-    private final EntityDynamicType entityType;
+    private final LocationDynamicType locationType;
     
     /**
      * Construct a new instance of an AbstractLocation.
@@ -141,28 +134,18 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
      * <li>abbreviatedName
      * </ul>
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public AbstractLocation(Map<?,?> properties) {
+        super(properties);
         inConstruction = true;
-        _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
-        if (!_legacyConstruction && properties!=null && !properties.isEmpty()) {
-            LOG.warn("Forcing use of deprecated old-style location construction for "+getClass().getName()+" because properties were specified ("+properties+")");
-            _legacyConstruction = true;
-        }
         
         // When one calls getConfig(key), we want to use the default value specified on *this* location
-        // if it overrides the default config. The easiest way to look up all our config keys is to 
-        // reuse the code for Entity (and this will become identical when locations become first-class
-        // entities). See {@link #getConfig(ConfigKey)}
-        entityType = new EntityDynamicType((Class)getClass());
+        // if it overrides the default config, by using the type object 
+        locationType = new LocationDynamicType(this);
         
-        if (_legacyConstruction) {
-            LOG.warn("Deprecated use of old-style location construction for "+getClass().getName()+"; instead use LocationManager().createLocation(spec)");
-            if (LOG.isDebugEnabled())
-                LOG.debug("Source of use of old-style location construction", new Throwable("Source of use of old-style location construction"));
-            
-            configure(properties);
-            
+        if (isLegacyConstruction()) {
+            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
+
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
             if (!deferConstructionChecks) {
                 FlagUtils.checkRequiredFields(this);
@@ -173,14 +156,14 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     }
 
     protected void assertNotYetManaged() {
-        if (!inConstruction && (managementContext != null && managementContext.getLocationManager().isManaged(this))) {
+        if (!inConstruction && Locations.isManaged(this)) {
             LOG.warn("Configuration being made to {} after deployment; may not be supported in future versions", this);
         }
         //throw new IllegalStateException("Cannot set configuration "+key+" on active location "+this)
     }
 
     public void setManagementContext(ManagementContextInternal managementContext) {
-        this.managementContext = managementContext;
+        super.setManagementContext(managementContext);
         if (displayNameAutoGenerated && getId() != null) name.set(getClass().getSimpleName()+":"+getId().substring(0, Math.min(getId().length(),4)));
 
         Location oldParent = parent.get();
@@ -218,28 +201,14 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
     }
 
-    @Override
-    public ManagementContext getManagementContext() {
-        return managementContext;
-    }
-    
     /**
-     * Will set fields from flags. The unused configuration can be found via the 
-     * {@linkplain ConfigBag#getUnusedConfig()}.
-     * This can be overridden for custom initialization but note the following. 
-     * <p>
-     * For new-style locations (i.e. not calling constructor directly, this will
-     * be invoked automatically by brooklyn-core post-construction).
-     * <p>
-     * For legacy location use, this will be invoked by the constructor in this class.
-     * Therefore if over-riding you must *not* rely on field initializers because they 
-     * may not run until *after* this method (this method is invoked by the constructor 
-     * in this class, so initializers in subclasses will not have run when this overridden 
-     * method is invoked.) If you require fields to be initialized you must do that in 
-     * this method with a guard (as in FixedListMachineProvisioningLocation).
+     * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly;
+     * see overridden method for more info
      */
     @SuppressWarnings("serial")
-    public void configure(Map<?,?> properties) {
+    @Override
+    @Deprecated
+    public AbstractLocation configure(Map<?,?> properties) {
         assertNotYetManaged();
         
         boolean firstTime = !configured.getAndSet(true);
@@ -281,6 +250,8 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
             }
             configBag.put(LocationConfigKeys.ISO_3166, codes);
         }
+        
+        return this;
     }
 
     // TODO ensure no callers rely on 'remove' semantics, and don't remove;
@@ -293,39 +264,8 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
     }
     
-    /**
-     * Called by framework (in new-style locations) after configuring, setting parent, etc,
-     * but before a reference to this location is shared with other locations.
-     * 
-     * To preserve backwards compatibility for if the location is constructed directly, one
-     * can call the code below, but that means it will be called after references to this 
-     * location have been shared with other entities.
-     * <pre>
-     * {@code
-     * if (isLegacyConstruction()) {
-     *     init();
-     * }
-     * }
-     * </pre>
-     */
-    public void init() {
-        // no-op
-    }
-
-    /**
-     * Called by framework (in new-style locations) on rebind, after configuring, setting parent, etc.
-     * Note that a future change to Brooklyn is that {@link #init()} will not be called when rebinding.
-     */
-    public void rebind() {
-        // no-op
-    }
-
-    protected boolean isRebinding() {
-        return RebindManagerImpl.RebindTracker.isRebinding();
-    }
-    
     public boolean isManaged() {
-        return managementContext != null && managed;
+        return getManagementContext() != null && managed;
     }
 
     public void onManagementStarted() {
@@ -335,8 +275,8 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     
     public void onManagementStopped() {
         this.managed = false;
-        if (managementContext.isRunning()) {
-            BrooklynStorage storage = ((ManagementContextInternal)managementContext).getStorage();
+        if (getManagementContext().isRunning()) {
+            BrooklynStorage storage = ((ManagementContextInternal)getManagementContext()).getStorage();
             storage.remove(getId()+"-parent");
             storage.remove(getId()+"-children");
             storage.remove(getId()+"-creationTime");
@@ -344,10 +284,6 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
             storage.remove(getId()+"-displayName");
             storage.remove(getId()+"-config");
         }
-    }
-    
-    protected boolean isLegacyConstruction() {
-        return _legacyConstruction;
     }
     
     @Override
@@ -407,7 +343,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
         // TODO when locations become entities, the duplication of this compared to EntityConfigMap.getConfig will disappear.
         @SuppressWarnings("unchecked")
-        ConfigKey<T> ownKey = (ConfigKey<T>) elvis(entityType.getConfigKey(key.getName()), key);
+        ConfigKey<T> ownKey = (ConfigKey<T>) elvis(locationType.getConfigKey(key.getName()), key);
 
         return ownKey.getDefaultValue();
     }
@@ -455,6 +391,15 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         return result;
     }
 
+    /**
+     * @since 0.6.0 (?) - use getDisplayName
+     * @deprecated since 0.7.0; use {@link #getDisplayName()}
+     */
+    @Deprecated
+    public void setName(String newName) {
+        setDisplayName(newName);
+    }
+
     public void setDisplayName(String newName) {
         name.set(newName);
         displayNameAutoGenerated = false;
@@ -487,7 +432,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     }
 
     protected <T extends Location> T addChild(LocationSpec<T> spec) {
-        T child = managementContext.getLocationManager().createLocation(spec);
+        T child = getManagementContext().getLocationManager().createLocation(spec);
         addChild(child);
         return child;
     }
@@ -514,13 +459,12 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
         
         if (isManaged()) {
-            if (!managementContext.getLocationManager().isManaged(child)) {
-                // this deprecated call should be replaced with an internal interface call?
-                managementContext.getLocationManager().manage(child);
+            if (!getManagementContext().getLocationManager().isManaged(child)) {
+                Locations.manage(child, getManagementContext());
             }
-        } else if (managementContext != null) {
-            if (((LocalLocationManager)managementContext.getLocationManager()).getLocationEvenIfPreManaged(child.getId()) == null) {
-                ((ManagementContextInternal)managementContext).prePreManage(child);
+        } else if (getManagementContext() != null) {
+            if (((LocalLocationManager)getManagementContext().getLocationManager()).getLocationEvenIfPreManaged(child.getId()) == null) {
+                ((ManagementContextInternal)getManagementContext()).prePreManage(child);
             }
         }
 
@@ -542,16 +486,11 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
             child.setParent(null);
             
             if (isManaged()) {
-                managementContext.getLocationManager().unmanage(child);
+                getManagementContext().getLocationManager().unmanage(child);
             }
         }
         onChanged();
         return removed;
-    }
-
-    @Override
-    protected void onTagsChanged() {
-        onChanged();
     }
 
     protected void onChanged() {

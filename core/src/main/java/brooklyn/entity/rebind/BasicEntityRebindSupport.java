@@ -43,16 +43,18 @@ import brooklyn.policy.basic.AbstractPolicy;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
-public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
+public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSupport<EntityMemento> {
 
     private static final Logger LOG = LoggerFactory.getLogger(BasicEntityRebindSupport.class);
     
     private final EntityLocal entity;
     
-    public BasicEntityRebindSupport(EntityLocal entity) {
+    public BasicEntityRebindSupport(AbstractEntity entity) {
+        super(entity);
         this.entity = checkNotNull(entity, "entity");
     }
     
+    // Can rely on super-type once the deprecated getMementoWithProperties is deleted
     @Override
     public EntityMemento getMemento() {
         return getMementoWithProperties(Collections.<String,Object>emptyMap());
@@ -68,31 +70,13 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         return memento;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public void reconstruct(RebindContext rebindContext, EntityMemento memento) {
-        if (LOG.isTraceEnabled()) LOG.trace("Reconstructing entity: {}", memento.toVerboseString());
-
-        // Note that the id should have been set in the constructor; it is immutable
-        entity.setDisplayName(memento.getDisplayName());
-        
-        for (Effector<?> eff: memento.getEffectors())
+    @SuppressWarnings("unchecked")
+    protected void addCustoms(RebindContext rebindContext, EntityMemento memento) {
+        for (Effector<?> eff: memento.getEffectors()) {
             ((EntityInternal)entity).getMutableEntityType().addEffector(eff);
-
-        for (Map.Entry<ConfigKey<?>, Object> entry : memento.getConfig().entrySet()) {
-            try {
-                ConfigKey<?> key = entry.getKey();
-                Object value = entry.getValue();
-                Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-                entity.setConfig((ConfigKey<Object>)key, value);
-            } catch (ClassNotFoundException e) {
-                throw Throwables.propagate(e);
-            }
         }
-        
-        ((EntityInternal)entity).getConfigMap().addToLocalBag(memento.getConfigUnmatched());
-        ((EntityInternal)entity).refreshInheritedConfig();
-        
+    
         for (Map.Entry<AttributeSensor<?>, Object> entry : memento.getAttributes().entrySet()) {
             try {
                 AttributeSensor<?> key = entry.getKey();
@@ -107,11 +91,24 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         setParent(rebindContext, memento);
         addChildren(rebindContext, memento);
         addMembers(rebindContext, memento);
-        addTags(rebindContext, memento);
         addLocations(rebindContext, memento);
+    }
 
-        doReconstruct(rebindContext, memento);
-        ((AbstractEntity)entity).rebind();
+    @Override
+    protected void addConfig(RebindContext rebindContext, EntityMemento memento) {
+        for (Map.Entry<ConfigKey<?>, Object> entry : memento.getConfig().entrySet()) {
+            try {
+                ConfigKey<?> key = entry.getKey();
+                Object value = entry.getValue();
+                Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
+                entity.setConfig((ConfigKey<Object>)key, value);
+            } catch (ClassNotFoundException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        
+        ((EntityInternal)entity).getConfigMap().addToLocalBag(memento.getConfigUnmatched());
+        ((EntityInternal)entity).refreshInheritedConfig();
     }
     
     @Override
@@ -148,13 +145,6 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
         }
     }
     
-    /**
-     * For overriding, to reconstruct other fields.
-     */
-    protected void doReconstruct(RebindContext rebindContext, EntityMemento memento) {
-        // default is no-op
-    }
-    
     protected void addMembers(RebindContext rebindContext, EntityMemento memento) {
         if (memento.getMembers().size() > 0) {
             if (entity instanceof Group) {
@@ -170,12 +160,6 @@ public class BasicEntityRebindSupport implements RebindSupport<EntityMemento> {
             } else {
                 throw new UnsupportedOperationException("Entity with members should be a group: entity="+entity+"; type="+entity.getClass()+"; members="+memento.getMembers());
             }
-        }
-    }
-    
-    protected void addTags(RebindContext rebindContext, EntityMemento memento) {
-        for (Object tag : memento.getTags()) {
-            entity.addTag(tag);
         }
     }
     

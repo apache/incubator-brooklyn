@@ -30,6 +30,7 @@ import brooklyn.mementos.Memento;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public abstract class AbstractMemento implements Memento, Serializable {
@@ -43,7 +44,8 @@ public abstract class AbstractMemento implements Memento, Serializable {
         protected Class<?> typeClass;
         protected String displayName;
         protected Map<String, Object> fields = Maps.newLinkedHashMap();
-        
+        protected List<Object> tags = Lists.newArrayList();
+
         @SuppressWarnings("unchecked")
         protected B self() {
             return (B) this;
@@ -55,6 +57,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
             typeClass = other.getTypeClass();
             displayName = other.getDisplayName();
             fields.putAll(other.getCustomFields());
+            tags.addAll(other.getTags());
             return self();
         }
         public B brooklynVersion(String val) {
@@ -85,6 +88,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
     private String type;
     private String id;
     private String displayName;
+    private List<Object> tags;
 
     private transient Class<?> typeClass;
 
@@ -100,6 +104,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         typeClass = builder.typeClass;
         displayName = builder.displayName;
         setCustomFields(builder.fields);
+        tags = toPersistedList(builder.tags);
     }
 
     // "fields" is not included as a field here, so that it is serialized after selected subclass fields
@@ -136,6 +141,10 @@ public abstract class AbstractMemento implements Memento, Serializable {
         return displayName;
     }
 
+    public List<Object> getTags() {
+        return fromPersistedList(tags);
+    }
+    
     @Deprecated
     @Override
     public Object getCustomField(String name) {

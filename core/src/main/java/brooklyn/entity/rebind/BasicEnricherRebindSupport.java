@@ -18,38 +18,22 @@
  */
 package brooklyn.entity.rebind;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
-public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento> {
+public class BasicEnricherRebindSupport extends AbstractBrooklynObjectRebindSupport<EnricherMemento> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BasicEnricherRebindSupport.class);
-    
     private final AbstractEnricher enricher;
     
     public BasicEnricherRebindSupport(AbstractEnricher enricher) {
+        super(enricher);
         this.enricher = enricher;
     }
     
     @Override
-    public EnricherMemento getMemento() {
-        EnricherMemento memento = MementosGenerators.newEnricherMementoBuilder(enricher).build();
-        if (LOG.isTraceEnabled()) LOG.trace("Creating memento for enricher: {}", memento.toVerboseString());
-        return memento;
-    }
-
-    @Override
-    public void reconstruct(RebindContext rebindContext, EnricherMemento memento) {
-        if (LOG.isTraceEnabled()) LOG.trace("Reconstructing enricher: {}", memento.toVerboseString());
-
-        enricher.setDisplayName(memento.getDisplayName());
-        
+    protected void addConfig(RebindContext rebindContext, EnricherMemento memento) {
         // TODO entity does config-lookup differently; the memento contains the config keys.
         // BasicEntityMemento.postDeserialize uses the injectTypeClass to call EntityTypes.getDefinedConfigKeys(clazz)
         // 
@@ -57,25 +41,10 @@ public class BasicEnricherRebindSupport implements RebindSupport<EnricherMemento
         ConfigBag configBag = ConfigBag.newInstance(memento.getConfig());
         FlagUtils.setFieldsFromFlags(enricher, configBag);
         FlagUtils.setAllConfigKeys(enricher, configBag, false);
-        
-        doReconstruct(rebindContext, memento);
-        ((AbstractEnricher)enricher).rebind();
     }
-
+    
     @Override
-    public void addPolicies(RebindContext rebindContext, EnricherMemento Memento) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void addEnrichers(RebindContext rebindContext, EnricherMemento Memento) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * For overriding, to give custom reconsruct behaviour.
-     */
-    protected void doReconstruct(RebindContext rebindContext, EnricherMemento memento) {
-        // default is no-op
+    protected void addCustoms(RebindContext rebindContext, EnricherMemento memento) {
+        // no-op
     }
 }

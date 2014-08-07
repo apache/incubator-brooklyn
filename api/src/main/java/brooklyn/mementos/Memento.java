@@ -19,6 +19,7 @@
 package brooklyn.mementos;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.rebind.RebindSupport;
@@ -69,4 +70,6 @@ public interface Memento extends Serializable {
      * previously calling {@code EntityTypes.getDefinedSensors(getType())}. 
      */
     public Class<?> getTypeClass();
+
+    public Collection<Object> getTags();
 }

@@ -51,7 +51,10 @@ public class InternalLocationFactory extends InternalFactory {
      * 
      * @param managementContext
      * @param clazz
+     * 
+     * @deprecated since 0.7.0; use {@link InternalFactory#isNewStyle(Class)}
      */
+    @Deprecated
     public static boolean isNewStyleLocation(ManagementContext managementContext, Class<?> clazz) {
         try {
             return isNewStyleLocation(clazz);
@@ -60,6 +63,10 @@ public class InternalLocationFactory extends InternalFactory {
         }
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link InternalFactory#isNewStyle(Class)}
+     */
+    @Deprecated
     public static boolean isNewStyleLocation(Class<?> clazz) {
         if (!Location.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Class "+clazz+" is not an location");
@@ -97,9 +104,9 @@ public class InternalLocationFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractLocation)loc).setDisplayName(spec.getDisplayName());
             
-            ((AbstractLocation)loc).addTags(spec.getTags());
+            loc.getTagSupport().addTags(spec.getTags());
             
-            if (isNewStyleLocation(clazz)) {
+            if (isNewStyle(clazz)) {
                 ((AbstractLocation)loc).setManagementContext(managementContext);
                 ((AbstractLocation)loc).configure(ConfigBag.newInstance().putAll(spec.getFlags()).putAll(spec.getConfig()).getAllConfig());
             }

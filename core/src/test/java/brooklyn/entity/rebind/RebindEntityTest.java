@@ -277,17 +277,17 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     @Test
     public void testEntityTags() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        origE.addTag("foo");
-        origE.addTag(origApp);
+        origE.getTagSupport().addTag("foo");
+        origE.getTagSupport().addTag(origApp);
 
         newApp = rebind(false);
         MyEntity newE = Iterables.getOnlyElement( Entities.descendants(newApp, MyEntity.class) );
 
-        assertTrue(newE.containsTag("foo"), "tags are "+newE.getTags());
-        assertFalse(newE.containsTag("bar"));
-        assertTrue(newE.containsTag(newE.getParent()));
-        assertTrue(newE.containsTag(origApp));
-        assertEquals(newE.getTags(), MutableSet.of("foo", newE.getParent()));
+        assertTrue(newE.getTagSupport().containsTag("foo"), "tags are "+newE.getTagSupport().getTags());
+        assertFalse(newE.getTagSupport().containsTag("bar"));
+        assertTrue(newE.getTagSupport().containsTag(newE.getParent()));
+        assertTrue(newE.getTagSupport().containsTag(origApp));
+        assertEquals(newE.getTagSupport().getTags(), MutableSet.of("foo", newE.getParent()));
     }
 
     public static class ReffingEntity {
