@@ -52,7 +52,7 @@ under the License.
                     <% } else if (!model.get("config")) { %>
                         <p>Loading...</p>
                     <% } else if (_.isEmpty(model.get("config"))) { %>
-                        <p>None available</p>
+                        <p>No configuration</p>
                     <% } else { %>
                         <% var skip = [
                             'name',
@@ -90,7 +90,9 @@ under the License.
                 <div class="accordion-inner">
                     <% if (model.error) { %>
                     <p><i class="icon-exclamation-sign"></i> Could not load sensors</p>
-                    <% } else if (!model.get("sensors") || _.isEmpty(model.get("sensors"))) { %>
+                    <% } else if (!model.get("sensors")) { %>
+                        <p>Loading...</p>
+                    <% } else if (_.isEmpty(model.get("sensors"))) { %>
                         <p>No sensors</p>
                     <% } else { %>
                         <table class="table table-striped table-condensed nonDatatables">
@@ -125,7 +127,9 @@ under the License.
                 <div class="accordion-inner">
                 <% if (model.error) { %>
                     <p><i class="icon-exclamation-sign"></i> Could not load effectors</p>
-                <% } else if (!model.get("effectors") || _.isEmpty(model.get("effectors"))) { %>
+                <% } else if (!model.get("effectors")) { %>
+                    <p>Loading...</p>
+                <% } else if (_.isEmpty(model.get("effectors"))) { %>
                     <p>No effectors</p>
                 <% } else { %>
                     <% _.each(model.get("effectors"), function(object, index) { %>
