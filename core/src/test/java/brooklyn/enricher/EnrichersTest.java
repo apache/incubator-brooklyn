@@ -28,12 +28,15 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.Functionals;
@@ -41,6 +44,7 @@ import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -107,7 +111,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     public void testCombiningRespectsUnchanged() {
         entity.addEnricher(Enrichers.builder()
                 .combining(NUM1, NUM2)
-                .publishing(NUM3)
+                .<Object>publishing(NUM3)
                 .computing(new Function<Iterable<Integer>, Object>() {
                         @Override public Object apply(Iterable<Integer> input) {
                             if (input != null && Iterables.contains(input, 123)) {
@@ -156,7 +160,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.addEnricher(Enrichers.builder()
                 .transforming(NUM1)
                 .publishing(LONG1)
-                .computing(Functions.constant(Integer.valueOf(1)))
+                .computing(Functions.constant(Long.valueOf(1)))
                 .build());
         
         entity.setAttribute(NUM1, 123);
@@ -179,22 +183,59 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test(groups="Integration") // because takes a second
-    public void testTransformingRespectsUnchanged() {
+    public void testTransformingRespectsUnchangedButWillRepublish() {
+        RecordingSensorEventListener record = new RecordingSensorEventListener();
+        app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
+        
         entity.addEnricher(Enrichers.builder()
                 .transforming(STR1)
-                .publishing(STR2)
+                .<Object>publishing(STR2)
                 .computing(new Function<String, Object>() {
                         @Override public Object apply(String input) {
                             return ("ignoredval".equals(input)) ? Entities.UNCHANGED : input;
                         }})
                 .build());
+        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(0));
         
         entity.setAttribute(STR1, "myval");
-        EntityTestUtils.assertAttributeEqualsEventually(entity, STR2, "myval");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
+        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
         
         entity.setAttribute(STR1, "ignoredval");
         EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval");
+        
+        entity.setAttribute(STR1, "myval2");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(2));
+        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval2");
+        
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval3");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(5));
     }
+
+    // TODO if we had something like suppressDuplicates(true) :
+//    public void testTransformingSuppressDuplicates() {
+//        RecordingSensorEventListener record = new RecordingSensorEventListener();
+//        app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
+//        
+//        entity.addEnricher(Enrichers.builder()
+//                .transforming(STR1)
+//                .publishing(STR2)
+//                .computing(Functions.<String>identity())
+//                .suppressDuplicates(true)
+//                .build());
+//
+//        entity.setAttribute(STR1, "myval");
+//        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
+//        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
+//        
+//        entity.setAttribute(STR1, "myval2");
+//        entity.setAttribute(STR1, "myval2");
+//        entity.setAttribute(STR1, "myval3");
+//        EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval3");
+//        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(3));
+//    }
 
     @Test
     public void testPropagating() {
@@ -321,7 +362,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
                 .aggregating(NUM1)
                 .publishing(LONG1)
                 .fromMembers()
-                .computing(Functions.constant(Integer.valueOf(1)))
+                .computing(Functions.constant(Long.valueOf(1)))
                 .build());
         
         entity.setAttribute(NUM1, 123);
@@ -333,7 +374,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         group.addMember(entity);
         group.addEnricher(Enrichers.builder()
                 .aggregating(NUM1)
-                .publishing(LONG1)
+                .<Object>publishing(LONG1)
                 .fromMembers()
                 .computing(new Function<Iterable<Integer>, Object>() {
                         @Override public Object apply(Iterable<Integer> input) {
