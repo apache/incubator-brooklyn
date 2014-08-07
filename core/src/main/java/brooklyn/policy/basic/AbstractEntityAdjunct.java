@@ -36,6 +36,7 @@ import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigMap;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal;
@@ -238,6 +239,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         this.entity = entity;
     }
     
+    /** @deprecated since 0.7.0 only {@link AbstractEnricher} has emit convenience */
     protected <T> void emit(Sensor<T> sensor, T val) {
         checkState(entity != null, "entity must first be set");
         if (sensor instanceof AttributeSensor) {

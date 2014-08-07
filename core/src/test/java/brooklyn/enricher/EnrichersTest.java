@@ -214,28 +214,27 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(5));
     }
 
-    // TODO if we had something like suppressDuplicates(true) :
-//    public void testTransformingSuppressDuplicates() {
-//        RecordingSensorEventListener record = new RecordingSensorEventListener();
-//        app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
-//        
-//        entity.addEnricher(Enrichers.builder()
-//                .transforming(STR1)
-//                .publishing(STR2)
-//                .computing(Functions.<String>identity())
-//                .suppressDuplicates(true)
-//                .build());
-//
-//        entity.setAttribute(STR1, "myval");
-//        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
-//        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
-//        
-//        entity.setAttribute(STR1, "myval2");
-//        entity.setAttribute(STR1, "myval2");
-//        entity.setAttribute(STR1, "myval3");
-//        EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval3");
-//        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(3));
-//    }
+    public void testTransformingSuppressDuplicates() {
+        RecordingSensorEventListener record = new RecordingSensorEventListener();
+        app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
+        
+        entity.addEnricher(Enrichers.builder()
+                .transforming(STR1)
+                .publishing(STR2)
+                .computing(Functions.<String>identity())
+                .suppressDuplicates(true)
+                .build());
+
+        entity.setAttribute(STR1, "myval");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
+        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
+        
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval3");
+        EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval3");
+        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(3));
+    }
 
     @Test
     public void testPropagating() {

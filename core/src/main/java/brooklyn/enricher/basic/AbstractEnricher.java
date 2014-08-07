@@ -18,15 +18,23 @@
  */
 package brooklyn.enricher.basic;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.BasicEnricherRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherType;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 
 /**
@@ -34,7 +42,11 @@ import com.google.common.collect.Maps;
 */
 public abstract class AbstractEnricher extends AbstractEntityAdjunct implements Enricher {
 
+    public static final ConfigKey<Boolean> SUPPRESS_DUPLICATES = ConfigKeys.newBooleanConfigKey("enricher.suppressDuplicates",
+        "Whether duplicate values published by this enricher should be suppressed");
+
     private final EnricherDynamicType enricherType;
+    protected Boolean suppressDuplicates;
 
     public AbstractEnricher() {
         this(Maps.newLinkedHashMap());
@@ -61,8 +73,31 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     }
 
     @Override
+    public void setEntity(EntityLocal entity) {
+        super.setEntity(entity);
+        this.suppressDuplicates = getConfig(SUPPRESS_DUPLICATES);
+    }
+    
+    @Override
     protected void onChanged() {
         requestPersist();
+    }
+
+    @Override
+    protected <T> void emit(Sensor<T> sensor, T val) {
+        checkState(entity != null, "entity must first be set");
+        
+        if (sensor instanceof AttributeSensor) {
+            if (Boolean.TRUE.equals(suppressDuplicates)) {
+                T oldValue = entity.getAttribute((AttributeSensor<T>)sensor);
+                if (Objects.equal(oldValue, val))
+                    return;
+            }
+            entity.setAttribute((AttributeSensor<T>)sensor, val);
+        } else { 
+            entity.emit(sensor, val);
+        }
+
     }
     
 }

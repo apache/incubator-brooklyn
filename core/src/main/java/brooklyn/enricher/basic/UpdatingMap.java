@@ -36,6 +36,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -47,7 +48,8 @@ import com.google.common.reflect.TypeToken;
  * with default behaviour being to remove an entry if <code>null</code> is returned
  * but this can be overriden by setting {@link #REMOVING_IF_RESULT_IS_NULL} false.
  * {@link Entities#REMOVE} and {@link Entities#UNCHANGED} are also respeced as return values for the computation
- * (ignoring generics).  
+ * (ignoring generics).
+ * Unlike most other enrichers, this defaults to {@link AbstractEnricher#SUPPRESS_DUPLICATES} being true
  *  
  * @author alex
  *
@@ -80,6 +82,15 @@ public class UpdatingMap<S,TKey,TVal> extends AbstractEnricher implements Sensor
     protected Boolean removingIfResultIsNull;
 
     public UpdatingMap() {
+        this(Maps.newLinkedHashMap());
+    }
+
+    public UpdatingMap(Map<Object, Object> flags) {
+        super(flags);
+        if (suppressDuplicates==null) {
+            // this defaults to suppressing duplicates
+            suppressDuplicates = true;
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
