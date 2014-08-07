@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -56,6 +57,7 @@ import brooklyn.util.flags.TypeCoercions;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 
@@ -343,7 +345,20 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     public String getUniqueTag() {
         return uniqueTag;
     }
-    
+
+    public TagSupport getTagSupport() {
+        return new AdjunctTagSupport();
+    }
+
+    protected class AdjunctTagSupport extends BasicTagSupport {
+        @Override
+        public Set<Object> getTags() {
+            ImmutableSet.Builder<Object> rb = ImmutableSet.builder().addAll(super.getTags());
+            if (getUniqueTag()!=null) rb.add(getUniqueTag());
+            return rb.build();
+        }
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(getClass()).omitNullValues()
