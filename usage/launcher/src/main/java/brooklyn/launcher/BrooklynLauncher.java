@@ -27,6 +27,7 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
@@ -80,7 +81,10 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -150,7 +154,7 @@ public class BrooklynLauncher {
     private CampPlatform campPlatform;
 
     private boolean started;
-    private String globalBrooklynPropertiesFile;
+    private String globalBrooklynPropertiesFile = Os.mergePaths(Os.home(), ".brooklyn", "brooklyn.properties");
     private String localBrooklynPropertiesFile;
 
     public List<Application> getApplications() {
@@ -440,8 +444,17 @@ public class BrooklynLauncher {
         if (managementContext == null) {
             if (brooklynProperties == null) {
                 Builder builder = new BrooklynProperties.Factory.Builder();
-                if (globalBrooklynPropertiesFile != null) builder.globalPropertiesFile(globalBrooklynPropertiesFile);
-                if (localBrooklynPropertiesFile != null) builder.localPropertiesFile(localBrooklynPropertiesFile);
+                if (globalBrooklynPropertiesFile != null) {
+                    // brooklyn.properties stores passwords (web-console and cloud credentials), 
+                    // so ensure it has sensible permissions
+                    checkFilePermissionsX00(globalBrooklynPropertiesFile);
+                    builder.globalPropertiesFile(globalBrooklynPropertiesFile);
+                }
+                if (localBrooklynPropertiesFile != null) {
+                    checkFileReadable(localBrooklynPropertiesFile);
+                    checkFilePermissionsX00(localBrooklynPropertiesFile);
+                    builder.localPropertiesFile(localBrooklynPropertiesFile);
+                }
                 managementContext = new LocalManagementContext(builder, brooklynAdditionalProperties);
             } else {
                 managementContext = new LocalManagementContext(brooklynProperties, brooklynAdditionalProperties);
@@ -485,6 +498,37 @@ public class BrooklynLauncher {
         return this;
     }
 
+    private void checkFileReadable(String file) {
+        File f = new File(Os.tidyPath(file));
+        if (!f.exists()) {
+            throw new FatalRuntimeException("File "+file+" does not exist");
+        }
+        if (!f.isFile()) {
+            throw new FatalRuntimeException(file+" is not a file");
+        }
+        if (!f.canRead()) {
+            throw new FatalRuntimeException(file+" is not readable");
+        }
+    }
+    
+    private void checkFilePermissionsX00(String file) {
+        File f = new File(Os.tidyPath(file));
+        if (f.exists() && f.isFile() && f.canRead()) {
+            try {
+                Maybe<String> permission = FileUtil.getFilePermissions(f);
+                if (permission.isAbsent()) {
+                    LOG.debug("Could not determine permissions of global brooklyn properties file; assuming ok: "+f);
+                } else {
+                    if (!permission.get().substring(4).equals("------")) {
+                        throw new FatalRuntimeException("Invalid permissions for file "+file+"; expected 600 but was "+permission.get());
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                throw Exceptions.propagate(e); // should not happen; did f.exists() above
+            }
+        }
+    }
+    
     private void handleSubsystemStartupError(boolean ignoreSuchErrors, String system, Exception e) {
         Exceptions.propagateIfFatal(e);
         if (ignoreSuchErrors) {
