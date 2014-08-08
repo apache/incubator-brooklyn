@@ -998,7 +998,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (templateBuilder==null) {
             templateBuilder = new PortableTemplateBuilder<PortableTemplateBuilder<?>>();
         } else {
-            LOG.debug("jclouds using templateBuilder {} as base for provisioning in {} for {}", new Object[] {
+            LOG.debug("jclouds using templateBuilder {} as custom base for provisioning in {} for {}", new Object[] {
                     templateBuilder, this, config.getDescription()});
         }
         if (templateBuilder instanceof PortableTemplateBuilder<?>) {
@@ -1040,12 +1040,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             customizer.customize(this, computeService, templateBuilder);
         }
         
+        LOG.debug("jclouds using templateBuilder {} for provisioning in {} for {}", new Object[] {
+            templateBuilder, this, config.getDescription()});
+        
         // Finally try to build the template
         Template template;
         try {
             template = templateBuilder.build();
             if (template==null) throw new NullPointerException("No template found (templateBuilder.build returned null)");
-            LOG.debug(""+this+" got template "+template+" (image "+template.getImage()+")");
+            LOG.debug("jclouds found template "+template+" (image "+template.getImage()+") for provisioning in "+this+" for "+config.getDescription());
             if (template.getImage()==null) throw new NullPointerException("Template does not contain an image (templateBuilder.build returned invalid template)");
         } catch (AuthorizationException e) {
             LOG.warn("Error resolving template: not authorized (rethrowing: "+e+")");
