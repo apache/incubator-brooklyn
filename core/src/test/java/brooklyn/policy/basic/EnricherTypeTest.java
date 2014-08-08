@@ -46,7 +46,7 @@ public class EnricherTypeTest {
     @Test
     public void testGetConfig() throws Exception {
         EnricherType enricherType = enricher.getEnricherType();
-        assertEquals(enricherType.getConfigKeys(), ImmutableSet.of(MyEnricher.CONF1, MyEnricher.CONF2));
+        assertEquals(enricherType.getConfigKeys(), ImmutableSet.of(MyEnricher.CONF1, MyEnricher.CONF2, AbstractEnricher.SUPPRESS_DUPLICATES));
         assertEquals(enricherType.getName(), MyEnricher.class.getCanonicalName());
         assertEquals(enricherType.getConfigKey("test.conf1"), MyEnricher.CONF1);
         assertEquals(enricherType.getConfigKey("test.conf2"), MyEnricher.CONF2);
