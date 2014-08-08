@@ -19,6 +19,8 @@
 package brooklyn.rest;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -26,6 +28,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
 import java.util.Set;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 
@@ -62,6 +65,15 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+import com.google.common.io.Files;
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -151,6 +163,7 @@ public class BrooklynRestApiLauncher {
         BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
                 .useManagementContext(mgmt)
                 .launch();
+        log.debug("started "+platform);
 
         ContextHandler context;
         String summary;
@@ -239,7 +252,7 @@ public class BrooklynRestApiLauncher {
 
     /** starts a server, on all NICs if security is configured,
      * otherwise (no security) only on loopback interface */
-    private Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
+    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
         // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
         boolean secure = mgmt != null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig());
         if (secure) {
@@ -259,7 +272,7 @@ public class BrooklynRestApiLauncher {
         return startServer(context, summary, bindLocation);
     }
 
-    private Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
+    public static Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
         Server server = new Server(bindLocation);
         server.setHandler(context);
         try {
@@ -334,9 +347,7 @@ public class BrooklynRestApiLauncher {
      */
     @Deprecated
     public static Server startServer(ContextHandler context, String summary) {
-        return launcher()
-                .customContext(context)
-                .startServer(context, summary,
+        return BrooklynRestApiLauncher.startServer(context, summary,
                 new InetSocketAddress(Networking.ANY_NIC, Networking.nextAvailablePort(FAVOURITE_PORT)));
     }
 
@@ -360,6 +371,8 @@ public class BrooklynRestApiLauncher {
      * supports globs in the filename portion only, in which case it returns the _newest_ matching file.
      * <p>
      * otherwise returns null */
+     **/
+    @Beta // public because used in dependent test projects
     public static Optional<String> findMatchingFile(String filename) {
         final File f = new File(filename);
         if (f.exists()) return Optional.of(filename);
