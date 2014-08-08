@@ -31,6 +31,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynWebConfig;
+import brooklyn.rest.security.PasswordHasher;
 
 /** security provider which validates users against passwords according to property keys,
  * as set in {@link BrooklynWebConfig#USERS} and {@link BrooklynWebConfig#PASSWORD_FOR_USER(String)}*/
@@ -92,17 +93,31 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         }
 
         BrooklynProperties properties = (BrooklynProperties) mgmt.getConfig();
-        String actualP = properties.getConfig(BrooklynWebConfig.PASSWORD_FOR_USER(user));
-        if (actualP==null) {
-            LOG.warn("Web console rejecting passwordless user "+user);
-            return false;
-        } else if (!actualP.equals(password)){
-            LOG.info("Web console rejecting bad password for user "+user);
-            return false;
-        } else {
-            //password is good
-            return allow(session, user);
+        String expectedP = properties.getConfig(BrooklynWebConfig.PASSWORD_FOR_USER(user));
+        String salt = properties.getConfig(BrooklynWebConfig.SALT_FOR_USER(user));
+        String expectedSha256 = properties.getConfig(BrooklynWebConfig.SHA256_FOR_USER(user));
+        
+        if (expectedP != null) {
+            if (expectedP.equals(password)){
+                // password is good
+                return allow(session, user);
+            } else {
+                LOG.info("Web console rejecting bad password for user "+user);
+                return false;
+            }
         }
+        if (expectedSha256 != null) {
+            String hashedPassword = PasswordHasher.sha256(salt, password);
+            if (expectedSha256.equals(hashedPassword)) {
+                // hashed password is good
+                return allow(session, user);
+            } else {
+                LOG.info("Web console rejecting bad password for user "+user);
+                return false;
+            }                
+        }
+        LOG.warn("Web console rejecting passwordless user "+user);
+        return false;
     }
 
     private boolean allow(HttpSession session, String user) {

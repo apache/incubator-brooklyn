@@ -21,16 +21,24 @@ package brooklyn.cli;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 import groovy.lang.GroovyClassLoader;
 import io.airlift.command.Cli;
 import io.airlift.command.ParseException;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +48,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.cli.Main.BrooklynCommand;
+import brooklyn.cli.Main.GeneratePasswordCommand;
 import brooklyn.cli.Main.HelpCommand;
 import brooklyn.cli.Main.LaunchCommand;
 import brooklyn.entity.Entity;
@@ -58,8 +67,11 @@ import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -351,6 +363,103 @@ public class CliTest {
                     assertTrue(Iterables.getFirst(exampleEntity.getApplication().getLocations(), null).getDisplayName().equals("appLocalhost"));
                 }
             });
+    }
+
+    @Test
+    public void testGeneratePasswordCommandParsed() throws Exception {
+        Cli<BrooklynCommand> cli = buildCli();
+        BrooklynCommand command = cli.parse("generate-password", "--user", "myname");
+        
+        assertTrue(command instanceof GeneratePasswordCommand);
+    }
+
+    @Test
+    public void testGeneratePasswordFromStdin() throws Exception {
+        List<String> stdoutLines = runCommand(ImmutableList.of("generate-password", "--user", "myname", "--stdin"), "mypassword\nmypassword\n");
+        
+        System.out.println(stdoutLines);
+    }
+
+    @Test
+    public void testGeneratePasswordFailsIfPasswordsDontMatch() throws Throwable {
+        Throwable exception = runCommandExpectingException(ImmutableList.of("generate-password", "--user", "myname", "--stdin"), "mypassword\ndifferentpassword\n");
+        if (exception instanceof UserFacingException && exception.toString().contains("Passwords did not match")) {
+            // success
+        } else {
+            throw new Exception(exception);
+        }
+    }
+
+    @Test
+    public void testGeneratePasswordFailsIfNoConsole() throws Throwable {
+        Throwable exception = runCommandExpectingException(ImmutableList.of("generate-password", "--user", "myname"), "");
+        if (exception instanceof FatalConfigurationRuntimeException && exception.toString().contains("No console")) {
+            // success
+        } else {
+            throw new Exception(exception);
+        }
+    }
+    
+    @Test
+    public void testGeneratePasswordFailsIfPasswordBlank() throws Throwable {
+        Throwable exception = runCommandExpectingException(ImmutableList.of("generate-password", "--user", "myname", "--stdin"), "\n\n");
+        if (exception instanceof UserFacingException && exception.toString().contains("Password must not be blank")) {
+            // success
+        } else {
+            throw new Exception(exception);
+        }
+    }
+
+    protected Throwable runCommandExpectingException(Iterable<String> args, String input) throws Exception {
+        try {
+            List<String> stdout = runCommand(args, input);
+            fail("Expected exception, but got stdout="+stdout);
+            return null;
+        } catch (ExecutionException e) {
+            return e.getCause();
+        }
+    }
+
+    protected List<String> runCommand(Iterable<String> args, String input) throws Exception {
+        Cli<BrooklynCommand> cli = buildCli();
+        final BrooklynCommand command = cli.parse(args);
+        
+        final AtomicReference<Exception> exception = new AtomicReference<Exception>();
+        Thread t= new Thread(new Runnable() {
+            public void run() {
+                try {
+                    command.call();
+                } catch (Exception e) {
+                    exception.set(e);
+                    throw Exceptions.propagate(e);
+                }
+            }});
+        
+        InputStream origIn = System.in;
+        PrintStream origOut = System.out;
+        try {
+            InputStream stdin = new ByteArrayInputStream(input.getBytes());
+            System.setIn(stdin);
+
+            ByteArrayOutputStream stdoutBytes = new ByteArrayOutputStream();
+            PrintStream stdout = new PrintStream(stdoutBytes);
+            System.setOut(stdout);
+
+            t.start();
+
+            t.join(10*1000);
+            assertFalse(t.isAlive());
+            
+            if (exception.get() != null) {
+                throw new ExecutionException(exception.get());
+            }
+            
+            return ImmutableList.copyOf(Splitter.on("\n").split(new String(stdoutBytes.toByteArray())));
+        } finally {
+            System.setIn(origIn);
+            System.setOut(origOut);
+            t.interrupt();
+        }
     }
 
     private void submitCommandAndAssertRunnableSucceeds(final BrooklynCommand command, Runnable runnable) {
