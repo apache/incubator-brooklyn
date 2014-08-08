@@ -17,8 +17,8 @@
  * under the License.
  */
 define([
-    'brooklyn-utils'
-], function (Util) {
+    'brooklyn-utils', "backbone"
+], function (Util, Backbone) {
 
     describe('Rounding numbers', function () {
 
@@ -82,5 +82,53 @@ define([
         it("should handle input without domain", function() {
             expect(Util.pathOf("/a/b/c/d#e")).toBe("/a/b/c/d");
         })
+    });
+
+    describe("inputValue", function () {
+        it("should return inputs as strings", function () {
+            expect(Util.inputValue($('<input type="text" value="bob"/>'))).toBe("bob");
+            expect(Util.inputValue($('<textarea rows="10" cols="5">content</textarea>'))).toBe("content");
+        });
+
+        it("should return true/false for checkboxes", function () {
+            var input = $('<input type="checkbox" checked/>');
+            expect(Util.inputValue(input)).toBe(true);
+            input = $('<input type="checkbox" />');
+            expect(Util.inputValue(input)).toBe(false);
+        });
+    });
+
+    describe("bindModelFromForm", function () {
+        // pretend to be a Backbone model without bringing in Backbone as a dependency
+        var TestModel = Backbone.Model.extend({
+            urlRoot: function () {
+                return "/foo/bar/";
+            }
+
+        });
+        var form = $("<form>" +
+            "<input name='id' type='input' value='text'/>" +
+            "<input name='bool' type='checkbox' checked/>" +
+            "</form>");
+
+        it("should create a new model if given a constructor", function () {
+            var model = Util.bindModelFromForm(TestModel, form);
+            expect(model instanceof TestModel).toBe(true);
+            expect(model.url()).toBe("/foo/bar/text");
+            var inputs = model.attributes;
+            expect(_.keys(inputs).length).toBe(2);
+            expect(inputs.id).toBe("text");
+            expect(inputs.bool).toBe(true);
+        });
+
+        it("should update an existing model", function () {
+            var model = new TestModel({initialAttribute: "xyz"});
+            Util.bindModelFromForm(model, form);
+            var inputs = model.attributes;
+            expect(_.keys(inputs).length).toBe(3);
+            expect(inputs.id).toBe("text");
+            expect(inputs.bool).toBe(true);
+            expect(inputs.initialAttribute).toBe("xyz");
+        });
     });
 });
