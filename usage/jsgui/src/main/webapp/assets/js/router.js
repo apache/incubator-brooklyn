@@ -70,24 +70,37 @@ define([
         this._periodicFunctions[uid] = setInterval(periodic, interval)
     }
 
+    /**
+     * @returns {jquery.Deferred}
+     *      A promise that resolves when the high availability status has been
+     *      loaded. Actions to be taken on the view after it has loaded should
+     *      be registered with calls to .done()
+     */
     // Not just defined as a function on Router because the delay if the HA status
     // hasn't loaded requires a reference to the function, which we lose if we use
     // 'this.showView'.
-    var showViewImpl = function (router, selector, view) {
+    function showViewImpl(router, selector, view) {
         // Don't do anything until the HA status has loaded.
-        if (!ha.loaded) {
-            _.delay(showViewImpl, 100, router, selector, view);
-        } else {
-            // close the previous view - does binding clean-up and avoids memory leaks
-            if (router.currentView) {
-                router.currentView.close();
+        var promise = $.Deferred()
+            .done(function () {
+                // close the previous view - does binding clean-up and avoids memory leaks
+                if (router.currentView) {
+                    router.currentView.close();
+                }
+                // render the view inside the selector element
+                $(selector).html(view.render().el);
+                router.currentView = view;
+                return view
+            });
+        (function isComplete() {
+            if (ha.loaded) {
+                promise.resolve();
+            } else {
+                _.defer(isComplete, 100);
             }
-            // render the view inside the selector element
-            $(selector).html(view.render().el);
-            router.currentView = view;
-            return view
-        }
-    };
+        })();
+        return promise;
+    }
 
     var Router = Backbone.Router.extend({
         routes:{
@@ -106,7 +119,7 @@ define([
         },
 
         showView: function(selector, view) {
-            showViewImpl(this, selector, view);
+            return showViewImpl(this, selector, view);
         },
 
         defaultRoute: function() {
