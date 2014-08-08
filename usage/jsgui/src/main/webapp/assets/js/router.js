@@ -19,17 +19,17 @@
 define([
     "brooklyn", "underscore", "jquery", "backbone",
     "model/application", "model/app-tree", "model/location", "model/ha",
-    "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy", 
+    "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy",
     "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-not-ha-master.html"
 ], function (Brooklyn, _, $, Backbone,
         Application, AppTree, Location, ha,
-        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
+        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView,
         HelpHtml, LabsHtml, ServerNotMasterHtml) {
 
     // TODO this initialising - customising the View prototype - should be moved,
     // and perhaps expanded to include other methods from viewutils
     // see discussion at https://github.com/brooklyncentral/brooklyn/pull/939
-    
+
     // add close method to all views for clean-up
     // (NB we have to update the prototype _here_ before any views are instantiated;
     //  see "close" called below in "showView") 
@@ -96,6 +96,7 @@ define([
             'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
             'v1/locations':'catalogPage',
+            'v1/catalog/:kind/:id':'catalogPage',
             'v1/catalog':'catalogPage',
             'v1/apidoc':'apidocPage',
             'v1/script/groovy':'scriptGroovyPage',
@@ -150,13 +151,14 @@ define([
                 if (trail !== undefined) appExplorer.show(trail)
             }})
         },
-        catalogPage:function () {
-            var that = this
+        catalogPage: function (catalogItemKind, id) {
             var catalogResource = new CatalogView({
-                locations:that.locations,
-                appRouter:that
-            })
-            that.showView("#application-content", catalogResource)
+                locations: this.locations,
+                appRouter: this,
+                kind: catalogItemKind,
+                id: id
+            });
+            this.showView("#application-content", catalogResource);
         },
         apidocPage:function () {
             var apidocResource = new ApidocView({})

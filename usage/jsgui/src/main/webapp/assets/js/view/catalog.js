@@ -212,6 +212,7 @@ define([
                 activeDetailsView = this.name;
                 this.activeCid = cid;
                 var model = this.collection.get(cid);
+                Backbone.history.navigate("v1/catalog/" + this.name + "/" + model.id);
                 this.options.onItemSelected(model, $event);
             }
         },
@@ -253,21 +254,24 @@ define([
                     name: "applications",
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     model: Entity.Model,
-                    autoOpen: true
+                    autoOpen: !this.options.kind || this.options.kind == "applications"
                 }),
                 "entities": new AccordionItemView({
                     name: "entities",
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
-                    model: Entity.Model
+                    model: Entity.Model,
+                    autoOpen: this.options.kind == "entities"
                 }),
                 "policies": new AccordionItemView({
                     onItemSelected: _.partial(this.showCatalogItem, DetailsGenericHtml),
-                    name: "policies"
+                    name: "policies",
+                    autoOpen: this.options.kind == "policies"
                 }),
                 "locations": new AccordionItemView({
                     name: "locations",
                     onItemSelected: _.partial(this.showCatalogItem, LocationDetailsHtml),
                     collection: this.options.locations,
+                    autoOpen: this.options.kind == "locations",
                     entryTemplateArgs: function (location, index) {
                         return {
                             type: location.getPrettyName(),
@@ -284,14 +288,16 @@ define([
 
         render: function() {
             this.$el.html(_.template(CatalogPageHtml, {}));
-
-            // Show empty details view to start
-            this.setDetailsView(new CatalogItemDetailsView().render());
-
             var parent = this.$(".catalog-accordion-parent");
             _.each(this.accordion, function(child) {
                 parent.append(child.render().$el);
             });
+            if (this.options.kind && this.options.id) {
+                this.loadAccordionItem(this.options.kind, this.options.id)
+            } else {
+                // Show empty details view to start
+                this.setDetailsView(new CatalogItemDetailsView().render());
+            }
             return this
         },
 
@@ -302,11 +308,32 @@ define([
 
         createNewThing: function(event) {
 
+        loadAccordionItem: function (kind, id) {
+            if (!this.accordion[kind]) {
+                console.error("No accordion for: " + kind);
+            } else {
+                var accordion = this.accordion[kind];
+                accordion.collection.fetch()
+                    .then(function() {
+                        var model = accordion.collection.get(id);
+                        if (!model) {
+                            console.log("Accordion for " + kind + " has no element with id " + id);
+                        } else {
+                            activeDetailsView = kind;
+                            accordion.activeCid = model.cid;
+                            accordion.options.onItemSelected(model);
+                        }
+                    });
+            }
         },
 
         showCatalogItem: function(template, model, $target) {
             this.$(".accordion-nav-row").removeClass("active");
-            $target.addClass("active");
+            if ($target) {
+                $target.addClass("active");
+            } else {
+                this.$("[data-cid=" + model.cid + "]").addClass("active");
+            }
             var newView = new CatalogItemDetailsView({
                 model: model,
                 template: template
