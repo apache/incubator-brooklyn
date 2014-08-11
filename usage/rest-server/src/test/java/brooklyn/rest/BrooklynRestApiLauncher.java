@@ -349,7 +349,7 @@ public class BrooklynRestApiLauncher {
      * supports globs in the filename portion only, in which case it returns the _newest_ matching file.
      * <p>
      * otherwise returns null */
-    private static Optional<String> findMatchingFile(String filename) {
+    public static Optional<String> findMatchingFile(String filename) {
         final File f = new File(filename);
         if (f.exists()) return Optional.of(filename);
         File dir = f.getParentFile();
