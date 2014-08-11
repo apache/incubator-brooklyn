@@ -21,6 +21,7 @@ package brooklyn.entity.webapp.nodejs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -54,7 +55,7 @@ public class NodeJsWebAppServiceImpl extends SoftwareProcessImpl implements Node
 
         ConfigToAttributes.apply(this);
 
-        HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getAttribute(HTTP_PORT));
+        HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getAttribute(Attributes.HTTP_PORT));
         String nodeJsUrl = String.format("http://%s:%d", accessible.getHostText(), accessible.getPort());
         LOG.info("Connecting to {}", nodeJsUrl);
 
@@ -86,6 +87,6 @@ public class NodeJsWebAppServiceImpl extends SoftwareProcessImpl implements Node
     }
 
     @Override
-    public Integer getHttpPort() { return getAttribute(HTTP_PORT); }
+    public Integer getHttpPort() { return getAttribute(Attributes.HTTP_PORT); }
 
 }

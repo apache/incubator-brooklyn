@@ -21,10 +21,13 @@ package brooklyn.entity.webapp.nodejs;
 import java.util.List;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
+import brooklyn.location.PortRange;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
@@ -34,6 +37,9 @@ import com.google.common.reflect.TypeToken;
 public interface NodeJsWebAppService extends SoftwareProcess, WebAppService {
 
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "stable");
+
+    @SetFromFlag("httpPort")
+    ConfigKey<PortRange> HTTP_PORT = ConfigKeys.newConfigKeyWithDefault(Attributes.HTTP_PORT.getConfigKey(), PortRanges.fromInteger(3000));
 
     @SetFromFlag("gitRepoUrl")
     ConfigKey<String> APP_GIT_REPOSITORY_URL = ConfigKeys.newStringConfigKey("nodejs.gitRepo.url", "The Git repository where the application is hosted");
