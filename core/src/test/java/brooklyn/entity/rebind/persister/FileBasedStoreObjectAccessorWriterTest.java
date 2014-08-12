@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.rebind.persister;
 
+import static org.testng.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -27,11 +29,17 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccess
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
+
 @Test
 public class FileBasedStoreObjectAccessorWriterTest extends PersistenceStoreObjectAccessorWriterTestFixture {
 
+    private File file;
+    
     protected StoreObjectAccessorWithLock newPersistenceStoreObjectAccessor() throws IOException {
-        File file = Os.newTempFile(getClass(), "txt");
+        file = Os.newTempFile(getClass(), "txt");
         return new StoreObjectAccessorLocking(new FileBasedStoreObjectAccessor(file, ".tmp"));
     }
     
@@ -46,4 +54,11 @@ public class FileBasedStoreObjectAccessorWriterTest extends PersistenceStoreObje
         super.testLastModifiedTime();
     }
     
+    @Test(groups="Integration")
+    public void testFilePermissions600() throws Exception {
+        accessor.put("abc");
+        assertEquals(Files.readLines(file, Charsets.UTF_8), ImmutableList.of("abc"));
+        
+        FileBasedObjectStoreTest.assertFilePermission600(file);
+    }
 }
