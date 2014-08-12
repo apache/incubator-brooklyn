@@ -22,11 +22,11 @@ define([
 
     describe("view", function () {
         describe("form", function() {
-            var formTemplate = '<form>' +
+            var formTemplate = _.template('<form>' +
                 '<input name="id" type="text"/>' +
                 '<input name="initialvalue" type="text" value="present"/>' +
                 '<button type="submit" class="submit">Submit</button>' +
-                '</form>';
+                '</form>');
 
             it("should set existing values on the model", function() {
                 var form = new B.view.Form({template: formTemplate, onSubmit: function() {}});

@@ -24,13 +24,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
         urlRoot:'/v1/locations',
         defaults:function () {
             return {
-                id:'',
                 name:'',
                 spec:'',
-                config:{},
-                links:{
-                    self:''
-                }
+                config:{}
             }
         },
         idFromSelfLink:function () {
@@ -79,6 +75,7 @@ define(["underscore", "backbone"], function (_, Backbone) {
 
     Location.Collection = Backbone.Collection.extend({
         model:Location.Model,
+        comparator: "name",
         url:'/v1/locations'
     })
 

@@ -16,9 +16,22 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+<form>
+    <label for="name" class="control-label">Name</label>
+    <input id="name" name="name" type="text" placeholder="e.g. My Cloud Region #3" class="input-xlarge">
 
-<!-- Template for rendering a key-value configuration inside the new location form -->
-<li>
-    <span class="key"><%= key %></span> : <span class="value"><%= value %></span>
-    <span class="icon-remove-sign remove" style="margin-left:10px;"></span>
-</li>
+    <label for="spec" class="control-label">Spec</label>
+    <input id="spec" name="spec" type="text" placeholder="e.g. jclouds:cloud:region" class="input-xlarge">
+
+    <h4>Configuration</h4>
+    <div id="new-location-config"></div>
+
+    <button class='catalog-submit-button btn' data-loading-text='Saving...'>Submit</button>
+
+    <p class="catalog-save-error hide">
+        <span class="alert-error">
+            <strong>Error:</strong><br/>
+            <span class="catalog-error-message"></span>
+        </span>
+    </p>
+</form>

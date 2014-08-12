@@ -84,6 +84,8 @@ define([
     /**
      * A form that listens to modifications to its inputs, maintaining a model that is
      * submitted when a button with class 'submit' is clicked.
+     *
+     * Expects a body view or a template function to render.
      */
     module.Form = Backbone.View.extend({
         events: {
@@ -92,20 +94,30 @@ define([
         },
 
         initialize: function() {
-            if (!this.options.template) {
-                throw new Error("template required by GenericForm");
+            if (!this.options.body && !this.options.template) {
+                throw new Error("body view or template function required by GenericForm");
             } else if (!this.options.onSubmit) {
                 throw new Error("onSubmit function required by GenericForm");
             }
             this.onSubmitCallback = this.options.onSubmit;
-            this.template = _.template(this.options.template);
             this.model = new (this.options.model || Backbone.Model);
             _.bindAll(this, "onSubmit", "onChange");
             this.render();
         },
 
+        beforeClose: function() {
+            if (this.options.body) {
+                this.options.body.close();
+            }
+        },
+
         render: function() {
-            this.$el.html(this.template());
+            if (this.options.body) {
+                this.options.body.render();
+                this.$el.html(this.options.body.$el);
+            } else {
+                this.$el.html(this.options.template());
+            }
             // Initialise the model with existing values
             Util.bindModelFromForm(this.model, this.$el);
             return this;
@@ -119,8 +131,8 @@ define([
 
         onSubmit: function(e) {
             e.preventDefault();
-            // TODO: Could validate model
-            this.onSubmitCallback(this.model);
+            // Could validate model
+            this.onSubmitCallback(this.model.clone());
             return false;
         }
 
