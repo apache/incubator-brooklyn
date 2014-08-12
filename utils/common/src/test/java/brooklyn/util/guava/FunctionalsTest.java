@@ -35,24 +35,24 @@ public class FunctionalsTest {
     }
 
     @Test
-    public void testWhen() {
-        WhenFunctionsTest.checkTF(Functionals.when(false).value("F").when(true).value("T").defaultValue("?").build(), "?");
+    public void testIf() {
+        IfFunctionsTest.checkTF(Functionals.ifEquals(false).value("F").ifEquals(true).value("T").defaultValue("?").build(), "?");
     }
 
     @Test
-    public void testWhenNoBuilder() {
-        WhenFunctionsTest.checkTF(Functionals.when(false).value("F").when(true).value("T").defaultValue("?"), "?");
+    public void testIfNoBuilder() {
+        IfFunctionsTest.checkTF(Functionals.ifEquals(false).value("F").ifEquals(true).value("T").defaultValue("?"), "?");
     }
     
     @Test
-    public void testWhenPredicateAndSupplier() {
-        WhenFunctionsTest.checkTF(Functionals.when(Predicates.equalTo(false)).value(Suppliers.ofInstance("F"))
-            .when(true).value("T").defaultValue(Suppliers.ofInstance("?")).build(), "?");
+    public void testIfPredicateAndSupplier() {
+        IfFunctionsTest.checkTF(Functionals.ifPredicate(Predicates.equalTo(false)).get(Suppliers.ofInstance("F"))
+            .ifEquals(true).value("T").defaultGet(Suppliers.ofInstance("?")).build(), "?");
     }
 
     @Test
-    public void testWhenTwoArgs() {
-        WhenFunctionsTest.checkTF(Functionals.when(Predicates.equalTo(false), "F").when(Predicates.equalTo(true), "T").defaultValue("?").build(), "?");
+    public void testIfNotEqual() {
+        IfFunctionsTest.checkTF(Functionals.ifNotEquals(false).value("T").defaultValue("F").build(), "T");
     }
 
 }

@@ -396,7 +396,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.addEnricher(Enrichers.builder()
                 .updatingMap(MAP1)
                 .from(LONG1)
-                .computing(Functionals.when(-1L).value("-1 is not allowed"))
+                .computing(Functionals.ifEquals(-1L).value("-1 is not allowed"))
                 .build());
         
         doUpdatingMapChecks(MAP1);
@@ -408,7 +408,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.addEnricher(Enrichers.builder()
                 .updatingMap((AttributeSensor)MAP2)
                 .from(LONG1)
-                .computing(Functionals.when(-1L).value("-1 is not allowed"))
+                .computing(Functionals.ifEquals(-1L).value("-1 is not allowed"))
                 .build());
         
         doUpdatingMapChecks(MAP2);

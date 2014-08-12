@@ -36,38 +36,81 @@ import com.google.common.collect.Sets;
  * @author alex */
 public class CollectionFunctionals {
 
+    private static final class EqualsSetPredicate implements Predicate<Iterable<?>> {
+        private final Iterable<?> target;
+
+        private EqualsSetPredicate(Iterable<?> target) {
+            this.target = target;
+        }
+
+        @Override
+        public boolean apply(@Nullable Iterable<?> input) {
+            if (input==null) return false;
+            return Sets.newHashSet(target).equals(Sets.newHashSet(input));
+        }
+    }
+
+    private static final class KeysOfMapFunction<K> implements Function<Map<K, ?>, Set<K>> {
+        @Override
+        public Set<K> apply(Map<K, ?> input) {
+            if (input==null) return null;
+            return input.keySet();
+        }
+
+        @Override public String toString() { return "keys"; }
+    }
+
+    private static final class SizeSupplier implements Supplier<Integer> {
+        private final Iterable<?> collection;
+
+        private SizeSupplier(Iterable<?> collection) {
+            this.collection = collection;
+        }
+
+        @Override
+        public Integer get() {
+            return Iterables.size(collection);
+        }
+
+        @Override public String toString() { return "sizeSupplier("+collection+")"; }
+    }
+
+    public static final class SizeFunction implements Function<Iterable<?>, Integer> {
+        private final Integer valueIfInputNull;
+
+        private SizeFunction(Integer valueIfInputNull) {
+            this.valueIfInputNull = valueIfInputNull;
+        }
+
+        @Override
+        public Integer apply(Iterable<?> input) {
+            if (input==null) return valueIfInputNull;
+            return Iterables.size(input);
+        }
+
+        @Override public String toString() { return "sizeFunction"; }
+    }
+
     public static Supplier<Integer> sizeSupplier(final Iterable<?> collection) {
-        return new Supplier<Integer>() {
-            @Override
-            public Integer get() {
-                return Iterables.size(collection);
-            }
-            @Override public String toString() { return "sizeSupplier("+collection+")"; }
-        };
+        return new SizeSupplier(collection);
     }
     
-    public static Function<Iterable<?>, Integer> sizeFunction() {
-        return new Function<Iterable<?>, Integer>() {
-            @Override
-            public Integer apply(Iterable<?> input) {
-                return Iterables.size(input);
-            }
-            @Override public String toString() { return "sizeFunction"; }
-        };
+    public static Function<Iterable<?>, Integer> sizeFunction() { return sizeFunction(null); }
+    
+    public static Function<Iterable<?>, Integer> sizeFunction(final Integer valueIfInputNull) {
+        return new SizeFunction(valueIfInputNull);
     }
 
     public static <K> Function<Map<K,?>,Set<K>> keys() {
-        return new Function<Map<K,?>, Set<K>>() {
-            @Override
-            public Set<K> apply(Map<K, ?> input) {
-                return input.keySet();
-            }
-            @Override public String toString() { return "keys"; }
-        };
+        return new KeysOfMapFunction<K>();
     }
 
     public static <K> Function<Map<K, ?>, Integer> mapSize() {
-        return Functions.compose(CollectionFunctionals.sizeFunction(), CollectionFunctionals.<K>keys());
+        return mapSize(null);
+    }
+    
+    public static <K> Function<Map<K, ?>, Integer> mapSize(Integer valueIfNull) {
+        return Functions.compose(CollectionFunctionals.sizeFunction(valueIfNull), CollectionFunctionals.<K>keys());
     }
 
     /** default guava Equals predicate will reflect order of target, and will fail when matching against a list;
@@ -76,13 +119,7 @@ public class CollectionFunctionals {
         return equalsSet(Arrays.asList(target));
     }
     public static Predicate<Iterable<?>> equalsSet(final Iterable<?> target) {
-        return new Predicate<Iterable<?>>() {
-            @Override
-            public boolean apply(@Nullable Iterable<?> input) {
-                if (input==null) return false;
-                return Sets.newHashSet(target).equals(Sets.newHashSet(input));
-            }
-        };
+        return new EqualsSetPredicate(target);
     }
 
     public static Predicate<Iterable<?>> sizeEquals(int targetSize) {

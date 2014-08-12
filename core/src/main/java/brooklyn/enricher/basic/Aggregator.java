@@ -35,7 +35,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.event.AttributeSensor;
@@ -45,7 +44,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -53,6 +51,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
+@SuppressWarnings("serial")
 public class Aggregator<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Aggregator.class);
@@ -98,7 +97,7 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
     public Aggregator() {
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
@@ -237,12 +236,7 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
      */
     protected void onUpdated() {
         try {
-            Object v = compute();
-            if (v == Entities.UNCHANGED) {
-                // nothing
-            } else {
-                emit(targetSensor, TypeCoercions.coerce(v, targetSensor.getTypeToken()));
-            }
+            emit(targetSensor, compute());
         } catch (Throwable t) {
             LOG.warn("Error calculating and setting aggregate for enricher "+this, t);
             throw Exceptions.propagate(t);

@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ServiceStatusLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.event.feed.function.FunctionFeed;
@@ -116,6 +117,18 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return Iterables.get(Iterables.filter(getLocations(), MachineLocation.class), 0, null);
     }
     
+    @Override
+    public void init() {
+        super.init();
+        
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(SERVICE_PROCESS_IS_RUNNING)
+            .computing(Functionals.ifNotEquals(true).value("The software process for this entity does not appear to be running"))
+            .build());
+        
+        addEnricher(ServiceNotUpLogic.newEnricherForServiceUpIfNoNotUpIndicators());
+    }
+    
   	/**
   	 * Called before driver.start; guarantees the driver will exist, and locations will have been set.
   	 */
@@ -161,14 +174,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                             }
                         }))
                 .build();
-
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
-            .from(SERVICE_PROCESS_IS_RUNNING)
-            .computing(Functionals.when(false).value("Process not running (according to driver checkRunning)")
-                .when((Boolean)null).value("Process not running (no data for "+SERVICE_PROCESS_IS_RUNNING.getName()+")") )
-            .build());
-        
-        addEnricher(ServiceStatusLogic.newEnricherForServiceUpIfNoNotUpIndicators());
     }
 
     /**
@@ -180,7 +185,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      */
     protected void disconnectServiceUpIsRunning() {
         if (serviceProcessIsRunning != null) serviceProcessIsRunning.stop();
-        ServiceStatusLogic.updateMapSensor(this, Attributes.SERVICE_NOT_UP_INDICATORS, SERVICE_PROCESS_IS_RUNNING.getName(), "Disabled checking whether service process is running");
+        // set null so the SERVICE_UP enricher runs (possibly removing it), then remove so everything is removed
+        // TODO race because the is-running check may be mid-task
+        setAttribute(SERVICE_PROCESS_IS_RUNNING, null);
+        removeAttribute(SERVICE_PROCESS_IS_RUNNING);
     }
 
     /**

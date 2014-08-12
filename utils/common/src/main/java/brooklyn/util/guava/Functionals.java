@@ -18,13 +18,11 @@
  */
 package brooklyn.util.guava;
 
-import brooklyn.util.guava.WhenFunctions.WhenFunctionBuilder;
-import brooklyn.util.guava.WhenFunctions.WhenFunctionBuilderWhenFirst;
+import brooklyn.util.guava.IfFunctions.IfFunctionBuilderApplyingFirst;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 
 public class Functionals {
 
@@ -43,24 +41,43 @@ public class Functionals {
         return chain(f1, chain(f2, chain(f3, f4)));
     }
 
-    /** @see WhenFunctions */
-    public static <I> WhenFunctionBuilderWhenFirst<I> when(I test) {
-        return WhenFunctions.when(test);
-    }
-    
-    /** @see WhenFunctions */
-    public static <I> WhenFunctionBuilderWhenFirst<I> when(Predicate<I> test) {
-        return WhenFunctions.when(test);
+    /** @see IfFunctions */
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifEquals(I test) {
+        return IfFunctions.ifEquals(test);
     }
 
-    /** @see WhenFunctions */
-    public static <I,O> WhenFunctionBuilder<I,O> when(Predicate<I> test, Supplier<O> supplier) {
-        return WhenFunctions.when(test, supplier);
+    /** @see IfFunctions */
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifNotEquals(I test) {
+        return IfFunctions.ifNotEquals(test);
     }
     
-    /** @see WhenFunctions */
-    public static <I,O> WhenFunctionBuilder<I,O> when(Predicate<I> test, O value) {
-        return WhenFunctions.when(test, value);
+    /** @see IfFunctions */
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifPredicate(Predicate<I> test) {
+        return IfFunctions.ifPredicate(test);
     }
-    
+
+    /** like guava equivalent but parametrises the input generic type, and allows tostring to be customised */
+    public static final class ConstantFunction<I, O> implements Function<I, O> {
+        private final O constant;
+        private Object toStringDescription;
+
+        public ConstantFunction(O constant) {
+            this(constant, null);
+        }
+        public ConstantFunction(O constant, Object toStringDescription) {
+            this.constant = constant;
+            this.toStringDescription = toStringDescription;
+        }
+
+        @Override
+        public O apply(I input) {
+            return constant;
+        }
+        
+        @Override
+        public String toString() {
+            return toStringDescription==null ? "constant("+constant+")" : toStringDescription.toString();
+        }
+    }
+
 }

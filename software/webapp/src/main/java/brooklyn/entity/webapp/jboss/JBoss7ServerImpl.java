@@ -33,11 +33,9 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.policy.Enricher;
 import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 
@@ -51,16 +49,16 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         super();
     }
 
-    public JBoss7ServerImpl(Map flags){
+    public JBoss7ServerImpl(@SuppressWarnings("rawtypes") Map flags){
         this(flags, null);
     }
 
-    public JBoss7ServerImpl(Map flags, Entity parent) {
+    public JBoss7ServerImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         super(flags, parent);
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return JBoss7Driver.class;
     }
 
@@ -120,7 +118,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(MANAGEMENT_URL_UP)
-            .computing(Functionals.when(Predicates.not(Predicates.equalTo(true))).value("Management URL not reachable") )
+            .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
             .build());
     }
     

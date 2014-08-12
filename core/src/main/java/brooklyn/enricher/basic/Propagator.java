@@ -43,9 +43,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
+@SuppressWarnings("serial")
 public class Propagator extends AbstractEnricher implements SensorEventListener<Object> {
 
-    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(Propagator.class);
 
     @SetFromFlag("producer")
@@ -126,6 +126,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         emitAllAttributes();
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void onEvent(SensorEvent<Object> event) {
         // propagate upwards
@@ -147,6 +148,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         emitAllAttributes(false);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void emitAllAttributes(boolean includeNullValues) {
         Iterable<? extends Sensor<?>> sensorsToPopulate = propagatingAll 
                 ? Iterables.filter(producer.getEntityType().getSensors(), sensorFilter)
