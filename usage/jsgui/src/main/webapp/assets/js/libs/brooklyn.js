@@ -1,6 +1,7 @@
 /** Client configuration. */
 define([
-], function () {
+    "brooklyn-view", "brooklyn-utils"
+], function (BrooklynViews, BrooklynUtils) {
 
     /**
      * Makes the console API safe to use:
@@ -38,13 +39,15 @@ define([
         }
     })();
 
-    var Config = {
-        "refresh":true,
-        "toggleRefresh":function () {
+    var Brooklyn = {
+        refresh: true,
+        toggleRefresh: function () {
             this.refresh = !this.refresh;
             return this.refresh;
-        }
+        },
+        view: BrooklynViews,
+        util: BrooklynUtils
     };
 
-    return Config;
+    return Brooklyn;
 });
