@@ -16,22 +16,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<div id="catalog-resource">
-    <div class="row row-fluid">
-        <div class="span4" id="accord">
-            <div class="navbar_top">
-                <h3>Catalog</h3>
-                <div class="apps-tree-toolbar">
-                    <i id="add-new-thing" class="icon-br-plus-sign handy"></i>
-                    &nbsp;
-                    <i class="icon-br-refresh refresh handy"></i>
-                </div>
-            </div>
-            <div class="navbar_main_wrapper">
-                <div class="catalog-accordion-parent catalog-accordion-wrapper"></div>
-            </div>
-        </div>
+<form>
+    <label for="new-blueprint">Enter blueprint:</label>
+    <textarea id='new-blueprint' name='yaml' rows='5' cols='15'></textarea>
 
-        <div class="span8" id="details"></div>
-    </div>
-</div>
+    <button class='catalog-submit-button btn' data-loading-text='Saving...'>Submit</button>
+    <p class="catalog-save-error hide">
+        <span class="alert-error">
+            <strong>Error:</strong><br/>
+            <span class="catalog-error-message"></span>
+        </span>
+    </p>
+</form>

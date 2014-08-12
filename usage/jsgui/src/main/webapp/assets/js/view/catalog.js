@@ -17,18 +17,21 @@
  * under the License.
 */
 define([
-    "underscore", "jquery", "backbone", "formatJson",
+    "underscore", "jquery", "backbone", "formatJson", "brooklyn",
     "model/location", "model/entity",
-    "view/catalog-add-location-modal",
     "text!tpl/catalog/page.html",
     "text!tpl/catalog/details-entity.html",
     "text!tpl/catalog/details-generic.html",
-    "text!tpl/catalog/nav-entry.html",
     "text!tpl/catalog/details-location.html",
+    "text!tpl/catalog/add-catalog-entry.html",
+    "text!tpl/catalog/add-entity.html",
+    "text!tpl/catalog/nav-entry.html",
 
     "bootstrap", "jquery-form"
-], function(_, $, Backbone, FormatJSON, Location, Entity, AddLocationModalView,
-        CatalogPageHtml, DetailsEntityHtml, DetailsGenericHtml, EntryHtml, LocationDetailsHtml) {
+], function(_, $, Backbone, FormatJSON, Brooklyn,
+        Location, Entity,
+        CatalogPageHtml, DetailsEntityHtml, DetailsGenericHtml, LocationDetailsHtml,
+        AddCatalogEntryHtml, AddEntityHtml, EntryHtml) {
 
     // Holds the currently active details type, e.g. applications, policies. Bit of a workaround
     // to share the active view with all instances of AccordionItemView, so clicking the 'reload
@@ -115,6 +118,89 @@ define([
             this.renderEmpty(displayName ? "Deleted " + displayName : "");
         }
     });
+
+    var AddCatalogEntryView = Backbone.View.extend({
+        template: _.template(AddCatalogEntryHtml),
+        events: {
+            "click .show-context": "showContext"
+        },
+        initialize: function() {
+            _.bindAll(this);
+        },
+        render: function (initialView) {
+            this.$el.html(this.template());
+            if (initialView) {
+                this.$("[data-context='"+initialView+"']").addClass("active");
+                this.showFormForType(initialView)
+            }
+            return this;
+        },
+        beforeClose: function () {
+            if (this.contextView) {
+                this.contextView.close();
+            }
+        },
+        showContext: function(event) {
+            var $event = $(event.currentTarget);
+            var context = $event.data("context");
+            if (this.context !== context) {
+                if (this.contextView) {
+                    this.contextView.close();
+                }
+                this.showFormForType(context)
+            }
+        },
+        showFormForType: function (type) {
+            this.context = type;
+            if (type == "entity") {
+                this.contextView = newEntityForm(this.options.parent);
+            } else if (type !== undefined) {
+                console.log("unknown catalog type " + type);
+                this.showFormForType("entity");
+                return;
+            }
+            Backbone.history.navigate("/v1/catalog/new/" + type);
+            this.$("#catalog-add-form").html(this.contextView.$el);
+        }
+    });
+
+    function newEntityForm(parent) {
+        return new Brooklyn.view.Form({
+            template: AddEntityHtml,
+            onSubmit: function (model) {
+                console.log("Submit entity", model.get("yaml"));
+                var submitButton = this.$(".catalog-submit-button");
+                // "loading" is an indicator to Bootstrap, not a string to display
+                submitButton.button("loading");
+                var self = this;
+                var options = {
+                    url: "/v1/catalog/",
+                    data: model.get("yaml"),
+                    processData: false,
+                    type: "post"
+                };
+                $.ajax(options)
+                    .done(function (data, status, xhr) {
+                        // Can extract location of new item with:
+                        //model.url = Brooklyn.util.pathOf(xhr.getResponseHeader("Location"));
+                        parent.loadAccordionItem("entities", data.id);
+                    })
+                    .fail(function (xhr, status, error) {
+                        var message;
+                        try {
+                            message = JSON.parse(xhr.responseText).message;
+                        } catch (e) {
+                            message = "Error adding catalog item: " + error;
+                        }
+                        submitButton.button("reset");
+                        self.$(".catalog-save-error")
+                            .removeClass("hide")
+                            .find(".catalog-error-message")
+                            .html(message);
+                    });
+            }
+        });
+    }
 
     var Catalog = Backbone.Collection.extend({
         initialize: function(models, options) {
@@ -225,6 +311,14 @@ define([
             } else {
                 body.slideUp('fast')
             }
+        },
+
+        show: function() {
+            var body = this.$(".accordion-body");
+            var hidden = this.hidden = body.css("display") == "none";
+            if (hidden) {
+                body.removeClass("hide").slideDown('fast');
+            }
         }
     });
 
@@ -236,11 +330,7 @@ define([
 
         events: {
             'click .refresh':'refresh',
-            'click #add-new-thing':'createNewThing',
-            'click #add-new-entity':'addNewCatalogResource',
-            'click #new-entity-submit':'newEntitySubmit',
-            'click #add-new-location':'addLocation',
-            'click .delete-location':'deleteLocation'
+            'click #add-new-thing': 'createNewThing'
         },
 
         initialize: function() {
@@ -292,7 +382,9 @@ define([
             _.each(this.accordion, function(child) {
                 parent.append(child.render().$el);
             });
-            if (this.options.kind && this.options.id) {
+            if (this.options.kind === "new") {
+                this.createNewThing(this.options.id);
+            } else if (this.options.kind && this.options.id) {
                 this.loadAccordionItem(this.options.kind, this.options.id)
             } else {
                 // Show empty details view to start
@@ -306,7 +398,22 @@ define([
             _.invoke(this.accordion, 'refresh');
         },
 
-        createNewThing: function(event) {
+        createNewThing: function (type) {
+            // Discard if it's the jquery event object.
+            if (!_.isString(type)) {
+                type = undefined;
+            }
+            var viewName = "createNewThing";
+            if (!type) {
+                Backbone.history.navigate("/v1/catalog/new");
+            }
+            activeDetailsView = viewName;
+            this.$(".accordion-nav-row").removeClass("active");
+            var newView = new AddCatalogEntryView({
+                parent: this
+            }).render(type);
+            this.setDetailsView(newView);
+        },
 
         loadAccordionItem: function (kind, id) {
             if (!this.accordion[kind]) {
@@ -322,6 +429,7 @@ define([
                             activeDetailsView = kind;
                             accordion.activeCid = model.cid;
                             accordion.options.onItemSelected(model);
+                            accordion.show();
                         }
                     });
             }
@@ -353,7 +461,6 @@ define([
             }
             this.detailsView = view;
         }
-        
     });
     
     return CatalogResourceView

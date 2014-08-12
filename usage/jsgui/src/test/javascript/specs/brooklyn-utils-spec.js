@@ -104,7 +104,6 @@ define([
             urlRoot: function () {
                 return "/foo/bar/";
             }
-
         });
         var form = $("<form>" +
             "<input name='id' type='input' value='text'/>" +

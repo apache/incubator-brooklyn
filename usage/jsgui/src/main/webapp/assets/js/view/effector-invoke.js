@@ -63,7 +63,7 @@ define([
             this.$el.html(this.template({
                 name:this.model.get("name"),
                 entityName:this.options.entity.get("name"),
-                description:this.model.get("description")?this.model.get("description"):"",
+                description:this.model.get("description")?this.model.get("description"):""
             }))
             // do we have parameters to render?
             if (params.length !== 0) {

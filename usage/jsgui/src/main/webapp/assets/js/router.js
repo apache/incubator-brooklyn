@@ -109,7 +109,7 @@ define([
             'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
             'v1/locations':'catalogPage',
-            'v1/catalog/:kind/:id':'catalogPage',
+            'v1/catalog/:kind(/:id)':'catalogPage',
             'v1/catalog':'catalogPage',
             'v1/apidoc':'apidocPage',
             'v1/script/groovy':'scriptGroovyPage',

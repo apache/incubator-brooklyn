@@ -1134,6 +1134,13 @@ tr.app-add-wizard-config-entry {
     padding-bottom: 180px;
     text-align: center;
 }
+.catalog-save-error {
+    background-color: #f2dede;
+    /* margin matches bootstrap input margin-bottom. */
+    margin: 9px 0 0 0;
+    padding: 7px;
+    border-radius: 3px;
+}
 
 .float-right {
     float: right;
