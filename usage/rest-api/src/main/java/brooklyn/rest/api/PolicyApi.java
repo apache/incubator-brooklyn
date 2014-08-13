@@ -136,6 +136,7 @@ public interface PolicyApi {
           @PathParam("policy") String policyId
   ) ;
 
+  // TODO: Should be DELETE /policy, not POST /policy/destroy
   @POST
   @Path("/{policy}/destroy")
   @ApiOperation(value = "Destroy a policy", notes="Removes a policy from being associated with the entity and destroys it (stopping first if running)")

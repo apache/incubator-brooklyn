@@ -108,7 +108,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         Policy policy = brooklyn().getPolicy(application, entityToken, policyId);
 
         policy.resume();
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @Override
@@ -116,7 +116,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         Policy policy = brooklyn().getPolicy(application, entityToken, policyId);
 
         policy.suspend();
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @Override
@@ -126,6 +126,6 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
 
         policy.suspend();
         entity.removePolicy(policy);
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 }

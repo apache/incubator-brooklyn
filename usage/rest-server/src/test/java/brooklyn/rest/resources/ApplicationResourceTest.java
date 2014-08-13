@@ -89,13 +89,13 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceTest.class);
     
-  private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
-          entities(ImmutableSet.of(
+  private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app")
+          .entities(ImmutableSet.of(
                   new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()),
                   new EntitySpec("simple-group", EverythingGroup.class.getName())
-          )).
-          locations(ImmutableSet.of("localhost")).
-          build();
+          ))
+          .locations(ImmutableSet.of("localhost"))
+          .build();
 
   // Convenience for finding an EntitySummary within a collection, based on its name
   private static Predicate<EntitySummary> withName(final String name) {
@@ -249,10 +249,10 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   public void testDeployWithInvalidEntityType() {
     try {
       clientDeploy(
-          ApplicationSpec.builder().name("invalid-app").
-              entities(ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity"))).
-              locations(ImmutableSet.of("localhost")).
-              build()
+          ApplicationSpec.builder().name("invalid-app")
+              .entities(ImmutableSet.of(new EntitySpec("invalid-ent", "not.existing.entity")))
+              .locations(ImmutableSet.of("localhost"))
+              .build()
       );
 
     } catch (UniformInterfaceException e) {
@@ -265,10 +265,10 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   public void testDeployWithInvalidLocation() {
     try {
         clientDeploy(
-          ApplicationSpec.builder().name("invalid-app").
-              entities(ImmutableSet.<EntitySpec>of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
-              locations(ImmutableSet.of("3423")).
-              build()
+          ApplicationSpec.builder().name("invalid-app")
+              .entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())))
+              .locations(ImmutableSet.of("3423"))
+              .build()
       );
 
     } catch (UniformInterfaceException e) {
@@ -333,8 +333,8 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     Assert.assertNotNull(groupSummary);
     
     String itemIds = app.get("id")+","+entitySummary.get("id")+","+groupSummary.get("id");
-    Collection entities = client().resource("/v1/applications/fetch?items="+itemIds).
-            get(Collection.class);
+    Collection entities = client().resource("/v1/applications/fetch?items="+itemIds)
+            .get(Collection.class);
     log.info("Applications+Entities fetched are: "+entities);
     
     Assert.assertEquals(entities.size(), apps.size()+2);
@@ -486,9 +486,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
       Set<PolicySummary> policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
       assertEquals(policies.size(), 0);
       
-      ClientResponse response = client().resource(policiesEndpoint).
-          queryParam("type", CapitalizePolicy.class.getCanonicalName()).
-          post(ClientResponse.class, Maps.newHashMap());
+      ClientResponse response = client().resource(policiesEndpoint)
+              .queryParam("type", CapitalizePolicy.class.getCanonicalName())
+              .post(ClientResponse.class, Maps.newHashMap());
       assertEquals(response.getStatus(), 200);
       PolicySummary policy = response.getEntity(PolicySummary.class);
       assertNotNull(policy.getId());
@@ -497,34 +497,30 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
       policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
       assertEquals(policies.size(), 1);
       
-      String status = client().resource(policiesEndpoint+"/"+newPolicyId).
-          get(String.class);
+      String status = client().resource(policiesEndpoint+"/"+newPolicyId)
+              .get(String.class);
       log.info("POLICY STATUS: "+status);
       
-      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/start").
-              post(ClientResponse.class);
-      assertEquals(response.getStatus(), 200);
-      status = client().resource(policiesEndpoint+"/"+newPolicyId).
-              get(String.class);
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/start")
+              .post(ClientResponse.class);
+      assertEquals(response.getStatus(), 204);
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).get(String.class);
       assertEquals(status, Lifecycle.RUNNING.name());
       
-      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/stop").
-              post(ClientResponse.class);
-      assertEquals(response.getStatus(), 200);
-      status = client().resource(policiesEndpoint+"/"+newPolicyId).
-              get(String.class);
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/stop")
+              .post(ClientResponse.class);
+      assertEquals(response.getStatus(), 204);
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).get(String.class);
       assertEquals(status, Lifecycle.STOPPED.name());
       
-      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/destroy").
-              post(ClientResponse.class);
-      assertTrue(response.getStatus()==200 || response.getStatus()==404);
+      response = client().resource(policiesEndpoint+"/"+newPolicyId+"/destroy")
+              .post(ClientResponse.class);
+      assertEquals(response.getStatus(), 204);
+
       response = client().resource(policiesEndpoint+"/"+newPolicyId).get(ClientResponse.class);
       log.info("POLICY STATUS RESPONSE AFTER DESTROY: "+response.getStatus());
-      assertTrue(response.getStatus()==200 || response.getStatus()==404);
-      if (response.getStatus()==200) {
-          assertEquals(response.getEntity(String.class), Lifecycle.DESTROYED.name());
-      }
-      
+      assertEquals(response.getStatus(), 404);
+
       policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
       assertEquals(0, policies.size());
   }
