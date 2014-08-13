@@ -69,7 +69,8 @@ public interface PolicyApi {
       @ApiError(code = 404, reason = "Could not find application or entity"),
       @ApiError(code = 400, reason = "Type is not a class implementing Policy")
   })
-  public PolicySummary addPolicy(
+
+  public Response addPolicy(
       @ApiParam(name = "application", value = "Application ID or name", required = true)
       @PathParam("application") String application,
       
@@ -136,6 +137,7 @@ public interface PolicyApi {
           @PathParam("policy") String policyId
   ) ;
 
+  // TODO: Should be DELETE /policy, not POST /policy/destroy
   @POST
   @Path("/{policy}/destroy")
   @ApiOperation(value = "Destroy a policy", notes="Removes a policy from being associated with the entity and destroys it (stopping first if running)")

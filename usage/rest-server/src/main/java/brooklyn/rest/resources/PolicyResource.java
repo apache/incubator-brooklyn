@@ -75,7 +75,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     }
 
     @Override
-    public PolicySummary addPolicy( String application,String entityToken, String policyTypeName,
+    public Response addPolicy( String application,String entityToken, String policyTypeName,
             // TODO would like to make this optional but jersey complains if we do
             Map<String, String> config
     ) {
@@ -94,7 +94,8 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         Policy policy = entity.addPolicy(PolicySpec.create(policyType).configure(config));
         log.debug("REST API added policy " + policy + " to " + entity);
 
-        return PolicyTransformer.policySummary(entity, policy);
+        return Response.status(Response.Status.CREATED)
+                .entity(PolicyTransformer.policySummary(entity, policy)).build();
     }
 
     @Override
@@ -108,7 +109,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         Policy policy = brooklyn().getPolicy(application, entityToken, policyId);
 
         policy.resume();
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @Override
@@ -116,7 +117,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         Policy policy = brooklyn().getPolicy(application, entityToken, policyId);
 
         policy.suspend();
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 
     @Override
@@ -126,6 +127,6 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
 
         policy.suspend();
         entity.removePolicy(policy);
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.NO_CONTENT).build();
     }
 }
