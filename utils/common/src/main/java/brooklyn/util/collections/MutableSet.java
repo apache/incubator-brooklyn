@@ -69,6 +69,13 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         return orig==null ? new MutableSet<V>() : new MutableSet<V>(orig);
     }
     
+    public static <V> MutableSet<V> copyOf(@Nullable Iterator<? extends V> elements) {
+        if (elements == null || !elements.hasNext()) {
+            return of();
+        }
+        return new MutableSet.Builder<V>().addAll(elements).build();
+    }
+    
     public MutableSet() {
     }
     
@@ -142,6 +149,13 @@ public class MutableSet<V> extends LinkedHashSet<V> {
                 for (V v : iterable) {
                     result.add(v);
                 }
+            }
+            return this;
+        }
+
+        public Builder<V> addAll(Iterator<? extends V> iter) {
+            while (iter.hasNext()) {
+                add(iter.next());
             }
             return this;
         }
