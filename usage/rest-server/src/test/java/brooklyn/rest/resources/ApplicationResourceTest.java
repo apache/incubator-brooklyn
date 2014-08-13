@@ -20,6 +20,7 @@ package brooklyn.rest.resources;
 
 import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
@@ -489,7 +490,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
           queryParam("type", CapitalizePolicy.class.getCanonicalName()).
           post(ClientResponse.class, Maps.newHashMap());
       assertEquals(response.getStatus(), 200);
-      String newPolicyId = response.getEntity(String.class);
+      PolicySummary policy = response.getEntity(PolicySummary.class);
+      assertNotNull(policy.getId());
+      String newPolicyId = policy.getId();
       log.info("POLICY CREATED: "+newPolicyId);
       policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
       assertEquals(policies.size(), 1);
