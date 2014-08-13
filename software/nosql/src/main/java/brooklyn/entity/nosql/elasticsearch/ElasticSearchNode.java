@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.nosql.elasticsearch;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -35,6 +36,7 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents an ElasticSearch node
  */
+@Catalog(name="Elastic Search Node", description="Elastic Search is...")
 @ImplementedBy(ElasticSearchNodeImpl.class)
 public interface ElasticSearchNode extends SoftwareProcess, DatastoreMixins.HasDatastoreUrl {
     @SetFromFlag("version")

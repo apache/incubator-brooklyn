@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.google.common.reflect.TypeToken;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
@@ -34,6 +35,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
+@Catalog(name="Riak Node", description="Riak is...")
 @ImplementedBy(RiakNodeImpl.class)
 public interface RiakNode extends SoftwareProcess {
 

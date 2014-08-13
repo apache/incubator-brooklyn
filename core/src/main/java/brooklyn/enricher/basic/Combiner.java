@@ -30,6 +30,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -49,6 +50,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
+@Catalog(name="Combiner", description="Combines attributes; see Enrichers.builder().combining(...)")
 public class Combiner<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Combiner.class);

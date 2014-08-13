@@ -27,6 +27,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -44,6 +45,7 @@ import com.google.common.reflect.TypeToken;
 
 /** Building on {@link AbstractAggregator} for a single source sensor (on multiple children and/or members) */
 @SuppressWarnings("serial")
+@Catalog(name="Aggregator", description="Aggregates attributes from multiple entities into a single attribute value; see Enrichers.builder().aggregating(...)")
 public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEventListener<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Aggregator.class);

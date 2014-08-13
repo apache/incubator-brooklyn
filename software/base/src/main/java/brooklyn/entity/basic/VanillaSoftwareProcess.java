@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.basic;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
@@ -51,6 +52,7 @@ import brooklyn.event.basic.AttributeSensorAndConfigKey;
  * <li> A different {@link SoftwareProcess#PID_FILE} to use
  * <li>
  */
+@Catalog(name="Vanilla Software Process", description="A software process configured with scripts, e.g. for launch, check-running and stop")
 @ImplementedBy(VanillaSoftwareProcessImpl.class)
 public interface VanillaSoftwareProcess extends SoftwareProcess {
 

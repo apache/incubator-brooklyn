@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.messaging.storm;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
@@ -35,6 +36,7 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a Storm node (UI, Nimbus or Supervisor).
  */
+@Catalog(name="Storm Node", description="Storm is...")
 @ImplementedBy(StormImpl.class)
 public interface Storm extends SoftwareProcess, UsesJmx {
 

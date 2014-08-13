@@ -67,7 +67,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * of container resource in the pool respectively. These events may be consumed by a separate policy that is capable
  * of resizing the container pool.
  */
-@Catalog
+@Catalog(name="Load Balancer", description="Policy that is attached to a pool of \"containers\", each of which "
+        + "can host one or more migratable \"items\". The policy monitors the workrates of the items and effects "
+        + "migrations in an attempt to ensure that the containers are all sufficiently utilized without any of "
+        + "them being overloaded.")
 public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movable> extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class);

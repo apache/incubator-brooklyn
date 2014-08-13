@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.webapp;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -56,6 +57,7 @@ import brooklyn.util.flags.SetFromFlag;
  * than with the child {@link brooklyn.entity.group.DynamicCluster}. However, note that changing this entity's
  * members has no effect on the members of the underlying DynamicCluster - treat this as a read-only view.
  */
+@Catalog(name="Controlled Dynamic Web-app Cluster", description="A cluster of load-balanced web-apps, which can be dynamically re-sized")
 @ImplementedBy(ControlledDynamicWebAppClusterImpl.class)
 public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, Startable, Resizable, MemberReplaceable, Group, ElasticJavaWebAppService, JavaWebAppService.CanDeployAndUndeploy, JavaWebAppService.CanRedeployAll {
     

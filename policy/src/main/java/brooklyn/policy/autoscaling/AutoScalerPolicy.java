@@ -62,12 +62,17 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Policy that is attached to a {@link Resizable} entity and dynamically adjusts its size in response to
- * emitted {@code POOL_COLD} and {@code POOL_HOT} events. (This policy does not itself determine whether
- * the pool is hot or cold, but instead relies on these events being emitted by the monitored entity itself, or
- * by another policy that is attached to it; see, for example, {@link LoadBalancingPolicy}.)
+ * emitted {@code POOL_COLD} and {@code POOL_HOT} events. Alternatively, the policy can be configured to
+ * keep a given metric within a required range.
+ * <p>
+ * TThis policy does not itself determine whether the pool is hot or cold, but instead relies on these 
+ * events being emitted by the monitored entity itself, or by another policy that is attached to it; see, 
+ * for example, {@link LoadBalancingPolicy}.)
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-@Catalog
+@Catalog(name="Auto-scaler", description="Policy that is attached to a Resizable entity and dynamically "
+        + "adjusts its size in response to either keep a metric within a given range, or in response to "
+        + "POOL_COLD and POOL_HOT events")
 public class AutoScalerPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(AutoScalerPolicy.class);

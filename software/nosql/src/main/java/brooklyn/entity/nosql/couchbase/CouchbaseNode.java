@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.nosql.couchbase;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.annotation.Effector;
@@ -35,6 +36,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.ByteSizeStrings;
 
+@Catalog(name="CouchBase Node", description="CouchBase is...")
 @ImplementedBy(CouchbaseNodeImpl.class)
 public interface CouchbaseNode extends SoftwareProcess {
 

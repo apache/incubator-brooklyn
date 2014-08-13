@@ -20,8 +20,7 @@ package brooklyn.entity.nosql.riak;
 
 import java.util.Map;
 
-import com.google.common.reflect.TypeToken;
-
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -32,6 +31,9 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.reflect.TypeToken;
+
+@Catalog(name="Riak Node", description="Riak is...")
 @ImplementedBy(RiakClusterImpl.class)
 public interface RiakCluster extends DynamicCluster {
 

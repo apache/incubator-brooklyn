@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.nosql.mongodb.sharding;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
@@ -28,6 +29,9 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.reflect.TypeToken;
 
+@Catalog(name="MongoDB Router",
+        description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
+        iconUrl="classpath:///mongodb-logo.png")
 @ImplementedBy(MongoDBRouterImpl.class)
 public interface MongoDBRouter extends AbstractMongoDBServer {
 

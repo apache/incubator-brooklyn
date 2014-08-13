@@ -21,6 +21,7 @@ package brooklyn.entity.nosql.cassandra;
 import java.math.BigInteger;
 import java.util.Set;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -45,6 +46,9 @@ import com.google.common.reflect.TypeToken;
 /**
  * An {@link brooklyn.entity.Entity} that represents a Cassandra node in a {@link CassandraDatacenter}.
  */
+@Catalog(name="Apache Cassandra Node", description="Cassandra is a highly scalable, eventually " +
+        "consistent, distributed, structured key-value store which provides a ColumnFamily-based data model " +
+        "richer than typical key/value systems", iconUrl="classpath:///cassandra-logo.jpeg")
 @ImplementedBy(CassandraNodeImpl.class)
 public interface CassandraNode extends DatastoreMixins.DatastoreCommon, SoftwareProcess, UsesJmx, UsesJavaMXBeans, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript {
 

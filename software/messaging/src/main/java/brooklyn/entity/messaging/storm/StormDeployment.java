@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.messaging.storm;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -25,6 +26,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.util.flags.SetFromFlag;
 
+@Catalog(name="Storm Deployment", description="Storm is...")
 @ImplementedBy(StormDeploymentImpl.class)
 public interface StormDeployment extends Entity, Startable {
 
