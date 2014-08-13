@@ -22,12 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import io.airlift.command.Cli;
 import io.airlift.command.Cli.CliBuilder;
 import io.airlift.command.Command;
-import io.airlift.command.Help;
 import io.airlift.command.Option;
 import io.airlift.command.ParseException;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,10 +43,6 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.cli.Main.BrooklynCommand;
-import brooklyn.cli.Main.BrooklynCommandCollectingArgs;
-import brooklyn.cli.Main.HelpCommand;
-import brooklyn.cli.Main.InfoCommand;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
@@ -58,8 +51,6 @@ import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsUtil;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
-import brooklyn.util.exceptions.FatalRuntimeException;
-import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
@@ -76,15 +67,9 @@ import com.google.common.collect.Lists;
  * so requires less additional credential configuration. It also gives brooklyn-specific information,
  * such as which image will be used by default in a given cloud.
  */
-public class CloudExplorer {
+public class CloudExplorer extends AbstractMain {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-
-    // Error codes
-    public static final int SUCCESS = 0;
-    public static final int PARSE_ERROR = 1;
-    public static final int EXECUTION_ERROR = 2;
-    public static final int CONFIGURATION_ERROR = 3;
 
     public static void main(String... args) {
         new CloudExplorer().execCli(args);
@@ -442,45 +427,4 @@ public class CloudExplorer {
 
         return builder;
     }
-    
-    protected void execCli(String ...args) {
-        execCli(cliBuilder().build(), args);
-    }
-    
-    protected void execCli(Cli<BrooklynCommand> parser, String ...args) {
-        try {
-            log.debug("Parsing command line arguments: {}", Arrays.asList(args));
-            BrooklynCommand command = parser.parse(args);
-            log.debug("Executing command: {}", command);
-            command.call();
-            System.exit(SUCCESS);
-        } catch (ParseException pe) { // looks like the user typed it wrong
-            System.err.println("Parse error: " + pe.getMessage()); // display
-                                                                   // error
-            System.err.println(getUsageInfo(parser)); // display cli help
-            System.exit(PARSE_ERROR);
-        } catch (FatalConfigurationRuntimeException e) {
-            log.error("Configuration error: "+e.getMessage(), e.getCause());
-            System.err.println("Configuration error: " + e.getMessage());
-            System.exit(CONFIGURATION_ERROR);
-        } catch (FatalRuntimeException e) { // anticipated non-configuration error
-            log.error("Startup error: "+e.getMessage(), e.getCause());
-            System.err.println("Startup error: "+e.getMessage());
-            System.exit(EXECUTION_ERROR);
-        } catch (Exception e) { // unexpected error during command execution
-            log.error("Execution error: " + e.getMessage(), e);
-            System.err.println("Execution error: " + e.getMessage());
-            if (!(e instanceof UserFacingException))
-                e.printStackTrace();
-            System.exit(EXECUTION_ERROR);
-        }
-    }
-
-    protected String getUsageInfo(Cli<BrooklynCommand> parser) {
-        StringBuilder help = new StringBuilder();
-        help.append("\n");
-        Help.help(parser.getMetadata(), Collections.<String>emptyList(), help);
-        return help.toString();
-    }
-
 }
