@@ -19,6 +19,7 @@
 package brooklyn.rest.resources;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import javax.ws.rs.core.MediaType;
@@ -30,6 +31,7 @@ import org.testng.annotations.Test;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.rest.testing.mocks.RestMockSimplePolicy;
@@ -58,7 +60,9 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
         ClientResponse pResponse = client().resource(policiesEndpoint)
                 .queryParam("type", RestMockSimplePolicy.class.getCanonicalName())
                 .post(ClientResponse.class, Maps.newHashMap());
-        policyId = pResponse.getEntity(String.class);
+        PolicySummary response = pResponse.getEntity(PolicySummary.class);
+        assertNotNull(response.getId());
+        policyId = response.getId();
     }
 
     @Test

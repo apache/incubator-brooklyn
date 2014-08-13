@@ -64,12 +64,12 @@ public interface PolicyApi {
       @PathParam("entity") String entityToken) ;
   
   @POST
-  @ApiOperation(value = "Add a policy", notes="Returns ID of policy added; policy type must have no-arg constructor " +
-  		"and setConfig(Map) method should be available if non-empty config is supplied")
+  @ApiOperation(value = "Add a policy", notes = "Returns a summary of the new policy")
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application, entity or policy")
+      @ApiError(code = 404, reason = "Could not find application or entity"),
+      @ApiError(code = 400, reason = "Type is not a class implementing Policy")
   })
-  public String addPolicy(
+  public PolicySummary addPolicy(
       @ApiParam(name = "application", value = "Application ID or name", required = true)
       @PathParam("application") String application,
       

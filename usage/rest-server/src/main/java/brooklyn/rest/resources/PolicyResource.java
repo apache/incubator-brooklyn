@@ -18,7 +18,6 @@
  */
 package brooklyn.rest.resources;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.Policies;
 import brooklyn.rest.api.PolicyApi;
 import brooklyn.rest.domain.PolicySummary;
@@ -37,6 +37,7 @@ import brooklyn.rest.domain.Status;
 import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.ApplicationTransformer;
 import brooklyn.rest.transform.PolicyTransformer;
+import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
@@ -74,26 +75,26 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     }
 
     @Override
-    public String addPolicy( String application,String entityToken, String policyTypeName,
+    public PolicySummary addPolicy( String application,String entityToken, String policyTypeName,
             // TODO would like to make this optional but jersey complains if we do
             Map<String, String> config
     ) {
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
-
+        Class<? extends Policy> policyType;
         try {
-            Class<?> policyType = Class.forName(policyTypeName);
-            Policy policy = (Policy) policyType.newInstance();
-            if (config != null && !config.isEmpty()) {
-                // TODO support this:
-                //policy.setConfig(config);
-                policyType.getMethod("setConfig", Map.class).invoke(policy, config);
-            }
-            log.debug("REST API adding policy " + policy + " to " + entity);
-            entity.addPolicy(policy);
-            return policy.getId();
+            policyType = (Class<? extends Policy>) Class.forName(policyTypeName);
+        } catch (ClassNotFoundException e) {
+            throw WebResourceUtils.badRequest("No policy with type %s found", policyTypeName);
+        } catch (ClassCastException e) {
+            throw WebResourceUtils.badRequest("No policy with type %s found", policyTypeName);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
+
+        Policy policy = entity.addPolicy(PolicySpec.create(policyType).configure(config));
+        log.debug("REST API added policy " + policy + " to " + entity);
+
+        return PolicyTransformer.policySummary(entity, policy);
     }
 
     @Override
