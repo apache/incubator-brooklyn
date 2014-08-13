@@ -127,7 +127,7 @@ public class EntityTransformer {
         return applicationUri(entity.getApplication()) + "/entities/" + entity.getId();
     }
     
-    protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, Field configKeyField) {
+    public static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, Field configKeyField) {
         CatalogConfig catalogConfig = configKeyField!=null ? configKeyField.getAnnotation(CatalogConfig.class) : null;
         String label = catalogConfig==null ? null : catalogConfig.label();
         Double priority = catalogConfig==null ? null : catalogConfig.priority();

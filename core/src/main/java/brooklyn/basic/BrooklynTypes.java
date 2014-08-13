@@ -76,7 +76,7 @@ public class BrooklynTypes {
         return (EntityDynamicType) BrooklynTypes.getDefinedBrooklynType(entityClass);
     }
 
-    private static BrooklynDynamicType<?,?> getDefinedBrooklynType(Class<? extends BrooklynObject> brooklynClass) {
+    public static BrooklynDynamicType<?,?> getDefinedBrooklynType(Class<? extends BrooklynObject> brooklynClass) {
         BrooklynDynamicType<?,?> t = cache.get(brooklynClass);
         if (t!=null) return t;
         return loadDefinedBrooklynType(brooklynClass);
