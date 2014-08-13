@@ -147,7 +147,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<Object> USER_METADATA = USER_METADATA_MAP;
 
     public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = ConfigKeys.newBooleanConfigKey(
-            "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", false);
+            "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", true);
 
     public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = ConfigKeys.newConfigKey(JcloudsLocationCustomizer.class,
             "customizer", "Optional location customizer");
