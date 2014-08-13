@@ -47,18 +47,18 @@ public class CassandraNodeLiveTest extends AbstractCassandraNodeTest {
 
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
-        return new Object[][] { // ImageName, Provider, Region
-            new Object[] { "ubuntu", "aws-ec2", "eu-west-1" },
-            new Object[] { "Ubuntu 12.0", "rackspace-cloudservers-uk", "" },
-            new Object[] { "CentOS 6.2", "rackspace-cloudservers-uk", "" },
+        return new Object[][] { // ImageId, Provider, Region, Description (for logging)
+            new Object[] { "eu-west-1/ami-0307d674", "aws-ec2", "eu-west-1", "Ubuntu Server 14.04 LTS (HVM), SSD Volume Type" },
+            new Object[] { "LON/f9b690bf-88eb-43c2-99cf-391f2558732e", "rackspace-cloudservers-uk", "", "Ubuntu 12.04 LTS (Precise Pangolin)" }, 
+            new Object[] { "LON/a84b1592-6817-42da-a57c-3c13f3cfc1da", "rackspace-cloudservers-uk", "", "CentOS 6.5 (PVHVM)" }, 
         };
     }
 
     @Test(groups = "Live", dataProvider = "virtualMachineData")
-    protected void testOperatingSystemProvider(String imageName, String provider, String region) throws Exception {
-        log.info("Testing Cassandra on {}{} using {}", new Object[] { provider, Strings.isNonEmpty(region) ? ":" + region : "", imageName });
+    protected void testOperatingSystemProvider(String imageId, String provider, String region, String description) throws Exception {
+        log.info("Testing Cassandra on {}{} using {} ({})", new Object[] { provider, Strings.isNonEmpty(region) ? ":" + region : "", description, imageId });
 
-        Map<String, String> properties = MutableMap.of("image-name-matches", imageName);
+        Map<String, String> properties = MutableMap.of("imageId", imageId);
         testLocation = app.getManagementContext().getLocationRegistry()
                 .resolve(provider + (Strings.isNonEmpty(region) ? ":" + region : ""), properties);
 
