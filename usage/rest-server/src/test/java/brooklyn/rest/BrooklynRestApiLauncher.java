@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
@@ -61,7 +62,6 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
-import scala.actors.threadpool.Arrays;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -85,15 +85,19 @@ public class BrooklynRestApiLauncher {
         FILTER, SERVLET, WEB_XML
     }
 
+    public static final Set<Class<? extends Filter>> DEFAULT_FILTERS = ImmutableSet.of(
+            BrooklynPropertiesSecurityFilter.class,
+            HaMasterCheckFilter.class);
+
     private boolean forceUseOfDefaultCatalogWithJavaClassPath = false;
     private Class<? extends SecurityProvider> securityProvider;
-    private Set<Class<? extends Filter>> filters = Sets.newHashSet();
+    private Set<Class<? extends Filter>> filters = DEFAULT_FILTERS;
     private StartMode mode = StartMode.FILTER;
     private ManagementContext mgmt;
     private ContextHandler customContext;
     private boolean deployJsgui = true;
 
-    private BrooklynRestApiLauncher() {}
+    protected BrooklynRestApiLauncher() {}
 
     public BrooklynRestApiLauncher managementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
@@ -110,9 +114,12 @@ public class BrooklynRestApiLauncher {
         return this;
     }
 
+    /**
+     * Runs the server with the given set of filters. Replaces {@link #DEFAULT_FILTERS}.
+     */
     @SuppressWarnings("unchecked")
-    public BrooklynRestApiLauncher addFilters(Class<? extends Filter>... filters) {
-        this.filters.addAll(Arrays.asList(filters));
+    public BrooklynRestApiLauncher filters(Class<? extends Filter>... filters) {
+        this.filters = Sets.newHashSet(filters);
         return this;
     }
 
@@ -194,7 +201,7 @@ public class BrooklynRestApiLauncher {
         context.setWar(this.deployJsgui && findJsguiWebapp() != null
                        ? findJsguiWebapp()
                        : createTempWebDirWithIndexHtml("Brooklyn REST API <p> (gui not available)"));
-        installAsServletFilter(context);
+        installAsServletFilter(context, this.filters);
         return context;
     }
 
@@ -209,8 +216,7 @@ public class BrooklynRestApiLauncher {
         context.addServlet(servletHolder, "/*");
         context.setContextPath("/");
 
-        installBrooklynFilters(context);
-
+        installBrooklynFilters(context, this.filters);
         return context;
     }
 
@@ -231,16 +237,11 @@ public class BrooklynRestApiLauncher {
         return context;
     }
 
-    private static void installBrooklynFilters(ServletContextHandler context) {
-        context.addFilter(BrooklynPropertiesSecurityFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        context.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-    }
-
     /** starts a server, on all NICs if security is configured,
      * otherwise (no security) only on loopback interface */
     private Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
         // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
-        boolean secure = mgmt!=null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig()) ? true : false;
+        boolean secure = mgmt != null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig());
         if (secure) {
             log.debug("Detected security configured, launching server on all network interfaces");
         } else {
@@ -300,7 +301,11 @@ public class BrooklynRestApiLauncher {
     }
 
     public static void installAsServletFilter(ServletContextHandler context) {
-        installBrooklynFilters(context);
+        installAsServletFilter(context, DEFAULT_FILTERS);
+    }
+
+    private static void installAsServletFilter(ServletContextHandler context, Set<Class<? extends Filter>> filters) {
+        installBrooklynFilters(context, filters);
 
         // now set up the REST servlet resources
         ResourceConfig config = new DefaultResourceConfig();
@@ -315,6 +320,12 @@ public class BrooklynRestApiLauncher {
         // finally create this as a _filter_ which falls through to a web app or something (optionally)
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
+    }
+
+    private static void installBrooklynFilters(ServletContextHandler context, Set<Class<? extends Filter>> filters) {
+        for (Class<? extends Filter> filter : filters) {
+            context.addFilter(filter, "/*", EnumSet.allOf(DispatcherType.class));
+        }
     }
 
     /**
