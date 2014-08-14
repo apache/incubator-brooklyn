@@ -20,7 +20,6 @@ package brooklyn.util.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -59,8 +58,13 @@ public class FileUtil {
                 if (LOG.isTraceEnabled()) LOG.trace("Failed to set permissions to 700 for file {}: setRead={}, setWrite={}, setExecutable={}",
                         new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
             } else {
-                LOG.warn("Failed to set permissions to 700 for file {}: setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
-                        new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
+                if (Os.isMicrosoftWindows()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("Failed to set permissions to 700 for file {}; expected behaviour on Windows; setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
+                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
+                } else {
+                    LOG.warn("Failed to set permissions to 700 for file {}: setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
+                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
+                }
                 loggedSetFilePermissionsWarning = true;
             }
         }
@@ -86,8 +90,13 @@ public class FileUtil {
                 if (LOG.isTraceEnabled()) LOG.trace("Failed to set permissions to 600 for file {}: setRead={}, setWrite={}, setExecutable={}",
                         new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
             } else {
-                LOG.warn("Failed to set permissions to 600 for file {}: setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
-                        new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
+                if (Os.isMicrosoftWindows()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("Failed to set permissions to 600 for file {}; expected behaviour on Windows; setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
+                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
+                } else {
+                    LOG.warn("Failed to set permissions to 600 for file {}: setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
+                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
+                }
                 loggedSetFilePermissionsWarning = true;
             }
         }
@@ -121,8 +130,8 @@ public class FileUtil {
      * @return The file permission (in a form like "-rwxr--r--"), or null if the permissions could not be determined.
      */
     @Beta
-    public static Maybe<String> getFilePermissions(File file) throws FileNotFoundException {
-        if (!file.exists()) throw new FileNotFoundException();
+    public static Maybe<String> getFilePermissions(File file) {
+        if (!file.exists()) return Maybe.absent("File "+file+" does not exist");
         
         if (Os.isMicrosoftWindows()) {
             return Maybe.absent("Cannot determine permissions on windows");

@@ -27,7 +27,6 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
@@ -447,6 +446,7 @@ public class BrooklynLauncher {
                 if (globalBrooklynPropertiesFile != null) {
                     // brooklyn.properties stores passwords (web-console and cloud credentials), 
                     // so ensure it has sensible permissions
+                    checkFileReadable(globalBrooklynPropertiesFile);
                     checkFilePermissionsX00(globalBrooklynPropertiesFile);
                     builder.globalPropertiesFile(globalBrooklynPropertiesFile);
                 }
@@ -513,18 +513,13 @@ public class BrooklynLauncher {
     
     private void checkFilePermissionsX00(String file) {
         File f = new File(Os.tidyPath(file));
-        if (f.exists() && f.isFile() && f.canRead()) {
-            try {
-                Maybe<String> permission = FileUtil.getFilePermissions(f);
-                if (permission.isAbsent()) {
-                    LOG.debug("Could not determine permissions of global brooklyn properties file; assuming ok: "+f);
-                } else {
-                    if (!permission.get().substring(4).equals("------")) {
-                        throw new FatalRuntimeException("Invalid permissions for file "+file+"; expected 600 but was "+permission.get());
-                    }
-                }
-            } catch (FileNotFoundException e) {
-                throw Exceptions.propagate(e); // should not happen; did f.exists() above
+        
+        Maybe<String> permission = FileUtil.getFilePermissions(f);
+        if (permission.isAbsent()) {
+            LOG.debug("Could not determine permissions of file; assuming ok: "+f);
+        } else {
+            if (!permission.get().substring(4).equals("------")) {
+                throw new FatalRuntimeException("Invalid permissions for file "+file+"; expected ?00 but was "+permission.get());
             }
         }
     }
