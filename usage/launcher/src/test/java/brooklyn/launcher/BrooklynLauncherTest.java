@@ -44,6 +44,8 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.exceptions.FatalRuntimeException;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
@@ -219,6 +221,7 @@ public class BrooklynLauncherTest {
     @Test
     public void testReloadBrooklynPropertiesFromFile() throws Exception {
         File globalPropertiesFile = File.createTempFile("local-brooklyn-properties-test", ".properties");
+        FileUtil.setFilePermissionsTo600(globalPropertiesFile);
         try {
             String property = "mykey=myval";
             Files.write(property, globalPropertiesFile, Charsets.UTF_8);
@@ -237,6 +240,59 @@ public class BrooklynLauncherTest {
         }
     }
 
+    @Test(groups="Integration")
+    public void testChecksGlobalBrooklynPropertiesPermissionsX00() throws Exception {
+        File propsFile = File.createTempFile("testChecksGlobalBrooklynPropertiesPermissionsX00", ".properties");
+        propsFile.setReadable(true, false);
+        try {
+            launcher = BrooklynLauncher.newInstance()
+                    .webconsole(false)
+                    .globalBrooklynPropertiesFile(propsFile.getAbsolutePath())
+                    .start();
+            
+            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("mykey"), "myval");
+        } catch (FatalRuntimeException e) {
+            if (!e.toString().contains("Invalid permissions for file")) throw e;
+        } finally {
+            propsFile.delete();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testChecksLocalBrooklynPropertiesPermissionsX00() throws Exception {
+        File propsFile = File.createTempFile("testChecksLocalBrooklynPropertiesPermissionsX00", ".properties");
+        propsFile.setReadable(true, false);
+        try {
+            launcher = BrooklynLauncher.newInstance()
+                    .webconsole(false)
+                    .localBrooklynPropertiesFile(propsFile.getAbsolutePath())
+                    .start();
+            
+            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("mykey"), "myval");
+        } catch (FatalRuntimeException e) {
+            if (!e.toString().contains("Invalid permissions for file")) throw e;
+        } finally {
+            propsFile.delete();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testStartsWithBrooklynPropertiesPermissionsX00() throws Exception {
+        File globalPropsFile = File.createTempFile("testChecksLocalBrooklynPropertiesPermissionsX00_global", ".properties");
+        File localPropsFile = File.createTempFile("testChecksLocalBrooklynPropertiesPermissionsX00_local", ".properties");
+        FileUtil.setFilePermissionsTo600(globalPropsFile);
+        FileUtil.setFilePermissionsTo600(localPropsFile);
+        try {
+            launcher = BrooklynLauncher.newInstance()
+                    .webconsole(false)
+                    .localBrooklynPropertiesFile(globalPropsFile.getAbsolutePath())
+                    .start();
+        } finally {
+            globalPropsFile.delete();
+            localPropsFile.delete();
+        }
+    }
+    
     private void assertOnlyApp(BrooklynLauncher launcher, Class<? extends Application> expectedType) {
         assertEquals(launcher.getApplications().size(), 1, "apps="+launcher.getApplications());
         assertNotNull(Iterables.find(launcher.getApplications(), Predicates.instanceOf(TestApplication.class), null), "apps="+launcher.getApplications());
