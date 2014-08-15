@@ -58,7 +58,10 @@ public interface NodeJsWebAppService extends SoftwareProcess, WebAppService {
     ConfigKey<String> APP_NAME = ConfigKeys.newStringConfigKey("nodejs.app.name", "The name of the NodeJS application");
 
     @SetFromFlag("appCommand")
-    ConfigKey<String> APP_COMMAND = ConfigKeys.newStringConfigKey("nodejs.app.command", "Command to start the NodeJS application", "node");
+    ConfigKey<String> APP_COMMAND = ConfigKeys.newStringConfigKey("nodejs.app.command", "Command to start the NodeJS application (defaults to node)", "node");
+
+    @SetFromFlag("appCommandLine")
+    ConfigKey<String> APP_COMMAND_LINE = ConfigKeys.newStringConfigKey("nodejs.app.commandLine", "Replacement command line to start the NodeJS application (ignores command and file if set)");
 
     @SetFromFlag("nodePackages")
     ConfigKey<List<String>> NODE_PACKAGE_LIST = ConfigKeys.newConfigKey(new TypeToken<List<String>>() { },

@@ -67,7 +67,7 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
     }
 
     protected Map<String, Integer> getPortMap() {
-        return ImmutableMap.of("http", getEntity().getAttribute(WebAppService.HTTP_PORT));
+        return ImmutableMap.of("http", getHttpPort());
     }
 
     @Override
@@ -111,13 +111,13 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
         String appName = getEntity().getConfig(NodeJsWebAppService.APP_NAME);
 
         if (Strings.isNonBlank(gitRepoUrl) && Strings.isNonBlank(archiveUrl)) {
-            throw new IllegalStateException("Only one of Git or archive URL must be set");
+            throw new IllegalStateException("Only one of Git or archive URL must be set for " + getEntity());
         } else if (Strings.isNonBlank(gitRepoUrl)) {
             commands.add(String.format("git clone %s %s", gitRepoUrl, appName));
         } else if (Strings.isNonBlank(archiveUrl)) {
             ArchiveUtils.deploy(archiveUrl, getMachine(), getRunDir());
         } else {
-            throw new IllegalStateException("At least one of Git or archive URL must be set");
+            throw new IllegalStateException("At least one of Git or archive URL must be set for " + getEntity());
         }
 
         newScript(CUSTOMIZING)
@@ -132,9 +132,14 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
         String appName = getEntity().getConfig(NodeJsWebAppService.APP_NAME);
         String appFile = getEntity().getConfig(NodeJsWebAppService.APP_FILE);
         String appCommand = getEntity().getConfig(NodeJsWebAppService.APP_COMMAND);
+        String appCommandLine = getEntity().getConfig(NodeJsWebAppService.APP_COMMAND_LINE);
+
+        if (Strings.isBlank(appCommandLine)) {
+            appCommandLine = appCommand + " " + appFile;
+        }
 
         commands.add(String.format("cd %s", Os.mergePathsUnix(getRunDir(), appName)));
-        commands.add(BashCommands.sudo("nohup " + appCommand + " " + appFile + " &"));
+        commands.add(BashCommands.sudo("nohup " + appCommandLine + " &"));
 
         newScript(MutableMap.of(USE_PID_FILE, true), LAUNCHING)
                 .body.append(commands)
