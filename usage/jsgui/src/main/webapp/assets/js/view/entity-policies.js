@@ -133,7 +133,8 @@ define([
             if (activePolicyId != null && that.activePolicy != activePolicyId) {
                 // TODO better to use a json array, as we do elsewhere
                 var $table = $('#policy-config-table'),
-                    $tbody = $('#policy-config-table tbody').empty();
+                    $tbody = $table.find('tbody');
+                $table.dataTable().fnClearTable();
                 $("#policy-config-none-selected").slideUp(100);
                 if (that._config.length==0) {
                     $(".has-no-policy-config").show();
