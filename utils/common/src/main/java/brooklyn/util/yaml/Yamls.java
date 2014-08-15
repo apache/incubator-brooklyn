@@ -106,7 +106,22 @@ public class Yamls {
                 if (result==null) result = candidate;
                 else if (!result.equals(candidate)) {
                     log.warn("Different values for attributes "+Arrays.toString(equivalentNames)+"; " +
-                    		"preferring '"+result+"' to '"+candidate+"'");
+                            "preferring '"+result+"' to '"+candidate+"'");
+                }
+            }
+        }
+        return result;
+    }
+
+    public static Object getMultinameAttribute(Map<String,Object> obj, String ...equivalentNames) {
+        Object result = null;
+        for (String name: equivalentNames) {
+            Object candidate = obj.get(name);
+            if (candidate!=null) {
+                if (result==null) result = candidate;
+                else if (!result.equals(candidate)) {
+                    log.warn("Different values for attributes "+Arrays.toString(equivalentNames)+"; " +
+                            "preferring '"+result+"' to '"+candidate+"'");
                 }
             }
         }
