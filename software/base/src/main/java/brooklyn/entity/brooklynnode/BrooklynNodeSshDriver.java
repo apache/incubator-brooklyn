@@ -37,6 +37,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.file.ArchiveUtils;
+import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
@@ -322,14 +323,14 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         SshMachineLocation machine = getMachine();
         String tempRemotePath = String.format("%s/upload.tmp", getRunDir());
 
-        if (contents != null) {
-            machine.copyTo(new ByteArrayInputStream(contents.getBytes()), tempRemotePath);
-        } else if (alternativeUri != null) {
-            InputStream propertiesStream = resource.getResourceFromUrl(alternativeUri);
-            machine.copyTo(propertiesStream, tempRemotePath);
-        } else {
-            throw new IllegalStateException("No contents supplied for file "+remotePath);
+        if (contents == null && alternativeUri == null) {
+            throw new IllegalStateException("No contents supplied for file " + remotePath);
         }
+        InputStream stream = contents != null
+                ? new ByteArrayInputStream(contents.getBytes())
+                : resource.getResourceFromUrl(alternativeUri);
+        Map<String, String> flags = MutableMap.of(SshTool.PROP_PERMISSIONS.getName(), "0600");
+        machine.copyTo(flags, stream, tempRemotePath);
         newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
                 .body.append(

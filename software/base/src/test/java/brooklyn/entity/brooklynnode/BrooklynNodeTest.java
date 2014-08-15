@@ -87,7 +87,7 @@ public class BrooklynNodeTest {
     
     @Test
     public void testCanStartSameNode() throws Exception {
-        // not very interesting as done not have REST when run in this project
+        // not very interesting as do not have REST when run in this project
         // but test BrooklynNodeRestTest in downstream project does
         BrooklynNode bn = app.createAndManageChild(EntitySpec.create(BrooklynNode.class, SameBrooklynNodeImpl.class));
         bn.start(MutableSet.<Location>of());
