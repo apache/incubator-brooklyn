@@ -443,7 +443,7 @@ public class BrooklynLauncher {
         if (managementContext == null) {
             if (brooklynProperties == null) {
                 Builder builder = new BrooklynProperties.Factory.Builder();
-                if (globalBrooklynPropertiesFile != null) {
+                if (globalBrooklynPropertiesFile != null && fileExists(globalBrooklynPropertiesFile)) {
                     // brooklyn.properties stores passwords (web-console and cloud credentials), 
                     // so ensure it has sensible permissions
                     checkFileReadable(globalBrooklynPropertiesFile);
@@ -496,6 +496,10 @@ public class BrooklynLauncher {
         } catch (Exception e) { handleSubsystemStartupError(ignoreAppErrors, "managed apps", e); }
         
         return this;
+    }
+
+    private boolean fileExists(String file) {
+        return new File(Os.tidyPath(file)).exists();
     }
 
     private void checkFileReadable(String file) {
