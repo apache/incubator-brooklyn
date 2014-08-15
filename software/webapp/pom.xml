@@ -111,7 +111,6 @@
         <dependency>
             <groupId>mx4j</groupId>
             <artifactId>mx4j-tools</artifactId>
-            <version>${mx4j.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -141,6 +140,13 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-software-nosql</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- bring in jclouds for testing -->
         <dependency>
             <groupId>io.brooklyn</groupId>

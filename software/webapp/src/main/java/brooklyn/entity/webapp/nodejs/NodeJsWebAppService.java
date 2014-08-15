@@ -20,6 +20,7 @@ package brooklyn.entity.webapp.nodejs;
 
 import java.util.List;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -33,6 +34,9 @@ import brooklyn.util.flags.SetFromFlag;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
+@Catalog(name="Node.JS Application",
+        description="Node.JS Web Application",
+        iconUrl="classpath:///nodejs-logo.png")
 @ImplementedBy(NodeJsWebAppServiceImpl.class)
 public interface NodeJsWebAppService extends SoftwareProcess, WebAppService {
 

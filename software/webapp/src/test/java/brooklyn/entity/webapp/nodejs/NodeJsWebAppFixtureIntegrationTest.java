@@ -18,8 +18,6 @@
  */
 package brooklyn.entity.webapp.nodejs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 
 import brooklyn.entity.basic.SoftwareProcess;
@@ -30,8 +28,6 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.test.entity.TestApplication;
 
 public class NodeJsWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(NodeJsWebAppFixtureIntegrationTest.class);
 
     public static final String GIT_REPO_URL = "https://github.com/grkvlt/node-hello-world.git";
     public static final String APP_FILE = "app.js";

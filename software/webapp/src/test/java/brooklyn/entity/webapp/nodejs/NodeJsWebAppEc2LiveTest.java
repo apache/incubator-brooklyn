@@ -21,6 +21,8 @@ package brooklyn.entity.webapp.nodejs;
 import static brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegrationTest.*;
 import static org.testng.Assert.assertNotNull;
 
+import org.testng.annotations.Test;
+
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
@@ -54,6 +56,12 @@ public class NodeJsWebAppEc2LiveTest extends AbstractEc2LiveTest {
                 assertNotNull(server.getAttribute(NodeJsWebAppService.ERROR_COUNT));
                 assertNotNull(server.getAttribute(NodeJsWebAppService.TOTAL_PROCESSING_TIME));
             }});
+    }
+
+    @Test(groups = {"Live", "Live-sanity"})
+    @Override
+    public void test_Ubuntu_12_0() throws Exception {
+        super.test_Ubuntu_12_0();
     }
 
 }
