@@ -99,8 +99,8 @@ public class DependentConfiguration {
         return attributeWhenReady(source, sensor, GroovyJavaMethods.truthPredicate());
     }
     
-    public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Closure ready) {
-        Predicate<T> readyPredicate = (ready != null) ? GroovyJavaMethods.predicateFromClosure(ready) : GroovyJavaMethods.truthPredicate();
+    public static <T> Task<T> attributeWhenReady(Entity source, AttributeSensor<T> sensor, Closure<Boolean> ready) {
+        Predicate<Object> readyPredicate = (ready != null) ? GroovyJavaMethods.<Object>predicateFromClosure(ready) : GroovyJavaMethods.truthPredicate();
         return attributeWhenReady(source, sensor, readyPredicate);
     }
     
@@ -346,9 +346,9 @@ public class DependentConfiguration {
         return listAttributesWhenReady(sensor, entities, GroovyJavaMethods.truthPredicate());
     }
     
-    public static <T> Task<List<T>> listAttributesWhenReady(AttributeSensor<T> sensor, Iterable<Entity> entities, Closure readiness) {
-        Predicate<T> readinessPredicate = (readiness != null) ? GroovyJavaMethods.predicateFromClosure(readiness) : GroovyJavaMethods.truthPredicate();
-        return listAttributesWhenReady(sensor, entities, readiness);
+    public static <T> Task<List<T>> listAttributesWhenReady(AttributeSensor<T> sensor, Iterable<Entity> entities, Closure<Boolean> readiness) {
+        Predicate<Object> readinessPredicate = (readiness != null) ? GroovyJavaMethods.<Object>predicateFromClosure(readiness) : GroovyJavaMethods.truthPredicate();
+        return listAttributesWhenReady(sensor, entities, readinessPredicate);
     }
     
     /** returns a task for parallel execution returning a list of values of the given sensor list on the given entity, 
