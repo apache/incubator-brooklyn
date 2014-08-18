@@ -133,6 +133,23 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 .attributeWhenReady(entity, TestEntity.SEQUENCE)
                 .postProcess(Functions.toStringFunction())
                 .build());
+
+        assertNotDoneContinually(t);
+        
+        entity.setAttribute(TestEntity.SEQUENCE, 1);
+        assertEquals(assertDoneEventually(t), "1");
+    }
+
+    @Test
+    public void testAttributeWhenReadyWithPostProcessingWithBuilderWaitingNow() throws Exception {
+        final Task<String> t = submit(new Callable<String>() {
+            public String call() {
+                return DependentConfiguration.builder()
+                        .attributeWhenReady(entity, TestEntity.SEQUENCE)
+                        .postProcess(Functions.toStringFunction())
+                        .runNow();
+            }});
+
         assertNotDoneContinually(t);
         
         entity.setAttribute(TestEntity.SEQUENCE, 1);
@@ -157,6 +174,31 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 .attributeWhenReady(entity, TestEntity.NAME)
                 .abortIf(entity2, TestEntity.SEQUENCE, Predicates.equalTo(1))
                 .build());
+
+        assertNotDoneContinually(t);
+
+        entity2.setAttribute(TestEntity.SEQUENCE, 321);
+        assertNotDoneContinually(t);
+
+        entity2.setAttribute(TestEntity.SEQUENCE, 1);
+        try {
+            assertDoneEventually(t);
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("Aborted waiting for ready")) throw e;
+        }
+    }
+
+    @Test
+    public void testAttributeWhenReadyWithAbortWaitingNow() throws Exception {
+        final Task<String> t = submit(new Callable<String>() {
+            public String call() {
+                return DependentConfiguration.builder()
+                        .attributeWhenReady(entity, TestEntity.NAME)
+                        .abortIf(entity2, TestEntity.SEQUENCE, Predicates.equalTo(1))
+                        .runNow();
+            }});
+
         assertNotDoneContinually(t);
 
         entity2.setAttribute(TestEntity.SEQUENCE, 321);
@@ -178,6 +220,24 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 .attributeWhenReady(entity, TestEntity.NAME)
                 .abortIf(entity2, TestEntity.SEQUENCE, Predicates.equalTo(1))
                 .build());
+        try {
+            assertDoneEventually(t);
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("Aborted waiting for ready")) throw e;
+        }
+    }
+
+    @Test
+    public void testAttributeWhenReadyWithAbortFailsWhenAbortConditionAlreadyHoldsWaitingNow() throws Exception {
+        entity2.setAttribute(TestEntity.SEQUENCE, 1);
+        final Task<String> t = submit(new Callable<String>() {
+            public String call() {
+                return DependentConfiguration.builder()
+                        .attributeWhenReady(entity, TestEntity.NAME)
+                        .abortIf(entity2, TestEntity.SEQUENCE, Predicates.equalTo(1))
+                        .runNow();
+            }});
         try {
             assertDoneEventually(t);
             fail();
@@ -304,5 +364,9 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
     
     private <T> Task<T> submit(Task<T> task) {
         return app.getExecutionContext().submit(task);
+    }
+    
+    private <T> Task<T> submit(Callable<T> job) {
+        return app.getExecutionContext().submit(new BasicTask<T>(job));
     }
 }

@@ -33,9 +33,9 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.math.MathPredicates;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
 public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements MongoDBClientDriver {
@@ -130,11 +130,10 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             }
-            DependentConfiguration.waitInTaskForAttributeReady(server, MongoDBRouter.SHARD_COUNT, new Predicate<Integer>() {
-                public boolean apply(Integer input) {
-                    return input > 0;
-                };
-            });
+            DependentConfiguration.builder()
+                    .attributeWhenReady(server, MongoDBRouter.SHARD_COUNT)
+                    .readiness(MathPredicates.<Integer>greaterThan(0))
+                    .runNow();
         } else {
             if (deployment != null) {
                 log.warn("Server and ShardedDeployment defined for {}; using server ({} instead of {})", 
@@ -146,7 +145,10 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             }
-            DependentConfiguration.waitInTaskForAttributeReady(server, Startable.SERVICE_UP, Predicates.equalTo(true));
+            DependentConfiguration.builder()
+                    .attributeWhenReady(server, Startable.SERVICE_UP)
+                    .readiness(Predicates.equalTo(true))
+                    .runNow();
         }
         return server;
     }
