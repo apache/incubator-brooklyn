@@ -1,0 +1,91 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+services:
+- type: brooklyn.entity.basic.VanillaSoftwareProcess
+  name: CBC Pillowfight
+  checkRunning.command: ""
+  stop.command: ""
+  launch.command: |
+    sudo wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/ubuntu/couchbase-ubuntu1204.list
+    sudo wget -O- http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add -
+    sudo apt-get update
+    sudo apt-get install -y libcouchbase2-libevent libcouchbase-dev libcouchbase2-bin
+  brooklyn.initializers:
+  - type: brooklyn.entity.software.ssh.SshCommandEffector
+    brooklyn.config:
+      name: cbcPillowFight
+      description: runs cbc pillowfight
+      command: >
+        cbc pillowfight
+        `if [ -n "$host" ]; then echo -h $host; fi` 
+        `if [ -n "$bucket" ]; then echo -b $bucket; fi` 
+        `if [ -n "$username" ]; then echo -u $username; fi`
+        `if [ -n "$password" ]; then echo -p $password; fi`
+        `if [ -n "$iterations" ]; then echo -i $iterations; fi`
+        `if [ -n "$numItems" ]; then echo -I $numItems; fi`
+        `if [ -n "$keyPrefix" ]; then echo -p $keyPrefix; fi`
+        `if [ -n "$numThreads" ]; then echo -t $numThreads; fi`
+        `if [ -n "$numInstances" ]; then echo -Q $numInstances; fi`
+        `if [ -n "$randomSeed" ]; then echo -s $randomSeed; fi`
+        `if [ -n "$minSize" ]; then echo -m $minSize; fi`
+        `if [ -n "$maxSize" ]; then echo -M $maxSize; fi`
+      parameters:
+        host:
+          description: list of hosts to connect to
+          defaultValue: 127.0.0.1:8091
+        bucket:
+          description: bucket to use
+          defaultValue: default
+        username:
+          description: username used for authentication to the cluster
+        password:
+          description: password used for authentication to the cluster
+        iterations:
+          description: number of iterations to run
+          defaultValue: 1000
+        numItems:
+          description: number of items to operate on
+          defaultValue: 1000
+        keyPrefix:
+          description: prefix for keys
+        numThreads:
+          description: number of threads to use
+          defaultValue: 1
+        numInstances:
+          description: number of connection instances to put into the shared connection pool
+          defaultValue: 1
+        randomSeed:
+          description: random seed
+          defaultValue: 0
+        ratio:
+          description: "specify SET/GET command ratio (default: 33, i.e. 33% SETs and 67% GETs)"
+          defaultValue: 33
+        minSize:
+          description: minimum size of payload, i.e. document body
+          defaultValue: 50
+        maxSize:
+          description: maximum size of payload, i.e. document body
+          defaultValue: 5120
+
+# For CentOS, use the following launch command:
+#  launch.command: |
+#    sudo wget -O/etc/yum.repos.d/couchbase.repo http://packages.couchbase.com/rpm/couchbase-centos55-x86_64.repo
+#    sudo yum check-update
+#    sudo yum install -y libcouchbase2-libevent libcouchbase-devel libcouchbase2-bin
+   
