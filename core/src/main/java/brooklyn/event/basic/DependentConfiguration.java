@@ -231,7 +231,10 @@ public class DependentConfiguration {
     
     /**
      * Returns a {@link Task} which blocks until the given job returns, then returns the value of that job.
+     * 
+     * @deprecated since 0.7; code will be moved into test utilities
      */
+    @Deprecated
     public static <T> Task<T> whenDone(Callable<T> job) {
         return new BasicTask<T>(MutableMap.of("tag", "whenDone", "displayName", "waiting for job"), job);
     }
