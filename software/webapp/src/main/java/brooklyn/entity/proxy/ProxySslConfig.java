@@ -19,10 +19,47 @@
 package brooklyn.entity.proxy;
 
 import java.io.Serializable;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import brooklyn.util.flags.TypeCoercions;
+
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 public class ProxySslConfig implements Serializable {
+
+    private static AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /** Setup type coercion. */
+    @SuppressWarnings("rawtypes")
+    public static void init() {
+        if (initialized.getAndSet(true)) return;
+
+        TypeCoercions.registerAdapter(Map.class, ProxySslConfig.class, new Function<Map, ProxySslConfig>() {
+            @Override
+            public ProxySslConfig apply(final Map input) {
+                ProxySslConfig sslConfig = new ProxySslConfig();
+                sslConfig.certificateSourceUrl = (String) input.get("certificateSourceUrl");
+                sslConfig.keySourceUrl = (String) input.get("keySourceUrl");
+                sslConfig.certificateDestination = (String) input.get("certificateDestination");
+                sslConfig.keyDestination = (String) input.get("keyDestination");
+                Object targetIsSsl = input.get("targetIsSsl");
+                if (targetIsSsl != null) {
+                    sslConfig.targetIsSsl = TypeCoercions.coerce(targetIsSsl, Boolean.TYPE);
+                }
+                Object reuseSessions = input.get("reuseSessions");
+                if (reuseSessions != null) {
+                    sslConfig.reuseSessions = TypeCoercions.coerce(reuseSessions, Boolean.TYPE);
+                }
+                return sslConfig;
+            }
+        });
+    }
+
+    static {
+        init();
+    }
 
     /** 
      * url's for the SSL certificates required at the server
