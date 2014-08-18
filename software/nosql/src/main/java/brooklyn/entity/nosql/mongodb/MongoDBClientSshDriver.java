@@ -122,14 +122,11 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         AbstractMongoDBServer server = entity.getConfig(MongoDBClient.SERVER);
         MongoDBShardedDeployment deployment = entity.getConfig(MongoDBClient.SHARDED_DEPLOYMENT);
         if (server == null) {
-            Preconditions.checkNotNull(deployment, "Either server or shardedDeployment must be specified");
-            Task<MongoDBRouter> task = DependentConfiguration.attributeWhenReady(deployment.getRouterCluster(),
-                    MongoDBRouterCluster.ANY_ROUTER);
-            try {
-                server = DependentConfiguration.waitForTask(task, entity, "any available router");
-            } catch (InterruptedException e) {
-                throw Exceptions.propagate(e);
-            }
+            Preconditions.checkNotNull(deployment, "Either server or shardedDeployment must be specified for %s", this);
+            server = DependentConfiguration.builder()
+                    .attributeWhenReady(deployment.getRouterCluster(), MongoDBRouterCluster.ANY_ROUTER)
+                    .blockingDetails("any available router")
+                    .runNow();
             DependentConfiguration.builder()
                     .attributeWhenReady(server, MongoDBRouter.SHARD_COUNT)
                     .readiness(MathPredicates.<Integer>greaterThan(0))
@@ -138,12 +135,6 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
             if (deployment != null) {
                 log.warn("Server and ShardedDeployment defined for {}; using server ({} instead of {})", 
                         new Object[] {this, server, deployment});
-            }
-            Task<Boolean> task = DependentConfiguration.attributeWhenReady(server, Startable.SERVICE_UP);
-            try {
-                DependentConfiguration.waitForTask(task, server);
-            } catch (InterruptedException e) {
-                throw Exceptions.propagate(e);
             }
             DependentConfiguration.builder()
                     .attributeWhenReady(server, Startable.SERVICE_UP)
