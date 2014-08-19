@@ -16,24 +16,18 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-
-<!-- Catalog page template -->
 <div id="catalog-resource">
     <div class="row row-fluid">
         <div class="span4" id="accord">
             <div class="navbar_top">
                 <h3>Catalog</h3>
-
                 <div class="apps-tree-toolbar">
-                    <i class="icon-br-refresh refresh handy"/>
+                    <i id="add-new-thing" class="icon-br-plus-sign handy"></i>
+                    &nbsp;
+                    <i class="icon-br-refresh refresh handy"></i>
                 </div>
             </div>
             <div class="navbar_main_wrapper">
-                <div id="accordion-empty-to-create-info-message" class="label-message hide">
-                    <div class="label-important full-width">ERROR</div>
-                    No category selected.
-                    Select the category of the item type you wish to add.
-                </div>
                 <div class="catalog-accordion-parent catalog-accordion-wrapper"></div>
             </div>
         </div>
@@ -41,44 +35,3 @@ under the License.
         <div class="span8" id="details"></div>
     </div>
 </div>
-
-<div class="modal hide fade" id="new-entity-modal">
-    <form class="form-vertical" id="new-entity-form">
-
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">x</button>
-            <h3>Upload Catalog Resource</h3>
-        </div>
-
-        <div class="modal-body">
-
-            <fieldset>
-                <div class="row">
-                    <div class="span5">
-
-                        <label for="groovy-code" class="control-label">Select the source code file for the template/entity/policy you wish to upload.</label>
-                        <br/>
-                        <div class="control-group">
-                            <div class="controls">
-                                <input id="groovy-code" name="groovyCode" type="file" class="input-large">
-                            </div>
-                        </div>
-                        <br/>
-                    </div>
-                </div>
-            </fieldset>
-            <div id="info-box">
-                <p><span class="label label-info">Note:</span> This window will close automatically when file is
-                    uploaded</p>
-            </div>
-        </div>
-
-        <div class="modal-footer form-actions">
-            <button class="btn" data-dismiss="modal" type="button">Close</button>
-            <button id="new-entity-submit" class="btn btn-primary" type="button">Save</button>
-        </div>
-
-    </form>
-</div>
-
-<div class="modal hide fade" id="new-location-modal"></div>

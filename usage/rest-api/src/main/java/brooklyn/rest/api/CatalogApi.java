@@ -39,7 +39,6 @@ import java.util.List;
 @Path("/v1/catalog")
 @Apidoc("Catalog")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 public interface CatalogApi {
 
     @POST
@@ -82,9 +81,9 @@ public interface CatalogApi {
     @ApiOperation(value = "List available entity types optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
     public List<CatalogItemSummary> listEntities(
         @ApiParam(name = "regex", value = "Regular expression to search for")
-        final @QueryParam("regex") @DefaultValue("") String regex,
+        @QueryParam("regex") @DefaultValue("") String regex,
         @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-        final @QueryParam("fragment") @DefaultValue("") String fragment
+        @QueryParam("fragment") @DefaultValue("") String fragment
     ) ;
 
     @GET
@@ -92,9 +91,9 @@ public interface CatalogApi {
     @ApiOperation(value = "Fetch a list of application templates optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
     public List<CatalogItemSummary> listApplications(
             @ApiParam(name = "regex", value = "Regular expression to search for")
-            final @QueryParam("regex") @DefaultValue("") String regex,
+            @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-            final @QueryParam("fragment") @DefaultValue("") String fragment
+            @QueryParam("fragment") @DefaultValue("") String fragment
     ) ;
 
     @GET
@@ -122,9 +121,9 @@ public interface CatalogApi {
     @ApiOperation(value = "List available policies optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
     public List<CatalogItemSummary> listPolicies(
             @ApiParam(name = "regex", value = "Regular expression to search for")
-            final @QueryParam("regex") @DefaultValue("") String regex,
+            @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-            final @QueryParam("fragment") @DefaultValue("") String fragment
+            @QueryParam("fragment") @DefaultValue("") String fragment
     ) ;
     
     @GET
@@ -146,7 +145,7 @@ public interface CatalogApi {
     @Produces("application/image")
     public Response getIcon(
         @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy)")
-        final @PathParam("itemId") @DefaultValue("") String itemId
+        @PathParam("itemId") @DefaultValue("") String itemId
     ) ;
 
 }

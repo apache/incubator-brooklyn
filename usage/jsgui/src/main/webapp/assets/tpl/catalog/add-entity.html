@@ -16,4 +16,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<div data-cid="<%= cid %>" class="accordion-nav-row <%= extraClasses %>"><%= type %></div>
+<form>
+    <label for="new-blueprint">Enter blueprint:</label>
+    <textarea id='new-blueprint' name='yaml' rows='5' cols='15'></textarea>
+
+    <button class='catalog-submit-button btn' data-loading-text='Saving...'>Submit</button>
+    <p class="catalog-save-error hide">
+        <span class="alert-error">
+            <strong>Error:</strong><br/>
+            <span class="catalog-error-message"></span>
+        </span>
+    </p>
+</form>

@@ -16,6 +16,7 @@
         "moment":"js/libs/moment.min",
         "handlebars":"js/libs/handlebars-1.0.rc.1",
         "brooklyn":"js/libs/brooklyn",
+        "brooklyn-view":"js/libs/brooklyn-view",
         "brooklyn-utils":"js/libs/brooklyn-utils",
         "datatables-extensions":"js/libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",

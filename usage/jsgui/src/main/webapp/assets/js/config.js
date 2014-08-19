@@ -39,6 +39,7 @@ require.config({
         "moment":"libs/moment.min",
         "handlebars":"libs/handlebars-1.0.rc.1",
         "brooklyn":"libs/brooklyn",
+        "brooklyn-view":"libs/brooklyn-view",
         "brooklyn-utils":"libs/brooklyn-utils",
         "datatables-extensions":"libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",

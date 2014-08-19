@@ -17,16 +17,25 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div class="catalog-details-generic">
+<div class="catalog-details">
 
-<% if ((typeof title !== 'undefined') && (title.length > 0)) { %>
-    <h3><%= title %></h3>
-<% } %>
+    <% if (model.get("name") !== undefined) { %>
+        <h2><%= model.get("name") %></h2>
+    <% } else if (model.get("type") !== undefined) { %>
+        <h2><%= model.get("type") %></h2>
+    <% } %>
 
-<% if (typeof json === 'undefined') { %>
-    <i>Loading...</i>
-<% } else { %>
-    <textarea readonly="readonly" rows="25" style="width:100%;"><%= json %></textarea>
-<% } %>
+    <dl>
+        <% _.each(model.attributes, function(value, key) { %>
+            <% if (value) { %>
+                <dt><%= key %></dt>
+                <% if (_.isObject(value)) { %>
+                    <dd>Not shown: is a complex object</dd>
+                <% } else { %>
+                    <dd><%= value %></dd>
+                <% } %>
+            <% } %>
+        <% }) %>
+    </dl>
 
 </div>

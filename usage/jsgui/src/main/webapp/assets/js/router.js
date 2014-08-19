@@ -19,17 +19,17 @@
 define([
     "brooklyn", "underscore", "jquery", "backbone",
     "model/application", "model/app-tree", "model/location", "model/ha",
-    "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy", 
+    "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy",
     "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-not-ha-master.html"
 ], function (Brooklyn, _, $, Backbone,
         Application, AppTree, Location, ha,
-        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
+        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView,
         HelpHtml, LabsHtml, ServerNotMasterHtml) {
 
     // TODO this initialising - customising the View prototype - should be moved,
     // and perhaps expanded to include other methods from viewutils
     // see discussion at https://github.com/brooklyncentral/brooklyn/pull/939
-    
+
     // add close method to all views for clean-up
     // (NB we have to update the prototype _here_ before any views are instantiated;
     //  see "close" called below in "showView") 
@@ -70,24 +70,37 @@ define([
         this._periodicFunctions[uid] = setInterval(periodic, interval)
     }
 
+    /**
+     * @returns {jquery.Deferred}
+     *      A promise that resolves when the high availability status has been
+     *      loaded. Actions to be taken on the view after it has loaded should
+     *      be registered with calls to .done()
+     */
     // Not just defined as a function on Router because the delay if the HA status
     // hasn't loaded requires a reference to the function, which we lose if we use
     // 'this.showView'.
-    var showViewImpl = function (router, selector, view) {
+    function showViewImpl(router, selector, view) {
         // Don't do anything until the HA status has loaded.
-        if (!ha.loaded) {
-            _.delay(showViewImpl, 100, router, selector, view);
-        } else {
-            // close the previous view - does binding clean-up and avoids memory leaks
-            if (router.currentView) {
-                router.currentView.close();
+        var promise = $.Deferred()
+            .done(function () {
+                // close the previous view - does binding clean-up and avoids memory leaks
+                if (router.currentView) {
+                    router.currentView.close();
+                }
+                // render the view inside the selector element
+                $(selector).html(view.render().el);
+                router.currentView = view;
+                return view
+            });
+        (function isComplete() {
+            if (ha.loaded) {
+                promise.resolve();
+            } else {
+                _.defer(isComplete, 100);
             }
-            // render the view inside the selector element
-            $(selector).html(view.render().el);
-            router.currentView = view;
-            return view
-        }
-    };
+        })();
+        return promise;
+    }
 
     var Router = Backbone.Router.extend({
         routes:{
@@ -96,6 +109,7 @@ define([
             'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
             'v1/locations':'catalogPage',
+            'v1/catalog/:kind(/:id)':'catalogPage',
             'v1/catalog':'catalogPage',
             'v1/apidoc':'apidocPage',
             'v1/script/groovy':'scriptGroovyPage',
@@ -105,7 +119,7 @@ define([
         },
 
         showView: function(selector, view) {
-            showViewImpl(this, selector, view);
+            return showViewImpl(this, selector, view);
         },
 
         defaultRoute: function() {
@@ -150,13 +164,14 @@ define([
                 if (trail !== undefined) appExplorer.show(trail)
             }})
         },
-        catalogPage:function () {
-            var that = this
+        catalogPage: function (catalogItemKind, id) {
             var catalogResource = new CatalogView({
-                locations:that.locations,
-                appRouter:that
-            })
-            that.showView("#application-content", catalogResource)
+                locations: this.locations,
+                appRouter: this,
+                kind: catalogItemKind,
+                id: id
+            });
+            this.showView("#application-content", catalogResource);
         },
         apidocPage:function () {
             var apidocResource = new ApidocView({})

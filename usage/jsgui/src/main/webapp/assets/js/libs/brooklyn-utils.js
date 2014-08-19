@@ -1,6 +1,6 @@
 define([
-    'underscore'
-], function (_) {
+    'jquery', 'underscore'
+], function ($, _) {
 
     var Util = {};
 
@@ -77,6 +77,36 @@ define([
         var a = document.createElement("a");
         a.href = string;
         return a.pathname;
+    };
+
+    /**
+     * Extracts the value of the given input. Returns true/false for for checkboxes
+     * rather than "on" or "off".
+     */
+    Util.inputValue = function($input) {
+        if ($input.attr("type") === "checkbox") {
+            return $input.is(":checked");
+        } else {
+            return $input.val();
+        }
+    };
+
+    /**
+     * Updates or initialises the given model with the values of named elements under
+     * the given element. Force-updates the model by setting silent: true.
+     */
+    Util.bindModelFromForm = function(modelOrConstructor, $el) {
+        var model = _.isFunction(modelOrConstructor) ? new modelOrConstructor() : modelOrConstructor;
+        var inputs = {};
+
+        // Look up all named elements
+        $("[name]", $el).each(function(idx, inp) {
+            var input = $(inp);
+            var name = input.attr("name");
+            inputs[name] = Util.inputValue(input);
+        });
+        model.set(inputs, { silent: true });
+        return model;
     };
 
     return Util;
