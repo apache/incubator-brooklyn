@@ -299,7 +299,7 @@ define([
 //          log("getting, count "+options.count+", delay "+period+": "+url)
             
             var disabled = (options['enablement'] && !options['enablement']()) 
-                || !BrooklynConfig.refresh
+                || !BrooklynConfig.view.refresh
             if (options.count > 1 && disabled) {
                 // not enabled, just requeue
                 if (options['period']) 
@@ -426,7 +426,7 @@ define([
             var fetcher = function() {
                 if (view && view.viewIsClosed) return;
                 var disabled = (options['enablement'] && !options['enablement']()) 
-                    || !BrooklynConfig.refresh
+                    || !BrooklynConfig.view.refresh
                 if (options.count > 1 && disabled) {
                     // not enabled, just requeue
                     ViewUtils.fetchRepeatedlyWithDelay(view, model, options);

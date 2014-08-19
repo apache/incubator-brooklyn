@@ -73,7 +73,7 @@ define([
 
         // Expects callback to have been called at least once
         it("should have 'this' set to the owning view", function() {
-            Brooklyn.refresh = true;
+            Brooklyn.view.refresh = true;
             var view = new CallbackView();
             waits(15);
             runs(function() {
@@ -81,13 +81,13 @@ define([
             });
         });
 
-        it("should not be run if Brooklyn.refresh is false", function() {
-            Brooklyn.refresh = false;
+        it("should not be run if Brooklyn.view.refresh is false", function() {
+            Brooklyn.view.refresh = false;
             var view = new CallbackView();
             waits(15);
             runs(function() {
                 expect(view.counter).toEqual(0);
-                Brooklyn.refresh = true;
+                Brooklyn.view.refresh = true;
             });
         });
     });
