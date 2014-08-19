@@ -19,10 +19,58 @@
 package brooklyn.entity.proxy;
 
 import java.io.Serializable;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.flags.TypeCoercions;
+
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 
 public class ProxySslConfig implements Serializable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProxySslConfig.class);
+    private static final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /** Setup type coercion. */
+    @SuppressWarnings("rawtypes")
+    public static void init() {
+        if (initialized.getAndSet(true)) return;
+
+        TypeCoercions.registerAdapter(Map.class, ProxySslConfig.class, new Function<Map, ProxySslConfig>() {
+            @Override
+            public ProxySslConfig apply(final Map input) {
+                Map map = MutableMap.copyOf(input);
+                ProxySslConfig sslConfig = new ProxySslConfig();
+                sslConfig.certificateSourceUrl = (String) map.remove("certificateSourceUrl");
+                sslConfig.keySourceUrl = (String) map.remove("keySourceUrl");
+                sslConfig.certificateDestination = (String) map.remove("certificateDestination");
+                sslConfig.keyDestination = (String) map.remove("keyDestination");
+                Object targetIsSsl = map.remove("targetIsSsl");
+                if (targetIsSsl != null) {
+                    sslConfig.targetIsSsl = TypeCoercions.coerce(targetIsSsl, Boolean.TYPE);
+                }
+                Object reuseSessions = map.remove("reuseSessions");
+                if (reuseSessions != null) {
+                    sslConfig.reuseSessions = TypeCoercions.coerce(reuseSessions, Boolean.TYPE);
+                }
+                if (!map.isEmpty()) {
+                    LOG.info("Extra unused keys found in ProxySslConfig config: [{}]",
+                            Joiner.on(",").withKeyValueSeparator("=").join(map));
+                }
+                return sslConfig;
+            }
+        });
+    }
+
+    static {
+        init();
+    }
 
     /** 
      * url's for the SSL certificates required at the server
