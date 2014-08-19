@@ -19,6 +19,7 @@
 package brooklyn.rest.resources;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.testng.annotations.Test;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.PolicyConfigSummary;
+import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.rest.testing.mocks.RestMockSimplePolicy;
@@ -51,6 +53,8 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(PolicyResourceTest.class);
 
+    private static final String ENDPOINT = "/v1/applications/simple-app/entities/simple-ent/policies/";
+
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").entities(
             ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).locations(
             ImmutableSet.of("localhost")).build();
@@ -65,18 +69,19 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
         ClientResponse aResponse = clientDeploy(simpleSpec);
         waitForApplicationToBeRunning(aResponse.getLocation());
 
-        String policiesEndpoint = "/v1/applications/simple-app/entities/simple-ent/policies";
-
-        ClientResponse pResponse = client().resource(policiesEndpoint)
+        ClientResponse pResponse = client().resource(ENDPOINT)
                 .queryParam("type", RestMockSimplePolicy.class.getCanonicalName())
                 .post(ClientResponse.class, Maps.newHashMap());
-        policyId = pResponse.getEntity(String.class);
+
+        PolicySummary response = pResponse.getEntity(PolicySummary.class);
+        assertNotNull(response.getId());
+        policyId = response.getId();
 
     }
 
     @Test
     public void testListConfig() throws Exception {
-        Set<PolicyConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/policies/" + policyId + "/config")
+        Set<PolicyConfigSummary> config = client().resource(ENDPOINT + policyId + "/config")
                 .get(new GenericType<Set<PolicyConfigSummary>>() {});
         
         Set<String> configNames = Sets.newLinkedHashSet();
@@ -93,7 +98,7 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
     public void testGetNonExistantConfigReturns404() throws Exception {
         String invalidConfigName = "doesnotexist";
         try {
-            PolicyConfigSummary summary = client().resource("/v1/applications/simple-app/entities/simple-ent/policies/" + policyId + "/config/" + invalidConfigName)
+            PolicyConfigSummary summary = client().resource(ENDPOINT + policyId + "/config/" + invalidConfigName)
                     .get(PolicyConfigSummary.class);
             fail("Should have thrown 404, but got "+summary);
         } catch (Exception e) {
@@ -106,7 +111,7 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
         String configName = RestMockSimplePolicy.SAMPLE_CONFIG.getName();
         String expectedVal = RestMockSimplePolicy.SAMPLE_CONFIG.getDefaultValue();
         
-        String configVal = client().resource("/v1/applications/simple-app/entities/simple-ent/policies/" + policyId + "/config/" + configName)
+        String configVal = client().resource(ENDPOINT + policyId + "/config/" + configName)
                 .get(String.class);
         assertEquals(configVal, expectedVal);
     }
@@ -115,8 +120,7 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
     public void testReconfigureConfig() throws Exception {
         String configName = RestMockSimplePolicy.SAMPLE_CONFIG.getName();
         
-        ClientResponse response = client().resource(
-                "/v1/applications/simple-app/entities/simple-ent/policies/" + policyId + "/config/" + configName + "/set")
+        ClientResponse response = client().resource(ENDPOINT + policyId + "/config/" + configName + "/set")
                 .queryParam("value", "newval")
                 .post(ClientResponse.class);
 
@@ -128,11 +132,11 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
         String configName = RestMockSimplePolicy.SAMPLE_CONFIG.getName();
         String expectedVal = "newval";
         
-        Map<String, Object> allState = client().resource("/v1/applications/simple-app/entities/simple-ent/policies/" + policyId + "/config/current-state")
+        Map<String, Object> allState = client().resource(ENDPOINT + policyId + "/config/current-state")
                 .get(new GenericType<Map<String, Object>>() {});
         assertEquals(allState, ImmutableMap.of(configName, expectedVal));
         
-        String configVal = client().resource("/v1/applications/simple-app/entities/simple-ent/policies/" + policyId + "/config/" + configName)
+        String configVal = client().resource(ENDPOINT + policyId + "/config/" + configName)
                 .get(String.class);
         assertEquals(configVal, expectedVal);
     }
