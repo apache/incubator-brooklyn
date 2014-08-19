@@ -17,9 +17,12 @@
  * under the License.
 */
 define([
-    "jquery", "underscore", "backbone", "brooklyn-utils"
-], function (
-    $, _, Backbone, Util
+    "jquery", "underscore", "backbone", "brooklyn-utils",
+    "text!tpl/lib/basic-modal.html",
+    "text!tpl/lib/config-key-type-value-input-pair.html"
+    ], function (
+    $, _, Backbone, Util,
+    ModalHtml, ConfigKeyInputHtml
 ) {
 
     var module = {};
@@ -121,6 +124,122 @@ define([
             return false;
         }
 
+    });
+
+    /**
+     * A view to render another view in a modal. Give another view to render as
+     * the `body' parameter.
+     */
+    module.Modal = Backbone.View.extend({
+
+        id: _.uniqueId("modal"),
+        className: "modal",
+        template: _.template(ModalHtml),
+
+        events: {
+            "hide": "close",
+            "click .modal-submit": "onSubmit"
+        },
+
+        initialize: function() {
+            if (!this.options.body) {
+                throw new Error("Modal view requires body to render");
+            }
+            _.bindAll(this);
+            if (this.options.autoOpen) {
+                this.show();
+            }
+        },
+
+        beforeClose: function() {
+            if (this.options.body) {
+                this.options.body.close();
+            }
+        },
+
+        render: function() {
+            this.$el.html(this.template({
+                title: this.options.title
+            }));
+            this.options.body.render();
+            this.$(".modal-body").html(this.options.body.$el);
+            return this;
+        },
+
+        show: function() {
+            this.render().$el.modal();
+            return this;
+        },
+
+        onSubmit: function(event) {
+            if (_.isFunction(this.options.body.onSubmit)) {
+                var submission = this.options.body.onSubmit.apply(this.options.body, [event]);
+                var self = this;
+                submission.done(function() {
+                    // Closes view via event.
+                    self.$el.modal("hide");
+                }).fail(function() {
+                    // ?
+                });
+            }
+            return false;
+        }
+
+    });
+
+    /**
+     * Presents inputs for config key names/values with  buttons to add/remove entries
+     * and a function to extract a map of name->value.
+     */
+    module.ConfigKeyInputPairList = Backbone.View.extend({
+        template: _.template(ConfigKeyInputHtml),
+        // Could listen to input change events and add 'error' class to any type inputs
+        // that duplicate values.
+        events: {
+            "click .config-key-row-remove": "rowRemove",
+            "keypress .last": "rowAdd"
+        },
+        render: function () {
+            if (this.options.configKeys) {
+                var templated = _.map(this.options.configKeys, function (value, key) {
+                    return this.templateRow(key, value);
+                }, this);
+                this.$el.html(templated.join(""));
+            }
+            this.$el.append(this.templateRow());
+            this.markLast();
+            return this;
+        },
+        rowAdd: function (event) {
+            this.$el.append(this.templateRow());
+            this.markLast();
+        },
+        rowRemove: function (event) {
+            $(event.currentTarget).parent().remove();
+            if (this.$el.children().length == 0) {
+                this.rowAdd();
+            }
+            this.markLast();
+        },
+        markLast: function () {
+            this.$(".last").removeClass("last");
+            this.$("div").last().addClass("last");
+        },
+        templateRow: function (type, value) {
+            return this.template({type: type || "", value: value || ""});
+        },
+        getConfigKeys: function () {
+            var cks = {};
+            this.$(".config-key-type").each(function (index, input) {
+                input = $(input);
+                var type = input.val() && input.val().trim();
+                var value = input.next().val() && input.next().val().trim();
+                if (type && value) {
+                    cks[type] = value;
+                }
+            });
+            return cks;
+        }
     });
 
     return module;
