@@ -223,7 +223,10 @@ define([
         },
         markLast: function () {
             this.$(".last").removeClass("last");
-            this.$("div").last().addClass("last");
+            // Marking inputs rather than parent div to avoid weird behaviour when
+            // remove row button is triggered with the keyboard.
+            this.$(".config-key-type").last().addClass("last");
+            this.$(".config-key-value").last().addClass("last");
         },
         templateRow: function (type, value) {
             return this.template({type: type || "", value: value || ""});

@@ -1258,6 +1258,10 @@ input[type="file"] {
     width: 300px;
 }
 
+input.error {
+    border-color: #b94a48;
+}
+
 #policy-config-table {
     table-layout: fixed;
 }
@@ -1270,6 +1274,10 @@ input[type="file"] {
 #policy-config-table td.policy-config-value {
     overflow-wrap: break-word;
     word-wrap: break-word;
+}
+
+.has-no-policies {
+    margin-bottom: 9px;
 }
 
 .padded-div {
@@ -1399,4 +1407,9 @@ the element's children, who probably want to control their opacity separately. *
 
 .capitalized {
     text-transform: capitalize;
+}
+
+.config-key-input-pair {
+    /* matches Bootstrap */
+    margin-bottom: 9px;
 }
