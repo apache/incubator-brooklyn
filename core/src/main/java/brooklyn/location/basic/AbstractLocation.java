@@ -495,7 +495,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     protected void onChanged() {
         // currently changes simply trigger re-persistence; there is no intermediate listener as we do for EntityChangeListener
-        if (getManagementContext() != null) {
+        if (isManaged()) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(this);
         }
     }
