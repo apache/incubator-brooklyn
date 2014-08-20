@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.webapp.nodejs;
+package brooklyn.demo;
 
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import brooklyn.catalog.Catalog;
@@ -26,6 +26,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.nosql.redis.RedisStore;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
 import brooklyn.event.basic.DependentConfiguration;
 
 import com.google.common.collect.ImmutableList;
