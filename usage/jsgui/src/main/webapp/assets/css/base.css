@@ -1276,6 +1276,7 @@ input.error {
     word-wrap: break-word;
 }
 
+#policy-config,
 .has-no-policies {
     margin-bottom: 9px;
 }

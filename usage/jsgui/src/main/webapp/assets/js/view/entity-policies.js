@@ -67,12 +67,6 @@ define([
                 }});
         },
 
-        beforeClose: function() {
-            if (this._modal) {
-                this._modal.close();
-            }
-        },
-
         render:function () {
             if (this.viewIsClosed)
                 return;
@@ -164,7 +158,7 @@ define([
                             type:config.get("type"),
                             reconfigurable:config.get("reconfigurable"),
                             link:config.getLinkByName('self'),
-                            value:'' // will be set later
+                            value: config.get("defaultValue")
                         }));
                         $tbody.find('*[rel="tooltip"]').tooltip();
                     });
@@ -187,7 +181,7 @@ define([
 
         refreshPolicyConfig:function() {
             var that = this;
-            if (that.viewIsClosed) return;
+            if (that.viewIsClosed || !that.currentStateUrl) return;
             var $table = that.$('#policy-config-table').dataTable(),
                 $rows = that.$("tr.policy-config-row");
             $.get(that.currentStateUrl, function (data) {
@@ -196,33 +190,31 @@ define([
                 $rows.each(function (index, row) {
                     var key = $(this).find(".policy-config-name").text();
                     var v = data[key];
-                    if (v === undefined) v = "";
-                    $table.fnUpdate(_.escape(v), row, 1, false);
+                    if (v !== undefined) {
+                        $table.fnUpdate(_.escape(v), row, 1, false);
+                    }
                 });
             });
             $table.dataTable().fnStandingRedraw();
         },
 
-        showPolicyConfigModal:function (evt) {
-            evt.stopPropagation();
-            // get the model that we need to show, create its view and show it
+        showPolicyConfigModal: function (evt) {
             var cid = $(evt.currentTarget).attr("id");
-            this._modal = new PolicyConfigInvokeView({
-                el:"#policy-modal",
-                model:this._config.get(cid),
-                policy:this.model
-            });
-            this._modal.render().$el.modal('show');
+            var currentValue = $(evt.currentTarget)
+                .parent().parent()
+                .find(".policy-config-value")
+                .text();
+            Brooklyn.view.showModalWith(new PolicyConfigInvokeView({
+                model: this._config.get(cid),
+                policy: this.model,
+                currentValue: currentValue
+            }));
         },
 
         showNewPolicyModal: function () {
-            var newPolicy = new Brooklyn.view.Modal({
-                title: "Attach a policy",
-                body: new NewPolicyView({
-                    entity: this.model
-                })
-            });
-            newPolicy.show();
+            Brooklyn.view.showModalWith(new NewPolicyView({
+                entity: this.model
+            }));
         },
 
         callStart:function(event) { this.doPost(event, "start"); },

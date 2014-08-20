@@ -128,7 +128,8 @@ define([
 
     /**
      * A view to render another view in a modal. Give another view to render as
-     * the `body' parameter.
+     * the `body' parameter that has an onSubmit function that will be called
+     * when the modal's `Save' button is clicked.
      */
     module.Modal = Backbone.View.extend({
 
@@ -158,8 +159,13 @@ define([
         },
 
         render: function() {
+            var optionalTitle = this.options.body.title;
+            var title = _.isFunction(optionalTitle)
+                    ? optionalTitle()
+                    : _.isString(optionalTitle)
+                        ? optionalTitle : this.options.title;
             this.$el.html(this.template({
-                title: this.options.title
+                title: title
             }));
             this.options.body.render();
             this.$(".modal-body").html(this.options.body.$el);
@@ -184,8 +190,12 @@ define([
             }
             return false;
         }
-
     });
+
+    /** Creates, displays and returns a modal with the given view used as its body */
+    module.showModalWith = function (bodyView) {
+        return new module.Modal({body: bodyView}).show();
+    };
 
     /**
      * Presents inputs for config key names/values with  buttons to add/remove entries

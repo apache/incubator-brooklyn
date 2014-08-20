@@ -26,6 +26,7 @@ define([
 
     return Backbone.View.extend({
         template: _.template(NewPolicyHtml),
+        title: "Attach a policy",
 
         initialize: function () {
             if (!this.options.entity) {
