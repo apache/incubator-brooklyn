@@ -139,7 +139,7 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
         }
 
         commands.add(String.format("cd %s", Os.mergePathsUnix(getRunDir(), appName)));
-        commands.add(BashCommands.sudo("nohup " + appCommandLine + " &"));
+        commands.add("nohup " + appCommandLine + " > console.out 2>&1 &");
 
         newScript(MutableMap.of(USE_PID_FILE, true), LAUNCHING)
                 .body.append(commands)
