@@ -1132,6 +1132,7 @@
                 <module>usage/all</module>
                 <module>usage/dist</module>
                 <module>usage/archetypes/quickstart</module>
+                <module>usage/downstream-parent</module>
             </modules>
         </profile>
         <profile>
