@@ -24,12 +24,15 @@ import java.io.File;
 
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.management.ManagementContext;
+import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
@@ -50,7 +53,8 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
     
     protected void checkPersistenceContainerNameIs(String expected) {
-        assertEquals(getPersistenceDir(lastMgmt()).getAbsolutePath(), expected);
+        String expectedFqp = new File(Os.tidyPath(expected)).getAbsolutePath();
+        assertEquals(getPersistenceDir(lastMgmt()).getAbsolutePath(), expectedFqp);
     }
 
     static File getPersistenceDir(ManagementContext managementContext) {
@@ -60,7 +64,8 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
 
     protected void checkPersistenceContainerNameIsDefault() {
-        checkPersistenceContainerNameIs(BrooklynServerConfig.DEFAULT_PERSISTENCE_DIR_FOR_FILESYSTEM);
+        String expected = BrooklynServerConfig.resolvePersistencePath(null, BrooklynProperties.Factory.newEmpty(), null);
+        checkPersistenceContainerNameIs(expected);
     }
 
     @Test
@@ -70,9 +75,9 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         String tempFileName = tempF.getAbsolutePath();
         
         try {
-            runRebindFails(PersistMode.AUTO, tempFileName, "not a directory");
-            runRebindFails(PersistMode.REBIND, tempFileName, "not a directory");
-            runRebindFails(PersistMode.CLEAN, tempFileName, "not a directory");
+            runRebindFails(PersistMode.AUTO, tempFileName, "must not be a file");
+            runRebindFails(PersistMode.REBIND, tempFileName, "must not be a file");
+            runRebindFails(PersistMode.CLEAN, tempFileName, "must not be a file");
         } finally {
             new File(tempFileName).delete();
         }

@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.rebind.persister;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 import java.io.File;
@@ -77,7 +78,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
      * @param basedir
      */
     public FileBasedObjectStore(File basedir) {
-        this.basedir = basedir;
+        this.basedir = checkPersistenceDirPlausible(basedir);
         this.executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         log.debug("File-based objectStore will use directory {}", basedir);
         // don't check accessible yet, we do that when we prepare
@@ -281,6 +282,16 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         prepared = true;        
     }
 
+    protected File checkPersistenceDirPlausible(File dir) {
+        checkNotNull(dir, "directory");
+        if (!dir.exists()) return dir;
+        if (dir.isFile()) throw new FatalConfigurationRuntimeException("Invalid persistence directory" + dir + ": must not be a file");
+        if (!(dir.canRead() && dir.canWrite())) throw new FatalConfigurationRuntimeException("Invalid persistence directory" + dir + ": " +
+                (!dir.canRead() ? "not readable" :
+                        (!dir.canWrite() ? "not writable" : "unknown reason")));
+        return dir;
+    }
+
     protected void checkPersistenceDirAccessible(File dir) {
         if (!(dir.exists() && dir.isDirectory() && dir.canRead() && dir.canWrite())) {
             FatalConfigurationRuntimeException problem = new FatalConfigurationRuntimeException("Invalid persistence directory " + dir + ": " +
@@ -385,7 +396,10 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
     
     static boolean isMementoDirExistButEmpty(File dir) {
         if (!dir.exists()) return false;
-        for (File sub : dir.listFiles()) {
+        File[] contents = dir.listFiles();
+        if (contents == null) return false;
+        
+        for (File sub : contents) {
             if (sub.isFile()) return false;
             if (sub.isDirectory() && sub.listFiles().length > 0) return false;
         }
