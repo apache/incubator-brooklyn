@@ -20,6 +20,7 @@ package brooklyn.entity.rebind;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
@@ -95,5 +96,21 @@ public class RebindContextImpl implements RebindContext {
     @Override
     public RebindExceptionHandler getExceptionHandler() {
         return exceptionHandler;
+    }
+
+    protected Collection<Location> getLocations() {
+        return locations.values();
+    }
+    
+    protected Collection<Entity> getEntities() {
+        return entities.values();
+    }
+    
+    protected Collection<Policy> getPolicies() {
+        return policies.values();
+    }
+
+    protected Collection<Enricher> getEnrichers() {
+        return enrichers.values();
     }
 }

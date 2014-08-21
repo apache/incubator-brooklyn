@@ -106,4 +106,28 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         }
     }
 
+    @Test(groups="Integration")
+    public void testCopyPersistedState() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        populatePersistenceDir(persistenceDir, appSpec);
+        
+        File destinationDir = Files.createTempDir();
+        try {
+            // Auto will rebind if the dir exists
+            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO);
+            BrooklynMemento memento = launcher.retrieveState();
+            launcher.persistState(memento, destinationDir);
+            launcher.terminate();
+            
+            assertEquals(memento.getApplicationIds().size(), 1, "apps="+memento.getApplicationIds());
+            
+            // Should now have a usable copy in the destionationDir
+            // Auto will rebind if the dir exists
+            newLauncherDefault(PersistMode.AUTO).start();
+            assertOnlyApp(lastMgmt(), TestApplication.class);
+            
+        } finally {
+            Os.deleteRecursively(destinationDir);
+        }
+    }
 }

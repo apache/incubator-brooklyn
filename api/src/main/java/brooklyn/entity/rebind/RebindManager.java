@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import brooklyn.entity.Application;
+import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.time.Duration;
 
@@ -65,6 +66,8 @@ public interface RebindManager {
 
     public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws IOException;
 
+    public BrooklynMemento retrieveMemento(ClassLoader classLoader) throws IOException;
+
     public ChangeListener getChangeListener();
 
     /**
@@ -87,5 +90,4 @@ public interface RebindManager {
     /** forcibly performs persistence, in the foreground */
     @VisibleForTesting
     public void forcePersistNow();
-    
 }

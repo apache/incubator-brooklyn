@@ -72,9 +72,11 @@ public abstract class BrooklynLauncherRebindTestFixture {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         for (BrooklynLauncher l: launchers) {
-            l.terminate();
-            PersistenceObjectStore store = getPersistenceStore(l.getServerDetails().getManagementContext());
-            if (store!=null) store.deleteCompletely();
+            if (l.isStarted()) {
+                l.terminate();
+                PersistenceObjectStore store = getPersistenceStore(l.getServerDetails().getManagementContext());
+                if (store!=null) store.deleteCompletely();
+            }
         }
     }
 
