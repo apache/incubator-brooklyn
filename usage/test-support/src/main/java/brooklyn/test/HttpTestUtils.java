@@ -18,19 +18,16 @@
  */
 package brooklyn.test;
 
-import static com.google.common.base.Predicates.instanceOf;
-import static com.google.common.base.Throwables.getCausalChain;
-import static com.google.common.collect.Iterables.find;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,6 +45,9 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -132,11 +132,7 @@ public class HttpTestUtils {
         int status = ((HttpURLConnection) connection).getResponseCode();
         
         // read fully if possible, then close everything, trying to prevent cached threads at server
-        try { DefaultGroovyMethods.getText( connection.getInputStream() ); } catch (Exception e) {}
-        try { ((HttpURLConnection) connection).disconnect(); } catch (Exception e) {}
-        try { connection.getInputStream().close(); } catch (Exception e) {}
-        try { connection.getOutputStream().close(); } catch (Exception e) {}
-        try { ((HttpURLConnection) connection).getErrorStream().close(); } catch (Exception e) {}
+        consumeAndCloseQuietly((HttpURLConnection) connection);
         
         if (LOG.isDebugEnabled())
             LOG.debug("connection to {} ({}ms) gives {}", new Object[] { url, (System.currentTimeMillis()-startTime), status });
@@ -166,7 +162,7 @@ public class HttpTestUtils {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted for "+url+" (in assertion that unreachable)", e);
         } catch (Exception e) {
-            IOException cause = getFirstThrowableOfType(e, IOException.class);
+            IOException cause = Exceptions.getFirstThrowableOfType(e, IOException.class);
             if (cause != null) {
                 // success; clean shutdown transitioning from 400 to error
             } else {
@@ -180,7 +176,7 @@ public class HttpTestUtils {
     }
     
     public static void assertUrlUnreachableEventually(Map flags, final String url) {
-        TestUtils.executeUntilSucceeds(flags, new Runnable() {
+        Asserts.succeedsEventually(flags, new Runnable() {
             public void run() {
                 assertUrlUnreachable(url);
             }
@@ -209,7 +205,7 @@ public class HttpTestUtils {
     }
 
     public static void assertHttpStatusCodeEventuallyEquals(Map flags, final String url, final int expectedCode) {
-        TestUtils.executeUntilSucceeds(flags, new Runnable() {
+        Asserts.succeedsEventually(flags, new Runnable() {
             public void run() {
                 assertHttpStatusCodeEquals(url, expectedCode);
             }
@@ -219,7 +215,7 @@ public class HttpTestUtils {
     public static void assertContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
             String contents = getContent(url);
-            Assert.assertTrue(contents!=null && contents.length()>0);
+            Assert.assertTrue(contents != null && contents.length() > 0);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (!contents.contains(text)) {
                     LOG.warn("CONTENTS OF URL "+url+" MISSING TEXT: "+text+"\n"+contents);
@@ -231,12 +227,58 @@ public class HttpTestUtils {
         }
     }
 
+    public static void assertContentNotContainsText(final String url, final String phrase, final String ...additionalPhrases) {
+        try {
+            String contents = getContent(url);
+            Assert.assertTrue(contents != null);
+            for (String text: Lists.asList(phrase, additionalPhrases)) {
+                if (contents.contains(text)) {
+                    LOG.warn("CONTENTS OF URL "+url+" HAS TEXT: "+text+"\n"+contents);
+                    Assert.fail("URL "+url+" contain text: "+text);
+                }
+            }
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    public static void assertErrorContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
+        try {
+            String contents = getErrorContent(url);
+            Assert.assertTrue(contents != null && contents.length() > 0);
+            for (String text: Lists.asList(phrase, additionalPhrases)) {
+                if (!contents.contains(text)) {
+                    LOG.warn("CONTENTS OF URL "+url+" MISSING TEXT: "+text+"\n"+contents);
+                    Assert.fail("URL "+url+" does not contain text: "+text);
+                }
+            }
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+
+    public static void assertErrorContentNotContainsText(final String url, final String phrase, final String ...additionalPhrases) {
+        try {
+            String err = getErrorContent(url);
+            Assert.assertTrue(err != null);
+            for (String text: Lists.asList(phrase, additionalPhrases)) {
+                if (err.contains(text)) {
+                    LOG.warn("CONTENTS OF URL "+url+" HAS TEXT: "+text+"\n"+err);
+                    Assert.fail("URL "+url+" contain text: "+text);
+                }
+            }
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+    
     public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         assertContentEventuallyContainsText(MutableMap.of(), url, phrase, additionalPhrases);
     }
     
     public static void assertContentEventuallyContainsText(Map flags, final String url, final String phrase, final String ...additionalPhrases) {
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(flags, new Runnable() {
             public void run() {
                 assertContentContainsText(url, phrase, additionalPhrases);
             }
@@ -256,6 +298,30 @@ public class HttpTestUtils {
                 assertContentMatches(url, regex);
             }
         });
+    }
+    
+    public static String getErrorContent(String url) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) connectToUrl(url);
+            long startTime = System.currentTimeMillis();
+            
+            String err;
+            int status;
+            try {
+                InputStream errStream = connection.getErrorStream();
+                err = Streams.readFullyString(errStream);
+                status = connection.getResponseCode();
+            } finally {
+                closeQuietly(connection);
+            }
+            
+            if (LOG.isDebugEnabled())
+                LOG.debug("read of err {} ({}ms) complete; http code {}", new Object[] { url, Time.makeTimeStringRounded(System.currentTimeMillis()-startTime), status});
+            return err;
+
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
     
     public static String getContent(String url) {
@@ -300,13 +366,26 @@ public class HttpTestUtils {
         });
     }
     
-    // TODO Part-duplicated from jclouds Throwables2
-    @SuppressWarnings("unchecked")
-    private static <T extends Throwable> T getFirstThrowableOfType(Throwable from, Class<T> clazz) {
-        try {
-            return (T) find(getCausalChain(from), instanceOf(clazz));
-        } catch (NoSuchElementException e) {
-            return null;
-        }
+    /**
+     * Consumes the input stream entirely and then cleanly closes the connection.
+     * Ignores all exceptions completely, not even logging them!
+     * 
+     * Consuming the stream fully is useful for preventing idle TCP connections. 
+     * See {@linkplain http://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html}.
+     */
+    public static void consumeAndCloseQuietly(HttpURLConnection connection) {
+        try { Streams.readFully(connection.getInputStream()); } catch (Exception e) {}
+        closeQuietly(connection);
+    }
+    
+    /**
+     * Closes all streams of the connection, and disconnects it. Ignores all exceptions completely,
+     * not even logging them!
+     */
+    public static void closeQuietly(HttpURLConnection connection) {
+        try { connection.disconnect(); } catch (Exception e) {}
+        try { connection.getInputStream().close(); } catch (Exception e) {}
+        try { connection.getOutputStream().close(); } catch (Exception e) {}
+        try { connection.getErrorStream().close(); } catch (Exception e) {}
     }
 }

@@ -30,7 +30,6 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
@@ -64,7 +63,14 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     }
 
     protected LocalManagementContext createOrigManagementContext() {
-        return RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, getPersistPeriodMillis());
+        return RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
+                .persistPeriodMillis(getPersistPeriodMillis())
+                .forLive(useLiveManagementContext())
+                .buildStarted();
+    }
+    
+    protected boolean useLiveManagementContext() {
+        return false;
     }
     
     protected int getPersistPeriodMillis() {
@@ -110,19 +116,23 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         if (terminateOrigManagementContext) {
             origManagementContext.terminate();
         }
-        return (T) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
+        LocalManagementContext newManagementContext = RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
+                .forLive(useLiveManagementContext())
+                .buildUnstarted();
+
+        return (T) RebindTestUtils.rebind(newManagementContext, classLoader);
     }
 
     @SuppressWarnings("unchecked")
     protected T rebind(RebindExceptionHandler exceptionHandler) throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-        return (T) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader(), exceptionHandler);
+        return (T) RebindTestUtils.rebind(mementoDir, classLoader, exceptionHandler);
     }
 
     @SuppressWarnings("unchecked")
     protected T rebind(ManagementContext newManagementContext, RebindExceptionHandler exceptionHandler) throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-        return (T) RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader(), exceptionHandler);
+        return (T) RebindTestUtils.rebind(newManagementContext, mementoDir, classLoader, exceptionHandler);
     }
     
     protected BrooklynMementoManifest loadMementoManifest() throws Exception {

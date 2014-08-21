@@ -23,45 +23,30 @@ import static org.testng.Assert.assertEquals;
 import java.net.URL;
 import java.util.Map;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxy.StubAppServer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
-public class NginxLightIntegrationTest {
+public class NginxLightIntegrationTest extends BrooklynAppUnitTestSupport {
 
-    private TestApplication app;
     private NginxController nginx;
     private DynamicCluster cluster;
 
     private URL war;
-    private static String WAR_URL = "classpath://hello-world.war";
+    private static final String WAR_URL = "classpath://hello-world.war";
     
-    @BeforeMethod
-    public void setup() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void shutdown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-
     // FIXME Fails because getting addEntity callback for group members while nginx is still starting,
     // so important nginx fields are still null. Therefore get NPE for cluster members, and thus targets
     // is of size zero.
