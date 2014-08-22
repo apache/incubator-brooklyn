@@ -1,0 +1,70 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Brooklyn Object List</title>
+    </head>
+    <body>
+        <h1>Entities</h1>
+        <table id="entities">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </table>
+        <br>
+        <h1>Policies</h1>
+        <table id="policies">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </table>
+        <h1>Enrichers</h1>
+        <table id="enrichers">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </table>
+        <br>
+        <h1>Locations</h1>
+        <table id="locations">
+            <tr>
+                <th>Type</th>
+            </tr>
+        </table>
+        <br>
+        <h1>Location Resolvers</h1>
+        <table id="locationResolvers">
+            <tr>
+                <th>Name</th>
+            </tr>
+        </table>
+        <br>
+        <br>
+        <script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript"></script>
+        <script src="items.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                items.entities.forEach(function(element) {
+                    $("#entities").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='entities/" + element.type + ".html'>" + element.type + "</a></td><td>" + element.description + "</td></tr>")
+                });
+                items.policies.forEach(function(element) {
+                    $("#policies").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='policies/" + element.type + ".html'>" + element.type + "</a></td><td>" + element.description + "</td></tr>")
+                });
+                items.enrichers.forEach(function(element) {
+                    $("#enrichers").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='enrichers/" + element.type + ".html'>" + element.type + "</a></td><td>" + element.description + "</td></tr>")
+                });
+                items.locations.forEach(function(element) {
+                    $("#locations").find("tr:last").after("<tr><td><a href='locations/" + element.type + ".html'>" + element.type + "</a></td></tr>")
+                });
+                items.locationResolvers.forEach(function(element) {
+                    $("#locationResolvers").find("tr:last").after("<tr><td>" + element + "</td></tr>")
+                });
+            });
+        </script>
+    </body>
+</html>

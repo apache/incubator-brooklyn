@@ -1,16 +1,5 @@
 package brooklyn.cli.itemlister;
 
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
-import io.airlift.command.Command;
-import io.airlift.command.Option;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.Catalog;
 import brooklyn.cli.AbstractMain;
@@ -20,8 +9,10 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationResolver;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
-
+import brooklyn.util.os.Os;
+import brooklyn.util.text.TemplateProcessor;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -29,10 +20,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
+import io.airlift.command.Cli;
+import io.airlift.command.Cli.CliBuilder;
+import io.airlift.command.Command;
+import io.airlift.command.Option;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 
 public class ItemLister extends AbstractMain {
 
@@ -50,13 +54,16 @@ public class ItemLister extends AbstractMain {
         public String typeRegex = null;
 
         @Option(name = { "--catalog-only" }, title = "Whether to only list items annotated with @Catalog")
-        public boolean catalogOnly;
+        public boolean catalogOnly = true;
 
         @Option(name = { "--ignore-impls" }, title = "Ignore Entity implementations, where there is an Entity interface with @ImplementedBy")
         public boolean ignoreImpls;
 
         @Option(name = { "--headings-only" }, title = "Whether to only show name/type, and not config keys etc")
         public boolean headingsOnly;
+        
+        @Option(name = { "--output-folder" }, title = "Whether to only show name/type, and not config keys etc")
+        public String outputFolder;
 
         @Override
         public Void call() throws Exception {
@@ -75,9 +82,60 @@ public class ItemLister extends AbstractMain {
                     .put("locations", ItemDescriptors.toItemDescriptors(locationTypes, headingsOnly))
                     .put("locationResolvers", ItemDescriptors.toItemDescriptors(ImmutableList.copyOf(ServiceLoader.load(LocationResolver.class))))
                     .build();
-            
-            System.out.println(toJson(result));
+
+            String json = toJson(result);
+
+            if (outputFolder == null) {
+                System.out.println(json);
+            } else {
+                String outputPath = Os.mergePaths(outputFolder, "index.html");
+                String parentDir = (new File(outputPath).getParentFile()).getAbsolutePath();
+                mkdir(parentDir, "entities");
+                mkdir(parentDir, "policies");
+                mkdir(parentDir, "enrichers");
+                mkdir(parentDir, "locations");
+                mkdir(parentDir, "locationResolvers");
+                Files.write("var items = " + json, new File(Os.mergePaths(outputFolder, "items.js")), Charsets.UTF_8);
+                ResourceUtils resourceUtils = ResourceUtils.create(this);
+                String mainHtml = resourceUtils.getResourceAsString("brooklyn-object-list.html");
+                Files.write(mainHtml, new File(Os.mergePaths(outputFolder, "index.html")), Charsets.UTF_8);
+                List<Map<String, Object>> entities = (List<Map<String, Object>>) result.get("entities");
+                String entityTemplateHtml = resourceUtils.getResourceAsString("entity.html");
+                for (Map<String, Object> entity : entities) {
+                    String type = (String) entity.get("type");
+                    String name = (String) entity.get("name");
+                    String entityHtml = TemplateProcessor.processTemplateContents(entityTemplateHtml, ImmutableMap.of("type", type, "name", name));
+                    Files.write(entityHtml, new File(Os.mergePaths(outputFolder, "entities", type + ".html")), Charsets.UTF_8);
+                }
+                List<Map<String, Object>> policies = (List<Map<String, Object>>) result.get("policies");
+                String policyTemplateHtml = resourceUtils.getResourceAsString("policy.html");
+                for (Map<String, Object> policy : policies) {
+                    String type = (String) policy.get("type");
+                    String name = (String) policy.get("name");
+                    String policyHtml = TemplateProcessor.processTemplateContents(policyTemplateHtml, ImmutableMap.of("type", type, "name", name));
+                    Files.write(policyHtml, new File(Os.mergePaths(outputFolder, "policies", type + ".html")), Charsets.UTF_8);
+                }
+                List<Map<String, Object>> enrichers = (List<Map<String, Object>>) result.get("enrichers");
+                String enricherTemplateHtml = resourceUtils.getResourceAsString("enricher.html");
+                for (Map<String, Object> enricher : enrichers) {
+                    String type = (String) enricher.get("type");
+                    String name = (String) enricher.get("name");
+                    String enricherHtml = TemplateProcessor.processTemplateContents(enricherTemplateHtml, ImmutableMap.of("type", type, "name", name));
+                    Files.write(enricherHtml, new File(Os.mergePaths(outputFolder, "enrichers", type + ".html")), Charsets.UTF_8);
+                }
+                List<Map<String, Object>> locations = (List<Map<String, Object>>) result.get("locations");
+                String locationTemplateHtml = resourceUtils.getResourceAsString("location.html");
+                for (Map<String, Object> location : locations) {
+                    String type = (String) location.get("type");
+                    String locationHtml = TemplateProcessor.processTemplateContents(locationTemplateHtml, ImmutableMap.of("type", type));
+                    Files.write(locationHtml, new File(Os.mergePaths(outputFolder, "locations", type + ".html")), Charsets.UTF_8);
+                }
+            }
             return null;
+        }
+
+        private void mkdir(String rootDir, String dirName) {
+            (new File(Os.mergePaths(rootDir, dirName))).mkdirs();
         }
 
         protected List<URL> getUrls() throws MalformedURLException {
