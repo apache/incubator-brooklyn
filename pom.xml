@@ -822,6 +822,14 @@
                     <version>1.4.0</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>1.3</version>
+                    <configuration>
+                        <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <!-- This configuration is used for Eclipse settings only. -->
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
@@ -913,9 +921,22 @@
                          </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
+
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
@@ -1251,6 +1272,8 @@
                                     what is really needed.
                                 -->
                                 <Export-Package>brooklyn.*</Export-Package>
+                                <Implementation-SHA-1>${buildNumber}</Implementation-SHA-1>
+                                <Implementation-Branch>${scmBranch}</Implementation-Branch>
                             </instructions>
                         </configuration>
                     </plugin>

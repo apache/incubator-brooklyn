@@ -243,6 +243,13 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <!-- Required to set values in build-metadata.properties -->
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
 
 <!-- if you want to build a WAR, full or skinny:

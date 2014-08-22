@@ -18,8 +18,11 @@
  */
 package brooklyn.rest.resources;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +39,18 @@ import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.domain.HighAvailabilitySummary;
+import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
     private static final Logger log = LoggerFactory.getLogger(ServerResource.class);
+
+    private static final String BUILD_SHA_1_PROPERTY = "git-sha-1";
+    private static final String BUILD_BRANCH_PROPERTY = "git-branch-name";
 
     @Override
     public void reloadBrooklynProperties() {
@@ -81,8 +89,18 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     }
 
     @Override
-    public String getVersion() {
-        return BrooklynVersion.get();
+    public VersionSummary getVersion() {
+        InputStream input = ResourceUtils.create().getResourceFromUrl("classpath://build-metadata.properties");
+        Properties properties = new Properties();
+        String gitSha1 = null, gitBranch = null;
+        try {
+            properties.load(input);
+            gitSha1 = properties.getProperty(BUILD_SHA_1_PROPERTY);
+            gitBranch = properties.getProperty(BUILD_BRANCH_PROPERTY);
+        } catch (IOException e) {
+            log.error("Failed to load build-metadata.properties", e);
+        }
+        return new VersionSummary(BrooklynVersion.get(), gitSha1, gitBranch);
     }
 
     @Override

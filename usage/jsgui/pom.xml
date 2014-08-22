@@ -394,6 +394,10 @@
                                     <token>assets/css/styles.css</token>
                                     <value>assets/css/styles.min.css</value>
                                 </replacement>
+                                <replacement>
+                                    <token>GIT_SHA_1</token>
+                                    <value>${buildNumber}</value>
+                                </replacement>
                             </replacements>
                         </configuration>
                     </plugin>
