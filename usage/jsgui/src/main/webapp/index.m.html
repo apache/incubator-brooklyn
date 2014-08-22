@@ -1,0 +1,99 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<!doctype html>
+<html ng-app="BrooklynMobile" ng-controller="MainController">
+<head title="IBM Automated Modular Management">
+
+<title>{{'TITLE' | translate}}</title>
+	<meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" /> 
+<link rel="stylesheet" href="/assets/mobile/libs/mcasimir-mobile-angular-ui-be39011/dist/css/mobile-angular-ui-base.min.css" /> 
+<link rel="stylesheet" href="/assets/mobile/css/mobile.css" />
+
+	<script src="/assets/mobile/libs/angular-1.2.19/angular.min.js"></script>
+    <script src="/assets/mobile/libs/angular-1.2.19/angular-route.min.js"></script>
+    <script src="/assets/mobile/libs/angular-1.2.19/angular-touch.min.js"></script>
+    <script src="/assets/mobile/libs/angular-1.2.19/angular-resource.min.js"></script>
+     <script src="/assets/mobile/libs/angular-1.2.19/angular-cookies.min.js"></script>
+    <script src="/assets/mobile/libs/mcasimir-mobile-angular-ui-be39011/dist/js/mobile-angular-ui.min.js"></script>
+    <!-- NLS related -->
+    <script src="/assets/mobile/libs/angular-translate/angular-translate.min.js"></script>
+    <script src="/assets/mobile/libs/angular-translate-loader-static-files/angular-translate-loader-static-files.min.js"></script> 
+    <script src="/assets/mobile/libs/angular-translate-storage-cookie/angular-translate-storage-cookie.min.js"></script>
+    <script src="/assets/mobile/libs/angular-translate-storage-local/angular-translate-storage-local.min.js"></script>
+    <script src="/assets/mobile/js/services.js"></script>
+	<script src="/assets/mobile/js/controllers.js"></script>
+	<script src="/assets/mobile/js/filters.js"></script>
+	<script src="/assets/mobile/js/app.js"></script>
+
+</head>
+<body>
+
+<!-- Sidebars -->
+    <div class="sidebar sidebar-left" toggleable parent-active-class="sidebar-left-in" id="mainSidebar" yield-to="left-control-nav">
+    	<h2 class="app-name">{{'APP_NAME_SHORT' | translate}}</h2>
+
+		<div class="scrollable sidebar-scrollable">
+		  <div class="scrollable-content">
+		    <div class="list-group" toggle="off" bubble target="mainSidebar">
+		      <a class="list-group-item" href="#/v1/applications">{{'M_MENU_APPS' | translate}}</a>
+		      <a class="list-group-item" href="https://brooklyn.incubator.apache.org/quickstart/">{{'M_MENU_HELP' | translate}}</a>
+		    </div>
+		  </div>
+		</div>
+
+		 <div class="navbar navbar-app navbar-footer navbar-absolute-bottom">
+			<img class="poweredLogo" alt="{{M_MENU_POWERED_BY}}"/>
+		 </div>
+    </div>
+	<div class="sidebar sidebar-right" toggleable parent-active-class="sidebar-right-in" id="rightSidebar" yield-to="right-control-nav">
+		&nbsp;
+	</div>
+	<div class="app">
+
+      <!-- Navbars -->
+
+      <div class="navbar navbar-app navbar-absolute-top">
+        <div class="navbar-brand navbar-brand-center" yield-to="title">
+          <span>{{'APP_NAME_LONG' | translate}}</span>
+        </div>
+        <div class="btn-group pull-left" style="z-index:100;" yield-to="left-control-nav-icon-left">
+          <div ng-click="toggle('mainSidebar')" class="btn btn-navbar sidebar-toggle">
+            <i class="fa fa-bars"></i>
+          </div>
+        </div>
+        <div class="btn-group pull-right" style="z-index:100;" yield-to="right-control-nav-icon-right">
+		&nbsp;
+        </div>
+       
+      </div>
+
+      <!-- App Body -->
+      <div class="app-body" ng-class="{loading: loading}">
+        <div ng-show="loading" class="app-content-loading">
+          <i class="fa fa-spinner fa-spin fa-2x loading-spinner"></i>&nbsp;<span>{{'LOADING' | translate}}</span>
+        </div>
+
+        <ng-view class="app-content" ng-hide="loading"></ng-view>
+      </div>
+
+    </div>
+</body>
+</html>

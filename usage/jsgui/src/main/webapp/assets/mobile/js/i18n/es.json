@@ -1,0 +1,26 @@
+{
+	"TITLE"     : "IBM Automated Modular Management",
+	"APP_NAME_LONG"    : "Automated Modular Management",
+	"APP_NAME_SHORT"    : "IBM AMM",
+	"APPLICATION_LIST_TITLE":"Applicaciones",
+	"NO_APPS_FOUND": "No hay applicaciones.",
+	"NO_ENTITIES_FOUND": "No entities found.",
+	"M_MENU_APPS": "Applications",
+	"M_MENU_HELP": "Help",
+	"LOADING": "Loading ...",
+	"E_DISMISS_BUTTON":"Dismiss",
+	"E_DETIALS_SUMMARY":"Summary",
+	"E_DETIALS_CONFIG": "Config",
+	"E_DETIALS_LIFECYCLE": "Licecycle",
+	"E_DETIALS_POLICIES":"Policies",
+	"E_DETIALS_ACTIVITIES":"Activities",
+	"E_DETIALS_NO_CONFIG_FOUND":"No configurations found",
+	"E_DETIALS_NO_POLICIES_FOUND":"No policies found",
+	"E_DETIALS_NO_ACTIVITIES_FOUND":"No activities found",
+	"E_SUMMARY_NAME":"Name",
+	"E_SUMMARY_ID": "Id",
+	"E_SUMMARY_STATUS":"Status",
+	"E_SUMMARY_TYPE": "Type",
+	"E_SUMMARY_SERVICE_UP":"Service up"
+	
+}

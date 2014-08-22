@@ -1,0 +1,20 @@
+{
+  "name": "angular-translate-storage-local",
+  "version": "2.2.0",
+  "main": "./angular-translate-storage-local.js",
+  "dependencies": {
+    "angular-translate": "~2.2.0",
+    "angular-translate-storage-cookie": "~2.2.0"
+  },
+  "homepage": "https://github.com/PascalPrecht/bower-angular-translate-storage-local",
+  "_release": "2.2.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "2.2.0",
+    "commit": "1b2fbfc31ce70e3e75e0037f759b60fd92b46bd8"
+  },
+  "_source": "git://github.com/PascalPrecht/bower-angular-translate-storage-local.git",
+  "_target": "~2.2.0",
+  "_originalSource": "angular-translate-storage-local",
+  "_direct": true
+}
