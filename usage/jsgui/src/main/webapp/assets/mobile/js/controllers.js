@@ -39,7 +39,7 @@ bklnControllers.controller('ApplicationListController', function($scope, $interv
 	    console.log('ApplicationListController: loadeding');
 	    $scope.loadData();
 	    console.log('ApplicationListController: requested data');
-	    $scope.reloadTimer = $interval($scope.loadData, 48000);
+	    $scope.reloadTimer = $interval($scope.loadData, 10000);
 	    console.log('ApplicationListController: reload timer set');
 	    console.log('ApplicationListController: loaded');
 	  });
@@ -96,7 +96,7 @@ bklnControllers.controller('EntityListController', function($scope, $http, $inte
 	    console.log('EntityListController: loadeding');
 	    $scope.loadData();
 	    console.log('EntityListController: requested data');
-	    $scope.reloadTimer = $interval($scope.loadData, 48000);
+	    $scope.reloadTimer = $interval($scope.loadData, 10000);
 	    console.log('EntityListController: reload timer set');
 	    console.log('EntityListController: loaded');
 	  });
