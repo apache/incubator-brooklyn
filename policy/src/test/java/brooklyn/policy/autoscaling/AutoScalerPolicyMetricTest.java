@@ -31,7 +31,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
@@ -49,7 +48,7 @@ import com.google.common.collect.Lists;
 public class AutoScalerPolicyMetricTest {
     
     private static long TIMEOUT_MS = 10000;
-    private static long SHORT_WAIT_MS = 250;
+    private static long SHORT_WAIT_MS = 50;
     
     private static final AttributeSensor<Integer> MY_ATTRIBUTE = Sensors.newIntegerSensor("autoscaler.test.intAttrib");
     TestApplication app;
@@ -57,7 +56,7 @@ public class AutoScalerPolicyMetricTest {
     
     @BeforeMethod(alwaysRun=true)
     public void before() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         tc = app.createAndManageChild(EntitySpec.create(TestCluster.class)
                 .configure("initialSize", 1));
     }

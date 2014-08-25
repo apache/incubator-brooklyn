@@ -70,6 +70,12 @@ public class ServiceStateLogic {
     /** static only; not for instantiation */
     private ServiceStateLogic() {}
 
+    public static <TKey,TVal> TVal getMapSensorEntry(EntityLocal entity, AttributeSensor<Map<TKey,TVal>> sensor, TKey key) {
+        Map<TKey, TVal> map = entity.getAttribute(sensor);
+        if (map==null) return null;
+        return map.get(key);
+    }
+    
     @SuppressWarnings("unchecked")
     public static <TKey,TVal> void clearMapSensorEntry(EntityLocal entity, AttributeSensor<Map<TKey,TVal>> sensor, TKey key) {
         updateMapSensorEntry(entity, sensor, key, (TVal)Entities.REMOVE);
@@ -164,6 +170,15 @@ public class ServiceStateLogic {
      * {@link ServiceStateLogic#newEnricherForServiceState(Class)} and added to an entity.
      */
     public static class ComputeServiceState extends AbstractEnricher implements SensorEventListener<Object> {
+        public ComputeServiceState() {}
+        public ComputeServiceState(Map<?,?> flags) { super(flags); }
+            
+        @Override
+        public void init() {
+            super.init();
+            if (uniqueTag==null) uniqueTag = "service.state.actual";
+        }
+        
         public void setEntity(EntityLocal entity) {
             super.setEntity(entity);
             if (suppressDuplicates==null) {
@@ -206,7 +221,13 @@ public class ServiceStateLogic {
             } else if (problems!=null && !problems.isEmpty()) {
                 return Lifecycle.ON_FIRE;
             } else {
-                return (up==null ? null : up ? Lifecycle.RUNNING : Lifecycle.STOPPED);
+                // no expected transition
+                // if the problems map is non-null, then infer, else leave unchanged
+                if (problems!=null)
+                    return (up==null ? null /* remove if up is not set */ : 
+                        up ? Lifecycle.RUNNING : Lifecycle.STOPPED);
+                else
+                    return entity.getAttribute(SERVICE_STATE_ACTUAL);
             }
         }
 
@@ -220,7 +241,7 @@ public class ServiceStateLogic {
         return newEnricherForServiceState(ComputeServiceState.class);
     }
     public static final EnricherSpec<?> newEnricherForServiceState(Class<? extends Enricher> type) {
-        return EnricherSpec.create(type).uniqueTag("service.state.actual from service.state.expected and service.problems");
+        return EnricherSpec.create(type);
     }
     
     public static class ServiceProblemsLogic {
@@ -243,6 +264,14 @@ public class ServiceStateLogic {
         /** as {@link #clearProblemsIndicator(EntityLocal, Sensor)} */
         public static void clearProblemsIndicator(EntityLocal entity, Effector<?> eff) {
             clearMapSensorEntry(entity, Attributes.SERVICE_PROBLEMS, eff.getName());
+        }
+        /** as {@link #updateProblemsIndicator(EntityLocal, Sensor, Object)} */
+        public static void updateProblemsIndicator(EntityLocal entity, String key, Object value) {
+            updateMapSensorEntry(entity, Attributes.SERVICE_PROBLEMS, key, value);
+        }
+        /** as {@link #clearProblemsIndicator(EntityLocal, Sensor)} */
+        public static void clearProblemsIndicator(EntityLocal entity, String key) {
+            clearMapSensorEntry(entity, Attributes.SERVICE_PROBLEMS, key);
         }
     }
     

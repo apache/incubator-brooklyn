@@ -26,22 +26,24 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityNoEnrichersImpl;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 
 public class BrooklynMetricsTest {
 
     private static final long TIMEOUT_MS = 2*1000;
+    private final static int DEFAULT_SUBSCRIPTIONS_PER_ENTITY = 2;
     
     TestApplication app;
     SimulatedLocation loc;
@@ -52,7 +54,6 @@ public class BrooklynMetricsTest {
         loc = new SimulatedLocation();
         app = TestApplication.Factory.newManagedInstanceForTests();
         brooklynMetrics = app.createAndManageChild(EntitySpec.create(BrooklynMetrics.class).configure("updatePeriod", 10L));
-        Entities.manage(brooklynMetrics);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -64,7 +65,7 @@ public class BrooklynMetricsTest {
     public void testInitialBrooklynMetrics() {
         app.start(ImmutableList.of(loc));
 
-        Asserts.succeedsEventually(new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_SECONDS), new Runnable() {
             public void run() {
                 assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EFFECTORS_INVOKED), (Long)1L);
                 assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_TASKS_SUBMITTED) > 0);
@@ -72,16 +73,16 @@ public class BrooklynMetricsTest {
                 assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_ACTIVE_TASKS), (Long)0L);
                 assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_PUBLISHED) > 0);
                 assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED), (Long)0L);
-                assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), (Long)0L);
+                assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), (Long)(2L*DEFAULT_SUBSCRIPTIONS_PER_ENTITY));
             }});
     }
     
     @Test
     public void testBrooklynMetricsIncremented() {
-        TestEntity e = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        TestEntity e = app.createAndManageChild(EntitySpec.create(TestEntity.class, TestEntityNoEnrichersImpl.class));
         app.start(ImmutableList.of(loc));
 
-        Asserts.succeedsEventually(new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_SECONDS), new Runnable() {
             public void run() {
                 assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EFFECTORS_INVOKED), (Long)2L); // for app and testEntity's start
             }});
@@ -106,11 +107,12 @@ public class BrooklynMetricsTest {
         app.subscribe(e, TestEntity.SEQUENCE, SensorEventListener.NOOP);
         e.setAttribute(TestEntity.SEQUENCE, 1);
         
-        Asserts.succeedsEventually(new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_SECONDS), new Runnable() {
             public void run() {
                 assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_PUBLISHED) > eventsPublished);
                 assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED) > eventsDelivered);
-                assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), (Long)1L);
+                assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), (Long)
+                    (1L + 2*DEFAULT_SUBSCRIPTIONS_PER_ENTITY));
             }});
     }
     

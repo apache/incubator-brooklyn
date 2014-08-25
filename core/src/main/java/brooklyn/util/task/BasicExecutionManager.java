@@ -397,8 +397,13 @@ public class BasicExecutionManager implements ExecutionManager {
                         afterEnd(flags, task);
                     }
                     if (error!=null) {
+                        /* we throw, after logging debug.
+                         * the throw means the error is available for task submitters to monitor.
+                         * however it is possible no one is monitoring it, in which case we will have debug logging only for errors.
+                         * (the alternative, of warn-level logging in lots of places where we don't want it, seems worse!) 
+                         */
                         if (log.isDebugEnabled()) {
-                            // debug only here, because we rethrow
+                            // debug only here, because most submitters will handle failures
                             log.debug("Exception running task "+task+" (rethrowing): "+error.getMessage(), error);
                             if (log.isTraceEnabled())
                                 log.trace("Trace for exception running task "+task+" (rethrowing): "+error.getMessage(), error);

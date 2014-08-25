@@ -84,7 +84,7 @@ public class ResilientMongoDbApp extends AbstractApplication implements Startabl
 
     /** invoked whenever a new MongoDB server is added (the server may not be started yet) */
     protected void initSoftwareProcess(SoftwareProcess p) {
-        p.addPolicy(new ServiceFailureDetector());
+        p.addEnricher(new ServiceFailureDetector());
         p.addPolicy(new ServiceRestarter(ServiceFailureDetector.ENTITY_FAILED));
     }
     

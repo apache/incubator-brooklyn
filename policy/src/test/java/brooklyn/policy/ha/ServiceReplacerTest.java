@@ -138,7 +138,7 @@ public class ServiceReplacerTest {
         e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
         
         // Expect cluster to go on-fire when fails to start replacement
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
         // And expect to have the second failed entity still kicking around as proof (in quarantine)
         Iterable<Entity> members = Iterables.filter(managementContext.getEntityManager().getEntities(), Predicates.instanceOf(FailingEntity.class));
