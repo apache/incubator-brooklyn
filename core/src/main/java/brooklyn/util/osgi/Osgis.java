@@ -198,7 +198,7 @@ public class Osgis {
             URL url = resources.nextElement();
             ReferenceWithError<Boolean> installResult = installExtensionBundle(bundleContext, url, installedBundles, getVersionedId(framework));
             if (installResult.hasError()) {
-                if (installResult.getMaskingError()) {
+                if (installResult.getWithoutError()) {
                     // true return code means it was installed or trivially not installed
                     if (LOG.isTraceEnabled())
                         LOG.trace(installResult.getError().getMessage());

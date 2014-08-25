@@ -20,9 +20,11 @@ package brooklyn.util.exceptions;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Supplier;
 
 /** A reference to an object which can carry an object alongside it. */
+@Beta
 public class ReferenceWithError<T> implements Supplier<T> {
 
     private final T object;
@@ -57,19 +59,21 @@ public class ReferenceWithError<T> implements Supplier<T> {
         return maskError;
     }
 
-    /** returns the underlying value, throwing if there is an error and {@link #throwsErrorOnAccess()} is set */
+    /** returns the underlying value, throwing if there is an error which is not masked (ie {@link #throwsErrorOnAccess()} is set) */
     public T get() {
         if (masksErrorIfPresent()) {
-            return getMaskingError();
+            return getWithoutError();
         }
-        return getThrowingError();
+        return getWithError();
     }
 
-    public T getMaskingError() {
+    /** returns the object, ignoring any error (even non-masked) */
+    public T getWithoutError() {
         return object;
     }
 
-    public T getThrowingError() {
+    /** throws error, even if there is one (even if masked), else returns the object */
+    public T getWithError() {
         checkNoError();
         return object;
     }

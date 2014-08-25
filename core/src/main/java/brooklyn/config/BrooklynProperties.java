@@ -95,6 +95,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
                 this(true);
             }
             
+            // TODO it's always called with true here, perhaps we don't need the argument?
             private Builder(boolean setGlobalFileDefaults) {
                 resetDefaultLocationMetadataUrl();
                 if (setGlobalFileDefaults) {

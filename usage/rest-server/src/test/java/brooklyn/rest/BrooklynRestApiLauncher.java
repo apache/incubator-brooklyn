@@ -42,15 +42,6 @@ import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.api.core.ResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
-
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
@@ -63,12 +54,11 @@ import brooklyn.rest.util.HaMasterCheckFilter;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
@@ -127,9 +117,9 @@ public class BrooklynRestApiLauncher {
     }
 
     /**
-     * Runs the server with the given set of filters. Replaces {@link #DEFAULT_FILTERS}.
+     * Runs the server with the given set of filters. 
+     * Overrides any previously supplied set (or {@link #DEFAULT_FILTERS} which is used by default).
      */
-    @SuppressWarnings("unchecked")
     public BrooklynRestApiLauncher filters(Class<? extends Filter>... filters) {
         this.filters = Sets.newHashSet(filters);
         return this;
@@ -371,7 +361,6 @@ public class BrooklynRestApiLauncher {
      * supports globs in the filename portion only, in which case it returns the _newest_ matching file.
      * <p>
      * otherwise returns null */
-     **/
     @Beta // public because used in dependent test projects
     public static Optional<String> findMatchingFile(String filename) {
         final File f = new File(filename);

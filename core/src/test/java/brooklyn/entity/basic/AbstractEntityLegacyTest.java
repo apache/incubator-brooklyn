@@ -106,7 +106,10 @@ public class AbstractEntityLegacyTest {
         assertEquals(entity.getConfigureCount(), 1);
         assertEquals(entity.getConfigureDuringConstructionCount(), 1);
     }
-    
+
+    // TODO move the testNewStyle methods (several of them) to EntitySpecTest ?
+    // make sure to keep them when legacy approach removed!
+    // see https://github.com/apache/incubator-brooklyn/pull/113#discussion-diff-16474353
     @Test
     public void testNewStyleCallsConfigureAfterConstruction() throws Exception {
         app = TestApplication.Factory.newManagedInstanceForTests();
