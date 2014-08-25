@@ -34,12 +34,14 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.DelegateEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.entity.basic.ServiceStateLogic;
@@ -111,6 +113,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             }
         });
     }
+
+    static {
+        RendererHints.register(FIRST, new RendererHints.NamedActionWithUrl("Open", DelegateEntity.EntityUrl.entityUrl()));
+        RendererHints.register(CLUSTER, new RendererHints.NamedActionWithUrl("Open", DelegateEntity.EntityUrl.entityUrl()));
+    }
+
 
     private static final Logger LOG = LoggerFactory.getLogger(DynamicClusterImpl.class);
 
@@ -710,7 +718,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
 
-    protected Entity addNode(Location loc, Map<?,?> extraFlags) {
+    @Override
+    public Entity addNode(Location loc, Map<?,?> extraFlags) {
         Map<?,?> createFlags = MutableMap.builder()
                 .putAll(getCustomChildFlags())
                 .putAll(extraFlags)
@@ -720,6 +729,18 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         Entity entity = createNode(loc, createFlags);
+
+        ((EntityLocal) entity).setAttribute(CLUSTER_MEMBER, true);
+        ((EntityLocal) entity).setAttribute(CLUSTER, this);
+        synchronized (this) {
+            if (getAttribute(FIRST) == null) {
+                setAttribute(FIRST, entity);
+                ((EntityLocal) entity).setAttribute(FIRST_MEMBER, true);
+            } else {
+                ((EntityLocal) entity).setAttribute(FIRST_MEMBER, false);
+            }
+        }
+
         Entities.manage(entity);
         addMember(entity);
         return entity;
