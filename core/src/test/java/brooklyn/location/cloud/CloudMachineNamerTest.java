@@ -30,6 +30,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
@@ -47,7 +48,7 @@ public class CloudMachineNamerTest {
 
     @Test
     public void testGenerateGroupIdWithEntity() {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"), LocalManagementContextForTests.newInstance());
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
 
         ConfigBag cfg = new ConfigBag()
@@ -69,7 +70,7 @@ public class CloudMachineNamerTest {
     
     @Test
     public void testGenerateNewMachineName() {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"), LocalManagementContextForTests.newInstance());
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
 
         ConfigBag cfg = new ConfigBag()
@@ -88,7 +89,7 @@ public class CloudMachineNamerTest {
     
     @Test
     public void testGenerateNewMachineUniqueNameFromGroupId() {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"), LocalManagementContextForTests.newInstance());
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
 
         ConfigBag cfg = new ConfigBag()
@@ -103,7 +104,7 @@ public class CloudMachineNamerTest {
     
     @Test
     public void testLengthMaxPermittedForMachineName() {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"), LocalManagementContextForTests.newInstance());
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
         
         ConfigBag cfg = new ConfigBag()
@@ -116,7 +117,7 @@ public class CloudMachineNamerTest {
     
     @Test
     public void testLengthReserverdForNameInGroup() {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"), LocalManagementContextForTests.newInstance());
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
         
         ConfigBag cfg = new ConfigBag()
@@ -130,7 +131,7 @@ public class CloudMachineNamerTest {
 
     @Test
     public void testSanitizesNewMachineName() {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("T_%$()\r\n\t[]*.!App"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("T_%$()\r\n\t[]*.!App"), LocalManagementContextForTests.newInstance());
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("ent"));
 
         ConfigBag cfg = new ConfigBag()

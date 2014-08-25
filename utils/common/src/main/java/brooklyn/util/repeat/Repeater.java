@@ -301,7 +301,7 @@ public class Repeater {
      * @return true if the exit condition was satisfied; false if the loop terminated for any other reason.
      */
     public boolean run() {
-        return runKeepingError().getMaskingError();
+        return runKeepingError().getWithoutError();
     }
     
     public ReferenceWithError<Boolean> runKeepingError() {

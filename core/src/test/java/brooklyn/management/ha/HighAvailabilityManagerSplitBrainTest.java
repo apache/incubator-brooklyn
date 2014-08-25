@@ -48,10 +48,12 @@ import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableList;
 
@@ -303,31 +305,42 @@ public class HighAvailabilityManagerSplitBrainTest {
             Thread t = new Thread() { public void run() {
                 if (staggerStart!=null) Time.sleep(staggerStart.multiply(Math.random()));
                 n.ha.start(HighAvailabilityMode.AUTO);
+                n.ha.setPollPeriod(Duration.millis(20));
             } };
             spawned.add(t);
             t.start();
         }
 
-        Assert.assertTrue(Repeater.create().every(Duration.millis(1)).limitTimeTo(Duration.THIRTY_SECONDS).until(new Callable<Boolean>() {
-            @Override public Boolean call() throws Exception {
-                ManagementPlaneSyncRecord memento = nodes.get(0).ha.getManagementPlaneSyncState();
-                int masters=0, standbys=0, savedMasters=0, savedStandbys=0;
-                for (HaMgmtNode n: nodes) {
-                    if (n.ha.getNodeState()==ManagementNodeState.MASTER) masters++;
-                    if (n.ha.getNodeState()==ManagementNodeState.STANDBY) standbys++;
-                    ManagementNodeSyncRecord m = memento.getManagementNodes().get(n.ownNodeId);
-                    if (m!=null) {
-                        if (m.getStatus()==ManagementNodeState.MASTER) savedMasters++;
-                        if (m.getStatus()==ManagementNodeState.STANDBY) savedStandbys++;
+        try {
+            final Stopwatch timer = Stopwatch.createStarted();
+            Assert.assertTrue(Repeater.create().backoff(Duration.millis(1), 1.2, Duration.millis(50)).limitTimeTo(Duration.THIRTY_SECONDS).until(new Callable<Boolean>() {
+                @Override public Boolean call() throws Exception {
+                    ManagementPlaneSyncRecord memento = nodes.get(0).ha.getManagementPlaneSyncState();
+                    int masters=0, standbys=0, savedMasters=0, savedStandbys=0;
+                    for (HaMgmtNode n: nodes) {
+                        if (n.ha.getNodeState()==ManagementNodeState.MASTER) masters++;
+                        if (n.ha.getNodeState()==ManagementNodeState.STANDBY) standbys++;
+                        ManagementNodeSyncRecord m = memento.getManagementNodes().get(n.ownNodeId);
+                        if (m!=null) {
+                            if (m.getStatus()==ManagementNodeState.MASTER) savedMasters++;
+                            if (m.getStatus()==ManagementNodeState.STANDBY) savedStandbys++;
+                        }
                     }
-                }
-                log.info("starting "+nodes.size()+" nodes: "+masters+" M + "+standbys+" zzz; "
-                    + memento.getManagementNodes().size()+" saved, "
+                    log.info("while starting "+nodes.size()+" nodes: "+masters+" M + "+standbys+" zzz; "
+                        + memento.getManagementNodes().size()+" saved, "
                         + memento.getMasterNodeId()+" master, "+savedMasters+" M + "+savedStandbys+" zzz");
-                
-                return masters==1 && standbys==nodes.size()-1 && savedMasters==1 && savedStandbys==nodes.size()-1;
-            }
-        }).run());
+
+                    if (timer.isRunning() && Duration.of(timer).compareTo(Duration.TEN_SECONDS)>0) {
+                        log.warn("we seem to have a problem stabilizing");  //handy place to set a suspend-VM breakpoint!
+                        timer.stop();
+                    }
+                    return masters==1 && standbys==nodes.size()-1 && savedMasters==1 && savedStandbys==nodes.size()-1;
+                }
+            }).run());
+        } catch (Throwable t) {
+            log.warn("Failed to stabilize (rethrowing): "+t, t);
+            throw Exceptions.propagate(t);
+        }
         
         for (Thread t: spawned)
             t.join(Duration.THIRTY_SECONDS.toMilliseconds());

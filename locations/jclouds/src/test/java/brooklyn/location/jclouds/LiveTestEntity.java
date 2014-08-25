@@ -23,24 +23,23 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 
+import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 @ImplementedBy(LiveTestEntity.LiveTestEntityImpl.class)
 public interface LiveTestEntity extends TestEntity {
 
-    MachineProvisioningLocation getProvisioningLocation();
+    MachineProvisioningLocation<?> getProvisioningLocation();
     JcloudsSshMachineLocation getObtainedLocation();
 
     public static class LiveTestEntityImpl extends TestEntityImpl implements LiveTestEntity {
@@ -78,7 +77,7 @@ public interface LiveTestEntity extends TestEntity {
             setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
         }
 
-        public MachineProvisioningLocation getProvisioningLocation() {
+        public MachineProvisioningLocation<?> getProvisioningLocation() {
             return provisioningLocation;
         }
 

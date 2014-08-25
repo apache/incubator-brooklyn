@@ -26,7 +26,7 @@ import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableMap;
 
-public class JcloudsMinRamLiveTest extends AbstractJcloudsTest {
+public class JcloudsMinRamLiveTest extends AbstractJcloudsLiveTest {
 
     private static final Logger log = LoggerFactory.getLogger(JcloudsMinRamLiveTest.class);
     

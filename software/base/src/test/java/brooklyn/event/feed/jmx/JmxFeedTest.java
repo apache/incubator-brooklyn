@@ -131,7 +131,7 @@ public class JmxFeedTest {
         jmxObjectName = new ObjectName(objectName);
         
         // Create an entity and configure it with the above JMX service
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).impl(TestEntityWithJmx.class));
         app.start(ImmutableList.of(new SimulatedLocation()));
 

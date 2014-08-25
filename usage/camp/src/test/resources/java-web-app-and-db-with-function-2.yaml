@@ -29,7 +29,7 @@ services:
       brooklyn.example.db.url: 
         # alternate syntax
         $brooklyn:formatString:
-        - jdbc:%s%s?user=%s\\&password=%s
+        - jdbc:%s%s?user=%s\&password=%s
         - $brooklyn:component("db").attributeWhenReady("datastore.url")
         - visitors
         - brooklyn

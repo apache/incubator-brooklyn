@@ -57,6 +57,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.ReferenceWithError;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
@@ -179,7 +180,7 @@ public class Osgis {
             // framework bundle start exceptions are not interesting to caller...
             throw Exceptions.propagate(e);
         }
-        LOG.debug("OSGi framework started in " + Duration.of(timer) + " seconds.");
+        LOG.debug("OSGi framework started in " + Duration.of(timer));
 
         return framework;
     }
@@ -195,7 +196,22 @@ public class Osgis {
         Map<String, Bundle> installedBundles = getInstalledBundles(bundleContext);
         while(resources.hasMoreElements()) {
             URL url = resources.nextElement();
-            installExtensionBundle(bundleContext, url, installedBundles, getVersionedId(framework));
+            ReferenceWithError<Boolean> installResult = installExtensionBundle(bundleContext, url, installedBundles, getVersionedId(framework));
+            if (installResult.hasError()) {
+                if (installResult.getWithoutError()) {
+                    // true return code means it was installed or trivially not installed
+                    if (LOG.isTraceEnabled())
+                        LOG.trace(installResult.getError().getMessage());
+                } else {
+                    if (installResult.masksErrorIfPresent()) {
+                        // if error is masked, then it's not so important (many of the bundles we are looking at won't have manifests)
+                        LOG.debug(installResult.getError().getMessage());
+                    } else {
+                        // it's reported as a critical error, so warn here
+                        LOG.warn("Unable to install manifest from "+url+": "+installResult.getError(), installResult.getError());
+                    }
+                }
+            }
         }
     }
 
@@ -208,13 +224,15 @@ public class Osgis {
         return installedBundles;
     }
 
-    private static void installExtensionBundle(BundleContext bundleContext, URL manifestUrl, Map<String, Bundle> installedBundles, String frameworkVersionedId) {
+    private static ReferenceWithError<Boolean> installExtensionBundle(BundleContext bundleContext, URL manifestUrl, Map<String, Bundle> installedBundles, String frameworkVersionedId) {
         //ignore http://felix.extensions:9/ system entry
-        if("felix.extensions".equals(manifestUrl.getHost())) return;
+        if("felix.extensions".equals(manifestUrl.getHost())) 
+            return ReferenceWithError.newInstanceMaskingError(true, new IllegalArgumentException("Skiping install of internal extension bundle from "+manifestUrl));
 
         try {
             Manifest manifest = readManifest(manifestUrl);
-            if (!isValidBundle(manifest)) return;
+            if (!isValidBundle(manifest)) 
+                return ReferenceWithError.newInstanceMaskingError(false, new IllegalArgumentException("Resource at "+manifestUrl+" is not an OSGi bundle: no valid manifest"));
             
             String versionedId = getVersionedId(manifest);
             URL bundleUrl = ResourceUtils.getContainerUrl(manifestUrl, MANIFEST_PATH);
@@ -224,9 +242,9 @@ public class Osgis {
                 if (!bundleUrl.equals(existingBundle.getLocation()) &&
                         //the framework bundle is always pre-installed, don't display duplicate info
                         !versionedId.equals(frameworkVersionedId)) {
-                    LOG.info("Ignoring duplicate " + versionedId + " from manifest " + manifestUrl + ", already loaded from " + existingBundle.getLocation());
+                    return ReferenceWithError.newInstanceMaskingError(false, new IllegalArgumentException("Bundle "+versionedId+" (from manifest " + manifestUrl + ") is already installed, from " + existingBundle.getLocation()));
                 }
-                return;
+                return ReferenceWithError.newInstanceMaskingError(true, new IllegalArgumentException("Bundle "+versionedId+" from manifest " + manifestUrl + " is already installed"));
             }
             
             byte[] jar = buildExtensionBundle(manifest);
@@ -235,10 +253,11 @@ public class Osgis {
             //(since we cannot access BundleImpl.isExtension)
             Bundle newBundle = bundleContext.installBundle(EXTENSION_PROTOCOL + ":" + bundleUrl.toString(), new ByteArrayInputStream(jar));
             installedBundles.put(versionedId, newBundle);
-        } catch (IOException e) {
-            LOG.warn("Error installing extension bundle " + manifestUrl + ", ignoring: "+e, e);
-        } catch (BundleException e) {
-            LOG.warn("Error installing extension bundle " + manifestUrl + ", ignoring: "+e, e);
+            return ReferenceWithError.newInstanceWithoutError(true);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            return ReferenceWithError.newInstanceThrowingError(false, 
+                new IllegalStateException("Problem installing extension bundle " + manifestUrl + ": "+e, e));
         }
     }
 

@@ -20,7 +20,6 @@ package brooklyn.location.jclouds;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcloudsTest {
+public class SimpleJcloudsLocationUserLoginAndConfigLiveTest extends AbstractJcloudsLiveTest {
 
     // FIXME And tidy up this one
     

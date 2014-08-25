@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Tests different login options for ssh keys, passwords, etc.
  */
-public class JcloudsLoginLiveTest extends AbstractJcloudsTest {
+public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsLoginLiveTest.class);
 

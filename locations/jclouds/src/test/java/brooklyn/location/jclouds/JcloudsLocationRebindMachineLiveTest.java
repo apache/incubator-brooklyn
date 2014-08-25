@@ -36,7 +36,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
+public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTest {
     
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindMachineLiveTest.class);
     
@@ -71,6 +71,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         // Create a VM through jclouds
         JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", EUWEST_IMAGE_ID, "imageOwner", IMAGE_OWNER));
         assertTrue(machine.isSshable());
+        LOG.info("obtained "+machine);
 
         String id = checkNotNull(machine.getJcloudsId(), "id");
         InetAddress address = checkNotNull(machine.getAddress(), "address");
@@ -80,6 +81,8 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         // Create a new jclouds location, and re-bind the existing VM to that
         JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
         SshMachineLocation machine2 = loc2.rebindMachine(ImmutableMap.of("id", id, "hostname", hostname, "user", user));
+        
+        LOG.info("rebinded to "+machine2);
         
         // Confirm the re-bound machine is wired up
         assertTrue(machine2.isSshable());

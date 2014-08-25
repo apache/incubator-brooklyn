@@ -68,7 +68,7 @@ public class CampYamlLiteTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        mgmt = new LocalManagementContextForTests();
+        mgmt = LocalManagementContextForTests.newInstanceWithOsgi();
         platform = new CampPlatformWithJustBrooklynMgmt(mgmt);
     }
     
@@ -187,7 +187,7 @@ public class CampYamlLiteTest {
       String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
       String yaml = getSampleMyCatalogAppYaml(registeredTypeName, bundleUrl);
 
-      LocalManagementContextForTests mgmt2 = new LocalManagementContextForTests();
+      LocalManagementContext mgmt2 = LocalManagementContextForTests.newInstanceWithOsgi();
       try {
           CampPlatformWithJustBrooklynMgmt platform2 = new CampPlatformWithJustBrooklynMgmt(mgmt2);
           MockWebPlatform.populate(platform2, TestAppAssemblyInstantiator.class);

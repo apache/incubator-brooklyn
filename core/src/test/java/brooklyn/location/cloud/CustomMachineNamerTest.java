@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
@@ -40,7 +41,7 @@ public class CustomMachineNamerTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TestApp"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TestApp"), LocalManagementContextForTests.newInstance());
         child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
         config = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);

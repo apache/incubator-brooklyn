@@ -34,6 +34,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.collect.ImmutableList;
@@ -41,9 +42,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-public class AbstractJcloudsTest {
+public class AbstractJcloudsLiveTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractJcloudsLiveTest.class);
 
     public static final String BROOKLYN_PROPERTIES_PREFIX = "brooklyn.location.jclouds.";
     public static final String BROOKLYN_PROPERTIES_LEGACY_PREFIX = "brooklyn.jclouds.";
@@ -107,7 +108,8 @@ public class AbstractJcloudsTest {
     }
 
     protected LocalManagementContext newManagementContext() {
-        return new LocalManagementContext();
+        // loads properties, by default, but not OSGi or anything else
+        return LocalManagementContextForTests.builder(true).useDefaultProperties().build();
     }
     
     protected void stripBrooklynProperties(BrooklynProperties props) {

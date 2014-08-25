@@ -64,8 +64,8 @@ public class StandaloneJcloudsLiveTest {
     
     public static final Logger LOG = LoggerFactory.getLogger(StandaloneJcloudsLiveTest.class);
     
-    private static final String PROVIDER = AbstractJcloudsTest.AWS_EC2_PROVIDER;
-    private static final String REGION = AbstractJcloudsTest.AWS_EC2_USEAST_REGION_NAME;
+    private static final String PROVIDER = AbstractJcloudsLiveTest.AWS_EC2_PROVIDER;
+    private static final String REGION = AbstractJcloudsLiveTest.AWS_EC2_USEAST_REGION_NAME;
     private static final String PRIVATE_IMAGE_ID = "us-east-1/ami-f95cf390";
     
     static BrooklynProperties globals = BrooklynProperties.Factory.newDefault();

@@ -32,6 +32,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.collections.MutableMap;
@@ -105,7 +106,10 @@ public class AbstractEntityLegacyTest {
         assertEquals(entity.getConfigureCount(), 1);
         assertEquals(entity.getConfigureDuringConstructionCount(), 1);
     }
-    
+
+    // TODO move the testNewStyle methods (several of them) to EntitySpecTest ?
+    // make sure to keep them when legacy approach removed!
+    // see https://github.com/apache/incubator-brooklyn/pull/113#discussion-diff-16474353
     @Test
     public void testNewStyleCallsConfigureAfterConstruction() throws Exception {
         app = TestApplication.Factory.newManagedInstanceForTests();
@@ -147,7 +151,7 @@ public class AbstractEntityLegacyTest {
     
     @Test
     public void testNewStyleUsesCustomDisplayName() throws Exception {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("appname"));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("appname"), LocalManagementContextForTests.newInstance());
         MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class).displayName("entityname"));
         
         assertEquals(app.getDisplayName(), "appname");

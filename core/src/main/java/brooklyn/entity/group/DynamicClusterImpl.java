@@ -488,7 +488,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         synchronized (mutex) {
             ReferenceWithError<Optional<Entity>> added = addInSingleLocation(memberLoc, extraFlags);
 
-            if (!added.getMaskingError().isPresent()) {
+            if (!added.getWithoutError().isPresent()) {
                 String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
                 if (added.hasError())
                     throw new IllegalStateException(msg, added.getError());
@@ -502,7 +502,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new StopFailedRuntimeException("replaceMember failed to stop and remove old member "+member.getId(), e);
             }
 
-            return added.getThrowingError().get();
+            return added.getWithError().get();
         }
     }
 
@@ -585,7 +585,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         // create and start the entities
-        return addInEachLocation(chosenLocations, ImmutableMap.of()).getThrowingError();
+        return addInEachLocation(chosenLocations, ImmutableMap.of()).getWithError();
     }
 
     /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
@@ -619,7 +619,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected ReferenceWithError<Optional<Entity>> addInSingleLocation(Location location, Map<?,?> flags) {
         ReferenceWithError<Collection<Entity>> added = addInEachLocation(ImmutableList.of(location), flags);
         
-        Optional<Entity> result = Iterables.isEmpty(added.getMaskingError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.get()));
+        Optional<Entity> result = Iterables.isEmpty(added.getWithoutError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.get()));
         if (!added.hasError()) {
             return ReferenceWithError.newInstanceWithoutError( result );
         } else {

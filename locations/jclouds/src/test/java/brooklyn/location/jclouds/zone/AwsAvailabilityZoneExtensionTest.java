@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
-import brooklyn.location.jclouds.AbstractJcloudsTest;
+import brooklyn.location.jclouds.AbstractJcloudsLiveTest;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -43,10 +43,10 @@ import com.google.common.collect.Lists;
 
 public class AwsAvailabilityZoneExtensionTest {
 
-    public static final String PROVIDER = AbstractJcloudsTest.AWS_EC2_PROVIDER;
-    public static final String REGION_NAME = AbstractJcloudsTest.AWS_EC2_USEAST_REGION_NAME;
+    public static final String PROVIDER = AbstractJcloudsLiveTest.AWS_EC2_PROVIDER;
+    public static final String REGION_NAME = AbstractJcloudsLiveTest.AWS_EC2_USEAST_REGION_NAME;
     public static final String LOCATION_SPEC = PROVIDER + (REGION_NAME == null ? "" : ":" + REGION_NAME);
-    public static final String SMALL_HARDWARE_ID = AbstractJcloudsTest.AWS_EC2_SMALL_HARDWARE_ID;
+    public static final String SMALL_HARDWARE_ID = AbstractJcloudsLiveTest.AWS_EC2_SMALL_HARDWARE_ID;
     
     public static final String US_EAST_IMAGE_ID = "us-east-1/ami-7d7bfc14"; // centos 6.3
     
