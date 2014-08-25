@@ -194,7 +194,15 @@ public class DependentConfiguration {
                             semaphore.release();
                         }
                     }}));
+                Object abortValue = abortCondition.source.getAttribute(abortCondition.sensor);
+                if (abortCondition.predicate.apply(abortValue)) {
+                    abortion.add(new Exception("Abort due to "+abortCondition.source+" -> "+abortCondition.sensor));
+                }
             }
+            if (abortion.size() > 0) {
+                throw new CompoundRuntimeException("Aborted waiting for ready from "+source+" "+sensor, abortion);
+            }
+            
             value = source.getAttribute(sensor);
             while (!ready.apply(value)) {
                 String prevBlockingDetails = current.setBlockingDetails("Waiting for ready from "+source+" "+sensor+" (subscription)");
