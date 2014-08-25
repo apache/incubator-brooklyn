@@ -125,6 +125,9 @@ public class Enrichers {
         public PropagatorBuilder propagatingAll() {
             return new PropagatorBuilder(true, null);
         }
+        public PropagatorBuilder propagatingAllButUsualAnd(Sensor<?>... vals) {
+            return new PropagatorBuilder(true, ImmutableSet.<Sensor<?>>builder().addAll(Propagator.SENSORS_NOT_USUALLY_PROPAGATED).add(vals).build());
+        }
         public PropagatorBuilder propagatingAllBut(Sensor<?>... vals) {
             return new PropagatorBuilder(true, ImmutableSet.copyOf(vals));
         }

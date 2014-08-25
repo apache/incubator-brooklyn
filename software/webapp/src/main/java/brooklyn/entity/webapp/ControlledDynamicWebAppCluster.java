@@ -93,7 +93,7 @@ public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, St
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
 
-    public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
+    public static final AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
 
     
     public LoadBalancer getController();

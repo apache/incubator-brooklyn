@@ -89,6 +89,16 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         setAttribute(GROUP_MEMBERS, ImmutableList.<Entity>of());
     }
 
+    @Override
+    protected void initEnrichers() {
+        super.initEnrichers();
+        
+        // problem if any children or members are on fire
+        ServiceStateLogic.newEnricherFromChildrenState().checkChildrenAndMembers().requireRunningChildren(getConfig(RUNNING_QUORUM_CHECK)).addTo(this);
+        // defaults to requiring at least one member or child who is up
+        ServiceStateLogic.newEnricherFromChildrenUp().checkChildrenAndMembers().requireUpChildren(getConfig(UP_QUORUM_CHECK)).addTo(this);
+    }
+
     /**
      * Adds the given entity as a member of this group <em>and</em> this group as one of the groups of the child
      */

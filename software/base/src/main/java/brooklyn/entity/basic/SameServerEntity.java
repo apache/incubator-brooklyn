@@ -51,7 +51,7 @@ public interface SameServerEntity extends Entity, Startable {
             "provisioning.properties", "Custom properties to be passed in when provisioning a new machine",
             MutableMap.<String, Object>of());
     
-    AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
+    AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
 
     @SuppressWarnings("rawtypes")
     AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(

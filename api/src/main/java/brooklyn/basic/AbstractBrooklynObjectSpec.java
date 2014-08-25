@@ -33,17 +33,17 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
 
     private static final long serialVersionUID = 3010955277740333030L;
     
-    private final Class<T> type;
+    private final Class<? extends T> type;
     private String displayName;
     private Set<Object> tags = MutableSet.of();
 
-    protected AbstractBrooklynObjectSpec(Class<T> type) {
+    protected AbstractBrooklynObjectSpec(Class<? extends T> type) {
         checkValidType(type);
         this.type = type;
     }
     
     @SuppressWarnings("unchecked")
-    protected final K self() {
+    protected K self() {
         return (K) this;
     }
 
@@ -52,7 +52,7 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
         return Objects.toStringHelper(this).add("type", getType()).toString();
     }
 
-    protected abstract void checkValidType(Class<T> type);
+    protected abstract void checkValidType(Class<? extends T> type);
     
     public K displayName(String val) {
         displayName = val;
@@ -71,14 +71,14 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
     }
 
     /**
-     * @return The type of the enricher
+     * @return The type of the object (or significant interface)
      */
-    public final Class<T> getType() {
+    public Class<? extends T> getType() {
         return type;
     }
     
     /**
-     * @return The display name of the enricher
+     * @return The display name of the object
      */
     public final String getDisplayName() {
         return displayName;

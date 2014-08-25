@@ -69,7 +69,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         return super.configure(flags);
     }
     
-    @Override
+    @Override // made public for testing
     public boolean isLegacyConstruction() {
         return super.isLegacyConstruction();
     }

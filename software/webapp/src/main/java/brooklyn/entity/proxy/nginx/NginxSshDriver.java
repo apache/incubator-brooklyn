@@ -380,8 +380,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // calling waitForEntityStart()), we can guarantee that the start-thread's call to update will happen after
         // this call to reload. So we this can be a no-op, and just rely on that subsequent call to update.
 
-        Lifecycle lifecycle = entity.getAttribute(NginxController.SERVICE_STATE);
         if (!isRunning()) {
+            Lifecycle lifecycle = entity.getAttribute(NginxController.SERVICE_STATE_ACTUAL);
             log.debug("Ignoring reload of nginx "+entity+", because service is not running (state "+lifecycle+")");
             return;
         }

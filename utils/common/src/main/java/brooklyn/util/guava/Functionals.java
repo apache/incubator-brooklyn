@@ -23,6 +23,7 @@ import brooklyn.util.guava.IfFunctions.IfFunctionBuilderApplyingFirst;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 
 public class Functionals {
 
@@ -78,6 +79,36 @@ public class Functionals {
         public String toString() {
             return toStringDescription==null ? "constant("+constant+")" : toStringDescription.toString();
         }
+    }
+
+    /** like guava {@link Functions#forSupplier(Supplier)} but parametrises the input generic type */
+    public static <I,O> Function<I,O> function(final Supplier<O> supplier) {
+        class SupplierAsFunction implements Function<I,O> {
+            @Override public O apply(I input) {
+                return supplier.get();
+            }
+        }
+        return new SupplierAsFunction();
+    }
+
+    public static <I> Function<I,Void> function(final Runnable runnable) {
+        class RunnableAsFunction implements Function<I,Void> {
+            @Override public Void apply(I input) {
+                runnable.run();
+                return null;
+            }
+        }
+        return new RunnableAsFunction();
+    }
+
+    public static Runnable runnable(final Supplier<?> supplier) {
+        class SupplierAsRunnable implements Runnable {
+            @Override
+            public void run() {
+                supplier.get();
+            }
+        }
+        return new SupplierAsRunnable();
     }
 
 }

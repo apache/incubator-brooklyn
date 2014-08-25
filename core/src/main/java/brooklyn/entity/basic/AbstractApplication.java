@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -75,11 +77,6 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     }
 
     @Override
-    public void init() {
-        log.warn("Deprecated: AbstractApplication.init() will be declared abstract in a future release; please override (without calling super) for code instantiating child entities");
-    }
-
-    @Override
     public Application getApplication() {
         if (application!=null) {
             if (application.getId().equals(getId()))
@@ -115,6 +112,15 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         return this;
     }
     
+    /** as {@link AbstractEntity#initEnrichers()} but also adding default service not-up and problem indicators from children */
+    @Override
+    protected void initEnrichers() {
+        super.initEnrichers();
+        
+        // default app logic; easily overridable by adding a different enricher with the same tag
+        ServiceStateLogic.newEnricherFromChildren().checkChildrenAndMembers().addTo(this);
+    }
+    
     /**
      * Default start will start all Startable children (child.start(Collection<? extends Location>)),
      * calling preStart(locations) first and postStart(locations) afterwards.
@@ -123,23 +129,25 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public void start(Collection<? extends Location> locations) {
         this.addLocations(locations);
         Collection<? extends Location> locationsToUse = getLocations();
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        ServiceProblemsLogic.clearProblemsIndicator(this, START);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         recordApplicationEvent(Lifecycle.STARTING);
         try {
             preStart(locationsToUse);
             doStart(locationsToUse);
             postStart(locationsToUse);
         } catch (Exception e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            // TODO should probably remember these problems then clear?  if so, do it here or on all effectors?
+//            ServiceProblemsLogic.updateProblemsIndicator(this, START, e);
+            
             recordApplicationEvent(Lifecycle.ON_FIRE);
             // no need to log here; the effector invocation should do that
             throw Exceptions.propagate(e);
+        } finally {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         }
-
-        setAttribute(SERVICE_UP, true);
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+        
         deployed = true;
-
         recordApplicationEvent(Lifecycle.RUNNING);
 
         logApplicationLifecycle("Started");
@@ -175,17 +183,17 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         logApplicationLifecycle("Stopping");
 
         setAttribute(SERVICE_UP, false);
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         recordApplicationEvent(Lifecycle.STOPPING);
         try {
             doStop();
         } catch (Exception e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             recordApplicationEvent(Lifecycle.ON_FIRE);
             log.warn("Error stopping application " + this + " (rethrowing): "+e);
             throw Exceptions.propagate(e);
         }
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         recordApplicationEvent(Lifecycle.STOPPED);
 
         synchronized (this) {

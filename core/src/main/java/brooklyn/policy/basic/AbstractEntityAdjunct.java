@@ -377,6 +377,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
                 .add("name", name)
                 .add("uniqueTag", uniqueTag)
                 .add("running", isRunning())
+                .add("entity", entity)
                 .add("id", getId())
                 .toString();
     }

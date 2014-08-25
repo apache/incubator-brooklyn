@@ -41,6 +41,7 @@ import brooklyn.entity.basic.EffectorStartableImpl.StartParameters;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -191,16 +192,15 @@ public abstract class MachineLifecycleEffectorTasks {
     
     // ---------------------
     
-    /** runs the tasks needed to start, wrapped by setting {@link Attributes#SERVICE_STATE} appropriately */ 
+    /** runs the tasks needed to start, wrapped by setting {@link Attributes#SERVICE_STATE_EXPECTED} appropriately */ 
     public void start(Collection<? extends Location> locations) {
-        entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
         try {
             startInLocations(locations);
             DynamicTasks.waitForLast();
-            if (entity().getAttribute(Attributes.SERVICE_STATE) == Lifecycle.STARTING) 
-                entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         } catch (Throwable t) {
-            entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
             throw Exceptions.propagate(t);
         }
     }
@@ -298,6 +298,7 @@ public abstract class MachineLifecycleEffectorTasks {
             entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
             entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
             if (machine instanceof SshMachineLocation) {
+                @SuppressWarnings("resource")
                 SshMachineLocation sshMachine = (SshMachineLocation) machine;
                 UserAndHostAndPort sshAddress = UserAndHostAndPort.fromParts(sshMachine.getUser(), sshMachine.getAddress().getHostName(), sshMachine.getPort());
                 entity().setAttribute(Attributes.SSH_ADDRESS, sshAddress);
@@ -396,7 +397,7 @@ public abstract class MachineLifecycleEffectorTasks {
     
     /** default restart impl, stops processes if possible, then starts the entity again */
     public void restart() {
-        entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
         DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
             DynamicTasks.markInessential();
             stopProcessesAtMachine();
@@ -407,11 +408,10 @@ public abstract class MachineLifecycleEffectorTasks {
         DynamicTasks.queue("starting", new Runnable() { public void run() {
             // startInLocations will look up the location, and provision a machine if necessary
             // (if it remembered the provisioning location)
-            entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
             startInLocations(null);
             DynamicTasks.waitForLast();
-            if (entity().getAttribute(Attributes.SERVICE_STATE) == Lifecycle.STARTING) 
-                entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         }});
     }
 
@@ -424,17 +424,17 @@ public abstract class MachineLifecycleEffectorTasks {
         log.info("Stopping {} in {}", entity(), entity().getLocations());
         
         DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
-            if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
+            if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
                 return "Already stopped";
             }
-            entity().setAttribute(SoftwareProcess.SERVICE_STATE, Lifecycle.STOPPING);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
             preStopCustom();
             return null;
         }});
         
-        if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
+        if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
             return;
         }
                
@@ -448,7 +448,7 @@ public abstract class MachineLifecycleEffectorTasks {
         
         // Release this machine (even if error trying to stop process - we rethrow that after)
         Task<StopMachineDetails<Integer>> stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() { public StopMachineDetails<Integer> call() {
-            if (entity().getAttribute(SoftwareProcess.SERVICE_STATE)==Lifecycle.STOPPED) {
+            if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
                 return new StopMachineDetails<Integer>("Already stopped", 0);
             }
@@ -478,9 +478,9 @@ public abstract class MachineLifecycleEffectorTasks {
             }
             
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
-            entity().setAttribute(SoftwareProcess.SERVICE_STATE, Lifecycle.STOPPED);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
         } catch (Throwable e) {
-            entity().setAttribute(SoftwareProcess.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
             Exceptions.propagate(e);
         }
         

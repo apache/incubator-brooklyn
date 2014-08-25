@@ -45,6 +45,7 @@ public interface Attributes {
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "download.url", "URL pattern for downloading the installer (will substitute things like ${version} automatically)");
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = new BasicAttributeSensorAndConfigKey(
             Map.class, "download.addon.urls", "URL patterns for downloading named add-ons (will substitute things like ${version} automatically)");
 
@@ -53,9 +54,11 @@ public interface Attributes {
      * Port number attributes.
      */
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<List<Integer>> PORT_NUMBERS = new BasicAttributeSensor(
             List.class, "port.list", "List of port numbers");
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     AttributeSensor<List<Sensor<Integer>>> PORT_SENSORS = new BasicAttributeSensor(
             List.class, "port.list.sensors", "List of port number attributes");
 
@@ -98,8 +101,20 @@ public interface Attributes {
         "service.notUp.indicators", 
         "A map of namespaced indicators that the service is not up");
     
-    AttributeSensor<Lifecycle> SERVICE_STATE = Sensors.newSensor(Lifecycle.class,
-            "service.state", "Expected lifecycle state of the service");
+    @SuppressWarnings("serial")
+    AttributeSensor<Map<String,Object>> SERVICE_PROBLEMS = Sensors.newSensor(
+        new TypeToken<Map<String,Object>>() {},
+        "service.problems", 
+        "A map of namespaced indicators of problems with a service");
+
+    AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Sensors.newSensor(Lifecycle.class,
+            "service.state", "Actual lifecycle state of the service");
+    AttributeSensor<Lifecycle.Transition> SERVICE_STATE_EXPECTED = Sensors.newSensor(Lifecycle.Transition.class,
+            "service.state.expected", "Last controlled change to service state, indicating what the expected state should be");
+    
+    /** @deprecated since 0.7.0 use {@link #SERVICE_STATE_ACTUAL} or {@link #SERVICE_STATE_EXPECTED} as appropriate. */
+    @Deprecated
+    AttributeSensor<Lifecycle> SERVICE_STATE = SERVICE_STATE_ACTUAL;
 
     /*
      * Other metadata (optional)

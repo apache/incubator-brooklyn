@@ -57,10 +57,12 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
@@ -143,7 +145,8 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class))
                 .configure(DynamicCluster.INITIAL_SIZE, 0));
         cluster.start(ImmutableList.of(loc));
-        assertEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING);
+        
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         assertTrue(cluster.getAttribute(Attributes.SERVICE_UP));
     }
 

@@ -35,6 +35,7 @@ import com.google.common.reflect.TypeToken;
 @ImplementedBy(DynamicGroupImpl.class)
 public interface DynamicGroup extends AbstractGroup {
 
+    @SuppressWarnings("serial")
     @SetFromFlag("entityFilter")
     ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(new TypeToken<Predicate<? super Entity>>() { },
             "dynamicgroup.entityfilter", "Filter for entities which will automatically be in the group");

@@ -38,6 +38,7 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
@@ -111,7 +112,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                     return ImmutableSet.of();
                 } else if (hasPublishedSeeds) {
                     Set<Entity> currentSeeds = getAttribute(CURRENT_SEEDS);
-                    if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) {
+                    if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.STARTING) {
                         if (Sets.intersection(currentSeeds, potentialSeeds).isEmpty()) {
                             log.warn("Cluster {} lost all its seeds while starting! Subsequent failure likely, but changing seeds during startup would risk split-brain: seeds={}", new Object[] {CassandraDatacenterImpl.this, currentSeeds});
                         }
@@ -426,12 +427,6 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                     .build());
 
         }
-
-        subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
-            @Override public void onEvent(SensorEvent<Boolean> event) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
-        });
     }
 
     @Override
@@ -477,17 +472,9 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                 setAttribute(THRIFT_PORT, null);
                 setAttribute(CASSANDRA_CLUSTER_NODES, Collections.<String>emptyList());
             }
-            
-            setAttribute(SERVICE_UP, upNode.isPresent() && calculateServiceUp());
+
+            ServiceNotUpLogic.updateNotUpIndicatorRequiringNonEmptyList(this, CASSANDRA_CLUSTER_NODES);
         }
-    }
-    
-    @Override
-    protected boolean calculateServiceUp() {
-        if (!super.calculateServiceUp()) return false;
-        List<String> nodes = getAttribute(CASSANDRA_CLUSTER_NODES);
-        if (nodes==null || nodes.isEmpty()) return false;
-        return true;
     }
     
     /**

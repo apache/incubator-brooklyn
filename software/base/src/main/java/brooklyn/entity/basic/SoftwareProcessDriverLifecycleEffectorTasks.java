@@ -63,8 +63,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         entity().getDriver().restart();
         DynamicTasks.queue("post-restart", new Runnable() { public void run() {
             postStartCustom();
-            if (entity().getAttribute(Attributes.SERVICE_STATE) == Lifecycle.STARTING) 
-                entity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         }});
     }
     

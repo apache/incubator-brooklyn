@@ -286,8 +286,8 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
     
     public static class MyTestEntityWithEnricher extends TestEntityImpl {
         @Override
-        public void init() {
-            super.init();
+        protected void initEnrichers() {
+            // don't add default ones
             addEnricher(EnricherSpec.create(MyEnricher.class).uniqueTag("x").tag(Identifiers.makeRandomId(8)));
             addEnricher(EnricherSpec.create(MyEnricher.class));
         }

@@ -127,10 +127,10 @@ public class VanillaJavaAppTest {
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
         app.start(ImmutableList.of(loc));
-        assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.RUNNING);
+        assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);
 
         javaProcess.stop();
-        assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE), Lifecycle.STOPPED);
+        assertEquals(javaProcess.getAttribute(VanillaJavaApp.SERVICE_STATE_ACTUAL), Lifecycle.STOPPED);
     }
 
     @Test(groups={"Integration"})

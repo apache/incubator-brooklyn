@@ -118,6 +118,8 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
 
     @Override
     public void init() {
+        super.init();
+        
         MySqlNode mysql = addChild(
                 EntitySpec.create(MySqlNode.class)
                         .configure(MySqlNode.CREATION_SCRIPT_URL, Entities.getRequiredUrlConfig(this, DB_SETUP_SQL_URL)));

@@ -16,36 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.nosql.couchdb;
+package brooklyn.test.entity;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.proxying.EntitySpec;
 
 /**
- * Implementation of {@link CouchDBCluster}.
+ * Mock entity for testing.
  */
-public class CouchDBClusterImpl extends DynamicClusterImpl implements CouchDBCluster {
-
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(CouchDBClusterImpl.class);
-
-    public CouchDBClusterImpl() {
-    }
-
-    /**
-     * Sets the default {@link #MEMBER_SPEC} to describe the CouchDB nodes.
-     */
-    @Override
-    protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, EntitySpec.create(CouchDBNode.class));
-    }
+public class TestEntityNoEnrichersImpl extends TestEntityImpl {
 
     @Override
-    public String getClusterName() {
-        return getAttribute(CLUSTER_NAME);
+    protected void initEnrichers() {
+        // no enrichers here, so we can test the explicit enrichers we set
     }
-
+    
 }

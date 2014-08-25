@@ -47,6 +47,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.BetterMockWebServer;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.time.Duration;
@@ -381,9 +382,9 @@ public class HttpFeedTest extends BrooklynAppUnitTestSupport {
                             return null;
                         }
                     })
-                    .onFailureOrException(EntityFunctions.settingSensorsConstantFunction(entity, MutableMap.<AttributeSensor<?>,Object>of(
+                    .onFailureOrException(Functionals.function(EntityFunctions.settingSensorsConstant(entity, MutableMap.<AttributeSensor<?>,Object>of(
                         SENSOR_INT, -1, 
-                        SENSOR_STRING, PollConfig.REMOVE)))
+                        SENSOR_STRING, PollConfig.REMOVE))))
                 .period(100))
                 .build();
     }

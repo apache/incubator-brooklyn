@@ -18,25 +18,18 @@
  */
 package brooklyn.enricher.basic;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.trait.Changeable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -46,46 +39,20 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
+/** Building on {@link AbstractAggregator} for a single source sensor (on multiple children and/or members) */
 @SuppressWarnings("serial")
-public class Aggregator<T,U> extends AbstractEnricher implements SensorEventListener<T> {
+public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEventListener<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Aggregator.class);
 
+    public static final ConfigKey<Sensor<?>> SOURCE_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.sourceSensor");
     public static final ConfigKey<Function<? super Collection<?>, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<? super Collection<?>, ?>>() {}, "enricher.transformation");
 
-    public static final ConfigKey<Entity> PRODUCER = ConfigKeys.newConfigKey(Entity.class, "enricher.producer");
-
-    public static final ConfigKey<Sensor<?>> SOURCE_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.sourceSensor");
-
-    public static final ConfigKey<Sensor<?>> TARGET_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.targetSensor");
-
-    public static final ConfigKey<?> DEFAULT_MEMBER_VALUE = ConfigKeys.newConfigKey(Object.class, "enricher.defaultMemberValue");
-
-    public static final ConfigKey<Set<? extends Entity>> FROM_HARDCODED_PRODUCERS = ConfigKeys.newConfigKey(new TypeToken<Set<? extends Entity>>() {}, "enricher.aggregating.fromHardcodedProducers");
-
-    public static final ConfigKey<Boolean> FROM_MEMBERS = ConfigKeys.newBooleanConfigKey("enricher.aggregating.fromMembers");
-
-    public static final ConfigKey<Boolean> FROM_CHILDREN = ConfigKeys.newBooleanConfigKey("enricher.aggregating.fromChildren");
-
-    public static final ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(new TypeToken<Predicate<? super Entity>>() {}, "enricher.aggregating.entityFilter");
-
-    public static final ConfigKey<Predicate<?>> VALUE_FILTER = ConfigKeys.newConfigKey(new TypeToken<Predicate<?>>() {}, "enricher.aggregating.valueFilter");
-
-    protected Function<? super Collection<T>, ? extends U> transformation;
-    protected Entity producer;
     protected Sensor<T> sourceSensor;
-    protected Sensor<U> targetSensor;
-    protected T defaultMemberValue;
-    protected Set<? extends Entity> fromHardcodedProducers;
-    protected Boolean fromMembers;
-    protected Boolean fromChildren;
-    protected Predicate<? super Entity> entityFilter;
-    protected Predicate<? super T> valueFilter;
+    protected Function<? super Collection<T>, ? extends U> transformation;
     
     /**
      * Users of values should either on it synchronize when iterating over its entries or use
@@ -94,100 +61,40 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
     // We use a synchronizedMap over a ConcurrentHashMap for entities that store null values.
     protected final Map<Entity, T> values = Collections.synchronizedMap(new LinkedHashMap<Entity, T>());
 
-    public Aggregator() {
-    }
+    public Aggregator() {}
 
-    @SuppressWarnings({ "unchecked" })
-    @Override
-    public void setEntity(EntityLocal entity) {
-        super.setEntity(entity);
-        this.transformation = (Function<? super Collection<T>, ? extends U>) getRequiredConfig(TRANSFORMATION);
-        this.producer = getConfig(PRODUCER);
-        this.fromHardcodedProducers= getConfig(FROM_HARDCODED_PRODUCERS);
+    @SuppressWarnings("unchecked")
+    protected void setEntityLoadingConfig() {
+        super.setEntityLoadingConfig();
         this.sourceSensor = (Sensor<T>) getRequiredConfig(SOURCE_SENSOR);
-        this.targetSensor = (Sensor<U>) getRequiredConfig(TARGET_SENSOR);
-        this.defaultMemberValue = (T) getConfig(DEFAULT_MEMBER_VALUE);
-        this.fromMembers = getConfig(FROM_MEMBERS);
-        this.fromChildren = getConfig(FROM_CHILDREN);
-        this.entityFilter = (Predicate<? super Entity>) (getConfig(ENTITY_FILTER) == null ? Predicates.alwaysTrue() : getConfig(ENTITY_FILTER));
-        this.valueFilter = (Predicate<? super T>) (getConfig(VALUE_FILTER) == null ? Predicates.alwaysTrue() : getConfig(VALUE_FILTER));
-
-        if (fromHardcodedProducers == null && producer == null) producer = entity;
-        checkState(fromHardcodedProducers != null ^ producer != null, "must specify one of %s (%s) or %s (%s)", 
-                PRODUCER.getName(), producer, FROM_HARDCODED_PRODUCERS.getName(), fromHardcodedProducers);
-        checkState(producer != null ? (Boolean.TRUE.equals(fromMembers) ^ Boolean.TRUE.equals(fromChildren)) : true, 
-                "when specifying producer, must specify one of fromMembers (%s) or fromChildren (%s)", fromMembers, fromChildren);
-
-        if (fromHardcodedProducers != null) {
-            for (Entity producer : Iterables.filter(fromHardcodedProducers, entityFilter)) {
-                addProducer(producer);
-            }
-            onUpdated();
-        }
+        this.transformation = (Function<? super Collection<T>, ? extends U>) getRequiredConfig(TRANSFORMATION);
+    }
         
-        if (Boolean.TRUE.equals(fromMembers)) {
-            checkState(producer instanceof Group, "must be a group when fromMembers true: producer=%s; entity=%s; "
-                    + "hardcodedProducers=%s", getConfig(PRODUCER), entity, fromHardcodedProducers);
 
-            subscribe(producer, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
-                @Override public void onEvent(SensorEvent<Entity> event) {
-                    if (entityFilter.apply(event.getValue())) addProducer(event.getValue());
-                }
-            });
-            subscribe(producer, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
-                @Override public void onEvent(SensorEvent<Entity> event) {
-                    removeProducer(event.getValue());
-                }
-            });
-            
-            if (producer instanceof Group) {
-                for (Entity member : Iterables.filter(((Group)producer).getMembers(), entityFilter)) {
-                    addProducer(member);
-                }
-            }
-            onUpdated();
-        }
-        
-        if (Boolean.TRUE.equals(fromChildren)) {
-            if (LOG.isDebugEnabled()) LOG.debug("{} linked (children of {}, {}) to {}", new Object[] {this, producer, sourceSensor, targetSensor});
-            subscribeToChildren(producer, sourceSensor, this);
-
-            subscribe(producer, AbstractEntity.CHILD_REMOVED, new SensorEventListener<Entity>() {
-                @Override public void onEvent(SensorEvent<Entity> event) {
-                    onProducerRemoved(event.getValue());
-                }
-            });
-            subscribe(producer, AbstractEntity.CHILD_ADDED, new SensorEventListener<Entity>() {
-                @Override public void onEvent(SensorEvent<Entity> event) {
-                    if (entityFilter.apply(event.getValue())) onProducerAdded(event.getValue());
-                }
-            });
-
-            for (Entity child : Iterables.filter(producer.getChildren(), entityFilter)) {
-                onProducerAdded(child, false);
-            }
-            onUpdated();
-        }
+    protected void setEntityBeforeSubscribingProducerChildrenEvents() {
+        if (LOG.isDebugEnabled()) LOG.debug("{} subscribing to children of {}", new Object[] {this, producer });
+        subscribeToChildren(producer, sourceSensor, this);
     }
 
-    protected void addProducer(Entity producer) {
-        if (LOG.isDebugEnabled()) LOG.debug("{} linked ({}, {}) to {}", new Object[] {this, producer, sourceSensor, targetSensor});
+    protected void addProducerHardcoded(Entity producer) {
         subscribe(producer, sourceSensor, this);
         onProducerAdded(producer);
     }
-    
-    // TODO If producer removed but then get (queued) event from it after this method returns,  
-    protected T removeProducer(Entity producer) {
-        if (LOG.isDebugEnabled()) LOG.debug("{} unlinked ({}, {}) from {}", new Object[] {this, producer, sourceSensor, targetSensor});
-        unsubscribe(producer);
-        return onProducerRemoved(producer);
+
+    protected void addProducerChild(Entity producer) {
+        // not required due to subscribeToChildren call
+//        subscribe(producer, sourceSensor, this);
+        onProducerAdded(producer);
     }
 
-    protected void onProducerAdded(Entity producer) {
-        onProducerAdded(producer, true);
+    protected void addProducerMember(Entity producer) {
+        subscribe(producer, sourceSensor, this);
+        onProducerAdded(producer);
     }
+
     
-    protected void onProducerAdded(Entity producer, boolean update) {
+    protected void onProducerAdded(Entity producer) {
+        if (LOG.isDebugEnabled()) LOG.debug("{} listening to {}", new Object[] {this, producer});
         synchronized (values) {
             T vo = values.get(producer);
             if (vo==null) {
@@ -206,18 +113,13 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
                 if (LOG.isDebugEnabled()) LOG.debug("{} already had value ({}) for producer ({}); but that producer has just been added", new Object[] {this, vo, producer});
             }
         }
-        if (update) {
-            onUpdated();
-        }
     }
     
-    // TODO If producer removed but then get (queued) event from it after this method returns,  
-    protected T onProducerRemoved(Entity producer) {
-        T removed = values.remove(producer);
+    protected void onProducerRemoved(Entity producer) {
+        values.remove(producer);
         onUpdated();
-        return removed;
     }
-    
+
     @Override
     public void onEvent(SensorEvent<T> event) {
         Entity e = event.getSource();
@@ -231,9 +133,6 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
         onUpdated();
     }
 
-    /**
-     * Called whenever the values for the set of producers changes (e.g. on an event, or on a member added/removed).
-     */
     protected void onUpdated() {
         try {
             emit(targetSensor, compute());
@@ -257,4 +156,5 @@ public class Aggregator<T,U> extends AbstractEnricher implements SensorEventList
             return Collections.unmodifiableMap(MutableMap.copyOf(values));
         }
     }
+
 }

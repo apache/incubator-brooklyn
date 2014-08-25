@@ -57,7 +57,7 @@ public class ApplicationTransformer {
 
     public static Status statusFromApplication(Application application) {
         if (application == null) return UNKNOWN;
-        Lifecycle state = application.getAttribute(Attributes.SERVICE_STATE);
+        Lifecycle state = application.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
         if (state != null) return statusFromLifecycle(state);
         Boolean up = application.getAttribute(Startable.SERVICE_UP);
         if (up != null && up.booleanValue()) return RUNNING;

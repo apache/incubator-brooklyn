@@ -369,7 +369,6 @@ public class DynamicGroupTest {
         };
         ((EntityLocal)group2).setConfig(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class));
         app.addChild(group2);
-        group2.init();
         Entities.manage(group2);
         
         for (int i = 0; i < NUM_CYCLES; i++) {
@@ -421,7 +420,6 @@ public class DynamicGroupTest {
         };
         ((EntityLocal)group2).setConfig(DynamicGroup.ENTITY_FILTER, Predicates.<Object>equalTo(e3));
         app.addChild(group2);
-        group2.init();
         
         Thread t1 = new Thread(new Runnable() {
             @Override public void run() {

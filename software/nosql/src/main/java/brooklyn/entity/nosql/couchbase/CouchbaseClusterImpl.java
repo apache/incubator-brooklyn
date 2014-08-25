@@ -35,13 +35,13 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.QuorumCheck;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
@@ -129,8 +129,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         super.start(locations);
 
         connectSensors();
-        connectEnrichers();
-
+        
         //start timeout before adding the servers
         Time.sleep(getConfig(SERVICE_UP_TIME_OUT));
 
@@ -165,7 +164,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 //check Repeater.
             }
         } else {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
         }
 
     }
@@ -173,16 +172,6 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     @Override
     public void stop() {
         super.stop();
-    }
-
-    public void connectEnrichers() {
-
-        subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
-            @Override
-            public void onEvent(SensorEvent<Boolean> event) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
-        });
     }
 
     protected void connectSensors() {
@@ -292,13 +281,22 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
 
     @Override
-    protected boolean calculateServiceUp() {
-        if (!super.calculateServiceUp()) return false;
-        Set<Entity> upNodes = getAttribute(COUCHBASE_CLUSTER_UP_NODES);
-        if (upNodes == null || upNodes.isEmpty() || upNodes.size() < getQuorumSize()) return false;
-        return true;
+    protected void initEnrichers() {
+        if (getConfigRaw(UP_QUORUM_CHECK, false).isAbsent()) {
+            class CouchbaseQuorumCheck implements QuorumCheck {
+                @Override
+                public boolean isQuorate(int sizeHealthy, int totalSize) {
+                    // check members count passed in AND the sensor  
+                    if (sizeHealthy < getQuorumSize()) return false;
+                    Set<Entity> upNodes = getAttribute(COUCHBASE_CLUSTER_UP_NODES);
+                    return (upNodes != null && !upNodes.isEmpty() && upNodes.size() >= getQuorumSize());
+                }
+            }
+            setConfig(UP_QUORUM_CHECK, new CouchbaseQuorumCheck());
+        }
+        super.initEnrichers();
     }
-
+    
     protected void addServers(Set<Entity> serversToAdd) {
         Preconditions.checkNotNull(serversToAdd);
         for (Entity e : serversToAdd) {

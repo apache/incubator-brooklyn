@@ -18,14 +18,10 @@
  */
 package brooklyn.entity.proxy;
 
-import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.location.Location;
-import brooklyn.policy.PolicySpec;
 
 /**
  * A cluster of load balancers, where configuring the cluster (through the LoadBalancer interface)
@@ -47,33 +43,6 @@ public class LoadBalancerClusterImpl extends DynamicClusterImpl implements LoadB
 
     public LoadBalancerClusterImpl() {
         super();
-    }
-
-    @Override
-    public void start(Collection<? extends Location> locs) {
-        super.start(locs);
-        
-        // TODO Is there a race here, where (dispite super.stop() calling policy.suspend),
-        // this could still be executing setAttribute(true) and hence incorrectly leave
-        // the cluster in a service_up==true state after stop() returns?
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
-                .configure("group", this));
-    }
-
-    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
-        @Override protected void onEntityEvent(EventType type, Entity member) {
-            entity.setAttribute(SERVICE_UP, ((LoadBalancerClusterImpl)entity).calculateServiceUp());
-        }
-    }
-
-    /**
-     * Up if running and has at least one load-balancer in the cluster.
-     * 
-     * TODO Could also look at service_up of each load-balancer, but currently does not do that.
-     */
-    @Override
-    protected boolean calculateServiceUp() {
-        return super.calculateServiceUp() && getCurrentSize() > 0;
     }
 
     /* NOTE The following methods come from {@link LoadBalancer} but are probably safe to ignore */

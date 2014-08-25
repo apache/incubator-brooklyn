@@ -192,7 +192,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 .attributeWhenReady(entity, TestEntity.NAME)
                 .build());
 
-        entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        ServiceStateLogic.setExpectedState(entity, Lifecycle.ON_FIRE);
         try {
             assertDoneEventually(t);
             fail();
@@ -203,7 +203,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testAttributeWhenReadyAbortsWhenAlreadyOnfireByDefault() throws Exception {
-        entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        ServiceStateLogic.setExpectedState(entity, Lifecycle.ON_FIRE);
         
         final Task<String> t = submit(DependentConfiguration.builder()
                 .attributeWhenReady(entity, TestEntity.NAME)

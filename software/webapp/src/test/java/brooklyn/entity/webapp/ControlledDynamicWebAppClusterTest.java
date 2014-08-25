@@ -317,6 +317,6 @@ public class ControlledDynamicWebAppClusterTest {
         Entities.unmanage(controller);
         
         cluster.stop();
-        EntityTestUtils.assertAttributeEquals(cluster, ControlledDynamicWebAppCluster.SERVICE_STATE, Lifecycle.STOPPED);
+        EntityTestUtils.assertAttributeEquals(cluster, ControlledDynamicWebAppCluster.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
     }
 }

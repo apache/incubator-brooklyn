@@ -151,8 +151,13 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
         super(type);
     }
     
+    @SuppressWarnings("unchecked")
+    public Class<T> getType() {
+        return (Class<T>)super.getType();
+    }
+    
     @Override
-    protected void checkValidType(Class<T> type) {
+    protected void checkValidType(Class<? extends T> type) {
         // EntitySpec does nothing.  Other specs do check it's an implementation etc.
     }
     

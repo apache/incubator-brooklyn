@@ -122,7 +122,7 @@ public abstract class BrooklynMementoPersisterTestFixture {
         assertTrue(Iterables.contains(reloadedMemento.getEntityIds(), entity.getId()));
         assertEquals(Iterables.getOnlyElement(reloadedMemento.getLocationIds()), location.getId());
         assertEquals(Iterables.getOnlyElement(reloadedMemento.getPolicyIds()), policy.getId());
-        assertEquals(Iterables.getOnlyElement(reloadedMemento.getEnricherIds()), enricher.getId());
+        assertTrue(reloadedMemento.getEnricherIds().contains(enricher.getId()));
     }
 
     @Test

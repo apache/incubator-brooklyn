@@ -60,7 +60,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
         super.init();
         setAttribute(RUNNING, true);
     }
-
+    
     @Override
     public void setEntityFilter(Predicate<? super Entity> filter) {
         // TODO Sould this be "evenIfOwned"?

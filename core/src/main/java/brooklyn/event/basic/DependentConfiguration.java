@@ -401,12 +401,12 @@ public class DependentConfiguration {
         
         /**
          * Will wait for the attribute on the given entity.
-         * If that entity report {@link Lifecycle#ON_FIRE} for its {@link Attributes#SERVICE_STATE} then it will abort. 
+         * If that entity report {@link Lifecycle#ON_FIRE} for its {@link Attributes#SERVICE_STATE_ACTUAL} then it will abort. 
          */
         public <T2> Builder<T2,T2> attributeWhenReady(Entity source, AttributeSensor<T2> sensor) {
             this.source = checkNotNull(source, "source");
             this.sensor = (AttributeSensor) checkNotNull(sensor, "sensor");
-            abortIf(source, Attributes.SERVICE_STATE, Predicates.equalTo(Lifecycle.ON_FIRE));
+            abortIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.ON_FIRE));
             return (Builder<T2, T2>) this;
         }
         /** returns a task for parallel execution returning a list of values of the given sensor list on the given entity, 

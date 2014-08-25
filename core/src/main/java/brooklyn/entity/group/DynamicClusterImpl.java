@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +39,13 @@ import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
-import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
@@ -146,6 +144,17 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setAttribute(SERVICE_UP, false);
     }
 
+    @Override
+    protected void initEnrichers() {
+        if (getConfigRaw(UP_QUORUM_CHECK, true).isAbsent() && getConfig(INITIAL_SIZE)==0) {
+            // if initial size is 0 then override up check to allow zero if empty
+            setConfig(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
+        }
+        super.initEnrichers();
+        // override previous enricher so that only members are checked
+        ServiceStateLogic.newEnricherFromChildrenUp().checkMembersOnly().requireUpChildren(getConfig(UP_QUORUM_CHECK)).addTo(this);
+    }
+    
     @Override
     public void setRemovalStrategy(Function<Collection<Entity>, Entity> val) {
         setConfig(REMOVAL_STRATEGY, checkNotNull(val, "removalStrategy"));
@@ -247,13 +256,15 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             setAttribute(SUB_LOCATIONS, findSubLocations(loc));
         }
 
-        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-        setAttribute(SERVICE_UP, calculateServiceUp());
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         try {
             if (isQuarantineEnabled()) {
-                QuarantineGroup quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
-                Entities.manage(quarantineGroup);
-                setAttribute(QUARANTINE_GROUP, quarantineGroup);
+                QuarantineGroup quarantineGroup = getAttribute(QUARANTINE_GROUP);
+                if (quarantineGroup==null || !Entities.isManaged(quarantineGroup)) {
+                    quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
+                    Entities.manage(quarantineGroup);
+                    setAttribute(QUARANTINE_GROUP, quarantineGroup);
+                }
             }
 
             int initialSize = getConfig(INITIAL_SIZE).intValue();
@@ -307,44 +318,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             for (Policy it : getPolicies()) {
                 it.resume();
             }
-            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-            setAttribute(SERVICE_UP, calculateServiceUp());
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Exception e) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
-        } finally {
-            connectSensors();
         }
-    }
-
-    protected void connectSensors() {
-        subscribeToChildren(this, SERVICE_STATE, new SensorEventListener<Lifecycle>() {
-            @Override
-            public void onEvent(SensorEvent<Lifecycle> event) {
-                setAttribute(SERVICE_STATE, calculateServiceState());
-            }
-        });
-        subscribeToChildren(this, SERVICE_UP, new SensorEventListener<Boolean>() {
-            @Override
-            public void onEvent(SensorEvent<Boolean> event) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
-        });
-    }
-
-    protected Lifecycle calculateServiceState() {
-        Lifecycle currentState = getAttribute(SERVICE_STATE);
-        if (EnumSet.of(Lifecycle.ON_FIRE, Lifecycle.RUNNING).contains(currentState)) {
-            Iterable<Lifecycle> memberStates = Iterables.transform(getMembers(), EntityFunctions.attribute(SERVICE_STATE));
-            int running = Iterables.frequency(memberStates, Lifecycle.RUNNING);
-            int onFire = Iterables.frequency(memberStates, Lifecycle.ON_FIRE);
-            if ((getInitialQuorumSize() > 0 ? running < getInitialQuorumSize() : true) && onFire > 0) {
-                currentState = Lifecycle.ON_FIRE;
-            } else if (onFire == 0 && running > 0) {
-                currentState = Lifecycle.RUNNING;
-            }
-        }
-        return currentState;
     }
 
     protected List<Location> findSubLocations(Location loc) {
@@ -386,10 +364,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     public void stop() {
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         try {
-            setAttribute(SERVICE_UP, calculateServiceUp());
-
             for (Policy it : getPolicies()) { it.suspend(); }
 
             // run shrink without mutex to make things stop even if starting,
@@ -403,10 +379,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             // (this ignores the quarantine node which is not stoppable)
             StartableMethods.stop(this);
 
-            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
-            setAttribute(SERVICE_UP, calculateServiceUp());
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         } catch (Exception e) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
     }
@@ -695,13 +670,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         for (Entity entity : failedEntities) {
             discardNode(entity);
         }
-    }
-
-    /**
-     * Default impl is to be up when running, and !up otherwise.
-     */
-    protected boolean calculateServiceUp() {
-        return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
     }
 
     protected Map<Entity, Throwable> waitForTasksOnEntityStart(Map<? extends Entity,? extends Task<?>> tasks) {

@@ -325,7 +325,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void postRebind() {
         super.postRebind();
-        Lifecycle state = getAttribute(SERVICE_STATE);
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state != null && state == Lifecycle.RUNNING) {
             isActive = true;
             update();

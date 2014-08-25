@@ -117,6 +117,7 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
             FunctionFeed.builder()
                 .entity(this)
                 .period(Duration.millis(10))
+                .onlyIfServiceUp()
                 .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_PROCESS_IS_RUNNING)
                     .onException(Functions.constant(Boolean.FALSE))
                     .callable(new Callable<Boolean>() {

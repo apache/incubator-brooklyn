@@ -56,7 +56,7 @@ public class EnricherSpec<T extends Enricher> extends AbstractBrooklynObjectSpec
      * 
      * @param type A {@link Enricher} class
      */
-    public static <T extends Enricher> EnricherSpec<T> create(Class<T> type) {
+    public static <T extends Enricher> EnricherSpec<T> create(Class<? extends T> type) {
         return new EnricherSpec<T>(type);
     }
     
@@ -68,18 +68,18 @@ public class EnricherSpec<T extends Enricher> extends AbstractBrooklynObjectSpec
      * @param config The spec's configuration (see {@link EnricherSpec#configure(Map)}).
      * @param type   An {@link Enricher} class
      */
-    public static <T extends Enricher> EnricherSpec<T> create(Map<?,?> config, Class<T> type) {
+    public static <T extends Enricher> EnricherSpec<T> create(Map<?,?> config, Class<? extends T> type) {
         return EnricherSpec.create(type).configure(config);
     }
     
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
     private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
 
-    protected EnricherSpec(Class<T> type) {
+    protected EnricherSpec(Class<? extends T> type) {
         super(type);
     }
     
-    protected void checkValidType(Class<T> type) {
+    protected void checkValidType(Class<? extends T> type) {
         checkIsImplementation(type, Enricher.class);
         checkIsNewStyleImplementation(type);
     }
@@ -149,4 +149,66 @@ public class EnricherSpec<T extends Enricher> extends AbstractBrooklynObjectSpec
         return Collections.unmodifiableMap(config);
     }
 
+    public abstract static class ExtensibleEnricherSpec<T extends Enricher,K extends ExtensibleEnricherSpec<T,K>> extends EnricherSpec<T> {
+        private static final long serialVersionUID = -3649347642882809739L;
+        
+        protected ExtensibleEnricherSpec(Class<? extends T> type) {
+            super(type);
+        }
+
+        @SuppressWarnings("unchecked")
+        protected K self() {
+            // we override the AbstractBrooklynObjectSpec method -- it's a different K here because
+            // EnricherSpec does not contain a parametrisable generic return type (Self)
+            return (K) this;
+        }
+        
+        @Override
+        public K uniqueTag(String uniqueTag) {
+            super.uniqueTag(uniqueTag);
+            return self();
+        }
+
+        @Override
+        public K configure(Map<?, ?> val) {
+            super.configure(val);
+            return self();
+        }
+
+        @Override
+        public K configure(CharSequence key, Object val) {
+            super.configure(key, val);
+            return self();
+        }
+
+        @Override
+        public <V> K configure(ConfigKey<V> key, V val) {
+            super.configure(key, val);
+            return self();
+        }
+
+        @Override
+        public <V> K configureIfNotNull(ConfigKey<V> key, V val) {
+            super.configureIfNotNull(key, val);
+            return self();
+        }
+
+        @Override
+        public <V> K configure(ConfigKey<V> key, Task<? extends V> val) {
+            super.configure(key, val);
+            return self();
+        }
+
+        @Override
+        public <V> K configure(HasConfigKey<V> key, V val) {
+            super.configure(key, val);
+            return self();
+        }
+
+        @Override
+        public <V> K configure(HasConfigKey<V> key, Task<? extends V> val) {
+            super.configure(key, val);
+            return self();
+        }
+    }
 }

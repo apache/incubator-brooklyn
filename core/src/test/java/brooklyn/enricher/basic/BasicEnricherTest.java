@@ -22,11 +22,15 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.Iterables;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
@@ -91,10 +95,14 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSameUniqueTagEnricherNotAddedTwice() throws Exception {
-        MyEnricher enricher1 = app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
-        MyEnricher enricher2 = app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(94).uniqueTag("x"));
-        assertEquals(enricher2, enricher1);
+        app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
+        app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(94).uniqueTag("x"));
+        
         assertEquals(app.getEnrichers().size(), 1);
+        // the more recent one should dominate
+        Enricher enricher = Iterables.getOnlyElement(app.getEnrichers());
+        Assert.assertTrue(enricher.getTagSupport().containsTag(94));
+        Assert.assertFalse(enricher.getTagSupport().containsTag(99));
     }
 
 }
