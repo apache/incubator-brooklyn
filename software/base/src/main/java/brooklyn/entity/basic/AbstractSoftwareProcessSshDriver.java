@@ -279,6 +279,25 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getDisplayName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
     }
+
+    @Override
+    public void resources() {
+        Map runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
+        copyResources(runtimeFiles);
+
+        Map runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
+        copyTemplates(runtimeTemplates);
+    }
+    
+    @Override
+    public void runPreInstallCommand(String command) {
+        execute(ImmutableList.of(command), "running pre-install commands");
+    }
+    
+    @Override
+    public void runPostInstallCommand(String command) {
+        execute(ImmutableList.of(command), "running post-install commands");
+    }
     
     @Override
     public void runPreLaunchCommand(String command) {
@@ -599,6 +618,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 if (!groovyTruth(flags.get(INSTALL_INCOMPLETE))) {
                     s.footer.append("date > $INSTALL_DIR/BROOKLYN");
                 }
+                // don't set vars during install phase, prevent dependency resolution
+                s.environmentVariablesReset();
             }
             if (ImmutableSet.of(CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING, KILLING, RESTARTING).contains(phase)) {
                 s.header.append(
@@ -712,5 +733,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         result.add(22);
         return result;
     }
+
+    @Override
+    public void setup() { }
 
 }

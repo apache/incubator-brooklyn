@@ -33,6 +33,8 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.reflect.TypeToken;
+
 public interface SoftwareProcess extends Entity, Startable {
 
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
@@ -46,20 +48,35 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("startLatch")
     public static final ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
 
+    @SetFromFlag("setupLatch")
+    public static final ConfigKey<Boolean> SETUP_LATCH = BrooklynConfigKeys.SETUP_LATCH;
+
     @SetFromFlag("installLatch")
     public static final ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
 
     @SetFromFlag("customizeLatch")
     public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
-    
-    @SetFromFlag("preLaunchCommand")
-    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = BrooklynConfigKeys.PRE_LAUNCH_COMMAND;
-    
-    @SetFromFlag("postLaunchCommand")
-    public static final ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
+
+    @SetFromFlag("resourcesLatch")
+    public static final ConfigKey<Boolean> RESOURCES_LATCH = BrooklynConfigKeys.RESOURCES_LATCH;
 
     @SetFromFlag("launchLatch")
     public static final ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
+
+    @SetFromFlag("skipInstall")
+    public static final ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_INSTALLATION;
+
+    @SetFromFlag("preInstallCommand")
+    public static final ConfigKey<String> PRE_INSTALL_COMMAND = BrooklynConfigKeys.PRE_INSTALL_COMMAND;
+
+    @SetFromFlag("postInstallCommand")
+    public static final ConfigKey<String> POST_INSTALL_COMMAND = BrooklynConfigKeys.POST_INSTALL_COMMAND;
+
+    @SetFromFlag("preLaunchCommand")
+    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = BrooklynConfigKeys.PRE_LAUNCH_COMMAND;
+
+    @SetFromFlag("postLaunchCommand")
+    public static final ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
 
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
@@ -72,7 +89,7 @@ public interface SoftwareProcess extends Entity, Startable {
 
     @SetFromFlag("installLabel")
     public static final ConfigKey<String> INSTALL_UNIQUE_LABEL = BrooklynConfigKeys.INSTALL_UNIQUE_LABEL;
-    
+
     @SetFromFlag("expandedInstallDir")
     BasicAttributeSensorAndConfigKey<String> EXPANDED_INSTALL_DIR = BrooklynConfigKeys.EXPANDED_INSTALL_DIR;
 
@@ -85,6 +102,16 @@ public interface SoftwareProcess extends Entity, Startable {
     BasicAttributeSensorAndConfigKey<String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
     @Deprecated
     public static final ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
+
+    /** Files to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
+    @SetFromFlag("runtimeFiles")
+    ConfigKey<Map<String, String>> RUNTIME_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "files.runtime", "Map of files to be copied, keyed by destination name relative to runDir");
+
+    /** Templates to be filled in and then copied to the server. See {@link #RUNTIME_FILES}. */
+    @SetFromFlag("runtimeTemplates")
+    ConfigKey<Map<String, String>> RUNTIME_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "templates.runtime", "Map of templates to be filled in and copied, keyed by destination name relative to runDir");
 
     @SetFromFlag("env")
     public static final MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;
@@ -37,6 +38,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
@@ -92,7 +94,8 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
             }
             if (lo.isPresent()) {
                 Location l = lo.get();
-                if (l instanceof PortSupplier) {
+                Boolean skip = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION)).or(false);
+                if (l instanceof PortSupplier && !skip) {
                     int p = ((PortSupplier)l).obtainPort(value);
                     if (p!=-1) {
                         LOG.debug(""+entity+" choosing port "+p+" for "+getName());

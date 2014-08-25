@@ -59,10 +59,15 @@ public class BrooklynConfigKeys {
         + "this should include something readable, and must include a hash of all data which differentiates an installation "
         + "(e.g. version, plugins, etc), but should be the same where install dirs can be shared to allow for re-use");
     
-    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("pre.launch.command",
-            "Command to be run prior to the launch method being called on the driver");
+    public static final ConfigKey<Boolean> SKIP_INSTALLATION = newBooleanConfigKey("install.skip", "Skip the driver install commands entirely, for pre-installed software", Boolean.FALSE);
     
     // The implementation in AbstractSoftwareSshDriver runs this command as an SSH command 
+    public static final ConfigKey<String> PRE_INSTALL_COMMAND = ConfigKeys.newStringConfigKey("pre.install.command",
+            "Command to be run prior to the install method being called on the driver");
+    public static final ConfigKey<String> POST_INSTALL_COMMAND = ConfigKeys.newStringConfigKey("post.install.command",
+            "Command to be run after the install method being called on the driver");
+    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("pre.launch.command",
+            "Command to be run prior to the launch method being called on the driver");
     public static final ConfigKey<String> POST_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("post.launch.command",
             "Command to be run after the launch method being called on the driver");
     
@@ -111,8 +116,10 @@ public class BrooklynConfigKeys {
      * component is up, but this entity does not care about the dependent component's actual config values.
      */
     public static final ConfigKey<Boolean> START_LATCH = newBooleanConfigKey("start.latch", "Latch for blocking start until ready");
+    public static final ConfigKey<Boolean> SETUP_LATCH = newBooleanConfigKey("setup.latch", "Latch for blocking setup until ready");
     public static final ConfigKey<Boolean> INSTALL_LATCH = newBooleanConfigKey("install.latch", "Latch for blocking install until ready");
     public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = newBooleanConfigKey("customize.latch", "Latch for blocking customize until ready");
+    public static final ConfigKey<Boolean> RESOURCES_LATCH = newBooleanConfigKey("resources.latch", "Latch for blocking resources until ready");
     public static final ConfigKey<Boolean> LAUNCH_LATCH = newBooleanConfigKey("launch.latch", "Latch for blocking launch until ready");
 
     public static final ConfigKey<Duration> START_TIMEOUT = newConfigKey(
