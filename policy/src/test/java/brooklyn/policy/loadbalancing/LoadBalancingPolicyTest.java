@@ -27,6 +27,8 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -179,7 +181,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         
         MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 30, CONTAINER_STARTUP_DELAY_MS);
         // New container allows hot ones to offload work.
-        
+
         assertWorkratesEventually(
                 ImmutableList.of(containerA, containerB, containerC), 
                 ImmutableList.of(item1, item2, item3, item4, item5, item6, item7, item8), 

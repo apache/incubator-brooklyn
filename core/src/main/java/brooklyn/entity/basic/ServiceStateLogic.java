@@ -25,6 +25,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.basic.AbstractEnricher;
@@ -55,6 +58,8 @@ import com.google.common.collect.ImmutableList;
 /** Logic, sensors and enrichers, and conveniences, for computing service status */ 
 public class ServiceStateLogic {
 
+    private static final Logger log = LoggerFactory.getLogger(ServiceStateLogic.class);
+    
     public static final AttributeSensor<Boolean> SERVICE_UP = Attributes.SERVICE_UP;
     public static final AttributeSensor<Map<String,Object>> SERVICE_NOT_UP_INDICATORS = Attributes.SERVICE_NOT_UP_INDICATORS;
     
@@ -206,6 +211,7 @@ public class ServiceStateLogic {
         }
 
         protected void setActualState(@Nullable Lifecycle state) {
+            if (log.isTraceEnabled()) log.trace("{} setting actual state {}", this, state);
             emit(SERVICE_STATE_ACTUAL, (state==null ? Entities.REMOVE : state));
         }
     }
@@ -253,6 +259,8 @@ public class ServiceStateLogic {
             "Logic for checking whether this service is healthy, based on children and/or members running, defaulting to requiring none to be ON-FIRE", QuorumCheck.QuorumChecks.all());
         public static final ConfigKey<Boolean> DERIVE_SERVICE_NOT_UP = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.service_up.publish", "Whether to derive a service-not-up indicator from children", true);
         public static final ConfigKey<Boolean> DERIVE_SERVICE_PROBLEMS = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.service_problems.publish", "Whether to derive a service-problem indicator from children", true);
+        public static final ConfigKey<Boolean> IGNORE_NULL_VALUES = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.ignore_nulls", "Whether to ignore children reporting null values for the sensor", true);
+        public static final ConfigKey<Boolean> IGNORE_TRANSITIONING = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.ignore_transitioning", "Whether to ignore children reporting transitional states (starting, stopping, etc) for service state", true);
 
         protected String getKeyForMapSensor() {
             return Preconditions.checkNotNull(super.getUniqueTag());
@@ -304,7 +312,12 @@ public class ServiceStateLogic {
         protected Object computeServiceNotUp() {
             Map<Entity, Boolean> values = getValues(SERVICE_UP);
             List<Entity> violators = MutableList.of();
+            boolean ignoreNull = getConfig(IGNORE_NULL_VALUES);
+            int entries=0;
             for (Map.Entry<Entity, Boolean> state: values.entrySet()) {
+                if (ignoreNull && state.getValue()==null)
+                    continue;
+                entries++;
                 if (!Boolean.TRUE.equals(state.getValue())) {
                     violators.add(state.getKey());
                 }
@@ -312,11 +325,12 @@ public class ServiceStateLogic {
 
             QuorumCheck qc = getConfig(UP_QUORUM_CHECK);
             if (qc!=null) {
-                if (qc.isQuorate(values.size()-violators.size(), values.size()))
+                if (qc.isQuorate(entries-violators.size(), entries))
                     // quorate
                     return null;
 
                 if (values.isEmpty()) return "No entities present";
+                if (entries==0) return "No entities publishing service up";
                 if (violators.isEmpty()) return "Not enough entities";
             } else {
                 if (violators.isEmpty())
@@ -324,35 +338,41 @@ public class ServiceStateLogic {
             }
 
             if (violators.size()==1) return violators.get(0)+" is not up";
-            if (violators.size()==values.size()) return "None of the entities are up";
+            if (violators.size()==entries) return "None of the entities are up";
             return violators.size()+" entities are not up, including "+violators.get(0);
         }
 
         protected Object computeServiceProblems() {
             Map<Entity, Lifecycle> values = getValues(SERVICE_STATE_ACTUAL);
-            int numRunning=0, numOnFire=0;
+            int numRunning=0, numNotHealthy=0;
+            boolean ignoreNull = getConfig(IGNORE_NULL_VALUES);
+            boolean ignoreTransition = getConfig(IGNORE_TRANSITIONING);
             for (Lifecycle state: values.values()) {
                 if (state==Lifecycle.RUNNING) numRunning++;
-                else if (state==Lifecycle.ON_FIRE) numOnFire++;
+                else if (state==Lifecycle.ON_FIRE) numNotHealthy++;
+                else if (state==null) { if (!ignoreNull) numNotHealthy++; }
+                else { if (!ignoreTransition) numNotHealthy++; }
             }
 
             QuorumCheck qc = getConfig(RUNNING_QUORUM_CHECK);
             if (qc!=null) {
-                if (qc.isQuorate(numRunning, numOnFire+numRunning))
+                if (qc.isQuorate(numRunning, numNotHealthy+numRunning))
                     // quorate
                     return null;
 
-                if (numOnFire==0)
+                if (numNotHealthy==0)
                     return "Not enough entities running to be quorate";
             } else {
-                if (numOnFire==0)
+                if (numNotHealthy==0)
                     return null;
             }
 
-            return numOnFire+" entit"+Strings.ies(numOnFire)+" are on fire";
+            return numNotHealthy+" entit"+Strings.ies(numNotHealthy)+" not healthy";
         }
 
         protected void updateMapSensor(AttributeSensor<Map<String, Object>> sensor, Object value) {
+            if (log.isTraceEnabled()) log.trace("{} updating map sensor {} with {}", new Object[] { this, sensor, value });
+
             if (value!=null)
                 updateMapSensorEntry(entity, sensor, getKeyForMapSensor(), value);
             else

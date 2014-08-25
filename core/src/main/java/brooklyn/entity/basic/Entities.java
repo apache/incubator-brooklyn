@@ -281,7 +281,7 @@ public class Entities {
         dumpInfo(e, new PrintWriter(System.out), currentIndentation, tab);
     }
     public static void dumpInfo(Entity e, Writer out, String currentIndentation, String tab) throws IOException {
-        out.append(currentIndentation+e.toString()+"\n");
+        out.append(currentIndentation+e.toString()+" "+e.getId()+"\n");
 
         out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
@@ -332,7 +332,8 @@ public class Entities {
         if (e instanceof Group) {
             StringBuilder members = new StringBuilder();
             for (Entity it : ((Group)e).getMembers()) {
-                members.append(it.getId()+", ");
+                if (members.length()>0) members.append(", ");
+                members.append(it.getId());
             }
             out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
         }

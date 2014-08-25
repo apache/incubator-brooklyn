@@ -39,6 +39,9 @@ public interface QuorumCheck {
         public static QuorumCheck atLeastOneUnlessEmpty() {
             return new NumericQuorumCheck(1, 0.0, true);
         }
+        public static QuorumCheck alwaysTrue() {
+            return new NumericQuorumCheck(0, 0.0, true);
+        }
         public static QuorumCheck newInstance(int minRequiredSize, double minRequiredRatio, boolean allowEmpty) {
             return new NumericQuorumCheck(minRequiredSize, minRequiredRatio, allowEmpty);
         }

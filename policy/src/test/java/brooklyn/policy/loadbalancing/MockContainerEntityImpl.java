@@ -116,6 +116,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         emit(BalanceableContainer.ITEM_REMOVED, item);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Set<Movable> getBalanceableItems() {
         return (Set) Sets.newLinkedHashSet(getMembers());
@@ -137,8 +138,6 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
             if (getDelay() > 0) Time.sleep(getDelay());
             running = true;
             addLocations(locs);
-            Location loc = Iterables.get(locs, 0);
-            String locName = (loc.getDisplayName() != null) ? loc.getDisplayName() : loc.toString();
             emit(Attributes.LOCATION_CHANGED, null);
             setAttribute(SERVICE_UP, true);
         } finally {

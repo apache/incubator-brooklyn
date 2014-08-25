@@ -102,8 +102,6 @@ public class EntityConfigMap implements ConfigMap {
         //           but that example doesn't have a default...
         ConfigKey<T> ownKey = entity!=null ? (ConfigKey<T>)elvis(entity.getEntityType().getConfigKey(key.getName()), key) : key;
         
-        ExecutionContext exec = entity.getExecutionContext();
-
         // TODO We're notifying of config-changed because currently persistence needs to know when the
         // attributeWhenReady is complete (so it can persist the result).
         // Long term, we'll just persist tasks properly so the call to onConfigChanged will go!
@@ -114,11 +112,13 @@ public class EntityConfigMap implements ConfigMap {
             T result = null;
             boolean complete = false;
             if (((ConfigKeySelfExtracting<T>)ownKey).isSet(ownConfig)) {
+                ExecutionContext exec = entity.getExecutionContext();
                 result = ((ConfigKeySelfExtracting<T>)ownKey).extractValue(ownConfig, exec);
                 complete = true;
             } else if (((ConfigKeySelfExtracting<T>)ownKey).isSet(inheritedConfig)) {
-               result = ((ConfigKeySelfExtracting<T>)ownKey).extractValue(inheritedConfig, exec);
-               complete = true;
+                ExecutionContext exec = entity.getExecutionContext();
+                result = ((ConfigKeySelfExtracting<T>)ownKey).extractValue(inheritedConfig, exec);
+                complete = true;
             } else if (localConfigBag.containsKey(ownKey)) {
                 // TODO configBag.get doesn't handle tasks/attributeWhenReady - it only uses TypeCoercions
                 result = localConfigBag.get(ownKey);

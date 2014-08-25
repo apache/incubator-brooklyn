@@ -41,7 +41,7 @@ public interface MockContainerEntity extends AbstractGroup, BalanceableContainer
     public static final ConfigKey<Long> DELAY = new BasicConfigKey<Long>(
             Long.class, "mock.container.delay", "", 0L);
 
-    public static final Effector OFFLOAD_AND_STOP = new MethodEffector(MockContainerEntity.class, "offloadAndStop");
+    public static final Effector<Void> OFFLOAD_AND_STOP = new MethodEffector<Void>(MockContainerEntity.class, "offloadAndStop");
 
     public void lock();
 
