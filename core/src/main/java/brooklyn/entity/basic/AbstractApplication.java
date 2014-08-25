@@ -57,6 +57,13 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public AbstractApplication() {
     }
 
+    public void init() { 
+        initApp();
+        super.init();
+    }
+    
+    protected void initApp() {}
+    
     /**
      * 
      * @deprecated since 0.6; use EntitySpec so no-arg constructor

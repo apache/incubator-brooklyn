@@ -55,7 +55,7 @@ public class ResilientMongoDbApp extends AbstractApplication implements Startabl
     public static final String DEFAULT_LOCATION = "named:gce-europe-west1";
 
     @Override
-    public void init() {
+    public void initApp() {
         MongoDBReplicaSet rs = addChild(
                 EntitySpec.create(MongoDBReplicaSet.class)
                         .configure(MongoDBReplicaSet.INITIAL_SIZE, 3));

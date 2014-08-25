@@ -114,9 +114,7 @@ public class CumulusRDFApplication extends AbstractApplication {
      * </ul>
      */
     @Override
-    public void init() {
-        super.init();
-        
+    public void initApp() {
         // Cassandra cluster
         EntitySpec<CassandraDatacenter> clusterSpec = EntitySpec.create(CassandraDatacenter.class)
                 .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)

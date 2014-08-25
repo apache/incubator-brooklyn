@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,8 +40,12 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.time.Duration;
@@ -58,6 +64,8 @@ import com.google.common.util.concurrent.Callables;
  */
 public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
+    private static final Logger log = LoggerFactory.getLogger(DependentConfigurationTest.class);
+    
     public static final int SHORT_WAIT_MS = 100;
     public static final int TIMEOUT_MS = 30*1000;
     
@@ -187,23 +195,38 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
-    public void testAttributeWhenReadyAbortsWhenOnfireByDefault() throws Exception {
+    public void testAttributeWhenReadyAbortsWhenOnFireByDefault() {
+        log.info("starting test "+JavaClassNames.niceClassAndMethod());
         final Task<String> t = submit(DependentConfiguration.builder()
                 .attributeWhenReady(entity, TestEntity.NAME)
                 .build());
 
         ServiceStateLogic.setExpectedState(entity, Lifecycle.ON_FIRE);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        
         try {
             assertDoneEventually(t);
-            fail();
-        } catch (Exception e) {
-            if (!e.toString().contains("Aborted waiting for ready")) throw e;
+            fail("Should have failed already!");
+        } catch (Throwable e) {
+            if (e.toString().contains("Aborted waiting for ready")) 
+                return;
+            
+            log.warn("Did not abort as expected: "+e, e);
+            Entities.dumpInfo(entity);
+            
+            throw Exceptions.propagate(e);
         }
     }
 
+    @Test(invocationCount=100, groups = "Integration")
+    public void testAttributeWhenReadyAbortsWhenOnfireByDefaultManyTimes() {
+        testAttributeWhenReadyAbortsWhenOnFireByDefault();
+    }
+    
     @Test
-    public void testAttributeWhenReadyAbortsWhenAlreadyOnfireByDefault() throws Exception {
+    public void testAttributeWhenReadyAbortsWhenAlreadyOnFireByDefault() throws Exception {
         ServiceStateLogic.setExpectedState(entity, Lifecycle.ON_FIRE);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
         final Task<String> t = submit(DependentConfiguration.builder()
                 .attributeWhenReady(entity, TestEntity.NAME)
@@ -281,7 +304,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
     
     private <T> T assertDoneEventually(final Task<T> t) throws Exception {
         final AtomicReference<ExecutionException> exception = new AtomicReference<ExecutionException>();
-        T result = Asserts.succeedsEventually(new Callable<T>() {
+        T result = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_SECONDS), new Callable<T>() {
             @Override public T call() throws InterruptedException, TimeoutException {
                 try {
                     return t.get(Duration.ONE_SECOND);

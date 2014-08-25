@@ -55,7 +55,7 @@ public class HighAvailabilityCassandraCluster extends AbstractApplication {
     
     
     @Override
-    public void init() {
+    public void initApp() {
         addChild(EntitySpec.create(CassandraDatacenter.class)
                 .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn")
                 .configure(CassandraDatacenter.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE))

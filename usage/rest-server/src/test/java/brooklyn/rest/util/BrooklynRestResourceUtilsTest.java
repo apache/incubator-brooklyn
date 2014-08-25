@@ -110,10 +110,6 @@ public class BrooklynRestResourceUtilsTest {
             description="Application which does nothing, included only as part of the test cases.",
             iconUrl="")
     public static class SampleNoOpApplication extends AbstractApplication implements MyInterface {
-        @Override
-        public void init() {
-            // no-op
-        }
     }
     
     public static class MyPolicy extends AbstractPolicy {

@@ -59,7 +59,7 @@ public class WebClusterExample extends AbstractApplication {
     private ControlledDynamicWebAppCluster web;
     
     @Override
-    public void init() {
+    public void initApp() {
         nginxController = addChild(EntitySpec.create(NginxController.class)
                 //.configure("domain", "webclusterexample.brooklyn.local")
                 .configure("port", "8000+"));

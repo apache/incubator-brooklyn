@@ -30,8 +30,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
@@ -83,16 +81,16 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
         // currently, is initially set true after successful start
         Assert.assertTrue(entity.getAttribute(Startable.SERVICE_UP));
         
-//        entity.connectServiceUpIsRunning();
-        
         EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, true);
-        log.info("XXX F");
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
+        
+        log.debug("up, now cause failure");
+        
         driver.setFailExecution(true);
-        log.info("XXX G");
         EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, false);
-        log.info("XXX H");
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, false);
+        
+        log.debug("caught failure, now clear");
         driver.setFailExecution(false);
         EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, true);
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
@@ -117,7 +115,6 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
             FunctionFeed.builder()
                 .entity(this)
                 .period(Duration.millis(10))
-                .onlyIfServiceUp()
                 .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_PROCESS_IS_RUNNING)
                     .onException(Functions.constant(Boolean.FALSE))
                     .callable(new Callable<Boolean>() {

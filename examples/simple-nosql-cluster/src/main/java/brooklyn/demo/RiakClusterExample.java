@@ -64,7 +64,7 @@ public class RiakClusterExample extends AbstractApplication {
         Entities.dumpInfo(launcher.getApplications());
     }
 
-    public void init() {
+    public void initApp() {
         addChild(EntitySpec.create(RiakCluster.class)
                 .configure(RiakCluster.INITIAL_SIZE, getConfig(RIAK_RING_SIZE))
                 .configure(RiakCluster.MEMBER_SPEC, EntitySpec.create(RiakNode.class)
