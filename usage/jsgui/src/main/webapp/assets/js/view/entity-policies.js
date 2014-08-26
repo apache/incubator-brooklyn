@@ -212,8 +212,13 @@ define([
         },
 
         showNewPolicyModal: function () {
+            var self = this;
             Brooklyn.view.showModalWith(new NewPolicyView({
-                entity: this.model
+                entity: this.model,
+                onSave: function (policy) {
+                    console.log("New policy", policy);
+                    self._policies.add(policy);
+                }
             }));
         },
 

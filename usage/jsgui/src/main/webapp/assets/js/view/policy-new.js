@@ -58,7 +58,7 @@ define([
             }
             var url = this.options.entity.get("links").policies + "/?type=" + type;
             var self = this;
-            return $.ajax({
+            var ajax = $.ajax({
                 url: url,
                 type: "post",
                 data: JSON.stringify(config),
@@ -67,6 +67,10 @@ define([
                 var message = JSON.parse(response.responseText).message;
                 self.showError(message);
             });
+            if (_.isFunction(this.options.onSave)) {
+                ajax.done(this.options.onSave);
+            }
+            return ajax;
         },
 
         showError: function (message) {
