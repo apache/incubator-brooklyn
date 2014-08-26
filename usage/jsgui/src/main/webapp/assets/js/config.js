@@ -80,8 +80,8 @@ require.config({
  * Inclusion of brooklyn module sets up logging.
  */
 require([
-    "backbone", "router", "brooklyn", "model/ha"
-], function (Backbone, Router, Brooklyn, ha) {
+    "backbone", "brooklyn", "router", "model/ha"
+], function (Backbone, Brooklyn, Router, ha) {
     ha.autoUpdate();
     var router = new Router();
     Backbone.history.start();

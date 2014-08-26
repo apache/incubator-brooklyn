@@ -40,11 +40,6 @@ define([
     })();
 
     var Brooklyn = {
-        refresh: true,
-        toggleRefresh: function () {
-            this.refresh = !this.refresh;
-            return this.refresh;
-        },
         view: BrooklynViews,
         util: BrooklynUtils
     };

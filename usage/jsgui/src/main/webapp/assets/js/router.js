@@ -26,50 +26,6 @@ define([
         HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView,
         HelpHtml, LabsHtml, ServerNotMasterHtml) {
 
-    // TODO this initialising - customising the View prototype - should be moved,
-    // and perhaps expanded to include other methods from viewutils
-    // see discussion at https://github.com/brooklyncentral/brooklyn/pull/939
-
-    // add close method to all views for clean-up
-    // (NB we have to update the prototype _here_ before any views are instantiated;
-    //  see "close" called below in "showView") 
-    Backbone.View.prototype.close = function () {
-        // call user defined close method if exists
-        this.viewIsClosed = true
-        if (this.beforeClose) {
-            this.beforeClose()
-        }
-        _.each(this._periodicFunctions, function(i) {
-            clearInterval(i)
-        })
-        this.remove()
-        this.unbind()
-    }
-    Backbone.View.prototype.viewIsClosed = false
-
-    /**
-     * Registers a callback (cf setInterval) that is unregistered cleanly when the view
-     * closes. The callback is run in the context of the owning view, so callbacks can
-     * refer to 'this' safely.
-     */
-    Backbone.View.prototype.callPeriodically = function (uid, callback, interval) {
-        if (!this._periodicFunctions) {
-            this._periodicFunctions = {}
-        }
-        var old = this._periodicFunctions[uid]
-        if (old) clearInterval(old)
-
-        // Wrap callback in function that checks whether updates are enabled
-        var periodic = function() {
-            if (Brooklyn.refresh) {
-                callback.apply(this);
-            }
-        };
-        // Bind this to the view
-        periodic = _.bind(periodic, this);
-        this._periodicFunctions[uid] = setInterval(periodic, interval)
-    }
-
     /**
      * @returns {jquery.Deferred}
      *      A promise that resolves when the high availability status has been
