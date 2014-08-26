@@ -77,7 +77,7 @@ define([
                 // view directly (e.g. when indicating an error), below handles keeping the
                 // right thing open when navigating from view to view.
                 var open = this.$(".in").attr("id");
-                var newHtml = $(template({model: model}));
+                var newHtml = $(template({model: model, viewName: that.options.name}));
                 $(newHtml).find("#"+open).addClass("in");
                 that.$el.html(newHtml);
                 // rewire events. previous callbacks are removed automatically.
@@ -299,7 +299,7 @@ define([
                 this.activeCid = cid;
                 var model = this.collection.get(cid);
                 Backbone.history.navigate("v1/catalog/" + this.name + "/" + model.id);
-                this.options.onItemSelected(model, $event);
+                this.options.onItemSelected(activeDetailsView, model, $event);
             }
         },
 
@@ -353,7 +353,7 @@ define([
                     autoOpen: this.options.kind == "entities"
                 }),
                 "policies": new AccordionItemView({
-                    onItemSelected: _.partial(this.showCatalogItem, DetailsGenericHtml),
+                    onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     name: "policies",
                     autoOpen: this.options.kind == "policies"
                 }),
@@ -428,14 +428,14 @@ define([
                         } else {
                             activeDetailsView = kind;
                             accordion.activeCid = model.cid;
-                            accordion.options.onItemSelected(model);
+                            accordion.options.onItemSelected(kind, model);
                             accordion.show();
                         }
                     });
             }
         },
 
-        showCatalogItem: function(template, model, $target) {
+        showCatalogItem: function(template, viewName, model, $target) {
             this.$(".accordion-nav-row").removeClass("active");
             if ($target) {
                 $target.addClass("active");
@@ -444,7 +444,8 @@ define([
             }
             var newView = new CatalogItemDetailsView({
                 model: model,
-                template: template
+                template: template,
+                name: viewName
             }).render();
             this.setDetailsView(newView)
         },
