@@ -46,7 +46,7 @@ public class NodeJsTodoApplication extends AbstractApplication implements Starta
         RedisStore redis = addChild(EntitySpec.create(RedisStore.class));
 
         addChild(EntitySpec.create(NodeJsWebAppService.class)
-                .configure(NodeJsWebAppService.APP_GIT_REPOSITORY_URL, "https://github.com/amirrajan/nodejs-todo/")
+                .configure(NodeJsWebAppService.APP_GIT_REPOSITORY_URL, "https://github.com/grkvlt/nodejs-todo/")
                 .configure(NodeJsWebAppService.APP_FILE, "server.js")
                 .configure(NodeJsWebAppService.APP_NAME, "nodejs-todo")
                 .configure(NodeJsWebAppService.NODE_PACKAGE_LIST, ImmutableList.of("express", "ejs", "jasmine-node", "underscore", "method-override", "cookie-parser", "express-session", "body-parser", "cookie-session", "redis", "redis-url", "connect"))
