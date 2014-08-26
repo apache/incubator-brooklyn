@@ -109,21 +109,23 @@ public class DynamicWebAppClusterTest {
     
         app.start(ImmutableList.of(new SimulatedLocation()));
         
-        // Should initially be false (when child has no service_up value) 
-        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
+        // Should initially be true (now that TestJavaWebAppEntity sets true) 
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, true);
         
-        // When child is !service_up, should continue to report false
+        // When child is !service_up, should report false
         ((EntityLocal)Iterables.get(cluster.getMembers(), 0)).setAttribute(Startable.SERVICE_UP, false);
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", SHORT_WAIT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
         
         cluster.resize(2);
         
         // When one of the two children is service_up, should report true
-        ((EntityLocal)Iterables.get(cluster.getMembers(), 0)).setAttribute(Startable.SERVICE_UP, true);
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, true);
 
         // And if that serviceUp child goes away, should again report false
-        Entities.unmanage(Iterables.get(cluster.getMembers(), 0));
+        Entities.unmanage(Iterables.get(cluster.getMembers(), 1));
+        ((EntityLocal)Iterables.get(cluster.getMembers(), 0)).setAttribute(Startable.SERVICE_UP, false);
+        
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, false);
     }
     

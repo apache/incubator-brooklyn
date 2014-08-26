@@ -26,13 +26,17 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationNoEnrichersImpl;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import brooklyn.util.collections.MutableMap;
@@ -43,7 +47,7 @@ import com.google.common.collect.ImmutableList;
 public class BrooklynMetricsTest {
 
     private static final long TIMEOUT_MS = 2*1000;
-    private final static int DEFAULT_SUBSCRIPTIONS_PER_ENTITY = 2;
+    private final static int NUM_SUBSCRIPTIONS_PER_ENTITY = 4;
     
     TestApplication app;
     SimulatedLocation loc;
@@ -52,7 +56,8 @@ public class BrooklynMetricsTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new SimulatedLocation();
-        app = TestApplication.Factory.newManagedInstanceForTests();
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class, TestApplicationNoEnrichersImpl.class),
+            LocalManagementContextForTests.newInstance());
         brooklynMetrics = app.createAndManageChild(EntitySpec.create(BrooklynMetrics.class).configure("updatePeriod", 10L));
     }
     
@@ -73,7 +78,7 @@ public class BrooklynMetricsTest {
                 assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_ACTIVE_TASKS), (Long)0L);
                 assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_PUBLISHED) > 0);
                 assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED), (Long)0L);
-                assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), (Long)(2L*DEFAULT_SUBSCRIPTIONS_PER_ENTITY));
+                assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), (Long)(0L+NUM_SUBSCRIPTIONS_PER_ENTITY));
             }});
     }
     
@@ -112,7 +117,7 @@ public class BrooklynMetricsTest {
                 assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_PUBLISHED) > eventsPublished);
                 assertTrue(brooklynMetrics.getAttribute(BrooklynMetrics.TOTAL_EVENTS_DELIVERED) > eventsDelivered);
                 assertEquals(brooklynMetrics.getAttribute(BrooklynMetrics.NUM_SUBSCRIPTIONS), (Long)
-                    (1L + 2*DEFAULT_SUBSCRIPTIONS_PER_ENTITY));
+                    (1L + NUM_SUBSCRIPTIONS_PER_ENTITY));
             }});
     }
     

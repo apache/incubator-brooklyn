@@ -26,7 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.java.VanillaJavaAppImpl;
@@ -52,7 +55,10 @@ public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
 
     
 	public void customStart(Collection<? extends Location> loc) {
+	    ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         LOG.trace("Starting {}", this);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+        setAttribute(Attributes.SERVICE_UP, true);
     }
 
     @Override

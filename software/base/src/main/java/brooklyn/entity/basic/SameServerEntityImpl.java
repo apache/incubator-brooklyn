@@ -32,6 +32,12 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
 
     private static final MachineLifecycleEffectorTasks LIFECYCLE_TASKS = new SameServerDriverLifecycleEffectorTasks();
 
+    @Override
+    protected void initEnrichers() {
+        super.initEnrichers();
+        addEnricher(ServiceStateLogic.newEnricherFromChildren());
+    }
+    
     /**
      * Restarts the entity and its children.
      * <p/>

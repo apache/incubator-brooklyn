@@ -160,4 +160,5 @@ public class EntityTestUtils {
         assertAttributeEventually(entity, attribute, 
             Predicates.not(Predicates.equalTo(entity.getAttribute(attribute))));
     }
+    
 }

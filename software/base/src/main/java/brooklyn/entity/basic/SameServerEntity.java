@@ -22,6 +22,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
@@ -51,6 +52,9 @@ public interface SameServerEntity extends Entity, Startable {
             "provisioning.properties", "Custom properties to be passed in when provisioning a new machine",
             MutableMap.<String, Object>of());
     
+    ConfigKey<QuorumCheck> UP_QUORUM_CHECK = ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK;
+    ConfigKey<QuorumCheck> RUNNING_QUORUM_CHECK = ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK;
+
     AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
 
     @SuppressWarnings("rawtypes")

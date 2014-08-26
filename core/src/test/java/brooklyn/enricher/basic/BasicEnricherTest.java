@@ -29,9 +29,14 @@ import com.google.common.collect.Iterables;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.BrooklynConfigKeys;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestApplicationNoEnrichersImpl;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -42,7 +47,13 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
     
     // TODO These tests are a copy of BasicPolicyTest, which is a code smell.
     // However, the src/main/java code does not contain as much duplication.
-    
+
+    protected void setUpApp() {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class, TestApplicationNoEnrichersImpl.class)
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
+        app = ApplicationBuilder.newManagedApp(appSpec, mgmt);
+    }
+
     public static class MyEnricher extends AbstractEnricher {
         @SetFromFlag("intKey")
         public static final BasicConfigKey<Integer> INT_KEY = new BasicConfigKey<Integer>(Integer.class, "bkey", "b key");

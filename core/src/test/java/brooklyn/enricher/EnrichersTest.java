@@ -19,24 +19,33 @@
 package brooklyn.enricher;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
+import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
+import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceState;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
+import brooklyn.policy.Enricher;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.CollectionFunctionals;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.Functionals;
@@ -54,6 +63,27 @@ import com.google.common.reflect.TypeToken;
 @SuppressWarnings("serial")
 public class EnrichersTest extends BrooklynAppUnitTestSupport {
 
+    public static List<Enricher> getNonSystemEnrichers(Entity entity) {
+        List<Enricher> result = MutableList.copyOf(entity.getEnrichers());
+        Iterator<Enricher> ri = result.iterator();
+        while (ri.hasNext()) {
+            if (isSystemEnricher(ri.next())) ri.remove();
+        }
+        return result;
+    }
+
+    public static final List<String> SYSTEM_ENRICHER_UNIQUE_TAGS = ImmutableList.of(
+        ServiceNotUpLogic.DEFAULT_ENRICHER_UNIQUE_TAG,
+        ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG,
+        ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG,
+        ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG_UP);
+    
+    public static boolean isSystemEnricher(Enricher enr) {
+        if (enr.getUniqueTag()==null) return false;
+        if (SYSTEM_ENRICHER_UNIQUE_TAGS.contains(enr.getUniqueTag())) return true;
+        return false;
+    }
+    
     public static final AttributeSensor<Integer> NUM1 = Sensors.newIntegerSensor("test.num1");
     public static final AttributeSensor<Integer> NUM2 = Sensors.newIntegerSensor("test.num2");
     public static final AttributeSensor<Integer> NUM3 = Sensors.newIntegerSensor("test.num3");
@@ -81,11 +111,13 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     @SuppressWarnings("unchecked")
     @Test
     public void testAdding() {
-        entity.addEnricher(Enrichers.builder()
+        Enricher enr = entity.addEnricher(Enrichers.builder()
                 .combining(NUM1, NUM2)
                 .publishing(NUM3)
                 .computingSum()
                 .build());
+        
+        Assert.assertEquals(EnrichersTest.getNonSystemEnrichers(entity), ImmutableList.of(enr));
         
         entity.setAttribute(NUM1, 2);
         entity.setAttribute(NUM2, 3);

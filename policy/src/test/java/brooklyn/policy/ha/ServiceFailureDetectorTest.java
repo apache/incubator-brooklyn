@@ -30,6 +30,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
@@ -55,7 +56,7 @@ import com.google.common.base.Predicates;
 
 public class ServiceFailureDetectorTest {
 
-    private static final int TIMEOUT_MS = 1*1000;
+    private static final int TIMEOUT_MS = 10*1000;
 
     private ManagementContext managementContext;
     private TestApplication app;
@@ -206,13 +207,14 @@ public class ServiceFailureDetectorTest {
     }
     
     @Test
-    public void testDisablingSetsOnFireOnFailure() throws Exception {
+    public void testDisablingOnFire() throws Exception {
         e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
             .configure(ServiceFailureDetector.SERVICE_ON_FIRE_STABILIZATION_DELAY, Duration.PRACTICALLY_FOREVER));
         
         // Make the entity fail
         e1.setAttribute(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
+        EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         e1.setAttribute(TestEntity.SERVICE_UP, false);
 
         assertEquals(e1.getAttribute(TestEntity.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);
@@ -226,6 +228,8 @@ public class ServiceFailureDetectorTest {
         // Make the entity fail
         e1.setAttribute(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
+        EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        
         e1.setAttribute(TestEntity.SERVICE_UP, false);
 
         assertEquals(e1.getAttribute(TestEntity.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);
@@ -244,7 +248,7 @@ public class ServiceFailureDetectorTest {
         e1.setAttribute(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
 
-        assertEquals(e1.getAttribute(TestEntity.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);
+        EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         ServiceStateLogic.ServiceProblemsLogic.updateProblemsIndicator(e1, "test", "foo");
         
         assertEquals(e1.getAttribute(TestEntity.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);

@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
@@ -58,8 +57,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     }
 
     public void init() { 
-        initApp();
         super.init();
+        initApp();
     }
     
     protected void initApp() {}

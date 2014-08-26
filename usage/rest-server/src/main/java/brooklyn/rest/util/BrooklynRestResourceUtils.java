@@ -341,7 +341,7 @@ public class BrooklynRestResourceUtils {
         if (clazz.isInterface()) {
             result = brooklyn.entity.proxying.EntitySpec.create(clazz);
         } else {
-            result = brooklyn.entity.proxying.EntitySpec.create(Entity.class).impl(clazz);
+            result = brooklyn.entity.proxying.EntitySpec.create(Entity.class).impl(clazz).additionalInterfaces(Reflections.getAllInterfaces(clazz));
         }
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getType(), config) );

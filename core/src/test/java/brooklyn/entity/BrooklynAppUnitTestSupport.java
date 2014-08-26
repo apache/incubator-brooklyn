@@ -52,6 +52,10 @@ public class BrooklynAppUnitTestSupport {
         if (mgmt == null) {
             mgmt = new LocalManagementContextForTests();
         }
+        setUpApp();
+    }
+
+    protected void setUpApp() {
         EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
                 .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
         app = ApplicationBuilder.newManagedApp(appSpec, mgmt);

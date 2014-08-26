@@ -56,6 +56,12 @@ public class RestMockSimpleEntity extends SoftwareProcessImpl {
     public RestMockSimpleEntity(@SuppressWarnings("rawtypes") Map flags) {
         super(flags);
     }
+    
+    @Override
+    protected void connectSensors() {
+        super.connectSensors();
+        connectServiceUpIsRunning();
+    }
 
     @SetFromFlag("sampleConfig")
     public static final ConfigKey<String> SAMPLE_CONFIG = new BasicConfigKey<String>(
@@ -75,11 +81,6 @@ public class RestMockSimpleEntity extends SoftwareProcessImpl {
         return result;
     }
 
-    @Override
-    public void waitForServiceUp() {
-        return;
-    }
-    
     @SuppressWarnings("rawtypes")
     @Override
     public Class getDriverInterface() {

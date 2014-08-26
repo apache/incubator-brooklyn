@@ -121,6 +121,8 @@ public class ServiceStateLogic {
     }
     
     public static class ServiceNotUpLogic {
+        public static final String DEFAULT_ENRICHER_UNIQUE_TAG = "service.isUp if no service.notUp.indicators";
+        
         /** static only; not for instantiation */
         private ServiceNotUpLogic() {}
         
@@ -132,7 +134,7 @@ public class ServiceStateLogic {
                     Functionals.<Map<String,?>>
                         ifNotEquals(null).<Object>apply(Functions.forPredicate(CollectionFunctionals.<String>mapSizeEquals(0)))
                         .defaultValue(Entities.REMOVE) )
-                .uniqueTag("service.isUp if no service.notUp.indicators")
+                .uniqueTag(DEFAULT_ENRICHER_UNIQUE_TAG)
                 .build();
         }
         
@@ -170,13 +172,16 @@ public class ServiceStateLogic {
      * {@link ServiceStateLogic#newEnricherForServiceState(Class)} and added to an entity.
      */
     public static class ComputeServiceState extends AbstractEnricher implements SensorEventListener<Object> {
+        
+        public static final String DEFAULT_ENRICHER_UNIQUE_TAG = "service.state.actual";
+
         public ComputeServiceState() {}
         public ComputeServiceState(Map<?,?> flags) { super(flags); }
             
         @Override
         public void init() {
             super.init();
-            if (uniqueTag==null) uniqueTag = "service.state.actual";
+            if (uniqueTag==null) uniqueTag = DEFAULT_ENRICHER_UNIQUE_TAG;
         }
         
         public void setEntity(EntityLocal entity) {
@@ -277,10 +282,10 @@ public class ServiceStateLogic {
     
     public static class ComputeServiceIndicatorsFromChildrenAndMembers extends AbstractMultipleSensorAggregator<Void> implements SensorEventListener<Object> {
         /** standard unique tag identifying instances of this enricher at runtime, also used for the map sensor if no unique tag specified */
-        public final static String IDENTIFIER_DEFAULT = "service-lifecycle-indicators-from-children-and-members";
+        public final static String DEFAULT_UNIQUE_TAG = "service-lifecycle-indicators-from-children-and-members";
         
-        /** as {@link #IDENTIFIER_LIFECYCLE}, but when a second distinct instance is responsible for computing service up */
-        public final static String IDENTIFIER_UP = "service-not-up-indicators-from-children-and-members";
+        /** as {@link #DEFAULT_UNIQUE_TAG}, but when a second distinct instance is responsible for computing service up */
+        public final static String DEFAULT_UNIQUE_TAG_UP = "service-not-up-indicators-from-children-and-members";
 
         public static final ConfigKey<QuorumCheck> UP_QUORUM_CHECK = ConfigKeys.newConfigKey(QuorumCheck.class, "enricher.service_state.children_and_members.quorum.up", 
             "Logic for checking whether this service is up, based on children and/or members, defaulting to allowing none but if there are any requiring at least one to be up", QuorumCheck.QuorumChecks.atLeastOneUnlessEmpty());
@@ -457,22 +462,22 @@ public class ServiceStateLogic {
     }
 
     /** provides the default {@link ComputeServiceIndicatorsFromChildrenAndMembers} enricher, 
-     * using the default unique tag ({@link ComputeServiceIndicatorsFromChildrenAndMembers#IDENTIFIER_DEFAULT}),
+     * using the default unique tag ({@link ComputeServiceIndicatorsFromChildrenAndMembers#DEFAULT_UNIQUE_TAG}),
      * configured here to require none on fire, and either no children or at least one up child,
      * the spec can be further configured as appropriate */
     public static ComputeServiceIndicatorsFromChildrenAndMembersSpec newEnricherFromChildren() {
         return new ComputeServiceIndicatorsFromChildrenAndMembersSpec()
-            .uniqueTag(ComputeServiceIndicatorsFromChildrenAndMembers.IDENTIFIER_DEFAULT);
+            .uniqueTag(ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG);
     }
 
     /** as {@link #newEnricherFromChildren()} but only publishing service not-up indicators, 
-     * using a different unique tag ({@link ComputeServiceIndicatorsFromChildrenAndMembers#IDENTIFIER_UP}),
+     * using a different unique tag ({@link ComputeServiceIndicatorsFromChildrenAndMembers#DEFAULT_UNIQUE_TAG_UP}),
      * listening to children only, ignoring lifecycle/service-state,
      * and using the same logic 
      * (viz looking only at children (not members) and requiring either no children or at least one child up) by default */
     public static ComputeServiceIndicatorsFromChildrenAndMembersSpec newEnricherFromChildrenUp() {
         return newEnricherFromChildren()
-            .uniqueTag(ComputeServiceIndicatorsFromChildrenAndMembers.IDENTIFIER_UP)
+            .uniqueTag(ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG_UP)
             .checkChildrenOnly()
             .configure(ComputeServiceIndicatorsFromChildrenAndMembers.DERIVE_SERVICE_PROBLEMS, false);
     }

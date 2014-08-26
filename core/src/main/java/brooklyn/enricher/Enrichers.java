@@ -95,11 +95,11 @@ public class Enrichers {
 
         protected abstract String getDefaultUniqueTag();
         
-        protected EnricherSpec<?> build() {
+        protected EnricherSpec<? extends Enricher> build() {
             EnricherSpec<? extends Enricher> spec = EnricherSpec.create(enricherType);
             
             String uniqueTag2 = uniqueTag;
-            if (uniqueTag!=null)
+            if (uniqueTag2==null)
                 uniqueTag2 = getDefaultUniqueTag();
             if (uniqueTag2!=null)
                 spec.uniqueTag(uniqueTag2);
