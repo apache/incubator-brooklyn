@@ -53,4 +53,27 @@ public class MutableListTest {
         Assert.assertEquals(b, a);
     }
 
+    public void testContainingNullAndUnmodifiable() {
+        MutableList<Object> x = MutableList.<Object>of("x", null);
+        Assert.assertTrue(x.contains(null));
+        
+        List<Object> x1 = x.asUnmodifiable();
+        List<Object> x2 = x.asUnmodifiableCopy();
+        List<Object> x3 = x.asImmutableCopy();
+        
+        x.remove(null);
+        Assert.assertFalse(x.contains(null));
+        Assert.assertFalse(x1.contains(null));
+        Assert.assertTrue(x2.contains(null));
+        Assert.assertTrue(x3.contains(null));
+        
+        try { x1.remove("x"); Assert.fail(); } catch (Exception e) { /* expected */ }
+        try { x2.remove("x"); Assert.fail(); } catch (Exception e) { /* expected */ }
+        try { x3.remove("x"); Assert.fail(); } catch (Exception e) { /* expected */ }
+        
+        Assert.assertTrue(x1.contains("x"));
+        Assert.assertTrue(x2.contains("x"));
+        Assert.assertTrue(x3.contains("x"));
+    }
+    
 }

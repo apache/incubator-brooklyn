@@ -20,16 +20,22 @@ package brooklyn.util.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class MutableList<V> extends ArrayList<V> {
     private static final long serialVersionUID = -5533940507175152491L;
 
+    private static final Logger log = LoggerFactory.getLogger(MutableList.class);
+    
     public static <V> MutableList<V> of() {
         return new MutableList<V>();
     }
@@ -74,10 +80,25 @@ public class MutableList<V> extends ArrayList<V> {
         }
     }
     
+    /** @deprecated since 0.7.0, use {@link #asImmutableCopy()}, or {@link #asUnmodifiable()} / {@link #asUnmodifiableCopy()} */ @Deprecated
     public ImmutableList<V> toImmutable() {
         return ImmutableList.copyOf(this);
     }
-    
+    public List<V> asImmutableCopy() {
+        try {
+            return ImmutableList.copyOf(this);
+        } catch (Exception e) {
+            log.warn("Error converting list to Immutable, using unmodifiable instead: "+e, e);
+            return asUnmodifiableCopy();
+        }
+    }
+    public List<V> asUnmodifiable() {
+        return Collections.unmodifiableList(this);
+    }
+    public List<V> asUnmodifiableCopy() {
+        return Collections.unmodifiableList(MutableList.copyOf(this));
+    }
+
     public static <V> Builder<V> builder() {
         return new Builder<V>();
     }

@@ -72,7 +72,7 @@ public class KnifeTaskFactory<RET> extends SystemProcessTaskFactory<KnifeTaskFac
         MutableList<Function<ProcessTaskWrapper<?>, Void>> result = MutableList.copyOf(super.getCompletionListeners());
         if (throwOnCommonKnifeErrors != Boolean.FALSE)
             insertKnifeCompletionListenerIntoCompletionListenersList(result);
-        return result.toImmutable();
+        return result.asUnmodifiable();
     }
     
     public KnifeTaskFactory<RET> notThrowingOnCommonKnifeErrors() {
@@ -127,7 +127,7 @@ public class KnifeTaskFactory<RET> extends SystemProcessTaskFactory<KnifeTaskFac
         }
         if (numKnifes==0)
             result.add(buildKnifeCommand(numKnifes++));
-        return result.toImmutable();
+        return result.asUnmodifiable();
     }
     
     /** creates the command for running knife.
