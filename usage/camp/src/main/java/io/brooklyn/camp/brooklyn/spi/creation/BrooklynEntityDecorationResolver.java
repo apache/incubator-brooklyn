@@ -23,8 +23,11 @@ import io.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.Insta
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.management.ManagementContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
@@ -98,11 +101,24 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<PolicySpec<?>> decorations) {
             InstantiatorFromKey decoLoader = instantiator.from(decorationJson).prefix("policy");
-            // this pattern of creating a spec could be simplified with a "Configurable" superinterface on *Spec  
-            decorations.add(PolicySpec.create(decoLoader.getType(Policy.class))
-                .configure( decoLoader.getConfigMap() ));
+
+            String policyType = decoLoader.getTypeName().get();
+            ManagementContext mgmt = instantiator.loader.getManagementContext();
+            BrooklynCatalog catalog = mgmt.getCatalog();
+            CatalogItem<?, ?> item = catalog.getCatalogItem(policyType);
+            PolicySpec<? extends Policy> spec;
+            if (item != null) {
+                spec = (PolicySpec<? extends Policy>) catalog.createSpec(item);
+                spec.configure(decoLoader.getConfigMap());
+            } else {
+                // this pattern of creating a spec could be simplified with a "Configurable" superinterface on *Spec  
+                spec = PolicySpec.create(decoLoader.getType(Policy.class))
+                    .configure( decoLoader.getConfigMap() );
+            }
+            decorations.add(spec);
         }
     }
 

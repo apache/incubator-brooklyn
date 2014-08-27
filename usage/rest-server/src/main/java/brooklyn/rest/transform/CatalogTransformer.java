@@ -89,7 +89,8 @@ public class CatalogTransformer {
 
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
         Set<PolicyConfigSummary> config = ImmutableSet.of();
-        return new CatalogPolicySummary(item.getId(), item.getName(), item.getJavaType(),
+        return new CatalogPolicySummary(item.getId(), item.getName(), item.getRegisteredTypeName(),
+                item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
                 makeLinks(item));
     }
