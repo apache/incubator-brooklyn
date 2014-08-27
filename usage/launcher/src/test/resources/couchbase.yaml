@@ -18,7 +18,7 @@
 #
 name: Couchbase
 
-location: softlayer:ams01
+location: aws-ec2
 
 services:
 - type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
@@ -26,4 +26,4 @@ services:
   adminPassword: Password
   initialSize: 3
 
-- type: "classpath://pillowfight.yaml"
+- type: "classpath://brooklyn/entity/nosql/couchbase/pillowfight.yaml"

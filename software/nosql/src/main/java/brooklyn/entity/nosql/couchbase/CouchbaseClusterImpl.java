@@ -363,6 +363,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     public void createBuckets() {
         //TODO: check for port conflicts if buckets are being created with a port
         List<Map<String, Object>> bucketsToCreate = getConfig(CREATE_BUCKETS);
+        if (bucketsToCreate==null) return;
+        
         Entity primaryNode = getPrimaryNode();
 
         for (Map<String, Object> bucketMap : bucketsToCreate) {
