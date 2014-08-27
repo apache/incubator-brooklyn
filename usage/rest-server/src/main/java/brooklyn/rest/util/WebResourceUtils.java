@@ -38,40 +38,41 @@ public class WebResourceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(WebResourceUtils.class);
 
-    /** @throws WebApplicationException With code 400 bad request */
-    public static WebApplicationException badRequest(String format, Object... args) {
+    /** @throws WebApplicationException with an ApiError as its body and the given status as its response code. */
+    public static WebApplicationException throwWebApplicationException(Response.Status status, String format, Object... args) {
         String msg = String.format(format, args);
-        if (log.isDebugEnabled()) log.debug("returning 400 bad request ("+msg+")");
-        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+        if (log.isDebugEnabled()) {
+            log.debug("responding {} {} ({})",
+                    new Object[]{status.getStatusCode(), status.getReasonPhrase(), msg});
+        }
+        throw new WebApplicationException(Response.status(status)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .entity(ApiError.builder().message(msg).build()).build());
+    }
+
+    /** @throws WebApplicationException With code 500 internal server error */
+    public static WebApplicationException serverError(String format, Object... args) {
+        return throwWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, format, args);
+    }
+
+    /** @throws WebApplicationException With code 400 bad request */
+    public static WebApplicationException badRequest(String format, Object... args) {
+        return throwWebApplicationException(Response.Status.BAD_REQUEST, format, args);
     }
 
     /** @throws WebApplicationException With code 401 unauthorized */
     public static WebApplicationException unauthorized(String format, Object... args) {
-        String msg = String.format(format, args);
-        if (log.isDebugEnabled()) log.debug("returning 401 unauthorized("+msg+")");
-        throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .entity(ApiError.builder().message(msg).build()).build());
+        return throwWebApplicationException(Response.Status.UNAUTHORIZED, format, args);
     }
 
     /** @throws WebApplicationException With code 404 not found */
     public static WebApplicationException notFound(String format, Object... args) {
-        String msg = String.format(format, args);
-        if (log.isDebugEnabled()) log.debug("returning 404 notFound("+msg+")");
-        throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .entity(ApiError.builder().message(msg).build()).build());
+        return throwWebApplicationException(Response.Status.NOT_FOUND, format, args);
     }
 
     /** @throws WebApplicationException With code 412 precondition failed */
     public static WebApplicationException preconditionFailed(String format, Object... args) {
-        String msg = String.format(format, args);
-        if (log.isDebugEnabled()) log.debug("returning 412 preconditionFailed("+msg+")");
-        throw new WebApplicationException(Response.status(Response.Status.PRECONDITION_FAILED)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .entity(ApiError.builder().message(msg).build()).build());
+        return throwWebApplicationException(Response.Status.PRECONDITION_FAILED, format, args);
     }
 
     public final static Map<String,com.google.common.net.MediaType> IMAGE_FORMAT_MIME_TYPES = ImmutableMap.<String, com.google.common.net.MediaType>builder()

@@ -122,6 +122,10 @@ public class ApiError {
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String details;
 
+    public ApiError(String message) {
+        this(message, null);
+    }
+
     public ApiError(
             @JsonProperty("message") String message,
             @JsonProperty("details") String details) {
