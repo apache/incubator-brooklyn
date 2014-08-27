@@ -28,10 +28,10 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.enricher.EnrichersTest;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityAdjuncts;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.policy.Enricher;
 import brooklyn.test.Asserts;
@@ -57,8 +57,8 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         log.info("App started:");
         Entities.dumpInfo(app);
         
-        Assert.assertEquals(EnrichersTest.getNonSystemEnrichers(app).size(), 1);
-        final Enricher enricher = EnrichersTest.getNonSystemEnrichers(app).iterator().next();
+        Assert.assertEquals(EntityAdjuncts.getNonSystemEnrichers(app).size(), 1);
+        final Enricher enricher = EntityAdjuncts.getNonSystemEnrichers(app).iterator().next();
         Assert.assertTrue(enricher instanceof TestEnricher, "enricher="+enricher);
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_NAME), "Name from YAML");
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_FROM_FUNCTION), "$brooklyn: is a fun place");
@@ -90,16 +90,16 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         log.info("App started:");
         Entities.dumpInfo(app);
 
-        Assert.assertEquals(EnrichersTest.getNonSystemEnrichers(app).size(), 0);
+        Assert.assertEquals(EntityAdjuncts.getNonSystemEnrichers(app).size(), 0);
         Assert.assertEquals(app.getChildren().size(), 1);
         final Entity child = app.getChildren().iterator().next();
         Asserts.eventually(new Supplier<Integer>() {
             @Override
             public Integer get() {
-                return EnrichersTest.getNonSystemEnrichers(child).size();
+                return EntityAdjuncts.getNonSystemEnrichers(child).size();
             }
         }, Predicates.<Integer> equalTo(1));        
-        final Enricher enricher = EnrichersTest.getNonSystemEnrichers(child).iterator().next();
+        final Enricher enricher = EntityAdjuncts.getNonSystemEnrichers(child).iterator().next();
         Assert.assertNotNull(enricher);
         Assert.assertTrue(enricher instanceof TestEnricher, "enricher=" + enricher + "; type=" + enricher.getClass());
         Assert.assertEquals(enricher.getConfig(TestEnricher.CONF_NAME), "Name from YAML");
@@ -151,10 +151,10 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         Asserts.eventually(new Supplier<Integer>() {
             @Override
             public Integer get() {
-                return EnrichersTest.getNonSystemEnrichers(parentEntity).size();
+                return EntityAdjuncts.getNonSystemEnrichers(parentEntity).size();
             }
         }, Predicates.<Integer>equalTo(1));
-        Enricher enricher = EnrichersTest.getNonSystemEnrichers(parentEntity).iterator().next();
+        Enricher enricher = EntityAdjuncts.getNonSystemEnrichers(parentEntity).iterator().next();
         Asserts.assertTrue(enricher instanceof Propagator, "Expected enricher to be Propagator, found:" + enricher);
         final Propagator propagator = (Propagator)enricher;
         Entity producer = ((EntityInternal)parentEntity).getExecutionContext().submit(MutableMap.of(), new Callable<Entity>() {
@@ -242,7 +242,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
     }
     
     private Enricher getEnricher(Entity entity) {
-        List<Enricher> enrichers = EnrichersTest.getNonSystemEnrichers(entity);
+        List<Enricher> enrichers = EntityAdjuncts.getNonSystemEnrichers(entity);
         Assert.assertEquals(enrichers.size(), 1, "Wrong number of enrichers: "+enrichers);
         Enricher enricher = enrichers.iterator().next();
         Assert.assertTrue(enricher instanceof TestReferencingEnricher, "Wrong enricher: "+enricher);

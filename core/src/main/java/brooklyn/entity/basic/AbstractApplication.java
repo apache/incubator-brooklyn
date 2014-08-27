@@ -35,6 +35,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Time;
 
 /**
  * Users can extend this to define the entities in their application, and the relationships between
@@ -125,6 +126,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         
         // default app logic; easily overridable by adding a different enricher with the same tag
         ServiceStateLogic.newEnricherFromChildren().checkChildrenAndMembers().addTo(this);
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application created but not yet started, at "+Time.makeDateString());
     }
     
     /**
@@ -137,13 +139,17 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         Collection<? extends Location> locationsToUse = getLocations();
         ServiceProblemsLogic.clearProblemsIndicator(this, START);
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application starting");
         recordApplicationEvent(Lifecycle.STARTING);
         try {
             preStart(locationsToUse);
+            // if there are other items which should block service_up, they should be done in preStart
+            ServiceStateLogic.ServiceNotUpLogic.clearNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL);
+            
             doStart(locationsToUse);
             postStart(locationsToUse);
         } catch (Exception e) {
-            // TODO should probably remember these problems then clear?  if so, do it here or on all effectors?
+            // TODO should probably remember these problems then clear?  if so, do it here ... or on all effectors?
 //            ServiceProblemsLogic.updateProblemsIndicator(this, START, e);
             
             recordApplicationEvent(Lifecycle.ON_FIRE);
@@ -188,6 +194,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public void stop() {
         logApplicationLifecycle("Stopping");
 
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application stopping");
         setAttribute(SERVICE_UP, false);
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         recordApplicationEvent(Lifecycle.STOPPING);
@@ -199,6 +206,7 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             log.warn("Error stopping application " + this + " (rethrowing): "+e);
             throw Exceptions.propagate(e);
         }
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application stopping");
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         recordApplicationEvent(Lifecycle.STOPPED);
 

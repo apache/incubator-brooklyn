@@ -70,7 +70,7 @@ public interface QuorumCheck {
         
         @Override
         public String toString() {
-            return "QuorumCheck[require="+minRequiredSize+","+((int)100*minRequiredRatio)+"%]";
+            return "QuorumCheck[require="+minRequiredSize+","+((int)100*minRequiredRatio)+"%"+(allowEmpty ? "|0" : "")+"]";
         }
     }
     

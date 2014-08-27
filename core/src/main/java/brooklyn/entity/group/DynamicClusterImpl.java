@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroupImpl;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
@@ -141,7 +142,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void init() {
         super.init();
-        setAttribute(SERVICE_UP, false);
     }
 
     @Override
@@ -149,6 +149,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (getConfigRaw(UP_QUORUM_CHECK, true).isAbsent() && getConfig(INITIAL_SIZE)==0) {
             // if initial size is 0 then override up check to allow zero if empty
             setConfig(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
+            setAttribute(SERVICE_UP, true);
+        } else {
+            setAttribute(SERVICE_UP, false);
         }
         super.initEnrichers();
         // override previous enricher so that only members are checked

@@ -761,12 +761,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return attributesInternal.getValue(attribute);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getAttributeByNameParts(List<String> nameParts) {
         return (T) attributesInternal.getValue(nameParts);
     }
     
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
+        if (LOG.isTraceEnabled())
+            LOG.trace(""+this+" setAttribute "+attribute+" "+val);
+        
         T result = attributesInternal.update(attribute, val);
         if (result == null) {
             // could be this is a new sensor
@@ -779,6 +783,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public <T> T setAttributeWithoutPublishing(AttributeSensor<T> attribute, T val) {
+        if (LOG.isTraceEnabled())
+            LOG.trace(""+this+" setAttributeWithoutPublishing "+attribute+" "+val);
+        
         T result = attributesInternal.updateWithoutPublishing(attribute, val);
         if (result == null) {
             // could be this is a new sensor
@@ -791,6 +798,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public void removeAttribute(AttributeSensor<?> attribute) {
+        if (LOG.isTraceEnabled())
+            LOG.trace(""+this+" removeAttribute "+attribute);
+        
         attributesInternal.remove(attribute);
         entityType.removeSensor(attribute);
     }

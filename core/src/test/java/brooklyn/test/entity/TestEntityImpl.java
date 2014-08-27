@@ -137,6 +137,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         counter.decrementAndGet();
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
+        setAttribute(SERVICE_UP, false);
     }
 
     @Override

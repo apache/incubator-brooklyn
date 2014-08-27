@@ -106,6 +106,9 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
     }
 
     protected Object compute(SensorEvent<T> event) {
-        return transformation.apply(event);
+        U result = transformation.apply(event);
+        if (LOG.isTraceEnabled())
+            LOG.trace("Enricher "+this+" computed "+result+" from "+event);
+        return result;
     }
 }

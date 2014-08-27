@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -47,6 +48,7 @@ import brooklyn.policy.EnricherSpec.ExtensibleEnricherSpec;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.text.Strings;
 
@@ -54,6 +56,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 
 /** Logic, sensors and enrichers, and conveniences, for computing service status */ 
 public class ServiceStateLogic {
@@ -139,11 +143,19 @@ public class ServiceStateLogic {
         }
         
         /** puts the given value into the {@link Attributes#SERVICE_NOT_UP_INDICATORS} map as if the 
-         * {@link UpdatingMap} enricher for the given sensor reported */
+         * {@link UpdatingMap} enricher for the given key */
+        public static void updateNotUpIndicator(EntityLocal entity, String key, Object value) {
+            updateMapSensorEntry(entity, Attributes.SERVICE_NOT_UP_INDICATORS, key, value);
+        }
+        /** clears any entry for the given key in the {@link Attributes#SERVICE_NOT_UP_INDICATORS} map */
+        public static void clearNotUpIndicator(EntityLocal entity, String key) {
+            clearMapSensorEntry(entity, Attributes.SERVICE_NOT_UP_INDICATORS, key);
+        }
+        /** as {@link #updateNotUpIndicator(EntityLocal, String, Object)} using the given sensor as the key */
         public static void updateNotUpIndicator(EntityLocal entity, Sensor<?> sensor, Object value) {
             updateMapSensorEntry(entity, Attributes.SERVICE_NOT_UP_INDICATORS, sensor.getName(), value);
         }
-        /** clears any entry for the given sensor in the {@link Attributes#SERVICE_NOT_UP_INDICATORS} map */
+        /** as {@link #clearNotUpIndicator(EntityLocal, String)} using the given sensor as the key */
         public static void clearNotUpIndicator(EntityLocal entity, Sensor<?> sensor) {
             clearMapSensorEntry(entity, Attributes.SERVICE_NOT_UP_INDICATORS, sensor.getName());
         }
@@ -222,12 +234,19 @@ public class ServiceStateLogic {
         
         protected Lifecycle computeActualStateWhenNotExpectedRunning(Map<String, Object> problems, Boolean up, Lifecycle.Transition stateTransition) {
             if (stateTransition!=null) {
+                // if expected state is present but not running, just echo the expected state (ignore problems and up-ness)
                 return stateTransition.getState();
+                
             } else if (problems!=null && !problems.isEmpty()) {
-                return Lifecycle.ON_FIRE;
+                // if there is no expected state, then if service is not up, say stopped, else say on fire (whether service up is true or not present)
+                if (Boolean.FALSE.equals(up))
+                    return Lifecycle.STOPPED;
+                else
+                    return Lifecycle.ON_FIRE;
             } else {
-                // no expected transition
-                // if the problems map is non-null, then infer, else leave unchanged
+                // no expected transition and no problems
+                // if the problems map is non-null, then infer from service up;
+                // if there is no problems map, then leave unchanged (user may have set it explicitly)
                 if (problems!=null)
                     return (up==null ? null /* remove if up is not set */ : 
                         up ? Lifecycle.RUNNING : Lifecycle.STOPPED);
@@ -240,6 +259,7 @@ public class ServiceStateLogic {
             if (log.isTraceEnabled()) log.trace("{} setting actual state {}", this, state);
             emit(SERVICE_STATE_ACTUAL, (state==null ? Entities.REMOVE : state));
         }
+
     }
     
     public static final EnricherSpec<?> newEnricherForServiceStateFromProblemsAndUp() {
@@ -293,8 +313,12 @@ public class ServiceStateLogic {
             "Logic for checking whether this service is healthy, based on children and/or members running, defaulting to requiring none to be ON-FIRE", QuorumCheck.QuorumChecks.all());
         public static final ConfigKey<Boolean> DERIVE_SERVICE_NOT_UP = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.service_up.publish", "Whether to derive a service-not-up indicator from children", true);
         public static final ConfigKey<Boolean> DERIVE_SERVICE_PROBLEMS = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.service_problems.publish", "Whether to derive a service-problem indicator from children", true);
-        public static final ConfigKey<Boolean> IGNORE_NULL_VALUES = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.ignore_nulls", "Whether to ignore children reporting null values for the sensor", true);
-        public static final ConfigKey<Boolean> IGNORE_TRANSITIONING = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.ignore_transitioning", "Whether to ignore children reporting transitional states (starting, stopping, etc) for service state", true);
+        public static final ConfigKey<Boolean> IGNORE_ENTITIES_WITH_SERVICE_UP_NULL = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.ignore_entities.service_up_null", "Whether to ignore children reporting null values for service up", true);
+        @SuppressWarnings("serial")
+        public static final ConfigKey<Set<Lifecycle>> IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES = ConfigKeys.newConfigKey(new TypeToken<Set<Lifecycle>>() {},
+            "enricher.service_state.children_and_members.ignore_entities.service_state_values", 
+            "Service states (including null) which indicate an entity should be ignored when looking at children service states; anything apart from RUNNING not in this list will be treated as not healthy (by default just ON_FIRE will mean not healthy)", 
+            MutableSet.<Lifecycle>builder().addAll(Lifecycle.values()).add(null).remove(Lifecycle.RUNNING).remove(Lifecycle.ON_FIRE).build().asUnmodifiable());
 
         protected String getKeyForMapSensor() {
             return Preconditions.checkNotNull(super.getUniqueTag());
@@ -326,6 +350,27 @@ public class ServiceStateLogic {
             }
         }
 
+        final static Set<ConfigKey<?>> RECONFIGURABLE_KEYS = ImmutableSet.<ConfigKey<?>>of(
+            UP_QUORUM_CHECK, RUNNING_QUORUM_CHECK,
+            DERIVE_SERVICE_NOT_UP, DERIVE_SERVICE_NOT_UP, 
+            IGNORE_ENTITIES_WITH_SERVICE_UP_NULL, IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES);
+        
+        @Override
+        protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
+            if (RECONFIGURABLE_KEYS.contains(key)) {
+                return;
+            } else {
+                super.doReconfigureConfig(key, val);
+            }
+        }
+        
+        @Override
+        protected void onChanged() {
+            super.onChanged();
+            if (entity != null && isRunning())
+                onUpdated();
+        }
+        
         private final List<Sensor<?>> SOURCE_SENSORS = ImmutableList.<Sensor<?>>of(SERVICE_UP, SERVICE_STATE_ACTUAL);
         @Override
         protected Collection<Sensor<?>> getSourceSensors() {
@@ -334,8 +379,13 @@ public class ServiceStateLogic {
 
         @Override
         protected void onUpdated() {
-            // override superclass to publish potentially several items
+            if (entity==null || !Entities.isManaged(entity)) {
+                // either invoked during setup or entity has become unmanaged; just ignore
+                log.debug("Ignoring {} onUpdated when entity is not in valid state ({})", this, entity);
+                return;
+            }
 
+            // override superclass to publish multiple sensors
             if (getConfig(DERIVE_SERVICE_PROBLEMS))
                 updateMapSensor(SERVICE_PROBLEMS, computeServiceProblems());
 
@@ -346,7 +396,7 @@ public class ServiceStateLogic {
         protected Object computeServiceNotUp() {
             Map<Entity, Boolean> values = getValues(SERVICE_UP);
             List<Entity> violators = MutableList.of();
-            boolean ignoreNull = getConfig(IGNORE_NULL_VALUES);
+            boolean ignoreNull = getConfig(IGNORE_ENTITIES_WITH_SERVICE_UP_NULL);
             int entries=0;
             for (Map.Entry<Entity, Boolean> state: values.entrySet()) {
                 if (ignoreNull && state.getValue()==null)
@@ -379,13 +429,10 @@ public class ServiceStateLogic {
         protected Object computeServiceProblems() {
             Map<Entity, Lifecycle> values = getValues(SERVICE_STATE_ACTUAL);
             int numRunning=0, numNotHealthy=0;
-            boolean ignoreNull = getConfig(IGNORE_NULL_VALUES);
-            boolean ignoreTransition = getConfig(IGNORE_TRANSITIONING);
+            Set<Lifecycle> ignoreStates = getConfig(IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES);
             for (Lifecycle state: values.values()) {
                 if (state==Lifecycle.RUNNING) numRunning++;
-                else if (state==Lifecycle.ON_FIRE) numNotHealthy++;
-                else if (state==null) { if (!ignoreNull) numNotHealthy++; }
-                else { if (!ignoreTransition) numNotHealthy++; }
+                else if (!ignoreStates.contains(state)) numNotHealthy++;
             }
 
             QuorumCheck qc = getConfig(RUNNING_QUORUM_CHECK);
