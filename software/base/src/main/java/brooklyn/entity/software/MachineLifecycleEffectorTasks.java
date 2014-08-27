@@ -90,7 +90,7 @@ import com.google.common.collect.Iterables;
  *  <li> {@link #postStartCustom()}
  *  <li> {@link #preStopCustom()}
  * </ul>
- * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE} sensor.
+ * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE_EXPECTED} sensor.
  *  
  * @since 0.6.0
  **/

@@ -177,7 +177,7 @@ public class ServiceReplacerTest {
         // Configured to not mark cluster as on fire
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
-                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
+                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.ON_FIRE);
             }});
         
         // And will have received notification event about it
@@ -217,7 +217,7 @@ public class ServiceReplacerTest {
         // Failure to stop the failed member should not cause "on-fire" of cluster
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
-                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
+                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.ON_FIRE);
             }});
     }
 

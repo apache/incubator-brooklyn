@@ -288,7 +288,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (getServiceName()==null) return false;
         int result = DynamicTasks.queue(SshEffectorTasks.ssh("/etc/init.d/"+getServiceName()+" stop").runAsRoot()).get();
         if (0==result) return true;
-        if (entity().getAttribute(Attributes.SERVICE_STATE)!=Lifecycle.RUNNING)
+        if (entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL)!=Lifecycle.RUNNING)
             return true;
         
         throw new IllegalStateException("The process for "+entity()+" appears could not be stopped (exit code "+result+" to service stop)");
@@ -298,7 +298,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (getWindowsServiceName()==null) return false;
                 int result = DynamicTasks.queue(SshEffectorTasks.ssh("sc query \""+getWindowsServiceName()+"\"").runAsCommand()).get();
         if (0==result) return true;
-        if (entity().getAttribute(Attributes.SERVICE_STATE)!=Lifecycle.RUNNING)
+        if (entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL)!=Lifecycle.RUNNING)
             return true;
 
         throw new IllegalStateException("The process for "+entity()+" appears could not be stopped (exit code "+result+" to service stop)");
@@ -307,11 +307,11 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     protected boolean tryStopPid() {
         Integer pid = entity().getAttribute(Attributes.PID);
         if (pid==null) {
-            if (entity().getAttribute(Attributes.SERVICE_STATE)==Lifecycle.RUNNING && getPidFile()==null)
+            if (entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL)==Lifecycle.RUNNING && getPidFile()==null)
                 log.warn("No PID recorded for "+entity()+" when running, with PID file "+getPidFile()+"; skipping kill in "+Tasks.current());
             else 
                 if (log.isDebugEnabled())
-                    log.debug("No PID recorded for "+entity()+"; skipping ("+entity().getAttribute(Attributes.SERVICE_STATE)+" / "+getPidFile()+")");
+                    log.debug("No PID recorded for "+entity()+"; skipping ("+entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL)+" / "+getPidFile()+")");
             return false;
         }
         

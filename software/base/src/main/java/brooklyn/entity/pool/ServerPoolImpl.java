@@ -282,7 +282,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
      */
     @Override
     protected Collection<Entity> shrink(int delta) {
-        if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
+        if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE_ACTUAL))) {
             return super.shrink(delta);
         }
 
@@ -327,7 +327,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
         public Entity apply(Collection<Entity> members) {
             synchronized (mutex) {
                 Optional<Entity> choice;
-                if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
+                if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE_ACTUAL))) {
                     choice = Optional.of(members.iterator().next());
                 } else {
                     // Otherwise should only choose between removable + unusable or available

@@ -81,11 +81,11 @@ public abstract class AbstractToyMySqlEntityTest extends BrooklynAppLiveTestSupp
     protected void checkStartsRunning(Entity mysql) {
         // should be starting within a few seconds (and almost certainly won't complete in that time) 
         Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_SECONDS),
-                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE),
+                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE_ACTUAL),
                 Predicates.or(Predicates.equalTo(Lifecycle.STARTING), Predicates.equalTo(Lifecycle.RUNNING)));
         // should be up and running within 5m 
         Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_MINUTES),
-                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE),
+                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE_ACTUAL),
                 Predicates.equalTo(Lifecycle.RUNNING));
     }
 

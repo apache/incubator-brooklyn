@@ -190,7 +190,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             boolean managed = Entities.isManaged(member);
             String hostname = member.getAttribute(Attributes.HOSTNAME);
             boolean serviceUp = Boolean.TRUE.equals(member.getAttribute(Attributes.SERVICE_UP));
-            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE);
+            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
             boolean hasFailed = !managed || (serviceState == Lifecycle.ON_FIRE) || (serviceState == Lifecycle.RUNNING && !serviceUp) || (serviceState == Lifecycle.STOPPED);
             boolean result = (hostname != null && !hasFailed);
             if (log.isTraceEnabled()) log.trace("Node {} in Fabric {}: viableSeed={}; hostname={}; serviceUp={}; serviceState={}; hasFailed={}", new Object[] {member, CassandraFabricImpl.this, result, hostname, serviceUp, serviceState, hasFailed});

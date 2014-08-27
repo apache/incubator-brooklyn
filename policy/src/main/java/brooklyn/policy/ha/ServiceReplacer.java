@@ -32,12 +32,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.StopFailedRuntimeException;
 import brooklyn.entity.trait.MemberReplaceable;
 import brooklyn.event.Sensor;
@@ -206,7 +205,7 @@ public class ServiceReplacer extends AbstractPolicy {
         consecutiveReplacementFailureTimes.add(currentTimeMillis());
         
         if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
-            entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceProblemsLogic.updateProblemsIndicator(entity, "ServiceReplacer", "replacement failed: "+msg);
         }
         entity.emit(ENTITY_REPLACEMENT_FAILED, new FailureDescriptor(entity, msg));
     }

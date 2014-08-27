@@ -1047,7 +1047,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
     
     /**
-     * By default, adds enrichers to populate {@link Attributes#SERVICE_UP} and {@link Attributes#SERVICE_STATE}
+     * By default, adds enrichers to populate {@link Attributes#SERVICE_UP} and {@link Attributes#SERVICE_STATE_ACTUAL}
      * based on {@link Attributes#SERVICE_NOT_UP_INDICATORS}, 
      * {@link Attributes#SERVICE_STATE_EXPECTED} and {@link Attributes#SERVICE_PROBLEMS}
      * (doing nothing if these sensors are not used).

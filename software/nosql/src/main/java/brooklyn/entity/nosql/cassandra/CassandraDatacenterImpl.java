@@ -146,7 +146,6 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
     
     protected SeedTracker seedTracker = new SeedTracker();
     protected TokenGenerator tokenGenerator = null;
-    private MemberTrackingPolicy policy;
 
     public CassandraDatacenterImpl() {
     }
@@ -174,6 +173,15 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
             @Override
             public void onEvent(SensorEvent<Boolean> event) {
                 seedTracker.onServiceUpChanged(event.getSource(), event.getValue());
+            }
+        });
+        subscribeToMembers(this, Attributes.SERVICE_STATE_ACTUAL, new SensorEventListener<Lifecycle>() {
+            @Override
+            public void onEvent(SensorEvent<Lifecycle> event) {
+                // trigger a recomputation also when lifecycle state changes, 
+                // because it might not have ruled a seed as inviable when service up went true 
+                // because service state was not yet running
+                seedTracker.onServiceUpChanged(event.getSource(), Lifecycle.RUNNING==event.getValue());
             }
         });
         
@@ -296,6 +304,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         return super.grow(delta);
     }
     
+    @SuppressWarnings("deprecation")
     @Override
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
         Map<Object, Object> allflags = MutableMap.copyOf(flags);
@@ -357,7 +366,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
     protected void connectSensors() {
         connectEnrichers();
         
-        policy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Cassandra Cluster Tracker")
                 .configure("sensorsToTrack", ImmutableSet.of(Attributes.SERVICE_UP, Attributes.HOSTNAME, CassandraNode.THRIFT_PORT))
                 .configure("group", this));
@@ -587,7 +596,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
             boolean managed = Entities.isManaged(member);
             String hostname = member.getAttribute(Attributes.HOSTNAME);
             boolean serviceUp = Boolean.TRUE.equals(member.getAttribute(Attributes.SERVICE_UP));
-            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE);
+            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
             boolean hasFailed = !managed || (serviceState == Lifecycle.ON_FIRE) || (serviceState == Lifecycle.RUNNING && !serviceUp) || (serviceState == Lifecycle.STOPPED);
             boolean result = (hostname != null && !hasFailed);
             if (log.isTraceEnabled()) log.trace("Node {} in Cluster {}: viableSeed={}; hostname={}; serviceUp={}; serviceState={}; hasFailed={}", new Object[] {member, this, result, hostname, serviceUp, serviceState, hasFailed});
@@ -596,7 +605,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         public boolean isRunningSeed(Entity member) {
             boolean viableSeed = isViableSeed(member);
             boolean serviceUp = Boolean.TRUE.equals(member.getAttribute(Attributes.SERVICE_UP));
-            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE);
+            Lifecycle serviceState = member.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
             boolean result = viableSeed && serviceUp && serviceState == Lifecycle.RUNNING;
             if (log.isTraceEnabled()) log.trace("Node {} in Cluster {}: runningSeed={}; viableSeed={}; serviceUp={}; serviceState={}", new Object[] {member, this, result, viableSeed, serviceUp, serviceState});
             return result;

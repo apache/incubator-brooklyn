@@ -31,6 +31,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -141,7 +142,7 @@ public class ServiceRestarter extends AbstractPolicy {
             return;
         }
         try {
-            entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+            ServiceStateLogic.setExpectedState(entity, Lifecycle.STARTING);
             Entities.invokeEffector(entity, entity, Startable.RESTART).get();
         } catch (Exception e) {
             onRestartFailed("Restart failure (error "+e+") at "+entity+": "+event.getValue());
@@ -151,7 +152,7 @@ public class ServiceRestarter extends AbstractPolicy {
     protected void onRestartFailed(String msg) {
         LOG.warn("ServiceRestarter failed for "+entity+": "+msg);
         if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
-            entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(entity, Lifecycle.ON_FIRE);
         }
         entity.emit(ENTITY_RESTART_FAILED, new FailureDescriptor(entity, msg));
     }

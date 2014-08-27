@@ -36,6 +36,7 @@ import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
@@ -168,12 +169,12 @@ public class CassandraFabricTest extends BrooklynAppUnitTestSupport {
 
         @Override
         public void start(Collection<? extends Location> locations) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         }
 
         @Override
         public void stop() {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         }
 
         @Override

@@ -114,6 +114,11 @@ public class ServiceStateLogic {
     
     public static void setExpectedState(Entity entity, Lifecycle state) {
         ((EntityInternal)entity).setAttribute(Attributes.SERVICE_STATE_EXPECTED, new Lifecycle.Transition(state, new Date()));
+        
+        Enricher enricher = EntityAdjuncts.findWithUniqueTag(entity.getEnrichers(), ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG);
+        if (enricher instanceof ComputeServiceState) {
+            ((ComputeServiceState)enricher).onEvent(null);
+        }
     }
     public static Lifecycle getExpectedState(Entity entity) {
         Transition expected = entity.getAttribute(Attributes.SERVICE_STATE_EXPECTED);
