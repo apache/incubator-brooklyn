@@ -79,7 +79,8 @@ public interface EffectorApi {
       @QueryParam("timeout")
       String timeout,
       
-      @ApiParam(name = "parameters", value = "Effector parameters (as key value pairs)", required = false)
+      @ApiParam(/* FIXME: giving a `name` in swagger @ApiParam seems wrong as this object is the body, not a named argument */ name = "parameters",
+          value = "Effector parameters (as key value pairs)", required = false)
       @Valid 
       Map<String, Object> parameters
   ) ;

@@ -82,6 +82,9 @@ public interface PolicyConfigApi {
       @ApiParam(value = "Config key ID", required = true)
       @PathParam("config") String configKeyName
   ) ;
+  
+  // TODO support a POST directly to /{config} where the body is the value, useful e.g. when it's a map
+  // TODO and deprecate the /set endpoint item below
 
   @POST
   @Path("/{config}/set")
