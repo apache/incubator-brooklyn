@@ -61,6 +61,11 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
     }
 
     @Override
+    public String getAppDir() {
+        return Os.mergePaths(getRunDir(), getEntity().getConfig(NodeJsWebAppService.APP_NAME));
+    }
+
+    @Override
     public void postLaunch() {
         String rootUrl = String.format("http://%s:%d/", getHostname(), getHttpPort());
         entity.setAttribute(WebAppService.ROOT_URL, rootUrl);
