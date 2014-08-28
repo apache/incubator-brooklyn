@@ -57,6 +57,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ExecutionList;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -81,7 +82,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     public final String displayName;
     public final String description;
 
-    protected final Set<Object> tags = new LinkedHashSet<Object>();
+    protected final Set<Object> tags = Sets.newConcurrentHashSet();
     // for debugging, to record where tasks were created
 //    { tags.add(new Throwable("Creation stack trace")); }
 
