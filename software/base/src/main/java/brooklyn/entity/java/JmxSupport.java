@@ -18,8 +18,6 @@
  */
 package brooklyn.entity.java;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.EnumSet;
 import java.util.List;
 
@@ -32,10 +30,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.Locations;
@@ -160,24 +156,18 @@ public class JmxSupport implements UsesJmx {
 
     public String getJmxUrl() {
         init();
-        
-        String host = entity.getAttribute(Attributes.HOSTNAME);
-        if (host==null) {
-            SshMachineLocation machine = EffectorTasks.getSshMachine(entity);
-            host = machine.getAddress().getHostName();
-        }
-        
+
+        HostAndPort jmx = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
+        HostAndPort rmi = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(RMI_REGISTRY_PORT));
+
         if (EnumSet.of(JmxAgentModes.JMXMP, JmxAgentModes.JMXMP_AND_RMI).contains(getJmxAgentMode())) {
-            HostAndPort jmxmp = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
-            return JmxHelper.toJmxmpUrl(jmxmp.getHostText(), jmxmp.getPort());
+            return JmxHelper.toJmxmpUrl(jmx.getHostText(), jmx.getPort());
         } else {
             if (getJmxAgentMode() == JmxAgentModes.NONE) {
                 fixPortsForModeNone();
             }
             // this will work for agent or agentless
-            return JmxHelper.toRmiJmxUrl(host,
-                    entity.getAttribute(JMX_PORT),
-                    entity.getAttribute(RMI_REGISTRY_PORT),
+            return JmxHelper.toRmiJmxUrl(jmx.getHostText(), jmx.getPort(), rmi.getPort(),
                     entity.getAttribute(JMX_CONTEXT));
         }
     }
@@ -269,18 +259,18 @@ public class JmxSupport implements UsesJmx {
     /** applies _some_ of the common settings needed to connect via JMX */
     public void applyJmxJavaSystemProperties(MutableMap.Builder<String,Object> result) {
         if (!isJmx()) return ;
-        
-        Integer jmxRemotePort;
-        String hostName = getEntity().getAttribute(Attributes.HOSTNAME);
-        if (hostName==null) hostName = checkNotNull(getMachine().get().getAddress().getHostName(), "hostname for entity " + entity);
-        
+
+        HostAndPort jmx = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
+        Integer jmxRemotePort = getEntity().getAttribute(JMX_PORT);
+        String hostName = jmx.getHostText();
+
         result.put("com.sun.management.jmxremote", null);
+        result.put("java.rmi.server.hostname", hostName);
 
         switch (getJmxAgentMode()) {
         case JMXMP_AND_RMI:
             result.put(JmxmpAgent.RMI_REGISTRY_PORT_PROPERTY, Preconditions.checkNotNull(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT), "registry port"));
         case JMXMP:
-            jmxRemotePort = getEntity().getAttribute(JMX_PORT);
             if (jmxRemotePort==null || jmxRemotePort<=0)
                 throw new IllegalStateException("Unsupported JMX port "+jmxRemotePort+" - when applying system properties ("+getJmxAgentMode()+" / "+getEntity()+")");
             result.put(JmxmpAgent.JMXMP_PORT_PROPERTY, jmxRemotePort);
@@ -289,25 +279,21 @@ public class JmxSupport implements UsesJmx {
             // (should not be present, but remove just to be sure)
             result.remove("java.rmi.server.hostname");
             break;
-        case JMX_RMI_CUSTOM_AGENT:    
-            jmxRemotePort = getEntity().getAttribute(JMX_PORT);
+        case JMX_RMI_CUSTOM_AGENT:
             if (jmxRemotePort==null || jmxRemotePort<=0)
                 throw new IllegalStateException("Unsupported JMX port "+jmxRemotePort+" - when applying system properties ("+getJmxAgentMode()+" / "+getEntity()+")");
-            result.put(JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, 
-                    Preconditions.checkNotNull(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT), "registry port"));
+            result.put(JmxRmiAgent.RMI_REGISTRY_PORT_PROPERTY, Preconditions.checkNotNull(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT), "registry port"));
             result.put(JmxRmiAgent.JMX_SERVER_PORT_PROPERTY, jmxRemotePort);
-            result.put("java.rmi.server.hostname", hostName);
             break;
         case NONE:
-            // only for mode 'NONE' - other modes use different fields
             jmxRemotePort = fixPortsForModeNone();
+        case JMX_RMI:
             result.put("com.sun.management.jmxremote.port", jmxRemotePort);
-            result.put("java.rmi.server.hostname", hostName);
             break;
-        default:    
+        default:
             throw new IllegalStateException("Unsupported JMX mode - when applying system properties ("+getJmxAgentMode()+" / "+getEntity()+")");
         }
-        
+
         if (isSecure()) {
             // set values true, and apply keys pointing to keystore / truststore
             getJmxSslSupport().applyAgentJmxJavaSystemProperties(result);
@@ -320,7 +306,7 @@ public class JmxSupport implements UsesJmx {
 
     /** installs files needed for JMX, to the runDir given in constructor, assuming the runDir has been created */ 
     public void install() {
-        if (getJmxAgentMode()!=JmxAgentModes.NONE) {
+        if (EnumSet.of(JmxAgentModes.JMXMP_AND_RMI, JmxAgentModes.JMXMP, JmxAgentModes.JMX_RMI_CUSTOM_AGENT).contains(getJmxAgentMode())) {
             getMachine().get().copyTo(ResourceUtils.create(this).getResourceFromUrl(
                 getJmxAgentJarUrl()), getJmxAgentJarDestinationFilePath());
         }
