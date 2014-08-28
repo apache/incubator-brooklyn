@@ -79,6 +79,10 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
     @Override
     public void start() {
+        DynamicTasks.queue("post-launch", new Runnable() { public void run() {
+            preInstall();
+        }});
+
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND))) {
             DynamicTasks.queue("pre-install command", new Runnable() { public void run() {
                 runPreInstallCommand(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND));
@@ -138,6 +142,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
     @Override
     public abstract void stop();
+
+    /**
+     * Implement this method in child classes to add some post-launch behavior
+     */
+    public void preInstall() {}
 
     public abstract void runPreInstallCommand(String command);
     public abstract void setup();

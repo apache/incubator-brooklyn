@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -80,6 +81,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     private volatile String installDir;
     private volatile String runDir;
     private volatile String expandedInstallDir;
+
+    protected volatile DownloadResolver resolver;
     
     /** include this flag in newScript creation to prevent entity-level flags from being included;
      * any SSH-specific flags passed to newScript override flags from the entity,

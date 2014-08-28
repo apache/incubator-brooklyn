@@ -29,13 +29,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 
@@ -62,15 +62,18 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
 
     public String getMirrorUrl() { return entity.getConfig(SolrServer.MIRROR_URL); }
 
-    public String getPidFile() { return String.format("%s/solr.pid", getRunDir()); }
+    public String getPidFile() { return Os.mergePaths(getRunDir(), "solr.pid"); }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("solr-%s", getVersion()))));
+    }
 
     @Override
     public void install() {
-        log.debug("Installing {}", entity);
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("solr-%s", getVersion())));
 
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
@@ -38,6 +39,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
@@ -114,14 +116,18 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("nginx-%s", getVersion()))));
+    }
+
+    @Override
     public void install() {
         // inessential here, installation will fail later if it needs to sudo (eg if using port 80)
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), OnFailingTask.WARN_OR_IF_DYNAMIC_FAIL_MARKING_INESSENTIAL)).orSubmitAndBlock();
 
-        DownloadResolver nginxResolver = mgmt().getEntityDownloadsManager().newDownloader(this);
-        List<String> nginxUrls = nginxResolver.getTargets();
-        String nginxSaveAs = nginxResolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/" + nginxResolver.getUnpackedDirectoryName(format("nginx-%s", getVersion())));
+        List<String> nginxUrls = resolver.getTargets();
+        String nginxSaveAs = resolver.getFilename();
 
         boolean sticky = ((NginxController) entity).isSticky();
         boolean isMac = getMachine().getOsDetails().isMac();

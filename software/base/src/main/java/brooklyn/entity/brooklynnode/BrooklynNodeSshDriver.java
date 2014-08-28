@@ -30,7 +30,6 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
@@ -78,7 +77,15 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     protected String getInstallLabelExtraSalt() {
         return Identifiers.makeIdFromHash(Objects.hashCode(entity.getConfig(BrooklynNode.DOWNLOAD_URL), entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL)));
     }
-    
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        String subpath = entity.getConfig(BrooklynNode.SUBPATH_IN_ARCHIVE);
+        if (Strings.isBlank(subpath)) subpath = format("brooklyn-%s", getVersion());
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(subpath)));
+    }
+
     @Override
     public void install() {
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
@@ -87,13 +94,8 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         // This filename is used to generate the first URL to try: 
         // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-0.6.0-SNAPSHOT-dist.tar.gz
         // (DOWNLOAD_URL overrides this and has a default which comes from maven)
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        
-        String subpath = entity.getConfig(BrooklynNode.SUBPATH_IN_ARCHIVE);
-        if (Strings.isBlank(subpath)) subpath = format("brooklyn-%s", getVersion());
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(subpath));
         
         newScript("createInstallDir")
                 .body.append("mkdir -p "+getInstallDir())
