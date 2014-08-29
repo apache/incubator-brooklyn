@@ -29,6 +29,8 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.collect.ImmutableList;
 
 public class MutableList<V> extends ArrayList<V> {
@@ -84,17 +86,23 @@ public class MutableList<V> extends ArrayList<V> {
     public ImmutableList<V> toImmutable() {
         return ImmutableList.copyOf(this);
     }
+    /** creates an {@link ImmutableList} which is a copy of this list.  note that the list should not contain nulls.  */
     public List<V> asImmutableCopy() {
         try {
             return ImmutableList.copyOf(this);
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             log.warn("Error converting list to Immutable, using unmodifiable instead: "+e, e);
             return asUnmodifiableCopy();
         }
     }
+    /** creates a {@link Collections#unmodifiableList(List)} wrapper around this list. the method is efficient,
+     * as there is no copying, but the returned view might change if the list here is changed.  */
     public List<V> asUnmodifiable() {
         return Collections.unmodifiableList(this);
     }
+    /** creates a {@link Collections#unmodifiableList(List)} of a copy of this list.
+     * the returned item is immutable, but unlike {@link #asImmutableCopy()} nulls are permitted. */
     public List<V> asUnmodifiableCopy() {
         return Collections.unmodifiableList(MutableList.copyOf(this));
     }

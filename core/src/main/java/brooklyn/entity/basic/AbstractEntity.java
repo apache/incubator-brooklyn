@@ -1058,7 +1058,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // these enrichers do nothing unless Attributes.SERVICE_NOT_UP_INDICATORS are used
     // and/or SERVICE_STATE_EXPECTED 
     protected void initEnrichers() {
-        addEnricher(ServiceNotUpLogic.newEnricherForServiceUpIfNoNotUpIndicators());
+        addEnricher(ServiceNotUpLogic.newEnricherForServiceUpIfNotUpIndicatorsEmpty());
         addEnricher(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
     }
     

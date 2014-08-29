@@ -46,15 +46,8 @@ public enum Lifecycle {
      * When this completes the entity will normally transition to 
      * {@link Lifecycle#RUNNING}. 
      */
-//    * {@link Lifecycle#STARTED} or 
     STARTING,
 
-//    /**
-//     * The entity has been started and no further start-up steps are needed from the management plane,
-//     * but the entity has not yet been confirmed as running.
-//     */
-//    STARTED,
-//
     /**
      * The entity service is expected to be running. In healthy operation, {@link Attributes#SERVICE_UP} will be true,
      * or will shortly be true if all service start actions have been completed and we are merely waiting for it to be running. 

@@ -55,6 +55,7 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         Preconditions.checkNotNull(getSourceSensors(), "sourceSensors must be set");
     }
     
+    @Override
     protected void setEntityBeforeSubscribingProducerChildrenEvents() {
         if (LOG.isDebugEnabled()) LOG.debug("{} subscribing to children of {}", new Object[] {this, producer });
         for (Sensor<?> sourceSensor: getSourceSensors()) {
@@ -62,6 +63,7 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         }
     }
 
+    @Override
     protected void addProducerHardcoded(Entity producer) {
         for (Sensor<?> sourceSensor: getSourceSensors()) {
             subscribe(producer, sourceSensor, this);
@@ -69,17 +71,18 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         onProducerAdded(producer);
     }
 
+    @Override
     protected void addProducerChild(Entity producer) {
-        // not required due to subscribeToChildren call
-//        subscribe(producer, sourceSensor, this);
+        // no `subscribe` call needed here, due to previous subscribeToChildren call
         onProducerAdded(producer);
     }
 
+    @Override
     protected void addProducerMember(Entity producer) {
         addProducerHardcoded(producer);
     }
 
-    
+    @Override
     protected void onProducerAdded(Entity producer) {
         if (LOG.isDebugEnabled()) LOG.debug("{} listening to {}", new Object[] {this, producer});
         synchronized (values) {
@@ -106,6 +109,7 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         }
     }
     
+    @Override
     protected void onProducerRemoved(Entity producer) {
         synchronized (values) {
             for (Sensor<?> sensor: getSourceSensors()) {
@@ -140,5 +144,6 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         }
     }
     
+    @Override
     protected abstract Object compute();
 }

@@ -29,6 +29,8 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -79,17 +81,21 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         // Don't use ImmutableSet as that does not accept nulls
         return Collections.unmodifiableSet(Sets.newLinkedHashSet(this));
     }
+    /** as {@link MutableList#asImmutableCopy()()} */
     public Set<V> asImmutableCopy() {
         try {
             return ImmutableSet.copyOf(this);
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             log.warn("Error converting list to Immutable, using unmodifiable instead: "+e, e);
             return asUnmodifiableCopy();
         }
     }
+    /** as {@link MutableList#asUnmodifiable()} */
     public Set<V> asUnmodifiable() {
         return Collections.unmodifiableSet(this);
     }
+    /** as {@link MutableList#asUnmodifiableCopy()} */
     public Set<V> asUnmodifiableCopy() {
         return Collections.unmodifiableSet(MutableSet.copyOf(this));
     }

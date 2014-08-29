@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Predicate;
@@ -146,17 +147,21 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
     public ImmutableMap<K,V> toImmutable() {
         return ImmutableMap.copyOf(this);
     }
+    /** as {@link MutableList#asImmutableCopy()} */
     public Map<K,V> asImmutableCopy() {
         try {
             return ImmutableMap.copyOf(this);
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             log.warn("Error converting list to Immutable, using unmodifiable instead: "+e, e);
             return asUnmodifiableCopy();
         }
     }
+    /** as {@link MutableList#asUnmodifiable()} */
     public Map<K,V> asUnmodifiable() {
         return Collections.unmodifiableMap(this);
     }
+    /** as {@link MutableList#asUnmodifiableCopy()} */
     public Map<K,V> asUnmodifiableCopy() {
         return Collections.unmodifiableMap(MutableMap.copyOf(this));
     }

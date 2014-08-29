@@ -85,7 +85,7 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
         if (fromHardcodedProducers == null && producer == null) producer = entity;
         checkState(fromHardcodedProducers != null ^ producer != null, "must specify one of %s (%s) or %s (%s)", 
                 PRODUCER.getName(), producer, FROM_HARDCODED_PRODUCERS.getName(), fromHardcodedProducers);
-        checkState(producer != null ? (Boolean.TRUE.equals(fromMembers) || Boolean.TRUE.equals(fromChildren)) : true, 
+        checkState(producer == null || Boolean.TRUE.equals(fromMembers) || Boolean.TRUE.equals(fromChildren), 
                 "when specifying producer, must specify at least one of fromMembers (%s) or fromChildren (%s)", fromMembers, fromChildren);
 
         if (fromHardcodedProducers != null) {

@@ -27,8 +27,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -235,7 +233,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
                 ImmutableList.of(item1, item2, item3, item4, item5, item6), 
                 ImmutableList.of(30d, 30d));
         
-        MockItemEntity item7 = newItem(app, containerA, "7", 40);
+        newItem(app, containerA, "7", 40);
         
         assertWorkratesEventually(
                 ImmutableList.of(containerA, containerB), 
@@ -305,6 +303,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
                 ImmutableList.of(40d, 40d));
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testModelIncludesItemsAndContainersStartedBeforePolicyCreated() {
         pool.removePolicy(policy);
@@ -312,7 +311,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         
         // Set-up containers and items.
         final MockContainerEntity containerA = newContainer(app, "A", 10, 100);
-        MockItemEntity item1 = newItem(app, containerA, "1", 10);
+        newItem(app, containerA, "1", 10);
 
         policy = new LoadBalancingPolicy(MutableMap.of(), TEST_METRIC, model);
         pool.addPolicy(policy);

@@ -70,29 +70,31 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
         this.transformation = (Function<? super Collection<T>, ? extends U>) getRequiredConfig(TRANSFORMATION);
     }
         
-
+    @Override
     protected void setEntityBeforeSubscribingProducerChildrenEvents() {
         if (LOG.isDebugEnabled()) LOG.debug("{} subscribing to children of {}", new Object[] {this, producer });
         subscribeToChildren(producer, sourceSensor, this);
     }
 
+    @Override
     protected void addProducerHardcoded(Entity producer) {
         subscribe(producer, sourceSensor, this);
         onProducerAdded(producer);
     }
 
+    @Override
     protected void addProducerChild(Entity producer) {
-        // not required due to subscribeToChildren call
-//        subscribe(producer, sourceSensor, this);
+        // no subscription needed here, due to the subscribeToChildren call
         onProducerAdded(producer);
     }
 
+    @Override
     protected void addProducerMember(Entity producer) {
         subscribe(producer, sourceSensor, this);
         onProducerAdded(producer);
     }
 
-    
+    @Override
     protected void onProducerAdded(Entity producer) {
         if (LOG.isDebugEnabled()) LOG.debug("{} listening to {}", new Object[] {this, producer});
         synchronized (values) {
@@ -115,6 +117,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
         }
     }
     
+    @Override
     protected void onProducerRemoved(Entity producer) {
         values.remove(producer);
         onUpdated();
@@ -142,6 +145,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
         }
     }
     
+    @Override
     protected Object compute() {
         synchronized (values) {
             // TODO Could avoid copying when filter not needed

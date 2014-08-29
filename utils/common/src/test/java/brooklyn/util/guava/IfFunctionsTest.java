@@ -67,7 +67,7 @@ public class IfFunctionsTest {
 
     @Test
     public void testWithCast() {
-        Function<Boolean, String> f = IfFunctions.<Boolean,String>ifEquals(false).value("F").ifEquals(true).value("T").defaultValue("?").build();
+        Function<Boolean, String> f = IfFunctions.ifEquals(false).value("F").ifEquals(true).value("T").defaultValue("?").build();
         checkTF(f, "?");
     }
 

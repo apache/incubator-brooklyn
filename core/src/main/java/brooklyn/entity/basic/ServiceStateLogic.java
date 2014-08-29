@@ -136,7 +136,7 @@ public class ServiceStateLogic {
         private ServiceNotUpLogic() {}
         
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public static final EnricherSpec<?> newEnricherForServiceUpIfNoNotUpIndicators() {
+        public static final EnricherSpec<?> newEnricherForServiceUpIfNotUpIndicatorsEmpty() {
             return Enrichers.builder()
                 .transforming(SERVICE_NOT_UP_INDICATORS).publishing(Attributes.SERVICE_UP)
                 .computing( /* cast hacks to support removing */ (Function)

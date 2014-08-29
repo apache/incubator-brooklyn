@@ -38,13 +38,13 @@ public class IfFunctions {
         return new IfFunctionBuilder<I,O>();
     }
     
-    public static <I,O> IfFunctionBuilderApplyingFirst<I> ifPredicate(Predicate<? super I> test) {
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifPredicate(Predicate<? super I> test) {
         return new IfFunctionBuilderApplyingFirst<I>(test);
     }
-    public static <I,O> IfFunctionBuilderApplyingFirst<I> ifEquals(I test) {
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifEquals(I test) {
         return ifPredicate(Predicates.equalTo(test));
     }
-    public static <I,O> IfFunctionBuilderApplyingFirst<I> ifNotEquals(I test) {
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifNotEquals(I test) {
         return ifPredicate(Predicates.not(Predicates.equalTo(test)));
     }
     
