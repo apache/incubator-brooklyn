@@ -224,7 +224,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         try {
             AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createSpec(at, camp);
+                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createSpec(at, camp, loader);
             }
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
         } catch (Exception e) {

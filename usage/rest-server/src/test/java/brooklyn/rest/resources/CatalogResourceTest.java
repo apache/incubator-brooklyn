@@ -43,6 +43,7 @@ import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.rest.domain.CatalogPolicySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.util.collections.MutableList;
 
@@ -68,7 +69,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   @Test
   /** based on CampYamlLiteTest */
   public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() {
-    String registeredTypeName = "my.catalog.app.id";
+    String registeredTypeName = "my.catalog.entity.id";
     String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
     String yaml =
         "brooklyn.catalog:\n"+
@@ -109,11 +110,38 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     // now let's check other things on the item
     assertEquals(entityItem.getName(), "My Catalog App");
     assertEquals(entityItem.getDescription(), "My description");
-    assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/my.catalog.app.id");
+    assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/" + registeredTypeName);
     assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
     
     byte[] iconData = client().resource("/v1/catalog/icon/"+registeredTypeName).get(byte[].class);
     assertEquals(iconData.length, 43);
+  }
+
+  @Test
+  public void testRegisterOSGiPolicy() {
+    String registeredTypeName = "my.catalog.policy.id";
+    String policyType = "brooklyn.osgi.tests.SimplePolicy";
+    String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
+
+    String yaml =
+        "brooklyn.catalog:\n"+
+        "  id: " + registeredTypeName + "\n"+
+        "  name: My Catalog App\n"+
+        "  description: My description\n"+
+        "  version: 0.1.2\n"+
+        "  libraries:\n"+
+        "  - url: " + bundleUrl + "\n"+
+        "\n"+
+        "brooklyn.policies:\n"+
+        "- type: " + policyType;
+
+    CatalogPolicySummary entityItem = client().resource("/v1/catalog")
+        .post(CatalogPolicySummary.class, yaml);
+
+    assertEquals(entityItem.getRegisteredType(), registeredTypeName);
+    Assert.assertNotNull(entityItem.getPlanYaml());
+    Assert.assertTrue(entityItem.getPlanYaml().contains(policyType));
+    assertEquals(entityItem.getId(), registeredTypeName);
   }
 
   @Test
