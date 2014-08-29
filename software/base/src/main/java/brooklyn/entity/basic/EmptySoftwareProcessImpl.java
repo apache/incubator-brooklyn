@@ -24,21 +24,16 @@ public class EmptySoftwareProcessImpl extends SoftwareProcessImpl implements Emp
     public Class<?> getDriverInterface() {
         return EmptySoftwareProcessDriver.class;
     }
-    
-    @Override
-    public SoftwareProcessDriver getDriver() {
-        return super.getDriver();
-    }
 
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        super.connectServiceUpIsRunning();
+        connectServiceUpIsRunning();
     }
-    
+
     @Override
     protected void disconnectSensors() {
-        super.disconnectServiceUpIsRunning();
+        disconnectServiceUpIsRunning();
         super.disconnectSensors();
     }
 }

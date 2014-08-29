@@ -53,43 +53,43 @@ import com.google.common.net.HostAndPort;
 public class JmxSupport implements UsesJmx {
 
     private static final Logger log = LoggerFactory.getLogger(JmxSupport.class);
-    
+
     private final Entity entity;
     private final String runDir;
-    
+
     private Boolean isJmx;
     private Boolean isSecure;
     private JmxAgentModes jmxAgentMode;
 
     private static boolean warnedAboutNotOnClasspath = false;
-    
+
     /** run dir may be null if it is not accessed */
     public JmxSupport(Entity entity, @Nullable String runDir) {
         this.entity = Preconditions.checkNotNull(entity, "entity must be supplied");
         this.runDir = runDir;
     }
-    
+
     @Nonnull
     public String getRunDir() {
         return Preconditions.checkNotNull(runDir, "runDir must have been supplied to perform this operation");
     }
-    
+
     public Entity getEntity() {
         return entity;
     }
-    
+
     <T> T getConfig(ConfigKey<T> key) {
         return getEntity().getConfig(key);
     }
-    
+
     <T> T getConfig(HasConfigKey<T> key) {
         return getEntity().getConfig(key);
     }
-    
+
     <T> void setConfig(ConfigKey<T> key, T value) {
         ((EntityLocal)getEntity()).setConfig(key, value);
     }
-    
+
     public Maybe<SshMachineLocation> getMachine() {
         return Locations.findUniqueSshMachineLocation(entity.getLocations());
     }
@@ -104,17 +104,17 @@ public class JmxSupport implements UsesJmx {
         if (jmxAgentMode==null) return JmxAgentModes.NONE;
         return jmxAgentMode;
     }
-    
+
     public boolean isSecure() {
         init();
         if (isSecure==null) return false;
         return isSecure;
     }
-    
+
     protected synchronized void init() {
         if (isJmx!=null)
             return;
-        
+
         if (Boolean.FALSE.equals(entity.getConfig(USE_JMX))) {
             isJmx = false;
             return;
@@ -122,10 +122,10 @@ public class JmxSupport implements UsesJmx {
         isJmx = true;
         jmxAgentMode = entity.getConfig(JMX_AGENT_MODE);
         if (jmxAgentMode==null) jmxAgentMode = JmxAgentModes.AUTODETECT;
-        
+
         isSecure = entity.getConfig(JMX_SSL_ENABLED);
         if (isSecure==null) isSecure = false;
-        
+
         if (jmxAgentMode==JmxAgentModes.AUTODETECT) {
             if (isSecure()) {
                 jmxAgentMode = JmxAgentModes.JMXMP;
@@ -135,14 +135,14 @@ public class JmxSupport implements UsesJmx {
                     // can happen e.g. if eclipse build
                     log.warn("JMX agent JAR not found ("+getJmxAgentJarUrl()+") when auto-detecting JMX settings for "+entity+"; " +
                             "likely cause is an incomplete build (e.g. from Eclipse; run a maven build then retry in the IDE); "+
-                    		"reverting to NONE (use built-in Java JMX support, which will not go through firewalls)");
+                            "reverting to NONE (use built-in Java JMX support, which will not go through firewalls)");
                     jmxAgentMode = JmxAgentModes.NONE;
                 }
             }
-            
+
             ((EntityLocal)entity).setConfig(JMX_AGENT_MODE, jmxAgentMode);
         }
-        
+
         if (isSecure && jmxAgentMode!=JmxAgentModes.JMXMP) {
             String msg = "JMX SSL is specified, but it requires JMXMP which is disabled, when configuring "+entity;
             log.warn(msg);
@@ -211,18 +211,18 @@ public class JmxSupport implements UsesJmx {
 
     @Nullable public MavenArtifact getJmxAgentJarMavenArtifact() {
         switch (getJmxAgentMode()) {
-        case JMXMP: 
-        case JMXMP_AND_RMI: 
+        case JMXMP:
+        case JMXMP_AND_RMI:
             MavenArtifact result = BrooklynMavenArtifacts.artifact(null, "brooklyn-jmxmp-agent", "jar", "with-dependencies");
             // the "with-dependencies" variant is needed; however the filename then has the classifier segment _replaced_ by "shaded" when this filename is created
             result.setCustomFileNameAfterArtifactMarker("shaded");
             result.setClassifierFileNameMarker("");
             return result;
-        case JMX_RMI_CUSTOM_AGENT: 
+        case JMX_RMI_CUSTOM_AGENT:
             return BrooklynMavenArtifacts.jar("brooklyn-jmxrmi-agent");
         default:
             return null;
-        }        
+        }
     }
 
     /** @deprecated since 0.6.0; use {@link #getJmxAgentJarMavenArtifact()} */
@@ -235,8 +235,8 @@ public class JmxSupport implements UsesJmx {
     }
 
     /** returns URL for accessing the java agent, throwing if not applicable;
-     * prefers on classpath where it should be, but will fall back to taking from maven hosted 
-     * (known problem in Eclipse where JARs are not always copied) 
+     * prefers on classpath where it should be, but will fall back to taking from maven hosted
+     * (known problem in Eclipse where JARs are not always copied)
      */
     public String getJmxAgentJarUrl() {
         MavenArtifact artifact = getJmxAgentJarMavenArtifact();
@@ -245,7 +245,7 @@ public class JmxSupport implements UsesJmx {
         String jar = "classpath://" + artifact.getFilename();
         if (ResourceUtils.create(this).doesUrlExist(jar))
             return jar;
-        
+
         String result = MavenRetriever.localUrl(artifact);
         if (warnedAboutNotOnClasspath) {
             log.debug("JMX JAR for "+artifact+" is not on the classpath; taking from "+result);
@@ -255,7 +255,7 @@ public class JmxSupport implements UsesJmx {
         }
         return result;
     }
-    
+
     /** applies _some_ of the common settings needed to connect via JMX */
     public void applyJmxJavaSystemProperties(MutableMap.Builder<String,Object> result) {
         if (!isJmx()) return ;
@@ -274,7 +274,7 @@ public class JmxSupport implements UsesJmx {
             if (jmxRemotePort==null || jmxRemotePort<=0)
                 throw new IllegalStateException("Unsupported JMX port "+jmxRemotePort+" - when applying system properties ("+getJmxAgentMode()+" / "+getEntity()+")");
             result.put(JmxmpAgent.JMXMP_PORT_PROPERTY, jmxRemotePort);
-            // with JMXMP don't try to tell it the hostname -- it isn't needed for JMXMP, and if specified 
+            // with JMXMP don't try to tell it the hostname -- it isn't needed for JMXMP, and if specified
             // it will break if the hostname we see is not known at the server, e.g. a forwarding public IP
             // (should not be present, but remove just to be sure)
             result.remove("java.rmi.server.hostname");
@@ -289,6 +289,7 @@ public class JmxSupport implements UsesJmx {
             jmxRemotePort = fixPortsForModeNone();
         case JMX_RMI:
             result.put("com.sun.management.jmxremote.port", jmxRemotePort);
+            result.put("java.rmi.server.useLocalHostname", "true");
             break;
         default:
             throw new IllegalStateException("Unsupported JMX mode - when applying system properties ("+getJmxAgentMode()+" / "+getEntity()+")");
@@ -304,7 +305,7 @@ public class JmxSupport implements UsesJmx {
         }
     }
 
-    /** installs files needed for JMX, to the runDir given in constructor, assuming the runDir has been created */ 
+    /** installs files needed for JMX, to the runDir given in constructor, assuming the runDir has been created */
     public void install() {
         if (EnumSet.of(JmxAgentModes.JMXMP_AND_RMI, JmxAgentModes.JMXMP, JmxAgentModes.JMX_RMI_CUSTOM_AGENT).contains(getJmxAgentMode())) {
             getMachine().get().copyTo(ResourceUtils.create(this).getResourceFromUrl(
@@ -322,7 +323,7 @@ public class JmxSupport implements UsesJmx {
     /** sets JMR_RMI_CUSTOM_AGENT as the connection mode for the indicated apps.
      * <p>
      * TODO callers of this method have RMI dependencies in the actual app;
-     * we should look at removing them, so that those pieces of software can run behind 
+     * we should look at removing them, so that those pieces of software can run behind
      * forwarding public IP's and over SSL (both reasons JMXMP is preferred by us!)
      */
     public void recommendJmxRmiCustomAgent() {
@@ -334,5 +335,5 @@ public class JmxSupport implements UsesJmx {
             log.warn("Entity "+entity+" may not function unless running JMX_RMI_CUSTOM_AGENT mode (asked to use "+jmx.get()+")");
         }
     }
-    
+
 }
