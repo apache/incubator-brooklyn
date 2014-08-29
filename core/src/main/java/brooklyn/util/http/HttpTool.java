@@ -26,12 +26,14 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
@@ -159,7 +161,8 @@ public class HttpTool {
             return this;
         }
         public HttpClient build() {
-            final DefaultHttpClient httpClient = new DefaultHttpClient(clientConnectionManager, httpParams);
+            final DefaultHttpClient httpClient = new DefaultHttpClient(clientConnectionManager);
+            httpClient.setParams(httpParams);
     
             // support redirects for POST (similar to `curl --post301 -L`)
             // http://stackoverflow.com/questions/3658721/httpclient-4-error-302-how-to-redirect
@@ -326,5 +329,9 @@ public class HttpTool {
     }
     
     public static boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
+
+    public static String toBasicAuthorizationValue(UsernamePasswordCredentials credentials) {
+        return "Basic "+Base64.encodeBase64String( (credentials.getUserName()+":"+credentials.getPassword()).getBytes() );
+    }
 
 }

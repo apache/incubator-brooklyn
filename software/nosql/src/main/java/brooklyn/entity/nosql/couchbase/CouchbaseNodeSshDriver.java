@@ -195,7 +195,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     }
 
     private String getWebPort() {
-        return entity.getConfig(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).iterator().next().toString();
+        return ""+entity.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
     }
 
     private String getCouchbaseHostnameAndCredentials() {
@@ -209,25 +209,27 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     private String getClusterInitRamSize() {
         return entity.getConfig(CouchbaseNode.COUCHBASE_CLUSTER_INIT_RAM_SIZE).toString();
     }
-
+        
     @Override
     public void rebalance() {
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
         newScript("rebalance")
                 .body.append(
                 couchbaseCli("rebalance") +
                         getCouchbaseHostnameAndCredentials())
                 .failOnNonZeroResultCode()
                 .execute();
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
-        // wait until the re-balance is complete
+        
+        // wait until the re-balance is started
+        // (if it's quick, this might miss it, but it will only block for 30s if so)
         Repeater.create()
-            .every(Duration.millis(500))
+            .backoff(Duration.millis(10), 2, Duration.millis(500))
             .limitTimeTo(Duration.THIRTY_SECONDS)
             .until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    for (String nodeHostName : CouchbaseNodeSshDriver.this.getNodeHostNames()) {
-                        if (isNodeRebalancing(nodeHostName)) {
+                    for (String nodeHostAndPort : CouchbaseNodeSshDriver.this.getNodesHostAndPort()) {
+                        if (isNodeRebalancing(nodeHostAndPort)) {
                             return true;
                         }
                     }
@@ -235,14 +237,16 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 }
             })
             .run();
+        
+        // then wait until the re-balance is complete
         Repeater.create()
             .every(Duration.FIVE_SECONDS)
             .limitTimeTo(Duration.FIVE_MINUTES)
             .until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
-                    for (String nodeHostName : CouchbaseNodeSshDriver.this.getNodeHostNames()) {
-                        if (isNodeRebalancing(nodeHostName)) {
+                    for (String nodeHostAndPort : getNodesHostAndPort()) {
+                        if (isNodeRebalancing(nodeHostAndPort)) {
                             return false;
                         }
                     }
@@ -253,7 +257,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         log.info("rebalanced cluster via primary node {}", getEntity());
     }
 
-    private Iterable<String> getNodeHostNames() throws URISyntaxException {
+    private Iterable<String> getNodesHostAndPort() throws URISyntaxException {
         Function<JsonElement, Iterable<String>> getNodesAsList = new Function<JsonElement, Iterable<String>>() {
             @Override public Iterable<String> apply(JsonElement input) {
                 if (input == null) {
@@ -276,12 +280,12 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         ).apply(nodesResponse);
     }
     
-    private boolean isNodeRebalancing(String nodeHostName) throws URISyntaxException {
-        HttpToolResponse response = getAPIResponse("http://" + nodeHostName + "/pools/nodes/rebalanceProgress");
+    private boolean isNodeRebalancing(String nodeHostAndPort) throws URISyntaxException {
+        HttpToolResponse response = getAPIResponse("http://" + nodeHostAndPort + "/pools/nodes/rebalanceProgress");
         if (response.getResponseCode() != 200) {
             throw new IllegalStateException("failed to rebalance cluster: " + response);
         }
-        return !HttpValueFunctions.jsonContents("status", String.class).apply(response).equals("none");
+        return !"none".equals(HttpValueFunctions.jsonContents("status", String.class).apply(response));
     }
     
     private HttpToolResponse getAPIResponse(String uri) throws URISyntaxException {
