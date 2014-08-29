@@ -79,7 +79,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
     @Override
     public void start() {
-        DynamicTasks.queue("post-launch", new Runnable() { public void run() {
+        DynamicTasks.queue("pre-install", new Runnable() { public void run() {
             preInstall();
         }});
 
