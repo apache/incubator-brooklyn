@@ -602,7 +602,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Entity app = createAndStartApplication(loadYaml("same-server-entity-test.yaml"));
         waitForApplicationTasks(app);
         assertNotNull(app);
-        assertEquals(app.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING, "service state");
+        assertEquals(app.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING, "service state");
         assertTrue(app.getAttribute(Attributes.SERVICE_UP), "service up");
 
         assertEquals(app.getChildren().size(), 1);

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -49,6 +50,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -72,7 +74,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 	private transient SoftwareProcessDriver driver;
 
     /** @see #connectServiceUpIsRunning() */
-    private volatile FunctionFeed serviceUp;
+    private volatile FunctionFeed serviceProcessIsRunning;
 
     private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
             new SoftwareProcessDriverLifecycleEffectorTasks();
@@ -113,6 +115,15 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected MachineLocation getMachineOrNull() {
         return Iterables.get(Iterables.filter(getLocations(), MachineLocation.class), 0, null);
     }
+
+    @Override
+    protected void initEnrichers() {
+        super.initEnrichers();
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(SERVICE_PROCESS_IS_RUNNING)
+            .computing(Functionals.ifNotEquals(true).value("The software process for this entity does not appear to be running"))
+            .build());
+    }
     
   	/**
   	 * Called before driver.start; guarantees the driver will exist, and locations will have been set.
@@ -148,10 +159,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * @see #disconnectServiceUpIsRunning()
      */
     protected void connectServiceUpIsRunning() {
-        serviceUp = FunctionFeed.builder()
+        serviceProcessIsRunning = FunctionFeed.builder()
                 .entity(this)
-                .period(5000)
-                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
+                .period(Duration.FIVE_SECONDS)
+                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_PROCESS_IS_RUNNING)
                         .onException(Functions.constant(Boolean.FALSE))
                         .callable(new Callable<Boolean>() {
                             public Boolean call() {
@@ -169,7 +180,11 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * @see #connectServiceUpIsRunning()
      */
     protected void disconnectServiceUpIsRunning() {
-        if (serviceUp != null) serviceUp.stop();
+        if (serviceProcessIsRunning != null) serviceProcessIsRunning.stop();
+        // set null so the SERVICE_UP enricher runs (possibly removing it), then remove so everything is removed
+        // TODO race because the is-running check may be mid-task
+        setAttribute(SERVICE_PROCESS_IS_RUNNING, null);
+        removeAttribute(SERVICE_PROCESS_IS_RUNNING);
     }
 
     /**
@@ -232,11 +247,13 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public void onManagementStarting() {
         super.onManagementStarting();
         
-        Lifecycle state = getAttribute(SERVICE_STATE);
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state == null || state == Lifecycle.CREATED) {
             // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
             setAttribute(SERVICE_UP, false);
-            setAttribute(SERVICE_STATE, Lifecycle.CREATED);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.CREATED);
+            // force actual to be created because this is expected subsequently
+            setAttribute(SERVICE_STATE_ACTUAL, Lifecycle.CREATED);
     	}
     }
 	
@@ -244,7 +261,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public void onManagementStarted() {
         super.onManagementStarted();
         
-        Lifecycle state = getAttribute(SERVICE_STATE);
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state != null && state != Lifecycle.CREATED) {
             postRebind();
         }
@@ -252,7 +269,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     
     @Override
     public void rebind() {
-        Lifecycle state = getAttribute(SERVICE_STATE);
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state == null || state != Lifecycle.RUNNING) {
             log.warn("On rebind of {}, not rebinding because state is {}", this, state);
             return;
@@ -290,11 +307,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         Entities.waitForServiceUp(this, Duration.of(duration, units));
     }
 
+    /** @deprecated since 0.7.0, this isn't a general test for modifiability, and was hardly ever used (now never used) */
+    @Deprecated
     public void checkModifiable() {
-        Lifecycle state = getAttribute(SERVICE_STATE);
-        if (getAttribute(SERVICE_STATE) == Lifecycle.RUNNING) return;
-        if (getAttribute(SERVICE_STATE) == Lifecycle.STARTING) return;
-        // TODO this check may be redundant or even inappropriate
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
+        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.RUNNING) return;
+        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.STARTING) return;
         throw new IllegalStateException("Cannot configure entity "+this+" in state "+state);
     }
 
@@ -381,20 +399,21 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             try {
                 isRunningResult = driver.isRunning();
             } catch (Exception  e) {
-                setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+                ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
                 // provide extra context info, as we're seeing this happen in strange circumstances
                 if (driver==null) throw new IllegalStateException(this+" concurrent start and shutdown detected");
                 throw new IllegalStateException("Error detecting whether "+this+" is running: "+e, e);
             }
             if (log.isDebugEnabled()) log.debug("checked {}, is running returned: {}", this, isRunningResult);
-            // slow exponential delay -- 1.1^N means after 40 tries and 50s elapsed, it reaches the max of 5s intervals  
+            // slow exponential delay -- 1.1^N means after 40 tries and 50s elapsed, it reaches the max of 5s intervals
+            // TODO use Repeater 
             delay = Math.min(delay*11/10, 5000);
         }
         if (!isRunningResult) {
             String msg = "Software process entity "+this+" did not pass is-running check within "+
                     "the required "+startTimeout+" limit ("+timer.getDurationElapsed().toStringRounded()+" elapsed)";
             log.warn(msg+" (throwing)");
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
             throw new IllegalStateException(msg);
         }
     }

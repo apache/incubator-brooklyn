@@ -18,26 +18,15 @@
  */
 package brooklyn.entity.basic;
 
+import java.io.Serializable;
+import java.util.Date;
+
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * An enumeration representing the status of an {@link brooklyn.entity.Entity}.
- *
- * @startuml img/entity-lifecycle.png
- * title Entity Lifecycle
- * 
- * (*) ->  "CREATED"
- *     if "Exception" then
- *     ->  "ON_FIRE"
- *     else
- *     --> "STARTING"
- *     --> "RUNNING"
- *     ->  "STOPPING"
- *     --> "STOPPED"
- *     --> "RUNNING"
- *     --> "DESTROYED"
- *     -left-> (*)
- * @enduml
  */
 public enum Lifecycle {
     /**
@@ -51,9 +40,11 @@ public enum Lifecycle {
 
     /**
      * The entity is starting.
-     *
-     * This stage is entered when the {@link brooklyn.entity.trait.Startable#START} {@link brooklyn.entity.Effector} is called. 
-     * The entity will have its location set and and setup helper object created.
+     * <p>
+     * This stage is typically entered when the {@link brooklyn.entity.trait.Startable#START} {@link brooklyn.entity.Effector} 
+     * is called, to undertake the startup operations from the management plane.
+     * When this completes the entity will normally transition to 
+     * {@link Lifecycle#RUNNING}. 
      */
     STARTING,
 
@@ -120,5 +111,42 @@ public enum Lifecycle {
        } catch (IllegalArgumentException iae) {
           return ON_FIRE;
        }
+    }
+    
+    public static class Transition implements Serializable {
+        private static final long serialVersionUID = 603419184398753502L;
+        
+        final Lifecycle state;
+        final long timestampUtc;
+        
+        public Transition(Lifecycle state, Date timestamp) {
+            this.state = Preconditions.checkNotNull(state, "state");
+            this.timestampUtc = Preconditions.checkNotNull(timestamp, "timestamp").getTime();
+        }
+        
+        public Lifecycle getState() {
+            return state;
+        }
+        public Date getTimestamp() {
+            return new Date(timestampUtc);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(state, timestampUtc);
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Transition)) return false;
+            if (!state.equals(((Transition)obj).getState())) return false;
+            if (timestampUtc != ((Transition)obj).timestampUtc) return false;
+            return true;
+        }
+        
+        @Override
+        public String toString() {
+            return state+" @ "+new Date(timestampUtc);
+        }
     }
 }

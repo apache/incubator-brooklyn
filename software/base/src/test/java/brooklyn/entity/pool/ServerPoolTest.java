@@ -29,17 +29,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import brooklyn.test.EntityTestUtils;
+import brooklyn.test.entity.TestApplication;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 
 public class ServerPoolTest extends AbstractServerPoolTest {
 
@@ -59,8 +59,7 @@ public class ServerPoolTest extends AbstractServerPoolTest {
     public void testFailureWhenNotEnoughServersAvailable() {
         TestApplication app = createAppWithChildren(getInitialPoolSize() + 1);
         assertNoMachinesAvailableForApp(app);
-        // Not asserting attr = true because the sensor will probably be null
-        assertFalse(Boolean.TRUE.equals(app.getAttribute(Attributes.SERVICE_UP)));
+        EntityTestUtils.assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
     }
 
     @Test

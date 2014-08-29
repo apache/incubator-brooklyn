@@ -33,6 +33,8 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
@@ -51,6 +53,8 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
     
     @Override
     public void init() {
+        super.init();
+        
         setAttribute(CONFIG_SERVER_CLUSTER, addChild(EntitySpec.create(MongoDBConfigServerCluster.class)
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE))));
         setAttribute(ROUTER_CLUSTER, addChild(EntitySpec.create(MongoDBRouterCluster.class)
@@ -62,11 +66,13 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
                 .propagating(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES)
                 .from(getAttribute(CONFIG_SERVER_CLUSTER))
                 .build());
+        
+        ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "stopped");
     }
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         try {
             final MongoDBRouterCluster routers = getAttribute(ROUTER_CLUSTER);
             final MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
@@ -79,10 +85,10 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
                         .displayName("Co-located router tracker")
                         .configure("group", (Group)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP)));
             }
-            setAttribute(SERVICE_UP, true);
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+            ServiceNotUpLogic.clearNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Exception e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             // no need to log here; the effector invocation should do that
             throw Exceptions.propagate(e);
         }
@@ -103,16 +109,16 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
 
     @Override
     public void stop() {
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         try {
             Entities.invokeEffectorList(this, ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), getAttribute(ROUTER_CLUSTER), 
                     getAttribute(SHARD_CLUSTER)), Startable.STOP).get();
         } catch (Exception e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
-        setAttribute(SERVICE_UP, false);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
+        ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "stopped");
     }
     
     @Override

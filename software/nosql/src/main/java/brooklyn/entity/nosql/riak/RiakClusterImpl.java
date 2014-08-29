@@ -21,6 +21,7 @@ package brooklyn.entity.nosql.riak;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -39,6 +40,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -80,7 +83,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
             setAttribute(IS_CLUSTER_INIT, true);
         } else {
             log.warn("No Riak Nodes are found on the cluster: {}. Initialization Failed", getId());
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
         }
     }
 
@@ -100,11 +103,11 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         if (log.isTraceEnabled()) log.trace("For {}, considering membership of {} which is in locations {}",
                 new Object[]{this, member, member.getLocations()});
 
+        Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
         if (belongsInServerPool(member)) {
             // TODO can we discover the nodes by asking the riak cluster, rather than assuming what we add will be in there?
             // TODO and can we do join as part of node starting?
 
-            Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
             if (nodes == null) nodes = Maps.newLinkedHashMap();
             String riakName = getRiakName(member);
 
@@ -151,7 +154,6 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 }
             }
         } else {
-            Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
             if (nodes != null && nodes.containsKey(member)) {
                 final Entity memberToBeRemoved = member;
 
@@ -172,6 +174,8 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
             }
         }
+        
+        ServiceNotUpLogic.updateNotUpIndicatorRequiringNonEmptyMap(this, RIAK_CLUSTER_NODES);
         if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
     }
 

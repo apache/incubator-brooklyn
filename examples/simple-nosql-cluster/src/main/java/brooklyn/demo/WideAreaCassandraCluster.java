@@ -24,8 +24,8 @@ import java.util.List;
 import brooklyn.catalog.Catalog;
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.nosql.cassandra.CassandraDatacenter;
@@ -33,6 +33,7 @@ import brooklyn.entity.nosql.cassandra.CassandraFabric;
 import brooklyn.entity.nosql.cassandra.CassandraNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.ServiceFailureDetector;
 import brooklyn.policy.ha.ServiceReplacer;
@@ -53,7 +54,7 @@ public class WideAreaCassandraCluster extends AbstractApplication {
     
 	
     @Override
-    public void init() {
+    public void initApp() {
         addChild(EntitySpec.create(CassandraFabric.class)
                 .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn")
                 .configure(CassandraDatacenter.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
@@ -61,7 +62,7 @@ public class WideAreaCassandraCluster extends AbstractApplication {
                 .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
                 .configure(CassandraFabric.MEMBER_SPEC, EntitySpec.create(CassandraDatacenter.class)
                         .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
-                                .policy(PolicySpec.create(ServiceFailureDetector.class))
+                                .enricher(EnricherSpec.create(ServiceFailureDetector.class))
                                 .policy(PolicySpec.create(ServiceRestarter.class)
                                         .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, ServiceFailureDetector.ENTITY_FAILED)))
                         .policy(PolicySpec.create(ServiceReplacer.class)

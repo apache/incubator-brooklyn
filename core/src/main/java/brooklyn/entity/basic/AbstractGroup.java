@@ -23,6 +23,8 @@ import java.util.Collection;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
+import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
@@ -43,6 +45,7 @@ import com.google.common.reflect.TypeToken;
  */
 public interface AbstractGroup extends Entity, Group, Changeable {
 
+    @SuppressWarnings("serial")
     AttributeSensor<Collection<Entity>> GROUP_MEMBERS = Sensors.newSensor(
             new TypeToken<Collection<Entity>>() { }, "group.members", "Members of the group");
 
@@ -51,6 +54,13 @@ public interface AbstractGroup extends Entity, Group, Changeable {
 
     ConfigKey<String> MEMBER_DELEGATE_NAME_FORMAT = ConfigKeys.newStringConfigKey(
             "group.members.delegate.nameFormat", "Delegate members name format string (Use %s for the original entity display name)", "%s");
+
+    public static final ConfigKey<QuorumCheck> UP_QUORUM_CHECK = ConfigKeys.newConfigKeyWithDefault(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, 
+        "Up check, applied by default to members, requiring at least one present and up",
+        QuorumChecks.atLeastOne());
+    public static final ConfigKey<QuorumCheck> RUNNING_QUORUM_CHECK = ConfigKeys.newConfigKeyWithDefault(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK,
+        "Problems check from children actual states (lifecycle), applied by default to members and children, not checking upness, but requiring by default that none are on-fire",
+        QuorumChecks.all());
 
     void setMembers(Collection<Entity> m);
 

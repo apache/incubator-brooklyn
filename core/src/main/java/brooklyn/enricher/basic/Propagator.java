@@ -18,16 +18,16 @@
  */
 package brooklyn.enricher.basic;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -36,17 +36,23 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
+@SuppressWarnings("serial")
 public class Propagator extends AbstractEnricher implements SensorEventListener<Object> {
 
-    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(Propagator.class);
+
+    public static final Set<Sensor<?>> SENSORS_NOT_USUALLY_PROPAGATED = ImmutableSet.<Sensor<?>>of(
+        Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
+        Attributes.SERVICE_STATE_ACTUAL, Attributes.SERVICE_STATE_EXPECTED, Attributes.SERVICE_PROBLEMS);
 
     @SetFromFlag("producer")
     public static ConfigKey<Entity> PRODUCER = ConfigKeys.newConfigKey(Entity.class, "enricher.producer");
@@ -112,7 +118,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
             };
         }
             
-        checkState(propagatingAll ^ sensorMapping.size() > 0,
+        Preconditions.checkState(propagatingAll ^ sensorMapping.size() > 0,
                 "Exactly one must be set of propagatingAll (%s, excluding %s), sensorMapping (%s)", propagatingAll, getConfig(PROPAGATING_ALL_BUT), sensorMapping);
 
         if (propagatingAll) {
@@ -126,6 +132,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         emitAllAttributes();
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void onEvent(SensorEvent<Object> event) {
         // propagate upwards
@@ -147,6 +154,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         emitAllAttributes(false);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void emitAllAttributes(boolean includeNullValues) {
         Iterable<? extends Sensor<?>> sensorsToPopulate = propagatingAll 
                 ? Iterables.filter(producer.getEntityType().getSensors(), sensorFilter)

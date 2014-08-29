@@ -132,6 +132,10 @@ public class ConfigKeys {
         return new BasicConfigKeyOverwriting<T>(parent, defaultValue);
     }
 
+    public static <T> ConfigKey<T> newConfigKeyWithDefault(ConfigKey<T> parent, String newDescription, T defaultValue) {
+        return new BasicConfigKeyOverwriting<T>(parent, newDescription, defaultValue);
+    }
+
     public static <T> ConfigKey<T> newConfigKeyRenamed(String newName, ConfigKey<T> key) {
         return new BasicConfigKey<T>(key.getTypeToken(), newName, key.getDescription(), key.getDefaultValue());
     }

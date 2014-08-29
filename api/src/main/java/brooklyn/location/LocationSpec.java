@@ -83,7 +83,7 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
         super(type);
     }
      
-    protected void checkValidType(java.lang.Class<T> type) {
+    protected void checkValidType(Class<? extends T> type) {
         checkIsImplementation(type, Location.class);
         checkIsNewStyleImplementation(type);
     }

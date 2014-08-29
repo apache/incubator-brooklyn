@@ -50,6 +50,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.WebAppMonitor;
 
 import com.google.common.base.Predicates;
@@ -134,7 +135,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
 
         assertEquals(newNginx.getConfigFile(), origConfigFile);
         
-        assertEquals(newNginx.getAttribute(NginxController.SERVICE_STATE), Lifecycle.RUNNING);
+        EntityTestUtils.assertAttributeEqualsEventually(newNginx, NginxController.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         assertEquals(newNginx.getAttribute(NginxController.PROXY_HTTP_PORT), (Integer)nginxPort);
         assertEquals(newNginx.getAttribute(NginxController.ROOT_URL), rootUrl);
         assertEquals(newNginx.getAttribute(NginxController.PROXY_HTTP_PORT), origNginx.getAttribute(NginxController.PROXY_HTTP_PORT));

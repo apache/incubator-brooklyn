@@ -20,7 +20,12 @@ package brooklyn.policy.loadbalancing;
 
 import java.util.Set;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractGroup;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.QuorumCheck;
+import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.event.basic.BasicNotificationSensor;
 
 /**
@@ -28,14 +33,18 @@ import brooklyn.event.basic.BasicNotificationSensor;
  * Membership of a balanceable container does not imply a parent-child relationship in the Brooklyn
  * management sense.
  */
-public interface BalanceableContainer<ItemType extends Movable> extends Entity {
+public interface BalanceableContainer<ItemType extends Movable> extends Entity, AbstractGroup {
     
     public static BasicNotificationSensor<Entity> ITEM_ADDED = new BasicNotificationSensor<Entity>(
             Entity.class, "balanceablecontainer.item.added", "Movable item added to balanceable container");
     public static BasicNotificationSensor<Entity> ITEM_REMOVED = new BasicNotificationSensor<Entity>(
             Entity.class, "balanceablecontainer.item.removed", "Movable item removed from balanceable container");
     
-    
+    public static final ConfigKey<QuorumCheck> UP_QUORUM_CHECK = ConfigKeys.newConfigKeyWithDefault(AbstractGroup.UP_QUORUM_CHECK, 
+        "Up check from members; default one for container overrides usual check to always return true, "
+        + "i.e. not block service up simply because the container is empty or something in the container has failed",
+        QuorumChecks.alwaysTrue());
+
     public Set<ItemType> getBalanceableItems();
     
 }

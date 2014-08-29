@@ -26,11 +26,18 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class MutableSet<V> extends LinkedHashSet<V> {
+    
     private static final long serialVersionUID = 2330133488446834595L;
+    private static final Logger log = LoggerFactory.getLogger(MutableSet.class);
 
     public static <V> MutableSet<V> of() {
         return new MutableSet<V>();
@@ -69,9 +76,28 @@ public class MutableSet<V> extends LinkedHashSet<V> {
         super((source instanceof Collection) ? (Collection<? extends V>)source : Sets.newLinkedHashSet(source));
     }
     
+    /** @deprecated since 0.7.0, use {@link #asImmutableCopy()}, or {@link #asUnmodifiable()} / {@link #asUnmodifiableCopy()} */ @Deprecated
     public Set<V> toImmutable() {
-    	// Don't use ImmutableSet as that does not accept nulls
+        // Don't use ImmutableSet as that does not accept nulls
         return Collections.unmodifiableSet(Sets.newLinkedHashSet(this));
+    }
+    /** as {@link MutableList#asImmutableCopy()()} */
+    public Set<V> asImmutableCopy() {
+        try {
+            return ImmutableSet.copyOf(this);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Error converting list to Immutable, using unmodifiable instead: "+e, e);
+            return asUnmodifiableCopy();
+        }
+    }
+    /** as {@link MutableList#asUnmodifiable()} */
+    public Set<V> asUnmodifiable() {
+        return Collections.unmodifiableSet(this);
+    }
+    /** as {@link MutableList#asUnmodifiableCopy()} */
+    public Set<V> asUnmodifiableCopy() {
+        return Collections.unmodifiableSet(MutableSet.copyOf(this));
     }
     
     public static <V> Builder<V> builder() {
@@ -103,6 +129,12 @@ public class MutableSet<V> extends LinkedHashSet<V> {
             return this;
         }
         
+        public Builder<V> addAll(V[] values) {
+            for (V v : values) {
+                result.add(v);
+            }
+            return this;
+        }
         public Builder<V> addAll(Iterable<? extends V> iterable) {
             if (iterable instanceof Collection) {
                 result.addAll((Collection<? extends V>) iterable);

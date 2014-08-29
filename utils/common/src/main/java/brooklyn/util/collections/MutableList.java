@@ -20,16 +20,24 @@ package brooklyn.util.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 
 public class MutableList<V> extends ArrayList<V> {
     private static final long serialVersionUID = -5533940507175152491L;
 
+    private static final Logger log = LoggerFactory.getLogger(MutableList.class);
+    
     public static <V> MutableList<V> of() {
         return new MutableList<V>();
     }
@@ -74,10 +82,31 @@ public class MutableList<V> extends ArrayList<V> {
         }
     }
     
+    /** @deprecated since 0.7.0, use {@link #asImmutableCopy()}, or {@link #asUnmodifiable()} / {@link #asUnmodifiableCopy()} */ @Deprecated
     public ImmutableList<V> toImmutable() {
         return ImmutableList.copyOf(this);
     }
-    
+    /** creates an {@link ImmutableList} which is a copy of this list.  note that the list should not contain nulls.  */
+    public List<V> asImmutableCopy() {
+        try {
+            return ImmutableList.copyOf(this);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Error converting list to Immutable, using unmodifiable instead: "+e, e);
+            return asUnmodifiableCopy();
+        }
+    }
+    /** creates a {@link Collections#unmodifiableList(List)} wrapper around this list. the method is efficient,
+     * as there is no copying, but the returned view might change if the list here is changed.  */
+    public List<V> asUnmodifiable() {
+        return Collections.unmodifiableList(this);
+    }
+    /** creates a {@link Collections#unmodifiableList(List)} of a copy of this list.
+     * the returned item is immutable, but unlike {@link #asImmutableCopy()} nulls are permitted. */
+    public List<V> asUnmodifiableCopy() {
+        return Collections.unmodifiableList(MutableList.copyOf(this));
+    }
+
     public static <V> Builder<V> builder() {
         return new Builder<V>();
     }

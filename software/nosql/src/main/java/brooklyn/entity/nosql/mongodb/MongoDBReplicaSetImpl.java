@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -200,7 +201,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 setAttribute(PRIMARY_ENTITY, server);
                 setAttribute(Startable.SERVICE_UP, true);
             } else {
-                setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+                ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             }
         } else {
             if (LOG.isDebugEnabled())

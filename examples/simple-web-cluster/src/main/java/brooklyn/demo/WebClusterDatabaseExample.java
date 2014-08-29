@@ -69,7 +69,7 @@ public class WebClusterDatabaseExample extends AbstractApplication {
             "appservers.count", "Number of app servers deployed");
 
     @Override
-    public void init() {
+    public void initApp() {
         MySqlNode mysql = addChild(EntitySpec.create(MySqlNode.class)
                 .configure("creationScriptUrl", DB_SETUP_SQL_URL));
         

@@ -35,7 +35,6 @@ import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Optional;
 
 /** 
  * Extended Entity interface for use in places where the caller should have certain privileges,

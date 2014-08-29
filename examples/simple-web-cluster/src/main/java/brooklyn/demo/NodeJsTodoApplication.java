@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableMap;
 public class NodeJsTodoApplication extends AbstractApplication implements StartableApplication {
 
     @Override
-    public void init() {
+    public void initApp() {
         RedisStore redis = addChild(EntitySpec.create(RedisStore.class));
 
         addChild(EntitySpec.create(NodeJsWebAppService.class)

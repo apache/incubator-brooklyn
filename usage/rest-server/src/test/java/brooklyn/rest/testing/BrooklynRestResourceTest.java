@@ -19,9 +19,9 @@
 package brooklyn.rest.testing;
 
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -29,14 +29,20 @@ import java.util.logging.Level;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import brooklyn.entity.Application;
+import brooklyn.entity.basic.Entities;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.Status;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.repeat.Repeater;
+import brooklyn.util.time.Duration;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -44,6 +50,8 @@ import com.sun.jersey.spi.inject.Errors;
 
 public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
 
+    private static final Logger log = LoggerFactory.getLogger(BrooklynRestResourceTest.class);
+    
     @BeforeClass(alwaysRun = true)
     public void setUp() throws Exception {
         // need this to debug jersey inject errors
@@ -71,6 +79,9 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
     }
     
     protected void waitForApplicationToBeRunning(final URI applicationRef) {
+        waitForApplicationToBeRunning(applicationRef, Duration.minutes(3));
+    }
+    protected void waitForApplicationToBeRunning(final URI applicationRef, Duration timeout) {
         if (applicationRef==null)
             throw new NullPointerException("No application URI available (consider using BrooklynRestResourceTest.clientDeploy)");
         
@@ -80,14 +91,21 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
                     public Boolean call() throws Exception {
                         Status status = getApplicationStatus(applicationRef);
                         if (status == Status.ERROR) {
-                            fail("Application failed with ERROR");
+                            Assert.fail("Application failed with ERROR");
                         }
                         return status == Status.RUNNING;
                     }
                 })
-                .every(100, TimeUnit.MILLISECONDS)
-                .limitTimeTo(3, TimeUnit.MINUTES)
+                .every(Duration.millis(100))
+                .limitTimeTo(timeout)
                 .run();
+        
+        if (!started) {
+            log.warn("Did not start application "+applicationRef+":");
+            Collection<Application> apps = getManagementContext().getApplications();
+            for (Application app: apps)
+                Entities.dumpInfo(app);
+        }
         assertTrue(started);
     }
 

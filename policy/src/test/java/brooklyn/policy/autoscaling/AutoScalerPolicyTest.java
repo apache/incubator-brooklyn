@@ -69,7 +69,7 @@ public class AutoScalerPolicyTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         cluster = app.createAndManageChild(EntitySpec.create(TestCluster.class).configure(TestCluster.INITIAL_SIZE, 1));
         resizable = new LocallyResizableEntity(cluster, cluster);
         Entities.manage(resizable);

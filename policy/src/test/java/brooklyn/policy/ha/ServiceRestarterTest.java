@@ -126,7 +126,7 @@ public class ServiceRestarterTest {
                 assertEquals(((FailureDescriptor)Iterables.getOnlyElement(events).getValue()).getComponent(), e2, "events="+events);
             }});
         
-        assertEquals(e2.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
+        assertEquals(e2.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.ON_FIRE);
     }
     
     @Test
@@ -144,7 +144,7 @@ public class ServiceRestarterTest {
         
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
-                assertNotEquals(e2.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
+                assertNotEquals(e2.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.ON_FIRE);
             }});
     }
     

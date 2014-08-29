@@ -39,9 +39,9 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;
-import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -761,12 +761,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return attributesInternal.getValue(attribute);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getAttributeByNameParts(List<String> nameParts) {
         return (T) attributesInternal.getValue(nameParts);
     }
     
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
+        if (LOG.isTraceEnabled())
+            LOG.trace(""+this+" setAttribute "+attribute+" "+val);
+        
         T result = attributesInternal.update(attribute, val);
         if (result == null) {
             // could be this is a new sensor
@@ -779,6 +783,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public <T> T setAttributeWithoutPublishing(AttributeSensor<T> attribute, T val) {
+        if (LOG.isTraceEnabled())
+            LOG.trace(""+this+" setAttributeWithoutPublishing "+attribute+" "+val);
+        
         T result = attributesInternal.updateWithoutPublishing(attribute, val);
         if (result == null) {
             // could be this is a new sensor
@@ -791,6 +798,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public void removeAttribute(AttributeSensor<?> attribute) {
+        if (LOG.isTraceEnabled())
+            LOG.trace(""+this+" removeAttribute "+attribute);
+        
         attributesInternal.remove(attribute);
         entityType.removeSensor(attribute);
     }
@@ -1026,6 +1036,31 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 //            .add("name", getDisplayName());
     }
     
+    // -------- INITIALIZATION --------------
+
+    /**
+     * Default entity initialization, just calls {@link #initEnrichers()}.
+     */
+    public void init() {
+        super.init();
+        initEnrichers();
+    }
+    
+    /**
+     * By default, adds enrichers to populate {@link Attributes#SERVICE_UP} and {@link Attributes#SERVICE_STATE_ACTUAL}
+     * based on {@link Attributes#SERVICE_NOT_UP_INDICATORS}, 
+     * {@link Attributes#SERVICE_STATE_EXPECTED} and {@link Attributes#SERVICE_PROBLEMS}
+     * (doing nothing if these sensors are not used).
+     * <p>
+     * Subclasses may go further and populate the {@link Attributes#SERVICE_NOT_UP_INDICATORS} 
+     * and {@link Attributes#SERVICE_PROBLEMS} from children and members or other sources.
+     */
+    // these enrichers do nothing unless Attributes.SERVICE_NOT_UP_INDICATORS are used
+    // and/or SERVICE_STATE_EXPECTED 
+    protected void initEnrichers() {
+        addEnricher(ServiceNotUpLogic.newEnricherForServiceUpIfNotUpIndicatorsEmpty());
+        addEnricher(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
+    }
     
     // -------- POLICIES --------------------
 
@@ -1035,35 +1070,32 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
-    public Policy addPolicy(Policy policy) {
-        List<Policy> old = MutableList.<Policy>copyOf(policies);
-
+    public void addPolicy(Policy policy) {
+        Policy old = findApparentlyEqualAndWarnIfNotSameUniqueTag(policies, policy);
+        if (old!=null) {
+            LOG.debug("Removing "+old+" when adding "+policy+" to "+this);
+            removePolicy(old);
+        }
+        
         policies.add((AbstractPolicy)policy);
         ((AbstractPolicy)policy).setEntity(this);
         
         getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
         emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
-        
-        Policy actual = findApparentlyEqualsAndWarn(old, policy);
-        if (actual!=null) {
-            removePolicy(policy);
-            return actual;
-        }
-        return policy;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
         T policy = getManagementContext().getEntityManager().createPolicy(spec);
-        return (T) addPolicy(policy);
+        addPolicy(policy);
+        return policy;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
         T enricher = getManagementContext().getEntityManager().createEnricher(spec);
-        return (T) addEnricher(enricher);
+        addEnricher(enricher);
+        return enricher;
     }
 
     @Override
@@ -1094,37 +1126,31 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
-    public Enricher addEnricher(Enricher enricher) {
-        List<Enricher> old = MutableList.<Enricher>copyOf(enrichers);
+    public void addEnricher(Enricher enricher) {
+        Enricher old = findApparentlyEqualAndWarnIfNotSameUniqueTag(enrichers, enricher);
+        if (old!=null) {
+            LOG.debug("Removing "+old+" when adding "+enricher+" to "+this);
+            removeEnricher(old);
+        }
         
         enrichers.add((AbstractEnricher) enricher);
         ((AbstractEnricher)enricher).setEntity(this);
         
         getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
         // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
-        
-        Enricher actual = findApparentlyEqualsAndWarn(old, enricher);
-        if (actual!=null) {
-            removeEnricher(enricher);
-            return actual;
-        }
-        return enricher;
     }
     
-    private <T extends EntityAdjunct> T findApparentlyEqualsAndWarn(Collection<? extends T> items, T newItem) {
-        T oldItem = findApparentlyEquals(items, newItem);
+    private <T extends EntityAdjunct> T findApparentlyEqualAndWarnIfNotSameUniqueTag(Collection<? extends T> items, T newItem) {
+        T oldItem = findApparentlyEqual(items, newItem);
         
         if (oldItem!=null) {
             String newItemTag = newItem.getUniqueTag();
             if (newItemTag!=null) {
-                // old item has same tag; don't add
-                LOG.warn("Adding to "+this+", "+newItem+" has identical uniqueTag as existing "+oldItem+"; will remove after adding. "
-                    + "Underlying addition should be modified so it is not added twice.");
                 return oldItem;
             }
             if (isRebinding()) {
-                LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; will remove after adding. "
-                    + "Underlying addition should be modified so it is not added twice during rebind.");
+                LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; will replace. "
+                    + "Underlying addition should be modified so it is not added twice during rebind or unique tag should be used to indicate it is identical.");
                 return oldItem;
             } else {
                 LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; may get removed on rebind. "
@@ -1135,8 +1161,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return null;
         }
     }
-    private <T extends EntityAdjunct> T findApparentlyEquals(Collection<? extends T> itemsCopy, T newItem) {
-        // FIXME workaround for issue where enrichers can get added multiple times on rebind,
+    private <T extends EntityAdjunct> T findApparentlyEqual(Collection<? extends T> itemsCopy, T newItem) {
+        // TODO workaround for issue where enrichers can get added multiple times on rebind,
         // if it's added in onBecomingManager or connectSensors; the right fix will be more disciplined about how/where these are added
         // (easier done when sensor feeds are persisted)
         Class<?> beforeEntityAdjunct = newItem.getClass();
@@ -1157,6 +1183,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                         "transformation",
                         // from averager
                         "values", "timestamps", "lastAverage")) {
+                    
+                    
                     return oldItem;
                 }
             }

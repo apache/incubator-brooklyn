@@ -26,14 +26,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
@@ -52,7 +50,7 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
     public static ConfigKey<Sensor<?>> SOURCE_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.sourceSensor");
 
     public static ConfigKey<Sensor<?>> TARGET_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.targetSensor");
-
+    
     protected Function<? super SensorEvent<T>, ? extends U> transformation;
     protected Entity producer;
     protected Sensor<T> sourceSensor;
@@ -65,6 +63,7 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
+        
         final Function<? super T, ? extends U> transformationFromValue = (Function<? super T, ? extends U>) getConfig(TRANSFORMATION_FROM_VALUE);
         final Function<? super SensorEvent<T>, ? extends U> transformationFromEvent = (Function<? super SensorEvent<T>, ? extends U>) getConfig(TRANSFORMATION_FROM_EVENT);
         checkArgument(transformationFromEvent != null ^ transformationFromValue != null, "must set exactly one of %s or %s", TRANSFORMATION_FROM_VALUE.getName(), TRANSFORMATION_FROM_EVENT.getName());
@@ -103,15 +102,13 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
 
     @Override
     public void onEvent(SensorEvent<T> event) {
-        Object v = compute(event);
-        if (v == Entities.UNCHANGED) {
-            // nothing
-        } else {
-            emit(targetSensor, TypeCoercions.coerce(v, targetSensor.getTypeToken()));
-        }
+        emit(targetSensor, compute(event));
     }
 
     protected Object compute(SensorEvent<T> event) {
-        return transformation.apply(event);
+        U result = transformation.apply(event);
+        if (LOG.isTraceEnabled())
+            LOG.trace("Enricher "+this+" computed "+result+" from "+event);
+        return result;
     }
 }

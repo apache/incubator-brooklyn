@@ -19,32 +19,42 @@
 package brooklyn.enricher;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityAdjuncts;
+import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
+import brooklyn.policy.Enricher;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.CollectionFunctionals;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.guava.TypeTokens;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
+@SuppressWarnings("serial")
 public class EnrichersTest extends BrooklynAppUnitTestSupport {
 
     public static final AttributeSensor<Integer> NUM1 = Sensors.newIntegerSensor("test.num1");
@@ -54,6 +64,9 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     public static final AttributeSensor<String> STR2 = Sensors.newStringSensor("test.str2");
     public static final AttributeSensor<Set<Object>> SET1 = Sensors.newSensor(new TypeToken<Set<Object>>() {}, "test.set1", "set1 descr");
     public static final AttributeSensor<Long> LONG1 = Sensors.newLongSensor("test.long1");
+    public static final AttributeSensor<Map<String,String>> MAP1 = Sensors.newSensor(new TypeToken<Map<String,String>>() {}, "test.map1", "map1 descr");
+    @SuppressWarnings("rawtypes")
+    public static final AttributeSensor<Map> MAP2 = Sensors.newSensor(Map.class, "test.map2");
     
     private TestEntity entity;
     private TestEntity entity2;
@@ -68,19 +81,23 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void testAdding() {
-        entity.addEnricher(Enrichers.builder()
+        Enricher enr = entity.addEnricher(Enrichers.builder()
                 .combining(NUM1, NUM2)
                 .publishing(NUM3)
                 .computingSum()
                 .build());
+        
+        Assert.assertEquals(EntityAdjuncts.getNonSystemEnrichers(entity), ImmutableList.of(enr));
         
         entity.setAttribute(NUM1, 2);
         entity.setAttribute(NUM2, 3);
         EntityTestUtils.assertAttributeEqualsEventually(entity, NUM3, 5);
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void testCombiningWithCustomFunction() {
         entity.addEnricher(Enrichers.builder()
@@ -94,11 +111,12 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(entity, NUM3, 1);
     }
     
+    @SuppressWarnings("unchecked")
     @Test(groups="Integration") // because takes a second
     public void testCombiningRespectsUnchanged() {
         entity.addEnricher(Enrichers.builder()
                 .combining(NUM1, NUM2)
-                .publishing(NUM3)
+                .<Object>publishing(NUM3)
                 .computing(new Function<Iterable<Integer>, Object>() {
                         @Override public Object apply(Iterable<Integer> input) {
                             if (input != null && Iterables.contains(input, 123)) {
@@ -147,7 +165,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.addEnricher(Enrichers.builder()
                 .transforming(NUM1)
                 .publishing(LONG1)
-                .computing((Function)Functions.constant(Integer.valueOf(1)))
+                .computing(Functions.constant(Long.valueOf(1)))
                 .build());
         
         entity.setAttribute(NUM1, 123);
@@ -170,21 +188,57 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test(groups="Integration") // because takes a second
-    public void testTransformingRespectsUnchanged() {
+    public void testTransformingRespectsUnchangedButWillRepublish() {
+        RecordingSensorEventListener record = new RecordingSensorEventListener();
+        app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
+        
         entity.addEnricher(Enrichers.builder()
                 .transforming(STR1)
-                .publishing(STR2)
+                .<Object>publishing(STR2)
                 .computing(new Function<String, Object>() {
                         @Override public Object apply(String input) {
                             return ("ignoredval".equals(input)) ? Entities.UNCHANGED : input;
                         }})
                 .build());
+        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(0));
         
         entity.setAttribute(STR1, "myval");
-        EntityTestUtils.assertAttributeEqualsEventually(entity, STR2, "myval");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
+        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
         
         entity.setAttribute(STR1, "ignoredval");
         EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval");
+        
+        entity.setAttribute(STR1, "myval2");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(2));
+        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval2");
+        
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval3");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(5));
+    }
+
+    public void testTransformingSuppressDuplicates() {
+        RecordingSensorEventListener record = new RecordingSensorEventListener();
+        app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
+        
+        entity.addEnricher(Enrichers.builder()
+                .transforming(STR1)
+                .publishing(STR2)
+                .computing(Functions.<String>identity())
+                .suppressDuplicates(true)
+                .build());
+
+        entity.setAttribute(STR1, "myval");
+        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
+        EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
+        
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval2");
+        entity.setAttribute(STR1, "myval3");
+        EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval3");
+        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(3));
     }
 
     @Test
@@ -312,7 +366,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
                 .aggregating(NUM1)
                 .publishing(LONG1)
                 .fromMembers()
-                .computing((Function)Functions.constant(Integer.valueOf(1)))
+                .computing(Functions.constant(Long.valueOf(1)))
                 .build());
         
         entity.setAttribute(NUM1, 123);
@@ -324,7 +378,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         group.addMember(entity);
         group.addEnricher(Enrichers.builder()
                 .aggregating(NUM1)
-                .publishing(LONG1)
+                .<Object>publishing(LONG1)
                 .fromMembers()
                 .computing(new Function<Iterable<Integer>, Object>() {
                         @Override public Object apply(Iterable<Integer> input) {
@@ -342,4 +396,39 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.setAttribute(NUM1, 987654);
         EntityTestUtils.assertAttributeEqualsContinually(group, LONG1, Long.valueOf(123));
     }
+    @Test
+    public void testUpdatingMap1() {
+        entity.addEnricher(Enrichers.builder()
+                .updatingMap(MAP1)
+                .from(LONG1)
+                .computing(Functionals.ifEquals(-1L).value("-1 is not allowed"))
+                .build());
+        
+        doUpdatingMapChecks(MAP1);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testUpdatingMap2() {
+        entity.addEnricher(Enrichers.builder()
+                .updatingMap((AttributeSensor)MAP2)
+                .from(LONG1)
+                .computing(Functionals.ifEquals(-1L).value("-1 is not allowed"))
+                .build());
+        
+        doUpdatingMapChecks(MAP2);
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected void doUpdatingMapChecks(AttributeSensor mapSensor) {
+        EntityTestUtils.assertAttributeEqualsEventually(entity, mapSensor, MutableMap.<String,String>of());
+        
+        entity.setAttribute(LONG1, -1L);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, mapSensor, MutableMap.<String,String>of(
+            LONG1.getName(), "-1 is not allowed"));
+        
+        entity.setAttribute(LONG1, 1L);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, mapSensor, MutableMap.<String,String>of());
+    }
+
 }

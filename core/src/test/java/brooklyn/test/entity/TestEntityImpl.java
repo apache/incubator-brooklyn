@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
@@ -69,7 +70,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         return super.configure(flags);
     }
     
-    @Override
+    @Override // made public for testing
     public boolean isLegacyConstruction() {
         return super.isLegacyConstruction();
     }
@@ -122,19 +123,21 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public void start(Collection<? extends Location> locs) {
         LOG.trace("Starting {}", this);
         callHistory.add("start");
-        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         counter.incrementAndGet();
         addLocations(locs);
-        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+        setAttribute(SERVICE_UP, true);
     }
 
     @Override
     public void stop() { 
         LOG.trace("Stopping {}", this);
         callHistory.add("stop");
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         counter.decrementAndGet();
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
+        setAttribute(SERVICE_UP, false);
     }
 
     @Override

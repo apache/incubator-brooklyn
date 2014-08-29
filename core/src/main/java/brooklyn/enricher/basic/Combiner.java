@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -42,7 +41,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -50,6 +48,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
+@SuppressWarnings("serial")
 public class Combiner<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Combiner.class);
@@ -121,12 +120,7 @@ public class Combiner<T,U> extends AbstractEnricher implements SensorEventListen
      */
     protected void onUpdated() {
         try {
-            Object v = compute();
-            if (v == Entities.UNCHANGED) {
-                // nothing
-            } else {
-                emit(targetSensor, TypeCoercions.coerce(v, targetSensor.getTypeToken()));
-            }
+            emit(targetSensor, compute());
         } catch (Throwable t) {
             LOG.warn("Error calculating and setting combination for enricher "+this, t);
             throw Exceptions.propagate(t);

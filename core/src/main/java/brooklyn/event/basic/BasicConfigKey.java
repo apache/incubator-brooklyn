@@ -227,8 +227,12 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         private final ConfigKey<T> parentKey;
         
         public BasicConfigKeyOverwriting(ConfigKey<T> key, T defaultValue) {
+            this(key, key.getDescription(), defaultValue);
+        }
+        
+        public BasicConfigKeyOverwriting(ConfigKey<T> key, String newDescription, T defaultValue) {
             super(checkNotNull(key.getTypeToken(), "type"), checkNotNull(key.getName(), "name"), 
-                    key.getDescription(), defaultValue);
+                    newDescription, defaultValue);
             parentKey = key;
         }
         

@@ -36,8 +36,10 @@ import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigMap;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Configurable;
@@ -238,12 +240,22 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         this.entity = entity;
     }
     
-    protected <T> void emit(Sensor<T> sensor, T val) {
+    /** @deprecated since 0.7.0 only {@link AbstractEnricher} has emit convenience */
+    protected <T> void emit(Sensor<T> sensor, Object val) {
         checkState(entity != null, "entity must first be set");
+        if (val == Entities.UNCHANGED) {
+            return;
+        }
+        if (val == Entities.REMOVE) {
+            ((EntityInternal)entity).removeAttribute((AttributeSensor<T>) sensor);
+            return;
+        }
+        
+        T newVal = TypeCoercions.coerce(val, sensor.getTypeToken());
         if (sensor instanceof AttributeSensor) {
-            entity.setAttribute((AttributeSensor<T>)sensor, val);
+            entity.setAttribute((AttributeSensor<T>)sensor, newVal);
         } else { 
-            entity.emit(sensor, val);
+            entity.emit(sensor, newVal);
         }
     }
 
@@ -365,6 +377,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
                 .add("name", name)
                 .add("uniqueTag", uniqueTag)
                 .add("running", isRunning())
+                .add("entity", entity)
                 .add("id", getId())
                 .toString();
     }

@@ -71,6 +71,8 @@ import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -82,6 +84,7 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 @Test(singleThreaded = true)
@@ -196,7 +199,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     
     // Expect app to be running
     URI appUri = response.getLocation();
-    waitForApplicationToBeRunning(response.getLocation());
+    waitForApplicationToBeRunning(response.getLocation(), Duration.TEN_SECONDS);
     assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-builder");
     
     // Expect app to have the child-entity
@@ -452,8 +455,8 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
   @Test(dependsOnMethods = "testTriggerSampleEffector")
   public void testBatchSensorValues() {
-    Map<String,String> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors/current-state")
-        .get(new GenericType<Map<String,String>>() {});
+    WebResource resource = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors/current-state");
+    Map<String,Object> sensors = resource.get(new GenericType<Map<String,Object>>() {});
     assertTrue(sensors.size() > 0);
     assertEquals(sensors.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
   }

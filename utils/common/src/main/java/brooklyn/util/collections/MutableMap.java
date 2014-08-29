@@ -18,6 +18,7 @@
  */
 package brooklyn.util.collections;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +26,10 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Predicate;
@@ -33,7 +38,9 @@ import com.google.common.collect.ImmutableMap;
 /** Map impl, exposing simple builder operations (add) in a fluent-style API,
  * where the final map is mutable.  You can also toImmutable. */
 public class MutableMap<K,V> extends LinkedHashMap<K,V> {
+    
     private static final long serialVersionUID = -2463168443382874384L;
+    private static final Logger log = LoggerFactory.getLogger(MutableMap.class);
 
     public static <K,V> MutableMap<K,V> of() {
         return new MutableMap<K,V>();
@@ -136,8 +143,27 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         return Maybe.absent("No entry for key '"+key+"' in this map");
     }
     
+    /** @deprecated since 0.7.0, use {@link #asImmutableCopy()}, or {@link #asUnmodifiable()} / {@link #asUnmodifiableCopy()} */ @Deprecated
     public ImmutableMap<K,V> toImmutable() {
         return ImmutableMap.copyOf(this);
+    }
+    /** as {@link MutableList#asImmutableCopy()} */
+    public Map<K,V> asImmutableCopy() {
+        try {
+            return ImmutableMap.copyOf(this);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Error converting list to Immutable, using unmodifiable instead: "+e, e);
+            return asUnmodifiableCopy();
+        }
+    }
+    /** as {@link MutableList#asUnmodifiable()} */
+    public Map<K,V> asUnmodifiable() {
+        return Collections.unmodifiableMap(this);
+    }
+    /** as {@link MutableList#asUnmodifiableCopy()} */
+    public Map<K,V> asUnmodifiableCopy() {
+        return Collections.unmodifiableMap(MutableMap.copyOf(this));
     }
     
     public static <K, V> Builder<K, V> builder() {

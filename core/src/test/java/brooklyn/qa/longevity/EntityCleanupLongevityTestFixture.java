@@ -131,7 +131,7 @@ public abstract class EntityCleanupLongevityTestFixture {
         // TODO would like to assert this
 //        Assert.assertTrue( schedulers.isEmpty(), "Not empty schedulers: "+schedulers);
         // but weaker form for now
-        Assert.assertTrue( schedulers.size() <= iterations, "Not empty schedulers: "+schedulers);
+        Assert.assertTrue( schedulers.size() <= 3*iterations, "Not empty schedulers: "+schedulers.size()+" after "+iterations+", "+schedulers);
         
         // memory leak detection only applies to subclasses who run lots of iterations
         if (checkMemoryLeaks())

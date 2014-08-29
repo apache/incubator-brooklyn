@@ -273,7 +273,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 .put("credential", credential)
                 .putIfNotNull("endpoint", endpoint)
                 .build()
-                .toImmutable();
+                .asUnmodifiable();
 
         if (allowReuse) {
             ComputeService result = cachedComputeServices.get(cacheKey);

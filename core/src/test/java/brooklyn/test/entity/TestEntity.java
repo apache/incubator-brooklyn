@@ -76,7 +76,9 @@ public interface TestEntity extends Entity, Startable, EntityLocal, EntityIntern
     public static final AttributeSensor<String> NAME = Sensors.newStringSensor("test.name", "Test name");
     public static final BasicNotificationSensor<Integer> MY_NOTIF = new BasicNotificationSensor<Integer>(Integer.class, "test.myNotif", "Test notification");
     
-    public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
+    public static final AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
+    @Deprecated
+    public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE_ACTUAL;
     
     public static final MethodEffector<Void> MY_EFFECTOR = new MethodEffector<Void>(TestEntity.class, "myEffector");
     public static final MethodEffector<Object> IDENTITY_EFFECTOR = new MethodEffector<Object>(TestEntity.class, "identityEffector");

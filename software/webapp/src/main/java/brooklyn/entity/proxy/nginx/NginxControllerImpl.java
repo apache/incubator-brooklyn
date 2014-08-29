@@ -66,7 +66,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     public void reload() {
         NginxSshDriver driver = (NginxSshDriver)getDriver();
         if (driver==null) {
-            Lifecycle state = getAttribute(NginxController.SERVICE_STATE);
+            Lifecycle state = getAttribute(NginxController.SERVICE_STATE_ACTUAL);
             throw new IllegalStateException("Cannot reload (no driver instance; stopped? (state="+state+")");
         }
 
@@ -181,7 +181,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         if (driver==null) {
             if (LOG.isDebugEnabled())
                 LOG.debug("No driver for {}, so not deploying archive (is entity stopping? state={})",
-                        this, getAttribute(NginxController.SERVICE_STATE));
+                        this, getAttribute(NginxController.SERVICE_STATE_ACTUAL));
             return;
         }
 
@@ -248,7 +248,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         if (driver==null) {
             if (LOG.isDebugEnabled())
                 LOG.debug("No driver for {}, so not generating config file (is entity stopping? state={})",
-                        this, getAttribute(NginxController.SERVICE_STATE));
+                        this, getAttribute(NginxController.SERVICE_STATE_ACTUAL));
             return null;
         }
 

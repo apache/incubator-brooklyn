@@ -82,7 +82,7 @@ public class GlobalWebFabricExample extends AbstractApplication {
         new PortAttributeSensorAndConfigKey(AbstractController.PROXY_HTTP_PORT, PortRanges.fromInteger(80));
     
     @Override
-    public void init() {
+    public void initApp() {
         StringConfigMap config = getManagementContext().getConfig();
         
         GeoscalingDnsService geoDns = addChild(EntitySpec.create(GeoscalingDnsService.class)

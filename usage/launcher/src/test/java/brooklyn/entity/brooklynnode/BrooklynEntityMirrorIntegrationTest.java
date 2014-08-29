@@ -121,7 +121,7 @@ public class BrooklynEntityMirrorIntegrationTest {
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "bermuda");
 
         serverApp.stop();
-        EntityTestUtils.assertAttributeEqualsEventually(mirror, Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        EntityTestUtils.assertAttributeEqualsEventually(mirror, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
     }
 
     
@@ -156,7 +156,7 @@ public class BrooklynEntityMirrorIntegrationTest {
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "bermuda");
 
         serverApp.stop();
-        EntityTestUtils.assertAttributeEqualsEventually(mirror, Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+        EntityTestUtils.assertAttributeEqualsEventually(mirror, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
     }
 
 }

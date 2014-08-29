@@ -111,7 +111,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         Boolean serviceUp = entity.getAttribute(Attributes.SERVICE_UP);
         if (serviceUp!=null) aRoot.put("serviceUp", serviceUp);
 
-        Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE);
+        Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
         if (serviceState!=null) aRoot.put("serviceState", serviceState.toString());
 
         String iconUrl = entity.getIconUrl();

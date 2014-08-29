@@ -420,7 +420,12 @@ public class Asserts {
             throw new ExecutionException(throwable.get());
         }
     }
-    
+
+    public static <T> void assertThat(T object, Predicate<T> condition) {
+        if (condition.apply(object)) return;
+        fail("Failed "+condition+": "+object);
+    }
+
     @SuppressWarnings("rawtypes")
     private static boolean groovyTruth(Object o) {
         // TODO Doesn't handle matchers (see http://docs.codehaus.org/display/GROOVY/Groovy+Truth)

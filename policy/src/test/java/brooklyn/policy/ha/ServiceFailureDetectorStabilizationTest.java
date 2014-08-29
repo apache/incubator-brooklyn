@@ -31,12 +31,14 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.ServiceStateLogicTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
-import brooklyn.policy.PolicySpec;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -49,6 +51,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 
+/** also see more primitive tests in {@link ServiceStateLogicTest} */
 public class ServiceFailureDetectorStabilizationTest {
 
     private static final int TIMEOUT_MS = 10*1000;
@@ -67,8 +70,8 @@ public class ServiceFailureDetectorStabilizationTest {
         managementContext = new LocalManagementContextForTests();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        e1.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
         e1.setAttribute(TestEntity.SERVICE_UP, true);
+        ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         
         app.getManagementContext().getSubscriptionManager().subscribe(
                 e1, 
@@ -95,8 +98,8 @@ public class ServiceFailureDetectorStabilizationTest {
     
     @Test(groups="Integration") // Because slow
     public void testNotNotifiedOfTemporaryFailuresDuringStabilisationDelay() throws Exception {
-        e1.addPolicy(PolicySpec.create(ServiceFailureDetector.class)
-                .configure(ServiceFailureDetector.SERVICE_FAILED_STABILIZATION_DELAY, Duration.ONE_MINUTE));
+        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+                .configure(ServiceFailureDetector.ENTITY_FAILED_STABILIZATION_DELAY, Duration.ONE_MINUTE));
         
         e1.setAttribute(TestEntity.SERVICE_UP, false);
         Thread.sleep(100);
@@ -109,8 +112,8 @@ public class ServiceFailureDetectorStabilizationTest {
     public void testNotifiedOfFailureAfterStabilisationDelay() throws Exception {
         final int stabilisationDelay = 1000;
         
-        e1.addPolicy(PolicySpec.create(ServiceFailureDetector.class)
-                .configure(ServiceFailureDetector.SERVICE_FAILED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
+        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+                .configure(ServiceFailureDetector.ENTITY_FAILED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
         e1.setAttribute(TestEntity.SERVICE_UP, false);
 
@@ -122,8 +125,8 @@ public class ServiceFailureDetectorStabilizationTest {
     public void testFailuresThenUpDownResetsStabilisationCount() throws Exception {
         final long stabilisationDelay = 1000;
         
-        e1.addPolicy(PolicySpec.create(ServiceFailureDetector.class)
-                .configure(ServiceFailureDetector.SERVICE_FAILED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
+        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+                .configure(ServiceFailureDetector.ENTITY_FAILED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
         e1.setAttribute(TestEntity.SERVICE_UP, false);
         assertNoEventsContinually(Duration.of(stabilisationDelay - OVERHEAD));
@@ -139,8 +142,8 @@ public class ServiceFailureDetectorStabilizationTest {
     public void testNotNotifiedOfTemporaryRecoveryDuringStabilisationDelay() throws Exception {
         final long stabilisationDelay = 1000;
         
-        e1.addPolicy(PolicySpec.create(ServiceFailureDetector.class)
-                .configure(ServiceFailureDetector.SERVICE_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
+        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+                .configure(ServiceFailureDetector.ENTITY_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
         e1.setAttribute(TestEntity.SERVICE_UP, false);
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);
@@ -157,8 +160,8 @@ public class ServiceFailureDetectorStabilizationTest {
     public void testNotifiedOfRecoveryAfterStabilisationDelay() throws Exception {
         final int stabilisationDelay = 1000;
         
-        e1.addPolicy(PolicySpec.create(ServiceFailureDetector.class)
-                .configure(ServiceFailureDetector.SERVICE_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
+        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+                .configure(ServiceFailureDetector.ENTITY_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
         e1.setAttribute(TestEntity.SERVICE_UP, false);
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);
@@ -173,8 +176,8 @@ public class ServiceFailureDetectorStabilizationTest {
     public void testRecoversThenDownUpResetsStabilisationCount() throws Exception {
         final long stabilisationDelay = 1000;
         
-        e1.addPolicy(PolicySpec.create(ServiceFailureDetector.class)
-                .configure(ServiceFailureDetector.SERVICE_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
+        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+                .configure(ServiceFailureDetector.ENTITY_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
         e1.setAttribute(TestEntity.SERVICE_UP, false);
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);

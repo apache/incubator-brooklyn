@@ -41,6 +41,8 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.geo.HostGeoInfo;
@@ -104,8 +106,11 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     @Override
     public void setServiceState(Lifecycle state) {
         setAttribute(HOSTNAME, getHostname());
-        setAttribute(SERVICE_STATE, state);
-        setAttribute(SERVICE_UP, state==Lifecycle.RUNNING);
+        ServiceStateLogic.setExpectedState(this, state);
+        if (state==Lifecycle.RUNNING)
+            ServiceNotUpLogic.clearNotUpIndicator(this, SERVICE_STATE_ACTUAL);
+        else
+            ServiceNotUpLogic.updateNotUpIndicator(this, SERVICE_STATE_ACTUAL, "Not in RUNNING state");
     }
     
     @Override

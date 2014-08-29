@@ -26,6 +26,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.Queue;
 import brooklyn.entity.messaging.Topic;
@@ -132,9 +133,17 @@ public abstract class JMSBrokerImpl<Q extends JMSDestination & Queue, T extends 
         addQueue(name, MutableMap.of());
     }
     
+    public void checkStartingOrRunning() {
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
+        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.RUNNING) return;
+        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.STARTING) return;
+        // TODO this check may be redundant or even inappropriate
+        throw new IllegalStateException("Cannot run against "+this+" in state "+state);
+    }
+
     @Override
     public void addQueue(String name, Map properties) {
-		checkModifiable();
+		checkStartingOrRunning();
         properties.put("name", name);
         queues.put(name, createQueue(properties));
     }
@@ -149,7 +158,7 @@ public abstract class JMSBrokerImpl<Q extends JMSDestination & Queue, T extends 
     
     @Override
     public void addTopic(String name, Map properties) {
-		checkModifiable();
+		checkStartingOrRunning();
         properties.put("name", name);
         topics.put(name, createTopic(properties));
     }

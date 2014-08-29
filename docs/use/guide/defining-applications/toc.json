@@ -12,6 +12,8 @@
   "file":  "{{ site.url }}/use/guide/defining-applications/deploying-yaml.html" },
 { "title": "YAML Reference",
   "file":  "{{ site.url }}/use/guide/defining-applications/yaml-reference.html" },
+{ "title": "Service State",
+  "file":  "{{ site.url }}/use/guide/defining-applications/service-state.html" },
 { "title": "Maven Archetype",
   "file":  "{{ site.url }}/use/guide/defining-applications/archetype.html" }
 ]

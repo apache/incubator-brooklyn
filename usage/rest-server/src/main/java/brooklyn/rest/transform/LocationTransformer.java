@@ -179,7 +179,7 @@ public class LocationTransformer {
             MutableMap.of("self", URI.create("/v1/locations/" + l.getId()))
                 .addIfNotNull("parent", l.getParent()!=null ? URI.create("/v1/locations/"+l.getParent().getId()) : null)
                 .addIfNotNull("spec", specId!=null ? URI.create("/v1/locations/"+specId) : null)
-                .toImmutable() );
+                .asUnmodifiable() );
     }
     
 }

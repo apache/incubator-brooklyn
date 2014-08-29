@@ -52,15 +52,15 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestJavaWebAppEntity;
+import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Functionals;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-/**
- * TODO clarify test purpose
- */
 public class ControlledDynamicWebAppClusterTest {
     private static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterTest.class);
 
@@ -76,7 +76,7 @@ public class ControlledDynamicWebAppClusterTest {
         String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         loc = new LocalhostMachineProvisioningLocation();
         locs = ImmutableList.of(loc);
     }
@@ -201,14 +201,19 @@ public class ControlledDynamicWebAppClusterTest {
                 .configure("initialSize", 1)
                 .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
         
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+        
         RecordingSensorEventListener<Lifecycle> listener = new RecordingSensorEventListener<Lifecycle>(true);
-        app.subscribe(cluster, Attributes.SERVICE_STATE, listener);
+        app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, listener);
         app.start(locs);
-
+        
+        Asserts.eventually(Suppliers.ofInstance(listener.getValues()), CollectionFunctionals.sizeEquals(2));
         assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STARTING, Lifecycle.RUNNING), "vals="+listener.getValues());
         listener.getValues().clear();
         
         app.stop();
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+        Asserts.eventually(Suppliers.ofInstance(listener.getValues()), CollectionFunctionals.sizeEquals(2));
         assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STOPPING, Lifecycle.STOPPED), "vals="+listener.getValues());
     }
     
@@ -317,6 +322,6 @@ public class ControlledDynamicWebAppClusterTest {
         Entities.unmanage(controller);
         
         cluster.stop();
-        EntityTestUtils.assertAttributeEquals(cluster, ControlledDynamicWebAppCluster.SERVICE_STATE, Lifecycle.STOPPED);
+        EntityTestUtils.assertAttributeEquals(cluster, ControlledDynamicWebAppCluster.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
     }
 }

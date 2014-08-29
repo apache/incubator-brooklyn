@@ -37,6 +37,7 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableSet;
@@ -104,7 +105,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testAddsEnricherSpec() throws Exception {
-        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class, TestEntityNoEnrichersImpl.class)
                 .enricher(EnricherSpec.create(MyEnricher.class)
                         .displayName("myenrichername")
                         .configure(MyEnricher.CONF1, "myconf1val")
@@ -119,7 +120,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testAddsEnricher() throws Exception {
         MyEnricher enricher = new MyEnricher();
-        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class, TestEntityNoEnrichersImpl.class)
                 .enricher(enricher));
         
         assertEquals(Iterables.getOnlyElement(entity.getEnrichers()), enricher);

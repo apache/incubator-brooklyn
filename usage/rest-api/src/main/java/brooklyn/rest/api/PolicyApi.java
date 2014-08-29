@@ -57,6 +57,7 @@ public interface PolicyApi {
   @GET
   @Path("/current-state")
   @ApiOperation(value = "Fetch policy states in batch", notes="Returns a map of policy ID to whether it is active")
+  // FIXME method name -- this is nothing to do with config!
   public Map<String, Boolean> batchConfigRead(
       @ApiParam(value = "Application ID or name", required = true)
       @PathParam("application") String application,

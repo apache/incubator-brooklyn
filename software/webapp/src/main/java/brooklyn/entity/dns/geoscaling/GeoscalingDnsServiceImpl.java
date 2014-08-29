@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
@@ -69,9 +70,9 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         try {
             applyConfig();
         } catch (Exception e) {
-            // don't prevent management coming up
+            // don't prevent management coming up, but do mark it as on fire
             log.error("Geoscaling did not come up correctly: "+e, e);
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
         }
         super.onManagementBecomingMaster();
     }

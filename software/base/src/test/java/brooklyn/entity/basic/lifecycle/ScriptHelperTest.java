@@ -22,17 +22,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.TestException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
+import brooklyn.entity.basic.SoftwareProcessEntityTest.MyService;
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyServiceImpl;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
@@ -40,11 +43,14 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.EntityTestUtils;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 
 public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
+    
+    private static final Logger log = LoggerFactory.getLogger(ScriptHelperTest.class);
     
     private SshMachineLocation machine;
     private FixedListMachineProvisioningLocation<SshMachineLocation> loc;
@@ -64,44 +70,59 @@ public class ScriptHelperTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testCheckRunningForcesInessential() {
-        MyServiceInessentialDriverImpl entity = new MyServiceInessentialDriverImpl(app);
-        Entities.manage(entity);
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class, MyServiceInessentialDriverImpl.class));
+        
+        // is set false on mgmt starting (probably shouldn't be though)
+        Assert.assertFalse(entity.getAttribute(Startable.SERVICE_UP));
         
         entity.start(ImmutableList.of(loc));
         SimulatedInessentialIsRunningDriver driver = (SimulatedInessentialIsRunningDriver) entity.getDriver();
         Assert.assertTrue(driver.isRunning());
+        // currently, is initially set true after successful start
+        Assert.assertTrue(entity.getAttribute(Startable.SERVICE_UP));
         
-        entity.connectServiceUpIsRunning();
-        
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, true);
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
+        
+        log.debug("up, now cause failure");
+        
         driver.setFailExecution(true);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, false);
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, false);
+        
+        log.debug("caught failure, now clear");
         driver.setFailExecution(false);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, true);
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
     }
     
-    private class MyServiceInessentialDriverImpl extends MyServiceImpl {
-        public MyServiceInessentialDriverImpl(Entity parent) {
-            super(parent);
-        }
+    public static class MyServiceInessentialDriverImpl extends MyServiceImpl {
         
         @Override public Class<?> getDriverInterface() {
             return SimulatedInessentialIsRunningDriver.class;
         }
+
+        @Override
+        protected void connectSensors() {
+            super.connectSensors();
+            connectServiceUpIsRunning();
+        }
         
         @Override
         public void connectServiceUpIsRunning() {
+//            super.connectServiceUpIsRunning();
+            // run more often
             FunctionFeed.builder()
-                    .entity(this)
-                    .period(500)
-                    .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_UP)
-                            .onException(Functions.constant(Boolean.FALSE))
-                            .callable(new Callable<Boolean>() {
-                                public Boolean call() {
-                                    return getDriver().isRunning();
-                                }
-                            }))
-                    .build();
+                .entity(this)
+                .period(Duration.millis(10))
+                .poll(new FunctionPollConfig<Boolean, Boolean>(SERVICE_PROCESS_IS_RUNNING)
+                    .onException(Functions.constant(Boolean.FALSE))
+                    .callable(new Callable<Boolean>() {
+                        public Boolean call() {
+                            return getDriver().isRunning();
+                        }
+                    }))
+                .build();
         }
     }
     

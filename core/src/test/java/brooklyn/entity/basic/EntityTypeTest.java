@@ -210,7 +210,7 @@ public class EntityTypeTest extends BrooklynAppUnitTestSupport {
     public void testRemoveSensor() throws Exception {
         entity.getMutableEntityType().removeSensor(SENSOR_ADDED);
         assertEquals(entity.getEntityType().getSensors(), 
-                MutableSet.builder().addAll(DEFAULT_SENSORS).remove(SENSOR_ADDED).build().toImmutable());
+                MutableSet.builder().addAll(DEFAULT_SENSORS).remove(SENSOR_ADDED).build().asUnmodifiable());
         
         TestUtils.assertEventually(
                 Suppliers.ofInstance(listener.events), 
@@ -222,7 +222,7 @@ public class EntityTypeTest extends BrooklynAppUnitTestSupport {
         entity.getMutableEntityType().removeSensor(SENSOR_ADDED.getName());
         entity.getMutableEntityType().removeSensor(POLICY_ADDED.getName());
         assertEquals(entity.getEntityType().getSensors(), 
-                MutableSet.builder().addAll(DEFAULT_SENSORS).remove(SENSOR_ADDED).remove(POLICY_ADDED).build().toImmutable());
+                MutableSet.builder().addAll(DEFAULT_SENSORS).remove(SENSOR_ADDED).remove(POLICY_ADDED).build().asUnmodifiable());
         
         TestUtils.assertEventually(
                 CollectionFunctionals.sizeSupplier(listener.events), 

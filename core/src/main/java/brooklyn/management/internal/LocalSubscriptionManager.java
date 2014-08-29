@@ -185,7 +185,11 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
                         return "LSM.publish("+event+")";
                     }
                     public void run() {
-                        sAtClosureCreation.listener.onEvent(event);
+                        try {
+                            sAtClosureCreation.listener.onEvent(event);
+                        } catch (Throwable t) {
+                            LOG.warn("Error in "+this+": "+t, t);
+                        }
                     }});
                 totalEventsDeliveredCount.incrementAndGet();
             }

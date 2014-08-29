@@ -52,6 +52,7 @@ import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -167,7 +168,7 @@ public class JavaWebAppsIntegrationTest {
             log.info("App started:");
             Entities.dumpInfo(app);
 
-            Assert.assertEquals(app.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING);
+            EntityTestUtils.assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
             Assert.assertEquals(app.getAttribute(Attributes.SERVICE_UP), Boolean.TRUE);
             
             final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
@@ -240,7 +241,7 @@ public class JavaWebAppsIntegrationTest {
             Assert.assertEquals(policy.getConfig(AutoScalerPolicy.METRIC_UPPER_BOUND), (Integer)100);
             Assert.assertTrue(policy.isRunning());
 
-            Assert.assertEquals(app.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING);
+            EntityTestUtils.assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
             Assert.assertEquals(app.getAttribute(Attributes.SERVICE_UP), Boolean.TRUE);
             
             final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {

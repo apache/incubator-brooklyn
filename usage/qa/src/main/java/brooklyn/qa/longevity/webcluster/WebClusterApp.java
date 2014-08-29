@@ -47,7 +47,7 @@ public class WebClusterApp extends AbstractApplication {
     private static final long loadCyclePeriodMs = 2 * 60 * 1000L;
 
     @Override
-    public void init() {
+    public void initApp() {
         final AttributeSensor<Double> sinusoidalLoad =
                 Sensors.newDoubleSensor("brooklyn.qa.sinusoidalLoad", "Sinusoidal server load");
         AttributeSensor<Double> averageLoad =

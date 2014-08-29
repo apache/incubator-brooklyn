@@ -38,6 +38,7 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -116,9 +117,10 @@ public class PolicyRegistrationTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testAddEnricherSpec() {
-        EntitySpecTest.MyEnricher enricher = entity.addEnricher(EnricherSpec.create(EntitySpecTest.MyEnricher.class));
+        TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class, TestEntityNoEnrichersImpl.class));
+        EntitySpecTest.MyEnricher enricher = entity2.addEnricher(EnricherSpec.create(EntitySpecTest.MyEnricher.class));
         assertNotNull(enricher);
-        assertEquals(entity.getEnrichers(), ImmutableList.of(enricher));
+        assertEquals(entity2.getEnrichers(), ImmutableList.of(enricher));
     }
 
     @Test

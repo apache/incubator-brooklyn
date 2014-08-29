@@ -16,46 +16,54 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test.entity
+package brooklyn.test.entity;
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import java.util.Collection;
+import java.util.Map;
 
-import brooklyn.entity.Effector
-import brooklyn.entity.Entity
-import brooklyn.entity.basic.MethodEffector
-import brooklyn.entity.basic.SoftwareProcessImpl
-import brooklyn.entity.effector.EffectorAndBody
-import brooklyn.entity.java.VanillaJavaAppImpl
-import brooklyn.entity.webapp.WebAppServiceConstants
-import brooklyn.location.Location
-import brooklyn.util.flags.SetFromFlag
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.Effector;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.MethodEffector;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.effector.EffectorAndBody;
+import brooklyn.entity.java.VanillaJavaAppImpl;
+import brooklyn.entity.webapp.WebAppServiceConstants;
+import brooklyn.location.Location;
+import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Mock web application server entity for testing.
  */
 public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
 	private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
-    public static final Effector<Void> START = new EffectorAndBody<Void>(SoftwareProcessImpl.START, new MethodEffector(TestJavaWebAppEntity.class, "customStart").getBody());
+    public static final Effector<Void> START = new EffectorAndBody<Void>(SoftwareProcessImpl.START, new MethodEffector<Void>(TestJavaWebAppEntity.class, "customStart").getBody());
 
-    public TestJavaWebAppEntity(Map properties=[:], Entity parent=null) {
-        super(properties, parent)
-    }
-    
     @SetFromFlag public int a;
     @SetFromFlag public int b;
     @SetFromFlag public int c;
 
+    public TestJavaWebAppEntity() {}
+    public TestJavaWebAppEntity(@SuppressWarnings("rawtypes") Map flags, Entity parent) { super(flags, parent); }
+    
 	public void waitForHttpPort() { }
 
     
 	public void customStart(Collection<? extends Location> loc) {
-        LOG.trace "Starting {}", this
+	    ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+        LOG.trace("Starting {}", this);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+        setAttribute(Attributes.SERVICE_UP, true);
     }
 
     @Override
 	protected void doStop() {
-        LOG.trace "Stopping {}", this
+        LOG.trace("Stopping {}", this);
     }
 
     @Override
@@ -63,13 +71,9 @@ public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
         throw new UnsupportedOperationException();
     }
 
-	@Override
-    String toString() {
-        return "Entity["+id[-8..-1]+"]"
-    }
-
 	public synchronized void spoofRequest() {
-		def rc = getAttribute(WebAppServiceConstants.REQUEST_COUNT) ?: 0
-		setAttribute(WebAppServiceConstants.REQUEST_COUNT, rc+1)
+		Integer rc = getAttribute(WebAppServiceConstants.REQUEST_COUNT);
+		if (rc==null) rc = 0;
+		setAttribute(WebAppServiceConstants.REQUEST_COUNT, rc+1);
 	}
 }

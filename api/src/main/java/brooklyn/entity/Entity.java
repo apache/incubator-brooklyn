@@ -25,6 +25,8 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.basic.BrooklynObject;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
@@ -214,7 +216,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      */
-    Policy addPolicy(Policy policy);
+    void addPolicy(Policy policy);
     
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
@@ -230,7 +232,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      */
-    Enricher addEnricher(Enricher enricher);
+    void addEnricher(Enricher enricher);
     
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.

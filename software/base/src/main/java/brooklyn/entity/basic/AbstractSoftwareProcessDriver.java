@@ -136,7 +136,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             DynamicTasks.markInessential();
             boolean previouslyRunning = isRunning();
             try {
-                getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+                ServiceStateLogic.setExpectedState(getEntity(), Lifecycle.STOPPING);
                 stop();
             } catch (Exception e) {
                 // queue a failed task so that there is visual indication that this task had a failure,
@@ -154,11 +154,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
         if (doFullStartOnRestart()) {
             DynamicTasks.waitForLast();
-            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+            ServiceStateLogic.setExpectedState(getEntity(), Lifecycle.STARTING);
             start();
         } else {
             DynamicTasks.queue("launch", new Runnable() { public void run() {
-                getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+                ServiceStateLogic.setExpectedState(getEntity(), Lifecycle.STARTING);
                 launch();
             }});
             DynamicTasks.queue("post-launch", new Runnable() { public void run() {
