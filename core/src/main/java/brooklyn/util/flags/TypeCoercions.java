@@ -103,6 +103,15 @@ public class TypeCoercions {
         return coerce(value, TypeToken.of(targetType));
     }
 
+    public static <T> Maybe<T> tryCoerce(Object value, TypeToken<T> targetTypeToken) {
+        try {
+            return Maybe.of( coerce(value, targetTypeToken) );
+        } catch (Throwable t) {
+            Exceptions.propagateIfFatal(t);
+            return Maybe.absent(t); 
+        }
+    }
+    
     /** @see #coerce(Object, Class) */
     @SuppressWarnings({ "unchecked" })
     public static <T> T coerce(Object value, TypeToken<T> targetTypeToken) {
@@ -622,7 +631,7 @@ public class TypeCoercions {
         registerAdapter(String.class, AttributeSensor.class, new Function<String,AttributeSensor>() {
             @Override
             public AttributeSensor apply(final String input) {
-                return new BasicAttributeSensor(Object.class, input);
+                return new BasicAttributeSensor<Object>(Object.class, input);
             }
         });
         registerAdapter(String.class, List.class, new Function<String,List>() {
