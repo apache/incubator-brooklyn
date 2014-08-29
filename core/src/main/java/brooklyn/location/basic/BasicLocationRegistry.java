@@ -85,7 +85,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
 
     protected void findServices() {
-        ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class);
+        ServiceLoader<LocationResolver> loader = ServiceLoader.load(LocationResolver.class, mgmt.getCatalog().getRootClassLoader());
         for (LocationResolver r: loader) {
             registerResolver(r);
         }
