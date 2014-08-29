@@ -55,7 +55,7 @@ public class NodeJsWebAppServiceImpl extends SoftwareProcessImpl implements Node
 
         ConfigToAttributes.apply(this);
 
-        HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getAttribute(Attributes.HTTP_PORT));
+        HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getHttpPort());
         String nodeJsUrl = String.format("http://%s:%d", accessible.getHostText(), accessible.getPort());
         LOG.info("Connecting to {}", nodeJsUrl);
 
