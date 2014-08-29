@@ -122,6 +122,7 @@ public interface CouchbaseNode extends SoftwareProcess {
     MethodEffector<Void> SERVER_ADD = new MethodEffector<Void>(CouchbaseNode.class, "serverAdd");
     MethodEffector<Void> SERVER_ADD_AND_REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "serverAddAndRebalance");
     MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
+    MethodEffector<Void> BUCKET_CREATE = new MethodEffector<Void>(CouchbaseNode.class, "bucketCreate");
 
     @Effector(description = "add a server to a cluster")
     public void serverAdd(@EffectorParam(name = "serverHostname") String serverToAdd, @EffectorParam(name = "username") String username, @EffectorParam(name = "password") String password);
@@ -131,5 +132,10 @@ public interface CouchbaseNode extends SoftwareProcess {
 
     @Effector(description = "rebalance the couchbase cluster")
     public void rebalance();
+    
+    @Effector(description = "create a new bucket")
+    public void bucketCreate(@EffectorParam(name = "bucketName") String bucketName, @EffectorParam(name = "bucketType") String bucketType, 
+            @EffectorParam(name = "bucketPort") Integer bucketPort, @EffectorParam(name = "bucketRamSize") Integer bucketRamSize, 
+            @EffectorParam(name = "bucketReplica") Integer bucketReplica);
 
 }
