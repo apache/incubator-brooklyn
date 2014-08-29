@@ -36,12 +36,12 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
@@ -260,71 +260,79 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+        ServiceProblemsLogic.clearProblemsIndicator(this, START);
         try {
-            if (isQuarantineEnabled()) {
-                QuarantineGroup quarantineGroup = getAttribute(QUARANTINE_GROUP);
-                if (quarantineGroup==null || !Entities.isManaged(quarantineGroup)) {
-                    quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
-                    Entities.manage(quarantineGroup);
-                    setAttribute(QUARANTINE_GROUP, quarantineGroup);
-                }
-            }
-
-            int initialSize = getConfig(INITIAL_SIZE).intValue();
-            int initialQuorumSize = getInitialQuorumSize();
-
-            try {
-                resize(initialSize);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                // apart from logging, ignore problems here; we extract them below
-                LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
-            }
-
-            Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
-            Iterator<Task<?>> fi = failed.iterator();
-            boolean noFailed=true, severalFailed=false;
-            if (fi.hasNext()) {
-                noFailed = false;
-                fi.next();
-                if (fi.hasNext())
-                    severalFailed = true;
-            }
-
-            int currentSize = getCurrentSize().intValue();
-            if (currentSize < initialQuorumSize) {
-                String message;
-                if (currentSize == 0 && !noFailed) {
-                    if (severalFailed)
-                        message = "All nodes in cluster "+this+" failed";
-                    else
-                        message = "Node in cluster "+this+" failed";
-                } else {
-                    message = "On start of cluster " + this + ", failed to get to initial size of " + initialSize
-                        + "; size is " + getCurrentSize()
-                        + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
-                }
-                Throwable firstError = Tasks.getError(Maybe.next(failed.iterator()).orNull());
-                if (firstError!=null) {
-                    if (severalFailed)
-                        message += "; first failure is: "+Exceptions.collapseText(firstError);
-                    else
-                        message += ": "+Exceptions.collapseText(firstError);
-                }
-                throw new IllegalStateException(message, firstError);
-            } else if (currentSize < initialSize) {
-                LOG.warn(
-                        "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
-                        new Object[] { this, currentSize, initialQuorumSize, initialSize });
-            }
-
-            for (Policy it : getPolicies()) {
-                it.resume();
-            }
-            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+            doStart();
+            DynamicTasks.waitForLast();
+            
         } catch (Exception e) {
-            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
+            ServiceProblemsLogic.updateProblemsIndicator(this, START, "start failed with error: "+e);
             throw Exceptions.propagate(e);
+        } finally {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+        }
+    }
+
+    protected void doStart() {
+        if (isQuarantineEnabled()) {
+            QuarantineGroup quarantineGroup = getAttribute(QUARANTINE_GROUP);
+            if (quarantineGroup==null || !Entities.isManaged(quarantineGroup)) {
+                quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
+                Entities.manage(quarantineGroup);
+                setAttribute(QUARANTINE_GROUP, quarantineGroup);
+            }
+        }
+
+        int initialSize = getConfig(INITIAL_SIZE).intValue();
+        int initialQuorumSize = getInitialQuorumSize();
+
+        try {
+            resize(initialSize);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            // apart from logging, ignore problems here; we extract them below
+            LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
+        }
+
+        Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
+        Iterator<Task<?>> fi = failed.iterator();
+        boolean noFailed=true, severalFailed=false;
+        if (fi.hasNext()) {
+            noFailed = false;
+            fi.next();
+            if (fi.hasNext())
+                severalFailed = true;
+        }
+
+        int currentSize = getCurrentSize().intValue();
+        if (currentSize < initialQuorumSize) {
+            String message;
+            if (currentSize == 0 && !noFailed) {
+                if (severalFailed)
+                    message = "All nodes in cluster "+this+" failed";
+                else
+                    message = "Node in cluster "+this+" failed";
+            } else {
+                message = "On start of cluster " + this + ", failed to get to initial size of " + initialSize
+                    + "; size is " + getCurrentSize()
+                    + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
+            }
+            Throwable firstError = Tasks.getError(Maybe.next(failed.iterator()).orNull());
+            if (firstError!=null) {
+                if (severalFailed)
+                    message += "; first failure is: "+Exceptions.collapseText(firstError);
+                else
+                    message += ": "+Exceptions.collapseText(firstError);
+            }
+            throw new IllegalStateException(message, firstError);
+        } else if (currentSize < initialSize) {
+            LOG.warn(
+                    "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
+                    new Object[] { this, currentSize, initialQuorumSize, initialSize });
+        }
+
+        for (Policy it : getPolicies()) {
+            it.resume();
         }
     }
 
