@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynServerConfig;
@@ -86,29 +85,14 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     public Application create(AssemblyTemplate template, CampPlatform platform) {
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         
-        EntitySpec<? extends Application> spec = createSpec(template, platform);
+        BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
+        EntitySpec<? extends Application> spec = createSpec(template, platform, loader);
         
         Application instance = mgmt.getEntityManager().createEntity(spec);
         log.info("CAMP placing '{}' under management", instance);
         Entities.startManagement(instance, mgmt);
 
         return instance;
-    }
-    
-    public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform) {
-        log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
-        
-        ManagementContext mgmt = getBrooklynManagementContext(platform);
-        BrooklynCatalog catalog = mgmt.getCatalog();
-        
-        CatalogItem<?,?> item = catalog.getCatalogItem(template.getName());
-        BrooklynClassLoadingContext loader;
-        if (item!=null) {
-            loader = item.newClassLoadingContext(mgmt);
-        } else {
-            loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
-        }
-        return createApplicationFromCampTemplate(template, platform, loader);
     }
     
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
@@ -123,7 +107,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     @SuppressWarnings("unchecked")
-    protected EntitySpec<? extends Application> createApplicationFromCampTemplate(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
+    public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
+        log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
+
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
 
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(

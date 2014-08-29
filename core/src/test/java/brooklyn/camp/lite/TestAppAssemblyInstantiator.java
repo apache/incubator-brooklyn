@@ -29,6 +29,7 @@ import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
@@ -66,7 +67,7 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
     }
 
     @Override
-    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform) {
+    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
         EntitySpec<TestApplication> app = EntitySpec.create(TestApplication.class)
             .configure(TestEntity.CONF_NAME, template.getName())
             .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", template.getType(), "desc", template.getDescription()));
