@@ -33,9 +33,9 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.math.MathPredicates;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 
 public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements MongoDBClientDriver {
@@ -122,31 +122,24 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
         AbstractMongoDBServer server = entity.getConfig(MongoDBClient.SERVER);
         MongoDBShardedDeployment deployment = entity.getConfig(MongoDBClient.SHARDED_DEPLOYMENT);
         if (server == null) {
-            Preconditions.checkNotNull(deployment, "Either server or shardedDeployment must be specified");
-            Task<MongoDBRouter> task = DependentConfiguration.attributeWhenReady(deployment.getRouterCluster(),
-                    MongoDBRouterCluster.ANY_ROUTER);
-            try {
-                server = DependentConfiguration.waitForTask(task, entity, "any available router");
-            } catch (InterruptedException e) {
-                throw Exceptions.propagate(e);
-            }
-            DependentConfiguration.waitInTaskForAttributeReady(server, MongoDBRouter.SHARD_COUNT, new Predicate<Integer>() {
-                public boolean apply(Integer input) {
-                    return input > 0;
-                };
-            });
+            Preconditions.checkNotNull(deployment, "Either server or shardedDeployment must be specified for %s", this);
+            server = DependentConfiguration.builder()
+                    .attributeWhenReady(deployment.getRouterCluster(), MongoDBRouterCluster.ANY_ROUTER)
+                    .blockingDetails("any available router")
+                    .runNow();
+            DependentConfiguration.builder()
+                    .attributeWhenReady(server, MongoDBRouter.SHARD_COUNT)
+                    .readiness(MathPredicates.<Integer>greaterThan(0))
+                    .runNow();
         } else {
             if (deployment != null) {
                 log.warn("Server and ShardedDeployment defined for {}; using server ({} instead of {})", 
                         new Object[] {this, server, deployment});
             }
-            Task<Boolean> task = DependentConfiguration.attributeWhenReady(server, Startable.SERVICE_UP);
-            try {
-                DependentConfiguration.waitForTask(task, server);
-            } catch (InterruptedException e) {
-                throw Exceptions.propagate(e);
-            }
-            DependentConfiguration.waitInTaskForAttributeReady(server, Startable.SERVICE_UP, Predicates.equalTo(true));
+            DependentConfiguration.builder()
+                    .attributeWhenReady(server, Startable.SERVICE_UP)
+                    .readiness(Predicates.equalTo(true))
+                    .runNow();
         }
         return server;
     }

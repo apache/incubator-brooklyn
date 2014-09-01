@@ -24,12 +24,15 @@ import java.io.File;
 
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.management.ManagementContext;
+import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
@@ -50,7 +53,8 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
     
     protected void checkPersistenceContainerNameIs(String expected) {
-        assertEquals(getPersistenceDir(lastMgmt()).getAbsolutePath(), expected);
+        String expectedFqp = new File(Os.tidyPath(expected)).getAbsolutePath();
+        assertEquals(getPersistenceDir(lastMgmt()).getAbsolutePath(), expectedFqp);
     }
 
     static File getPersistenceDir(ManagementContext managementContext) {
@@ -60,7 +64,8 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
 
     protected void checkPersistenceContainerNameIsDefault() {
-        checkPersistenceContainerNameIs(BrooklynServerConfig.DEFAULT_PERSISTENCE_DIR_FOR_FILESYSTEM);
+        String expected = BrooklynServerConfig.resolvePersistencePath(null, BrooklynProperties.Factory.newEmpty(), null);
+        checkPersistenceContainerNameIs(expected);
     }
 
     @Test
@@ -70,9 +75,9 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         String tempFileName = tempF.getAbsolutePath();
         
         try {
-            runRebindFails(PersistMode.AUTO, tempFileName, "not a directory");
-            runRebindFails(PersistMode.REBIND, tempFileName, "not a directory");
-            runRebindFails(PersistMode.CLEAN, tempFileName, "not a directory");
+            runRebindFails(PersistMode.AUTO, tempFileName, "must not be a file");
+            runRebindFails(PersistMode.REBIND, tempFileName, "must not be a file");
+            runRebindFails(PersistMode.CLEAN, tempFileName, "must not be a file");
         } finally {
             new File(tempFileName).delete();
         }
@@ -106,4 +111,28 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         }
     }
 
+    @Test(groups="Integration")
+    public void testCopyPersistedState() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        populatePersistenceDir(persistenceDir, appSpec);
+        
+        File destinationDir = Files.createTempDir();
+        try {
+            // Auto will rebind if the dir exists
+            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO);
+            BrooklynMemento memento = launcher.retrieveState();
+            launcher.persistState(memento, destinationDir);
+            launcher.terminate();
+            
+            assertEquals(memento.getApplicationIds().size(), 1, "apps="+memento.getApplicationIds());
+            
+            // Should now have a usable copy in the destionationDir
+            // Auto will rebind if the dir exists
+            newLauncherDefault(PersistMode.AUTO).start();
+            assertOnlyApp(lastMgmt(), TestApplication.class);
+            
+        } finally {
+            Os.deleteRecursively(destinationDir);
+        }
+    }
 }
