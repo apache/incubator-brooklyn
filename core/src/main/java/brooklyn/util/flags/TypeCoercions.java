@@ -628,6 +628,16 @@ public class TypeCoercions {
                 return BigInteger.valueOf(input);
             }
         });
+        registerAdapter(String.class, Class.class, new Function<String,Class>() {
+            @Override
+            public Class apply(final String input) {
+                try {
+                    return Class.forName(input);
+                } catch (ClassNotFoundException e) {
+                    throw Exceptions.propagate(e);
+                }
+            }
+        });
         registerAdapter(String.class, AttributeSensor.class, new Function<String,AttributeSensor>() {
             @Override
             public AttributeSensor apply(final String input) {

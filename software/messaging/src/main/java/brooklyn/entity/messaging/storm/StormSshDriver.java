@@ -31,7 +31,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.event.basic.DependentConfiguration;
@@ -120,12 +119,15 @@ public class StormSshDriver extends JavaSoftwareProcessSshDriver implements Stor
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("storm-%s", getVersion()))));
+    }
+
+    @Override
     public void install() {
-        log.debug("Installing {}", entity);
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("storm-%s", getVersion())));
         
         ImmutableList.Builder<String> commands= ImmutableList.<String> builder();
         if (!getLocation().getOsDetails().isMac()) {

@@ -77,10 +77,12 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-/** 
+/**
  * Default skeleton for start/stop/restart tasks on machines.
+ * <p>
  * Knows how to provision machines, making use of {@link ProvidesProvisioningFlags#obtainProvisioningFlags(MachineProvisioningLocation)},
  * and provides hooks for injecting behaviour at common places.
+ * <p>
  * Methods are designed for overriding, with the convention that *Async methods should queue (and not block).
  * The following methods are commonly overridden (and you can safely queue tasks, block, or return immediately in them):
  * <ul>
@@ -90,50 +92,54 @@ import com.google.common.collect.Iterables;
  *  <li> {@link #postStartCustom()}
  *  <li> {@link #preStopCustom()}
  * </ul>
- * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE_EXPECTED} sensor.
- *  
+ * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE} sensor.
+ *
  * @since 0.6.0
- **/
+ */
 @Beta
 public abstract class MachineLifecycleEffectorTasks {
 
     private static final Logger log = LoggerFactory.getLogger(MachineLifecycleEffectorTasks.class);
-    
+
     public static final ConfigKey<Boolean> ON_BOX_BASE_DIR_RESOLVED = ConfigKeys.newBooleanConfigKey("onbox.base.dir.resolved",
         "Whether the on-box base directory has been resolved (for internal use)");
-    
-    public static final ConfigKey<Collection<? extends Location>> LOCATIONS = StartParameters.LOCATIONS;
-    public static final ConfigKey<Duration> STOP_PROCESS_TIMEOUT = 
-        ConfigKeys.newConfigKey(Duration.class, "process.stop.timeout", "How long to wait for the processes to be stopped; "
-            + "use null to mean forever", Duration.TWO_MINUTES);
 
-    /** attaches lifecycle effectors (start, restart, stop) to the given entity (post-creation) */ 
+    public static final ConfigKey<Collection<? extends Location>> LOCATIONS = StartParameters.LOCATIONS;
+    public static final ConfigKey<Duration> STOP_PROCESS_TIMEOUT = ConfigKeys.newConfigKey(Duration.class,
+            "process.stop.timeout", "How long to wait for the processes to be stopped; use null to mean forever", Duration.TWO_MINUTES);
+
+    /** Attaches lifecycle effectors (start, restart, stop) to the given entity post-creation. */
     public void attachLifecycleEffectors(Entity entity) {
-        ((EntityInternal)entity).getMutableEntityType().addEffector(newStartEffector());
-        ((EntityInternal)entity).getMutableEntityType().addEffector(newRestartEffector());
-        ((EntityInternal)entity).getMutableEntityType().addEffector(newStopEffector());
+        ((EntityInternal) entity).getMutableEntityType().addEffector(newStartEffector());
+        ((EntityInternal) entity).getMutableEntityType().addEffector(newRestartEffector());
+        ((EntityInternal) entity).getMutableEntityType().addEffector(newStopEffector());
     }
-    
+
     /**
-     * @return an effector suitable for setting in a public static final or attaching dynamically;
-     * the effector overrides the corresponding effector from {@link Startable} with 
-     * the behaviour in this lifecycle class instance */
+     * Return an effector suitable for setting in a {@code public static final} or attaching dynamically.
+     * <p>
+     * The effector overrides the corresponding effector from {@link Startable} with
+     * the behaviour in this lifecycle class instance.
+     */
     public Effector<Void> newStartEffector() {
         return Effectors.effector(Startable.START).impl(newStartEffectorTask()).build();
     }
 
-    /** as {@link #newStartEffector()} */
+    /** @see {@link #newStartEffector()} */
     public Effector<Void> newRestartEffector() {
         return Effectors.effector(Startable.RESTART).impl(newRestartEffectorTask()).build();
     }
-    
-    /** as {@link #newStartEffector()} */
+
+    /** @see {@link #newStartEffector()} */
     public Effector<Void> newStopEffector() {
         return Effectors.effector(Startable.STOP).impl(newStopEffectorTask()).build();
     }
-    
-    /** returns the TaskFactory which supplies the implementation for this effector,
-     * calling the relevant method in this class ({@link #start(Collection)}) */
+
+    /**
+     * Returns the {@link TaskFactory} which supplies the implementation for the start effector.
+     * <p>
+     * Calls {@link #start(Collection)} in this class.
+     */
     public EffectorBody<Void> newStartEffectorTask() {
         return new EffectorBody<Void>() {
             @Override
@@ -146,7 +152,11 @@ public abstract class MachineLifecycleEffectorTasks {
         };
     }
 
-    /** as {@link #newStartEffectorTask()}, calling {@link #restart()} */
+    /**
+     * Calls {@link #restart()}.
+     *
+     * @see {@link #newStartEffectorTask()}
+     */
     public EffectorBody<Void> newRestartEffectorTask() {
         return new EffectorBody<Void>() {
             @Override
@@ -157,7 +167,11 @@ public abstract class MachineLifecycleEffectorTasks {
         };
     }
 
-    /** as {@link #newStartEffectorTask()}, calling {@link #stop()} */
+    /**
+     * Calls {@link #stop()}.
+     *
+     * @see {@link #newStartEffectorTask()}
+     */
     public EffectorBody<Void> newStopEffectorTask() {
         return new EffectorBody<Void>() {
             @Override
@@ -167,7 +181,7 @@ public abstract class MachineLifecycleEffectorTasks {
             }
         };
     }
-        
+
     protected EntityInternal entity() {
         return (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
     }
@@ -182,15 +196,13 @@ public abstract class MachineLifecycleEffectorTasks {
 
         Maybe<MachineLocation> ml = Locations.findUniqueMachineLocation(locations);
         if (ml.isPresent()) return ml.get();
-    
+
         if (locations.isEmpty())
             throw new IllegalArgumentException("No locations specified when starting "+entity());
         if (locations.size() != 1 || Iterables.getOnlyElement(locations)==null)
             throw new IllegalArgumentException("Ambiguous locations detected when starting "+entity()+": "+locations);
         return Iterables.getOnlyElement(locations);
     }
-    
-    // ---------------------
     
     /** runs the tasks needed to start, wrapped by setting {@link Attributes#SERVICE_STATE_EXPECTED} appropriately */ 
     public void start(Collection<? extends Location> locations) {
@@ -205,12 +217,12 @@ public abstract class MachineLifecycleEffectorTasks {
         }
     }
 
-    /** asserts there is a single location and calls {@link #startInLocation(Location)} with that location */
+    /** Asserts there is a single location and calls {@link #startInLocation(Location)} with that location. */
     protected void startInLocations(Collection<? extends Location> locations) {
-        startInLocation( getLocation(locations) );
+        startInLocation(getLocation(locations));
     }
 
-    /** dispatches to the appropriate method(s) to start in the given location */
+    /** Dispatches to the appropriate method(s) to start in the given location. */
     protected void startInLocation(final Location location) {
         Supplier<MachineLocation> locationS = null;
         if (location instanceof MachineProvisioningLocation) {
@@ -230,8 +242,10 @@ public abstract class MachineLifecycleEffectorTasks {
         return;
     }
 
-    /** returns a queued _task_ which provisions a machine in the given location 
-     * and returns that machine, so the task can be used as a supplier to subsequent methods */
+    /**
+     * Returns a queued {@link Task} which provisions a machine in the given location
+     * and returns that machine. The task can be used as a supplier to subsequent methods.
+     */
     protected Task<MachineLocation> provisionAsync(final MachineProvisioningLocation<?> location) {
         return DynamicTasks.queue(Tasks.<MachineLocation>builder().name("provisioning ("+location.getDisplayName()+")").body(
                 new Callable<MachineLocation>() {
@@ -250,18 +264,18 @@ public abstract class MachineLifecycleEffectorTasks {
                         } catch (Exception e) {
                             throw Exceptions.propagate(e);
                         }
-                        
+
                         if (log.isDebugEnabled())
-                            log.debug("While starting {}, obtained new location instance {}", entity(), 
-                                    (machine instanceof SshMachineLocation ? 
-                                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getLocalConfigBag()) 
+                            log.debug("While starting {}, obtained new location instance {}", entity(),
+                                    (machine instanceof SshMachineLocation ?
+                                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getLocalConfigBag())
                                             : machine));
                         return machine;
                     }
                 }).build());
     }
 
-    /** wraps a call to {@link #preStartCustom(MachineLocation)}, after setting the hostname and address */
+    /** Wraps a call to {@link #preStartCustom(MachineLocation)}, after setting the hostname and address. */
     protected void preStartAtMachineAsync(final Supplier<MachineLocation> machineS) {
         DynamicTasks.queue("pre-start", new Runnable() { public void run() {
             MachineLocation machine = machineS.get();
@@ -276,9 +290,9 @@ public abstract class MachineLifecycleEffectorTasks {
                         // machines are deemed compatible if hostname and address are the same, or they are localhost
                         // this allows a machine create by jclouds to then be defined with an ip-based spec
                         if (machine.getConfig(AbstractLocation.ORIGINAL_SPEC)!="localhost") {
-                            checkLocationParametersCompatible(machine, oldLoc, "hostname", 
+                            checkLocationParametersCompatible(machine, oldLoc, "hostname",
                                 oldLoc.getAddress().getHostName(), machine.getAddress().getHostName());
-                            checkLocationParametersCompatible(machine, oldLoc, "address", 
+                            checkLocationParametersCompatible(machine, oldLoc, "address",
                                 oldLoc.getAddress().getHostAddress(), machine.getAddress().getHostAddress());
                         }
                     }
@@ -303,27 +317,31 @@ public abstract class MachineLifecycleEffectorTasks {
                 UserAndHostAndPort sshAddress = UserAndHostAndPort.fromParts(sshMachine.getUser(), sshMachine.getAddress().getHostName(), sshMachine.getPort());
                 entity().setAttribute(Attributes.SSH_ADDRESS, sshAddress);
             }
-            
-            resolveOnBoxDir(entity(), machine);            
+
+            resolveOnBoxDir(entity(), machine);
             preStartCustom(machine);
         }});
     }
 
-    /** resolves the on-box dir; logs a warning if not */
-    // initialize and pre-create the right onbox working dir, if an ssh machine location
+    /**
+     * Resolves the on-box dir.
+     * <p>
+     * Initialize and pre-create the right onbox working dir, if an ssh machine location.
+     * Logs a warning if not.
+     */
     @SuppressWarnings("deprecation")
     public static String resolveOnBoxDir(EntityInternal entity, MachineLocation machine) {
-        String base = entity.getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR); 
+        String base = entity.getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR);
         if (base==null) base = machine.getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR);
         if (base!=null && Boolean.TRUE.equals(entity.getConfig(ON_BOX_BASE_DIR_RESOLVED))) return base;
         if (base==null) base = entity.getManagementContext().getConfig().getConfig(BrooklynConfigKeys.ONBOX_BASE_DIR);
-        if (base==null) base = entity.getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR); 
+        if (base==null) base = entity.getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR);
         if (base==null) base = machine.getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR);
         if (base==null) base = entity.getManagementContext().getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR);
         if (base==null) base = "~/brooklyn-managed-processes";
         if (base=="~") base=".";
         if (base.startsWith("~/")) base = "."+base.substring(1);
-        
+
         String resolvedBase = null;
         if (entity.getConfig(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION) || machine.getConfig(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION)) {
             if (log.isDebugEnabled()) log.debug("Skipping on-box base dir resolution for "+entity+" at "+machine);
@@ -354,16 +372,19 @@ public abstract class MachineLifecycleEffectorTasks {
         entity.setConfig(ON_BOX_BASE_DIR_RESOLVED, true);
         return resolvedBase;
     }
-    
+
     protected void checkLocationParametersCompatible(MachineLocation oldLoc, MachineLocation newLoc, String paramSummary,
-        Object oldParam, Object newParam) {
+            Object oldParam, Object newParam) {
         if (oldParam==null || newParam==null || !oldParam.equals(newParam))
-            throw new IllegalStateException("Cannot start "+entity()+" in "+newLoc+" as it has already been started with incompatible location "+oldLoc+" "
-                + "("+paramSummary+" not compatible: "+oldParam+" / "+newParam+"); "
-                + newLoc+" may require manual removal.");
+            throw new IllegalStateException("Cannot start "+entity()+" in "+newLoc+" as it has already been started with incompatible location "+oldLoc+" " +
+                    "("+paramSummary+" not compatible: "+oldParam+" / "+newParam+"); "+newLoc+" may require manual removal.");
     }
 
-    /** default pre-start hooks, can be extended by subclasses if needed*/
+    /**
+     * Default pre-start hooks.
+     * <p>
+     * Can be extended by subclasses if needed.
+     */
     protected void preStartCustom(MachineLocation machine) {
         ConfigToAttributes.apply(entity());
 
@@ -380,22 +401,28 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     protected abstract String startProcessesAtMachine(final Supplier<MachineLocation> machineS);
-    
+
     protected void postStartAtMachineAsync() {
         DynamicTasks.queue("post-start", new Runnable() { public void run() {
             postStartCustom();
         }});
     }
 
-    /** default post-start hooks, can be extended by subclasses, and typically will wait for confirmation of start 
-     * (the service not set to running until after this); also invoked following a restart */
+    /**
+     * Default post-start hooks.
+     * <p>
+     * Can be extended by subclasses, and typically will wait for confirmation of start.
+     * The service not set to running until after this. Also invoked following a restart.
+     */
     protected void postStartCustom() {
         // nothing by default
     }
 
-    // ---------------------
-    
-    /** default restart impl, stops processes if possible, then starts the entity again */
+    /**
+     * Default restart implementation for an entity.
+     * <p>
+     * Stops processes if possible, then starts the entity again.
+     */
     public void restart() {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
         DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
@@ -404,7 +431,7 @@ public abstract class MachineLifecycleEffectorTasks {
             DynamicTasks.waitForLast();
             return "Stop of process completed with no errors.";
         }});
-        
+
         DynamicTasks.queue("starting", new Runnable() { public void run() {
             // startInLocations will look up the location, and provision a machine if necessary
             // (if it remembered the provisioning location)
@@ -415,14 +442,16 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
     }
 
-    // ---------------------
-
-    /** default stop impl, aborts if already stopped, otherwise sets state STOPPING then
+    /**
+     * Default stop implementation for an entity.
+     * <p>
+     * Aborts if already stopped, otherwise sets state {@link Lifecycle#STOPPING} then
      * invokes {@link #preStopCustom()}, {@link #stopProcessesAtMachine()}, then finally
-     * {@link #stopAnyProvisionedMachines()} and sets state STOPPED */
+     * {@link #stopAnyProvisionedMachines()} and sets state {@link Lifecycle#STOPPED}
+     */
     public void stop() {
         log.info("Stopping {} in {}", entity(), entity().getLocations());
-        
+
         DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
@@ -437,7 +466,7 @@ public abstract class MachineLifecycleEffectorTasks {
         if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
             return;
         }
-               
+
         Maybe<SshMachineLocation> sshMachine = Machines.findUniqueSshMachineLocation(entity().getLocations());
         Task<String> stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
             DynamicTasks.markInessential();
@@ -445,7 +474,7 @@ public abstract class MachineLifecycleEffectorTasks {
             DynamicTasks.waitForLast();
             return "Stop at machine completed with no errors.";
         }});
-        
+
         // Release this machine (even if error trying to stop process - we rethrow that after)
         Task<StopMachineDetails<Integer>> stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() { public StopMachineDetails<Integer> call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
@@ -456,41 +485,42 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
 
         DynamicTasks.drain(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
-        
+
         // shutdown the machine if stopping process fails or takes too long
         synchronized (stoppingMachine) {
             // task also used as mutex by DST when it submits it; ensure it only submits once!
             if (!stoppingMachine.isSubmitted()) {
                 // force the stoppingMachine task to run by submitting it here
                 log.warn("Submitting machine stop early in background for "+entity()+" because process stop has "+
-                    (stoppingProcess.isDone() ? "finished abnormally" : "not finished"));
+                        (stoppingProcess.isDone() ? "finished abnormally" : "not finished"));
                 Entities.submit(entity(), stoppingMachine);
             }
         }
-        
+
         try {
-            if (stoppingMachine.get().value==0) {
+            if (stoppingMachine.get().value == 0) {
                 // TODO we should test for destruction above, not merely successful "stop", as things like localhost and ssh won't be destroyed
                 DynamicTasks.waitForLast();
-                if (sshMachine.isPresent())
+                if (sshMachine.isPresent()) {
                     // throw early errors *only if* there is a machine and we have not destroyed it
                     stoppingProcess.get();
+                }
             }
-            
+
             entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
         } catch (Throwable e) {
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
             Exceptions.propagate(e);
         }
-        
+
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
     }
-    
+
     protected void preStopCustom() {
         // nothing needed here
     }
-    
+
     public static class StopMachineDetails<T> implements Serializable {
         private static final long serialVersionUID = 3256747214315895431L;
         final String message;
@@ -504,20 +534,24 @@ public abstract class MachineLifecycleEffectorTasks {
             return message;
         }
     }
-    
-    /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. */
+
+    /**
+     * Stop the {@link MachineLocation} the entity is provisioned at.
+     * <p>
+     * Can run synchronously or not, caller will submit/queue as needed, and will block on any submitted tasks.
+     */
     protected StopMachineDetails<Integer> stopAnyProvisionedMachines() {
         @SuppressWarnings("unchecked")
         MachineProvisioningLocation<MachineLocation> provisioner = entity().getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
 
         // NB: previously has logic about "removeFirstMachine" but elsewhere had assumptions that there was only one,
         // so i think that was an aborted bit of work (which has been removed here). Alex, Aug 2013
-        
+
         if (Iterables.isEmpty(entity().getLocations())) {
             log.debug("No machine decommissioning necessary for "+entity()+" - no locations");
             return new StopMachineDetails<Integer>("No machine decommissioning necessary - no locations", 0);
         }
-        
+
         // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
         if (provisioner==null) {
             log.debug("No machine decommissioning necessary for "+entity()+" - did not provision");
@@ -529,7 +563,7 @@ public abstract class MachineLifecycleEffectorTasks {
             log.debug("No decommissioning necessary for "+entity()+" - not a machine location ("+machine+")");
             return new StopMachineDetails<Integer>("No machine decommissioning necessary - not a machine ("+machine+")", 0);
         }
-        
+
         try {
             entity().removeLocations(ImmutableList.of(machine));
             entity().setAttribute(Attributes.HOSTNAME, null);
@@ -543,8 +577,11 @@ public abstract class MachineLifecycleEffectorTasks {
         return new StopMachineDetails<Integer>("Decommissioned "+machine, 1);
     }
 
-    /** can run synchronously (or not) -- caller will submit/queue as needed, and will block on any submitted tasks. 
-     * @return string message of result */
+    /**
+     * Return string message of result.
+     * <p>
+     * Can run synchronously or not, caller will submit/queue as needed, and will block on any submitted tasks.
+     */
     protected abstract String stopProcessesAtMachine();
 
 }

@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -80,6 +81,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     private volatile String installDir;
     private volatile String runDir;
     private volatile String expandedInstallDir;
+
+    protected volatile DownloadResolver resolver;
     
     /** include this flag in newScript creation to prevent entity-level flags from being included;
      * any SSH-specific flags passed to newScript override flags from the entity,
@@ -278,6 +281,25 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
         if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getDisplayName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
+    }
+
+    @Override
+    public void resources() {
+        Map runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
+        copyResources(runtimeFiles);
+
+        Map runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
+        copyTemplates(runtimeTemplates);
+    }
+    
+    @Override
+    public void runPreInstallCommand(String command) {
+        execute(ImmutableList.of(command), "running pre-install commands");
+    }
+    
+    @Override
+    public void runPostInstallCommand(String command) {
+        execute(ImmutableList.of(command), "running post-install commands");
     }
     
     @Override
@@ -599,6 +621,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 if (!groovyTruth(flags.get(INSTALL_INCOMPLETE))) {
                     s.footer.append("date > $INSTALL_DIR/BROOKLYN");
                 }
+                // don't set vars during install phase, prevent dependency resolution
+                s.environmentVariablesReset();
             }
             if (ImmutableSet.of(CUSTOMIZING, LAUNCHING, CHECK_RUNNING, STOPPING, KILLING, RESTARTING).contains(phase)) {
                 s.header.append(
@@ -712,5 +736,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         result.add(22);
         return result;
     }
+
+    @Override
+    public void setup() { }
 
 }

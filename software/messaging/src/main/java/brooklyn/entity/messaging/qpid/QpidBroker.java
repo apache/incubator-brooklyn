@@ -68,16 +68,6 @@ public interface QpidBroker extends SoftwareProcess, MessageBroker, UsesJmx, Amq
     @SetFromFlag("httpManagementPort")
     public static final PortAttributeSensorAndConfigKey HTTP_MANAGEMENT_PORT = new PortAttributeSensorAndConfigKey("qpid.http-management.port", "Qpid HTTP management plugin port");
 
-    /** Files to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
-    @SetFromFlag("runtimeFiles")
-    public static final BasicConfigKey<Map<String, String>> RUNTIME_FILES = new BasicConfigKey(
-            Map.class, "qpid.files.runtime", "Map of files to be copied, keyed by destination name relative to runDir");
-
-    /** Templates to be filled in and then copied to the server. See {@link #RUNTIME_FILES}. */
-    @SetFromFlag("runtimeTemplates")
-    public static final BasicConfigKey<Map<String, String>> RUNTIME_TEMPLATES = new BasicConfigKey(
-            Map.class, "qpid.templates.runtime", "Map of templates to be filled in and copied, keyed by destination name relative to runDir");
-
     @SetFromFlag("jmxUser")
     public static final BasicAttributeSensorAndConfigKey<String> JMX_USER = new BasicAttributeSensorAndConfigKey<String>(
             UsesJmx.JMX_USER, "admin");

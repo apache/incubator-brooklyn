@@ -24,4 +24,6 @@ public interface NodeJsWebAppDriver extends SoftwareProcessDriver {
 
     Integer getHttpPort();
 
+    String getAppDir();
+
 }

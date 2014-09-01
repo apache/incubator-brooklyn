@@ -55,12 +55,12 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
     @Override
     public void init() {
         LOG.info("Starting server pool machine with id {}", getId());
+        super.init();
     }
 
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        connectServiceUpIsRunning();
 
         // Sensors linux-specific
         if (!getMachine().getMachineDetails().getOsDetails().isLinux()) return;
@@ -127,7 +127,6 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
 
     @Override
     public void disconnectSensors() {
-        disconnectServiceUpIsRunning();
         if (sensorFeed != null) sensorFeed.stop();
         super.disconnectSensors();
     }

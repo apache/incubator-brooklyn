@@ -36,6 +36,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -78,14 +79,43 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
     @Override
     public void start() {
-        DynamicTasks.queue("install", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
-            install();
+        DynamicTasks.queue("pre-install", new Runnable() { public void run() {
+            preInstall();
         }});
+
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND))) {
+            DynamicTasks.queue("pre-install command", new Runnable() { public void run() {
+                runPreInstallCommand(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND));
+            }});
+        };
+
+        Boolean skip = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION)).or(false);
+        if (!skip) {
+            DynamicTasks.queue("setup", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.SETUP_LATCH);
+                setup();
+            }});
+
+            DynamicTasks.queue("install", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
+                install();
+            }});
+        }
+
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND))) {
+            DynamicTasks.queue("post-install command", new Runnable() { public void run() {
+                runPostInstallCommand(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND));
+            }});
+        };
 
         DynamicTasks.queue("customize", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
             customize();
+        }});
+
+        DynamicTasks.queue("resources", new Runnable() { public void run() {
+            waitForConfigKey(BrooklynConfigKeys.RESOURCES_LATCH);
+            resources();
         }});
 
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
@@ -93,12 +123,12 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
             }});
         };
-        
+
         DynamicTasks.queue("launch", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
             launch();
         }});
-        
+
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
             DynamicTasks.queue("post-launch command", new Runnable() { public void run() {
                 runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
@@ -113,12 +143,20 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     @Override
     public abstract void stop();
 
+    /**
+     * Implement this method in child classes to add some post-launch behavior
+     */
+    public void preInstall() {}
+
+    public abstract void runPreInstallCommand(String command);
+    public abstract void setup();
     public abstract void install();
+    public abstract void runPostInstallCommand(String command);
     public abstract void customize();
+    public abstract void resources();
     public abstract void runPreLaunchCommand(String command);
     public abstract void launch();
     public abstract void runPostLaunchCommand(String command);
-    
 
     @Override
     public void kill() {
