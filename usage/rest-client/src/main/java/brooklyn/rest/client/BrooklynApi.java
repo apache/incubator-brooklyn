@@ -18,7 +18,11 @@
  */
 package brooklyn.rest.client;
 
+import javax.ws.rs.core.Response;
+
+import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
+import org.jboss.resteasy.util.GenericType;
 
 import brooklyn.rest.api.AccessApi;
 import brooklyn.rest.api.ActivityApi;
@@ -36,18 +40,18 @@ import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
 
-
 /**
  * @author Adam Lowe
  */
 @SuppressWarnings("deprecation")
 public class BrooklynApi {
+
     private final String target;
-    
+
     public BrooklynApi(String endpoint) {
         target = endpoint;
     }
-    
+
     public ActivityApi getActivityApi() {
         return ProxyFactory.create(ActivityApi.class, target);
     }
@@ -63,27 +67,27 @@ public class BrooklynApi {
     public EffectorApi getEffectorApi() {
         return ProxyFactory.create(EffectorApi.class, target);
     }
-    
+
     public EntityConfigApi getEntityConfigApi() {
         return ProxyFactory.create(EntityConfigApi.class, target);
     }
-    
+
     public EntityApi getEntityApi() {
         return ProxyFactory.create(EntityApi.class, target);
     }
-    
+
     public LocationApi getLocationApi() {
         return ProxyFactory.create(LocationApi.class, target);
     }
-    
+
     public PolicyConfigApi getPolicyConfigApi() {
         return ProxyFactory.create(PolicyConfigApi.class, target);
     }
-    
+
     public PolicyApi getPolicyApi() {
         return ProxyFactory.create(PolicyApi.class, target);
     }
-    
+
     public ScriptApi getScriptApi() {
         return ProxyFactory.create(ScriptApi.class, target);
     }
@@ -99,13 +103,31 @@ public class BrooklynApi {
     public UsageApi getUsageApi() {
         return ProxyFactory.create(UsageApi.class, target);
     }
-    
+
     public VersionApi getVersionApi() {
         return ProxyFactory.create(VersionApi.class, target);
     }
-    
+
     public AccessApi getAccessApi() {
         return ProxyFactory.create(AccessApi.class, target);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getEntity(Response response, Class<T> type) {
+        if (!(response instanceof ClientResponse)) {
+            throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
+        }
+        ClientResponse clientResponse = (ClientResponse) response;
+        return (T) clientResponse.getEntity(type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getEntityGeneric(Response response, GenericType type) {
+        if (!(response instanceof ClientResponse)) {
+            throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
+        }
+        ClientResponse clientResponse = (ClientResponse) response;
+        return (T) clientResponse.getEntity(type);
     }
 
 }
