@@ -55,6 +55,7 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
     @Override
     public void init() {
         LOG.info("Starting server pool machine with id {}", getId());
+        super.init();
     }
 
     @Override
