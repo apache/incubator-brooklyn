@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.webapp.nodejs;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
@@ -58,6 +62,11 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
     @Override
     public Integer getHttpPort() {
         return getEntity().getAttribute(Attributes.HTTP_PORT);
+    }
+
+    @Override
+    public String getAppDir() {
+        return Os.mergePaths(getRunDir(), getEntity().getConfig(NodeJsWebAppService.APP_NAME));
     }
 
     @Override

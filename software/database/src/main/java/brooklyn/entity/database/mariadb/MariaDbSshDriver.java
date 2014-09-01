@@ -19,9 +19,7 @@
 package brooklyn.entity.database.mariadb;
 
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.ok;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.io.InputStream;
@@ -38,12 +36,12 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatastoreMixins;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -111,11 +109,15 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("mariadb-%s-%s", getVersion(), getOsTag()))));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mariadb-%s-%s", getVersion(), getOsTag())));
 
         List<String> commands = new LinkedList<String>();
         commands.add(BashCommands.INSTALL_TAR);

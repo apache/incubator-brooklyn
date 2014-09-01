@@ -24,8 +24,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.MachineProvisioningLocation;
@@ -33,65 +32,92 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.reflect.TypeToken;
+
 public interface SoftwareProcess extends Entity, Startable {
 
-    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
-    public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
-    public static final AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
-    public static final AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
+    AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+    AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
+    AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
+    AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
 
     @SetFromFlag("startTimeout")
-    public static final ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
+    ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("startLatch")
-    public static final ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
+    ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
+
+    @SetFromFlag("setupLatch")
+    ConfigKey<Boolean> SETUP_LATCH = BrooklynConfigKeys.SETUP_LATCH;
 
     @SetFromFlag("installLatch")
-    public static final ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
+    ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
 
     @SetFromFlag("customizeLatch")
-    public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
-    
-    @SetFromFlag("preLaunchCommand")
-    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = BrooklynConfigKeys.PRE_LAUNCH_COMMAND;
-    
-    @SetFromFlag("postLaunchCommand")
-    public static final ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
+    ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
+
+    @SetFromFlag("resourcesLatch")
+    ConfigKey<Boolean> RESOURCES_LATCH = BrooklynConfigKeys.RESOURCES_LATCH;
 
     @SetFromFlag("launchLatch")
-    public static final ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
+    ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
+
+    @SetFromFlag("skipInstall")
+    ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_INSTALLATION;
+
+    @SetFromFlag("preInstallCommand")
+    ConfigKey<String> PRE_INSTALL_COMMAND = BrooklynConfigKeys.PRE_INSTALL_COMMAND;
+
+    @SetFromFlag("postInstallCommand")
+    ConfigKey<String> POST_INSTALL_COMMAND = BrooklynConfigKeys.POST_INSTALL_COMMAND;
+
+    @SetFromFlag("preLaunchCommand")
+    ConfigKey<String> PRE_LAUNCH_COMMAND = BrooklynConfigKeys.PRE_LAUNCH_COMMAND;
+
+    @SetFromFlag("postLaunchCommand")
+    ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
 
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
+    ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
 
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = Attributes.DOWNLOAD_URL;
+    AttributeSensorAndConfigKey<String,String> DOWNLOAD_URL = Attributes.DOWNLOAD_URL;
 
     @SetFromFlag("downloadAddonUrls")
-    BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = Attributes.DOWNLOAD_ADDON_URLS;
+    AttributeSensorAndConfigKey<Map<String,String>,Map<String,String>> DOWNLOAD_ADDON_URLS = Attributes.DOWNLOAD_ADDON_URLS;
 
     @SetFromFlag("installLabel")
-    public static final ConfigKey<String> INSTALL_UNIQUE_LABEL = BrooklynConfigKeys.INSTALL_UNIQUE_LABEL;
-    
+    ConfigKey<String> INSTALL_UNIQUE_LABEL = BrooklynConfigKeys.INSTALL_UNIQUE_LABEL;
+
     @SetFromFlag("expandedInstallDir")
-    BasicAttributeSensorAndConfigKey<String> EXPANDED_INSTALL_DIR = BrooklynConfigKeys.EXPANDED_INSTALL_DIR;
+    AttributeSensorAndConfigKey<String,String> EXPANDED_INSTALL_DIR = BrooklynConfigKeys.EXPANDED_INSTALL_DIR;
 
     @SetFromFlag("installDir")
-    BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = BrooklynConfigKeys.INSTALL_DIR;
+    AttributeSensorAndConfigKey<String,String> INSTALL_DIR = BrooklynConfigKeys.INSTALL_DIR;
     @Deprecated
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
+    ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
 
     @SetFromFlag("runDir")
-    BasicAttributeSensorAndConfigKey<String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
+    AttributeSensorAndConfigKey<String,String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
     @Deprecated
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
+    ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
+
+    /** Files to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
+    @SetFromFlag("runtimeFiles")
+    ConfigKey<Map<String, String>> RUNTIME_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "files.runtime", "Map of files to be copied, keyed by destination name relative to runDir");
+
+    /** Templates to be filled in and then copied to the server. See {@link #RUNTIME_FILES}. */
+    @SetFromFlag("runtimeTemplates")
+    ConfigKey<Map<String, String>> RUNTIME_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "templates.runtime", "Map of templates to be filled in and copied, keyed by destination name relative to runDir");
 
     @SetFromFlag("env")
-    public static final MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,
+    MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,
             "shell.env", "Map of environment variables to pass to the runtime shell", MutableMap.<String,Object>of());
 
     @SetFromFlag("provisioningProperties")
-    public static final MapConfigKey<Object> PROVISIONING_PROPERTIES = new MapConfigKey<Object>(Object.class,
+    MapConfigKey<Object> PROVISIONING_PROPERTIES = new MapConfigKey<Object>(Object.class,
             "provisioning.properties", "Custom properties to be passed in when provisioning a new machine", MutableMap.<String,Object>of());
 
     @SetFromFlag("maxRebindSensorsDelay")
@@ -108,7 +134,7 @@ public interface SoftwareProcess extends Entity, Startable {
      * (NB: restarts are currently not propagated to children in the default {@link SoftwareProcess}
      * due to the various semantics which may be desired; this may change, but if entities have specific requirements for restart,
      * developers should either subclass the {@link SoftwareProcessDriverLifecycleEffectorTasks} and/or lean on sensors from the parent */
-    public enum ChildStartableMode {
+    enum ChildStartableMode {
         /** do nothing with {@link Startable} children */
         NONE(true, false, false),
         /** start (stop) {@link Startable} children concurrent with *driver* start (stop),
@@ -147,17 +173,17 @@ public interface SoftwareProcess extends Entity, Startable {
     }
 
     @SetFromFlag("childStartMode")
-    public static final ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class, "children.startable.mode");
+    ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class, "children.startable.mode");
 
     @SuppressWarnings("rawtypes")
-    public static final AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(
+    AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = Sensors.newSensor(
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
 
-    public static final AttributeSensor<Boolean> SERVICE_PROCESS_IS_RUNNING = Sensors.newBooleanSensor("service.process.isRunning", 
-        "Whether the process for the service is confirmed as running");
+    AttributeSensor<Boolean> SERVICE_PROCESS_IS_RUNNING = Sensors.newBooleanSensor("service.process.isRunning", 
+            "Whether the process for the service is confirmed as running");
     
-    public static final AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
+    AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
  
-    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
+    AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
 
 }

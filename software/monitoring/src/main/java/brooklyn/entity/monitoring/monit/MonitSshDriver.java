@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
@@ -43,12 +43,18 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public MonitSshDriver(MonitNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("monit-%s", getVersion()))));
+    }
+
     @Override
     public void install() {
-        DownloadResolver resolver = ((EntityInternal)entity).getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("monit-%s", getVersion()));
+
         List<String> commands = ImmutableList.<String>builder()
             .add(BashCommands.INSTALL_TAR)
             .add(BashCommands.INSTALL_CURL)

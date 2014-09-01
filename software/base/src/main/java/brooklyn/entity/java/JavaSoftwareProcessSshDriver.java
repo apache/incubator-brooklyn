@@ -438,13 +438,13 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
     
     @Override
-    public void start() {
+    public void setup() {
         DynamicTasks.queue("install java", new Runnable() { public void run() {
             installJava();
         }});
-            
+
         // TODO check java version
-        
+
         if (isJmxEnabled()) {
             DynamicTasks.queue("install jmx", new Runnable() { public void run() {
                 installJmxSupport(); }}); 
@@ -454,8 +454,6 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
             DynamicTasks.queue("check java hostname bug", new Runnable() { public void run() {
                 checkJavaHostnameBug(); }});
         }
-
-        super.start();
     }
 
 }

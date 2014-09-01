@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -47,7 +46,7 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     }
 
     @Override
-    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "log/qpid.log"); }
+    protected String getLogFileLocation() { return Os.mergePaths(getRunDir(), "log", "qpid.log"); }
 
     @Override
     public Integer getAmqpPort() { return entity.getAttribute(QpidBroker.AMQP_PORT); }
@@ -58,11 +57,15 @@ public class QpidSshDriver extends JavaSoftwareProcessSshDriver implements QpidD
     public Integer getHttpManagementPort() { return entity.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT); }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion()))));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("qpid-broker-%s", getVersion())));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll( BashCommands.commandsToDownloadUrlsAs(urls, saveAs));

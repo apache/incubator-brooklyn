@@ -166,6 +166,18 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
             new TypeToken<Set<Location>>() {},
             "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
 
+    AttributeSensor<Boolean> CLUSTER_MEMBER = Sensors.newBooleanSensor(
+            "cluster.member", "Set on an entity if it is a member of a cluster");
+
+    AttributeSensor<Boolean> FIRST_MEMBER = Sensors.newBooleanSensor(
+            "cluster.first", "Set on an entity if it is the first member of a cluster");
+
+    AttributeSensor<Entity> FIRST = Sensors.newSensor(Entity.class,
+            "cluster.first.entity", "The first member of the cluster");
+
+    AttributeSensor<Entity> CLUSTER = Sensors.newSensor(Entity.class,
+            "cluster.entity", "The cluster an entity is a member of");
+
     /**
      * Changes the cluster size by the given number.
      *
@@ -187,4 +199,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     /** @deprecated since 0.7.0; use {@link #setMemberSpec(EntitySpec)} */
     @Deprecated
     void setFactory(EntityFactory<?> factory);
+
+    Entity addNode(Location loc, Map<?,?> extraFlags);
 }
