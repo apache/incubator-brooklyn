@@ -195,7 +195,10 @@ public class BrooklynComponentTemplateResolver {
 
     /** returns the entity class, if needed in contexts which scan its statics for example */
     public Class<? extends Entity> loadEntityClass() {
-        return tryLoadEntityClass().get();
+        Maybe<Class<? extends Entity>> result = tryLoadEntityClass();
+        if (result.isAbsent())
+            throw new IllegalStateException("Could not find "+getBrooklynType(), ((Maybe.Absent<?>)result).getException());
+        return result.get();
     }
     
     /** tries to load the Java entity class */
@@ -239,7 +242,6 @@ public class BrooklynComponentTemplateResolver {
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
-            @SuppressWarnings("rawtypes")
             Class interfaceclazz = (Application.class.isAssignableFrom(type)) ? Application.class : Entity.class;
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);

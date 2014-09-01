@@ -53,6 +53,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.net.MediaType;
 import com.google.gson.Gson;
 
 public class BrooklynEntityMirrorImpl extends AbstractEntity implements BrooklynEntityMirror {
@@ -137,7 +138,7 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
             HttpToolResponse result = null;
             byte[] content;
             try {
-                result = HttpTool.httpPost(client, uri, MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/json"), 
+                result = HttpTool.httpPost(client, uri, MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString()), 
                     Jsonya.of(args).toString().getBytes());
                 content = result.getContent();
             } catch (Exception e) {

@@ -88,6 +88,7 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
         assertResolvesValue(orig, String.class, expected);
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void testResolvesIterableOfMapsWithAttributeWhenReady() throws Exception {
         app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");

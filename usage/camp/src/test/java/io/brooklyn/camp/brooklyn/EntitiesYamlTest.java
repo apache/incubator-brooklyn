@@ -21,6 +21,9 @@ package io.brooklyn.camp.brooklyn;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
+import io.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
+import io.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
+import io.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent.Scope;
 
 import java.io.StringReader;
 import java.util.Iterator;
@@ -43,7 +46,9 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.effector.Effectors;
@@ -56,8 +61,13 @@ import brooklyn.management.Task;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Functionals;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -350,9 +360,33 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testMultipleReferencesJava() throws Exception {
+        final Entity app = createAndStartApplication(loadYaml("test-referencing-entities.yaml"));
+        waitForApplicationTasks(app);
+        
+        Entity c1 = Tasks.resolving(new DslComponent("c1").newTask(), Entity.class).context( ((EntityInternal)app).getExecutionContext() ).embedResolutionInTask(true).get();
+        Assert.assertEquals(c1, Entities.descendants(app, EntityPredicates.displayNameEqualTo("child 1")).iterator().next());
+        
+        Entity e1 = Tasks.resolving(new DslComponent(Scope.PARENT, "xxx").newTask(), Entity.class).context( ((EntityInternal)c1).getExecutionContext() ).embedResolutionInTask(true).get();
+        Assert.assertEquals(e1, Entities.descendants(app, EntityPredicates.displayNameEqualTo("entity 1")).iterator().next());
+        
+        Entity c1a = Tasks.resolving(BrooklynDslCommon.descendant("c1").newTask(), Entity.class).context( ((EntityInternal)e1).getExecutionContext() ).embedResolutionInTask(true).get();
+        Assert.assertEquals(c1a, c1);
+        Entity e1a = Tasks.resolving(BrooklynDslCommon.ancestor("e1").newTask(), Entity.class).context( ((EntityInternal)c1).getExecutionContext() ).embedResolutionInTask(true).get();
+        Assert.assertEquals(e1a, e1);
+        try {
+            Tasks.resolving(BrooklynDslCommon.ancestor("c1").newTask(), Entity.class).context( ((EntityInternal)e1).getExecutionContext() ).embedResolutionInTask(true).get();
+            Assert.fail("Should not have found c1 as ancestor of e1");
+        } catch (Exception e) { /* expected */ }
+    }
+    
+    @Test
     public void testMultipleReferences() throws Exception {
         final Entity app = createAndStartApplication(loadYaml("test-referencing-entities.yaml"));
         waitForApplicationTasks(app);
+        
+        Entities.dumpInfo(app);
+        
         Assert.assertEquals(app.getDisplayName(), "test-referencing-entities");
 
         Entity entity1 = null, entity2 = null, child1 = null, child2 = null, grandchild1 = null, grandchild2 = null;
@@ -390,6 +424,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Map<ConfigKey<Entity>, Entity> keyToEntity = new ImmutableMap.Builder<ConfigKey<Entity>, Entity>()
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_APP, app)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1, entity1)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1_ALT, entity1)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY2, entity2)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD1, child1)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_CHILD2, child2)
@@ -404,20 +439,34 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             }
         }).get();
 
-        for (Entity entityInApp : entitiesInApp)
+        for (Entity entityInApp : entitiesInApp) {
             checkReferences(entityInApp, keyToEntity);
+            try {
+                getResolvedConfigInTask(entityInApp, ReferencingYamlTestEntity.TEST_REFERENCE_BOGUS);
+                Assert.fail("Should not have resolved "+ReferencingYamlTestEntity.TEST_REFERENCE_BOGUS+" at "+entityInApp);
+            } catch (Exception e) {
+                /* expected */
+            }
+        }
     }
 
     private void checkReferences(final Entity entity, Map<ConfigKey<Entity>, Entity> keyToEntity) throws Exception {
         for (final ConfigKey<Entity> key : keyToEntity.keySet()) {
-            Entity fromConfig = ((EntityInternal)entity).getExecutionContext().submit(MutableMap.of(), new Callable<Entity>() {
-                @Override
-                public Entity call() throws Exception {
-                    return (Entity) entity.getConfig(key);
-                }
-            }).get();
-            Assert.assertEquals(fromConfig, keyToEntity.get(key));
+            try {
+                Assert.assertEquals(getResolvedConfigInTask(entity, key).get(), keyToEntity.get(key));
+            } catch (Throwable t) {
+                Exceptions.propagateIfFatal(t);
+                Assert.fail("Wrong value for "+entity+":"+key+", "+entity.getConfigRaw(key,  false)+": "+t, t);
+            }
         }
+    }
+
+    private Maybe<Entity> getResolvedConfigInTask(final Entity entity, final ConfigKey<Entity> key) {
+        return Tasks.resolving(Tasks.<Entity>builder().body(
+            Functionals.callable(Suppliers.compose(EntityFunctions.config(key), Suppliers.ofInstance(entity))) ).build())
+            .as(Entity.class)
+            .context( ((EntityInternal)entity).getExecutionContext() ).embedResolutionInTask(true)
+            .getMaybe();
     }
 
     public void testWithAppLocation() throws Exception {

@@ -18,6 +18,8 @@
  */
 package brooklyn.util.guava;
 
+import java.util.concurrent.Callable;
+
 import brooklyn.util.guava.IfFunctions.IfFunctionBuilderApplyingFirst;
 
 import com.google.common.base.Function;
@@ -109,6 +111,16 @@ public class Functionals {
             }
         }
         return new SupplierAsRunnable();
+    }
+
+    public static <T> Callable<T> callable(final Supplier<T> supplier) {
+        class SupplierAsCallable implements Callable<T> {
+            @Override
+            public T call() {
+                return supplier.get();
+            }
+        }
+        return new SupplierAsCallable();
     }
 
 }

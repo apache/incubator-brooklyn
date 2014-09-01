@@ -111,11 +111,10 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                     }
                     return;
                 } catch (Throwable e) {
-                    // NB errors are typically already caught at this point
-                    if (log.isDebugEnabled()) {
-                        log.debug("REST failed processing request " + uri + " with " + entitlementContext + ": " + e, e);
-                    }
-                    throw Exceptions.propagate(e);
+                    // errors are typically already caught at this point, except for serialization errors
+                    log.warn("REST failed processing request " + uri + " with " + entitlementContext + ": " + e, e);
+                    ((HttpServletResponse) response).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    return;
                 } finally {
                     originalRequest.remove();
                     Entitlements.clearEntitlementContext();

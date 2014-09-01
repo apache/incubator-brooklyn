@@ -20,9 +20,14 @@ package brooklyn.entity.nosql.couchbase;
 
 import static java.lang.String.format;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
@@ -36,21 +41,28 @@ import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.cloud.CloudLocationConfig;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.MaybeFunctions;
 import brooklyn.util.guava.TypeTokens;
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.net.Urls;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
+import com.google.common.net.MediaType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
 public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseNode {
+    
+    private static final Logger log = LoggerFactory.getLogger(CouchbaseNodeImpl.class);
     
     HttpFeed httpFeed;
 
@@ -140,6 +152,43 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             .onFailureOrException(Functions.<T>constant(null));
     }
 
+    @Override
+    protected void postStart() {
+        super.postStart();
+        renameServerToPublicHostname();
+    }
+    
+    protected void renameServerToPublicHostname() {
+        // http://docs.couchbase.com/couchbase-manual-2.5/cb-install/#couchbase-getting-started-hostnames
+        URI apiUri = null;
+        try {
+            String hostname = getAttribute(Attributes.HOSTNAME); 
+            String port = ""+getAttribute(COUCHBASE_WEB_ADMIN_PORT);
+            apiUri = new URI("http://"+hostname+":"+port+"/node/controller/rename");
+            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(
+                getConfig(COUCHBASE_ADMIN_USERNAME), getConfig(COUCHBASE_ADMIN_PASSWORD));
+            HttpToolResponse response = HttpTool.httpPost(HttpTool.httpClientBuilder()
+                // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
+                .uri(apiUri)
+                .credentials(credentials)
+                .build(), 
+                apiUri, 
+                MutableMap.of(
+                    com.google.common.net.HttpHeaders.CONTENT_TYPE, MediaType.FORM_DATA.toString(),
+                    com.google.common.net.HttpHeaders.ACCEPT, "*/*",
+                    // this appears needed; without it we get org.apache.http.NoHttpResponseException !?
+                    com.google.common.net.HttpHeaders.AUTHORIZATION, HttpTool.toBasicAuthorizationValue(credentials)),
+                ("hostname="+Urls.encode(hostname)).getBytes());
+            log.debug("Renamed Couchbase server "+this+" via "+apiUri+": "+response);
+            if (!HttpTool.isStatusCodeHealthy(response.getResponseCode())) {
+                log.warn("Invalid response code, renaming "+apiUri+": "+response);
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Error renaming server, using "+apiUri+": "+e, e);
+        }
+    }
+
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
@@ -181,4 +230,8 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         }
     }
 
+    @Override
+    public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
+        getDriver().bucketCreate(bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
+    }
 }

@@ -29,6 +29,7 @@ import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
@@ -44,25 +45,24 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
     /** Creates an absent whose get throws an {@link IllegalStateException} with the indicated message.
      * Both stack traces (the cause and the callers) are provided, which can be quite handy. */
     public static <T> Maybe<T> absent(final String message) {
-        return new Absent<T>() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public T get() {
-                throw new IllegalStateException(message);
-            }
-        };
+        return absent(new IllegalStateExceptionSupplier(message));
     }
 
     /** Creates an absent whose get throws an {@link IllegalStateException} with the indicated cause.
      * Both stack traces (the cause and the callers) are provided, which can be quite handy. */
     public static <T> Maybe<T> absent(final Throwable cause) {
-        return new Absent<T>() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public T get() {
-                throw new IllegalStateException(cause);
-            }
-        };
+        return absent(new IllegalStateExceptionSupplier(cause));
+    }
+    
+    /** Creates an absent whose get throws an {@link IllegalStateException} with the indicated message and underlying cause.
+     * Both stack traces (the cause and the callers) are provided, which can be quite handy. */
+    public static <T> Maybe<T> absent(final String message, final Throwable cause) {
+        return absent(new IllegalStateExceptionSupplier(message, cause));
+    }
+    
+    /** Creates an absent whose get throws an {@link RuntimeException} generated on demand from the given supplier */
+    public static <T> Maybe<T> absent(final Supplier<RuntimeException> exceptionSupplier) {
+        return new Absent<T>(Preconditions.checkNotNull(exceptionSupplier));
     }
     
     public static <T> Maybe<T> of(@Nullable T value) {
@@ -151,13 +151,23 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
     
     public static class Absent<T> extends Maybe<T> {
         private static final long serialVersionUID = -757170462010887057L;
+        private final Supplier<RuntimeException> exception;
+        public Absent() {
+            this(new IllegalStateExceptionSupplier());
+        }
+        public Absent(Supplier<RuntimeException> exception) {
+            this.exception = exception;
+        }
         @Override
         public boolean isPresent() {
             return false;
         }
         @Override
         public T get() {
-            throw new IllegalStateException();
+            throw getException();
+        }
+        public RuntimeException getException() {
+            return exception.get();
         }
     }
 

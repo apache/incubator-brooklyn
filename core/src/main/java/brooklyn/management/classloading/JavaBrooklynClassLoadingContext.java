@@ -48,7 +48,7 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
             return (Maybe) Maybe.of(loader.loadClass(className));
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            return Maybe.absent(e);
+            return Maybe.absent("Invalid class: "+className, e);
         }
     }
 

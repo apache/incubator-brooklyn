@@ -19,6 +19,7 @@
 package brooklyn.util.collections;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -128,6 +129,28 @@ public class CollectionFunctionals {
 
     public static <K> Predicate<Map<K,?>> mapSizeEquals(int targetSize) {
         return Predicates.compose(Predicates.equalTo(targetSize), CollectionFunctionals.<K>mapSize());
+    }
+
+    public static <T,I extends Iterable<T>> Function<I, List<T>> limit(final int max) {
+        return new LimitFunction<T,I>(max);
+    }
+
+    private static final class LimitFunction<T, I extends Iterable<T>> implements Function<I, List<T>> {
+        private final int max;
+        private LimitFunction(int max) {
+            this.max = max;
+        }
+        @Override
+        public List<T> apply(I input) {
+            if (input==null) return null;
+            MutableList<T> result = MutableList.of();
+            for (T i: input) {
+                result.add(i);
+                if (result.size()>=max)
+                    return result;
+            }
+            return result;
+        }
     }
 
 }

@@ -16,19 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.nosql.couchbase;
+package brooklyn.util.guava;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import com.google.common.base.Supplier;
 
-public interface CouchbaseNodeDriver extends SoftwareProcessDriver {
-    public String getOsTag();
+public class IllegalStateExceptionSupplier implements Supplier<RuntimeException> {
 
-    public void serverAdd(String serverToAdd, String username, String password);
-
-    public void rebalance();
+    protected final String message;
+    protected final Throwable cause;
     
-    public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica);
-
-    public void serverAddAndRebalance(String serverToAdd, String username, String password);
+    public IllegalStateExceptionSupplier() { this(null, null); }
+    public IllegalStateExceptionSupplier(String message) { this(message, null); }
+    public IllegalStateExceptionSupplier(Throwable cause) { this(null, cause); }
+    public IllegalStateExceptionSupplier(String message, Throwable cause) { 
+        this.message = message;
+        this.cause = cause;
+    }
+    
+    @Override
+    public RuntimeException get() {
+        return new IllegalStateException(message, cause);
+    }
 
 }

@@ -20,13 +20,9 @@ package brooklyn.util.task;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -40,7 +36,6 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -48,9 +43,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class Tasks {
     
@@ -109,109 +101,29 @@ public class Tasks {
     @SuppressWarnings("rawtypes")
     public static Task current() { return BasicExecutionManager.getPerThreadCurrentTask().get(); }
 
+    /** creates a {@link ValueResolver} instance which allows significantly more customization than
+     * the various {@link #resolveValue(Object, Class, ExecutionContext)} methods here */
+    public static <T> ValueResolver<T> resolving(Object v, Class<T> type) {
+        return new ValueResolver<T>(v, type);
+    }
+
+    public static ValueResolver.ResolverBuilderPretype resolving(Object v) {
+        return new ValueResolver.ResolverBuilderPretype(v);
+    }
+
     /** @see #resolveValue(Object, Class, ExecutionContext, String) */
-    public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec, null);
+    public static <T> T resolveValue(Object v, Class<T> type, @Nullable ExecutionContext exec) throws ExecutionException, InterruptedException {
+        return new ValueResolver<T>(v, type).context(exec).get();
     }
     
     /** attempt to resolve the given value as the given type, waiting on futures, submitting if necessary,
      * and coercing as allowed by TypeCoercions;
-     * contextMessage (optional) will be displayed in status reports while it waits (e.g. the name of the config key being looked up) */
-    public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec, contextMessage, false);
+     * contextMessage (optional) will be displayed in status reports while it waits (e.g. the name of the config key being looked up).
+     * if no execution context supplied (null) this method will throw an exception if the object is an unsubmitted task */
+    public static <T> T resolveValue(Object v, Class<T> type, @Nullable ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
+        return new ValueResolver<T>(v, type).context(exec).description(contextMessage).get();
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage, boolean forceDeep) throws ExecutionException, InterruptedException {
-        if (type==null) 
-            throw new NullPointerException("type cannot be null in resolveValue, for '"+v+"'"+(contextMessage!=null ? ", "+contextMessage : ""));
-        //if the expected type is a closure or map and that's what we have, we're done (or if it's null);
-        //but not allowed to return a future or DeferredSupplier as the resolved value
-        if (v==null || (!forceDeep && type.isInstance(v) && !Future.class.isInstance(v) && !DeferredSupplier.class.isInstance(v)))
-            return (T) v;
-        try {
-            //if it's a task or a future, we wait for the task to complete
-        	if (v instanceof TaskAdaptable<?>) {
-                //if it's a task, we make sure it is submitted
-                //(perhaps could run it here? ... tbd)
-                if (!((TaskAdaptable<?>) v).asTask().isSubmitted() ) {
-                    exec.submit(((TaskAdaptable<?>) v).asTask());
-                }
-            }
-            
-            if (v instanceof Future) {
-                final Future<?> vfuture = (Future<?>) v;
-                
-                //including tasks, above
-                if (!vfuture.isDone()) {
-                    final AtomicReference<Object> vref = new AtomicReference<Object>(v);
-                    
-                    withBlockingDetails("Waiting for "+(contextMessage!=null ? contextMessage : ""+v), 
-                            new Callable<Void>() {
-                        public Void call() throws Exception {
-                            vref.set( vfuture.get() );
-                            return null;
-                        }
-                    });
-                    
-                    v = vref.get();
-                    
-                } else {
-                    v = vfuture.get();
-                }
-                
-            } else if (v instanceof DeferredSupplier<?>) {
-                v = ((DeferredSupplier<?>) v).get();
-                
-            } else if (v instanceof Map) {
-                //and if a map or list we look inside
-                Map result = Maps.newLinkedHashMap();
-                for (Map.Entry<?,?> entry : ((Map<?,?>)v).entrySet()) {
-                    result.put(entry.getKey(), resolveValue(entry.getValue(), type, exec,
-                            (contextMessage!=null ? contextMessage+", " : "") + "map entry "+entry.getKey(), forceDeep));
-                }
-                return (T) result;
-                
-            } else if (v instanceof List) {
-                List result = Lists.newArrayList();
-                int count = 0;
-                for (Object it : (List)v) {
-                    result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
-                    count++;
-                }
-                return (T) result;
-                
-            } else if (v instanceof Set) {
-                Set result = Sets.newLinkedHashSet();
-                int count = 0;
-                for (Object it : (Set)v) {
-                    result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
-                    count++;
-                }
-                return (T) result;
-                
-            } else if (v instanceof Iterable) {
-                List result = Lists.newArrayList();
-                int count = 0;
-                for (Object it : (Iterable)v) {
-                    result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
-                    count++;
-                }
-                return (T) result;
-                
-            } else {
-                return TypeCoercions.coerce(v, type);
-            }
-            
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Error resolving "+(contextMessage!=null ? contextMessage+", " : "")+v+", in "+exec+": "+e, e);
-        }
-        return resolveValue(v, type, exec, contextMessage, forceDeep);
-    }
-
     /**
      * @see #resolveDeepValue(Object, Class, ExecutionContext, String)
      */
@@ -238,8 +150,8 @@ public class Tasks {
      * e.g. if the requested type is an Object, {@link #resolveValue(Object, Class, ExecutionContext, String)}
      * will decide that it matches a Map and not recurse on it, whereas this will recurse on it.
      */
-    public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec, contextMessage, true);
+    public static <T> T resolveDeepValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
+        return new ValueResolver<T>(v, type).context(exec).deep(true).description(contextMessage).get();
     }
 
     /** sets extra status details on the current task, if possible (otherwise does nothing).
