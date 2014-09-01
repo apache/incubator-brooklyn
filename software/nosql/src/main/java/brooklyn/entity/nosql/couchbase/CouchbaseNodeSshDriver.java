@@ -101,6 +101,8 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 "export DEBIAN_FRONTEND=noninteractive",
                 "which apt-get",
                 sudo("apt-get update"),
+                // The following line is required to run on Docker container
+                sudo("apt-get install -y python-httplib2"),
                 sudo("apt-get install -y libssl0.9.8"),
                 sudo(format("dpkg -i %s", saveAs)));
 
