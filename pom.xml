@@ -164,7 +164,7 @@
         <solr.version>4.7.0</solr.version>
         <jtidy.version>r8-20060801</jtidy.version>
         <opendmk_jmxremote_optional_jar.version>1.0-b01-ea</opendmk_jmxremote_optional_jar.version>
-        <resteasy.version>3.0.1.Final</resteasy.version>
+        <resteasy.version>3.0.8.Final</resteasy.version>
         <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
         <jopt.version>4.3</jopt.version>
         <concurrentlinkedhashmap.version>1.0_jdk5</concurrentlinkedhashmap.version>
