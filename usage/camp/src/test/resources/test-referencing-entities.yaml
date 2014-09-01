@@ -38,36 +38,43 @@ origin: http://brooklyn.io
 id: app1
 brooklyn.config:
   test.reference.app: $brooklyn:component("app1")
-  test.reference.entity1: $brooklyn:component("e1")
+  test.reference.entity1: $brooklyn:entity("e1")
+  test.reference.entity1a: $brooklyn:config("test.reference.entity1")
   test.reference.entity2: $brooklyn:component("e2")
   test.reference.child1: $brooklyn:component("c1")
   test.reference.child2: $brooklyn:component("c2")
   test.reference.grandchild1: $brooklyn:component("gc1")
   test.reference.grandchild2: $brooklyn:component("gc2")
+  test.reference.bogus: $brooklyn:child("c1")
 services:
 - serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
   id: e1
   name: entity 1
   brooklyn.config:
-    test.reference.app: $brooklyn:component("app1")
-    test.reference.entity1: $brooklyn:component("e1")
+    test.reference.app: $brooklyn:component("parent", "ignored")
+    test.reference.entity1: $brooklyn:component("this", "ignored")
+    test.reference.entity1a: $brooklyn:ancestor("app1").child("e1")
     test.reference.entity2: $brooklyn:component("e2")
-    test.reference.child1: $brooklyn:component("c1")
+    test.reference.child1: $brooklyn:component("child", "c1")
     test.reference.child2: $brooklyn:component("c2")
     test.reference.grandchild1: $brooklyn:component("gc1")
     test.reference.grandchild2: $brooklyn:component("gc2")
+    test.reference.bogus: $brooklyn:descendant("app1")
   brooklyn.children:
     - serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
       id: c1
       name: child 1
       brooklyn.config:
-        test.reference.app: $brooklyn:component("app1")
-        test.reference.entity1: $brooklyn:component("e1")
+        self: $brooklyn:entity("c1")
+        test.reference.app: $brooklyn:parent().parent()
+        test.reference.entity1: $brooklyn:parent()
+        test.reference.entity1a: $brooklyn:entity("e1").parent().child("e1")
         test.reference.entity2: $brooklyn:component("e2")
-        test.reference.child1: $brooklyn:component("c1")
+        test.reference.child1: $brooklyn:config("self")
         test.reference.child2: $brooklyn:component("c2")
         test.reference.grandchild1: $brooklyn:component("gc1")
         test.reference.grandchild2: $brooklyn:component("gc2")
+        test.reference.bogus: $brooklyn:component("bogus")
       brooklyn.children:
       - serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
         id: gc1
@@ -95,7 +102,7 @@ services:
       id: c2
       name: child 2
       brooklyn.config:
-        test.reference.app: $brooklyn:component("app1")
+        test.reference.app: $brooklyn:parent().parent().descendant("app1")
         test.reference.entity1: $brooklyn:component("e1")
         test.reference.entity2: $brooklyn:component("e2")
         test.reference.child1: $brooklyn:component("c1")

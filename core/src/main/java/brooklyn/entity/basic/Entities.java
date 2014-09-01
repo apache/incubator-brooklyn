@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -578,6 +579,33 @@ public class Entities {
         return Iterables.filter(descendants(root), ofType);
     }
     
+    /**
+     * returns the entity, its parent, its parent, and so on. */ 
+    public static Iterable<Entity> ancestors(final Entity root) {
+        return new Iterable<Entity>() {
+            @Override
+            public Iterator<Entity> iterator() {
+                return new Iterator<Entity>() {
+                    Entity next = root;
+                    @Override
+                    public boolean hasNext() {
+                        return next!=null;
+                    }
+                    @Override
+                    public Entity next() {
+                        Entity result = next;
+                        next = next.getParent();
+                        return result;
+                    }
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
+
     /**
      * Registers a {@link BrooklynShutdownHooks#invokeStopOnShutdown(Entity)} to shutdown this entity when the JVM exits.
      * (Convenience method located in this class for easy access.)
