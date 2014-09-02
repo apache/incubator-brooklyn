@@ -37,7 +37,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.location.geo.HostGeoLookup;
-import brooklyn.location.geo.MaxMindHostGeoLookup;
+import brooklyn.location.geo.UtraceHostGeoLookup;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -167,7 +167,7 @@ public class GeoscalingIntegrationTest {
         
         public StubHostGeoLookup(String delegateImpl) throws Exception {
             if (delegateImpl == null) {
-                delegate = new MaxMindHostGeoLookup();
+                delegate = new UtraceHostGeoLookup();
             } else {
                 delegate = (HostGeoLookup) Class.forName(delegateImpl).newInstance();
             }
