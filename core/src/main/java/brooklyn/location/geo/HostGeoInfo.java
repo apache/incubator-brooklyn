@@ -129,8 +129,7 @@ public class HostGeoInfo implements Serializable {
     private static HostGeoLookup findHostGeoLookupImpl() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         String type = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getValue();
         //like utrace because it seems more accurate than geobytes and gives a report of how many tokens are left
-        //but maxmind free is even better
-        if (type==null) return new MaxMindHostGeoLookup();
+        if (type==null) return new UtraceHostGeoLookup();
         if (type.isEmpty()) return null;
         return (HostGeoLookup) Class.forName(type).newInstance();
     }
