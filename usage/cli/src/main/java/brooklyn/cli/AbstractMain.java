@@ -18,8 +18,6 @@
  */
 package brooklyn.cli;
 
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyShell;
 import io.airlift.command.Arguments;
 import io.airlift.command.Cli;
 import io.airlift.command.Cli.CliBuilder;
@@ -29,16 +27,10 @@ import io.airlift.command.Option;
 import io.airlift.command.OptionType;
 import io.airlift.command.ParseException;
 
-import java.io.Console;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -50,39 +42,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.catalog.BrooklynCatalog;
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.entity.trait.Startable;
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.launcher.BrooklynServerDetails;
-import brooklyn.launcher.config.StopWhichAppsOnShutdown;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.rest.security.PasswordHasher;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.cli.Main.LaunchCommand;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.exceptions.UserFacingException;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.javalang.Enums;
-import brooklyn.util.net.Networking;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
 
-import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.collect.ImmutableList;
 
 /**
  * This class is the primary CLI for brooklyn.

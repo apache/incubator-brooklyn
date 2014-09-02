@@ -1,0 +1,217 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+*/
+/* landing page */
+body {
+	margin: 0px;
+	padding: 10px 0px 20px 0px;
+	font-family: arial, helvetica, sans-serif;
+	background-color: #ffffff;
+	color: #393939;
+	font-size: 15px;
+}
+
+h1 {
+	margin: 0 0 20px 0;
+	padding: 0;
+	font-size: 32px;
+	font-weight: normal;
+	color: #4d9d3a;
+	border-bottom: 1px solid #e9e9e9;
+}
+
+th {
+	margin: 1.25em 0 20px 0;
+	font-size: 20px;
+	font-weight: normal;
+	color: #4f8243
+}
+
+.typeLabel {
+	display: inline;
+	padding-right: 10px;
+}
+
+table {
+	border: 1px solid #f0f0f0;
+	border-radius: 5px;
+	background-color: #fcfcfc;
+	border-collapse: collapse;
+    padding: 6px;
+}
+
+td {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 6px;
+    max-width: 350px;
+    white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+	white-space: -pre-wrap;      /* Opera 4-6 */
+	white-space: -o-pre-wrap;    /* Opera 7 */
+	white-space: pre-wrap;       /* css-3 */
+	word-wrap: break-word;       /* Internet Explorer 5.5+ */
+	word-break: break-all;
+	white-space: normal;
+}
+
+.wordWrap {
+	word-break: normal !important;
+}
+
+.location {
+	word-break: keep-all;
+	max-width: 100%;
+}
+
+.objectContent {
+	display: block;
+	clear: both;
+}
+
+#container {
+	width: 980px;
+	padding: 0;
+	margin: 0 auto;
+}
+
+#identity {
+	float: left;
+	margin: 0;
+	padding: 30px 0 15px 10px;
+}
+
+#identity a {
+	text-decoration: none;
+	display: block;
+	margin: 0;
+	color: #4d9d3a;
+	font-size: 2.5em;
+	padding: 0;
+	background: transparent url(images/brooklyn.gif) no-repeat 0 0;
+	width: 206px;
+	height: 44px;
+	text-indent: -1000px;
+	overflow: hidden;
+}
+
+#menubar {
+	clear: both;
+	width: 978px;
+	height: 34px;
+	background-color: #e8eded;
+	border: 1px solid #d5dade;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+}
+
+#mainmenu {
+	list-style: none;
+	margin: 0;
+	padding: 4px 0 0 2px;
+	width: 765px;
+	display: block;
+	float: left;
+	font-size: 15px;
+}
+
+#mainmenu li {
+	float: left;
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+#mainmenu>li {
+	border: 1px solid transparent;
+	border-top-left-radius: 5px;
+	-moz-border-radius-topleft: 5px;
+	border-top-right-radius: 5px;
+	-moz-border-radius-topright: 5px;
+	border-bottom: 0;
+}
+
+#mainmenu a {
+	display: block;
+	text-decoration: none;
+	color: #508243;
+}
+
+#mainmenu>li>a {
+	padding: 0 8px 5px 8px;
+	line-height: 25px;
+}
+
+#mainmenu>li:hover {
+	background-color: #ffffff;
+	border: 1px solid #dbe0e4;
+	border-bottom: 0;
+}
+
+#mainmenu .current a {
+	color: #838a8b;
+}
+
+#mainmenu ul {
+	display: none;
+	position: absolute;
+	top: 30px;
+	left: -1px;
+	float: left;
+	background-color: #f5f5f5;
+	border: 1px solid #dbe0e4;
+	border-top: 0;
+	list-style: none;
+	margin: 0;
+	padding: 5px;
+	width: 185px;
+}
+
+#mainmenu ul ul {
+	left: 100%;
+	margin-left: 6px;
+	top: -1px;
+	border-top: 1px solid #dbe0e4;
+}
+
+#mainmenu ul li {
+	width: 183px;
+	padding: 0;
+	border: 1px solid transparent;
+}
+
+#mainmenu ul li:hover {
+	border: 1px solid #dbe0e4;
+	background-color: #ffffff;
+}
+
+#mainmenu ul a {
+	font-size: 14px;
+	padding: 7px;
+}
+
+#mainmenu li:hover>ul,#mainmenu li.sfHover>ul {
+	display: block;
+}
+
+#content {
+	overflow: scroll;
+	height: 1000px;
+}
+
+#content a {
+	color: #4f8243;
+}

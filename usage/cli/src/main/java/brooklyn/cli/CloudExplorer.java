@@ -40,8 +40,6 @@ import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.options.TemplateOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
@@ -68,8 +66,6 @@ import com.google.common.collect.Lists;
  * such as which image will be used by default in a given cloud.
  */
 public class CloudExplorer extends AbstractMain {
-
-    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {
         new CloudExplorer().execCli(args);

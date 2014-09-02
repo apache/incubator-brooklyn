@@ -1,70 +1,132 @@
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Brooklyn Object List</title>
-    </head>
-    <body>
-        <h1>Entities</h1>
-        <table id="entities">
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Description</th>
-            </tr>
-        </table>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>Brooklyn Object List</title>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/>
+    <link rel="stylesheet" href="items.css" type="text/css" media="screen"/>
+</head>
+<body>
+<div id="container">
+    <div id="header">
+        <div id="identity">
+            <a href="http://brooklyncentral.github.com/" rel="home">Brooklyn</a>
+        </div>
+        <div id="menubar">
+            <ul id="mainmenu">
+                <li class=""><a href="#" onclick="scrollTo('#entities')">Entities</a></li>
+                <li class=""><a href="#" onclick="scrollTo('#policies')">Policies</a></li>
+                <li class=""><a href="#" onclick="scrollTo('#enrichers')">Enrichers</a></li>
+                <li class=""><a href="#" onclick="scrollTo('#locations')">Locations</a></li>
+                <li class=""><a href="#" onclick="scrollTo('#locationResolvers')">Location Resolvers</a></li>
+            </ul>
+        </div>
+    </div>
+    <br>
+
+    <div id="content">
+        <div id="entities">
+            <h1>Entities</h1>
+            <table id="entityTable">
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </table>
+        </div>
         <br>
-        <h1>Policies</h1>
-        <table id="policies">
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Description</th>
-            </tr>
-        </table>
-        <h1>Enrichers</h1>
-        <table id="enrichers">
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Description</th>
-            </tr>
-        </table>
+
+        <div id="policies">
+            <h1>Policies</h1>
+            <table id="policyTable">
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </table>
+        </div>
         <br>
-        <h1>Locations</h1>
-        <table id="locations">
-            <tr>
-                <th>Type</th>
-            </tr>
-        </table>
+
+        <div id="enrichers">
+            <h1>Enrichers</h1>
+            <table id="enricherTable">
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </table>
+        </div>
         <br>
-        <h1>Location Resolvers</h1>
-        <table id="locationResolvers">
-            <tr>
-                <th>Name</th>
-            </tr>
-        </table>
+
+        <div id="locations">
+            <h1>Locations</h1>
+            <table id="locationTable">
+                <tr>
+                    <th>Type</th>
+                </tr>
+            </table>
+        </div>
         <br>
+
+        <div id="locationResolvers">
+            <h1>Location Resolvers</h1>
+            <table id="locationResolverTable">
+                <tr>
+                    <th>Name</th>
+                </tr>
+            </table>
+        </div>
         <br>
-        <script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript"></script>
-        <script src="items.js" type="text/javascript"></script>
-        <script type="text/javascript">
-            $(document).ready(function() {
-                items.entities.forEach(function(element) {
-                    $("#entities").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='entities/" + element.type + ".html'>" + element.type + "</a></td><td>" + element.description + "</td></tr>")
-                });
-                items.policies.forEach(function(element) {
-                    $("#policies").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='policies/" + element.type + ".html'>" + element.type + "</a></td><td>" + element.description + "</td></tr>")
-                });
-                items.enrichers.forEach(function(element) {
-                    $("#enrichers").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='enrichers/" + element.type + ".html'>" + element.type + "</a></td><td>" + element.description + "</td></tr>")
-                });
-                items.locations.forEach(function(element) {
-                    $("#locations").find("tr:last").after("<tr><td><a href='locations/" + element.type + ".html'>" + element.type + "</a></td></tr>")
-                });
-                items.locationResolvers.forEach(function(element) {
-                    $("#locationResolvers").find("tr:last").after("<tr><td>" + element + "</td></tr>")
-                });
+    </div>
+    <br>
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js" type="text/javascript"></script>
+    <script src="items.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function scrollTo(sectionName) {
+            var content = $("#content");
+            content.animate({
+                scrollTop: content.scrollTop() - content.offset().top + $(sectionName).offset().top
             });
-        </script>
-    </body>
+        }
+
+        $(document).ready(function () {
+            items.entities.forEach(function (element) {
+                $("#entityTable").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='entities/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
+            });
+            items.policies.forEach(function (element) {
+                $("#policyTable").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='policies/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
+            });
+            items.enrichers.forEach(function (element) {
+                $("#enricherTable").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='enrichers/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
+            });
+            items.locations.forEach(function (element) {
+                $("#locationTable").find("tr:last").after("<tr><td class='location'><a href='locations/" + element.type + ".html'>" + element.type + "</a></td></tr>")
+            });
+            items.locationResolvers.forEach(function (element) {
+                $("#locationResolverTable").find("tr:last").after("<tr><td>" + element + "</td></tr>")
+            });
+        });
+    </script>
+</div>
+</body>
 </html>
