@@ -213,40 +213,19 @@
 
   <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->
   <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-source</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>src/3rd/maxmind/GeoIPJava-1.2.8/source</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
       <pluginManagement>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.rat</groupId>
-            <artifactId>apache-rat-plugin</artifactId>
-            <configuration>
-              <excludes combine.children="append">
-                <exclude>**/src/main/resources/brooklyn/location/geo/external-ip-address-resolvers.txt</exclude>
-                <!-- FIXME: Maxmind code to be removed due to licence, see https://issues.apache.org/jira/browse/BROOKLYN-32-->
-                <exclude>**/src/3rd/maxmind/**</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
+          <plugins>
+              <plugin>
+                  <groupId>org.apache.rat</groupId>
+                  <artifactId>apache-rat-plugin</artifactId>
+                  <configuration>
+                      <excludes combine.children="append">
+                          <exclude>**/src/main/resources/brooklyn/location/geo/external-ip-address-resolvers.txt
+                          </exclude>
+                      </excludes>
+                  </configuration>
+              </plugin>
+          </plugins>
       </pluginManagement>
   </build>
 
