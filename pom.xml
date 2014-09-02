@@ -119,7 +119,7 @@
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
-        <fasterxml.jackson.version>2.2.0</fasterxml.jackson.version>  <!-- fasterxml (newer) jackson, used by camp -->
+        <fasterxml.jackson.version>2.4.2</fasterxml.jackson.version>
         <jersey.version>1.12</jersey.version> <!-- NB: 1.17 requires changes to how we hanlde multipart in CatalogApi -->
         <swagger.version>1.0.1</swagger.version>
         <dropwizard.version>0.4.4</dropwizard.version>
@@ -186,6 +186,7 @@
         <commons-lang.version>2.4</commons-lang.version>
         <hamcrest.version>1.1</hamcrest.version>
         <jsr311-api.version>1.1.1</jsr311-api.version>
+        <maxmind.version>0.8.1</maxmind.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
@@ -599,6 +600,11 @@
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
                 <version>${jsonPath.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.maxmind.geoip2</groupId>
+                <artifactId>geoip2</artifactId>
+                <version>${maxmind.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

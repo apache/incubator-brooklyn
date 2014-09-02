@@ -28,7 +28,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
@@ -37,7 +36,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.location.geo.HostGeoLookup;
-import brooklyn.location.geo.UtraceHostGeoLookup;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -83,7 +81,7 @@ public class GeoscalingIntegrationTest {
     public void setUp() throws Exception {
         geoLookupImpl = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getValue();
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         target = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         group = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
@@ -167,7 +165,7 @@ public class GeoscalingIntegrationTest {
         
         public StubHostGeoLookup(String delegateImpl) throws Exception {
             if (delegateImpl == null) {
-                delegate = new UtraceHostGeoLookup();
+                delegate = HostGeoInfo.getDefaultLookup();
             } else {
                 delegate = (HostGeoLookup) Class.forName(delegateImpl).newInstance();
             }
