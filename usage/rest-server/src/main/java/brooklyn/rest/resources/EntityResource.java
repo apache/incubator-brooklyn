@@ -77,7 +77,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   }
 
   @Override
-  public List<EntitySummary> getChildren( final String application, final String entity) {
+  public List<EntitySummary> getChildren(final String application, final String entity) {
       return FluentIterable
               .from(brooklyn().getEntity(application, entity).getChildren())
               .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
@@ -126,6 +126,13 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       // for anything else we do a redirect (e.g. http / https; perhaps ftp)
       return Response.temporaryRedirect(URI.create(url)).build();
   }
+
+    @Override
+    public Response rename(String application, String entity, String newName) {
+        EntityLocal entityLocal = brooklyn().getEntity(application, entity);
+        entityLocal.setDisplayName(newName);
+        return status(Response.Status.OK).build();
+    }
 
     @Override
     public Response expunge(String application, String entity, boolean release) {

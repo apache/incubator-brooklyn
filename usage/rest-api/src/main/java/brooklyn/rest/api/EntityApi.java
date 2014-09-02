@@ -119,6 +119,19 @@ public interface EntityApi {
 
   @POST
   @ApiOperation(
+      value = "Rename an entity"
+  )
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Undefined application or entity")
+  })
+  @Path("/{entity}/name")
+  public Response rename(
+      @ApiParam(value = "Application ID or name", required = true) @PathParam("application") final String applicationId, 
+      @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") final String entityId, 
+      @ApiParam(value = "New name for this entity", required = true) @QueryParam("name") final String name);
+  
+  @POST
+  @ApiOperation(
       value = "Expunge an entity",
       responseClass = "brooklyn.rest.domain.TaskSummary"
   )
@@ -126,7 +139,10 @@ public interface EntityApi {
       @ApiError(code = 404, reason = "Undefined application or entity")
   })
   @Path("/{entity}/expunge")
-  public Response expunge(@PathParam("application") final String application, @PathParam("entity") final String entity, @QueryParam("release") final boolean release);
+  public Response expunge(
+      @ApiParam(value = "Application ID or name", required = true) @PathParam("application") final String applicationId, 
+      @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") final String entityId, 
+      @ApiParam(value = "Whether to gracefully release all resources", required = true) @QueryParam("release") final boolean release);
   
   @GET
   @Path("/{entity}/descendants")

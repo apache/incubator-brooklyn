@@ -67,8 +67,9 @@ public class EntityTransformer {
                 .put("locations", URI.create(entityUri + "/locations"))
                 .put("tags", URI.create(entityUri + "/tags"))
                 .put("catalog", URI.create("/v1/catalog/entities/" + type))
-                .put("expunge", URI.create(entityUri + "/expunge")
-            );
+                .put("expunge", URI.create(entityUri + "/expunge"))
+                .put("rename", URI.create(entityUri + "/name"))
+            ;
         if (entity.getIconUrl()!=null)
             lb.put("iconUrl", URI.create(entityUri + "/icon"));
 

@@ -52,7 +52,7 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
             addResource(o);
         }
     }
-
+    
     @Test
     public void testCountRestResources() throws Exception {
         Documentation response = client().resource("/v1/apidoc/").get(Documentation.class);
@@ -74,7 +74,7 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testEntityDetails() throws Exception {
         Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.EntityResource").get(Documentation.class);
-        assertEquals(countOperations(response), 11);
+        assertEquals(countOperations(response), 12);
     }
 
     @Test

@@ -33,6 +33,7 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
+import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Predicate;
@@ -85,8 +86,18 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
         Assert.assertFalse(tags.contains("bar"));
     }
     
+    @Test
+    public void testRename() throws Exception {
+        ClientResponse response = client().resource(entityEndpoint + "/name")
+                .queryParam("name", "New Name")
+                .post(ClientResponse.class);
+
+        HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+        Assert.assertTrue(entity.getDisplayName().equals("New Name"));
+    }
+    
     // TODO any entity or complex object should be cleaned up as part of WebResourceUtils call
-    @Test(groups="WIP")
+    @Test(groups="WIP", dependsOnMethods={"testTagsSanity"})
     public void testTagsDoNotSerializeTooMuch() throws Exception {
         entity.getTagSupport().addTag("foo");
         entity.getTagSupport().addTag(entity.getParent());
