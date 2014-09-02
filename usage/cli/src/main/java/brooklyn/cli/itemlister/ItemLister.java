@@ -18,6 +18,21 @@
  */
 package brooklyn.cli.itemlister;
 
+import io.airlift.command.Cli;
+import io.airlift.command.Cli.CliBuilder;
+import io.airlift.command.Command;
+import io.airlift.command.Option;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.Catalog;
 import brooklyn.cli.AbstractMain;
@@ -45,21 +60,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
-import io.airlift.command.Command;
-import io.airlift.command.Option;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ItemLister extends AbstractMain {
     
@@ -103,11 +103,11 @@ public class ItemLister extends AbstractMain {
             List<Class<? extends Location>> locationTypes = getTypes(urls, Location.class, Boolean.FALSE);
 
             Map<String, Object> result = ImmutableMap.<String, Object>builder()
-                    .put("entities", ItemDescriptors.toItemDescriptors(entityTypes, headingsOnly))
-                    .put("policies", ItemDescriptors.toItemDescriptors(policyTypes, headingsOnly))
-                    .put("enrichers", ItemDescriptors.toItemDescriptors(enricherTypes, headingsOnly))
-                    .put("locations", ItemDescriptors.toItemDescriptors(locationTypes, headingsOnly))
-                    .put("locationResolvers", ItemDescriptors.toItemDescriptors(ImmutableList.copyOf(ServiceLoader.load(LocationResolver.class))))
+                    .put("entities", ItemDescriptors.toItemDescriptors(entityTypes, headingsOnly, "name"))
+                    .put("policies", ItemDescriptors.toItemDescriptors(policyTypes, headingsOnly, "name"))
+                    .put("enrichers", ItemDescriptors.toItemDescriptors(enricherTypes, headingsOnly, "name"))
+                    .put("locations", ItemDescriptors.toItemDescriptors(locationTypes, headingsOnly, "type"))
+                    .put("locationResolvers", ItemDescriptors.toItemDescriptors(ImmutableList.copyOf(ServiceLoader.load(LocationResolver.class)), true))
                     .build();
 
             String json = toJson(result);

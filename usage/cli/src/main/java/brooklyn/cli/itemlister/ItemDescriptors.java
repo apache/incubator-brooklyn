@@ -18,6 +18,8 @@
  */
 package brooklyn.cli.itemlister;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +43,7 @@ import brooklyn.rest.transform.EffectorTransformer;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.SensorTransformer;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -48,11 +51,31 @@ import com.google.common.collect.Sets;
 public class ItemDescriptors {
 
     public static List<Map<String, Object>> toItemDescriptors(Iterable<? extends Class<? extends BrooklynObject>> types, boolean headingsOnly) {
+        return toItemDescriptors(types, headingsOnly, null);
+    }
+    
+    public static List<Map<String, Object>> toItemDescriptors(Iterable<? extends Class<? extends BrooklynObject>> types, boolean headingsOnly, final String sortField) {
         List<Map<String, Object>> itemDescriptors = Lists.newArrayList();
         
         for (Class<? extends BrooklynObject> type : types) {
             Map<String, Object> itemDescriptor = toItemDescriptor(type, headingsOnly);
             itemDescriptors.add(itemDescriptor);
+        }
+        
+        if (!Strings.isNullOrEmpty(sortField)) {
+            Collections.sort(itemDescriptors, new Comparator<Map<String, Object>>() {
+                @Override public int compare(Map<String, Object> id1, Map<String, Object> id2) {
+                    Object o1 = id1.get(sortField);
+                    Object o2 = id2.get(sortField);
+                    if (o1 == null) {
+                        return o2 == null ? 0 : 1;
+                    }
+                    if (o2 == null) {
+                        return -1;
+                    }
+                    return o1.toString().compareTo(o2.toString());
+                }
+            });
         }
         
         return itemDescriptors;
@@ -107,9 +130,22 @@ public class ItemDescriptors {
     }
     
     public static Object toItemDescriptors(List<LocationResolver> resolvers) {
+        return toItemDescriptors(resolvers, false);
+    }
+    
+    public static Object toItemDescriptors(List<LocationResolver> resolvers, Boolean sort) {
         List<Object> result = Lists.newArrayList();
         for (LocationResolver resolver : resolvers) {
             result.add(toItemDescriptor(resolver));
+        }
+        if (sort) {
+            Collections.sort(result, new Comparator<Object>() {
+                @Override public int compare(Object o1, Object o2) {
+                    String s1 = o1 == null ? "" : o1.toString();
+                    String s2 = o2 == null ? "" : o2.toString();
+                    return s1.compareTo(s2);
+                }
+            });
         }
         return result;
     }

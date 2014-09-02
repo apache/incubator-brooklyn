@@ -111,13 +111,13 @@ under the License.
 
         $(document).ready(function () {
             items.entities.forEach(function (element) {
-                $("#entityTable").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='entities/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
+                $("#entityTable").find("tr:last").after("<tr><td class='wordWrap'>" + element.name + "</td><td><a href='entities/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
             });
             items.policies.forEach(function (element) {
-                $("#policyTable").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='policies/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
+                $("#policyTable").find("tr:last").after("<tr><td class='wordWrap'>" + element.name + "</td><td><a href='policies/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
             });
             items.enrichers.forEach(function (element) {
-                $("#enricherTable").find("tr:last").after("<tr><td>" + element.name + "</td><td><a href='enrichers/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
+                $("#enricherTable").find("tr:last").after("<tr><td class='wordWrap'>" + element.name + "</td><td><a href='enrichers/" + element.type + ".html'>" + element.type + "</a></td><td class='wordWrap'>" + element.description + "</td></tr>")
             });
             items.locations.forEach(function (element) {
                 $("#locationTable").find("tr:last").after("<tr><td class='location'><a href='locations/" + element.type + ".html'>" + element.type + "</a></td></tr>")
