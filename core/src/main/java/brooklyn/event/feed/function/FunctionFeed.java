@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
@@ -39,6 +41,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Provides a feed of attribute values, by periodically invoking functions.
@@ -79,6 +82,11 @@ public class FunctionFeed extends AbstractFeed {
 
     private static final Logger log = LoggerFactory.getLogger(FunctionFeed.class);
 
+    // Treat as immutable once built
+    public static final ConfigKey<SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>>> POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>>>() {},
+            "polls");
+
     public static Builder builder() {
         return new Builder();
     }
@@ -118,6 +126,7 @@ public class FunctionFeed extends AbstractFeed {
         public FunctionFeed build() {
             built = true;
             FunctionFeed result = new FunctionFeed(this);
+            result.setEntity(checkNotNull(entity, "entity"));
             result.start();
             return result;
         }
@@ -145,12 +154,16 @@ public class FunctionFeed extends AbstractFeed {
         }
     }
     
-    // Treat as immutable once built
-    private final SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>> polls = HashMultimap.<FunctionPollIdentifier,FunctionPollConfig<?,?>>create();
+    /**
+     * For rebind; do not call directly; use builder
+     */
+    public FunctionFeed() {
+    }
     
     protected FunctionFeed(Builder builder) {
-        super(builder.entity, builder.onlyIfServiceUp);
+        setConfig(ONLY_IF_SERVICE_UP, builder.onlyIfServiceUp);
         
+        SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>> polls = HashMultimap.<FunctionPollIdentifier,FunctionPollConfig<?,?>>create();
         for (FunctionPollConfig<?,?> config : builder.polls) {
             @SuppressWarnings({ "rawtypes", "unchecked" })
             FunctionPollConfig<?,?> configCopy = new FunctionPollConfig(config);
@@ -158,11 +171,13 @@ public class FunctionFeed extends AbstractFeed {
             Callable<?> job = config.getCallable();
             polls.put(new FunctionPollIdentifier(job), configCopy);
         }
+        setConfig(POLLS, polls);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected void preStart() {
+        SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?, ?>> polls = getConfig(POLLS);
         for (final FunctionPollIdentifier pollInfo : polls.keySet()) {
             Set<FunctionPollConfig<?,?>> configs = polls.get(pollInfo);
             long minPeriod = Integer.MAX_VALUE;

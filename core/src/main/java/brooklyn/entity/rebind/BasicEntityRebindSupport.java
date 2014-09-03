@@ -30,13 +30,13 @@ import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.Feed;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.feed.AbstractFeed;
 import brooklyn.location.Location;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.basic.AbstractPolicy;
@@ -148,11 +148,22 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
     
     @Override
     public void addFeeds(RebindContext rebindContext, EntityMemento memento) {
-        for (Feed feed : memento.getFeeds()) {
+        for (String feedId : memento.getFeeds()) {
+            AbstractFeed feed = (AbstractFeed) rebindContext.getFeed(feedId);
+            if (feed != null) {
+                try {
+                    ((EntityInternal)entity).getFeedSupport().addFeed(feed);
+                } catch (Exception e) {
+                    rebindContext.getExceptionHandler().onAddFeedFailed(entity, feed, e);
+                }
+            } else {
+                LOG.warn("Feed not found; discarding feed {} of entity {}({})",
+                        new Object[] {feedId, memento.getType(), memento.getId()});
+            }
+            
             if (feed != null) {
                 try {
                     feed.start();
-                    ((EntityInternal)entity).getFeedSupport().addFeed(feed);
                 } catch (Exception e) {
                     rebindContext.getExceptionHandler().onRebindFailed(BrooklynObjectType.ENTITY, entity, e);
                 }

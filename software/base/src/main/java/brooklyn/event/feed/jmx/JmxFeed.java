@@ -18,6 +18,8 @@
  */
 package brooklyn.event.feed.jmx;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +34,8 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.AbstractFeed;
@@ -41,12 +45,12 @@ import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.util.time.Duration;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 
 /**
@@ -89,6 +93,26 @@ public class JmxFeed extends AbstractFeed {
 	public static final Logger log = LoggerFactory.getLogger(JmxFeed.class);
 
 	public static final long JMX_CONNECTION_TIMEOUT_MS = 120*1000;
+
+    public static final ConfigKey<JmxHelper> HELPER = ConfigKeys.newConfigKey(JmxHelper.class, "helper");
+    public static final ConfigKey<Boolean> OWN_HELPER = ConfigKeys.newBooleanConfigKey("ownHelper");
+    public static final ConfigKey<String> JMX_URI = ConfigKeys.newStringConfigKey("jmxUri");
+    public static final ConfigKey<Long> JMX_CONNECTION_TIMEOUT = ConfigKeys.newLongConfigKey("jmxConnectionTimeout");
+    
+    @SuppressWarnings("serial")
+    public static final ConfigKey<SetMultimap<String, JmxAttributePollConfig<?>>> ATTRIBUTE_POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<SetMultimap<String, JmxAttributePollConfig<?>>>() {},
+            "attributePolls");
+
+    @SuppressWarnings("serial")
+    public static final ConfigKey<SetMultimap<List<?>, JmxOperationPollConfig<?>>> OPERATION_POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<SetMultimap<List<?>, JmxOperationPollConfig<?>>>() {},
+            "operationPolls");
+
+    @SuppressWarnings("serial")
+    public static final ConfigKey<SetMultimap<NotificationFilter, JmxNotificationSubscriptionConfig<?>>> NOTIFICATION_SUBSCRIPTIONS = ConfigKeys.newConfigKey(
+            new TypeToken<SetMultimap<NotificationFilter, JmxNotificationSubscriptionConfig<?>>>() {},
+            "notificationPolls");
 
     public static Builder builder() {
         return new Builder();
@@ -139,6 +163,7 @@ public class JmxFeed extends AbstractFeed {
         public JmxFeed build() {
             built = true;
             JmxFeed result = new JmxFeed(this);
+            result.setEntity(checkNotNull(entity, "entity"));
             result.start();
             return result;
         }
@@ -148,43 +173,66 @@ public class JmxFeed extends AbstractFeed {
         }
     }
 
-    private final JmxHelper helper;
-    private final boolean ownHelper;
-    private final String jmxUri;
-    private final long jmxConnectionTimeout;
-    
-    // Treat as immutable; never modified after constructor
-    private final SetMultimap<String, JmxAttributePollConfig<?>> attributePolls = HashMultimap.<String,JmxAttributePollConfig<?>>create();
-    private final SetMultimap<List<?>, JmxOperationPollConfig<?>> operationPolls = HashMultimap.<List<?>,JmxOperationPollConfig<?>>create();
-    private final SetMultimap<NotificationFilter, JmxNotificationSubscriptionConfig<?>> notificationSubscriptions = HashMultimap.create();
     private final SetMultimap<ObjectName, NotificationListener> notificationListeners = HashMultimap.create();
 
+    /**
+     * For rebind; do not call directly; use builder
+     */
+    public JmxFeed() {
+    }
+
     protected JmxFeed(Builder builder) {
-        super(builder.entity);
-        this.helper = (builder.helper != null) ? builder.helper : new JmxHelper(entity);
-        this.ownHelper = (builder.helper == null);
-        this.jmxUri = helper.getUrl();
-        this.jmxConnectionTimeout = builder.jmxConnectionTimeout;
+        super();
+        if (builder.helper != null) {
+            JmxHelper helper = builder.helper;
+            setConfig(HELPER, helper);
+            setConfig(OWN_HELPER, false);
+            setConfig(JMX_URI, helper.getUrl());
+        }
+        setConfig(JMX_CONNECTION_TIMEOUT, builder.jmxConnectionTimeout);
         
+        SetMultimap<String, JmxAttributePollConfig<?>> attributePolls = HashMultimap.<String,JmxAttributePollConfig<?>>create();
         for (JmxAttributePollConfig<?> config : builder.attributePolls) {
             @SuppressWarnings({ "rawtypes", "unchecked" })
             JmxAttributePollConfig<?> configCopy = new JmxAttributePollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             attributePolls.put(configCopy.getObjectName().getCanonicalName() + configCopy.getAttributeName(), configCopy);
         }
+        setConfig(ATTRIBUTE_POLLS, attributePolls);
+        
+        SetMultimap<List<?>, JmxOperationPollConfig<?>> operationPolls = HashMultimap.<List<?>,JmxOperationPollConfig<?>>create();
         for (JmxOperationPollConfig<?> config : builder.operationPolls) {
             @SuppressWarnings({ "rawtypes", "unchecked" })
             JmxOperationPollConfig<?> configCopy = new JmxOperationPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             operationPolls.put(configCopy.buildOperationIdentity(), configCopy);
         }
+        setConfig(OPERATION_POLLS, operationPolls);
+        
+        SetMultimap<NotificationFilter, JmxNotificationSubscriptionConfig<?>> notificationSubscriptions = HashMultimap.create();
         for (JmxNotificationSubscriptionConfig<?> config : builder.notificationSubscriptions) {
             notificationSubscriptions.put(config.getNotificationFilter(), config);
         }
+        setConfig(NOTIFICATION_SUBSCRIPTIONS, notificationSubscriptions);
     }
 
+    @Override
+    public void setEntity(EntityLocal entity) {
+        if (getConfig(HELPER) == null) {
+            JmxHelper helper = new JmxHelper(entity);
+            setConfig(HELPER, helper);
+            setConfig(OWN_HELPER, true);
+            setConfig(JMX_URI, helper.getUrl());
+        }
+        super.setEntity(entity);
+    }
+    
     public String getJmxUri() {
-        return jmxUri;
+        return getConfig(JMX_URI);
+    }
+    
+    protected JmxHelper getHelper() {
+        return getConfig(HELPER);
     }
     
     @SuppressWarnings("unchecked")
@@ -194,7 +242,7 @@ public class JmxFeed extends AbstractFeed {
     
     @Override
     protected boolean isConnected() {
-        return super.isConnected() && helper.isConnected();
+        return super.isConnected() && getHelper().isConnected();
     }
     
     @Override
@@ -217,13 +265,16 @@ public class JmxFeed extends AbstractFeed {
          *      ...
          *      at brooklyn.entity.rebind.RebindManagerImpl.rebind(RebindManagerImpl.java:184)
          */
+        final SetMultimap<NotificationFilter, JmxNotificationSubscriptionConfig<?>> notificationSubscriptions = getConfig(NOTIFICATION_SUBSCRIPTIONS);
+        final SetMultimap<List<?>, JmxOperationPollConfig<?>> operationPolls = getConfig(OPERATION_POLLS);
+        final SetMultimap<String, JmxAttributePollConfig<?>> attributePolls = getConfig(ATTRIBUTE_POLLS);
         
         getPoller().submit(new Callable<Void>() {
                public Void call() {
-                   helper.connect(jmxConnectionTimeout);
+                   getHelper().connect(getConfig(JMX_CONNECTION_TIMEOUT));
                    return null;
                }
-               @Override public String toString() { return "Connect JMX "+helper.getUrl(); }
+               @Override public String toString() { return "Connect JMX "+getHelper().getUrl(); }
            });
         
         for (final NotificationFilter filter : notificationSubscriptions.keySet()) {
@@ -254,7 +305,7 @@ public class JmxFeed extends AbstractFeed {
     @Override
     protected void preStop() {
         super.preStop();
-        
+
         for (Map.Entry<ObjectName, NotificationListener> entry : notificationListeners.entries()) {
             unregisterNotificationListener(entry.getKey(), entry.getValue());
         }
@@ -264,6 +315,8 @@ public class JmxFeed extends AbstractFeed {
     @Override
     protected void postStop() {
         super.postStop();
+        JmxHelper helper = getHelper();
+        Boolean ownHelper = getConfig(OWN_HELPER);
         if (helper != null && ownHelper) helper.terminate();
     }
     
@@ -287,11 +340,11 @@ public class JmxFeed extends AbstractFeed {
         getPoller().scheduleAtFixedRate(
                 new Callable<Object>() {
                     public Object call() throws Exception {
-                        if (log.isDebugEnabled()) log.debug("jmx operation polling for {} sensors at {} -> {}", new Object[] {getEntity(), jmxUri, operationName});
+                        if (log.isDebugEnabled()) log.debug("jmx operation polling for {} sensors at {} -> {}", new Object[] {getEntity(), getJmxUri(), operationName});
                         if (signature.size() == params.size()) {
-                            return helper.operation(objectName, operationName, signature, params);
+                            return getHelper().operation(objectName, operationName, signature, params);
                         } else {
-                            return helper.operation(objectName, operationName, params.toArray());
+                            return getHelper().operation(objectName, operationName, params.toArray());
                         }
                     }
                 }, 
@@ -317,8 +370,8 @@ public class JmxFeed extends AbstractFeed {
         getPoller().scheduleAtFixedRate(
                 new Callable<Object>() {
                     public Object call() throws Exception {
-                        if (log.isTraceEnabled()) log.trace("jmx attribute polling for {} sensors at {} -> {}", new Object[] {getEntity(), jmxUri, jmxAttributeName});
-                        return helper.getAttribute(objectName, jmxAttributeName);
+                        if (log.isTraceEnabled()) log.trace("jmx attribute polling for {} sensors at {} -> {}", new Object[] {getEntity(), getJmxUri(), jmxAttributeName});
+                        return getHelper().getAttribute(objectName, jmxAttributeName);
                     }
                 }, 
                 new DelegatingPollHandler<Object>(handlers), minPeriod);
@@ -355,14 +408,14 @@ public class JmxFeed extends AbstractFeed {
                 compoundHandler.onSuccess(notification);
             }
         };
-        helper.addNotificationListener(objectName, listener, filter);
+        getHelper().addNotificationListener(objectName, listener, filter);
         
         return listener;
     }
     
     private void unregisterNotificationListener(ObjectName objectName, NotificationListener listener) {
         try {
-            helper.removeNotificationListener(objectName, listener);
+            getHelper().removeNotificationListener(objectName, listener);
         } catch (RuntimeException e) {
             log.warn("Failed to unregister listener: "+objectName+", "+listener+"; continuing...", e);
         }
@@ -370,6 +423,6 @@ public class JmxFeed extends AbstractFeed {
     
     @Override
     public String toString() {
-        return "JmxFeed["+jmxUri+"]";
+        return "JmxFeed["+getJmxUri()+"]";
     }
 }

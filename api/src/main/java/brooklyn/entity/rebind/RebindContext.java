@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -41,6 +42,8 @@ public interface RebindContext {
     Policy getPolicy(String id);
 
     Enricher getEnricher(String id);
+
+    Feed getFeed(String id);
 
     Class<?> loadClass(String typeName) throws ClassNotFoundException;
     

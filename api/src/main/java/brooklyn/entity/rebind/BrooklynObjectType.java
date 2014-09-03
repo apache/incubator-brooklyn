@@ -26,5 +26,6 @@ public enum BrooklynObjectType {
     LOCATION,
     POLICY,
     ENRICHER,
+    FEED,
     UNKNOWN;
 }

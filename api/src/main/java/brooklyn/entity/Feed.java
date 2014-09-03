@@ -18,6 +18,13 @@
  */
 package brooklyn.entity;
 
+import brooklyn.basic.BrooklynObject;
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.entity.rebind.Rebindable;
+import brooklyn.entity.trait.Configurable;
+import brooklyn.mementos.FeedMemento;
+import brooklyn.policy.EntityAdjunct;
+
 import com.google.common.annotations.Beta;
 
 /** 
@@ -34,7 +41,7 @@ import com.google.common.annotations.Beta;
  *   </ul>
  */
 @Beta
-public interface Feed {
+public interface Feed extends EntityAdjunct, Rebindable {
 
     /** 
      * True if everything has been _started_ (or it is starting) but not stopped,
@@ -58,4 +65,10 @@ public interface Feed {
     void resume();
     
     void stop();
+
+    /**
+     * This method will likely move out of this interface, into somewhere internal; users should not call this directly.  
+     */
+    @Override
+    RebindSupport<FeedMemento> getRebindSupport();
 }

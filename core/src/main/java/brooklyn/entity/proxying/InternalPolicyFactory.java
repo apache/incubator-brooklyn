@@ -22,6 +22,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.entity.Feed;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Enricher;
@@ -176,6 +177,13 @@ public class InternalPolicyFactory extends InternalFactory {
      * Constructs a new-style enricher (fails if no no-arg constructor).
      */
     public <T extends Enricher> T constructEnricher(Class<T> clazz) {
+        return super.constructNewStyle(clazz);
+    }
+    
+    /**
+     * Constructs a new-style feed (fails if no no-arg constructor).
+     */
+    public <T extends Feed> T constructFeed(Class<T> clazz) {
         return super.constructNewStyle(clazz);
     }
 }

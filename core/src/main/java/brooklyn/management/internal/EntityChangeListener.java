@@ -20,6 +20,7 @@ package brooklyn.management.internal;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.Feed;
 import brooklyn.event.AttributeSensor;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -39,6 +40,8 @@ public interface EntityChangeListener {
         @Override public void onPolicyRemoved(Policy policy) {}
         @Override public void onEnricherAdded(Enricher enricher) {}
         @Override public void onEnricherRemoved(Enricher enricher) {}
+        @Override public void onFeedAdded(Feed feed) {}
+        @Override public void onFeedRemoved(Feed feed) {}
         @Override public void onEffectorStarting(Effector<?> effector) {}
         @Override public void onEffectorCompleted(Effector<?> effector) {}
     };
@@ -64,6 +67,10 @@ public interface EntityChangeListener {
     void onEnricherAdded(Enricher enricher);
 
     void onEnricherRemoved(Enricher enricher);
+
+    void onFeedAdded(Feed feed);
+
+    void onFeedRemoved(Feed feed);
 
     void onEffectorStarting(Effector<?> effector);
     

@@ -36,6 +36,7 @@ import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.feed.AbstractFeed;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
@@ -44,6 +45,7 @@ import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
@@ -73,6 +75,8 @@ public class MementosGenerators {
             return newPolicyMemento((Policy)instance);
         } else if (instance instanceof Enricher) {
             return newEnricherMemento((Enricher)instance);
+        } else if (instance instanceof Feed) {
+            return newFeedMemento((Feed)instance);
         } else {
             throw new IllegalArgumentException("Unexpected brooklyn type: "+(instance == null ? "null" : instance.getClass())+" ("+instance+")");
         }
@@ -183,7 +187,7 @@ public class MementosGenerators {
         }
         
         for (Feed feed : entity.getFeedSupport().getFeeds()) {
-            builder.feeds.add(feed); 
+            builder.feeds.add(feed.getId()); 
         }
         
         Entity parentEntity = entity.getParent();
@@ -330,6 +334,27 @@ public class MementosGenerators {
         return builder.build();
     }
     
+    /**
+     * Given a feed, extracts its state for serialization.
+     */
+    public static FeedMemento newFeedMemento(Feed feed) {
+        BasicFeedMemento.Builder builder = BasicFeedMemento.builder();
+        populateBrooklynObjectMementoBuilder(feed, builder);
+        
+        // TODO persist config keys as well? Or only support those defined on policy class;
+        // current code will lose the ConfigKey type on rebind for anything not defined on class.
+        // Whereas entities support that.
+        // TODO Do we need the "nonPersistableFlagNames" that locations use?
+        Map<ConfigKey<?>, Object> config = ((AbstractFeed)feed).getConfigMap().getAllConfig();
+        for (Map.Entry<ConfigKey<?>, Object> entry : config.entrySet()) {
+            ConfigKey<?> key = checkNotNull(entry.getKey(), "config=%s", config);
+            Object value = configValueToPersistable(entry.getValue());
+            builder.config.put(key.getName(), value); 
+        }
+        
+        return builder.build();
+    }
+    
     private static void populateBrooklynObjectMementoBuilder(BrooklynObject instance, AbstractMemento.Builder<?> builder) {
         builder.id = instance.getId();
         builder.displayName = instance.getDisplayName();
@@ -365,4 +390,12 @@ public class MementosGenerators {
         };
     }
 
+    public static Function<Feed, FeedMemento> feedMementoFunction() {
+        return new Function<Feed,FeedMemento>() {
+            @Override
+            public FeedMemento apply(Feed input) {
+                return MementosGenerators.newFeedMemento(input);
+            }
+        };
+    }
 }

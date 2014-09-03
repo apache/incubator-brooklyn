@@ -75,7 +75,7 @@ public interface EntityMemento extends Memento, TreeNode {
     public Collection<String> getEnrichers();
 
     /**
-     * The sensor feeds attached to this entity.
+     * The ids of the sensor feeds attached to this entity.
      */
-    public Collection<Feed> getFeeds();
+    public Collection<String> getFeeds();
 }

@@ -245,6 +245,11 @@ public interface Entity extends BrooklynObject {
      */
     boolean removeEnricher(Enricher enricher);
     
+    /**
+     * Adds the given feed to this entity. Also calls feed.setEntity if available.
+     */
+    <T extends Feed> T addFeed(T feed);
+    
     /** 
      * @since 0.7
      * @deprecated since 0.7; see {@link #getTagSupport()}

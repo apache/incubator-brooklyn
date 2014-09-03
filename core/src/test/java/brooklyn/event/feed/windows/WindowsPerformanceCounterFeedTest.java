@@ -32,7 +32,7 @@ public class WindowsPerformanceCounterFeedTest {
 
     @Test
     public void testIteratorWithSingleValue() {
-        Iterator iterator = new WindowsPerformanceCounterFeed
+        Iterator<?> iterator = new WindowsPerformanceCounterFeed
                 .PerfCounterValueIterator("\"10/14/2013 15:28:24.406\",\"0.000000\"");
         assertTrue(iterator.hasNext());
         assertEquals(iterator.next(), "0.000000");
@@ -41,7 +41,7 @@ public class WindowsPerformanceCounterFeedTest {
 
     @Test
     public void testIteratorWithMultipleValues() {
-        Iterator iterator = new WindowsPerformanceCounterFeed
+        Iterator<?> iterator = new WindowsPerformanceCounterFeed
                 .PerfCounterValueIterator("\"10/14/2013 15:35:50.582\",\"8803.000000\",\"405622.000000\"");
         assertTrue(iterator.hasNext());
         assertEquals(iterator.next(), "8803.000000");

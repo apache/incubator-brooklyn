@@ -178,7 +178,6 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
     public static class MyEntityWithSshFeedImpl extends TestEntityImpl {
         @Override
         public void start(Collection<? extends Location> locs) {
-            // TODO Auto-generated method stub
             super.start(locs);
             addFeed(SshFeed.builder()
                     .entity(this)

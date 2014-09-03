@@ -69,9 +69,9 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         protected List<String> locations = Lists.newArrayList();
         protected List<String> policies = Lists.newArrayList();
         protected List<String> enrichers = Lists.newArrayList();
+        protected List<String> feeds = Lists.newArrayList();
         protected List<String> members = Lists.newArrayList();
         protected List<Effector<?>> effectors = Lists.newArrayList();
-        protected List<Feed> feeds = Lists.newArrayList();
         
         public Builder from(EntityMemento other) {
             super.from((TreeNode)other);
@@ -83,9 +83,9 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             locations.addAll(other.getLocations());
             policies.addAll(other.getPolicies());
             enrichers.addAll(other.getEnrichers());
+            feeds.addAll(other.getFeeds());
             members.addAll(other.getMembers());
             effectors.addAll(other.getEffectors());
-            feeds.addAll(other.getFeeds());
             tags.addAll(other.getTags());
             return this;
         }
@@ -106,7 +106,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private Map<String, Object> attributes;
     private List<String> policies;
     private List<String> enrichers;
-    private List<Feed> feeds;
+    private List<String> feeds;
     
     // TODO can we move some of these to entity type, or remove/re-insert those which are final statics?
     private Map<String, ConfigKey<?>> configKeys;
@@ -286,8 +286,7 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     }
 
     @Override
-    public List<Feed> getFeeds() {
-        if (configByKey == null) postDeserialize();
+    public List<String> getFeeds() {
         return fromPersistedList(feeds);
     }
     

@@ -27,9 +27,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.rebind.BasicPolicyRebindSupport;
+import brooklyn.entity.rebind.BasicFeedRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.mementos.PolicyMemento;
+import brooklyn.mementos.FeedMemento;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 
 /** 
@@ -51,15 +51,30 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
     public AbstractFeed() {
     }
     
+    /**
+     * @deprecated since 0.7.0; use no-arg constructor; call {@link #setEntity(EntityLocal)}
+     */
+    @Deprecated
     public AbstractFeed(EntityLocal entity) {
         this(entity, false);
     }
     
+    /**
+     * @deprecated since 0.7.0; use no-arg constructor; call {@link #setEntity(EntityLocal)} and {@code setConfig(ONLY_IF_SERVICE_UP, onlyIfServiceUp)}
+     */
+    @Deprecated
     public AbstractFeed(EntityLocal entity, boolean onlyIfServiceUp) {
         this.entity = checkNotNull(entity, "entity");
         setConfig(ONLY_IF_SERVICE_UP, onlyIfServiceUp);
     }
 
+    // Ensure idempotent, as called in builders (in case not registered with entity), and also called
+    // when registering with entity
+    @Override
+    public void setEntity(EntityLocal entity) {
+        super.setEntity(entity);
+    }
+    
     @Override
     public boolean isActivated() {
         return activated;

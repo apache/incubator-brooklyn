@@ -41,6 +41,8 @@ public class BrooklynFeatureEnablement {
     
     public static final String FEATURE_ENRICHER_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.enricherPersistence";
     
+    public static final String FEATURE_FEED_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.feedPersistence";
+    
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
     private static final Object MUTEX = new Object();
@@ -52,6 +54,7 @@ public class BrooklynFeatureEnablement {
         
         setDefault(FEATURE_POLICY_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
+        setDefault(FEATURE_FEED_PERSISTENCE_PROPERTY, true);
     }
     
     static {

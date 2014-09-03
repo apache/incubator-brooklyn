@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -36,6 +37,7 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, Location> locations = Maps.newLinkedHashMap();
     private final Map<String, Policy> policies = Maps.newLinkedHashMap();
     private final Map<String, Enricher> enrichers = Maps.newLinkedHashMap();
+    private final Map<String, Feed> feeds = Maps.newLinkedHashMap();
     private final ClassLoader classLoader;
     private final RebindExceptionHandler exceptionHandler;
     
@@ -60,12 +62,20 @@ public class RebindContextImpl implements RebindContext {
         enrichers.put(id, enricher);
     }
     
+    public void registerFeed(String id, Feed feed) {
+        feeds.put(id, feed);
+    }
+    
     public void unregisterPolicy(Policy policy) {
         policies.remove(policy.getId());
     }
 
     public void unregisterEnricher(Enricher enricher) {
         enrichers.remove(enricher.getId());
+    }
+
+    public void unregisterFeed(Feed feed) {
+        feeds.remove(feed.getId());
     }
 
     @Override
@@ -86,6 +96,11 @@ public class RebindContextImpl implements RebindContext {
     @Override
     public Enricher getEnricher(String id) {
         return enrichers.get(id);
+    }
+    
+    @Override
+    public Feed getFeed(String id) {
+        return feeds.get(id);
     }
     
     @Override
@@ -112,5 +127,9 @@ public class RebindContextImpl implements RebindContext {
 
     protected Collection<Enricher> getEnrichers() {
         return enrichers.values();
+    }
+
+    protected Collection<Feed> getFeeds() {
+        return feeds.values();
     }
 }

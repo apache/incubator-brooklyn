@@ -18,26 +18,16 @@
  */
 package brooklyn.mementos;
 
-import java.io.Serializable;
 import java.util.Map;
 
+import brooklyn.entity.rebind.RebindSupport;
+
 /**
- * Represents a manifest of the entities etc in the overall memento.
+ * Represents the state of a feed, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
- * @author aled
+ * @see RebindSupport
  */
-public interface BrooklynMementoManifest extends Serializable {
+public interface FeedMemento extends Memento {
 
-    public Map<String, String> getEntityIdToType();
-
-    public Map<String, String> getLocationIdToType();
-
-    public Map<String, String> getPolicyIdToType();
-
-    public Map<String, String> getEnricherIdToType();
-
-    public Map<String, String> getFeedIdToType();
-
-    public boolean isEmpty();
-    
+    Map<String, Object> getConfig();
 }

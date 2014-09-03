@@ -23,6 +23,7 @@ import java.util.Collection;
 import brooklyn.mementos.BrooklynMementoPersister.Delta;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 
@@ -53,6 +54,10 @@ public class PersisterDeltaImpl implements Delta {
             delta.enrichers.addAll(vals);
             return this;
         }
+        public Builder feeds(Collection<? extends FeedMemento> vals) {
+            delta.feeds.addAll(vals);
+            return this;
+        }
         public Builder removedLocationIds(Collection<String> vals) {
             delta.removedLocationIds.addAll(vals);
             return this;
@@ -78,10 +83,12 @@ public class PersisterDeltaImpl implements Delta {
     Collection<EntityMemento> entities = Sets.newLinkedHashSet();
     Collection<PolicyMemento> policies = Sets.newLinkedHashSet();
     Collection<EnricherMemento> enrichers = Sets.newLinkedHashSet();
+    Collection<FeedMemento> feeds = Sets.newLinkedHashSet();
     Collection <String> removedLocationIds = Sets.newLinkedHashSet();
     Collection <String> removedEntityIds = Sets.newLinkedHashSet();
     Collection <String> removedPolicyIds = Sets.newLinkedHashSet();
     Collection <String> removedEnricherIds = Sets.newLinkedHashSet();
+    Collection <String> removedFeedIds = Sets.newLinkedHashSet();
     
     @Override
     public Collection<LocationMemento> locations() {
@@ -104,6 +111,11 @@ public class PersisterDeltaImpl implements Delta {
     }
 
     @Override
+    public Collection<FeedMemento> feeds() {
+        return feeds;
+    }
+
+    @Override
     public Collection<String> removedLocationIds() {
         return removedLocationIds;
     }
@@ -121,5 +133,10 @@ public class PersisterDeltaImpl implements Delta {
     @Override
     public Collection<String> removedEnricherIds() {
         return removedEnricherIds;
+    }
+    
+    @Override
+    public Collection<String> removedFeedIds() {
+        return removedFeedIds;
     }
 }

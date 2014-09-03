@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -71,14 +72,18 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         Set<Entity> entities = Sets.newLinkedHashSet();
         Set<Policy> policies = Sets.newLinkedHashSet();
         Set<Enricher> enrichers = Sets.newLinkedHashSet();
+        Set<Feed> feeds = Sets.newLinkedHashSet();
         Set<String> removedLocationIds = Sets.newLinkedHashSet();
         Set<String> removedEntityIds = Sets.newLinkedHashSet();
         Set<String> removedPolicyIds = Sets.newLinkedHashSet();
         Set<String> removedEnricherIds = Sets.newLinkedHashSet();
+        Set<String> removedFeedIds = Sets.newLinkedHashSet();
         
         public boolean isEmpty() {
-            return locations.isEmpty() && entities.isEmpty() && policies.isEmpty() && enrichers.isEmpty() &&
-                    removedEntityIds.isEmpty() && removedLocationIds.isEmpty() && removedPolicyIds.isEmpty() && removedEnricherIds.isEmpty();
+            return locations.isEmpty() && entities.isEmpty() && policies.isEmpty() && 
+                    enrichers.isEmpty() && feeds.isEmpty() &&
+                    removedEntityIds.isEmpty() && removedLocationIds.isEmpty() && removedPolicyIds.isEmpty() && 
+                    removedEnricherIds.isEmpty() && removedFeedIds.isEmpty();
         }
     }
     
@@ -250,6 +255,13 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                         exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.ENRICHER, enricher, e);
                     }
                 }
+                for (Feed feed : prevDeltaCollector.feeds) {
+                    try {
+                        persisterDelta.feeds.add(feed.getRebindSupport().getMemento());
+                    } catch (Exception e) {
+                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.FEED, feed, e);
+                    }
+                }
                 persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
                 persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
                 persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
@@ -346,6 +358,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 deltaCollector.policies.add((Policy) instance);
             } else if (instance instanceof Enricher) {
                 deltaCollector.enrichers.add((Enricher) instance);
+            } else if (instance instanceof Feed) {
+                deltaCollector.feeds.add((Feed) instance);
             } else {
                 throw new IllegalStateException("Unexpected brooklyn type: "+instance);
             }

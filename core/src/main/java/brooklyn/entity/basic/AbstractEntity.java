@@ -51,6 +51,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
@@ -1220,7 +1221,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     /**
      * Convenience, which calls {@link EntityInternal#getFeedSupport()} and {@link FeedSupport#addFeed(Feed)}.
      */
-    protected <T extends Feed> T addFeed(T feed) {
+    public <T extends Feed> T addFeed(T feed) {
         return getFeedSupport().addFeed(feed);
     }
 
@@ -1233,9 +1234,19 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
             @Override
             public <T extends Feed> T addFeed(T feed) {
-                feeds.add(feed);
+                Feed old = findApparentlyEqualAndWarnIfNotSameUniqueTag(feeds, feed);
+                if (old != null) {
+                    LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
+                    removeFeed(old);
+                }
                 
-                getManagementSupport().getEntityChangeListener().onChanged();
+                feeds.add(feed);
+                ((AbstractFeed)feed).setEntity(AbstractEntity.this);
+
+                getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
+                getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
+                // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+
                 return feed;
             }
 
@@ -1245,10 +1256,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                 boolean changed = feeds.remove(feed);
                 
                 if (changed) {
-                    getManagementSupport().getEntityChangeListener().onChanged();
+                    getManagementContext().getRebindManager().getChangeListener().onUnmanaged(feed);
+                    getManagementSupport().getEntityChangeListener().onFeedRemoved(feed);
                 }
                 return changed;
-
             }
 
             @Override

@@ -40,6 +40,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         protected final Map<String, String> locationIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> policyIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> enricherIdToType = Maps.newConcurrentMap();
+        protected final Map<String, String> feedIdToType = Maps.newConcurrentMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
@@ -68,6 +69,12 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         public Builder enrichers(Map<String, String> vals) {
             enricherIdToType.putAll(vals); return this;
         }
+        public Builder feed(String id, String type) {
+            feedIdToType.put(id, type); return this;
+        }
+        public Builder feed(Map<String, String> vals) {
+            feedIdToType.putAll(vals); return this;
+        }
         public BrooklynMementoManifest build() {
             return new BrooklynMementoManifestImpl(this);
         }
@@ -77,12 +84,14 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     private final Map<String, String> locationIdToType;
     private final Map<String, String> policyIdToType;
     private final Map<String, String> enricherIdToType;
+    private final Map<String, String> feedIdToType;
     
     private BrooklynMementoManifestImpl(Builder builder) {
         entityIdToType = builder.entityIdToType;
         locationIdToType = builder.locationIdToType;
         policyIdToType = builder.policyIdToType;
         enricherIdToType = builder.enricherIdToType;
+        feedIdToType = builder.feedIdToType;
     }
 
     @Override
@@ -103,6 +112,11 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     @Override
     public Map<String, String> getEnricherIdToType() {
         return Collections.unmodifiableMap(enricherIdToType);
+    }
+    
+    @Override
+    public Map<String, String> getFeedIdToType() {
+        return Collections.unmodifiableMap(feedIdToType);
     }
     
     @Override

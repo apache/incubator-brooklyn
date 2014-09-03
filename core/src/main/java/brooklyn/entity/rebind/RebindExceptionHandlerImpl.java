@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.location.Location;
@@ -102,6 +103,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         String errmsg = "problem loading memento: "+msg;
         
         switch (type) {
+            case FEED:
             case POLICY:
             case ENRICHER:
                 switch (loadPolicyFailureMode) {
@@ -193,6 +195,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         String errmsg = "problem rebinding "+type+" "+instance.getId()+" ("+instance+")";
         
         switch (type) {
+        case FEED:
         case ENRICHER:
         case POLICY:
             switch (addPolicyFailureMode) {
@@ -239,6 +242,25 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     public void onAddEnricherFailed(EntityLocal entity, Enricher enricher, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem adding enricher "+enricher.getId()+" ("+enricher+") to entity "+entity.getId()+" ("+entity+")";
+
+        switch (addPolicyFailureMode) {
+        case FAIL_FAST:
+            throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
+        case FAIL_AT_END:
+            addPolicyFailures.add(new IllegalStateException(errmsg, e));
+            break;
+        case CONTINUE:
+            LOG.warn(errmsg+"; continuing", e);
+            break;
+        default:
+            throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
+        }
+    }
+
+    @Override
+    public void onAddFeedFailed(EntityLocal entity, Feed feed, Exception e) {
+        Exceptions.propagateIfFatal(e);
+        String errmsg = "problem adding feed "+feed.getId()+" ("+feed+") to entity "+entity.getId()+" ("+entity+")";
 
         switch (addPolicyFailureMode) {
         case FAIL_FAST:
