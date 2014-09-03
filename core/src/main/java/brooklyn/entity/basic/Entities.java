@@ -834,21 +834,16 @@ public class Entities {
         return internal.getManagementContext().getEntityDownloadsManager().newDownloader(driver, addon, properties);
     }
 
-    public static <T> Supplier<T> attributeSupplier(final Entity entity, final AttributeSensor<T> sensor) {
-        return new Supplier<T>() {
-            public T get() { return entity.getAttribute(sensor); }
-        };
+    public static <T> Supplier<T> attributeSupplier(Entity entity, AttributeSensor<T> sensor) {
+        return EntityAndAttribute.supplier(entity, sensor);
     }
 
-    
-    public static <T> Supplier<T> attributeSupplier(final EntityAndAttribute<T> tuple) {
-        return Entities.attributeSupplier(tuple.getEntity(), tuple.getAttribute());
-    }
+    public static <T> Supplier<T> attributeSupplier(EntityAndAttribute<T> tuple) { return tuple; }
 
-    public static <T> Supplier<T> attributeSupplierWhenReady(final EntityAndAttribute<T> tuple) {
+    public static <T> Supplier<T> attributeSupplierWhenReady(EntityAndAttribute<T> tuple) {
         return attributeSupplierWhenReady(tuple.getEntity(), tuple.getAttribute());
     }
-    
+
     @SuppressWarnings({ "unchecked", "serial" })
     public static <T> Supplier<T> attributeSupplierWhenReady(final Entity entity, final AttributeSensor<T> sensor) {
         final Task<T> task = DependentConfiguration.attributeWhenReady(entity, sensor);

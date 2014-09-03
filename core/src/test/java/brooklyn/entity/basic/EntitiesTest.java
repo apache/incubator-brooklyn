@@ -70,7 +70,7 @@ public class EntitiesTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testAttributeSupplierUsingTuple() throws Exception {
         entity.setAttribute(TestEntity.NAME, "myname");
-        assertEquals(Entities.attributeSupplier(new EntityAndAttribute<String>(entity, TestEntity.NAME)).get(), "myname");
+        assertEquals(Entities.attributeSupplier(EntityAndAttribute.supplier(entity, TestEntity.NAME)).get(), "myname");
     }
     
     @Test(groups="Integration") // takes 1 second
