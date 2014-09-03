@@ -109,6 +109,22 @@ define([
         return model;
     };
 
+    /**
+     * Parses xhrResponse.responseText as JSON and returns its message. Returns
+     * alternate message if parsing fails or the parsed object has no message.
+     * @param {jqXHR} xhrResponse
+     * @param {string} alternateMessage
+     * @returns {*}
+     */
+    Util.extractError = function (xhrResponse, alternateMessage) {
+        try {
+            var response = JSON.parse(xhrResponse.responseText);
+            return response.message ? response.message : alternateMessage;
+        } catch (e) {
+            return alternateMessage;
+        }
+    };
+
     return Util;
 
 });

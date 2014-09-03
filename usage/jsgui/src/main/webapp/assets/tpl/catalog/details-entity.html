@@ -18,9 +18,9 @@ under the License.
 -->
 <div class="catalog-details">
 
-    <h2><%= model.get("name") %></h2>
-    <p><%= model.get("id") %></p>
-    <p><%= model.get("description") %></p>
+    <h2><%- model.get("name") %></h2>
+    <p><%- model.get("id") %></p>
+    <p><%- model.get("description") %></p>
 
     <div id="catalog-details-accordion" class="accordion">
         <div class="accordion-group">
@@ -32,7 +32,7 @@ under the License.
             <div id="collapseYaml" class="accordion-body collapse">
                 <div class="accordion-inner">
                     <% if (model.get("planYaml")) { %>
-                    <textarea rows="15" readonly><%= model.get("planYaml") %></textarea>
+                    <textarea rows="15" readonly><%- model.get("planYaml") %></textarea>
                     <% } else { %>
                     <p>No plan</p>
                     <% } %>
@@ -63,14 +63,14 @@ under the License.
                             'reconfigurable'
                         ]; %>
                         <% _.each(model.get("config"), function(object, index) { %>
-                        <p><strong><%= object.name %></strong>: <%= object.description %></p>
+                        <p><strong><%- object.name %></strong>: <%- object.description %></p>
                         <table class="table table-striped table-condensed nonDatatables">
                             <tbody>
                             <% _.each(object, function(value, key) { %>
                             <% if (!_.contains(skip, key)) { %>
                             <tr>
-                                <td><%= key %></td>
-                                <td><%= value %></td>
+                                <td><%- key %></td>
+                                <td><%- value %></td>
                             </tr>
                             <% } %>
                             <% }); %>
@@ -107,9 +107,9 @@ under the License.
                             <tbody>
                             <% _.each(model.get("sensors"), function(object, index) { %>
                                 <tr>
-                                    <td><%= object.name %></td>
-                                    <td><%= object.type %></td>
-                                    <td><%= object.description %></td>
+                                    <td><%- object.name %></td>
+                                    <td><%- object.type %></td>
+                                    <td><%- object.description %></td>
                                 </tr>
                             <% }); %>
                             </tbody>
@@ -134,7 +134,7 @@ under the License.
                     <p>No effectors</p>
                 <% } else { %>
                     <% _.each(model.get("effectors"), function(object, index) { %>
-                        <p><strong><%= object.name %></strong>: <%= object.description %></p>
+                        <p><strong><%- object.name %></strong>: <%- object.description %></p>
                         <% if (!object.parameters || _.isEmpty(object.parameters)) { %>
                             <p>No parameters</p>
                         <% } else { %>
@@ -143,8 +143,8 @@ under the License.
                                     <% _.each(object.parameters, function(parameter, index) { %>
                                         <% _.each(parameter, function(value, key) { %>
                                         <tr>
-                                            <td><%= key %></td>
-                                            <td><%= value %></td>
+                                            <td><%- key %></td>
+                                            <td><%- value %></td>
                                         </tr>
                                         <% }); %>
                                     <% }); %>

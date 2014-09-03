@@ -25,13 +25,14 @@ define([
     "text!tpl/catalog/details-location.html",
     "text!tpl/catalog/add-catalog-entry.html",
     "text!tpl/catalog/add-entity.html",
+    "text!tpl/catalog/add-location.html",
     "text!tpl/catalog/nav-entry.html",
 
     "bootstrap", "jquery-form"
 ], function(_, $, Backbone, FormatJSON, Brooklyn,
         Location, Entity,
         CatalogPageHtml, DetailsEntityHtml, DetailsGenericHtml, LocationDetailsHtml,
-        AddCatalogEntryHtml, AddEntityHtml, EntryHtml) {
+        AddCatalogEntryHtml, AddEntityHtml, AddLocationHtml, EntryHtml) {
 
     // Holds the currently active details type, e.g. applications, policies. Bit of a workaround
     // to share the active view with all instances of AccordionItemView, so clicking the 'reload
@@ -39,7 +40,6 @@ define([
     // more than one element.
     var activeDetailsView;
 
-    // TODO: Loading item's details should perform page navigation
     var CatalogItemDetailsView = Backbone.View.extend({
 
         events: {
@@ -154,6 +154,8 @@ define([
             this.context = type;
             if (type == "entity") {
                 this.contextView = newEntityForm(this.options.parent);
+            } else if (type == "location") {
+                this.contextView = newLocationForm(this.options.parent);
             } else if (type !== undefined) {
                 console.log("unknown catalog type " + type);
                 this.showFormForType("entity");
@@ -166,7 +168,7 @@ define([
 
     function newEntityForm(parent) {
         return new Brooklyn.view.Form({
-            template: AddEntityHtml,
+            template: _.template(AddEntityHtml),
             onSubmit: function (model) {
                 console.log("Submit entity", model.get("yaml"));
                 var submitButton = this.$(".catalog-submit-button");
@@ -186,20 +188,59 @@ define([
                         parent.loadAccordionItem("entities", data.id);
                     })
                     .fail(function (xhr, status, error) {
-                        var message;
-                        try {
-                            message = JSON.parse(xhr.responseText).message;
-                        } catch (e) {
-                            message = "Error adding catalog item: " + error;
-                        }
                         submitButton.button("reset");
                         self.$(".catalog-save-error")
                             .removeClass("hide")
                             .find(".catalog-error-message")
-                            .html(message);
+                            .html(Brooklyn.util.extractError(xhr, "Error adding catalog item: " + error));
                     });
             }
         });
+    }
+
+    // Could adapt to edit existing locations too.
+    function newLocationForm(parent) {
+        // Renders with config key list
+        var body = new (Backbone.View.extend({
+            beforeClose: function() {
+                if (this.configKeyList) {
+                    this.configKeyList.close();
+                }
+            },
+            render: function() {
+                this.configKeyList = new Brooklyn.view.ConfigKeyInputPairList().render();
+                var template = _.template(AddLocationHtml);
+                this.$el.html(template);
+                this.$("#new-location-config").html(this.configKeyList.$el);
+            },
+            showError: function (message) {
+                self.$(".catalog-save-error")
+                    .removeClass("hide")
+                    .find(".catalog-error-message")
+                    .html(message);
+            }
+        }));
+        var form = new Brooklyn.view.Form({
+            body: body,
+            model: Location.Model,
+            onSubmit: function (location) {
+                var configKeys = body.configKeyList.getConfigKeys();
+                if (!configKeys.displayName) {
+                    configKeys.displayName = location.get("name");
+                }
+                location.set("config", configKeys);
+                location.save()
+                    .done(function (newModel) {
+                        newModel = new Location.Model(newModel);
+                        parent.loadAccordionItem("locations", newModel.id);
+                    })
+                    .fail(function (response) {
+                        body.showError(Brooklyn.util.extractError(response));
+                    });
+            }
+        });
+
+        return form;
     }
 
     var Catalog = Backbone.Collection.extend({
@@ -342,12 +383,14 @@ define([
             this.accordion = this.options.accordion || {
                 "applications": new AccordionItemView({
                     name: "applications",
+                    singular: "application",
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     model: Entity.Model,
                     autoOpen: !this.options.kind || this.options.kind == "applications"
                 }),
                 "entities": new AccordionItemView({
                     name: "entities",
+                    singular: "entity",
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     model: Entity.Model,
                     autoOpen: this.options.kind == "entities"
@@ -355,10 +398,12 @@ define([
                 "policies": new AccordionItemView({
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     name: "policies",
+                    singular: "policy",
                     autoOpen: this.options.kind == "policies"
                 }),
                 "locations": new AccordionItemView({
                     name: "locations",
+                    singular: "location",
                     onItemSelected: _.partial(this.showCatalogItem, LocationDetailsHtml),
                     collection: this.options.locations,
                     autoOpen: this.options.kind == "locations",
@@ -420,11 +465,13 @@ define([
                 console.error("No accordion for: " + kind);
             } else {
                 var accordion = this.accordion[kind];
+                var self = this;
                 accordion.collection.fetch()
                     .then(function() {
                         var model = accordion.collection.get(id);
                         if (!model) {
-                            console.log("Accordion for " + kind + " has no element with id " + id);
+                            self.setDetailsView(new CatalogItemDetailsView().renderEmpty(
+                                    "No " + accordion.options.singular + " with id: " + id));
                         } else {
                             activeDetailsView = kind;
                             accordion.activeCid = model.cid;
