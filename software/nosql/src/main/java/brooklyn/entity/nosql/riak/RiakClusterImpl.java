@@ -21,7 +21,6 @@ package brooklyn.entity.nosql.riak;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,12 +28,6 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
@@ -50,6 +43,12 @@ import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     private static final Logger log = LoggerFactory.getLogger(RiakClusterImpl.class);
@@ -108,49 +107,45 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
             // TODO can we discover the nodes by asking the riak cluster, rather than assuming what we add will be in there?
             // TODO and can we do join as part of node starting?
 
-            if (nodes == null) nodes = Maps.newLinkedHashMap();
+            if (nodes == null) {
+                nodes = Maps.newLinkedHashMap();
+            }
+            
             String riakName = getRiakName(member);
+            Preconditions.checkNotNull(riakName);
 
-            if (riakName == null) {
-                log.error("Unable to get riak name for node: {}", member.getId());
+            // flag a first node to be the first node in the riak cluster.
+            if (!isFirstNodeSet.getAndSet(true)) {
+                nodes.put(member, riakName);
+                setAttribute(RIAK_CLUSTER_NODES, nodes);
+
+                ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
+
+                log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
             } else {
-                //flag a first node to be the first node in the riak cluster.
-                if (!isFirstNodeSet.get()) {
-                    nodes.put(member, riakName);
-                    setAttribute(RIAK_CLUSTER_NODES, nodes);
-
-                    ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
-                    isFirstNodeSet.set(true);
-
-                    log.info("Adding riak node {}: {}; {} to cluster", new Object[]{this, member, getRiakName(member)});
-
-                } else {
-
-                    //TODO: be wary of erreneous nodes but are still flagged 'in cluster'
-                    //add the new node to be part of the riak cluster.
-                    Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
-                        @Override
-                        public boolean apply(@Nullable Entity node) {
-                            return (node instanceof RiakNode && hasMemberJoinedCluster(node));
-                        }
-                    });
-
-                    if (anyNodeInCluster.isPresent()) {
-                        if (!nodes.containsKey(member) && !hasMemberJoinedCluster(member)) {
-
-
-                            String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
-                            Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
-                            if (getAttribute(IS_CLUSTER_INIT)) {
-                                Entities.invokeEffector(RiakClusterImpl.this, anyNodeInCluster.get(), RiakNode.COMMIT_RIAK_CLUSTER);
-                            }
-                            nodes.put(member, riakName);
-                            setAttribute(RIAK_CLUSTER_NODES, nodes);
-                            log.info("Adding riak node {}: {}; {} to cluster", new Object[]{this, member, getRiakName(member)});
-                        }
-                    } else {
-                        log.error("entity {}: is not present", member.getId());
+                // TODO: be wary of erroneous nodes but are still flagged 'in cluster'
+                // add the new node to be part of the riak cluster.
+                Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
+                    @Override
+                    public boolean apply(@Nullable Entity node) {
+                        return (node instanceof RiakNode && hasMemberJoinedCluster(node));
                     }
+                });
+
+                if (anyNodeInCluster.isPresent()) {
+                    if (!nodes.containsKey(member) && !hasMemberJoinedCluster(member)) {
+
+                        String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
+                        Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
+                        if (getAttribute(IS_CLUSTER_INIT)) {
+                            Entities.invokeEffector(RiakClusterImpl.this, anyNodeInCluster.get(), RiakNode.COMMIT_RIAK_CLUSTER);
+                        }
+                        nodes.put(member, riakName);
+                        setAttribute(RIAK_CLUSTER_NODES, nodes);
+                        log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
+                    }
+                } else {
+                    log.error("isFirstNodeSet , but no cluster members found to add {}", member.getId());
                 }
             }
         } else {
