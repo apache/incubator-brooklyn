@@ -74,6 +74,34 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
 public class CouchbaseClusterImpl extends DynamicClusterImpl implements CouchbaseCluster {
+    
+    /*
+     * Refactoring required:
+     * 
+     * Currently, on start() the cluster waits for an arbitrary SERVICE_UP_TIME_OUT (3 minutes) before assuming that a quorate 
+     * number of servers are available. The servers are then added to the cluster, and a further wait period of  
+     * DELAY_BEFORE_ADVERTISING_CLUSTER (30 seconds) is used before advertising the cluster
+     * 
+     * DELAY_BEFORE_ADVERTISING_CLUSTER: It should be possible to refactor this away by adding a repeater that will poll
+     * the REST API of the primary node (once established) until the API indicates that the cluster is available
+     * 
+     * SERVICE_UP_TIME_OUT: The refactoring of this would be more substantial. One method would be to remove the bulk of the 
+     * logic from the start() method, and rely entirely on the membership tracking policy and the onServerPoolMemberChanged()
+     * method. The addition of a RUNNING sensor on the nodes would allow the cluster to determine that a node is up and
+     * running but has not yet been added to the cluster. The IS_CLUSTER_INITIALIZED key could be used to determine whether
+     * or not the cluster should be initialized, or a node simply added to an existing cluster. A repeater could be used
+     * in the driver's to ensure that the method does not return until the node has been fully added
+     * 
+     * There is an (incomplete) first-pass at this here: https://github.com/Nakomis/incubator-brooklyn/compare/couchbase-running-sensor
+     * however, there have been significant changes to the cluster initialization since that work was done so it will probably
+     * need to be re-done
+     * 
+     * Additionally, during bucket creation, a HttpPoll is used to check that the bucket has been created. This should be 
+     * refactored to use a Repeater in CouchbaseNodeSshDriver.bucketCreate() in a similar way to the one employed in
+     * CouchbaseNodeSshDriver.rebalance(). Were this done, this class could simply queue the bucket creation tasks
+     * 
+     */
+    
     private static final Logger log = LoggerFactory.getLogger(CouchbaseClusterImpl.class);
     private final Object mutex = new Object[0];
     // Used to serialize bucket creation as only one bucket can be created at a time,
