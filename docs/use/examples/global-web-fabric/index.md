@@ -67,8 +67,8 @@ In order to generate the "closest-IP" script,
 Brooklyn needs a way to find out the latitude and longitude of the
 servers you are using.
 The simplest way to do this is do download the free GeoCityLite binary flatfile 
-from [MaxMind](http://www.maxmind.com/app/geolitecity),
-unpack it, and copy it to `~/.brooklyn/MaxMind-GeoLiteCity.dat`.
+from [MaxMind](http://dev.maxmind.com/geoip/geoip2/geolite2/#Downloads),
+unpack it, and copy it to `~/.brooklyn/GeoLite2-City.mmdb`.
 
 This will be picked up automatically if it is installed.
 You can instead specify to use an online lookup service, such as 
