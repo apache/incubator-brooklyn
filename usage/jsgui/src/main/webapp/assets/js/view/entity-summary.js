@@ -91,14 +91,13 @@ define([
 
             var status = this.updateStatusIcon();
             
+            this.updateCachedProblemIndicator(data);
+            
             if (status.problem) {
                 this.updateAddlInfoForProblem();
             } else {
                 this.$(".additional-info-on-problem").html("").hide()
             }
-        },
-        updateSensorsNow: function() {
-            this.updateWithData();
         },
         updateStatusIcon: function() {
             var statusIconInfo = ViewUtils.computeStatusIconInfo(this.$(".serviceUp .value").html(), this.$(".status .value").html());
@@ -109,6 +108,14 @@ define([
                 this.$('#status-icon').html('');
             }
             return statusIconInfo;
+        },
+        updateCachedProblemIndicator: function(data) {
+            if (!data) return;
+            this.problemIndicators = data['service.problems'];
+            if (!this.problemIndicators || !_.size(this.problemIndicators))
+                this.problemIndicators = data['service.notUp.indicators'];
+            if (!this.problemIndicators || !_.size(this.problemIndicators))
+                this.problemIndicators = null;
         },
         updateAddlInfoForProblem: function(tasksReloaded) {
             if (!this.options.tasks)
@@ -127,18 +134,31 @@ define([
                 }
             } );
 
+            if (this.problemIndicators) {
+                var indicatorText = _.values(this.problemIndicators);
+                for (error in indicatorText) {
+                    if (problemDetails)
+                        problemDetails = problemDetails + "<br style='line-height: 24px;'>";
+                    problemDetails = problemDetails + _.escape(indicatorText[error]);
+                }
+            }
             if (lastFailedTask) {
                 var path = "activities/subtask/"+lastFailedTask.id;
                 var base = this.model.getLinkByName("self");
-                problemDetails = "<b>"+_.escape("Failure running task ")
+                if (problemDetails)
+                    problemDetails = problemDetails + "<br style='line-height: 24px;'>";
+                problemDetails = problemDetails + "<b>"+_.escape("Failure running task ")
                     +"<a class='open-tab' tab-target='"+path+"'" +
                     		"href='#"+base+"/"+path+"'>" +
             				"<i>"+_.escape(lastFailedTask.attributes.displayName)+"</i> "
                     +"("+lastFailedTask.id+")</a>: </b>"+
                     _.escape(lastFailedTask.attributes.result);
-            } else if (!that.problemTasksLoaded) {
+            }
+            if (!that.problemTasksLoaded && this.options.tasks) {
                 // trigger callback to get tasks
-                problemDetails = "<i>Loading problem details...</i>";
+                if (!problemDetails)
+                    problemDetails = "<i>Loading problem details...</i>";
+                
                 ViewUtils.get(this, this.options.tasks.url, function() {
                     that.problemTasksLoaded = true;
                     that.updateAddlInfoForProblem();
