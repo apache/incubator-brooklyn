@@ -20,6 +20,7 @@ package brooklyn.util.text;
 
 import static org.testng.Assert.assertEquals;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
@@ -34,11 +35,37 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testAdditionalArgs() {
+        String templateContents = "${mykey}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.of("mykey", "myval"));
+        assertEquals(result, "myval");
+    }
+    
+    @Test
+    public void testEntityConfig() {
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
                 .configure(TestEntity.CONF_NAME, "myval"));
-        String templateContents = "${mykey}";
-        String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.of("mykey", "myval"));
+        String templateContents = "${config['"+TestEntity.CONF_NAME.getName()+"']}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.<String,Object>of());
         assertEquals(result, "myval");
+    }
+    
+    @Test
+    public void testEntityConfigNumber() {
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .configure(TestEntity.CONF_OBJECT, 123456));
+        String templateContents = "${config['"+TestEntity.CONF_OBJECT.getName()+"']}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.<String,Object>of());
+        assertEquals(result, "123,456");
+    }
+    
+    @Test
+    public void testEntityConfigNumberUnadorned() {
+        // ?c is needed to avoid commas (i always forget this!)
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .configure(TestEntity.CONF_OBJECT, 123456));
+        String templateContents = "${config['"+TestEntity.CONF_OBJECT.getName()+"']?c}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.<String,Object>of());
+        assertEquals(result, "123456");
     }
     
     @Test
@@ -58,36 +85,49 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
-    public void testEntityConfig() {
-        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
-                .configure(TestEntity.CONF_NAME, "myval"));
-        String templateContents = "${config['"+TestEntity.CONF_NAME.getName()+"']}";
-        String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.<String,Object>of());
-        assertEquals(result, "myval");
-    }
-    
-    // TODO Should this be under a sub-map (e.g. globalConfig or some such)?
-    @Test
     public void testManagementContextConfig() {
         mgmt.getBrooklynProperties().put("globalmykey", "myval");
-        String templateContents = "${globalmykey}";
+        String templateContents = "${mgmt.globalmykey}";
         String result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
         assertEquals(result, "myval");
     }
     
-    // FIXME Fails because tries to get global, and then call getMyKey() 
-    @Test(groups="WIP")
+    @Test
     public void testManagementContextConfigWithDot() {
         mgmt.getBrooklynProperties().put("global.mykey", "myval");
-        String templateContents = "${global.mykey}";
+        String templateContents = "${mgmt['global.mykey']}";
         String result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
         assertEquals(result, "myval");
     }
     
-    // FIXME Fails because does not respect attributeWhenReady; just returns its toString
-    // to fix this, we need to intercept lookups in the template processor 
-    // should be possible by passing a custom TemplateHashModel in to the template processor instead of our substitution map
-    @Test(groups="WIP")
+    @Test
+    public void testManagementContextDefaultValue() {
+        String templateContents = "${(missing)!\"defval\"}";
+        Object result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
+        assertEquals(result, "defval");
+    }
+    
+    @Test
+    public void testManagementContextDefaultValueInDotMissingValue() {
+        String templateContents = "${(mgmt.missing.more_missing)!\"defval\"}";
+        Object result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
+        assertEquals(result, "defval");
+    }
+    
+    @Test
+    public void testManagementContextErrors() {
+        try {
+            // NB: dot has special meaning so this should fail
+            mgmt.getBrooklynProperties().put("global.mykey", "myval");
+            String templateContents = "${mgmt.global.mykey}";
+            TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
+            Assert.fail("Should not have found value with intermediate dot");
+        } catch (Exception e) {
+            Assert.assertTrue(e.toString().contains("global"), "Should have mentioned missing key 'global' in error");
+        }
+    }
+    
+    @Test
     public void testApplyTemplatedConfigWithAttributeWhenReady() {
         app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
 
