@@ -62,6 +62,11 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
     
     private HttpFeed mirror;
     
+
+    //Passively mirror entity's state
+    @Override
+    protected void initEnrichers() {}
+
     @Override
     public void init() {
         super.init();

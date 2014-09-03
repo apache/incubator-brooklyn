@@ -20,8 +20,13 @@ package brooklyn.entity.basic;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -146,7 +151,31 @@ public enum Lifecycle {
         
         @Override
         public String toString() {
-            return state+" @ "+new Date(timestampUtc);
+            return state+" @ "+timestampUtc+" / "+new Date(timestampUtc);
         }
+    }
+    
+    protected static class TransitionCoalesceFunction implements Function<String, Transition> {
+        private static final Pattern TRANSITION_PATTERN = Pattern.compile("^(\\w+)\\s+@\\s+(\\d+).*");
+
+        @Override
+        public Transition apply(final String input) {
+            if (input != null) {
+                Matcher m = TRANSITION_PATTERN.matcher(input);
+                if (m.matches()) {
+                    Lifecycle state = Lifecycle.valueOf(m.group(1).toUpperCase());
+                    long time = Long.parseLong(m.group(2));
+                    return new Transition(state, new Date(time));
+                } else {
+                    throw new IllegalStateException("Serialized Lifecycle.Transition can't be parsed: " + input);
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+
+    static {
+        TypeCoercions.registerAdapter(String.class, Transition.class, new TransitionCoalesceFunction()); 
     }
 }
