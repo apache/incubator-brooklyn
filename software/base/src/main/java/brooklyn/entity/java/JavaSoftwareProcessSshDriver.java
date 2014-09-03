@@ -436,7 +436,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
             log.warn("Error checking/fixing Java hostname bug (continuing): "+e, e);
         }
     }
-    
+
     @Override
     public void setup() {
         DynamicTasks.queue("install java", new Runnable() { public void run() {
@@ -445,14 +445,19 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
 
         // TODO check java version
 
-        if (isJmxEnabled()) {
-            DynamicTasks.queue("install jmx", new Runnable() { public void run() {
-                installJmxSupport(); }}); 
-        }
-
         if (getEntity().getConfig(UsesJava.CHECK_JAVA_HOSTNAME_BUG)) {
             DynamicTasks.queue("check java hostname bug", new Runnable() { public void run() {
                 checkJavaHostnameBug(); }});
+        }
+    }
+
+    @Override
+    public void resources() {
+        super.resources();
+
+        if (isJmxEnabled()) {
+            DynamicTasks.queue("install jmx", new Runnable() { public void run() {
+                installJmxSupport(); }});
         }
     }
 
