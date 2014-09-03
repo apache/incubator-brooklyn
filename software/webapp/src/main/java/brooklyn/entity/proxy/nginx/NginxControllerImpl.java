@@ -26,9 +26,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxy.AbstractControllerImpl;
@@ -41,6 +43,7 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.file.ArchiveUtils;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
@@ -91,7 +94,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                 .period(getConfig(HTTP_POLL_PERIOD))
                 .baseUri(accessibleRootUrl)
                 .baseUriVars(ImmutableMap.of("include-runtime", "true"))
-                .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
+                .poll(new HttpPollConfig<Boolean>(NGINX_URL_ANSWERS_NICELY)
                         // Any response from Nginx is good.
                         .checkSuccess(Predicates.alwaysTrue())
                         .onResult(new Function<HttpToolResponse, Boolean>() {
@@ -104,6 +107,12 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                                 }})
                         .setOnException(false))
                 .build();
+        
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(NGINX_URL_ANSWERS_NICELY)
+            .computing(Functionals.ifNotEquals(true).value("URL where nginx listens is not answering correctly") )
+            .build());
+        connectServiceUpIsRunning();
 
         // Can guarantee that parent/managementContext has been set
         Group urlMappings = getConfig(URL_MAPPINGS);
