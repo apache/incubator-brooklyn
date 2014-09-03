@@ -127,6 +127,7 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
         }
     }
     
+    @Test
     public void testApplyTemplatedConfigWithAttributeWhenReady() {
         app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
 
