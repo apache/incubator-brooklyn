@@ -18,78 +18,55 @@
  */
 package brooklyn.location.basic;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
-import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.KeyValueParser;
+import brooklyn.util.config.ConfigBag;
 
-public class SingleMachineLocationResolver implements LocationResolver {
+public class SingleMachineLocationResolver extends AbstractLocationResolver {
     
     private static final String SINGLE = "single";
     
-    private static final Pattern PATTERN = Pattern.compile("(" + SINGLE + "|" + SINGLE.toUpperCase() + ")" + ":" + "\\((.*)\\)$");
-    
-    private volatile ManagementContext managementContext;
-
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void init(ManagementContext managementContext) {
-        this.managementContext = checkNotNull(managementContext, "managementContext");
-    }
-
-    @Override
-    public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
-        return newLocationFromString(spec, registry, registry.getProperties(), locationFlags);
-    }
-    
-    protected Location newLocationFromString(String spec, brooklyn.location.LocationRegistry registry, Map properties, Map locationFlags) {
-        Matcher matcher = PATTERN.matcher(spec);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid location '" + spec + "'; must specify something like single(named:foo)");
+    public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
+        ConfigBag config = extractConfig(locationFlags, spec, registry);
+        Map globalProperties = registry.getProperties();
+        String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
+        
+        if (registry != null) {
+            LocationPropertiesFromBrooklynProperties.setLocalTempDir(globalProperties, config);
         }
-        
-        String namedLocation = (String) locationFlags.get("named");
-        String args = matcher.group(2);
-        Map<String,?> locationArgs = KeyValueParser.parseMap(args);
 
-        Map<String, Object> filteredProperties = new LocationPropertiesFromBrooklynProperties().getLocationProperties(null, namedLocation, properties);
-        MutableMap<String, Object> flags = MutableMap.<String, Object>builder()
-                .putAll(filteredProperties)
-                .putAll(locationFlags)
-                .removeAll("named")
-                .putAll(locationArgs).build();
-        
-        if (locationArgs.get("target") == null) {
+        if (config.getStringKey("target") == null) {
             throw new IllegalArgumentException("target must be specified in single-machine spec");
         }
-        String target = locationArgs.get("target").toString();
-        locationArgs.remove("target");
+        String target = config.getStringKey("target").toString();
+        config.remove("target");
         if (!managementContext.getLocationRegistry().canMaybeResolve(target)) {
             throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SingleMachineProvisioningLocation.class)
                 .configure("location", target)
-                .configure("locationFlags", flags)
-                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, properties, namedLocation)));
+                .configure("locationFlags", config.getAllConfig())
+                .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, locationFlags, globalProperties, namedLocation)));
     }
-
+    
     @Override
     public String getPrefix() {
         return SINGLE;
     }
+    
+    @Override
+    protected Class<? extends Location> getLocationType() {
+        return SingleMachineProvisioningLocation.class;
+    }
 
     @Override
-    public boolean accepts(String spec, LocationRegistry registry) {
-        return BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true);
+    protected SpecParser getSpecParser() {
+        return new SpecParser(getPrefix()).setExampleUsage("\"single(target=jclouds:aws-ec2:us-east-1)\"");
     }
-    
 }

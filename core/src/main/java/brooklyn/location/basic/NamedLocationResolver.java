@@ -64,6 +64,7 @@ public class NamedLocationResolver implements LocationResolver {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
     
+    @Override
     @SuppressWarnings({ "rawtypes" })
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String name = spec;

@@ -51,9 +51,9 @@ public class JcloudsByonLocationResolverTest {
         assertThrowsIllegalArgument("jcloudsByon"); // no hosts
         assertThrowsIllegalArgument("jcloudsByon:()"); // no hosts
         assertThrowsIllegalArgument("jcloudsByon:(hosts=\"\")"); // empty hosts
-        assertThrowsIllegalArgument("jcloudsByon:(hosts=\"1.1.1.1\""); // no closing bracket
-        assertThrowsIllegalArgument("jcloudsByon:(hosts=\"1.1.1.1\", name)"); // no value for name
-        assertThrowsIllegalArgument("jcloudsByon:(hosts=\"1.1.1.1\", name=)"); // no value for name
+        assertThrowsIllegalArgument("jcloudsByon:(hosts=\"i-72b1b132\""); // no closing bracket
+        assertThrowsIllegalArgument("jcloudsByon:(hosts=\"i-72b1b132\", name)"); // no value for name
+        assertThrowsIllegalArgument("jcloudsByon:(hosts=\"i-72b1b132\", name=)"); // no value for name
     }
 
     @SuppressWarnings("unchecked")

@@ -25,30 +25,61 @@ import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.collections.MutableMap;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class JcloudsByonLocationResolverLiveTest extends AbstractJcloudsLiveTest {
+public class JcloudsByonLocationResolverAwsLiveTest extends AbstractJcloudsLiveTest {
 
-    // FIXME Expects this VM to exist; how to write this better? 
-    // We should create a VM in @BeforeClass - slower but automated and will work for everyone
-    private final String awsVm1User = "aled";
-    private final String awsVm1InstanceId = "i-72b1b132";
-    private final String awsVmIp = "54.195.164.70";
-    private final String awsVmHostname = "ec2-54-195-164-70.eu-west-1.compute.amazonaws.com";
+    private static final String AWS_REGION = "eu-west-1";
+    private static final String AWS_LOCATION_SPEC = "jclouds:aws-ec2:"+AWS_REGION;
+    
+    private String awsVmUser;
+    private String awsVmInstanceId;
+    private String awsVmIp;
+    private String awsVmHostname;
+     
+    private LocalManagementContext classManagementContext;
+    private JcloudsLocation classEc2Loc;
+    private JcloudsSshMachineLocation classEc2Vm;
 
-    private final String slVmInstanceId = "4107756";
-    private final String slVmIp = "81.95.147.234";
-    private final String slVmHostname = "amp";
+    @BeforeClass(groups="Live")
+    public void setUpClass() throws Exception {
+        classManagementContext = newManagementContext();
+        classEc2Loc = (JcloudsLocation) classManagementContext.getLocationRegistry().resolve(AWS_LOCATION_SPEC);
+        classEc2Vm = classEc2Loc.obtain(MutableMap.<String,Object>builder()
+                .put("hardwareId", AWS_EC2_SMALL_HARDWARE_ID)
+                .put("inboundPorts", ImmutableList.of(22))
+                .build());
+        awsVmUser = classEc2Vm.getUser();
+        awsVmInstanceId = classEc2Vm.getNode().getProviderId(); // id without region (e.g. "i-6ff96d2f" instead of "eu-west-1/i-6ff96d2f")
+        awsVmIp = classEc2Vm.getAddress().getHostAddress();
+        awsVmHostname = classEc2Vm.getAddress().getHostName();
+    }
+    
+    @AfterClass(alwaysRun=true)
+    public void tearDownClass() throws Exception {
+        try {
+            if (classEc2Vm != null) {
+                classEc2Loc.release(classEc2Vm);
+            }
+        } finally {
+            if (classManagementContext != null) classManagementContext.terminate();
+        }
+    }
 
     // TODO Requires that a VM already exists; could create that VM first to make test more robust
-    @Test(groups={"Live","WIP"})
+    @Test(groups={"Live"})
     public void testResolvesJcloudsByonAws() throws Exception {
-        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"eu-west-1\",user=\""+awsVm1User+"\",hosts=\""+awsVm1InstanceId+"\")";
-        
+        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\""+AWS_REGION+"\",user=\""+awsVmUser+"\",hosts=\""+awsVmInstanceId+"\",anotherprop=myval)";
+
         FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> loc = resolve(spec);
         
         Set<JcloudsSshMachineLocation> machines = loc.getAllMachines();
@@ -56,25 +87,24 @@ public class JcloudsByonLocationResolverLiveTest extends AbstractJcloudsLiveTest
         assertEquals(machine.getParent().getProvider(), "aws-ec2");
         assertEquals(machine.getAddress().getHostAddress(), awsVmIp);
         assertEquals(machine.getAddress().getHostName(), awsVmHostname);
-        assertEquals(machine.getUser(), awsVm1User);
+        assertEquals(machine.getUser(), awsVmUser);
+        assertEquals(machine.getAllConfig(true).get("anotherprop"), "myval");
         
         assertTrue(machine.isSshable());
     }
 
-    // TODO Requires that a VM already exists; could create that VM first to make test more robust
-    @Test(groups={"Live","WIP"})
+    @Test(groups={"Live"})
     public void testResolvesNamedJcloudsByon() throws Exception {
-        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"eu-west-1\",user=\""+awsVm1User+"\",hosts=\""+awsVm1InstanceId+"\")";
+        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\""+AWS_REGION+"\",user=\""+awsVmUser+"\",hosts=\""+awsVmInstanceId+"\")";
         brooklynProperties.put("brooklyn.location.named.mynamed", spec);
         
         FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> loc = resolve("named:mynamed");
         assertEquals(loc.obtain().getAddress(), InetAddress.getByName(awsVmHostname));
     }
 
-    // TODO Requires that a VM already exists; could create that VM first to make test more robust
-    @Test(groups={"Live","WIP"})
+    @Test(groups={"Live"})
     public void testJcloudsPropertiesPrecedence() throws Exception {
-        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\"eu-west-1\",user=\""+awsVm1User+"\",hosts=\""+awsVm1InstanceId+"\")";
+        String spec = "jcloudsByon:(provider=\"aws-ec2\",region=\""+AWS_REGION+"\",user=\""+awsVmUser+"\",hosts=\""+awsVmInstanceId+"\")";
         brooklynProperties.put("brooklyn.location.named.mynamed", spec);
         
         // prefer those in spec string over everything else
@@ -130,7 +160,7 @@ public class JcloudsByonLocationResolverLiveTest extends AbstractJcloudsLiveTest
 
         Map<String, Object> conf = resolve("named:mynamed").obtain().getAllConfig(true);
         
-        assertEquals(conf.get("user"), awsVm1User);
+        assertEquals(conf.get("user"), awsVmUser);
         assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
         assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
         assertEquals(conf.get("securityGroups"), "securityGroups-inProviderSpecificDeprecated");
@@ -140,36 +170,9 @@ public class JcloudsByonLocationResolverLiveTest extends AbstractJcloudsLiveTest
         assertEquals(conf.get("privateKeyData"), "privateKeyData-inNamed");
         assertEquals(conf.get("privateKeyPassphrase"), "privateKeyPassphrase-inNamed");
     }
-
-    // TODO Requires that a VM already exists; could create that VM first to make test more robust
-    @Test(groups={"Live","WIP"})
-    public void testResolvesJcloudsByonSoftlayer() throws Exception {
-        checkSoftlayer("jcloudsByon:(provider=\"softlayer\",region=\"dal05\",hosts=\""+slVmInstanceId+"\")");
-        checkSoftlayer("jcloudsByon:(provider=\"softlayer\",region=\"dal05\",hosts=\""+slVmHostname+"\")");
-        checkSoftlayer("jcloudsByon:(provider=\"softlayer\",region=\"dal05\",hosts=\""+slVmIp+"\")");
-        checkSoftlayer("jcloudsByon:(provider=\"softlayer\",hosts=\""+slVmIp+"\")");
-    }
     
-    private void checkSoftlayer(String spec) {
-        FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> loc = resolve(spec);
-        
-        Set<JcloudsSshMachineLocation> machines = loc.getAllMachines();
-        JcloudsSshMachineLocation machine = Iterables.getOnlyElement(machines);
-        assertEquals(machine.getParent().getProvider(), "softlayer");
-        assertEquals(machine.getNode().getId(), slVmInstanceId);
-        assertEquals(machine.getAddress().getHostAddress(), slVmIp);
-        assertTrue(slVmHostname.equals(machine.getAddress().getHostName()) || slVmIp.equals(machine.getAddress().getHostName()), 
-            "address hostname is: "+machine.getAddress().getHostName());
-        assertTrue(slVmHostname.equals(machine.getNode().getHostname()) || slVmIp.equals(machine.getNode().getHostname()), 
-            "node hostname is: "+machine.getNode().getHostname());
-        
-        // could also assert this, given a user credential, but not currently set up
-//        assertTrue(machine.isSshable());
-    }
-
     @SuppressWarnings("unchecked")
     private FixedListMachineProvisioningLocation<JcloudsSshMachineLocation> resolve(String spec) {
         return (FixedListMachineProvisioningLocation<JcloudsSshMachineLocation>) managementContext.getLocationRegistry().resolve(spec);
     }
-    
 }
