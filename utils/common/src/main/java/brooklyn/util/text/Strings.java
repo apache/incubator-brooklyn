@@ -751,6 +751,11 @@ public class Strings {
         return Ordering.<Integer>natural().onResultOf(StringFunctions.length()).compound(Ordering.<String>natural()).nullsFirst();
     }
 
+    public static boolean isMultiLine(String s) {
+        if (s==null) return false;
+        if (s.indexOf('\n')>=0 || s.indexOf('\r')>=0) return true;
+        return false;
+    }
     public static String getFirstLine(String s) {
         int idx = s.indexOf('\n');
         if (idx==-1) return s;
