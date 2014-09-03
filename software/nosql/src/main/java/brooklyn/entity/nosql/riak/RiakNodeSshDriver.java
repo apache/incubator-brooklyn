@@ -18,7 +18,12 @@
  */
 package brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -28,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -39,7 +43,6 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -249,10 +252,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return isPackageInstall ? "riak-admin" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak-admin");
     }
 
-    private String getAppConfigLocation() {
-        return Urls.mergePaths(getRiakEtcDir(), "app.config");
-    }
-
     @Override
     public void joinCluster(String nodeName) {
         //FIXME: find a way to batch commit the changes, instead of committing for every operation.
@@ -368,15 +367,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private String getVmArgsLocation() {
         return Urls.mergePaths(getRiakEtcDir(), "vm.args");
-    }
-
-    private String getPrivateIp() {
-        Optional<String> subnetAddress = Optional.fromNullable(entity.getAttribute(Attributes.SUBNET_ADDRESS));
-
-        if (subnetAddress.isPresent())
-            return subnetAddress.get();
-        else
-            throw new IllegalArgumentException("Subnet address is not set.");
     }
 
     private Boolean hasJoinedCluster() {
