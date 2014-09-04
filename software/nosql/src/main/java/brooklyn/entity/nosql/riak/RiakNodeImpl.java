@@ -27,9 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
@@ -40,6 +37,10 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Functionals;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 
 public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
@@ -135,7 +136,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
                         .onSuccess(HttpValueFunctions.jsonContents("pbc_active", Integer.class))
                         .onFailureOrException(Functions.constant(-1)))
                 .poll(new HttpPollConfig<List<String>>(RING_MEMBERS)
-                        .onSuccess(HttpValueFunctions.chain(
+                        .onSuccess(Functionals.chain(
                                 HttpValueFunctions.jsonContents("ring_members", String[].class),
                                 new Function<String[], List<String>>() {
                                     @Nullable
@@ -176,7 +177,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
     @Override
     public boolean hasJoinedCluster() {
-        return Boolean.TRUE.equals(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER);
+        return Boolean.TRUE.equals(getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER));
     }
 
     @Override

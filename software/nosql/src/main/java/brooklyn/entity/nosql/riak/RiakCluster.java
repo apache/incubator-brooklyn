@@ -35,6 +35,7 @@ import brooklyn.util.time.Duration;
 @ImplementedBy(RiakClusterImpl.class)
 public interface RiakCluster extends DynamicCluster {
 
+    @SuppressWarnings("serial")
     AttributeSensor<Map<Entity, String>> RIAK_CLUSTER_NODES = Sensors.newSensor(new TypeToken<Map<Entity, String>>() {
     }, "riak.cluster.nodes", "Names of all active Riak nodes in the cluster <Entity,Riak Name>");
 
