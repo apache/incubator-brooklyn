@@ -233,13 +233,11 @@ public class LocalEntityManager implements EntityManagerInternal {
     @Override
     public void manage(Entity e) {
         if (isManaged(e)) {
-//            if (log.isDebugEnabled()) {
-                log.warn(""+this+" redundant call to start management of entity (and descendants of) "+e+"; skipping", 
+            log.warn(""+this+" redundant call to start management of entity (and descendants of) "+e+"; skipping", 
                     new Exception("source of duplicate management of "+e));
-//            }
             return;
         }
-        
+
         AccessController.Response access = managementContext.getAccessController().canManageEntity(e);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids management of "+e+": "+access.getMsg());
@@ -399,10 +397,8 @@ public class LocalEntityManager implements EntityManagerInternal {
      * Should ensure that the entity is no longer managed anywhere, remove from all lists.
      * Returns true if the entity has been removed from management; if it was not previously managed (anything else throws exception) 
      */
-    private synchronized boolean unmanageNonRecursive(Entity e) {
-        Entity proxyE = toProxyEntityIfAvailable(e);
+    private boolean unmanageNonRecursive(Entity e) {
         Collection<Group> groups = e.getGroups();
-        
         e.clearParent();
         for (Group group : groups) {
             group.removeMember(e);
@@ -413,26 +409,30 @@ public class LocalEntityManager implements EntityManagerInternal {
                 member.removeGroup((Group)e);
             }
         }
-        if (e instanceof Application) {
-            applications.remove(proxyE);
-            applicationIds.remove(e.getId());
-        }
-        entities.remove(proxyE);
-        entityProxiesById.remove(e.getId());
-        Object old = entitiesById.remove(e.getId());
 
-        entityTypes.remove(e.getId());
-        
-        if (old==null) {
-            log.warn("{} call to stop management of unknown entity (already unmanaged?) {}", this, e);
-            return false;
-        } else if (!old.equals(e)) {
-            // shouldn't happen...
-            log.error("{} call to stop management of entity {} removed different entity {}", new Object[] { this, e, old });
-            return true;
-        } else {
-            if (log.isDebugEnabled()) log.debug("{} stopped management of entity {}", this, e);
-            return true;
+        synchronized (this) {
+            Entity proxyE = toProxyEntityIfAvailable(e);
+            if (e instanceof Application) {
+                applications.remove(proxyE);
+                applicationIds.remove(e.getId());
+            }
+
+            entities.remove(proxyE);
+            entityProxiesById.remove(e.getId());
+            Object old = entitiesById.remove(e.getId());
+
+            entityTypes.remove(e.getId());
+            if (old==null) {
+                log.warn("{} call to stop management of unknown entity (already unmanaged?) {}", this, e);
+                return false;
+            } else if (!old.equals(e)) {
+                // shouldn't happen...
+                log.error("{} call to stop management of entity {} removed different entity {}", new Object[] { this, e, old });
+                return true;
+            } else {
+                if (log.isDebugEnabled()) log.debug("{} stopped management of entity {}", this, e);
+                return true;
+            }
         }
     }
 
