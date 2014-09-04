@@ -16,18 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.resources;
+package brooklyn.rest.util;
 
-import brooklyn.BrooklynVersion;
-import brooklyn.rest.api.VersionApi;
+import brooklyn.management.ManagementContext;
 
-/** @deprecated since 0.7.0; use /v1/server/version */
-@Deprecated
-public class VersionResource extends AbstractBrooklynRestResource implements VersionApi {
+/** provides a way for management context to be injected directly.
+ * normally it is discovered automatically by the ServletContext, 
+ * but in the jersey InMemory test container it is not, so we must inject it manually.  
+ */
+public interface ManagementContextInjectable {
 
-  @Override
-  public String getVersion() {
-    return BrooklynVersion.get();
-  }
-
+    public void injectManagementContext(ManagementContext managementContext);
+    
 }

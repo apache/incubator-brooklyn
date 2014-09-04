@@ -127,7 +127,7 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         synchronized (values) {
             Map<Entity,Object> vs = values.get(event.getSensor().getName());
             if (vs==null) {
-                LOG.warn("{} has no entry for sensor on "+event);
+                LOG.debug(this+" received event when no entry for sensor ("+event+"); likely just added or removed, and will initialize subsequently if needed");
             } else {
                 vs.put(e, event.getValue());
             }

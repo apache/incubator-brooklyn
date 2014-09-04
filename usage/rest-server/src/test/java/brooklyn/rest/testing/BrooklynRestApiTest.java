@@ -20,6 +20,7 @@ package brooklyn.rest.testing;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 
 import brooklyn.entity.basic.Entities;
@@ -29,10 +30,11 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
-import brooklyn.rest.resources.AbstractBrooklynRestResource;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.rest.util.ManagementContextInjectable;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
 import brooklyn.rest.util.NullServletConfigProvider;
+import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -73,6 +75,10 @@ public abstract class BrooklynRestApiTest {
         return manager;
     }
     
+    protected ObjectMapper mapper() {
+        return BrooklynJacksonJsonProvider.findSharedObjectMapper(null, getManagementContext());
+    }
+    
     @AfterClass
     public void tearDown() throws Exception {
         if (manager!=null) {
@@ -96,8 +102,8 @@ public abstract class BrooklynRestApiTest {
         else
             config.getSingletons().add(resource);
         
-        if (resource instanceof AbstractBrooklynRestResource) {
-            ((AbstractBrooklynRestResource)resource).injectManagementContext(getManagementContext());
+        if (resource instanceof ManagementContextInjectable) {
+            ((ManagementContextInjectable)resource).injectManagementContext(getManagementContext());
         }
     }
     
@@ -110,15 +116,16 @@ public abstract class BrooklynRestApiTest {
     protected void addDefaultResources() {
         // seems we have to provide our own injector because the jersey test framework 
         // doesn't inject ServletConfig and it all blows up
-        addProvider(NullServletConfigProvider.class);
+//        addProvider(NullServletConfigProvider.class);
+        addResource(new NullServletConfigProvider());
         addProvider(NullHttpServletRequestProvider.class);
     }
 
     protected final void setUpResources() {
+        addDefaultResources();
         addBrooklynResources();
         for (Object r: BrooklynRestApi.getMiscResources())
             addResource(r);
-        addDefaultResources();
     }
 
     /** intended for overriding if you only want certain resources added, or additional ones added */

@@ -19,17 +19,21 @@
 package brooklyn.rest.resources;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
@@ -43,11 +47,12 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
 
 @Test(singleThreaded = true)
 public class EntityResourceTest extends BrooklynRestResourceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(EntityResourceTest.class);
+    
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder()
             .name("simple-app")
             .entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())))
@@ -97,12 +102,17 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
     
     @Test
     public void testRename() throws Exception {
-        ClientResponse response = client().resource(entityEndpoint + "/name")
+        try {
+            ClientResponse response = client().resource(entityEndpoint + "/name")
                 .queryParam("name", "New Name")
                 .post(ClientResponse.class);
 
-        HttpTestUtils.assertHealthyStatusCode(response.getStatus());
-        Assert.assertTrue(entity.getDisplayName().equals("New Name"));
+            HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+            Assert.assertTrue(entity.getDisplayName().equals("New Name"));
+        } finally {
+            // restore it for other tests!
+            entity.setDisplayName("simple-ent");
+        }
     }
     
     // TODO any entity or complex object should be cleaned up as part of WebResourceUtils call
@@ -114,24 +124,40 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
         ClientResponse response = client().resource(entityEndpoint + "/tags")
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
-        List<Object> tags = response.getEntity(new GenericType<List<Object>>(List.class) {});
-
-        Assert.assertEquals(tags.size(), 2, "tags are: "+tags);
+        String raw = response.getEntity(String.class);
+        log.info("TAGS raw: "+raw);
+        HttpTestUtils.assertHealthyStatusCode(response.getStatus());
         
+        Assert.assertTrue(raw.contains(entity.getParent().getId()), "unexpected app tag, does not include ID: "+raw);
+        
+        Assert.assertTrue(raw.length() < 1000, "unexpected app tag, includes too much mgmt info (len "+raw.length()+"): "+raw);
+        
+        Assert.assertFalse(raw.contains(entity.getManagementContext().getManagementNodeId()), "unexpected app tag, includes too much mgmt info: "+raw);
+        Assert.assertFalse(raw.contains("managementContext"), "unexpected app tag, includes too much mgmt info: "+raw);
+        Assert.assertFalse(raw.contains("localhost"), "unexpected app tag, includes too much mgmt info: "+raw);
+        Assert.assertFalse(raw.contains("catalog"), "unexpected app tag, includes too much mgmt info: "+raw);
+
+        @SuppressWarnings("unchecked")
+        List<Object> tags = mapper().readValue(raw, List.class);
+        log.info("TAGS are: "+tags);
+        
+        Assert.assertEquals(tags.size(), 2, "tags are: "+tags);
+
         Assert.assertTrue(tags.contains("foo"));
         Assert.assertFalse(tags.contains("bar"));
         
         MutableList<Object> appTags = MutableList.copyOf(tags);
         appTags.remove("foo");
         Object appTag = Iterables.getOnlyElement( appTags );
-        Assert.assertTrue((""+appTag).contains(entity.getParent().getId()), "unexpected app tag, does not include ID: "+appTag);
         
-        Assert.assertTrue((""+appTag).length() < 1000, "unexpected app tag, includes too much mgmt info (len "+(""+appTag).length()+"): "+appTag);
+        // it's a map at this point, because there was no way to make it something stronger than Object
+        Assert.assertTrue(appTag instanceof Map, "Should have deserialized an entity: "+appTag);
+        // let's re-serialize it as an entity
+        appTag = mapper().readValue(mapper().writeValueAsString(appTag), Entity.class);
         
-        Assert.assertFalse((""+appTag).contains(entity.getManagementContext().getManagementNodeId()), "unexpected app tag, includes too much mgmt info: "+appTag);
-        Assert.assertFalse((""+appTag).contains("managementContext"), "unexpected app tag, includes too much mgmt info: "+appTag);
-        Assert.assertFalse((""+appTag).contains("localhost"), "unexpected app tag, includes too much mgmt info: "+appTag);
-        Assert.assertFalse((""+appTag).contains("catalog"), "unexpected app tag, includes too much mgmt info: "+appTag);
+        Assert.assertTrue(appTag instanceof Entity, "Should have deserialized an entity: "+appTag);
+        Assert.assertEquals( ((Entity)appTag).getId(), entity.getApplicationId(), "Wrong ID: "+appTag);
+        Assert.assertTrue(appTag instanceof BasicApplication, "Should have deserialized BasicApplication: "+appTag);
     }
     
 }

@@ -31,7 +31,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;

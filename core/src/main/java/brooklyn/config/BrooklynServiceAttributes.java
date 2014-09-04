@@ -59,5 +59,8 @@ public class BrooklynServiceAttributes {
      * use this to supply a specific address (e.g. "127.0.0.1" or a specific IP on a specific NIC or FW)
      */
     public static StringSystemProperty LOCALHOST_IP_ADDRESS = new StringSystemProperty("brooklyn.location.localhost.address");
+
+    /** Jackson ObjectMapper shared among REST resources */ 
+    public static final String BROOKLYN_REST_OBJECT_MAPPER = "brooklyn.rest.objectMapper";
     
 }
