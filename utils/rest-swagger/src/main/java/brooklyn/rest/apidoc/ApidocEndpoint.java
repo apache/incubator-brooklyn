@@ -20,6 +20,9 @@ package brooklyn.rest.apidoc;
 
 import java.util.Comparator;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import com.wordnik.swagger.core.DocumentationEndPoint;
 
 public class ApidocEndpoint extends DocumentationEndPoint {
@@ -37,7 +40,8 @@ public class ApidocEndpoint extends DocumentationEndPoint {
     public final String name;
     public final String link;
     
-    public ApidocEndpoint(String name, String path, String description, String link) {
+    @JsonCreator
+    public ApidocEndpoint(@JsonProperty("name") String name, @JsonProperty("path") String path, @JsonProperty("description") String description, @JsonProperty("link") String link) {
         super(path, description);
         this.name = name;
         this.link = link;

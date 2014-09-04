@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
@@ -32,6 +34,7 @@ import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.transform.EntityTransformer;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -77,10 +80,28 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
   
   public Object get(boolean preferJson, String application, String entityToken, String configKeyName) {
     EntityLocal entity = brooklyn().getEntity(application, entityToken);
-    ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
-    if (ck==null) ck = new BasicConfigKey<Object>(Object.class, configKeyName);
+    ConfigKey<?> ck = findConfig(entity, configKeyName);
     
     return getValueForDisplay(entity.getConfigRaw(ck, true).orNull(), preferJson, true);
+  }
+
+  private ConfigKey<?> findConfig(EntityLocal entity, String configKeyName) {
+      ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
+      if (ck==null) ck = new BasicConfigKey<Object>(Object.class, configKeyName);
+      return ck;
+  }
+
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @Override
+  public void set(String application, String entityToken, String configName, Boolean recurse, Object newValue) {
+      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+      ConfigKey ck = findConfig(entity, configName);
+      ((EntityInternal)entity).setConfig(ck, newValue);
+      if (Boolean.TRUE.equals(recurse)) {
+          for (Entity e2: Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
+              ((EntityInternal)e2).setConfig(ck, newValue);
+          }
+      }
   }
 
 }

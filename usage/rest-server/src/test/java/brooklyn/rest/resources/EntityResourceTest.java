@@ -23,6 +23,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -35,6 +37,7 @@ import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -78,12 +81,18 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
         entity.getTagSupport().addTag("foo");
         
         ClientResponse response = client().resource(entityEndpoint + "/tags")
-                .accept(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON_TYPE)
                 .get(ClientResponse.class);
-        List<Object> tags = response.getEntity(new GenericType<List<Object>>(List.class) {});
-
-        Assert.assertTrue(tags.contains("foo"));
-        Assert.assertFalse(tags.contains("bar"));
+        String data = response.getEntity(String.class);
+        
+        try {
+            List<Object> tags = new ObjectMapper().readValue(data, new TypeReference<List<Object>>() {});
+            Assert.assertTrue(tags.contains("foo"));
+            Assert.assertFalse(tags.contains("bar"));
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalStateException("Error with deserialization of tags list: "+e+"\n"+data, e);
+        }
     }
     
     @Test

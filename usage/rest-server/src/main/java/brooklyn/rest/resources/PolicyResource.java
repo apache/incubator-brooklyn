@@ -74,6 +74,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public PolicySummary addPolicy( String application,String entityToken, String policyTypeName,
             // TODO would like to make this optional but jersey complains if we do

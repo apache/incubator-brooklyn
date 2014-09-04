@@ -84,7 +84,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 
-
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResource.class);

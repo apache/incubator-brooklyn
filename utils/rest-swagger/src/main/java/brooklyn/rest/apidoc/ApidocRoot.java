@@ -16,18 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli.commands;
+package brooklyn.rest.apidoc;
 
-/**
- * Exception that can happen during the execution of a {@link BrooklynCommand}
- */
-public class CommandExecutionException extends Exception {
+import java.util.List;
 
-    CommandExecutionException(String s) {
-        super(s);
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonSetter;
+
+import com.wordnik.swagger.core.Documentation;
+
+public class ApidocRoot extends Documentation {
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @JsonProperty("apis")
+    public List<ApidocEndpoint> getApidocApis() {
+        return (List) getApis();
     }
-
-    CommandExecutionException(String s, Throwable cause) {
-        super(s, cause);
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @JsonSetter("apis")
+    public void setApidocApis(List<ApidocEndpoint> ep) {
+        super.setApis((List)ep);
     }
+    
 }

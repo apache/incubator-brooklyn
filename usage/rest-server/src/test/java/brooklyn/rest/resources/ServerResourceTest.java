@@ -44,11 +44,6 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-
     @Test
     public void testGetVersion() throws Exception {
         VersionSummary version = client().resource("/v1/server/version").get(VersionSummary.class);

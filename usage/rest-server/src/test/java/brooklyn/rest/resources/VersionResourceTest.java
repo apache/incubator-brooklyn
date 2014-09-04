@@ -40,7 +40,8 @@ public class VersionResourceTest extends BrooklynRestResourceTest {
   }
 
   @Override
-  protected void setUpResources() throws Exception {
-    addResource(new VersionResource());
+  protected void addBrooklynResources() {
+      addResource(new VersionResource());
   }
+  
 }

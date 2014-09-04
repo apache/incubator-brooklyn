@@ -62,7 +62,24 @@ public interface EntityConfigApi {
       @PathParam("application") String application,
       @ApiParam(value = "Entity ID or name", required = true)
       @PathParam("entity") String entityToken) ;
+  
+  @GET
+  @Path("/{config}")
+  @ApiOperation(value = "Fetch config value (json)", responseClass = "Object")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application, entity or config key")
+  })
+  @Produces(MediaType.APPLICATION_JSON)
+  public Object get(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") String entityToken,
+      @ApiParam(value = "Config key ID", required = true)
+      @PathParam("config") String configKeyName
+      );
 
+  // if user requests plain value we skip some json post-processing
   @GET
   @Path("/{config}")
   @ApiOperation(value = "Fetch config value (text/plain)", responseClass = "Object")
@@ -79,20 +96,25 @@ public interface EntityConfigApi {
       @PathParam("config") String configKeyName
   );
 
-  @GET
+  @POST
   @Path("/{config}")
-  @ApiOperation(value = "Fetch config value (json)", responseClass = "Object")
+  @ApiOperation(value = "Manually set a config value")
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application, entity or config key")
+      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
   })
-  @Produces(MediaType.APPLICATION_JSON)
-  public Object get(
-      @ApiParam(value = "Application ID or name", required = true)
-      @PathParam("application") String application,
-      @ApiParam(value = "Entity ID or name", required = true)
-      @PathParam("entity") String entityToken,
-      @ApiParam(value = "Config key ID", required = true)
-      @PathParam("config") String configKeyName
-  );
+  public void set(
+          @ApiParam(value = "Application ID or name", required = true)
+          @PathParam("application") final String application,
+          @ApiParam(value = "Entity ID or name", required = true)
+          @PathParam("entity") final String entityToken,
+          @ApiParam(value = "Config key name", required = true)
+          @PathParam("config") String configName,
+          @ApiParam(value = "Apply the config to all pre-existing descendants", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean recurse,
+          @ApiParam(value = "Value to set")
+          Object newValue
+  ) ;
+
+  // deletion of config is not supported; you can set it null
 
 }

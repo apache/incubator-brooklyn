@@ -126,7 +126,7 @@ abstract public class ApidocResource {
     
     @GET
     @ApiOperation(value = "Returns list of all available API resource endpoints", 
-        responseClass = "DocumentationEndPoint", multiValueResponse = true)
+        responseClass = "ApidocRoot", multiValueResponse = true)
     public Response getAllApis(
             @Context ResourceConfig rc,
             @Context HttpHeaders headers,
@@ -138,7 +138,7 @@ abstract public class ApidocResource {
 
         Set<Class<?>> resources = getResourceClasses(rc);
 
-        Documentation allApiDoc = new Documentation();
+        ApidocRoot allApiDoc = new ApidocRoot();
 
         List<ApidocEndpoint> endpoints = new ArrayList<ApidocEndpoint>();
         for (Class<?> resource : resources) {

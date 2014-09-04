@@ -61,10 +61,10 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         super.setUp();
     }
     
-  @Override
-  protected void setUpResources() throws Exception {
-    addResource(new CatalogResource());
-  }
+    @Override
+    protected void addBrooklynResources() {
+        addResource(new CatalogResource());
+    }
 
   @Test
   /** based on CampYamlLiteTest */
@@ -191,6 +191,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
       ClientResponse response = client().resource(
               URI.create(REDIS_STORE_ICON_URL)).get(ClientResponse.class);
       response.bufferEntity();
+      Assert.assertEquals(response.getStatus(), 200);
       Assert.assertEquals(response.getType(), MediaType.valueOf("image/png"));
       Image image = Toolkit.getDefaultToolkit().createImage(Files.readFile(response.getEntityInputStream()));
       Assert.assertNotNull(image);

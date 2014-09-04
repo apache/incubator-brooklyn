@@ -18,17 +18,17 @@
  */
 package brooklyn.rest.domain;
 
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.EntitySpec;
+import static brooklyn.rest.util.RestApiTestUtils.asJson;
+import static brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
+import static org.testng.Assert.assertEquals;
+
+import java.io.IOException;
+
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
-import java.io.IOException;
-import static org.testng.Assert.assertEquals;
-import org.testng.annotations.Test;
 
 public class ApplicationSpecTest {
 

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.render.RendererHints;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -117,4 +118,19 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         return new BasicAttributeSensor<Object>(Object.class, name);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void set(String application, String entityToken, String sensorName, Object newValue) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        AttributeSensor sensor = findSensor(entity, sensorName);
+        entity.setAttribute(sensor, newValue);
+    }
+    
+    @Override
+    public void delete(String application, String entityToken, String sensorName) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        AttributeSensor<?> sensor = findSensor(entity, sensorName);
+        ((EntityInternal)entity).removeAttribute(sensor);
+    }
+    
 }

@@ -18,15 +18,15 @@
  */
 package brooklyn.rest.domain;
 
-import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
-import java.io.IOException;
+import static brooklyn.rest.util.RestApiTestUtils.asJson;
+import static brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-import org.testng.annotations.Test;
 
-import brooklyn.rest.domain.LocationSpec;
+import java.io.IOException;
+
+import org.testng.annotations.Test;
 
 @Deprecated
 public class LocationSpecTest {

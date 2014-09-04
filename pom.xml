@@ -119,10 +119,9 @@
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
-        <fasterxml.jackson.version>2.4.2</fasterxml.jackson.version>
-        <jersey.version>1.12</jersey.version> <!-- NB: 1.17 requires changes to how we hanlde multipart in CatalogApi -->
+        <fasterxml.jackson.version>2.4.2</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
+        <jersey.version>1.18.1</jersey.version>
         <swagger.version>1.0.1</swagger.version>
-        <dropwizard.version>0.4.4</dropwizard.version>
         <jansi.version>1.2.1</jansi.version>
         <gson.version>2.2.2</gson.version>
         <jsr305.version>2.0.1</jsr305.version>
@@ -279,6 +278,12 @@
                 <groupId>com.sun.jersey.contribs</groupId>
                 <artifactId>jersey-multipart</artifactId>
                 <version>${jersey.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.jersey.jersey-test-framework</groupId>
+                <artifactId>jersey-test-framework-inmemory</artifactId>
+                <version>${jersey.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -485,11 +490,6 @@
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
                 <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.dropwizard</groupId>
-                <artifactId>dropwizard-testing</artifactId>
-                <version>${dropwizard.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
@@ -1172,7 +1172,6 @@
                 <module>sandbox/extra</module>
                 <module>sandbox/database</module>
                 <module>sandbox/web-acceptance</module>
-                <module>sandbox/dropwizard</module>
                 <module>sandbox/nosql</module>
                 <module>sandbox/monitoring</module>
             </modules>

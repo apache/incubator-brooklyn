@@ -18,18 +18,19 @@
  */
 package brooklyn.rest.domain;
 
-import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
+import static brooklyn.rest.util.RestApiTestUtils.asJson;
+import static brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import brooklyn.rest.transform.LocationTransformer;
 import org.codehaus.jackson.type.TypeReference;
 import org.testng.annotations.Test;
+
+import brooklyn.rest.transform.LocationTransformer;
 
 public class LocationSummaryTest {
 
