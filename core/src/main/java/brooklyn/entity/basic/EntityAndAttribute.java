@@ -36,9 +36,13 @@ public class EntityAndAttribute<T> implements Supplier<T> {
     private final Entity entity;
     private final AttributeSensor<T> attribute;
 
+    public static <T> EntityAndAttribute<T> supplier(Entity entity, AttributeSensor<T> attribute) {
+        return new EntityAndAttribute<T>(entity, attribute);
+    }
+
     public EntityAndAttribute(Entity entity, AttributeSensor<T> attribute) {
-      this.entity = checkNotNull(entity, "entity");
-      this.attribute = checkNotNull(attribute, "attribute");
+        this.entity = checkNotNull(entity, "entity");
+        this.attribute = checkNotNull(attribute, "attribute");
     }
 
     public Entity getEntity() {
