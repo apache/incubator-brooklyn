@@ -22,6 +22,8 @@ import com.google.common.base.Supplier;
 
 public class IllegalStateExceptionSupplier implements Supplier<RuntimeException> {
 
+    public static final IllegalStateExceptionSupplier EMPTY_EXCEPTION = new IllegalStateExceptionSupplier();
+    
     protected final String message;
     protected final Throwable cause;
     

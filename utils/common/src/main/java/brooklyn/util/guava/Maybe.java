@@ -153,7 +153,7 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         private static final long serialVersionUID = -757170462010887057L;
         private final Supplier<RuntimeException> exception;
         public Absent() {
-            this(new IllegalStateExceptionSupplier());
+            this(IllegalStateExceptionSupplier.EMPTY_EXCEPTION);
         }
         public Absent(Supplier<RuntimeException> exception) {
             this.exception = exception;
