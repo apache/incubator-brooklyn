@@ -84,9 +84,9 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             @Override
             public void onEvent(SensorEvent<Boolean> booleanSensorEvent) {
                 if (Boolean.TRUE.equals(booleanSensorEvent.getValue())) {
-                    String hostname = getAttribute(HOSTNAME);
-                    String webPort = getConfig(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).iterator().next().toString();
-                    setAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, format("http://%s:%s", hostname, webPort));
+                    Integer webPort = getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
+                    String hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(CouchbaseNodeImpl.this, webPort).toString();
+                    setAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, format("http://%s", hostAndPort));
                 }
             }
         });
@@ -197,7 +197,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         Preconditions.checkNotNull(rawPort, "HTTP_PORT sensors not set for %s; is an acceptable port available?", this);
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, rawPort);
         
-        String adminUrl = String.format("http://%s:%s", hp.getHostText(), hp.getPort());
+        String adminUrl = String.format("http://%s", hp.toString());
         
         httpFeed = HttpFeed.builder()
             .entity(this)
