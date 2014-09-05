@@ -145,7 +145,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 "for i in {0..120}\n" +
                 "do\n" +
                 "    if [ $i -eq 120 ]; then echo REST API unavailable after 120 seconds, failing; exit 1; fi;\n" +
-                "    curl -s " + String.format("http://%s:%s", getHostname(), getWebPort()) + " > /dev/null && echo REST API available after $i seconds && break\n" +
+                "    curl -s " + String.format("http://localhost:%s", getWebPort()) + " > /dev/null && echo REST API available after $i seconds && break\n" +
                 "    sleep 1\n" +
                 "done\n" +
                 couchbaseCli("cluster-init") +
@@ -161,7 +161,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     public boolean isRunning() {
         //TODO add a better way to check if couchbase server is running
         return (newScript(CHECK_RUNNING)
-                .body.append(format("curl -u %s:%s http://%s:%s/pools/nodes", getUsername(), getPassword(), getHostname(), getWebPort()))
+                .body.append(format("curl -u %s:%s http://localhost:%s/pools/nodes", getUsername(), getPassword(), getWebPort()))
                 .execute() == 0);
     }
 
@@ -205,11 +205,11 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     }
 
     private String getCouchbaseHostnameAndCredentials() {
-        return format("-c %s:%s -u %s -p %s", getHostname(), getWebPort(), getUsername(), getPassword());
+        return format("-c localhost:%s -u %s -p %s", getWebPort(), getUsername(), getPassword());
     }
 
     private String getCouchbaseHostnameAndPort() {
-        return format("-c %s:%s", getHostname(), getWebPort());
+        return format("-c localhost:%s", getWebPort());
     }
 
     private String getClusterInitRamSize() {
