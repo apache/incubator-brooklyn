@@ -60,7 +60,7 @@ define([
             'mouseover .hasFloatLeft':'showFloatLeft',
             'mouseover .hasFloatDown':'enterFloatDown',
             'mouseout .hasFloatDown':'exitFloatDown',
-            'mouseup .light-popup-menu-item':'closeFloatMenuNow',
+            'mouseup .light-popup-menu-item':'closeFloatMenuNow'
 
             // these have no effect: you must register on the zeroclipboard object, below
             // (presumably the same for the .clipboard-item event listeners above, but unconfirmed)
@@ -217,7 +217,13 @@ define([
             this.toggleFilterEmpty();
             return this;
         },
-        
+
+        beforeClose: function () {
+            if (this.zeroClipboard) {
+                this.zeroClipboard.destroy();
+            }
+        },
+
         /* getting the float menu to pop-up and go away with all the right highlighting
          * is ridiculous. this is pretty good, but still not perfect. it seems some events
          * just don't fire, others occur out of order, and the root cause is that when
