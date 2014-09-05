@@ -37,6 +37,8 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.QuorumCheck;
+import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity;
@@ -116,6 +118,11 @@ public class ServiceReplacerTest {
                 assertFalse(Entities.isManaged(e1));
             }});
     }
+
+    @Test(invocationCount=100)
+    public void testSetsOnFireWhenFailToReplaceMemberManyTimes() throws Exception {
+        testSetsOnFireWhenFailToReplaceMember();
+    }
     
     // fails the startup of the replacement entity (but not the original). 
     @Test
@@ -126,7 +133,9 @@ public class ServiceReplacerTest {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
                         .configure(FailingEntity.FAIL_ON_START_CONDITION, predicateOnlyTrueForCallAtOrAfter(2)))
                 .configure(DynamicCluster.INITIAL_SIZE, 1)
-                .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true));
+                .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true)
+                .configure(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumCheck.QuorumChecks.alwaysTrue())
+                .configure(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumCheck.QuorumChecks.alwaysTrue()));
         app.start(ImmutableList.<Location>of(loc));
         
         ServiceReplacer policy = new ServiceReplacer(new ConfigBag().configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
@@ -138,9 +147,11 @@ public class ServiceReplacerTest {
         e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
         
         // Expect cluster to go on-fire when fails to start replacement
+        // Note that we've set up-quorum and running-quorum to be "alwaysTrue" so that we don't get a transient onFire
+        // when the failed node fails to start (but before it has been removed from the group to be put in quarantine).
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
-        // And expect to have the second failed entity still kicking around as proof (in quarantine)
+        // Expect to have the second failed entity still kicking around as proof (in quarantine)
         Iterable<Entity> members = Iterables.filter(managementContext.getEntityManager().getEntities(), Predicates.instanceOf(FailingEntity.class));
         assertEquals(Iterables.size(members), 2);
 

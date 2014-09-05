@@ -386,7 +386,7 @@ public class ServiceStateLogic {
         protected void onUpdated() {
             if (entity==null || !Entities.isManaged(entity)) {
                 // either invoked during setup or entity has become unmanaged; just ignore
-                log.debug("Ignoring {} onUpdated when entity is not in valid state ({})", this, entity);
+                if (log.isDebugEnabled()) log.debug("Ignoring {} onUpdated when entity is not in valid state ({})", this, entity);
                 return;
             }
 
