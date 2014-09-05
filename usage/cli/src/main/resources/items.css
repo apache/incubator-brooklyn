@@ -37,8 +37,8 @@ h1 {
 
 .nav-tabs {
   clear: both;
-  font-size: 16pt;
   font-weight: bold;
+  font-size: 12pt;
 }
 .nav-tabs a {
   color: #4d9d3a;
@@ -47,12 +47,13 @@ h1 {
   color: #4d9d3a;
 }
 
-.cardList {
+.tab-content {
   padding: 20px;
   padding-bottom: 10px;
   border: 1px solid #ddd;
   border-top: none;
 }
+
 .card {
   position: relative;
   padding: 12px;
@@ -131,63 +132,6 @@ td {
   word-break: normal !important;
 }
 
-.nav-tabs {
-  font-size: 16pt;
-  font-weight: bold;
-}
-.nav-tabs a {
-  color: #4d9d3a;
-}
-.nav-tabs a:hover {
-  color: #4d9d3a;
-}
-
-.cardList {
-  padding: 20px;
-  padding-bottom: 10px;
-  border: 1px solid #ddd;
-  border-top: none;
-}
-.card {
-  position: relative;
-  padding: 12px;
-  margin-bottom: 10px;
-  background-color: #f8f8f8;
-  color: #333;
-  border: 1px solid #E1E1E8;
-  border-radius: 6px;
-  font-size: 11pt;
-}
-.card:hover {
-  background-color: #f4f4f4;
-  top: -2px;
-  box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2);
-}
-.card .detailsLink {
-  display: block;
-  position: absolute;
-  right: 0;
-  top: 0;
-  padding: 8px;
-  font-size: 20pt;
-  color: #8a8 !important;
-  text-decoration: none;
-}
-.detailsLink:hover {
-  color: #686 !important;
-}
-.name {
-  font-size: 12pt;
-  font-weight: bold;
-}
-.type {
-  font-family: monospace;
-  color: #888;
-  margin-top: 2px;
-}
-.description {
-  margin: 10px 40px 0 20px;
-}
 .location {
   word-break: keep-all;
   max-width: 100%;
