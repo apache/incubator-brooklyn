@@ -786,7 +786,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             return Lists.newArrayList();
         
         if (delta == 1 && !isAvailabilityZoneEnabled()) {
-            return ImmutableList.of(pickAndRemoveMember()); // for backwards compatibility in sub-classes
+            Maybe<Entity> member = tryPickAndRemoveMember();
+            return (member.isPresent()) ? ImmutableList.of(member.get()) : ImmutableList.<Entity>of();
         }
 
         // TODO inefficient impl
@@ -807,28 +808,29 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         } else {
             List<Entity> entities = Lists.newArrayList();
             for (int i = 0; i < delta; i++) {
-                entities.add(pickAndRemoveMember());
+                // don't assume we have enough members; e.g. if shrinking to zero and someone else concurrently stops a member,
+                // then just return what we were able to remove.
+                Maybe<Entity> member = tryPickAndRemoveMember();
+                if (member.isPresent()) entities.add(member.get());
             }
             return entities;
         }
     }
 
-    /**
-     * @deprecated since 0.6.0; subclasses should instead override {@link #pickAndRemoveMembers(int)} if they really need to!
-     */
-    protected Entity pickAndRemoveMember() {
+    private Maybe<Entity> tryPickAndRemoveMember() {
         assert !isAvailabilityZoneEnabled() : "should instead call pickAndRemoveMembers(int) if using availability zones";
 
         // TODO inefficient impl
-        Preconditions.checkState(getMembers().size() > 0, "Attempt to remove a node when members is empty, from cluster "+this);
-        if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);
+        Collection<Entity> members = getMembers();
+        if (members.isEmpty()) return Maybe.absent();
 
-        Entity entity = getRemovalStrategy().apply(getMembers());
+        if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);
+        Entity entity = getRemovalStrategy().apply(members);
         Preconditions.checkNotNull(entity, "No entity chosen for removal from "+getId());
         Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster="+this+"; choice="+entity);
 
         removeMember(entity);
-        return entity;
+        return Maybe.of(entity);
     }
 
     protected void discardNode(Entity entity) {
