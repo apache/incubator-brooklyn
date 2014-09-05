@@ -107,18 +107,6 @@ public class AbstractEntityLegacyTest {
         assertEquals(entity.getConfigureDuringConstructionCount(), 1);
     }
 
-    // TODO move the testNewStyle methods (several of them) to EntitySpecTest ?
-    // make sure to keep them when legacy approach removed!
-    // see https://github.com/apache/incubator-brooklyn/pull/113#discussion-diff-16474353
-    @Test
-    public void testNewStyleCallsConfigureAfterConstruction() throws Exception {
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class));
-        
-        assertEquals(entity.getConfigureCount(), 1);
-        assertEquals(entity.getConfigureDuringConstructionCount(), 0);
-    }
-    
     @Test
     public void testLegacyConstructionSetsDefaultDisplayName() throws Exception {
         app = new TestApplicationImpl();
@@ -139,22 +127,5 @@ public class AbstractEntityLegacyTest {
         assertEquals(app.getDisplayName(), "appname");
         assertEquals(entity.getDisplayName(), "entityname");
         assertEquals(entity2.getDisplayName(), "entityname2");
-    }
-    
-    @Test
-    public void testNewStyleSetsDefaultDisplayName() throws Exception {
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class));
-        
-        assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
-    }
-    
-    @Test
-    public void testNewStyleUsesCustomDisplayName() throws Exception {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("appname"), LocalManagementContextForTests.newInstance());
-        MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class).displayName("entityname"));
-        
-        assertEquals(app.getDisplayName(), "appname");
-        assertEquals(entity.getDisplayName(), "entityname");
     }
 }
