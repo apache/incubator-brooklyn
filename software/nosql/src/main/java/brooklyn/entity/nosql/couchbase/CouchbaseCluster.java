@@ -35,7 +35,8 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.reflect.TypeToken;
 
-@Catalog(name="CouchBase Cluster", description="CouchBase is...")
+@Catalog(name="CouchBase Cluster", description="Couchbase is an open source, distributed (shared-nothing architecture) "
+        + "NoSQL document-oriented database that is optimized for interactive applications.")
 @ImplementedBy(CouchbaseClusterImpl.class)
 public interface CouchbaseCluster extends DynamicCluster {
 

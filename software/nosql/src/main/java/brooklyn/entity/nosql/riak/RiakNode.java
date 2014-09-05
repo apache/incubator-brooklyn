@@ -35,7 +35,8 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
-@Catalog(name="Riak Node", description="Riak is...")
+@Catalog(name="Riak Node", description="Riak is a distributed NoSQL key-value data store that offers "
+        + "extremely high availability, fault tolerance, operational simplicity and scalability.")
 @ImplementedBy(RiakNodeImpl.class)
 public interface RiakNode extends SoftwareProcess {
 

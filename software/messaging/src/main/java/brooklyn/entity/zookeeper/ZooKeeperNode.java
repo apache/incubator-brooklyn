@@ -32,7 +32,8 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Apache ZooKeeper instance.
  */
-@Catalog(name="ZooKeeper Node", description="ZooKeeper is...")
+@Catalog(name="ZooKeeper Node", description="Apache ZooKeeper is a server which enables "
+        + "highly reliable distributed coordination.")
 @ImplementedBy(ZooKeeperNodeImpl.class)
 public interface ZooKeeperNode extends SoftwareProcess {
 

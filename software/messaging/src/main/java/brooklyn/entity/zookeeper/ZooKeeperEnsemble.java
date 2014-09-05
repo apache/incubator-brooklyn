@@ -32,7 +32,8 @@ import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.reflect.TypeToken;
 
-@Catalog(name="ZooKeeper ensemble", description="ZooKeeper is...")
+@Catalog(name="ZooKeeper ensemble", description="A cluster of ZooKeeper servers. "
+        + "Apache ZooKeeper enables highly reliable distributed coordination.")
 @ImplementedBy(ZooKeeperEnsembleImpl.class)
 public interface ZooKeeperEnsemble extends DynamicCluster {
 

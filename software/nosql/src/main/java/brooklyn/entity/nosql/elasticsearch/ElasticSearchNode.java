@@ -36,7 +36,9 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents an ElasticSearch node
  */
-@Catalog(name="Elastic Search Node", description="Elastic Search is...")
+@Catalog(name="Elastic Search Node", description="Elasticsearch is an open-source search server based on Lucene. "
+        + "It provides a distributed, multitenant-capable full-text search engine with a RESTful web interface and "
+        + "schema-free JSON documents.")
 @ImplementedBy(ElasticSearchNodeImpl.class)
 public interface ElasticSearchNode extends SoftwareProcess, DatastoreMixins.HasDatastoreUrl {
     @SetFromFlag("version")
