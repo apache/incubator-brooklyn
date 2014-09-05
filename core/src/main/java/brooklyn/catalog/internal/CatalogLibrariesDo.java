@@ -59,15 +59,14 @@ public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
             Maybe<OsgiManager> osgi = mgmt.getOsgiManager();
             if (osgi.isAbsent()) {
                 throw new IllegalStateException("Unable to load bundles "+bundles+" because OSGi is not running.");
-            } else if (LOG.isDebugEnabled()) {
-                LOG.debug("{} loading bundles in {}: {}",
-                    new Object[]{this, managementContext, Joiner.on(", ").join(bundles)});
             }
+            if (LOG.isDebugEnabled()) LOG.debug("{} loading bundles in {}: {}", 
+                    new Object[] {this, managementContext, Joiner.on(", ").join(bundles)});
             Stopwatch timer = Stopwatch.createStarted();
             for (String bundleUrl : bundles) {
                 osgi.get().registerBundle(bundleUrl);
             }
-            LOG.debug("{} registered {} bundles in {}",
+            if (LOG.isDebugEnabled()) LOG.debug("{} registered {} bundles in {}",
                 new Object[]{this, bundles.size(), Time.makeTimeStringRounded(timer)});
         }
     }
