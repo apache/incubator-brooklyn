@@ -71,7 +71,6 @@ define([
 
         // Wrap callback in function that checks whether updates are enabled
         var periodic = function () {
-            console.log(module.refresh);
             if (module.refresh) {
                 callback.apply(this);
             }
@@ -129,7 +128,23 @@ define([
     /**
      * A view to render another view in a modal. Give another view to render as
      * the `body' parameter that has an onSubmit function that will be called
-     * when the modal's `Save' button is clicked.
+     * when the modal's `Save' button is clicked, and/or an onCancel callback
+     * that will be called when the modal is closed without saving.
+     *
+     * The onSubmit callback should return either:
+     * <ul>
+     *   <li><b>nothing</b>: the callback is treated as successful
+     *   <li><b>true</b> or <b>false</b>: the callback is treated as appropriate
+     *   <li>a <b>promise</b> with `done' and `fail' callbacks (for example a jqXHR object):
+     *     The callback is treated as successful when the promise is done without error.
+     *   <li><b>anything else</b>: the callback is treated as successful
+     * </ul>
+     * When the onSubmit callback is successful the modal is closed.
+     *
+     * The return value of the onCancel callback is ignored.
+     *
+     * The modal will still be open and visible when the onSubmit callback is called.
+     * The modal will have been closed when the onCancel callback is called.
      */
     module.Modal = Backbone.View.extend({
 
@@ -138,7 +153,7 @@ define([
         template: _.template(ModalHtml),
 
         events: {
-            "hide": "close",
+            "hide": "onClose",
             "click .modal-submit": "onSubmit"
         },
 
@@ -146,7 +161,7 @@ define([
             if (!this.options.body) {
                 throw new Error("Modal view requires body to render");
             }
-            _.bindAll(this);
+            _.bindAll(this, "onSubmit", "onCancel", "show");
             if (this.options.autoOpen) {
                 this.show();
             }
@@ -165,7 +180,9 @@ define([
                     : _.isString(optionalTitle)
                         ? optionalTitle : this.options.title;
             this.$el.html(this.template({
-                title: title
+                title: title,
+                submitButtonText: this.options.submitButtonText || "Save",
+                cancelButtonText: this.options.cancelButtonText || "Cancel"
             }));
             this.options.body.render();
             this.$(".modal-body").html(this.options.body.$el);
@@ -181,16 +198,77 @@ define([
             if (_.isFunction(this.options.body.onSubmit)) {
                 var submission = this.options.body.onSubmit.apply(this.options.body, [event]);
                 var self = this;
-                submission.done(function() {
+                var submissionSuccess = function() {
                     // Closes view via event.
+                    self.closingSuccessfully = true;
                     self.$el.modal("hide");
-                }).fail(function() {
-                    // ?
-                });
+                };
+                var submissionFailure = function () {
+                    // Better response.
+                    console.log("modal submission failed!", arguments);
+                };
+                // Assuming no value is fine
+                if (!submission) {
+                    submission = true;
+                }
+                if (_.isBoolean(submission) && submission) {
+                    submissionSuccess();
+                } else if (_.isBoolean(submission)) {
+                    submissionFailure();
+                } else if (_.isFunction(submission.done) && _.isFunction(submission.fail)) {
+                    submission.done(submissionSuccess).fail(submissionFailure);
+                } else {
+                    // assuming success and closing modal
+                    submissionSuccess()
+                }
             }
             return false;
+        },
+
+        onCancel: function () {
+            if (_.isFunction(this.options.body.onCancel)) {
+                this.options.body.onCancel.apply(this.options.body);
+            }
+        },
+
+        onClose: function () {
+            if (!this.closingSuccessfully) {
+                this.onCancel();
+            }
+            this.close();
         }
     });
+
+    /**
+     * Shows a modal with yes/no buttons as a user confirmation prompt.
+     * @param {string} question The message to show in the body of the modal
+     * @param {string} [title] An optional title to show. Uses generic default if not given.
+     * @returns {jquery.Deferred} The promise from a jquery.Deferred object. The
+     *          promise is resolved if the modal was submitted normally and rejected
+     *          otherwise.
+     */
+    module.requestConfirmation = function (question, title) {
+        var deferred = $.Deferred();
+        var Confirmation = Backbone.View.extend({
+            title: title || "Confirm action",
+            render: function () {
+                this.$el.html(question || "");
+            },
+            onSubmit: function () {
+                deferred.resolve();
+            },
+            onCancel: function () {
+                deferred.reject();
+            }
+        });
+        new module.Modal({
+            body: new Confirmation(),
+            autoOpen: true,
+            submitButtonText: "Yes",
+            cancelButtonText: "No"
+        });
+        return deferred.promise();
+    };
 
     /** Creates, displays and returns a modal with the given view used as its body */
     module.showModalWith = function (bodyView) {

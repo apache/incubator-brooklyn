@@ -59,7 +59,6 @@ define([
                 expect(wasCalled).toBe(true);
             });
 
-            // todo: expect failure jasmine method?
             it("should fail if called without template or onSubmit", function () {
                 try {
                     new B.view.Form({template: ""});
