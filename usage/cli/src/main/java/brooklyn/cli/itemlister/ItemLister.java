@@ -125,6 +125,8 @@ public class ItemLister extends AbstractMain {
                 mkdir(parentDir, "locationResolvers");
                 Files.write("var items = " + json, new File(Os.mergePaths(outputFolder, "items.js")), Charsets.UTF_8);
                 ResourceUtils resourceUtils = ResourceUtils.create(this);
+                String js = resourceUtils.getResourceAsString("common.js");
+                Files.write(js, new File(Os.mergePaths(outputFolder, "common.js")), Charsets.UTF_8);
                 String css = resourceUtils.getResourceAsString("items.css");
                 Files.write(css, new File(Os.mergePaths(outputFolder, "items.css")), Charsets.UTF_8);
                 String mainHtml = resourceUtils.getResourceAsString("brooklyn-object-list.html");
