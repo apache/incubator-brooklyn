@@ -398,6 +398,23 @@ public class LocalEntityManager implements EntityManagerInternal {
      * Returns true if the entity has been removed from management; if it was not previously managed (anything else throws exception) 
      */
     private boolean unmanageNonRecursive(Entity e) {
+        /*
+         * When method is synchronized, hit deadlock: 
+         * 1. thread called unmanage() on a member of a group, so we got the lock and called group.removeMember;
+         *    this ties to synchronize on AbstractGroupImpl.members 
+         * 2. another thread was doing AbstractGroupImpl.addMember, which is synchronized on AbstractGroupImpl.members;
+         *    it tries to call Entities.manage(child) which calls LocalEntityManager.getEntity(), which is
+         *    synchronized on this.
+         * 
+         * We MUST NOT call alien code from within the management framework while holding locks. 
+         * The AbstractGroup.removeMember is effectively alien because a user could override it, and because
+         * it is entity specific.
+         * 
+         * TODO Does getting then removing from groups risk this entity being added to other groups while 
+         * this is happening? Should abstractEntity.onManagementStopped or some such remove the entity
+         * from its groups?
+         */
+        
         Collection<Group> groups = e.getGroups();
         e.clearParent();
         for (Group group : groups) {

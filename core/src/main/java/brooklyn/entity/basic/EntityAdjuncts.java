@@ -28,6 +28,7 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EntityAdjunct;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -37,12 +38,12 @@ import com.google.common.collect.ImmutableList;
  */
 public class EntityAdjuncts {
 
-    public static <T extends EntityAdjunct> T findWithUniqueTag(Iterable<T> adjuncts, Object tag) {
+    public static <T extends EntityAdjunct> Maybe<T> tryFindWithUniqueTag(Iterable<T> adjuncts, Object tag) {
         Preconditions.checkNotNull(tag, "tag");
         for (T adjunct: adjuncts)
             if (tag.equals(adjunct.getUniqueTag())) 
-                return adjunct;
-        return null;
+                return Maybe.of(adjunct);
+        return Maybe.absent("Not found with tag "+tag);
     }
     
     public static final List<String> SYSTEM_ENRICHER_UNIQUE_TAGS = ImmutableList.of(

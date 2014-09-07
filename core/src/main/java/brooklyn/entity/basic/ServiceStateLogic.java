@@ -50,6 +50,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.Functionals;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -115,9 +116,9 @@ public class ServiceStateLogic {
     public static void setExpectedState(Entity entity, Lifecycle state) {
         ((EntityInternal)entity).setAttribute(Attributes.SERVICE_STATE_EXPECTED, new Lifecycle.Transition(state, new Date()));
         
-        Enricher enricher = EntityAdjuncts.findWithUniqueTag(entity.getEnrichers(), ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG);
-        if (enricher instanceof ComputeServiceState) {
-            ((ComputeServiceState)enricher).onEvent(null);
+        Maybe<Enricher> enricher = EntityAdjuncts.tryFindWithUniqueTag(entity.getEnrichers(), ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG);
+        if (enricher.isPresent() && enricher.get() instanceof ComputeServiceState) {
+            ((ComputeServiceState)enricher.get()).onEvent(null);
         }
     }
     public static Lifecycle getExpectedState(Entity entity) {
@@ -386,7 +387,7 @@ public class ServiceStateLogic {
         protected void onUpdated() {
             if (entity==null || !Entities.isManaged(entity)) {
                 // either invoked during setup or entity has become unmanaged; just ignore
-                log.debug("Ignoring {} onUpdated when entity is not in valid state ({})", this, entity);
+                if (log.isDebugEnabled()) log.debug("Ignoring {} onUpdated when entity is not in valid state ({})", this, entity);
                 return;
             }
 

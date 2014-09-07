@@ -23,12 +23,10 @@ import static org.testng.Assert.assertEquals;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -44,12 +42,12 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -313,8 +311,8 @@ public class HighAvailabilityManagerSplitBrainTest {
 
         try {
             final Stopwatch timer = Stopwatch.createStarted();
-            Assert.assertTrue(Repeater.create().backoff(Duration.millis(1), 1.2, Duration.millis(50)).limitTimeTo(Duration.THIRTY_SECONDS).until(new Callable<Boolean>() {
-                @Override public Boolean call() throws Exception {
+            Asserts.succeedsEventually(new Runnable() {
+                @Override public void run() {
                     ManagementPlaneSyncRecord memento = nodes.get(0).ha.getManagementPlaneSyncState();
                     int masters=0, standbys=0, savedMasters=0, savedStandbys=0;
                     for (HaMgmtNode n: nodes) {
@@ -334,9 +332,11 @@ public class HighAvailabilityManagerSplitBrainTest {
                         log.warn("we seem to have a problem stabilizing");  //handy place to set a suspend-VM breakpoint!
                         timer.stop();
                     }
-                    return masters==1 && standbys==nodes.size()-1 && savedMasters==1 && savedStandbys==nodes.size()-1;
-                }
-            }).run());
+                    assertEquals(masters, 1);
+                    assertEquals(standbys, nodes.size()-1);
+                    assertEquals(savedMasters, 1);
+                    assertEquals(savedStandbys, nodes.size()-1);
+                }});
         } catch (Throwable t) {
             log.warn("Failed to stabilize (rethrowing): "+t, t);
             throw Exceptions.propagate(t);

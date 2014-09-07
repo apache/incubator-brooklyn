@@ -36,6 +36,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
@@ -180,8 +181,7 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEquals(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         // if we change the state quorum check for the app to be "all are healthy and at least one running" *then* it shows stopped
         // (normally this would be done in `initEnrichers` of course)
-        Enricher appChildrenBasedEnricher = EntityAdjuncts.findWithUniqueTag(app.getEnrichers(), ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG);
-        Assert.assertNotNull(appChildrenBasedEnricher, "Expected enricher not found");
+        Enricher appChildrenBasedEnricher = EntityAdjuncts.tryFindWithUniqueTag(app.getEnrichers(), ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG).get();
         appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumChecks.allAndAtLeastOne());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
