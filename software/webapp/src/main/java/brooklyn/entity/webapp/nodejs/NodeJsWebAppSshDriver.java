@@ -89,8 +89,7 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
 
     @Override
     public void install() {
-        List<String> packages = getEntity().getConfig(NodeJsWebAppService.NODE_PACKAGE_LIST);
-        LOG.info("Installing Node.JS {} {}", getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION), Iterables.toString(packages));
+        LOG.info("Installing Node.JS {}", getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION));
 
         List<String> commands = MutableList.<String>builder()
                 .add(BashCommands.INSTALL_CURL)
@@ -102,10 +101,6 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
                 .add(BashCommands.sudo("n " + getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION)))
                 .build();
 
-        if (packages != null && packages.size() > 0) {
-            commands.add(BashCommands.sudo("npm install -g " + Joiner.on(' ').join(packages)));
-        }
-
         newScript(INSTALLING)
                 .body.append(commands)
                 .execute();
@@ -115,10 +110,14 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
     public void customize() {
         List<String> commands = Lists.newLinkedList();
 
+        List<String> packages = getEntity().getConfig(NodeJsWebAppService.NODE_PACKAGE_LIST);
+        if (packages != null && packages.size() > 0) {
+            commands.add(BashCommands.sudo("npm install -g " + Joiner.on(' ').join(packages)));
+        }
+
         String gitRepoUrl = getEntity().getConfig(NodeJsWebAppService.APP_GIT_REPOSITORY_URL);
         String archiveUrl = getEntity().getConfig(NodeJsWebAppService.APP_ARCHIVE_URL);
         String appName = getEntity().getConfig(NodeJsWebAppService.APP_NAME);
-
         if (Strings.isNonBlank(gitRepoUrl) && Strings.isNonBlank(archiveUrl)) {
             throw new IllegalStateException("Only one of Git or archive URL must be set for " + getEntity());
         } else if (Strings.isNonBlank(gitRepoUrl)) {
