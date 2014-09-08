@@ -48,6 +48,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableSet;
@@ -70,6 +71,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
@@ -405,14 +407,14 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     protected void addServer(Entity serverToAdd) {
         Preconditions.checkNotNull(serverToAdd);
         if (!isMemberInCluster(serverToAdd)) {
-            String hostname = serverToAdd.getAttribute(Attributes.HOSTNAME) + ":" + serverToAdd.getConfig(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).iterator().next();
+            HostAndPort webAdmin = BrooklynAccessUtils.getBrooklynAccessibleAddress(serverToAdd, serverToAdd.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
             String username = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
             String password = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
 
             if (isClusterInitialized()) {
-                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD_AND_REBALANCE, hostname, username, password);
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD_AND_REBALANCE, webAdmin.toString(), username, password);
             } else {
-                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, hostname, username, password);
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, webAdmin.toString(), username, password);
             }
             //FIXME check feedback of whether the server was added.
             ((EntityInternal) serverToAdd).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
