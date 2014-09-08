@@ -36,6 +36,7 @@ define([
             'click .entity-tabs a':'tabSelected'
         },
         initialize:function () {
+            var self = this;
             var tasks = new TaskSummary.Collection;
             
             this.$el.html(this.template({}))
@@ -68,6 +69,9 @@ define([
                 tabView:this,
                 application:this.options.application
             });
+            // propagate to app tree view 
+            this.advancedView.on("entity.expunged", function() { self.trigger("entity.expunged"); })
+            
             this.$("#summary").html(this.summaryView.render().el);
             this.$("#sensors").html(this.sensorsView.render().el);
             this.$("#effectors").html(this.effectorsView.render().el);
