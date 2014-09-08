@@ -35,29 +35,18 @@ import brooklyn.rest.security.PasswordHasher;
 
 /** security provider which validates users against passwords according to property keys,
  * as set in {@link BrooklynWebConfig#USERS} and {@link BrooklynWebConfig#PASSWORD_FOR_USER(String)}*/
-public class ExplicitUsersSecurityProvider implements SecurityProvider {
+public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider implements SecurityProvider {
 
     public static final Logger LOG = LoggerFactory.getLogger(ExplicitUsersSecurityProvider.class);
     
-    public static final String AUTHENTICATION_KEY = ExplicitUsersSecurityProvider.class.getCanonicalName()+"."+"AUTHENTICATED";
-
     protected final ManagementContext mgmt;
-    
+    private boolean allowAnyUserWithValidPass;
+    private Set<String> allowedUsers = null;
+
     public ExplicitUsersSecurityProvider(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
-    
-    @Override
-    public boolean isAuthenticated(HttpSession session) {
-        if (session==null) return false;
-        Object value = session.getAttribute(AUTHENTICATION_KEY);
-        return (value!=null);
-    }
 
-    private boolean allowAnyUserWithValidPass = false;
-    
-    private Set<String> allowedUsers = null;
-    
     private synchronized void initialize() {
         if (allowedUsers!=null) return;
 
@@ -98,7 +87,7 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
         String expectedSha256 = properties.getConfig(BrooklynWebConfig.SHA256_FOR_USER(user));
         
         if (expectedP != null) {
-            if (expectedP.equals(password)){
+            if (expectedP.equals(password)) {
                 // password is good
                 return allow(session, user);
             } else {
@@ -116,21 +105,8 @@ public class ExplicitUsersSecurityProvider implements SecurityProvider {
                 return false;
             }                
         }
-        LOG.warn("Web console rejecting passwordless user "+user);
+        LOG.warn("Web console rejecting passwordless user " + user);
         return false;
-    }
-
-    private boolean allow(HttpSession session, String user) {
-        LOG.debug("Web console "+getClass().getSimpleName()+" authenticated user "+user);
-        session.setAttribute(AUTHENTICATION_KEY, user);
-        return true;
-    }
-
-    @Override
-    public boolean logout(HttpSession session) { 
-        if (session==null) return false;
-        session.removeAttribute(AUTHENTICATION_KEY);
-        return true;
     }
 
 }
