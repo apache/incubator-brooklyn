@@ -55,8 +55,7 @@ public abstract class AbstractSecurityProvider implements SecurityProvider {
     }
 
     protected String getAuthenticationKey() {
-        LOG.info("Using authentication key {}", getClass().getCanonicalName() + ".AUTHENTICATED");
-        return getClass().getCanonicalName() + ".AUTHENTICATED";
+        return getClass().getName() + ".AUTHENTICATED";
     }
 
 }

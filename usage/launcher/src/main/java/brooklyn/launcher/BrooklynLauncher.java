@@ -19,6 +19,8 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
@@ -595,16 +597,18 @@ public class BrooklynLauncher {
     }
 
     protected void startWebApps() {
-        if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties)) {
-            if (bindAddress==null) {
-                LOG.info("Starting brooklyn web-console on loopback interface because no security config is set");
-                bindAddress = Networking.LOOPBACK;
-            }
-            if (skipSecurityFilter==null) {
-                LOG.debug("Starting brooklyn web-console without security because we are loopback and no security is set");
-                skipSecurityFilter = true;
-            }
+        // No security options in properties and no command line options overriding.
+        if (Boolean.TRUE.equals(skipSecurityFilter) && bindAddress == null) {
+            LOG.info("Starting Brooklyn web-console on loopback because security is explicitly disabled and no bind address was given");
+            bindAddress = Networking.LOOPBACK;
+        } else if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties) && bindAddress == null) {
+            LOG.info("Starting Brooklyn web-console with passwordless access on localhost and protected access from other interfaces");
+            bindAddress = Networking.ANY_NIC;
+            brooklynProperties.put(
+                    BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
+                    BrooklynUserWithRandomPasswordSecurityProvider.class.getName());
         }
+
         try {
             webServer = new BrooklynWebServer(webconsoleFlags, managementContext);
             webServer.setBindAddress(bindAddress);
@@ -614,15 +618,14 @@ public class BrooklynLauncher {
             if (skipSecurityFilter != Boolean.TRUE) {
                 webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
             }
-            
-            for (Map.Entry<String, String> webapp : webApps.entrySet())
+            for (Map.Entry<String, String> webapp : webApps.entrySet()) {
                 webServer.addWar(webapp.getKey(), webapp.getValue());
-            
+            }
             webServer.start();
-            
+
         } catch (Exception e) {
-            LOG.warn("Failed to start Brooklyn web-console (rethrowing): "+Exceptions.collapseText(e));
-            throw new FatalRuntimeException("Failed to start Brooklyn web-console: "+Exceptions.collapseText(e), e);
+            LOG.warn("Failed to start Brooklyn web-console (rethrowing): " + Exceptions.collapseText(e));
+            throw new FatalRuntimeException("Failed to start Brooklyn web-console: " + Exceptions.collapseText(e), e);
         }
     }
 
