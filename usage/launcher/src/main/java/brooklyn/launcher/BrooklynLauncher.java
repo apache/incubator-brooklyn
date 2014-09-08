@@ -579,7 +579,7 @@ public class BrooklynLauncher {
         if (permission.isAbsent()) {
             LOG.debug("Could not determine permissions of file; assuming ok: "+f);
         } else {
-            if (!permission.get().substring(4).equals("------")) {
+            if (!permission.get().subSequence(4, 10).equals("------")) {
                 throw new FatalRuntimeException("Invalid permissions for file "+file+"; expected ?00 but was "+permission.get());
             }
         }
