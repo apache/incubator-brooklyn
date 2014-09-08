@@ -83,9 +83,7 @@ public interface PolicyConfigApi {
       @PathParam("config") String configKeyName
   ) ;
   
-  // TODO support a POST directly to /{config} where the body is the value, useful e.g. when it's a map
-  // TODO and deprecate the /set endpoint item below
-
+  /** @deprecated since 0.7.0 use set with object*/ @Deprecated
   @POST
   @Path("/{config}/set")
   @ApiOperation(value = "Sets the given config on this policy")
@@ -104,4 +102,24 @@ public interface PolicyConfigApi {
           @ApiParam(name = "value", value = "New value for the configuration", required = true)
           @QueryParam("value") String value
   ) ;
+  
+  @POST
+  @Path("/{config}")
+  @ApiOperation(value = "Sets the given config on this policy")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application, entity, policy or config key")
+  })
+  public Response set(
+          @ApiParam(value = "Application ID or name", required = true)
+          @PathParam("application") String application,
+          @ApiParam(value = "Entity ID or name", required = true)
+          @PathParam("entity") String entityToken,
+          @ApiParam(value = "Policy ID or name", required = true)
+          @PathParam("policy") String policyToken,
+          @ApiParam(value = "Config key ID", required = true)
+          @PathParam("config") String configKeyName,
+          @ApiParam(name = "value", value = "New value for the configuration", required = true)
+          Object value
+  ) ;
+
 }

@@ -34,6 +34,7 @@ import brooklyn.rest.api.EntityConfigApi;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -103,7 +104,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
       }
 
       ConfigKey ck = findConfig(entity, configName);
-      ((EntityInternal)entity).setConfig(ck, newValue);
+      ((EntityInternal)entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getType()));
       if (Boolean.TRUE.equals(recurse)) {
           for (Entity e2: Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
               ((EntityInternal)e2).setConfig(ck, newValue);

@@ -45,11 +45,19 @@ define([
 
         onSubmit: function () {
             var that = this,
-                url = that.model.getLinkByName("self") + "/set",
+                url = that.model.getLinkByName("self"),
                 val = that.$("#policy-config-value").val();
+            try {
+                JSON.parse(val);
+            } catch (e) {
+                // ignore error, it's just unparseable, so put it in a string
+                val = JSON.stringify(val);
+            }
             return $.ajax({
                 type: "POST",
-                url: url + "?value=" + val
+                url: url,
+                contentType:"application/json",
+                data: val
             }).fail(function(response) {
                 var message = JSON.parse(response.responseText).message;
                 that.showError(message);
@@ -62,7 +70,7 @@ define([
         },
 
         title: function () {
-            return "Reconfigure " + this.options.policy.get("name")
+            return "Reconfigure " + this.options.policy.get("name");
         }
     });
     return PolicyConfigInvokeView;
