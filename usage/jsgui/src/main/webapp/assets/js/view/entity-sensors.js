@@ -22,13 +22,12 @@
  * @type {*}
  */
 define([
-    "brooklyn-utils", "zeroclipboard", 
-    "view/viewutils", "model/sensor-summary",
-    "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-name.html",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "zeroclipboard", "view/viewutils", 
+    "model/sensor-summary", "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-name.html",
     "jquery-datatables", "datatables-extensions", "underscore", "jquery", "backbone", "uri",
-], function (Util, ZeroClipboard, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
+], function (_, $, Backbone, Util, ZeroClipboard, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
 
-    // TODO if ZeroClipboard is used elsewhere consider extracting this to a ZeroClipboard wrapper
+    // TODO consider extracting all such usages to a shared ZeroClipboard wrapper?
     ZeroClipboard.config({ moviePath: 'assets/js/libs/ZeroClipboard.swf' });
     
     var sensorHtml = _.template(SensorsHtml),
@@ -76,10 +75,10 @@ define([
                 that = this;
             this.table = ViewUtils.myDataTable($table, {
                 "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-                    $(nRow).attr('id', aData[0])
+                    $(nRow).attr('id', aData[0]);
                     $('td',nRow).each(function(i,v){
                         if (i==1) $(v).attr('class','sensor-value');
-                    })
+                    });
                     return nRow;
                 },
                 "aoColumnDefs": [
@@ -430,7 +429,7 @@ define([
         getSensorActions: function(sensorName) {
             var allMetadata = this.sensorMetadata || {};
             var metadata = allMetadata[sensorName] || {};
-            return metadata.actions || {}
+            return metadata.actions || {};
         },
 
         toggleFilterEmpty: function() {
@@ -444,7 +443,7 @@ define([
         },
 
         enableAutoRefresh: function(isEnabled) {
-            this.refreshActive = isEnabled
+            this.refreshActive = isEnabled;
             return this;
         },
         
@@ -453,31 +452,32 @@ define([
          */
         isRefreshActive: function() { return this.refreshActive; },
         updateSensorsNow:function () {
-            var that = this
+            var that = this;
             ViewUtils.get(that, that.model.getSensorUpdateUrl(), that.updateWithData,
                     { enablement: that.isRefreshActive });
         },
         updateSensorsPeriodically:function () {
-            var that = this
-            ViewUtils.getRepeatedlyWithDelay(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(data) },
+            var that = this;
+            ViewUtils.getRepeatedlyWithDelay(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(data); },
                     { enablement: that.isRefreshActive });
         },
         updateWithData: function (data) {
-            var that = this
+            var that = this;
             $table = that.$('#sensors-table');
-            var options = {}
+            var options = {};
             if (that.fullRedraw) {
-                options.refreshAllRows = true
-                that.fullRedraw = false
+                options.refreshAllRows = true;
+                that.fullRedraw = false;
             }
             ViewUtils.updateMyDataTable($table, data, function(value, name) {
-                var metadata = that.sensorMetadata[name]
+                var metadata = that.sensorMetadata[name];
                 if (metadata==null) {                        
                     // kick off reload metadata when this happens (new sensor for which no metadata known)
                     // but only if we haven't loaded metadata for a while
+                    metadata = { 'name':name };
+                    that.sensorMetadata[name] = metadata; 
                     that.loadSensorMetadataIfStale(name, 10000);
-                    return [name, {'name':name}, value]
-                } 
+                };
                 return [name, metadata, value];
             }, options);
             
@@ -505,9 +505,9 @@ define([
                         description: sensor.description,
                         actions: actions,
                         type: sensor.type
-                    }
+                    };
                 });
-                that.fullRedraw = true
+                that.fullRedraw = true;
                 that.updateSensorsNow();
                 that.table.find('*[rel="tooltip"]').tooltip();
             });
@@ -515,7 +515,7 @@ define([
         },
         
         loadSensorMetadataIfStale: function(sensorName, recency) {
-            var that = this
+            var that = this;
             if (!that.lastSensorMetadataLoadTime || that.lastSensorMetadataLoadTime + recency < new Date().getTime()) {
 //                log("reloading metadata because new sensor "+sensorName+" identified")
                 that.loadSensorMetadata();

@@ -1,0 +1,12 @@
+name: Simple 2 Element
+
+location: localhost
+
+services:
+- type: brooklyn.entity.basic.BasicApplication
+  brooklyn.config:
+    key1: val1
+  brooklyn.children:
+  - type: brooklyn.entity.basic.BasicEntity
+    brooklyn.config:
+      key2: val2

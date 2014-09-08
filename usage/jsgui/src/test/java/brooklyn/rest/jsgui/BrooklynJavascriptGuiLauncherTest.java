@@ -26,7 +26,6 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import brooklyn.test.HttpTestUtils;
 
@@ -56,13 +55,21 @@ public class BrooklynJavascriptGuiLauncherTest {
         server = BrooklynJavascriptGuiLauncher.startJavascriptAndRest();
         BrooklynRestApiLauncherTestFixture.forceUseOfDefaultCatalogWithJavaClassPath(server);
         BrooklynRestApiLauncherTestFixture.enableAnyoneLogin(server);
+        checkEventuallyHealthy();
         checkUrlContains("/index.html", "Brooklyn");
         checkUrlContains("/v1/catalog/entities", "Tomcat");
     }
 
     protected void checkUrlContains(String path, String text) {
-        String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
-        HttpTestUtils.assertContentContainsText(rootUrl+path, text);
+        HttpTestUtils.assertContentContainsText(rootUrl()+path, text);
+    }
+
+    protected void checkEventuallyHealthy() {
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals(rootUrl(), 200);
+    }
+
+    protected String rootUrl() {
+        return "http://localhost:"+server.getConnectors()[0].getLocalPort();
     }
 
     private ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
