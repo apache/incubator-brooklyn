@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.messaging.storm;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -25,6 +26,9 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.util.flags.SetFromFlag;
 
+@Catalog(name="Storm Deployment", description="A Storm cluster. Apache Storm is a distributed realtime computation system. "
+        + "Storm makes it easy to reliably process unbounded streams of data, doing for realtime processing "
+        + "what Hadoop did for batch processing")
 @ImplementedBy(StormDeploymentImpl.class)
 public interface StormDeployment extends Entity, Startable {
 

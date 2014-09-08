@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.BrooklynConfigKeys;
@@ -48,6 +49,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
+@Catalog(name="Brooklyn Node", description="Deploys a Brooklyn management server")
 @ImplementedBy(BrooklynNodeImpl.class)
 public interface BrooklynNode extends SoftwareProcess, UsesJava {
 

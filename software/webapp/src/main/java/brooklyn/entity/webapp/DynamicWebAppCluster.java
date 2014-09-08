@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.webapp;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -34,6 +35,7 @@ import brooklyn.util.time.Duration;
  *   <li>Entity processing time</li>
  * </ul>
  */
+@Catalog(name="Dynamic Web-app Cluster", description="A cluster of web-apps, which can be dynamically re-sized; this does not include a load-balancer")
 @ImplementedBy(DynamicWebAppClusterImpl.class)
 public interface DynamicWebAppCluster extends DynamicCluster, WebAppService, JavaWebAppService, JavaWebAppService.CanDeployAndUndeploy, JavaWebAppService.CanRedeployAll {
 

@@ -53,7 +53,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-@Catalog
+@Catalog(name="Follow the Sun", description="Policy for moving \"work\" around to follow the demand; "
+        + "the work can be any \"Movable\" entity")
 public class FollowTheSunPolicy extends AbstractPolicy {
 
     private static final Logger LOG = LoggerFactory.getLogger(FollowTheSunPolicy.class);

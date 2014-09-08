@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -56,6 +57,7 @@ import com.google.common.collect.Lists;
 
 /** attaches to a DynamicCluster and replaces a failed member in response to HASensors.ENTITY_FAILED or other sensor;
  * if this fails, it sets the Cluster state to on-fire */
+@Catalog(name="Service Replacer", description="HA policy for replacing a failed member of a group")
 public class ServiceReplacer extends AbstractPolicy {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceReplacer.class);

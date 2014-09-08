@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableMap;
  * Node.JS Todo Application
  */
 @Catalog(name="NodeJS Todo",
-        description="Node.JS Todo Application.",
+        description="Node.js is a cross-platform runtime environment for server-side and networking applications. Node.js applications are written in JavaScript",
         iconUrl="classpath://nodejs-logo.png")
 public class NodeJsTodoApplication extends AbstractApplication implements StartableApplication {
 

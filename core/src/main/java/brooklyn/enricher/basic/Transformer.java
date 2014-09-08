@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -36,6 +37,7 @@ import brooklyn.event.basic.BasicSensorEvent;
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
 
+@Catalog(name="Transformer", description="Transformers attributes of an entity; see Enrichers.builder().transforming(...)")
 @SuppressWarnings("serial")
 public class Transformer<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 

@@ -20,6 +20,7 @@ package brooklyn.entity.zookeeper;
 
 import java.util.List;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.DynamicCluster;
@@ -31,6 +32,8 @@ import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.reflect.TypeToken;
 
+@Catalog(name="ZooKeeper ensemble", description="A cluster of ZooKeeper servers. "
+        + "Apache ZooKeeper enables highly reliable distributed coordination.")
 @ImplementedBy(ZooKeeperEnsembleImpl.class)
 public interface ZooKeeperEnsemble extends DynamicCluster {
 

@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.nosql.elasticsearch;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -26,6 +27,9 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * A cluster of {@link ElasticSearchNode}s based on {@link DynamicCluster} which can be resized by a policy if required.
  */
+@Catalog(name="Elastic Search Cluster", description="Elasticsearch is an open-source search server based on Lucene. "
+        + "It provides a distributed, multitenant-capable full-text search engine with a RESTful web interface and "
+        + "schema-free JSON documents.")
 @ImplementedBy(ElasticSearchClusterImpl.class)
 public interface ElasticSearchCluster extends DynamicCluster {
     @SetFromFlag("clusterName")

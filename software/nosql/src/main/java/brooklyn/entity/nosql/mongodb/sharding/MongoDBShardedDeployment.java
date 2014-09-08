@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.nosql.mongodb.sharding;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -29,6 +30,9 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+@Catalog(name="MongoDB Sharded Deployment",
+        description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
+        iconUrl="classpath:///mongodb-logo.png")
 @ImplementedBy(MongoDBShardedDeploymentImpl.class)
 public interface MongoDBShardedDeployment extends Entity, Startable {
     @SetFromFlag("configClusterSize")

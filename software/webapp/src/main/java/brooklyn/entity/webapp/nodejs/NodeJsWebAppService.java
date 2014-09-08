@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
 @Catalog(name="Node.JS Application",
-        description="Node.JS Web Application",
+        description="Node.js is a cross-platform runtime environment for server-side and networking applications. Node.js applications are written in JavaScriptq",
         iconUrl="classpath:///nodejs-logo.png")
 @ImplementedBy(NodeJsWebAppServiceImpl.class)
 public interface NodeJsWebAppService extends SoftwareProcess, WebAppService {

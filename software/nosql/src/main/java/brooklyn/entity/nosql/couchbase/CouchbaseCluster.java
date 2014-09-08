@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -34,6 +35,8 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.reflect.TypeToken;
 
+@Catalog(name="CouchBase Cluster", description="Couchbase is an open source, distributed (shared-nothing architecture) "
+        + "NoSQL document-oriented database that is optimized for interactive applications.")
 @ImplementedBy(CouchbaseClusterImpl.class)
 public interface CouchbaseCluster extends DynamicCluster {
 

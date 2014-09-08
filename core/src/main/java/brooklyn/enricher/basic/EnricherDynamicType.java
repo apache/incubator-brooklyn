@@ -24,6 +24,10 @@ import brooklyn.policy.EnricherType;
 
 public class EnricherDynamicType extends BrooklynDynamicType<Enricher, AbstractEnricher> {
 
+    public EnricherDynamicType(Class<? extends Enricher> type) {
+        super(type);
+    }
+
     public EnricherDynamicType(AbstractEnricher enricher) {
         super(enricher);
     }

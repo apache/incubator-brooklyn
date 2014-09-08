@@ -25,6 +25,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -46,6 +47,7 @@ import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
+@Catalog(name="Propagator", description="Propagates attributes from one entity to another; see Enrichers.builder().propagating(...)")
 public class Propagator extends AbstractEnricher implements SensorEventListener<Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Propagator.class);

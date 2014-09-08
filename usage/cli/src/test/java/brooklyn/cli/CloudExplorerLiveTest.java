@@ -33,7 +33,7 @@ import java.util.List;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.cli.Main.BrooklynCommand;
+import brooklyn.cli.AbstractMain.BrooklynCommand;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;

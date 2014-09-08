@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -54,7 +55,18 @@ import brooklyn.util.time.Duration;
  * (or until another process manually sets {@link Attributes#SERVICE_STATE_ACTUAL} to {@value Lifecycle#ON_FIRE},
  * which this enricher will not clear until all problems have gone away)
  */
+@Catalog(name="Service Failure Detector", description="HA policy for deteting failure of a service")
 public class ServiceFailureDetector extends ServiceStateLogic.ComputeServiceState {
+
+    // TODO Remove duplication between this and MemberFailureDetectionPolicy.
+    // The latter could be re-written to use this. Or could even be deprecated
+    // in favour of this.
+
+    public enum LastPublished {
+        NONE,
+        FAILED,
+        RECOVERED;
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceFailureDetector.class);
 

@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -52,6 +53,8 @@ import com.google.common.base.Preconditions;
  * if there is a subsequent failure within a configurable time interval, or if the restart fails,
  * this gives up and emits {@link #ENTITY_RESTART_FAILED} 
  */
+@Catalog(name="Service Restarter", description="HA policy for restarting a service automatically, "
+        + "and for emitting an events if the service repeatedly fails")
 public class ServiceRestarter extends AbstractPolicy {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceRestarter.class);

@@ -20,36 +20,23 @@ package brooklyn.cli;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
-import io.airlift.command.Arguments;
 import io.airlift.command.Cli;
 import io.airlift.command.Cli.CliBuilder;
 import io.airlift.command.Command;
-import io.airlift.command.Help;
 import io.airlift.command.Option;
-import io.airlift.command.OptionType;
-import io.airlift.command.ParseException;
 
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -83,7 +70,6 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 
@@ -100,22 +86,7 @@ import com.google.common.collect.ImmutableList;
  *      (typically calling the parent and then customizing the builder)
  * <li> populating a custom catalog using {@link LaunchCommand#populateCatalog(BrooklynCatalog)}
  */
-public class Main {
-
-    // Launch banner
-    public static final String BANNER =
-        " _                     _    _             \n" +
-        "| |__  _ __ ___   ___ | | _| |_   _ _ __ (R)\n" +
-        "| '_ \\| '__/ _ \\ / _ \\| |/ / | | | | '_ \\ \n" +
-        "| |_) | | | (_) | (_) |   <| | |_| | | | |\n" +
-        "|_.__/|_|  \\___/ \\___/|_|\\_\\_|\\__, |_| |_|\n" +
-        "                              |___/             "+BrooklynVersion.get()+"\n";
-
-    // Error codes
-    public static final int SUCCESS = 0;
-    public static final int PARSE_ERROR = 1;
-    public static final int EXECUTION_ERROR = 2;
-    public static final int CONFIGURATION_ERROR = 3;
+public class Main extends AbstractMain {
 
     /** @deprecated since 0.7.0 will become private static, subclasses should define their own logger */
     @Deprecated
@@ -123,98 +94,6 @@ public class Main {
 
     public static void main(String... args) {
         new Main().execCli(args);
-    }
-
-    /** abstract superclass for commands defining global options, but not arguments,
-     * as that prevents Help from being injectable in the {@link HelpCommand} subclass */
-    public static abstract class BrooklynCommand implements Callable<Void> {
-
-        @Option(type = OptionType.GLOBAL, name = { "-v", "--verbose" }, description = "Verbose mode")
-        public boolean verbose = false;
-
-        @Option(type = OptionType.GLOBAL, name = { "-q", "--quiet" }, description = "Quiet mode")
-        public boolean quiet = false;
-
-        @VisibleForTesting
-        protected PrintStream stdout = System.out;
-        
-        @VisibleForTesting
-        protected PrintStream stderr = System.err;
-
-        @VisibleForTesting
-        protected InputStream stdin = System.in;
-
-        public ToStringHelper string() {
-            return Objects.toStringHelper(getClass())
-                    .add("verbose", verbose)
-                    .add("quiet", quiet);
-        }
-
-        @Override
-        public String toString() {
-            return string().toString();
-        }
-    }
-    
-    /** common superclass for commands, defining global options (in our super) and extracting the arguments */
-    public static abstract class BrooklynCommandCollectingArgs extends BrooklynCommand {
-
-        /** extra arguments */
-        @Arguments
-        public List<String> arguments = new ArrayList<String>();
-        
-        /** @return true iff there are arguments; it also sys.errs a warning in that case  */
-        protected boolean warnIfArguments() {
-            if (arguments.isEmpty()) return false;
-            stderr.println("Invalid subcommand arguments: "+Strings.join(arguments, " "));
-            return true;
-        }
-        
-        /** throw {@link ParseException} iff there are arguments */
-        protected void failIfArguments() {
-            if (arguments.isEmpty()) return ;
-            throw new ParseException("Invalid subcommand arguments '"+Strings.join(arguments, " ")+"'");
-        }
-        
-        @Override
-        public ToStringHelper string() {
-            return super.string()
-                    .add("arguments", arguments);
-        }
-    }
-
-    @Command(name = "help", description = "Display help for available commands")
-    public static class HelpCommand extends BrooklynCommand {
-
-        @Inject
-        public Help help;
-
-        @Override
-        public Void call() throws Exception {
-            if (log.isDebugEnabled()) log.debug("Invoked help command: {}", this);
-            return help.call();
-        }
-    }
-
-    @Command(name = "info", description = "Display information about brooklyn")
-    public static class InfoCommand extends BrooklynCommandCollectingArgs {
-        
-        @Override
-        public Void call() throws Exception {
-            if (log.isDebugEnabled()) log.debug("Invoked info command: {}", this);
-            warnIfArguments();
-
-            System.out.println(BANNER);
-            System.out.println("Version:  " + BrooklynVersion.get());
-            System.out.println("Website:  http://brooklyn.incubator.apache.org");
-            System.out.println("Source:   https://github.com/apache/incubator-brooklyn");
-            System.out.println();
-            System.out.println("Copyright 2011-2014 The Apache Software Foundation.");
-            System.out.println("Licensed under the Apache 2.0 License");
-            System.out.println();
-
-            return null;
-        }
     }
 
     @Command(name = "generate-password", description = "Generates a hashed web-console password")
@@ -886,6 +765,7 @@ public class Main {
 
     /** method intended for overriding when a different {@link Cli} is desired,
      * or when the subclass wishes to change any of the arguments */
+    @Override
     protected CliBuilder<BrooklynCommand> cliBuilder() {
         @SuppressWarnings({ "unchecked" })
         CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
@@ -905,45 +785,4 @@ public class Main {
     protected Class<? extends BrooklynCommand> cliLaunchCommand() {
         return LaunchCommand.class;
     }
-    
-    protected void execCli(String ...args) {
-        execCli(cliBuilder().build(), args);
-    }
-    
-    protected void execCli(Cli<BrooklynCommand> parser, String ...args) {
-        try {
-            log.debug("Parsing command line arguments: {}", Arrays.asList(args));
-            BrooklynCommand command = parser.parse(args);
-            log.debug("Executing command: {}", command);
-            command.call();
-            System.exit(SUCCESS);
-        } catch (ParseException pe) { // looks like the user typed it wrong
-            System.err.println("Parse error: " + pe.getMessage()); // display
-                                                                   // error
-            System.err.println(getUsageInfo(parser)); // display cli help
-            System.exit(PARSE_ERROR);
-        } catch (FatalConfigurationRuntimeException e) {
-            log.error("Configuration error: "+e.getMessage(), e.getCause());
-            System.err.println("Configuration error: " + e.getMessage());
-            System.exit(CONFIGURATION_ERROR);
-        } catch (FatalRuntimeException e) { // anticipated non-configuration error
-            log.error("Startup error: "+e.getMessage(), e.getCause());
-            System.err.println("Startup error: "+e.getMessage());
-            System.exit(EXECUTION_ERROR);
-        } catch (Exception e) { // unexpected error during command execution
-            log.error("Execution error: " + e.getMessage(), e);
-            System.err.println("Execution error: " + e.getMessage());
-            if (!(e instanceof UserFacingException))
-                e.printStackTrace();
-            System.exit(EXECUTION_ERROR);
-        }
-    }
-
-    protected String getUsageInfo(Cli<BrooklynCommand> parser) {
-        StringBuilder help = new StringBuilder();
-        help.append("\n");
-        Help.help(parser.getMetadata(), Collections.<String>emptyList(), help);
-        return help.toString();
-    }
-
 }

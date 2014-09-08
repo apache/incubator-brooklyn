@@ -21,6 +21,10 @@ package brooklyn.policy.basic;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * @deprecated since 0.7.0; will be either deleted or moved to tests
+ */
+@Deprecated
 public class GeneralPurposePolicy extends AbstractPolicy {
     public GeneralPurposePolicy() {
         this(Collections.emptyMap());
