@@ -47,10 +47,9 @@ public class Entitlements {
     // ------------------- individual permissions
     
     public static EntitlementClass<Entity> SEE_ENTITY = new BasicEntitlementClassDefinition<Entity>("entity.see", Entity.class);
-    
     public static EntitlementClass<EntityAndItem<String>> SEE_SENSOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("sensor.see", EntityAndItem. typeToken(String.class));
-    
     public static EntitlementClass<EntityAndItem<String>> INVOKE_EFFECTOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("effector.invoke", EntityAndItem.typeToken(String.class));
+    public static EntitlementClass<Entity> MODIFY_ENTITY = new BasicEntitlementClassDefinition<Entity>("entity.modify", Entity.class);
     
     /** the permission to deploy an application, where parameter is some representation of the app to be deployed (spec instance or yaml plan) */
     public static EntitlementClass<Object> DEPLOY_APPLICATION = new BasicEntitlementClassDefinition<Object>("app.deploy", Object.class);
@@ -68,6 +67,7 @@ public class Entitlements {
         ENTITLEMENT_SEE_ENTITY(SEE_ENTITY),
         ENTITLEMENT_SEE_SENSOR(SEE_SENSOR),
         ENTITLEMENT_INVOKE_EFFECTOR(INVOKE_EFFECTOR),
+        ENTITLEMENT_MODIFY_ENTITY(MODIFY_ENTITY),
         ENTITLEMENT_DEPLOY_APPLICATION(DEPLOY_APPLICATION),
         ENTITLEMENT_SEE_ALL_SERVER_INFO(SEE_ALL_SERVER_INFO),
         ENTITLEMENT_ROOT(ROOT),

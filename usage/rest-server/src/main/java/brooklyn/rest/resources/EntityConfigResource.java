@@ -29,9 +29,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.EntityConfigApi;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.transform.EntityTransformer;
+import brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -95,6 +97,11 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
   @Override
   public void set(String application, String entityToken, String configName, Boolean recurse, Object newValue) {
       final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+      if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+          throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+              Entitlements.getEntitlementContext().user(), entity);
+      }
+
       ConfigKey ck = findConfig(entity, configName);
       ((EntityInternal)entity).setConfig(ck, newValue);
       if (Boolean.TRUE.equals(recurse)) {

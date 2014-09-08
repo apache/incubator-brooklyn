@@ -70,11 +70,49 @@ public interface EntityApi {
   @GET
   @ApiOperation(value = "Fetch details about a specific application entity's children",
           responseClass = "brooklyn.rest.domain.EntitySummary")
-  @Path("/{entity}/entities")
+  @Path("/{entity}/children")
   public List<EntitySummary> getChildren(
       @PathParam("application") final String application,
       @PathParam("entity") final String entity
-  ) ;
+  );
+  
+  /** @deprecated since 0.7.0 use /children */
+  @Deprecated
+  @Path("/{entity}/entities")
+  public List<EntitySummary> getChildrenOld(
+      @PathParam("application") final String application,
+      @PathParam("entity") final String entity
+  );
+
+  @POST
+  @ApiOperation(value = "Add a child or children to this entity given a YAML spec",
+          responseClass = "brooklyn.rest.domain.TaskSummary")
+  @Consumes({"application/x-yaml",
+      // see http://stackoverflow.com/questions/332129/yaml-mime-type
+      "text/yaml", "text/x-yaml", "application/yaml", MediaType.APPLICATION_JSON})
+  @Path("/{entity}/children")
+  public Response addChildren(
+      @PathParam("application") final String application,
+      @PathParam("entity") final String entity,
+      
+      @ApiParam(
+          name = "start",
+          value = "Whether to automatically start this child; if omitted, true for Startable entities")
+      @QueryParam("start") final Boolean start,
+      
+      @ApiParam(name = "timeout", value = "Delay before server should respond with incomplete activity task, rather than completed task: " +
+          "'never' means block until complete; " +
+          "'0' means return task immediately; " +
+          "and e.g. '20ms' (the default) will wait 20ms for copmleted task information to be available", 
+          required = false, defaultValue = "20ms")
+      @QueryParam("timeout") final String timeout,
+      
+      @ApiParam(
+          name = "childrenSpec",
+          value = "Entity spec in CAMP YAML format (including 'services' root element)",
+          required = true)
+      String yaml
+  );
 
   @GET
   @Path("/{entity}/activities")

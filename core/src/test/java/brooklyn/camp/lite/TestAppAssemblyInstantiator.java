@@ -67,7 +67,7 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
     }
 
     @Override
-    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
+    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrap) {
         EntitySpec<TestApplication> app = EntitySpec.create(TestApplication.class)
             .configure(TestEntity.CONF_NAME, template.getName())
             .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", template.getType(), "desc", template.getDescription()));

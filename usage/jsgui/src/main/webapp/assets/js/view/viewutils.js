@@ -529,7 +529,7 @@ define([
             } else if (lifecycleState=="stopping") {
                 mode = "stopping";
                 imgext = "gif";  //animated
-            } else if (lifecycleState=="on-fire" || /* just in case */ lifecycleState=="onfire") {
+            } else if (lifecycleState=="on_fire" || /* just in case */ lifecycleState=="on-fire" || lifecycleState=="onfire") {
                 mode = "onfire";
                 problem = true;
             }

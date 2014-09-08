@@ -58,7 +58,7 @@ public class EntityTransformer {
             lb.put("parent", URI.create(applicationUri+"/entities/"+entity.getParent().getId()));
         String type = entity.getEntityType().getName();
         lb.put("application", URI.create(applicationUri))
-                .put("children", URI.create(entityUri + "/entities"))
+                .put("children", URI.create(entityUri + "/children"))
                 .put("config", URI.create(entityUri + "/config"))
                 .put("sensors", URI.create(entityUri + "/sensors"))
                 .put("effectors", URI.create(entityUri + "/effectors"))

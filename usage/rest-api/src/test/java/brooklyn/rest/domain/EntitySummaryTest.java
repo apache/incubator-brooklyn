@@ -39,7 +39,7 @@ public class EntitySummaryTest {
     links.put("self", URI.create("/v1/applications/tesr/entities/zQsqdXzi"));
     links.put("catalog", URI.create("/v1/catalog/entities/brooklyn.entity.webapp.tomcat.TomcatServer"));
     links.put("application", URI.create("/v1/applications/tesr"));
-    links.put("children", URI.create("/v1/applications/tesr/entities/zQsqdXzi/entities"));
+    links.put("children", URI.create("/v1/applications/tesr/entities/zQsqdXzi/children"));
     links.put("effectors", URI.create("fixtures/effector-summary-list.json"));
     links.put("sensors", URI.create("fixtures/sensor-summary-list.json"));
     links.put("activities", URI.create("fixtures/task-summary-list.json"));

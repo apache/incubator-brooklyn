@@ -22,13 +22,14 @@
  * @type {*}
  */
 define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
-    "text!tpl/apps/advanced.html", "view/entity-config", "view/change-name-invoke"
+    "text!tpl/apps/advanced.html", "view/entity-config", "view/change-name-invoke", "view/add-child-invoke"
 ], function(_, $, Backbone, Brooklyn, Util, ViewUtils,
-        AdvancedHtml, EntityConfigView, ChangeNameInvokeView) {
+        AdvancedHtml, EntityConfigView, ChangeNameInvokeView, AddChildInvokeView) {
     var EntityAdvancedView = Backbone.View.extend({
         events: {
             "click button#change-name": "showChangeNameModal",
             "click button#reset-problems": "doResetProblems",
+            "click button#add-child": "showAddChildModal",
             "click button#expunge": "confirmExpunge",
             "click button#unmanage": "confirmUnmanage",
             "click #advanced-tab-error-closer": "closeAdvancedTabError"
@@ -66,6 +67,13 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
         showChangeNameModal: function() {
             this.showModel(new ChangeNameInvokeView({
                 el:"#change-name-modal",
+                model:this.model.attributes,
+                target:this
+            }));
+        },
+        showAddChildModal: function() {
+            this.showModel(new AddChildInvokeView({
+                el:"#add-child-modal",
                 model:this.model.attributes,
                 target:this
             }));

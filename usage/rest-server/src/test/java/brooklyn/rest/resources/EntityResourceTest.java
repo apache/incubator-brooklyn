@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.resources;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -34,12 +35,15 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
+import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -115,8 +119,31 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
         }
     }
     
-    // TODO any entity or complex object should be cleaned up as part of WebResourceUtils call
-    @Test(groups="WIP", dependsOnMethods={"testTagsSanity"})
+    @Test
+    public void testAddChild() throws Exception {
+        try {
+            // to test in GUI: 
+            // services: [ { type: brooklyn.entity.basic.BasicEntity }]
+            ClientResponse response = client().resource(entityEndpoint + "/children?timeout=10s")
+                .entity("services: [ { type: "+TestEntity.class.getName()+" }]", "application/yaml")
+                .post(ClientResponse.class);
+
+            HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+            Assert.assertEquals(entity.getChildren().size(), 1);
+            Entity child = Iterables.getOnlyElement(entity.getChildren());
+            Assert.assertTrue(Entities.isManaged(child));
+            
+            TaskSummary task = response.getEntity(TaskSummary.class);
+            Assert.assertEquals(task.getResult(), MutableList.of(child.getId()));
+            
+        } finally {
+            // restore it for other tests
+            Collection<Entity> children = entity.getChildren();
+            if (!children.isEmpty()) Entities.unmanage(Iterables.getOnlyElement(children));
+        }
+    }
+    
+    @Test
     public void testTagsDoNotSerializeTooMuch() throws Exception {
         entity.getTagSupport().addTag("foo");
         entity.getTagSupport().addTag(entity.getParent());

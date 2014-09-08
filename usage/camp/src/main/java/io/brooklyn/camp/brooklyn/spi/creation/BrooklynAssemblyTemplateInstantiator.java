@@ -61,7 +61,9 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Urls;
+import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -86,7 +88,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         ManagementContext mgmt = getBrooklynManagementContext(platform);
         
         BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
-        EntitySpec<? extends Application> spec = createSpec(template, platform, loader);
+        EntitySpec<? extends Application> spec = createSpec(template, platform, loader, true);
         
         Application instance = mgmt.getEntityManager().createEntity(spec);
         log.info("CAMP placing '{}' under management", instance);
@@ -107,7 +109,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     @SuppressWarnings("unchecked")
-    public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
+    public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrapIfPossible) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
 
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
@@ -122,7 +124,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             app.child(childSpec);
         }
         
-        if (shouldUnwrap(template, app)) {
+        if (autoUnwrapIfPossible && shouldUnwrap(template, app)) {
             EntitySpec<? extends Application> oldApp = app;
             app = (EntitySpec<? extends Application>) Iterables.getOnlyElement( app.getChildren() );
             // if promoted, apply the transformations done to the app
@@ -162,6 +164,29 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
             return false;
 
+        return hasNoNameOrCustomKeysOrRoot(template, app);
+    }
+
+    /** worker method to help determine whether child/children can be promoted */
+    @Beta
+    public static boolean hasNoNameOrCustomKeysOrRoot(AssemblyTemplate template, EntitySpec<?> spec) {
+        if (!Strings.isEmpty(template.getName())) {
+            if (spec.getChildren().size()==1) {
+                String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
+                if (Strings.isEmpty(childName) || childName.equals(template.getName())) {
+                    // if child has no name, or it's the same, could still promote
+                } else {
+                    return false;
+                }
+            } else {
+                // if name set at root and promoting children would be ambiguous, do not promote 
+                return false;
+            }
+        } else if (spec.getChildren().size()>1) {
+            // don't allow multiple children if a name is specified as a root
+            return false;
+        }
+        
         Set<String> rootAttrs = template.getCustomAttributes().keySet();
         for (String rootAttr: rootAttrs) {
             if (rootAttr.equals("brooklyn.catalog")) {
