@@ -1093,6 +1093,9 @@ tr.app-add-wizard-config-entry {
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }
+.catalog-details .accordion-body {
+    padding: 0;
+}
 .accordion-head:hover {
     background-color: #E0E4E0;
     cursor: hand; cursor: pointer;

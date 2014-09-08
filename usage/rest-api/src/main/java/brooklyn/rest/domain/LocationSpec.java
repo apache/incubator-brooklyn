@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableMap;
 
 // FIXME change name, due to confusion with brooklyn.location.LocationSpec <- no need, as we can kill the class instead soon!
 /** @deprecated since 0.7.0 location spec objects will not be used from the client, instead pass yaml location spec strings */
-public class LocationSpec implements HasName {
+public class LocationSpec implements HasName, HasConfig {
 
   @JsonSerialize(include=Inclusion.NON_NULL)
   private final String name;
