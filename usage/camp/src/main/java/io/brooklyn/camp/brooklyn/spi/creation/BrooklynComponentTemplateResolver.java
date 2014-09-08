@@ -37,6 +37,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.VanillaSoftwareProcess;
@@ -246,6 +247,9 @@ public class BrooklynComponentTemplateResolver {
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
+        if (template.isPresent() && template.get().getSourceCode()!=null)
+            spec.tag(BrooklynTags.newYamlSpecTag(template.get().getSourceCode()));
+
         return spec;
     }
 

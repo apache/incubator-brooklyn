@@ -142,6 +142,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         builder.type("brooklyn:" + BasicApplicationImpl.class.getName());
         builder.id(template.getId());
         builder.name(template.getName());
+        builder.sourceCode(template.getSourceCode());
         for (Entry<String, Object> entry : template.getCustomAttributes().entrySet()) {
             builder.customAttribute(entry.getKey(), entry.getValue());
         }

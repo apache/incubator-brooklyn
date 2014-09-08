@@ -103,7 +103,8 @@ public class WebResourceUtils {
     }
     
     /** returns an object which jersey will handle nicely, converting to json,
-     * sometimes wrapping in quotes if needed (for outermost json return types) */ 
+     * sometimes wrapping in quotes if needed (for outermost json return types);
+     * if json is not preferred, this simply applies a toString-style rendering */ 
     public static Object getValueForDisplay(ObjectMapper mapper, Object value, boolean preferJson, boolean isJerseyReturnValue) {
         if (preferJson) {
             if (value==null) return null;

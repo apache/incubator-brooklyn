@@ -228,5 +228,18 @@ public interface EntityApi {
       @PathParam("application") String application,
       @ApiParam(value = "Entity ID or name", required = true)
       @PathParam("entity") String entity);
-  
+
+  @GET
+  @Path("/{entity}/spec")
+  @ApiOperation(value = "Get the YAML spec used to create the entity, if available")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Application or entity missing")
+  })
+  public String getSpec(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") String entity
+  ) ;
+
 }

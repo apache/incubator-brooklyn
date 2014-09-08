@@ -40,6 +40,7 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.yaml.snakeyaml.error.YAMLException;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -55,8 +56,12 @@ public class PdpProcessor {
         this.campPlatform = campPlatform;
     }
 
-    @SuppressWarnings("unchecked")
     public DeploymentPlan parseDeploymentPlan(Reader yaml) {
+        return parseDeploymentPlan(Streams.readFully(yaml));
+    }
+    
+    @SuppressWarnings("unchecked")
+    public DeploymentPlan parseDeploymentPlan(String yaml) {
         Iterable<Object> template = Yamls.parseAll(yaml);
         
         Map<String, Object> dpRootUninterpreted = null;
@@ -68,7 +73,7 @@ public class PdpProcessor {
         }
         Map<String, Object> dpRootInterpreted = applyInterpreters(dpRootUninterpreted);
         
-		return DeploymentPlan.of( dpRootInterpreted );
+		return DeploymentPlan.of(dpRootInterpreted, yaml);
     }
     
     /** create and return an AssemblyTemplate based on the given DP (yaml) */
@@ -83,6 +88,7 @@ public class PdpProcessor {
         
         if (plan.getName()!=null) atc.name(plan.getName());
         if (plan.getDescription()!=null) atc.description(plan.getDescription());
+        if (plan.getSourceCode()!=null) atc.sourceCode(plan.getSourceCode());
         // nothing done with origin just now...
         
         if (plan.getServices()!=null) {

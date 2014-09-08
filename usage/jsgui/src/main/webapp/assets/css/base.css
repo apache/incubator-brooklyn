@@ -1353,6 +1353,14 @@ input.error {
     border-radius: 3px 3px 3px 3px !important;
     display: inline-block;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    max-width: 250px;
+}
+.activity-tag-giftlabel:hover {
+    max-width: 100%;
+    white-space: normal;
 }
 
 /* hover menu at left, as used in sensors view */

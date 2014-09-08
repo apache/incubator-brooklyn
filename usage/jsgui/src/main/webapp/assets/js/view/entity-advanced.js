@@ -49,7 +49,8 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
             this.model.on('change', this.modelChange, this);
             this.modelChange();
             
-            ViewUtils.getRepeatedlyWithDelay(this, this.model.get('links').locations, this.updateLocationData);
+            ViewUtils.getRepeatedlyWithDelay(this, this.model.get('links').locations, this.renderLocationData);
+            ViewUtils.get(this, this.model.get('links').tags, this.renderTags);
             
             ViewUtils.attachToggler(this.$el);
         },
@@ -57,8 +58,15 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
             this.$('#entity-name').html(Util.toDisplayString(this.model.get("name")));
             ViewUtils.updateTextareaWithData($("#advanced-entity-json", this.$el), FormatJSON(this.model.toJSON()), true, false, 250, 600);
         },
-        updateLocationData: function(data) {
+        renderLocationData: function(data) {
             ViewUtils.updateTextareaWithData($("#advanced-locations", this.$el), FormatJSON(data), true, false, 250, 600);
+        },
+        renderTags: function(data) {
+            var list = "";
+            for (tag in data)
+                list += "<div class='activity-tag-giftlabel'>"+_.escape(JSON.stringify(data[tag]))+"</div>";
+            if (!list) list = "No tags";
+            this.$('#advanced-entity-tags').html(list);
         },
         reload: function() {
             this.model.fetch();

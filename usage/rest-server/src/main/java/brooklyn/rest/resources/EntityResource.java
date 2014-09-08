@@ -45,6 +45,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTags;
+import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
@@ -155,9 +157,17 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
                 // we can promote
                 promoted = true;
                 for (EntitySpec<?> specC: specA.getChildren()) {
-                    if (!specA.getLocations().isEmpty())
+                    if (!specA.getLocations().isEmpty()) {
                         specC.locations(specA.getLocations());
-                    specs.add(specC);
+                        
+                        // TODO copying tags to all entities is not ideal;
+                        // in particular the BrooklynTags.YAML_SPEC tag will show all entities
+                        // even if just one was created
+                        specC.tags(specA.getTags());
+                        if (Strings.isEmpty(specC.getDisplayName()))
+                            specC.displayName(specA.getDisplayName());
+                    }
+                specs.add(specC);
                 }
             } else {
                 // if not promoting, set a nice name if needed
@@ -246,10 +256,11 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       return TaskTransformer.FROM_TASK.apply(t);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<Object> listTags(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
-      return MutableList.copyOf(entity.getTagSupport().getTags());
+      return (List<Object>) getValueForDisplay(MutableList.copyOf(entity.getTagSupport().getTags()), true, true);
   }
 
   @Override
@@ -308,4 +319,11 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       return result;
   }
 
+  public String getSpec(String applicationToken,  String entityToken) {
+      EntityLocal entity = brooklyn().getEntity(applicationToken, entityToken);
+      NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.getTagSupport().getTags());
+      if (spec==null) return null;
+      return (String) getValueForDisplay(spec.getContents(), true, true);
+  }
+  
 }

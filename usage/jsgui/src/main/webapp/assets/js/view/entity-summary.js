@@ -50,6 +50,8 @@ define([
             // however if we only use external objects we must either subscribe to their errors also
             // or do our own polling against the server, so we know when to disable ourselves
 //            ViewUtils.fetchRepeatedlyWithDelay(this, this.model, { period: 10*1000 })
+            
+            this.loadSpec();
         },
         render:function () {
             return this
@@ -189,6 +191,22 @@ define([
             // and prevent the a from firing
             event.preventDefault();
             return false;
+        },
+        loadSpec: function(flushCache) {
+            if (!flushCache && this.spec) {
+                this.renderSpec(this.spec);
+                return;
+            }
+            ViewUtils.get(this, this.model.get('links').spec, this.renderSpec);
+        },
+        renderSpec: function(data) {
+            if (!data) data=this.spec;
+            if (!data) {
+                this.$('#entity-spec-yaml-toggler').hide();
+            } else {
+                ViewUtils.updateTextareaWithData($("#entity-spec-yaml", this.$el), data, true, false, 150, 400);
+                this.$('#entity-spec-yaml-toggler').show();
+            }
         }
     });
 
