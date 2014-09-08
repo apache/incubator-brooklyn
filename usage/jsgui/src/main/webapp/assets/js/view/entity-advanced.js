@@ -21,9 +21,9 @@
  *
  * @type {*}
  */
-define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
+define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils", "formatJson",
     "text!tpl/apps/advanced.html", "view/entity-config", "view/change-name-invoke", "view/add-child-invoke", "view/policy-new"
-], function(_, $, Backbone, Brooklyn, Util, ViewUtils,
+], function(_, $, Backbone, Brooklyn, Util, ViewUtils, FormatJSON,
         AdvancedHtml, EntityConfigView, ChangeNameInvokeView, AddChildInvokeView, NewPolicyView) {
     var EntityAdvancedView = Backbone.View.extend({
         events: {
@@ -49,10 +49,16 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
             this.model.on('change', this.modelChange, this);
             this.modelChange();
             
+            ViewUtils.getRepeatedlyWithDelay(this, this.model.get('links').locations, this.updateLocationData);
+            
             ViewUtils.attachToggler(this.$el);
         },
         modelChange: function() {
             this.$('#entity-name').html(Util.toDisplayString(this.model.get("name")));
+            ViewUtils.updateTextareaWithData($("#advanced-entity-json", this.$el), FormatJSON(this.model.toJSON()), true, false, 250, 600);
+        },
+        updateLocationData: function(data) {
+            ViewUtils.updateTextareaWithData($("#advanced-locations", this.$el), FormatJSON(data), true, false, 250, 600);
         },
         reload: function() {
             this.model.fetch();

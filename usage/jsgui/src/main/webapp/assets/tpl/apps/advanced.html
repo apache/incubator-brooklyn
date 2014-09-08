@@ -23,7 +23,7 @@ under the License.
   <button id="change-name" class="btn pull-right">Change Name</button><br/>
   </h3>
 
-<div style="text-align: right; padding-top: 24px;">
+<div style="text-align: center; padding-top: 24px;">
   <button id="add-child" class="btn">Add Child</button>
   <button id="add-new-policy" class="btn">Attach New Policy</button>
   <button id="reset-problems" class="btn">Reset Problems</button>
@@ -52,4 +52,26 @@ under the License.
     <div id="advanced-config" class="hide"/>
   </div>
 
-<!-- TODO location, persistence -->
+  <!-- TODO persistence -->
+  <!-- TODO entity yaml -->
+  
+  <div class="toggler-region region-config" style="margin-top: 18px;">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Entity Resource JSON</b></div>
+    </div>
+    <div id="advanced-entity-json" class="for-textarea hide">
+      <textarea readonly="readonly" style="width: 100%;"/>
+    </div>
+  </div>
+
+  <div class="toggler-region region-config" style="margin-top: 18px;">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Locations JSON</b></div>
+    </div>
+    <div id="advanced-locations" class="for-textarea hide">
+      <!-- TODO a nicer view than just the JSON -->
+      <textarea readonly="readonly" style="width: 100%;"/>
+    </div>
+  </div>
