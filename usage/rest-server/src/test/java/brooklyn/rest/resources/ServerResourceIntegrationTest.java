@@ -38,6 +38,7 @@ import brooklyn.util.http.HttpToolResponse;
 
 public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFixture {
 
+    // marked integration because of time
     @Test(groups = "Integration")
     public void testGetUser() throws Exception {
         Server server = useServerForTest(BrooklynRestApiLauncher.launcher()

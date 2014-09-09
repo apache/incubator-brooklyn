@@ -24,6 +24,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,20 +96,48 @@ public class WebResourceUtils {
         }
     }
 
-    /** returns an object which jersey will handle nicely, converting to json,
-     * sometimes wrapping in quotes if needed (for outermost json return types) */ 
+    /** as {@link #getValueForDisplay(ObjectMapper, Object, boolean, boolean)} with no mapper
+     * (so will only handle a subset of types) */
     public static Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
-        
+        return getValueForDisplay(null, value, preferJson, isJerseyReturnValue);
+    }
+    
+    /** returns an object which jersey will handle nicely, converting to json,
+     * sometimes wrapping in quotes if needed (for outermost json return types);
+     * if json is not preferred, this simply applies a toString-style rendering */ 
+    public static Object getValueForDisplay(ObjectMapper mapper, Object value, boolean preferJson, boolean isJerseyReturnValue) {
         if (preferJson) {
             if (value==null) return null;
-            Object result = Jsonya.convertToJsonPrimitive(value);
+            Object result = null;
+            if (value instanceof String) {
+                result = value;
+            } else {
+                try {
+                    // check if we can serialize it, if so return it
+                    if (mapper!=null)
+                        mapper.writeValueAsString(value);
+                    return value;
+                } catch (Throwable e) {
+                    if (e instanceof StackOverflowError || e instanceof OutOfMemoryError) {
+                        log.warn("Requested REST value '"+value+"' overflowed on serialization attempt, trying other means");
+                        System.gc();
+                    } else {
+                        Exceptions.propagateIfFatal(e);
+                    }
+                    log.debug("Requested REST value '"+value+"' ("+value.getClass()+") could not be serialized, returning toString instead: "+e);
+                    // if we can't, just ignore and attempt to convert otherwise
+                }
+                // TODO do deep mapping
+                result = Jsonya.convertToJsonPrimitive(value);
+            }
             
             if (isJerseyReturnValue) {
-                if (result instanceof String)
+                if (result instanceof String) {
                     // Jersey does not do json encoding if the return type is a string,
                     // expecting the returner to do the json encoding himself
                     // cf discussion at https://github.com/dropwizard/dropwizard/issues/231
                     result = JavaStringEscapes.wrapJavaString((String)result);
+                }
             }
             
             return result;

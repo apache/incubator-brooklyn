@@ -103,11 +103,13 @@ public interface SoftwareProcess extends Entity, Startable {
     ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
 
     /** Files to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
+    @SuppressWarnings("serial")
     @SetFromFlag("runtimeFiles")
     ConfigKey<Map<String, String>> RUNTIME_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
             "files.runtime", "Map of files to be copied, keyed by destination name relative to runDir");
 
     /** Templates to be filled in and then copied to the server. See {@link #RUNTIME_FILES}. */
+    @SuppressWarnings("serial")
     @SetFromFlag("runtimeTemplates")
     ConfigKey<Map<String, String>> RUNTIME_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
             "templates.runtime", "Map of templates to be filled in and copied, keyed by destination name relative to runDir");

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -59,6 +60,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         "credential", "CR3dential",
         "location", "us-east-1");
     ClientResponse response = client().resource("/v1/locations")
+        .type(MediaType.APPLICATION_JSON_TYPE)
         .post(ClientResponse.class, new LocationSpec("my-jungle", "aws-ec2", expectedConfig));
 
     addedLocationUri = response.getLocation();

@@ -47,17 +47,12 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
+import brooklyn.management.internal.EntityManagementUtils;
+import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Urls;
@@ -75,23 +70,14 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     @Override
     public Assembly instantiate(AssemblyTemplate template, CampPlatform platform) {
         Application app = create(template, platform);
-        Task<?> task = start(app, platform);
-        log.info("CAMP created "+app+"; starting in "+task);
+        CreationResult<Application, Void> start = EntityManagementUtils.start(app);
+        log.debug("CAMP created "+app+"; starting in "+start.task());
         return platform.assemblies().get(app.getApplicationId());
     }
 
-    // note: based on BrooklynRestResourceUtils, but modified to not allow child entities (yet)
-    // (will want to revise that when building up from a non-brooklyn template)
     public Application create(AssemblyTemplate template, CampPlatform platform) {
-        ManagementContext mgmt = getBrooklynManagementContext(platform);
-        
-        BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
-        EntitySpec<? extends Application> spec = createSpec(template, platform, loader);
-        
-        Application instance = mgmt.getEntityManager().createEntity(spec);
-        log.info("CAMP placing '{}' under management", instance);
-        Entities.startManagement(instance, mgmt);
-
+        Application instance = EntityManagementUtils.createUnstarted(getBrooklynManagementContext(platform), template);
+        log.debug("CAMP created {}", instance);
         return instance;
     }
     
@@ -99,15 +85,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
     }
     
-    public Task<?> start(Application app, CampPlatform platform) {
-        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
-            // locations already set in the entities themselves;
-            // TODO make it so that this arg does not have to be supplied to START !
-            MutableMap.of("locations", MutableList.of()));
-    }
-
     @SuppressWarnings("unchecked")
-    public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
+    public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrapIfPossible) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
 
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
@@ -122,14 +101,13 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             app.child(childSpec);
         }
         
-        if (shouldUnwrap(template, app)) {
+        if (autoUnwrapIfPossible && shouldUnwrap(template, app)) {
             EntitySpec<? extends Application> oldApp = app;
             app = (EntitySpec<? extends Application>) Iterables.getOnlyElement( app.getChildren() );
+            
             // if promoted, apply the transformations done to the app
-            // (normally this will be done by the resolveSpec call above)
-            if (app.getDisplayName()==null) app.displayName(oldApp.getDisplayName());
-            app.tags(oldApp.getTags());
-            app.locations(oldApp.getLocations());
+            // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
+            EntityManagementUtils.collapseSpec(oldApp, app);
         }
         
         return app;
@@ -140,6 +118,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         builder.type("brooklyn:" + BasicApplicationImpl.class.getName());
         builder.id(template.getId());
         builder.name(template.getName());
+        builder.sourceCode(template.getSourceCode());
         for (Entry<String, Object> entry : template.getCustomAttributes().entrySet()) {
             builder.customAttribute(entry.getKey(), entry.getValue());
         }
@@ -162,23 +141,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
             return false;
 
-        Set<String> rootAttrs = template.getCustomAttributes().keySet();
-        for (String rootAttr: rootAttrs) {
-            if (rootAttr.equals("brooklyn.catalog")) {
-                // this attr does not block promotion
-                continue;
-            }
-            if (rootAttr.startsWith("brooklyn.")) {
-                // any others in 'brooklyn' namespace will block promotion
-                return false;
-            }
-            // location is allowed in both, and is copied on promotion
-            // (name also copied)
-            // others are root currently are ignored on promotion; they are usually metadata
-            // TODO might be nice to know what we are excluding
-        }
-        
-        return true;
+        return EntityManagementUtils.hasNoNameOrCustomKeysOrRoot(template, app);
     }
 
     private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {

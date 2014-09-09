@@ -31,7 +31,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
@@ -43,11 +42,6 @@ import com.google.common.collect.ImmutableSet;
 public class ServerResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);
-
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
 
     @Test
     public void testGetVersion() throws Exception {

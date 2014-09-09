@@ -135,8 +135,10 @@ public class TaskSummary implements HasId {
   
   public Collection<Object> getTags() {
     List<Object> result = new ArrayList<Object>();
-    for (Object t: tags)
+    for (Object t: tags) {
+        // TODO if we had access to a mapper we could use it to give better json
         result.add(Jsonya.convertToJsonPrimitive(t));
+    }
     return result;
   }
 

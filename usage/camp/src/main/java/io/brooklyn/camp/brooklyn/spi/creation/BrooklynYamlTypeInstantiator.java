@@ -97,7 +97,8 @@ public abstract class BrooklynYamlTypeInstantiator {
                 if (result.isAbsent()) result = data.getStringKeyMaybe("type");
             }
             
-            if (result.isAbsent()) return Maybe.absent("Missing key '"+getPreferredKeyName()+"'");
+            if (result.isAbsent() || result.get()==null) 
+                return Maybe.absent("Missing key '"+getPreferredKeyName()+"'");
             
             if (result.get() instanceof String) return Maybe.of((String)result.get());
             

@@ -29,11 +29,13 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
+import brooklyn.rest.util.ManagementContextInjectable;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public abstract class AbstractBrooklynRestResource {
+public abstract class AbstractBrooklynRestResource implements ManagementContextInjectable {
 
     @VisibleForTesting
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
@@ -46,7 +48,7 @@ public abstract class AbstractBrooklynRestResource {
     
     private ManagementContext managementContext;
     private BrooklynRestResourceUtils brooklynRestResourceUtils;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper;
 
     public synchronized ManagementContext mgmt() {
         if (managementContext!=null) return managementContext;
@@ -71,13 +73,15 @@ public abstract class AbstractBrooklynRestResource {
     }
     
     protected ObjectMapper mapper() {
+        if (mapper==null)
+            mapper = BrooklynJacksonJsonProvider.findAnyObjectMapper(servletContext, managementContext);
         return mapper;
     }
 
     /** returns an object which jersey will handle nicely, converting to json,
      * sometimes wrapping in quotes if needed (for outermost json return types) */ 
     protected Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
-        return WebResourceUtils.getValueForDisplay(value, preferJson, isJerseyReturnValue);
+        return WebResourceUtils.getValueForDisplay(mapper(), value, preferJson, isJerseyReturnValue);
     }
 
     protected CampPlatform camp() {

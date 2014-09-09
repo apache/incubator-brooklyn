@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.resources;
 
+import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
@@ -27,17 +28,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTags;
+import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.internal.EntityManagementUtils;
+import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.rest.api.EntityApi;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.LocationSummary;
@@ -49,14 +60,21 @@ import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
 
+    private static final Logger log = LoggerFactory.getLogger(EntityResource.class);
+
+    @Context
+    private UriInfo uriInfo;
+    
   @Override
   public List<EntitySummary> list(final String application) {
       return FluentIterable
@@ -77,13 +95,43 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   }
 
   @Override
-  public List<EntitySummary> getChildren( final String application, final String entity) {
+  public List<EntitySummary> getChildren(final String application, final String entity) {
       return FluentIterable
               .from(brooklyn().getEntity(application, entity).getChildren())
               .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
               .transform(EntityTransformer.FROM_ENTITY)
               .toList();
   }
+  
+  @Override
+  public List<EntitySummary> getChildrenOld(String application, String entity) {
+        log.warn("Using deprecated call to /entities when /children should be used");
+        return getChildren(application, entity);
+  }
+  
+    @Override
+    public Response addChildren(String applicationToken, String entityToken, Boolean start, String timeoutS, String yaml) {
+        final EntityLocal parent = brooklyn().getEntity(applicationToken, entityToken);
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, parent)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+                Entitlements.getEntitlementContext().user(), entityToken);
+        }
+        CreationResult<List<Entity>, List<String>> added = EntityManagementUtils.addChildren(parent, yaml, start)
+            .blockUntilComplete(timeoutS==null ? Duration.millis(20) : Duration.of(timeoutS));
+        ResponseBuilder response;
+        
+        if (added.get().size()==1) {
+            Entity child = Iterables.getOnlyElement(added.get());
+            URI ref = uriInfo.getBaseUriBuilder()
+                .path(EntityApi.class)
+                .path(EntityApi.class, "get")
+                .build(child.getApplicationId(), child.getId());
+            response = created(ref);
+        } else {
+            response = Response.status(Status.CREATED);
+        }
+        return response.entity(TaskTransformer.taskSummary(added.task())).build();
+    }
 
   @Override
   public List<TaskSummary> listTasks(String applicationId, String entityId) {
@@ -101,10 +149,11 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       return TaskTransformer.FROM_TASK.apply(t);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<Object> listTags(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
-      return MutableList.copyOf(entity.getTagSupport().getTags());
+      return (List<Object>) getValueForDisplay(MutableList.copyOf(entity.getTagSupport().getTags()), true, true);
   }
 
   @Override
@@ -126,6 +175,13 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       // for anything else we do a redirect (e.g. http / https; perhaps ftp)
       return Response.temporaryRedirect(URI.create(url)).build();
   }
+
+    @Override
+    public Response rename(String application, String entity, String newName) {
+        EntityLocal entityLocal = brooklyn().getEntity(application, entity);
+        entityLocal.setDisplayName(newName);
+        return status(Response.Status.OK).build();
+    }
 
     @Override
     public Response expunge(String application, String entity, boolean release) {
@@ -156,4 +212,11 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       return result;
   }
 
+  public String getSpec(String applicationToken,  String entityToken) {
+      EntityLocal entity = brooklyn().getEntity(applicationToken, entityToken);
+      NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.getTagSupport().getTags());
+      if (spec==null) return null;
+      return (String) getValueForDisplay(spec.getContents(), true, true);
+  }
+  
 }

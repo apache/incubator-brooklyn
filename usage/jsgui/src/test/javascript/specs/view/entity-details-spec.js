@@ -25,7 +25,7 @@ define([
         return "fixtures/sensor-current-state.json";
     };
 
-    // FIXME test complains about various things; $.get in entity-config gives weird errors;
+    // TODO test complains about various things; $.get in entity-config gives weird errors;
     // previously complains about 'url' needing to be set
     // but i can't figure out where 'url' is missing
     // (may get sorted out if state is stored centrally)
@@ -89,13 +89,9 @@ define([
             view.render();
         });
 
-        it('must render textarea contents', function () {
-            expect(view.$("textarea").length).toBe(1);
-            expect(view.$("textarea").val()).toMatch("Tomcat");
-        });
     });
 
-    // FIXME complains about instanceof on a non-object in underscore; probably because we are now doing $.get 
+    // TODO complains about instanceof on a non-object in underscore; probably because we are now doing $.get 
     // rather than collections.fetch 
 //    describe('view/entity-details-spec/Summary', function () {
 //        var sampleEntity, view

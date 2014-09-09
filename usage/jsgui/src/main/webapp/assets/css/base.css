@@ -1093,6 +1093,9 @@ tr.app-add-wizard-config-entry {
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }
+.catalog-details .accordion-body {
+    padding: 0;
+}
 .accordion-head:hover {
     background-color: #E0E4E0;
     cursor: hand; cursor: pointer;
@@ -1353,6 +1356,14 @@ input.error {
     border-radius: 3px 3px 3px 3px !important;
     display: inline-block;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    max-width: 250px;
+}
+.activity-tag-giftlabel:hover {
+    max-width: 100%;
+    white-space: normal;
 }
 
 /* hover menu at left, as used in sensors view */

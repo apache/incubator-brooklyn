@@ -193,7 +193,7 @@ define([
                         ? optionalTitle : this.options.title;
             this.$el.html(this.template({
                 title: title,
-                submitButtonText: this.options.submitButtonText || "Save",
+                submitButtonText: this.options.submitButtonText || "Apply",
                 cancelButtonText: this.options.cancelButtonText || "Cancel"
             }));
             this.options.body.render();

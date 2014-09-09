@@ -114,9 +114,17 @@ define([
      * alternate message if parsing fails or the parsed object has no message.
      * @param {jqXHR} xhrResponse
      * @param {string} alternateMessage
+     * @param {string} logMessage, if false or null, does not log; 
+     *   otherwise it logs a message and the xhrResponse, with logMessage (or with alternateMessage if logMessage is true)
      * @returns {*}
      */
-    Util.extractError = function (xhrResponse, alternateMessage) {
+    Util.extractError = function (xhrResponse, alternateMessage, logMessage) {
+        if (logMessage) {
+            if (logMessage==true) log("ERROR: "+alternateMessage);
+            else log("ERROR: "+logMessage);
+            log(xhrResponse);
+        }
+        
         try {
             var response = JSON.parse(xhrResponse.responseText);
             return response.message ? response.message : alternateMessage;

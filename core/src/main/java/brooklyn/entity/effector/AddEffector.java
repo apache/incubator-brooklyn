@@ -23,6 +23,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
@@ -35,7 +36,24 @@ import brooklyn.util.text.Strings;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
-/** Entity initializer which adds an effector to an entity 
+/** 
+ * Entity initializer which adds an effector to an entity.
+ * <p>
+ * This instance provides a {@link #newEffectorBuilder(Class, ConfigBag)} 
+ * which returns an abstract (body-less) effector defining:
+ * <li> the name from {@link #EFFECTOR_NAME};
+ * <li> the description from {@link #EFFECTOR_DESCRIPTION}
+ * <li> the parameters from {@link #EFFECTOR_PARAMETER_DEFS}
+ * <p>
+ * Callers should pass the effector to instantiate into the constructor.
+ * Often subclasses will supply a constructor which takes a ConfigBag of parameters,
+ * and a custom {@link #newEffectorBuilder(Class, ConfigBag)} which adds the body
+ * before passing to this class.
+ * <p>
+ * Note that the parameters passed to the call method in the body of the effector implementation
+ * are only those supplied by a user at runtime; in order to merge with default
+ * values, use {@link #getMergedParams(Effector, ConfigBag)}.
+ *  
  * @since 0.7.0 */
 @Beta
 public class AddEffector implements EntityInitializer {
@@ -81,6 +99,18 @@ public class AddEffector implements EntityInitializer {
         }
         
         return eff;
+    }
+
+    /** returns a ConfigBag containing the merger of the supplied parameters with default values on the effector-defined parameters */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static ConfigBag getMergedParams(Effector<?> eff, ConfigBag params) {
+        ConfigBag result = ConfigBag.newInstanceCopying(params);
+        for (ParameterType<?> param: eff.getParameters()) {
+            ConfigKey key = Effectors.asConfigKey(param);
+            if (!result.containsKey(key))
+                result.configure(key, params.get(key));
+        }
+        return result;
     }
 
 }

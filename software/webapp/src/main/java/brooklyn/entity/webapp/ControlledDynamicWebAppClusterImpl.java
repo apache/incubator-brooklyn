@@ -21,7 +21,6 @@ package brooklyn.entity.webapp;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,6 @@ import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.QuorumCheck;
 import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxy.LoadBalancer;
@@ -145,6 +143,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
             setConfig(UP_QUORUM_CHECK, QuorumChecks.newInstance(2, 1.0, false));
         }
         super.initEnrichers();
+        ServiceStateLogic.newEnricherFromChildrenUp().checkChildrenOnly().requireUpChildren(getConfig(UP_QUORUM_CHECK)).addTo(this);
     }
     
     @Override

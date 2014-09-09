@@ -58,7 +58,7 @@ public class EntityTransformer {
             lb.put("parent", URI.create(applicationUri+"/entities/"+entity.getParent().getId()));
         String type = entity.getEntityType().getName();
         lb.put("application", URI.create(applicationUri))
-                .put("children", URI.create(entityUri + "/entities"))
+                .put("children", URI.create(entityUri + "/children"))
                 .put("config", URI.create(entityUri + "/config"))
                 .put("sensors", URI.create(entityUri + "/sensors"))
                 .put("effectors", URI.create(entityUri + "/effectors"))
@@ -67,8 +67,10 @@ public class EntityTransformer {
                 .put("locations", URI.create(entityUri + "/locations"))
                 .put("tags", URI.create(entityUri + "/tags"))
                 .put("catalog", URI.create("/v1/catalog/entities/" + type))
-                .put("expunge", URI.create(entityUri + "/expunge")
-            );
+                .put("expunge", URI.create(entityUri + "/expunge"))
+                .put("rename", URI.create(entityUri + "/name"))
+                .put("spec", URI.create(entityUri + "/spec"))
+            ;
         if (entity.getIconUrl()!=null)
             lb.put("iconUrl", URI.create(entityUri + "/icon"));
 

@@ -18,16 +18,18 @@
  */
 package brooklyn.rest.domain;
 
-import com.google.common.collect.Maps;
-import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
+import static brooklyn.rest.util.RestApiTestUtils.asJson;
+import static brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
-import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+
+import org.testng.annotations.Test;
+
+import com.google.common.collect.Maps;
 
 public class EntitySummaryTest {
 
@@ -37,7 +39,7 @@ public class EntitySummaryTest {
     links.put("self", URI.create("/v1/applications/tesr/entities/zQsqdXzi"));
     links.put("catalog", URI.create("/v1/catalog/entities/brooklyn.entity.webapp.tomcat.TomcatServer"));
     links.put("application", URI.create("/v1/applications/tesr"));
-    links.put("children", URI.create("/v1/applications/tesr/entities/zQsqdXzi/entities"));
+    links.put("children", URI.create("/v1/applications/tesr/entities/zQsqdXzi/children"));
     links.put("effectors", URI.create("fixtures/effector-summary-list.json"));
     links.put("sensors", URI.create("fixtures/sensor-summary-list.json"));
     links.put("activities", URI.create("fixtures/task-summary-list.json"));

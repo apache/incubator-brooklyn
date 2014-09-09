@@ -24,7 +24,9 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.policy.Policy;
 import brooklyn.rest.api.PolicyConfigApi;
 import brooklyn.rest.domain.PolicyConfigSummary;
@@ -75,11 +77,20 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
     return getStringValueForDisplay(brooklyn(), policy, policy.getConfig(ck));
   }
 
+  @Override @Deprecated
+  public Response set(String application, String entityToken, String policyToken, String configKeyName, String value) {
+      return set(application, entityToken, policyToken, configKeyName, (Object)value);
+  }
+
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
-  public Response set(
-           String application, String entityToken, String policyToken, String configKeyName, String value
-  ) {
+  public Response set(String application, String entityToken, String policyToken, String configKeyName, Object value) {
+      Entity entity = brooklyn().getEntity(application, entityToken);
+      if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+          throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+              Entitlements.getEntitlementContext().user(), entity);
+      }
+      
       Policy policy = brooklyn().getPolicy(application, entityToken, policyToken);
       ConfigKey<?> ck = policy.getPolicyType().getConfigKey(configKeyName);
       if (ck == null) throw WebResourceUtils.notFound("Cannot find config key '%s' in policy '%s' of entity '%s'", configKeyName, policy, entityToken);
@@ -92,4 +103,5 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
   public static String getStringValueForDisplay(BrooklynRestResourceUtils utils, Policy policy, Object value) {
     return utils.getStringValueForDisplay(value);
   }
+
 }

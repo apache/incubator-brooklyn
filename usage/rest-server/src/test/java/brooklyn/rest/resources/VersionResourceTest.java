@@ -18,13 +18,16 @@
  */
 package brooklyn.rest.resources;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+import javax.ws.rs.core.Response;
+
+import org.testng.annotations.Test;
+
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.sun.jersey.api.client.ClientResponse;
-import javax.ws.rs.core.Response;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import org.testng.annotations.Test;
 
 public class VersionResourceTest extends BrooklynRestResourceTest {
 
@@ -39,8 +42,10 @@ public class VersionResourceTest extends BrooklynRestResourceTest {
     assertTrue(version.matches("^\\d+\\.\\d+\\.\\d+.*"));
   }
 
+  @SuppressWarnings("deprecation")
   @Override
-  protected void setUpResources() throws Exception {
-    addResource(new VersionResource());
+  protected void addBrooklynResources() {
+      addResource(new VersionResource());
   }
+  
 }

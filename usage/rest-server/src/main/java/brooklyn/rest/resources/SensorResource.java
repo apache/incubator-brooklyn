@@ -28,13 +28,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.render.RendererHints;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.transform.SensorTransformer;
+import brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -117,4 +120,24 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         return new BasicAttributeSensor<Object>(Object.class, name);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void set(String application, String entityToken, String sensorName, Object newValue) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+                Entitlements.getEntitlementContext().user(), entity);
+        }
+        
+        AttributeSensor sensor = findSensor(entity, sensorName);
+        entity.setAttribute(sensor, newValue);
+    }
+    
+    @Override
+    public void delete(String application, String entityToken, String sensorName) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        AttributeSensor<?> sensor = findSensor(entity, sensorName);
+        ((EntityInternal)entity).removeAttribute(sensor);
+    }
+    
 }

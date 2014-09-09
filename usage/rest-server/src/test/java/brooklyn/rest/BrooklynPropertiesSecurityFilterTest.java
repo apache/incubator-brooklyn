@@ -20,7 +20,6 @@ package brooklyn.rest;
 
 import static org.testng.Assert.assertTrue;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -37,19 +36,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.core.JsonParseException;
+import brooklyn.rest.security.provider.AnyoneSecurityProvider;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.time.Time;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
-import brooklyn.rest.security.provider.AnyoneSecurityProvider;
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
-import brooklyn.util.time.Time;
 
 public class BrooklynPropertiesSecurityFilterTest extends BrooklynRestApiLauncherTestFixture {
 
@@ -96,10 +93,12 @@ public class BrooklynPropertiesSecurityFilterTest extends BrooklynRestApiLaunche
                 ImmutableMap.of(HttpHeaders.CONTENT_TYPE, "application/x-yaml"),
                 blueprint.getBytes());
         assertTrue(HttpTool.isStatusCodeHealthy(response.getResponseCode()), "error creating app. response code=" + response.getResponseCode());
+        @SuppressWarnings("unchecked")
         Map<String, Object> body = new ObjectMapper().readValue(response.getContent(), HashMap.class);
         return (String) body.get("entityId");
     }
 
+    @SuppressWarnings("rawtypes")
     private String getTestEntityInApp(Server server, String appId) throws Exception {
         HttpClient client = HttpTool.httpClientBuilder()
                 .uri(getBaseUri(server))

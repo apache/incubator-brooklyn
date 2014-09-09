@@ -5,7 +5,7 @@
    "self":"/v1/applications/tesr/entities/zQsqdXzi",
    "catalog":"/v1/catalog/entities/brooklyn.entity.webapp.tomcat.TomcatServer",
    "application":"/v1/applications/tesr",
-   "children":"/v1/applications/tesr/entities/zQsqdXzi/entities",
+   "children":"/v1/applications/tesr/entities/zQsqdXzi/children",
    "effectors":"fixtures/effector-summary-list.json",
    "sensors":"fixtures/sensor-summary-list.json",
    "activities":"fixtures/task-summary-list.json"

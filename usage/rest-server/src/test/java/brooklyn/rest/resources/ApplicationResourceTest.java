@@ -72,7 +72,6 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -429,6 +428,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   public void testTriggerSampleEffector() throws InterruptedException, IOException {
     ClientResponse response = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors/"+
             RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
+        .type(MediaType.APPLICATION_JSON_TYPE)
         .post(ClientResponse.class, ImmutableMap.of("param1", "foo", "param2", 4));
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
@@ -444,7 +444,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     data.add("param2", "4");
     ClientResponse response = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors/"+
             RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
-        .type(MediaType.APPLICATION_FORM_URLENCODED)
+        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
         .post(ClientResponse.class, data);
 
     assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
@@ -491,6 +491,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
       
       ClientResponse response = client().resource(policiesEndpoint)
               .queryParam("type", CapitalizePolicy.class.getCanonicalName())
+              .type(MediaType.APPLICATION_JSON_TYPE)
               .post(ClientResponse.class, Maps.newHashMap());
       assertEquals(response.getStatus(), 200);
       PolicySummary policy = response.getEntity(PolicySummary.class);
@@ -500,21 +501,20 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
       policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
       assertEquals(policies.size(), 1);
       
-      String status = client().resource(policiesEndpoint+"/"+newPolicyId)
-              .get(String.class);
+      Lifecycle status = client().resource(policiesEndpoint+"/"+newPolicyId).get(Lifecycle.class);
       log.info("POLICY STATUS: "+status);
       
       response = client().resource(policiesEndpoint+"/"+newPolicyId+"/start")
               .post(ClientResponse.class);
       assertEquals(response.getStatus(), 204);
-      status = client().resource(policiesEndpoint+"/"+newPolicyId).get(String.class);
-      assertEquals(status, Lifecycle.RUNNING.name());
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).get(Lifecycle.class);
+      assertEquals(status, Lifecycle.RUNNING);
       
       response = client().resource(policiesEndpoint+"/"+newPolicyId+"/stop")
               .post(ClientResponse.class);
       assertEquals(response.getStatus(), 204);
-      status = client().resource(policiesEndpoint+"/"+newPolicyId).get(String.class);
-      assertEquals(status, Lifecycle.STOPPED.name());
+      status = client().resource(policiesEndpoint+"/"+newPolicyId).get(Lifecycle.class);
+      assertEquals(status, Lifecycle.STOPPED);
       
       response = client().resource(policiesEndpoint+"/"+newPolicyId+"/destroy")
               .post(ClientResponse.class);

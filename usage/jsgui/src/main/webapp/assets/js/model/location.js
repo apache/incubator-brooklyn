@@ -75,7 +75,6 @@ define(["underscore", "backbone"], function (_, Backbone) {
 
     Location.Collection = Backbone.Collection.extend({
         model:Location.Model,
-        comparator: "name",
         url:'/v1/locations'
     })
 

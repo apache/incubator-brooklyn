@@ -55,6 +55,7 @@ public class AbstractResource {
     private String name;
     private String type;
     private String description;
+    private String sourceCode;
     private Date created = Time.dropMilliseconds(new Date());
     private List<String> tags = Collections.emptyList();
     private RepresentationSkew representationSkew;
@@ -77,6 +78,9 @@ public class AbstractResource {
     }
     public String getDescription() {
         return description;
+    }
+    public String getSourceCode() {
+        return sourceCode;
     }
     public Date getCreated() {
         return created;
@@ -101,6 +105,9 @@ public class AbstractResource {
     }
     private void setDescription(String description) {
         this.description = description;
+    }
+    private void setSourceCode(String sourceCode) {
+        this.sourceCode = sourceCode;
     }
     private void setCreated(Date created) {
         // precision beyond seconds breaks equals check
@@ -176,7 +183,8 @@ public class AbstractResource {
         public U tags(List<String> x) { instance().setTags(x); return thisBuilder(); }
         public U representationSkew(RepresentationSkew x) { instance().setRepresentationSkew(x); return thisBuilder(); }
         public U customAttribute(String key, Object value) { instance().setCustomAttribute(key, value); return thisBuilder(); }
-        
+        public U sourceCode(String x) { instance().setSourceCode(x); return thisBuilder(); }
+
 //        public String type() { return instance().type; }
     }
 

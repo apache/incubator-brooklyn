@@ -22,8 +22,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -72,6 +74,24 @@ public interface SensorApi {
 
   @GET
   @Path("/{sensor}")
+  @ApiOperation(value = "Fetch sensor value (json)", responseClass = "Object")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+  })
+  public Object get(
+          @ApiParam(value = "Application ID or name", required = true)
+          @PathParam("application") final String application,
+          @ApiParam(value = "Entity ID or name", required = true)
+          @PathParam("entity") final String entityToken,
+          @ApiParam(value = "Sensor name", required = true)
+          @PathParam("sensor") String sensorName,
+          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+          @QueryParam("raw") @DefaultValue("false") final Boolean raw
+  ) ;
+
+  // this method is used if user has requested plain (ie not converting to json)
+  @GET
+  @Path("/{sensor}")
   @ApiOperation(value = "Fetch sensor value (text/plain)", responseClass = "String")
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application, entity or sensor")
@@ -88,21 +108,36 @@ public interface SensorApi {
           @QueryParam("raw") @DefaultValue("false") final Boolean raw
   ) ;
 
-  @GET
+  @POST
   @Path("/{sensor}")
-  @ApiOperation(value = "Fetch sensor value (json)", responseClass = "Object")
+  @ApiOperation(value = "Manually set a sensor value")
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application, entity or sensor")
   })
-  public Object get(
+  public void set(
           @ApiParam(value = "Application ID or name", required = true)
           @PathParam("application") final String application,
           @ApiParam(value = "Entity ID or name", required = true)
           @PathParam("entity") final String entityToken,
           @ApiParam(value = "Sensor name", required = true)
           @PathParam("sensor") String sensorName,
-          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
-          @QueryParam("raw") @DefaultValue("false") final Boolean raw
+          @ApiParam(value = "Value to set")
+          Object newValue
+  ) ;
+
+  @DELETE
+  @Path("/{sensor}")
+  @ApiOperation(value = "Manually clear a sensor value")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+  })
+  public void delete(
+          @ApiParam(value = "Application ID or name", required = true)
+          @PathParam("application") final String application,
+          @ApiParam(value = "Entity ID or name", required = true)
+          @PathParam("entity") final String entityToken,
+          @ApiParam(value = "Sensor name", required = true)
+          @PathParam("sensor") String sensorName
   ) ;
 
 }

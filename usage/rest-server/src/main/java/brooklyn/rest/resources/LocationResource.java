@@ -19,7 +19,6 @@
 package brooklyn.rest.resources;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +79,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
         return FluentIterable.from(brooklyn().getLocationRegistry().getDefinedLocations().values())
                 .transform(transformer)
                 .filter(LocationSummary.class)
-                .toSortedList(SummaryComparators.nameComparator());
+                .toSortedList(SummaryComparators.displayNameComparator());
     }
 
     // this is here to support the web GUI's circles

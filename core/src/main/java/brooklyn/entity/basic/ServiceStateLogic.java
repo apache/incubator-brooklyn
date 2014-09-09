@@ -434,27 +434,31 @@ public class ServiceStateLogic {
 
         protected Object computeServiceProblems() {
             Map<Entity, Lifecycle> values = getValues(SERVICE_STATE_ACTUAL);
-            int numRunning=0, numNotHealthy=0;
+            int numRunning=0;
+            List<Entity> onesNotHealthy=MutableList.of();
             Set<Lifecycle> ignoreStates = getConfig(IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES);
-            for (Lifecycle state: values.values()) {
-                if (state==Lifecycle.RUNNING) numRunning++;
-                else if (!ignoreStates.contains(state)) numNotHealthy++;
+            for (Map.Entry<Entity,Lifecycle> state: values.entrySet()) {
+                if (state.getValue()==Lifecycle.RUNNING) numRunning++;
+                else if (!ignoreStates.contains(state.getValue())) 
+                    onesNotHealthy.add(state.getKey());
             }
 
             QuorumCheck qc = getConfig(RUNNING_QUORUM_CHECK);
             if (qc!=null) {
-                if (qc.isQuorate(numRunning, numNotHealthy+numRunning))
+                if (qc.isQuorate(numRunning, onesNotHealthy.size()+numRunning))
                     // quorate
                     return null;
 
-                if (numNotHealthy==0)
+                if (onesNotHealthy.isEmpty())
                     return "Not enough entities running to be quorate";
             } else {
-                if (numNotHealthy==0)
+                if (onesNotHealthy.isEmpty())
                     return null;
             }
 
-            return numNotHealthy+" entit"+Strings.ies(numNotHealthy)+" not healthy";
+            return "Required entit"+Strings.ies(onesNotHealthy.size())+" not healthy: "+
+                (onesNotHealthy.size()>3 ? onesNotHealthy.get(0)+" and "+(onesNotHealthy.size()-1)+" others"
+                    : Strings.join(onesNotHealthy, ", "));
         }
 
         protected void updateMapSensor(AttributeSensor<Map<String, Object>> sensor, Object value) {

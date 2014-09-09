@@ -19,4 +19,11 @@
 package brooklyn.entity.basic;
 
 public class BasicApplicationImpl extends AbstractApplication implements BasicApplication {
+    
+    @Override
+    public void init() {
+        super.init();
+        setDefaultDisplayName("Application ("+getId()+")");
+    }
+    
 }

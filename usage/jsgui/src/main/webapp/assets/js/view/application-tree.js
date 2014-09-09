@@ -165,7 +165,7 @@ define([
                 var entityName = nModel && nModel.get("name")
                         ? nModel.get("name")
                         : this.collection.getEntityNameFromId(id);
-                var sortKey = entityName.toLowerCase() + "~~~" + id.toLowerCase();
+                var sortKey = (entityName ? entityName.toLowerCase() : "~~~") + "     " + id.toLowerCase();
                 var newNodeWrapper = $(
                         '<div data-sort-key="'+sortKey+'" class="toggler-group tree-box '+
                             (depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+
@@ -452,6 +452,7 @@ define([
         },
 
         showDetails: function(app, entitySummary) {
+            var self = this;
             ViewUtils.cancelFadeOnceLoaded($("div#details"))
             
             var whichTab = this.currentTab
@@ -471,11 +472,22 @@ define([
                 appRouter:this.options.appRouter,
                 preselectTab:whichTab,
                 preselectTabDetails:this.currentTabDetails,
-            })
-            var self = this;
+            });
+            
             this.detailsView.on("entity.expunged", function() {
                 self.preselectTab("summary");
-                self.displayEntityId(self.collection.first().id);
+                var id = self.selectedEntityId;
+                var model = self.collection.get(id);
+                if (model && model.get("parentId")) {
+                    self.displayEntityId(model.get("parentId"));
+                } else if (self.collection) {
+                    self.displayEntityId(self.collection.first().id);
+                } else if (id) {
+                    self.displayEntityNotFound(id);
+                } else {
+                    self.displayEntityNotFound("?");
+                }
+                self.collection.fetch();
             });
             this.detailsView.render( $("div#details") );
         },

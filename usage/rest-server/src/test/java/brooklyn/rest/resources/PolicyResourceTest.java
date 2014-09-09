@@ -25,6 +25,7 @@ import static org.testng.Assert.fail;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -71,6 +72,7 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
 
         ClientResponse pResponse = client().resource(ENDPOINT)
                 .queryParam("type", RestMockSimplePolicy.class.getCanonicalName())
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(ClientResponse.class, Maps.newHashMap());
 
         PolicySummary response = pResponse.getEntity(PolicySummary.class);
