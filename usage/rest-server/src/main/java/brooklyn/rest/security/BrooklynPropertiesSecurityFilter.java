@@ -19,6 +19,7 @@
 package brooklyn.rest.security;
 
 import java.io.IOException;
+import java.util.Enumeration;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -28,6 +29,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +39,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.WebEntitlementContext;
 import brooklyn.rest.security.provider.DelegatingSecurityProvider;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
@@ -47,16 +48,23 @@ import com.sun.jersey.core.util.Base64;
  * Provides basic HTTP authentication.
  */
 public class BrooklynPropertiesSecurityFilter implements Filter {
-    
-    /** session attribute set for authenticated users; for reference
+
+    /**
+     * The session attribute set for authenticated users; for reference
      * (but should not be relied up to confirm authentication, as
      * the providers may impose additional criteria such as timeouts,
-     * or a null user (no login) may be permitted) */
+     * or a null user (no login) may be permitted)
+     */
     public static final String AUTHENTICATED_USER_SESSION_ATTRIBUTE = "brooklyn.user";
-    
+
+    /**
+     * The session attribute set to indicate the remote address of the HTTP request.
+     * Corresponds to {@link javax.servlet.http.HttpServletRequest#getRemoteAddr()}.
+     */
+    public static final String REMOTE_ADDRESS_SESSION_ATTRIBUTE = "request.remoteAddress";
+
     private static final Logger log = LoggerFactory.getLogger(BrooklynPropertiesSecurityFilter.class);
     
-    protected ManagementContext mgmt;
     protected DelegatingSecurityProvider provider;
     
     private static ThreadLocal<String> originalRequest = new ThreadLocal<String>();
@@ -101,12 +109,23 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                     if (log.isDebugEnabled()) {
                         log.debug("REST req {} complete, responding {} for request {} with {}",
                                 new Object[]{uid, ((HttpServletResponse) response).getStatus(), uri, entitlementContext});
+                        log.debug("  source: " + httpRequest.getRemoteAddr());
                         if (!httpRequest.getParameterMap().isEmpty()) {
-                            log.debug("     parameters were: {}", httpRequest.getParameterMap());
+                            log.debug("  parameters were: {}", httpRequest.getParameterMap());
                         }
                         if (httpRequest.getContentLength() > 0) {
                             int len = httpRequest.getContentLength();
-                            log.debug("     upload content type was {}, length={}", httpRequest.getContentType(), len);
+                            log.debug("  upload content type was {}, length={}", httpRequest.getContentType(), len);
+                        }
+                        if (log.isTraceEnabled()) {
+                            Enumeration<String> headerNames = httpRequest.getHeaderNames();
+                            if (headerNames.hasMoreElements()) {
+                                log.trace("  headers:");
+                                while (headerNames.hasMoreElements()) {
+                                    String headerName = headerNames.nextElement();
+                                    log.trace("    {}: {}", headerName, httpRequest.getHeader(headerName));
+                                }
+                            }
                         }
                     }
                     return;
@@ -126,9 +145,11 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
     }
 
     protected boolean authenticate(HttpServletRequest request) {
-        if (provider.isAuthenticated( request.getSession() ))
+        HttpSession session = request.getSession();
+        if (provider.isAuthenticated(session)) {
             return true;
-        
+        }
+        session.setAttribute(REMOTE_ADDRESS_SESSION_ATTRIBUTE, request.getRemoteAddr());
         String user = null, pass = null;
         String authorization=request.getHeader("Authorization");
         if (authorization!=null) {
@@ -136,11 +157,10 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
             user=userpass.substring(0,userpass.indexOf(":"));
             pass=userpass.substring(userpass.indexOf(":")+1);
         }
-        
-        if (provider.authenticate(request.getSession(), user, pass)) {
-            log.debug("Web API authenticated "+request.getSession()+" for user "+user);
+        if (provider.authenticate(session, user, pass)) {
+            log.debug("Web API authenticated "+session+" for user "+user);
             if (user!=null) {
-                request.getSession().setAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE, user);
+                session.setAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE, user);
             }
             return true;
         }
@@ -150,7 +170,7 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
 
     @Override
     public void init(FilterConfig config) throws ServletException {
-        mgmt = (ManagementContext) config.getServletContext().getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        ManagementContext mgmt = (ManagementContext) config.getServletContext().getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
         provider = new DelegatingSecurityProvider(mgmt);
     }
     
@@ -164,6 +184,7 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                     request.getSession().getAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE));
             provider.logout(request.getSession());
             request.getSession().removeAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE);
+            request.getSession().removeAttribute(REMOTE_ADDRESS_SESSION_ATTRIBUTE);
             request.getSession().invalidate();
             return true;
         }
