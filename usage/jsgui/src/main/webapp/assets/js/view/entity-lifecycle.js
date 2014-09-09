@@ -16,39 +16,65 @@
  * specific language governing permissions and limitations
  * under the License.
 */
-/**
- * Render entity lifecycle tab.
- *
- * @type {*}
- */
-define(["underscore", "jquery", "backbone",
-    "text!tpl/apps/lifecycle.html", "view/expunge-invoke"
-], function(_, $, Backbone, LifecycleHtml, ExpungeInvokeView) {
+define([
+    "underscore", "jquery", "backbone", "brooklyn",
+    "text!tpl/apps/lifecycle.html"
+], function(
+    _, $, Backbone, Brooklyn, LifecycleHtml
+) {
+
     var EntityLifecycleView = Backbone.View.extend({
         template: _.template(LifecycleHtml),
+
         events: {
-            "click #expunge": "showExpungeModal"
+            "click #lifecycle-expunge": "confirmExpunge",
+            "click #lifecycle-unmanage": "confirmUnmanage"
         },
+
         initialize:function() {
             _.bindAll(this);
             this.$el.html(this.template());
         },
-        showExpungeModal: function() {
-            var self = this;
-            var modal = new ExpungeInvokeView({
-                el:"#expunge-modal",
-                model:this.model.attributes
-            });
-            modal.on("entity.expunged", function() {
-                self.trigger("entity.expunged");
-            });
-            modal.render().$el.modal("show");
-            this.expungeModal = modal;
+
+        confirmUnmanage: function () {
+            var entity = this.model.get("name");
+            var title = "Confirm the unmanagement of " + entity;
+            var q = "<p>Are you certain you want to unmanage this entity?</p>" +
+                "<p>Its resources will be left running.</p>" +
+                "<p><span class='label label-important'>Important</span> " +
+                "<b>This action is irreversible</b></p>";
+            this.unmanageAndOrExpunge(q, title, false);
         },
-        beforeClose: function() {
-            if (this.expungeModal)
-                this.expungeModal.close();
+
+        confirmExpunge: function () {
+            var entity = this.model.get("name");
+            var title = "Confirm the expunging of " + entity;
+            var q = "<p>Are you certain you want to expunge this entity?</p>" +
+                "<p>When possible, Brooklyn will delete all of its resources.</p>" +
+                "<p><span class='label label-important'>Important</span> " +
+                "<b>This action is irreversible</b></p>";
+            this.unmanageAndOrExpunge(q, title, true);
+        },
+
+        unmanageAndOrExpunge: function (question, title, releaseResources) {
+            var self = this;
+            Brooklyn.view.requestConfirmation(question, title).done(function() {
+                return $.ajax({
+                    type: "POST",
+                    url: self.model.get("links").expunge + "?release=" + releaseResources + "&timeout=0",
+                    contentType: "application/json"
+                }).done(function() {
+                    self.trigger("entity.expunged")
+                }).fail(function() {
+                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
+                    var msg = self.$(".lifecycle-error-message").removeClass("hide");
+                    setTimeout(function() { msg.fadeOut(); }, 4000);
+                });
+            });
         }
+
     });
+
     return EntityLifecycleView;
+
 });

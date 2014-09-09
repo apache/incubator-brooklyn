@@ -28,13 +28,22 @@ under the License.
     </thead>
     <tbody>
         <tr>
-            <td>expunge</td>
-            <td>unmanage this entity and (optionally) attempt to free its resources</td>
+            <td>Unmanage</td>
+            <td>Unmanage this entity and leave its resources running</td>
             <td>
-                <button class="btn btn-info btn-mini show-effector-modal" id="expunge">Invoke</button>
+                <button id="lifecycle-unmanage" class="btn btn-info btn-mini">Invoke</button>
+            </td>
+        </tr>
+        <tr>
+            <td>Expunge</td>
+            <td>Unmanage this entity and attempt to free its resources</td>
+            <td>
+                <button id="lifecycle-expunge" class="btn btn-info btn-mini">Invoke</button>
             </td>
         </tr>
     </tbody>
 </table>
 
-<div id="expunge-modal" class="modal hide fade"></div>
+<div class="alert alert-error hide lifecycle-error-message">
+    <strong>Connection error:</strong> The Brooklyn server is unreachable.
+</div>
