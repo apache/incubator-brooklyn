@@ -103,7 +103,7 @@ public interface EntityApi {
       @ApiParam(name = "timeout", value = "Delay before server should respond with incomplete activity task, rather than completed task: " +
           "'never' means block until complete; " +
           "'0' means return task immediately; " +
-          "and e.g. '20ms' (the default) will wait 20ms for copmleted task information to be available", 
+          "and e.g. '20ms' (the default) will wait 20ms for completed task information to be available", 
           required = false, defaultValue = "20ms")
       @QueryParam("timeout") final String timeout,
       

@@ -110,7 +110,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(NGINX_URL_ANSWERS_NICELY)
-            .computing(Functionals.ifNotEquals(true).value("URL where nginx listens is not answering correctly") )
+            .computing(Functionals.ifNotEquals(true).value("URL where nginx listens is not answering correctly (with expected header)") )
             .build());
         connectServiceUpIsRunning();
 

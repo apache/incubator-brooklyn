@@ -22,12 +22,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
-import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,8 +48,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
@@ -64,6 +58,8 @@ import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.internal.EntityManagementUtils;
+import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
@@ -76,7 +72,6 @@ import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -265,8 +260,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         }
 
         log.debug("Creating app from yaml:\n{}", yaml);
-        Reader input = new StringReader(yaml);
-        AssemblyTemplate at = camp().pdp().registerDeploymentPlan(input);
+        AssemblyTemplate at = camp().pdp().registerDeploymentPlan( new StringReader(yaml) );
         
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, at)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
@@ -278,33 +272,20 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
     private Response launch(AssemblyTemplate at) {
         try {
-            AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
-            Assembly assembly;
-            Task<?> task = null;
-            if (instantiator instanceof BrooklynAssemblyTemplateInstantiator) {
-                Application app = ((BrooklynAssemblyTemplateInstantiator) instantiator).create(at, camp());
-                assembly = camp().assemblies().get(app.getApplicationId());
-
-                task = Entities.invokeEffector((EntityLocal)app, app, Startable.START,
-                        // locations already set in the entities themselves;
-                        // TODO make it so that this arg does not have to be supplied to START !
-                        MutableMap.of("locations", MutableList.of()));
-            } else {
-                assembly = instantiator.instantiate(at, camp());
-            }
-            Entity app = mgmt().getEntityManager().getEntity(assembly.getId());
+            CreationResult<? extends Application, Void> result = EntityManagementUtils.createStarting(mgmt(), at);
             
+            Application app = result.get();
             if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, Startable.START.getName()))) {
                 throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
                     Entitlements.getEntitlementContext().user(), at.getType());
             }
 
-            log.info("Launched from YAML: " + assembly + " (" + task + ")");
+            log.info("Launched from YAML: " + at + " -> " + app + " (" + result.task() + ")");
 
             URI ref = URI.create(app.getApplicationId());
             ResponseBuilder response = created(ref);
-            if (task != null)
-                response.entity(TaskTransformer.FROM_TASK.apply(task));
+            if (result.task() != null) 
+                response.entity(TaskTransformer.FROM_TASK.apply(result.task()));
             return response.build();
         } catch (Exception e) {
             throw Exceptions.propagate(e);

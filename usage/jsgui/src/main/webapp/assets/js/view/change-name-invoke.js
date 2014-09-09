@@ -20,9 +20,9 @@
  * Render entity expungement as a modal
  */
 define([
-    "underscore", "jquery", "backbone",
+    "underscore", "jquery", "backbone", "brooklyn-utils",
     "text!tpl/apps/change-name-modal.html"
-], function(_, $, Backbone, ChangeNameModalHtml) {
+], function(_, $, Backbone, Util, ChangeNameModalHtml) {
     return Backbone.View.extend({
         template: _.template(ChangeNameModalHtml),
         initialize: function() {
@@ -44,14 +44,7 @@ define([
                     self.options.target.reload();
                 },
                 error: function(response) {
-                    var message = "Error contacting server";
-                    try {
-                        message = JSON.parse(response.responseText).message;
-                    } catch (e) {
-                        log("UNPARSEABLE RESPONSE");
-                        log(response);
-                    }
-                    self.showError(message);
+                    self.showError(Util.extractError(response, "Error contacting server", url));
                 }
             });
             return ajax;

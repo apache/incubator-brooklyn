@@ -138,9 +138,10 @@ define([
 
             if (this.problemIndicators) {
                 var indicatorText = _.values(this.problemIndicators);
-                for (error in indicatorText) {
-                    if (problemDetails)
+                for (var error in indicatorText) {
+                    if (problemDetails) {
                         problemDetails = problemDetails + "<br style='line-height: 24px;'>";
+                    }
                     problemDetails = problemDetails + _.escape(indicatorText[error]);
                 }
             }

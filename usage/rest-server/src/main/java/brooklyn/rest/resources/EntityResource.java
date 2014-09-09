@@ -43,11 +43,12 @@ import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.effector.AddChildrenEffector;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.internal.EntityManagementUtils;
+import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.rest.api.EntityApi;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.LocationSummary;
@@ -115,11 +116,12 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
                 Entitlements.getEntitlementContext().user(), entityToken);
         }
-        AddChildrenEffector.AddChildrenResult added = AddChildrenEffector.addChildren(parent, yaml, start, timeoutS==null ? Duration.millis(20) : Duration.of(timeoutS));
+        CreationResult<List<Entity>, List<String>> added = EntityManagementUtils.addChildren(parent, yaml, start)
+            .blockUntilComplete(timeoutS==null ? Duration.millis(20) : Duration.of(timeoutS));
         ResponseBuilder response;
         
-        if (added.getChildren().size()==1) {
-            Entity child = Iterables.getOnlyElement(added.getChildren());
+        if (added.get().size()==1) {
+            Entity child = Iterables.getOnlyElement(added.get());
             URI ref = uriInfo.getBaseUriBuilder()
                 .path(EntityApi.class)
                 .path(EntityApi.class, "get")
@@ -128,7 +130,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
         } else {
             response = Response.status(Status.CREATED);
         }
-        return response.entity(TaskTransformer.taskSummary(added.getTask())).build();
+        return response.entity(TaskTransformer.taskSummary(added.task())).build();
     }
 
   @Override

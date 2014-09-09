@@ -116,7 +116,7 @@ public abstract class BrooklynRestApiTest {
     protected void addDefaultResources() {
         // seems we have to provide our own injector because the jersey test framework 
         // doesn't inject ServletConfig and it all blows up
-//        addProvider(NullServletConfigProvider.class);
+        // and the servlet config provider must be an instance; addClasses doesn't work for some reason
         addResource(new NullServletConfigProvider());
         addProvider(NullHttpServletRequestProvider.class);
     }

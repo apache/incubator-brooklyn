@@ -42,7 +42,7 @@ define([
         zeroClipboard: null,
         
         events:{
-            'click .refresh':'refreshNow',
+            'click .refresh':'updateConfigNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
 
@@ -205,7 +205,13 @@ define([
             this.toggleFilterEmpty();
             return this;
         },
-        
+
+        beforeClose: function () {
+            if (this.zeroClipboard) {
+                this.zeroClipboard.destroy();
+            }
+        },
+
         floatMenuActive: false,
         lastFloatMenuRowId: null,
         lastFloatFocusInTextForEventUnmangling: null,

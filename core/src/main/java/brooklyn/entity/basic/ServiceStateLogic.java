@@ -449,10 +449,10 @@ public class ServiceStateLogic {
                     // quorate
                     return null;
 
-                if (onesNotHealthy.size()==0)
+                if (onesNotHealthy.isEmpty())
                     return "Not enough entities running to be quorate";
             } else {
-                if (onesNotHealthy.size()==0)
+                if (onesNotHealthy.isEmpty())
                     return null;
             }
 

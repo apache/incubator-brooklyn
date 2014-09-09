@@ -100,7 +100,7 @@ public interface EntityConfigApi {
   @Path("/{config}")
   @ApiOperation(value = "Manually set a config value")
   @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+      @ApiError(code = 404, reason = "Could not find application, entity or config key")
   })
   public void set(
           @ApiParam(value = "Application ID or name", required = true)

@@ -46,8 +46,7 @@ define([
                     self.options.target.reload();
                 },
                 error: function(response) {
-                    var message = JSON.parse(response.responseText).message;
-                    self.showError(message);
+                    self.showError(Util.extractError(response, "Error contacting server", url));
                 }
             });
             return ajax;

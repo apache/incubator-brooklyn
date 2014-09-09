@@ -89,11 +89,6 @@ define([
             view.render();
         });
 
-        // TODO textarea only appears if it's got yaml
-//        it('must render textarea contents', function () {
-//            expect(view.$("textarea").length).toBe(1);
-//            expect(view.$("textarea").val()).toMatch("Tomcat");
-//        });
     });
 
     // TODO complains about instanceof on a non-object in underscore; probably because we are now doing $.get 

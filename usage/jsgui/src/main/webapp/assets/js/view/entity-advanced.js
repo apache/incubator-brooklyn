@@ -30,7 +30,7 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
             "click button#change-name": "showChangeNameModal",
             "click button#add-child": "showAddChildModal",
             "click button#add-new-policy": "showNewPolicyModal",
-            "click button#reset-problems": "doResetProblems",
+            "click button#reset-problems": "confirmResetProblems",
             "click button#expunge": "confirmExpunge",
             "click button#unmanage": "confirmUnmanage",
             "click #advanced-tab-error-closer": "closeAdvancedTabError"
@@ -95,6 +95,17 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
                 entity: this.model,
             }));
         },
+        
+        confirmResetProblems: function () {
+            var entity = this.model.get("name");
+            var title = "Confirm the reset of problem indicators in " + entity;
+            var q = "<p>Are you sure you want to reset the problem indicators for this entity?</p>" +
+                "<p>If a problem has been fixed externally, but the fix is not being detected, this will clear problems. " +
+                "If the problem is not actually fixed, many feeds and enrichers will re-detect it, but note that some may not, " +
+                "and the entity may show as healthy when it is not." +
+                "</p>";
+            Brooklyn.view.requestConfirmation(q, title).done(this.doResetProblems);
+        },
         doResetProblems: function() {
             this.post(this.model.get('links').sensors+"/"+"service.notUp.indicators", {});
             this.post(this.model.get('links').sensors+"/"+"service.problems", {});
@@ -110,11 +121,8 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
                 success: function() {
                     self.reload();
                 },
-                error: function(data) {
-                    self.showAdvancedTabError("Error connecting to Brooklyn server");
-
-                    log("ERROR invoking operation");
-                    log(data);
+                error: function(response) {
+                    self.showAdvancedTabError(Util.extractError(response, "Error contacting server", url));
                 }
             });
         },
@@ -161,7 +169,6 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
             self.$("#advanced-tab-error-section").removeClass("hide");
         },
         closeAdvancedTabError: function() {
-            log("close")
             self.$("#advanced-tab-error-section").addClass("hide");
         },
         
@@ -169,6 +176,7 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
             if (this.activeModal)
                 this.activeModal.close();
             this.options.tabView.configView.close();
+            this.model.off();
         }
     });
     return EntityAdvancedView;
