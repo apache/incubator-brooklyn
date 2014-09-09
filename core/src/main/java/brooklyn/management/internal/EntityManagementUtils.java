@@ -101,7 +101,7 @@ public class EntityManagementUtils {
             
             EntitySpec<?> spec = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
             Entity app = mgmt.getEntityManager().createEntity(spec);
-            Entities.startManagement(app);
+            Entities.startManagement((Application)app, mgmt);
             return (T) app;
         } else {
             assembly = instantiator.instantiate(at, camp);

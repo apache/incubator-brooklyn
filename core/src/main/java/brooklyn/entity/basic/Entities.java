@@ -801,6 +801,9 @@ public class Entities {
         }
         if (!(o instanceof Application))
             throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
+        
+        log.warn("Deprecated invocation of startManagement for "+e+" without a management context present; "
+            + "a new local management context is being created! (Not recommended unless you really know what you are doing.)");
         ManagementContext mgmt = new LocalManagementContext();
         mgmt.getEntityManager().manage(o);
         return mgmt;
