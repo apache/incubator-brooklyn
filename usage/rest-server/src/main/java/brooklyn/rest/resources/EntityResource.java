@@ -226,7 +226,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
                 return Response.status(Status.CREATED).entity(TaskTransformer.taskSummary(task)).build();
             }
         } else {
-            throw new IllegalStateException("Add children only supported for spec instantiator instances");
+            throw new IllegalStateException("Spec could not be parsed to supply a compatible instantiator");
         }
   }
 

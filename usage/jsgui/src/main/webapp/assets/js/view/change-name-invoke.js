@@ -25,39 +25,40 @@ define([
 ], function(_, $, Backbone, ChangeNameModalHtml) {
     return Backbone.View.extend({
         template: _.template(ChangeNameModalHtml),
-        events: {
-            "click .invoke-operation": "invokeOperation",
-            "hide": "hide"
+        initialize: function() {
+            this.title = "Change Name of "+this.options.entity.get('name');
         },
         render: function() {
-            this.$el.html(this.template(this.model));
+            this.$el.html(this.template({ name: this.options.entity.get('name') }));
             return this;
         },
-        invokeOperation: function() {
+        onSubmit: function() {
             var self = this;
             var newName = this.$("#new-name").val();
-            var url = this.model.links.rename + "?name=" + encodeURIComponent(newName);
-            $.ajax({
+            var url = this.options.entity.get('links').rename + "?name=" + encodeURIComponent(newName);
+            var ajax = $.ajax({
                 type: "POST",
                 url: url,
                 contentType: "application/json",
                 success: function() {
                     self.options.target.reload();
                 },
-                error: function(data) {
-                    self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
-                    // TODO render the error better than poor-man's flashing
-                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
-
-                    log("ERROR invoking operation");
-                    log(data);
+                error: function(response) {
+                    var message = "Error contacting server";
+                    try {
+                        message = JSON.parse(response.responseText).message;
+                    } catch (e) {
+                        log("UNPARSEABLE RESPONSE");
+                        log(response);
+                    }
+                    self.showError(message);
                 }
             });
-            this.$el.fadeTo(500, 0.5);
-            this.$el.modal("hide");
+            return ajax;
         },
-        hide: function() {
-            this.undelegateEvents();
+        showError: function (message) {
+            this.$(".change-name-error-container").removeClass("hide");
+            this.$(".change-name-error-message").html(message);
         }
     });
 });

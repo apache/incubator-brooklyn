@@ -18,22 +18,12 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<!-- modal to render effector-->
+    <h4 style="margin-bottom: 9px;">New Name</h4>
+    <p>Change the display name of an entity</p>
 
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-    <h3>Rename <%= name %></h3>
+    <input type="text" id="new-name" style="width: 100%;" value="<%= name %>"></input>
 
-    <br/>
-    <p>Change the name of an entity</p>
-</div>
-
-<div class="modal-body">
-    <span>New name:</span>
-    <input type="text" id="new-name" value="<%= name %>"></input>
-</div>
-
-<div class="modal-footer">
-    <button type="button" class="btn btn-info btn-mini" data-dismiss="modal">Cancel</button>
-    <button type="button" class="btn btn-danger btn-mini invoke-operation">Invoke</button>
-</div>
+    <div class="hide alert alert-error change-name-error-container" style="margin-top: 9px;">
+        <strong>Error</strong>
+        <span class="change-name-error-message"></span>
+    </div>

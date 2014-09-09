@@ -22,14 +22,15 @@
  * @type {*}
  */
 define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
-    "text!tpl/apps/advanced.html", "view/entity-config", "view/change-name-invoke", "view/add-child-invoke"
+    "text!tpl/apps/advanced.html", "view/entity-config", "view/change-name-invoke", "view/add-child-invoke", "view/policy-new"
 ], function(_, $, Backbone, Brooklyn, Util, ViewUtils,
-        AdvancedHtml, EntityConfigView, ChangeNameInvokeView, AddChildInvokeView) {
+        AdvancedHtml, EntityConfigView, ChangeNameInvokeView, AddChildInvokeView, NewPolicyView) {
     var EntityAdvancedView = Backbone.View.extend({
         events: {
             "click button#change-name": "showChangeNameModal",
-            "click button#reset-problems": "doResetProblems",
             "click button#add-child": "showAddChildModal",
+            "click button#add-new-policy": "showNewPolicyModal",
+            "click button#reset-problems": "doResetProblems",
             "click button#expunge": "confirmExpunge",
             "click button#unmanage": "confirmUnmanage",
             "click #advanced-tab-error-closer": "closeAdvancedTabError"
@@ -57,25 +58,27 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
             this.model.fetch();
         },
         
-        showModel: function(modal) {
+        showModal: function(modal) {
             if (this.activeModal)
-                this.activeModal.$el.html("");
-            // not sure why opacity is needed, but it seems to be, else jumping around makes it opacity 0.5
-            modal.render().$el.modal("show").css('opacity', 1.0);
+                this.activeModal.close();
             this.activeModal = modal;
+            Brooklyn.view.showModalWith(modal);
         },
         showChangeNameModal: function() {
-            this.showModel(new ChangeNameInvokeView({
-                el:"#change-name-modal",
-                model:this.model.attributes,
+            this.showModal(new ChangeNameInvokeView({
+                entity: this.model,
                 target:this
             }));
         },
         showAddChildModal: function() {
-            this.showModel(new AddChildInvokeView({
-                el:"#add-child-modal",
-                model:this.model.attributes,
+            this.showModal(new AddChildInvokeView({
+                entity: this.model,
                 target:this
+            }));
+        },
+        showNewPolicyModal: function () {
+            this.showModal(new NewPolicyView({
+                entity: this.model,
             }));
         },
         doResetProblems: function() {

@@ -26,12 +26,13 @@ define([
 
     return Backbone.View.extend({
         template: _.template(NewPolicyHtml),
-        title: "Attach a policy",
+        title: "Attach New Policy",
 
         initialize: function () {
             if (!this.options.entity) {
                 throw new Error("NewPolicy view requires entity to know where to post result");
             }
+            this.title = "Attach New Policy to "+this.options.entity.get('name');
         },
 
         render: function() {

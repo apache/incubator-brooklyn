@@ -17,7 +17,7 @@
  * under the License.
 */
 /**
- * Render entity expungement as a modal
+ * Render as a modal
  */
 define([
     "underscore", "jquery", "backbone",
@@ -25,20 +25,19 @@ define([
 ], function(_, $, Backbone, AddChildModalHtml) {
     return Backbone.View.extend({
         template: _.template(AddChildModalHtml),
-        events: {
-            "click .invoke-operation": "invokeOperation",
-            "hide": "hide"
+        initialize: function() {
+            this.title = "Add Child to "+this.options.entity.get('name');
         },
         render: function() {
-            this.$el.html(this.template(this.model));
+            this.$el.html(this.template(this.options.entity.attributes));
             return this;
         },
-        invokeOperation: function() {
+        onSubmit: function (event) {
             var self = this;
             var childSpec = this.$("#child-spec").val();
-            var start = this.$("#child-autostart").is(":checked")
-            var url = this.model.links.children + (!start ? "?start=false" : "");
-            $.ajax({
+            var start = this.$("#child-autostart").is(":checked");
+            var url = this.options.entity.get('links').children + (!start ? "?start=false" : "");
+            var ajax = $.ajax({
                 type: "POST",
                 url: url,
                 data: childSpec,
@@ -46,20 +45,17 @@ define([
                 success: function() {
                     self.options.target.reload();
                 },
-                error: function(data) {
-                    self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
-                    // TODO render the error better than poor-man's flashing
-                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
-
-                    log("ERROR invoking operation");
-                    log(data);
+                error: function(response) {
+                    var message = JSON.parse(response.responseText).message;
+                    self.showError(message);
                 }
             });
-            this.$el.fadeTo(500, 0.5);
-            this.$el.modal("hide");
+            return ajax;
         },
-        hide: function() {
-            this.undelegateEvents();
+        showError: function (message) {
+            this.$(".child-add-error-container").removeClass("hide");
+            this.$(".child-add-error-message").html(message);
         }
+
     });
 });
