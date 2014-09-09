@@ -43,7 +43,13 @@ import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.effector.AddChildrenEffector;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -51,6 +57,8 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Predicates;
@@ -89,7 +97,7 @@ public class CampYamlLiteTest {
         Assert.assertEquals(at.getName(), "sample");
         Assert.assertEquals(at.getPlatformComponentTemplates().links().size(), 1);
         
-        // now use brooklyn to instantiate
+        // now use brooklyn to instantiate - note it won't be faithful, but it will set some config keys
         Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
         
         TestApplication app = ((TestAppAssembly)assembly).getBrooklynApp();
@@ -104,6 +112,43 @@ public class CampYamlLiteTest {
         Assert.assertEquals( map.get("type"), MockWebPlatform.APPSERVER.getType() );
         // desc ensures we got the information from the matcher, as this value is NOT in the yaml
         Assert.assertEquals( map.get("desc"), MockWebPlatform.APPSERVER.getDescription() );
+    }
+
+    /** based on {@link PdpYamlTest} for parsing,
+     * then creating a {@link TestAppAssembly} */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testAddChildrenEffector() throws Exception {
+        // NB: as above, with this mock instantiator, not everything will be set nicely
+        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
+        
+        String childYaml = Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml"));
+        AddChildrenEffector newEff = new AddChildrenEffector(ConfigBag.newInstance()
+            .configure(AddChildrenEffector.EFFECTOR_NAME, "add_tomcat")
+            .configure(AddChildrenEffector.BLUEPRINT_YAML, childYaml)
+            .configure(AddChildrenEffector.EFFECTOR_PARAMETER_DEFS, MutableMap.of("war", (Object)MutableMap.of(
+                "defaultValue", "foo.war"))) ) ;
+        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).addInitializer(newEff), mgmt);
+
+        // test adding, with a parameter
+        Task<List> task = app.invoke(Effectors.effector(List.class, "add_tomcat").buildAbstract(), MutableMap.of("war", "foo.bar"));
+        List result = task.get();
+        
+        Entity newChild = Iterables.getOnlyElement(app.getChildren());
+        Assert.assertEquals(newChild.getConfig(ConfigKeys.newStringConfigKey("war")), "foo.bar");
+        
+        Assert.assertEquals(Iterables.getOnlyElement(result), newChild.getId());
+        Entities.unmanage(newChild);
+        
+        // and test default value
+        task = app.invoke(Effectors.effector(List.class, "add_tomcat").buildAbstract(), MutableMap.<String,Object>of());
+        result = task.get();
+        
+        newChild = Iterables.getOnlyElement(app.getChildren());
+        Assert.assertEquals(newChild.getConfig(ConfigKeys.newStringConfigKey("war")), "foo.war");
+        
+        Assert.assertEquals(Iterables.getOnlyElement(result), newChild.getId());
+        Entities.unmanage(newChild);
     }
 
     @Test

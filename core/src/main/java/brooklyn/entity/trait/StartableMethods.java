@@ -60,7 +60,7 @@ public class StartableMethods {
         if (log.isDebugEnabled()) log.debug("Stopped entity "+e);
 	}
 
-    /** Common implementation for restart in parent nodes; just invokes stop on all children of the entity */
+    /** Common implementation for restart in parent nodes; just invokes restart on all children of the entity */
     public static void restart(EntityLocal e) {
         log.debug("Restarting entity "+e);
         DynamicTasks.queueIfPossible(restartingChildren(e)).orSubmitAsync(e).getTask().getUnchecked();

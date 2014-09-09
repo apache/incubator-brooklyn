@@ -396,11 +396,11 @@ public class ConfigBag {
         }
     }
 
-    protected <T> T get(ConfigKey<T> key, boolean remove) {
+    protected <T> T get(ConfigKey<T> key, boolean markUsed) {
         // TODO for now, no evaluation -- closure content / smart (self-extracting) keys are NOT supported
         // (need a clean way to inject that behaviour, as well as desired TypeCoercions)
         if (config.containsKey(key.getName()))
-            return coerceFirstNonNullKeyValue(key, getStringKey(key.getName(), remove));
+            return coerceFirstNonNullKeyValue(key, getStringKey(key.getName(), markUsed));
         
         return coerceFirstNonNullKeyValue(key);
     }

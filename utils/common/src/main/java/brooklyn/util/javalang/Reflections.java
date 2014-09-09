@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -95,7 +96,7 @@ public class Reflections {
             v = invokeConstructorWithArgs(clazz, argValues);
             if (v.isPresent()) return v.get();
         } catch (Exception e) {
-            throw new IllegalStateException("Error invoking constructor for "+clazz+Arrays.toString(argValues)+": "+e);
+            throw new IllegalStateException("Error invoking constructor for "+clazz+Arrays.toString(argValues) + ": " + Exceptions.collapseText(e));
         }
         throw new IllegalStateException("No suitable constructor for "+clazz+Arrays.toString(argValues));
 	}
@@ -110,9 +111,9 @@ public class Reflections {
 		try {
 			return clazz.newInstance();
 		} catch (InstantiationException e) {
-			throw new ReflectionAccessException("Failed to create instance of class '" + classname + "' using class loader " + classLoader, e);
+			throw new ReflectionAccessException("Failed to create instance of class '" + classname + "' using class loader " + classLoader + ": " + Exceptions.collapseText(e), e);
 		} catch (IllegalAccessException e) {
-			throw new ReflectionAccessException("Failed to create instance of class '" + classname + "' using class loader " + classLoader, e);
+			throw new ReflectionAccessException("Failed to create instance of class '" + classname + "' using class loader " + classLoader + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -121,11 +122,11 @@ public class Reflections {
 		try {
 			return classLoader.loadClass(classname);
 		} catch (ClassNotFoundException e) {
-			throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader, e);
+			throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader + ": " + Exceptions.collapseText(e), e);
 		} catch (NoClassDefFoundError e) {
-			throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader, e);
+			throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader + ": " + Exceptions.collapseText(e), e);
 		} catch (UnsupportedClassVersionError e) {
-			throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader, e);
+			throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -200,9 +201,9 @@ public class Reflections {
 		try {
 			return clazz.getConstructor(argTypes);
 		} catch (SecurityException e) {
-			throw new ReflectionAccessException("Failed to load constructor of class '" + clazz + " with argument types " + Arrays.asList(argTypes), e);
+			throw new ReflectionAccessException("Failed to load constructor of class '" + clazz + " with argument types " + Arrays.asList(argTypes) + ": " + Exceptions.collapseText(e), e);
 		} catch (NoSuchMethodException e) {
-			throw new ReflectionAccessException("Failed to load constructor of class '" + clazz + " with argument types " + Arrays.asList(argTypes), e);
+			throw new ReflectionAccessException("Failed to load constructor of class '" + clazz + " with argument types " + Arrays.asList(argTypes) + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -293,13 +294,13 @@ public class Reflections {
 				}
 			}
 		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException(getIllegalArgumentsErrorMessage(constructor, argValues), e);
+			throw new IllegalArgumentException(getIllegalArgumentsErrorMessage(constructor, argValues)+": " + Exceptions.collapseText(e), e);
 		} catch (InstantiationException e) {
-			throw new ReflectionAccessException("Failed to create instance of '" + constructor.getDeclaringClass(), e);
+			throw new ReflectionAccessException("Failed to create instance of " + constructor.getDeclaringClass() + ": " + Exceptions.collapseText(e), e);
 		} catch (IllegalAccessException e) {
-			throw new ReflectionAccessException("Failed to create instance of '" + constructor.getDeclaringClass(), e);
+		    throw new ReflectionAccessException("Failed to create instance of " + constructor.getDeclaringClass() + ": " + Exceptions.collapseText(e), e);
 		} catch (InvocationTargetException e) {
-			throw new ReflectionAccessException("Failed to create instance of '" + constructor.getDeclaringClass(), e);
+		    throw new ReflectionAccessException("Failed to create instance of " + constructor.getDeclaringClass() + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -307,11 +308,11 @@ public class Reflections {
 		try {
 			return clazz.getMethod(methodName, argTypes);
 		} catch (NoClassDefFoundError e) {
-			throw new ReflectionNotFoundException("Failed to invoke method '" + methodName + " on class " + clazz + " with argument types " + Arrays.asList(argTypes) + ", using class loader " + clazz.getClassLoader(), e);
+			throw new ReflectionNotFoundException("Failed to invoke method " + methodName + " on class " + clazz + " with argument types " + Arrays.asList(argTypes) + ", using class loader " + clazz.getClassLoader() + ": " + Exceptions.collapseText(e), e);
 		} catch (NoSuchMethodException e) {
-			throw new ReflectionNotFoundException("Failed to invoke method '" + methodName + " on class " + clazz + " with argument types " + Arrays.asList(argTypes), e);
+			throw new ReflectionNotFoundException("Failed to invoke method " + methodName + " on class " + clazz + " with argument types " + Arrays.asList(argTypes) + ": " + Exceptions.collapseText(e), e);
 		} catch (SecurityException e) {
-			throw new ReflectionAccessException("Failed to invoke method '" + methodName + " on class " + clazz + " with argument types " + Arrays.asList(argTypes), e);
+			throw new ReflectionAccessException("Failed to invoke method " + methodName + " on class " + clazz + " with argument types " + Arrays.asList(argTypes) + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -327,7 +328,7 @@ public class Reflections {
 			throw new ReflectionNotFoundException("Cannot find method " + methodName + " on class " + clazz);
 
 		} catch (SecurityException e) {
-			throw new ReflectionAccessException("Failed to invoke method '" + methodName + " on class " + clazz, e);
+			throw new ReflectionAccessException("Failed to invoke method '" + methodName + " on class " + clazz + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -342,9 +343,9 @@ public class Reflections {
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException(getIllegalArgumentsErrorMessage(method, argValues), e);
 		} catch (IllegalAccessException e) {
-			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues), e);
+			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues) + ": " + Exceptions.collapseText(e), e);
 		} catch (InvocationTargetException e) {
-			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues), e);
+			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues) + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -354,9 +355,9 @@ public class Reflections {
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException(getIllegalArgumentsErrorMessage(method, argValues), e);
 		} catch (IllegalAccessException e) {
-			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues), e);
+			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues) + ": " + Exceptions.collapseText(e), e);
 		} catch (InvocationTargetException e) {
-			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues), e);
+			throw new ReflectionAccessException("Failed to invoke method '" + method.toGenericString() + " on class " + method.getDeclaringClass() + " with argument values " + Arrays.asList(argValues) + ": " + Exceptions.collapseText(e), e);
 		}
 	}
 
@@ -382,9 +383,9 @@ public class Reflections {
 				try {
 					result[index] = field.get(null);
 				} catch (IllegalArgumentException e) {
-					throw new ReflectionAccessException("Failed to load field '" + field.getName() + " from class " + clazz, e);
+					throw new ReflectionAccessException("Failed to load field '" + field.getName() + " from class " + clazz + ": " + Exceptions.collapseText(e), e);
 				} catch (IllegalAccessException e) {
-					throw new ReflectionAccessException("Failed to load field '" + field.getName() + " from class " + clazz, e);
+					throw new ReflectionAccessException("Failed to load field '" + field.getName() + " from class " + clazz + ": " + Exceptions.collapseText(e), e);
 				}
 			}
 		}

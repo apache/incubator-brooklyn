@@ -21,43 +21,31 @@ package brooklyn.rest.resources;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
-import java.io.Reader;
-import java.io.StringReader;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
+import brooklyn.entity.effector.AddChildrenEffector;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.EntityApi;
@@ -71,16 +59,10 @@ import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.TaskBuilder;
-import brooklyn.util.task.Tasks;
-import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -126,119 +108,28 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
         return getChildren(application, entity);
   }
   
-  @Override
-  public Response addChildren(String applicationToken, String entityToken, Boolean start, String timeoutS, String yaml) {
+    @Override
+    public Response addChildren(String applicationToken, String entityToken, Boolean start, String timeoutS, String yaml) {
         final EntityLocal parent = brooklyn().getEntity(applicationToken, entityToken);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, parent)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
                 Entitlements.getEntitlementContext().user(), entityToken);
         }
-        Duration timeout = timeoutS==null ? Duration.millis(20) : Duration.of(timeoutS);
+        AddChildrenEffector.AddChildrenResult added = AddChildrenEffector.addChildren(parent, yaml, start, timeoutS==null ? Duration.millis(20) : Duration.of(timeoutS));
+        ResponseBuilder response;
         
-        log.debug("Creating child of "+parent+" from yaml:\n{}", yaml);
-        Reader input = new StringReader(yaml);
-        AssemblyTemplate at = camp().pdp().registerDeploymentPlan(input);
-
-        AssemblyTemplateInstantiator instantiator;
-        try {
-            instantiator = at.getInstantiator().newInstance();
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.newDefault(mgmt());
-            EntitySpec<?> specA = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp(), loader, false);
-            
-            boolean promoted;
-            
-            // see whether we can promote children
-            List<EntitySpec<?>> specs = MutableList.of();
-            if (BrooklynAssemblyTemplateInstantiator.hasNoNameOrCustomKeysOrRoot(at, specA)) {
-                // we can promote
-                promoted = true;
-                for (EntitySpec<?> specC: specA.getChildren()) {
-                    if (!specA.getLocations().isEmpty()) {
-                        specC.locations(specA.getLocations());
-                        
-                        // TODO copying tags to all entities is not ideal;
-                        // in particular the BrooklynTags.YAML_SPEC tag will show all entities
-                        // even if just one was created
-                        specC.tags(specA.getTags());
-                        if (Strings.isEmpty(specC.getDisplayName()))
-                            specC.displayName(specA.getDisplayName());
-                    }
-                specs.add(specC);
-                }
-            } else {
-                // if not promoting, set a nice name if needed
-                if (Strings.isEmpty(specA.getDisplayName())) {
-                    int size = specA.getChildren().size();
-                    String childrenCountString = size+" "+(size!=1 ? "children" : "child");
-                    specA.displayName("Dynamically added "+childrenCountString);
-                }
-                promoted = false;
-                specs.add(specA);
-            }
-            
-            final List<Entity> children = MutableList.of();
-            for (EntitySpec<?> spec: specs) {
-                Entity child = (Entity)parent.addChild(spec);
-                Entities.manage(child);
-                children.add(child);
-            }
-
-            String childrenCountString;
-            if (promoted) {
-                int size = children.size();
-                childrenCountString = size+" "+(size!=1 ? "children" : "child"); 
-            } else {
-                int size = specA.getChildren().size();
-                childrenCountString = "entity with "+size+" "+(size!=1 ? "children" : "child");
-            }
-
-            TaskBuilder<List<String>> taskM = Tasks.<List<String>>builder().name("add children")
-                .dynamic(true)
-                .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
-                .body(new Callable<List<String>>() {
-                    @Override public List<String> call() throws Exception {
-                        return ImmutableList.copyOf(Iterables.transform(children, EntityFunctions.id()));
-                    }})
-                .description("Add" + (start==null ? " and potentially start" : start ? " and start" : "") + " "+childrenCountString);
-            TaskBuilder<?> taskS = Tasks.builder().parallel(true).name("add (parallel)")
-                .description(
-                    (start==null ? "Add or start" : start ? "Start" : "Add")+" each new entity");
-
-            // should we autostart?
-            for (Entity child: children) {
-                if (Boolean.TRUE.equals(start) || (start==null && child instanceof Startable)) {
-                    taskS.add(Effectors.invocation(child, Startable.START, ImmutableMap.of("locations", ImmutableList.of())));
-                } else {
-                    taskS.add(Tasks.builder().name("create").description("Created and added as child of "+parent)
-                        .body(new Runnable() { public void run() {} })
-                        .tag(BrooklynTaskTags.tagForTargetEntity(child))
-                        .build());
-                }
-            }
-            taskM.add(taskS.build());
-            Task<List<String>> task = Entities.submit(parent, taskM.build());
-            
-            // wait a few ms in case start is trivially simple, save the client a call to get the task result
-            task.blockUntilEnded(timeout);
-
-            if (children.size()==1) {
-                Entity child = Iterables.getOnlyElement(children);
-                URI ref = uriInfo.getBaseUriBuilder()
-                    .path(EntityApi.class)
-                    .path(EntityApi.class, "get")
-                    .build(child.getApplicationId(), child.getId());
-                return created(ref).entity(TaskTransformer.taskSummary(task)).build();
-            } else {
-                return Response.status(Status.CREATED).entity(TaskTransformer.taskSummary(task)).build();
-            }
+        if (added.getChildren().size()==1) {
+            Entity child = Iterables.getOnlyElement(added.getChildren());
+            URI ref = uriInfo.getBaseUriBuilder()
+                .path(EntityApi.class)
+                .path(EntityApi.class, "get")
+                .build(child.getApplicationId(), child.getId());
+            response = created(ref);
         } else {
-            throw new IllegalStateException("Spec could not be parsed to supply a compatible instantiator");
+            response = Response.status(Status.CREATED);
         }
-  }
+        return response.entity(TaskTransformer.taskSummary(added.getTask())).build();
+    }
 
   @Override
   public List<TaskSummary> listTasks(String applicationId, String entityId) {

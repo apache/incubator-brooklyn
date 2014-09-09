@@ -49,6 +49,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.effector.AddChildrenEffector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
@@ -61,9 +62,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Urls;
-import brooklyn.util.text.Strings;
 
-import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -127,11 +126,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (autoUnwrapIfPossible && shouldUnwrap(template, app)) {
             EntitySpec<? extends Application> oldApp = app;
             app = (EntitySpec<? extends Application>) Iterables.getOnlyElement( app.getChildren() );
+            
             // if promoted, apply the transformations done to the app
-            // (normally this will be done by the resolveSpec call above)
-            if (app.getDisplayName()==null) app.displayName(oldApp.getDisplayName());
-            app.tags(oldApp.getTags());
-            app.locations(oldApp.getLocations());
+            // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
+            AddChildrenEffector.collapseSpec(oldApp, app);
         }
         
         return app;
@@ -165,46 +163,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
             return false;
 
-        return hasNoNameOrCustomKeysOrRoot(template, app);
-    }
-
-    /** worker method to help determine whether child/children can be promoted */
-    @Beta
-    public static boolean hasNoNameOrCustomKeysOrRoot(AssemblyTemplate template, EntitySpec<?> spec) {
-        if (!Strings.isEmpty(template.getName())) {
-            if (spec.getChildren().size()==1) {
-                String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
-                if (Strings.isEmpty(childName) || childName.equals(template.getName())) {
-                    // if child has no name, or it's the same, could still promote
-                } else {
-                    return false;
-                }
-            } else {
-                // if name set at root and promoting children would be ambiguous, do not promote 
-                return false;
-            }
-        } else if (spec.getChildren().size()>1) {
-            // don't allow multiple children if a name is specified as a root
-            return false;
-        }
-        
-        Set<String> rootAttrs = template.getCustomAttributes().keySet();
-        for (String rootAttr: rootAttrs) {
-            if (rootAttr.equals("brooklyn.catalog")) {
-                // this attr does not block promotion
-                continue;
-            }
-            if (rootAttr.startsWith("brooklyn.")) {
-                // any others in 'brooklyn' namespace will block promotion
-                return false;
-            }
-            // location is allowed in both, and is copied on promotion
-            // (name also copied)
-            // others are root currently are ignored on promotion; they are usually metadata
-            // TODO might be nice to know what we are excluding
-        }
-        
-        return true;
+        return AddChildrenEffector.hasNoNameOrCustomKeysOrRoot(template, app);
     }
 
     private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {

@@ -57,12 +57,12 @@ public final class SshCommandEffector extends AddEffector {
 
 
     protected static class Body extends EffectorBody<String> {
-        private Effector<?> effector;
-        private String command;
+        private final Effector<?> effector;
+        private final String command;
 
         public Body(Effector<?> eff, ConfigBag params) {
             this.effector = eff;
-            this.command = Preconditions.checkNotNull(params.get(EFFECTOR_COMMAND), "command must be supplied when defining an effector");
+            this.command = Preconditions.checkNotNull(params.get(EFFECTOR_COMMAND), "command must be supplied when defining this effector");
             // TODO could take a custom "env" aka effectorShellEnv
         }
 

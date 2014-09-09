@@ -228,9 +228,10 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         StartableMethods.stop(this);
     }
 
+    /** default impl invokes restart on all children simultaneously */
     @Override
     public void restart() {
-        throw new UnsupportedOperationException();
+        StartableMethods.restart(this);
     }
 
     @Override
