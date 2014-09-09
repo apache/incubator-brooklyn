@@ -20,6 +20,7 @@ package brooklyn.entity.brooklynnode;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
@@ -33,6 +34,8 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpFeed;
@@ -47,6 +50,7 @@ import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -70,10 +74,34 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
     @Override
     public void init() {
         super.init();
-        connectSensors();
+        connectSensorsAsync();
+
+        //start spinning, could take some time before MIRRORED_ENTITY_URL is available for first time mirroring
+        setAttribute(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
     }
 
-    protected void connectSensors() {
+    protected void connectSensorsAsync() {
+        Callable<Void> asyncTask = new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                //blocks until available (could be a task)
+                String mirroredEntityUrl = getConfig(MIRRORED_ENTITY_URL);
+                Preconditions.checkNotNull(mirroredEntityUrl, "Required config: "+MIRRORED_ENTITY_URL);
+
+                connectSensors(mirroredEntityUrl);
+                return null;
+            }
+        };
+
+        DynamicTasks.queueIfPossible(
+                Tasks.<Void>builder()
+                    .description("Start entity mirror feed")
+                    .body(asyncTask)
+                    .build())
+            .orSubmitAsync(this);
+    }
+
+    protected void connectSensors(String mirroredEntityUrl) {
         Function<HttpToolResponse, Void> mirrorSensors = new Function<HttpToolResponse,Void>() {
             @SuppressWarnings("rawtypes")
             @Override
@@ -85,11 +113,9 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
                 return null;
             }
         };
-        
-        String sensorsUri = Urls.mergePaths(
-            Preconditions.checkNotNull(getConfig(MIRRORED_ENTITY_URL), "Required config: "+MIRRORED_ENTITY_URL),
-            "sensors/current-state");
-        
+
+        String sensorsUri = Urls.mergePaths(mirroredEntityUrl, "sensors/current-state");
+
         mirror = HttpFeed.builder().entity(this)
             .baseUri(sensorsUri)
             .credentialsIfNotNull(getConfig(BrooklynNode.MANAGEMENT_USER), getConfig(BrooklynNode.MANAGEMENT_PASSWORD))
