@@ -77,7 +77,7 @@ public class BrooklynWebConfig {
         "Alias in "+KEYSTORE_URL+" for the certificate to use; defaults to the first if not supplied"); 
 
     public final static boolean hasNoSecurityOptions(ConfigMap config) {
-        return config.submap(ConfigPredicates.startingWith(BrooklynWebConfig.BASE_NAME_SECURITY)).isEmpty();
+        return config.submap(ConfigPredicates.startingWith(BASE_NAME_SECURITY)).isEmpty();
     }
     
 }
