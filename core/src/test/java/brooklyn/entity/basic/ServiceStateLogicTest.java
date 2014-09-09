@@ -142,7 +142,12 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEqualsEventually(entity, Attributes.SERVICE_UP, true);
     }
 
-    public void testManuallySettingIndicatorsOnApplicationsIsMoreComplicated() {
+    @Test(invocationCount=100, groups="Integration")
+    public void testManuallySettingIndicatorsOnApplicationsManyTimes() throws Exception {
+        testManuallySettingIndicatorsOnApplications();
+    }
+
+    public void testManuallySettingIndicatorsOnApplications() throws Exception {
         // indicators on application are more complicated because it is configured with additional indicators from its children
         // test a lot of situations, including reconfiguring some of the quorum config
         
@@ -176,59 +181,82 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEquals(entity, Attributes.SERVICE_UP, true);
         // but entity is still stopped because that is what is expected there, and that's okay even if service is apparently up
         assertAttributeEquals(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
-        
         // the app however is running, because the default state quorum check is "all are healthy"
-        assertAttributeEquals(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        
         // if we change the state quorum check for the app to be "all are healthy and at least one running" *then* it shows stopped
         // (normally this would be done in `initEnrichers` of course)
         Enricher appChildrenBasedEnricher = EntityAdjuncts.tryFindWithUniqueTag(app.getEnrichers(), ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG).get();
         appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumChecks.allAndAtLeastOne());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
-        // if entity is expected running, then it shows running, because service is up, and it's reflected at app and at entity
+        // if entity is expected running, then it will show running because service is up; this is reflected at app and at entity
         ServiceStateLogic.setExpectedState(entity, Lifecycle.RUNNING);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
         assertAttributeEquals(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         
-        // now, when the entity is unmanaged, the app is still running because children are empty
+        // now, when the entity is unmanaged, the app goes on fire because don't have "at least one running"
         Entities.unmanage(entity);
-        assertAttributeEquals(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
-        // but if we change its up quorum to atLeastOne then service up becomes false
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        // but UP_QUORUM_CHECK is still the default atLeastOneUnlessEmpty; so serviceUp=true
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_UP, true);
+        
+        // if we change its up-quorum to atLeastOne then state becomes stopped (because there is no expected state; has not been started)
         appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumChecks.atLeastOne());
-        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
-        // and state becomes stopped (because there is no expected state)
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
         
         // if we now start it will successfully start (because unlike entities it does not wait for service up) 
         // but will remain down and will go on fire
         app.start(ImmutableList.<Location>of());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
-        // restoring this to atLeastOneUnlessEmpty causes it to become RUNNING
+        
+        // restoring up-quorum to "atLeastOneUnlessEmpty" causes it to become RUNNING, because happy with empty
         appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
-        appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumChecks.all());
-        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        // but running-quorum is still allAndAtLeastOne, so remains on-fire
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
-        // now add a child, it's still up and running because null values are ignored by default
+        // now add a child, it's still up and running because null values are ignored by default (i.e. we're still "empty")
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        assertAttributeEquals(app, Attributes.SERVICE_UP, true);
-        assertAttributeEquals(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_UP, true);
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        
         // tell it not to ignore null values for children states, and it will go onfire (but still be service up)
         appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES, 
             ImmutableSet.<Lifecycle>of());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         assertAttributeEquals(app, Attributes.SERVICE_UP, true);
+        
         // tell it not to ignore null values for service up and it will go service down
         appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.IGNORE_ENTITIES_WITH_SERVICE_UP_NULL, false);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
+        
+        // set the entity to RUNNING and the app will be healthy again
+        ServiceNotUpLogic.clearNotUpIndicator(entity, INDICATOR_KEY_1);
+        ServiceStateLogic.setExpectedState(entity, Lifecycle.RUNNING);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEquals(entity, Attributes.SERVICE_UP, true);
+        assertAttributeEquals(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
     }
         
     private static <T> void assertAttributeEqualsEventually(Entity x, AttributeSensor<T> sensor, T value) {
         try {
-            EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", Duration.seconds(10)), x, sensor, value);
+            EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", Duration.seconds(3)), x, sensor, value);
         } catch (Throwable e) {
             log.warn("Expected "+x+" eventually to have "+sensor+" = "+value+"; instead:");
+            Entities.dumpInfo(x);
+            throw Exceptions.propagate(e);
+        }
+    }
+    private static <T> void assertAttributeEqualsContinually(Entity x, AttributeSensor<T> sensor, T value) {
+        try {
+            EntityTestUtils.assertAttributeEqualsContinually(ImmutableMap.of("timeout", Duration.millis(25)), x, sensor, value);
+        } catch (Throwable e) {
+            log.warn("Expected "+x+" continually to have "+sensor+" = "+value+"; instead:");
             Entities.dumpInfo(x);
             throw Exceptions.propagate(e);
         }
