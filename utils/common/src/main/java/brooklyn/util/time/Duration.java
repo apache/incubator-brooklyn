@@ -221,6 +221,10 @@ public class Duration implements Comparable<Duration>, Serializable {
         return millis(millisSinceEpoch - System.currentTimeMillis());
     }
 
+    public static Duration sinceUtc(long millisSinceEpoch) {
+        return millis(System.currentTimeMillis() - millisSinceEpoch);
+    }
+
     public Duration add(Duration other) {
         return nanos(nanos() + other.nanos());
     }

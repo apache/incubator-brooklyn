@@ -25,16 +25,20 @@ import groovy.util.XmlParser;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Durations;
 
 import com.google.common.base.Throwables;
 
 public class UtraceHostGeoLookup implements HostGeoLookup {
+
 
     /*
      * 
@@ -62,6 +66,13 @@ Note the queries count field -- you are permitted 100 per day.
 Beyond this you get blacklisted and requests may time out, or return none.
 (This may last for several days once blacklisting, not sure how long.)
      */
+    
+    /** after failures, subsequent retries within this time interval are blocked */
+    private static final Duration RETRY_INTERVAL = Duration.FIVE_MINUTES;
+    /** requests taking longer than this period are deemed to have timed out and failed;
+     * set reasonably low so that if we are blacklisted for making too many requests,
+     * the call to get geo info does not take very long */
+    private static final Duration REQUEST_TIMEOUT = Duration.seconds(3);
     
     public static final Logger log = LoggerFactory.getLogger(UtraceHostGeoLookup.class);
     
@@ -96,8 +107,48 @@ Beyond this you get blacklisted and requests may time out, or return none.
     }
     
     private static boolean LOGGED_GEO_LOOKUP_UNAVAILABLE = false;
+    private static long LAST_FAILURE_UTC = -1;
     
+    /** does the {@link #retrieveHostGeoInfo(InetAddress)}, but in the background with a default timeout */
     public HostGeoInfo getHostGeoInfo(InetAddress address) throws MalformedURLException, IOException {
+        if (Duration.sinceUtc(LAST_FAILURE_UTC).compareTo(RETRY_INTERVAL) < 0) {
+            // wait at least 60s since a failure
+            return null;
+        }
+        return getHostGeoInfo(address, REQUEST_TIMEOUT);
+    }
+    
+    /** does a {@link #retrieveHostGeoInfo(InetAddress)} with a timeout (returning null, interrupting, and setting failure time) */
+    public HostGeoInfo getHostGeoInfo(final InetAddress address, Duration timeout) throws MalformedURLException, IOException {
+        final AtomicReference<HostGeoInfo> result = new AtomicReference<HostGeoInfo>();
+        Thread lt = new Thread() {
+            public void run() {
+                try {
+                    result.set(retrieveHostGeoInfo(address));
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
+            }
+        };
+        lt.start();
+
+        try {
+            Durations.join(lt, timeout);
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+        
+        if (lt.isAlive()) {
+            // interrupt and set the failure time so that subsequent attempts do not face this timeout
+            lt.interrupt();
+            LAST_FAILURE_UTC = System.currentTimeMillis();
+            log.debug("Geo info lookup for "+address+" timed out after "+timeout);
+        }
+        
+        return result.get();
+    }
+    
+    public HostGeoInfo retrieveHostGeoInfo(InetAddress address) throws MalformedURLException, IOException {
         String url = getLookupUrlFor(address);
         if (log.isDebugEnabled())
             log.debug("Geo info lookup for "+address+" at "+url);
@@ -105,6 +156,7 @@ Beyond this you get blacklisted and requests may time out, or return none.
         try {
             xml = new XmlParser().parse(getLookupUrlFor(address));
         } catch (Exception e) {
+            LAST_FAILURE_UTC = System.currentTimeMillis();
             if (log.isDebugEnabled())
                 log.debug("Geo info lookup for "+address+" failed: "+e);
             if (!LOGGED_GEO_LOOKUP_UNAVAILABLE) {
