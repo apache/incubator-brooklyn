@@ -210,15 +210,17 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         recordApplicationEvent(Lifecycle.STOPPED);
 
-        synchronized (this) {
-            deployed = false;
-            //TODO review mgmt destroy lifecycle
-            //  we don't necessarily want to forget all about the app on stop, 
-            //since operator may be interested in things recently stopped;
-            //but that could be handled by the impl at management
-            //(keeping recently unmanaged things)  
-            //  however unmanaging must be done last, _after_ we stop children and set attributes 
-            getEntityManager().unmanage(this);
+        if (getParent()==null) {
+            synchronized (this) {
+                deployed = false;
+                //TODO review mgmt destroy lifecycle
+                //  we don't necessarily want to forget all about the app on stop, 
+                //since operator may be interested in things recently stopped;
+                //but that could be handled by the impl at management
+                //(keeping recently unmanaged things)  
+                //  however unmanaging must be done last, _after_ we stop children and set attributes 
+                getEntityManager().unmanage(this);
+            }
         }
 
         logApplicationLifecycle("Stopped");
