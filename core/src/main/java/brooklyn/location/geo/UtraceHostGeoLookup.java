@@ -96,8 +96,13 @@ Beyond this you get blacklisted and requests may time out, or return none.
     }
     
     private static boolean LOGGED_GEO_LOOKUP_UNAVAILABLE = false;
+    private static long LAST_FAILURE_UTC = -1;
     
     public HostGeoInfo getHostGeoInfo(InetAddress address) throws MalformedURLException, IOException {
+        if (Duration.sinceUtc(LAST_FAILURE_UTC).compareTo(Duration.ONE_MINUTE) < 0) {
+            // wait at least 60s since a failure
+            return null;
+        }
         String url = getLookupUrlFor(address);
         if (log.isDebugEnabled())
             log.debug("Geo info lookup for "+address+" at "+url);
@@ -105,6 +110,7 @@ Beyond this you get blacklisted and requests may time out, or return none.
         try {
             xml = new XmlParser().parse(getLookupUrlFor(address));
         } catch (Exception e) {
+            LAST_FAILURE_UTC = System.currentTimeMillis();
             if (log.isDebugEnabled())
                 log.debug("Geo info lookup for "+address+" failed: "+e);
             if (!LOGGED_GEO_LOOKUP_UNAVAILABLE) {
