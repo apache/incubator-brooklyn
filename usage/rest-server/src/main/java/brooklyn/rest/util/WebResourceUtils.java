@@ -28,12 +28,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-
 import brooklyn.rest.domain.ApiError;
-import brooklyn.util.collections.Jsonya;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+
+import com.google.common.collect.ImmutableMap;
 
 public class WebResourceUtils {
 
@@ -108,28 +107,10 @@ public class WebResourceUtils {
     public static Object getValueForDisplay(ObjectMapper mapper, Object value, boolean preferJson, boolean isJerseyReturnValue) {
         if (preferJson) {
             if (value==null) return null;
-            Object result = null;
-            if (value instanceof String) {
-                result = value;
-            } else {
-                try {
-                    // check if we can serialize it, if so return it
-                    if (mapper!=null)
-                        mapper.writeValueAsString(value);
-                    return value;
-                } catch (Throwable e) {
-                    if (e instanceof StackOverflowError || e instanceof OutOfMemoryError) {
-                        log.warn("Requested REST value '"+value+"' overflowed on serialization attempt, trying other means");
-                        System.gc();
-                    } else {
-                        Exceptions.propagateIfFatal(e);
-                    }
-                    log.debug("Requested REST value '"+value+"' ("+value.getClass()+") could not be serialized, returning toString instead: "+e);
-                    // if we can't, just ignore and attempt to convert otherwise
-                }
-                // TODO do deep mapping
-                result = Jsonya.convertToJsonPrimitive(value);
-            }
+            Object result = value;
+            // no serialization checks required, with new smart-mapper which does toString
+            // (note there is more sophisticated logic in git history however)
+            result = value;
             
             if (isJerseyReturnValue) {
                 if (result instanceof String) {

@@ -19,6 +19,7 @@
 package brooklyn.rest.util.json;
 
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.util.Map;
 
 import org.codehaus.jackson.JsonGenerationException;
@@ -96,29 +97,60 @@ public class BrooklynJacksonSerializerTest {
     }
 
     @Test
-    public void testCustomSerializerWithNonSerializableAngrySelfRef() {
-        checkNonSerializable(new AngrySelfRefNonSerializableClass());
+    public void testSelfReferenceFailsWhenStrict() {
+        checkNonSerializableWhenStrict(new AngrySelfRefNonSerializableClass());
     }
-
+    @Test
+    public void testSelfReferenceGeneratesErrorMapObject() throws JsonGenerationException, JsonMappingException, IOException {
+        checkSerializesWithErrorAndToString(new AngrySelfRefNonSerializableClass());
+    }
+    
     public static class AngryEmptyNonSerializableClass {
     }
 
     @Test
-    public void testCustomSerializerWithNonSerializableAngryEmpty() {
-        checkNonSerializable(new AngryEmptyNonSerializableClass());
+    public void testEmptyNonSerializable() throws JsonGenerationException, JsonMappingException, IOException {
+        checkSerializesWithErrorAndToString(new AngryEmptyNonSerializableClass());
+        // could instead to this (just return {})
+//        Map<?, ?> map = checkSerializesAsMap( new AngryEmptyNonSerializableClass() );
+//        Assert.assertTrue(map.isEmpty(), "Expected an empty map (ie Gson serialization); instead got: "+map);
     }
-
-    // TODO would like to find an example which is non-serializable because of infinite recursion,
-    // to test StackOverflowError -- tested here and in the Integration test below.
-    // (but I can't seem to make one!)
     
-    protected void checkNonSerializable(Object x) {
+    @Test
+    public void testEmptyNonSerializableFailsWhenStrict() {
+        checkNonSerializableWhenStrict(new AngryEmptyNonSerializableClass());
+    }
+    
+    protected Map<?,?> checkSerializesAsMap(Object x) {
         ManagementContext mgmt = LocalManagementContextForTests.newInstance();
         try {
             ObjectMapper mapper = BrooklynJacksonJsonProvider.newPrivateObjectMapper(mgmt);
-
             String tS = mapper.writeValueAsString(x);
-
+            log.info("angry-empty json is: "+tS);
+            return mapper.readValue(tS, Map.class);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            Entities.destroyAll(mgmt);
+        }
+    }
+    protected Map<?,?> checkSerializesWithErrorAndToString(Object x) {
+        Map<?,?> rt = checkSerializesAsMap(x);
+        Assert.assertEquals(rt.get("toString"), x.toString());
+        Assert.assertEquals(rt.get("error"), true);
+        return rt;
+    }
+    protected void checkNonSerializableWhenStrict(Object x) {
+        checkNonSerializable(x, true);
+    }
+    protected void checkNonSerializable(Object x, boolean strict) {
+        ManagementContext mgmt = LocalManagementContextForTests.newInstance();
+        try {
+            ObjectMapper mapper = BrooklynJacksonJsonProvider.newPrivateObjectMapper(mgmt);
+            if (strict)
+                ErrorAndToStringUnknownTypeSerializer.setStrictSerialization(true);
+            
+            String tS = mapper.writeValueAsString(x);
             Assert.fail("Should not have serialized "+x+"; instead gave: "+tS);
             
         } catch (Exception e) {
@@ -126,6 +158,8 @@ public class BrooklynJacksonSerializerTest {
             log.info("Got expected error, when serializing "+x+": "+e);
             
         } finally {
+            if (strict)
+                ErrorAndToStringUnknownTypeSerializer.clearStrictSerialization();
             Entities.destroyAll(mgmt);
         }
     }
@@ -153,8 +187,8 @@ public class BrooklynJacksonSerializerTest {
             Assert.assertEquals(values.get("type"), LocalManagementContextForTests.class.getCanonicalName());
             
             // assert normal API returns the same, containing links
-            log.info("ENTITY is: \n"+content);
             content = HttpTestUtils.getContent(entityUrl);
+            log.info("ENTITY is: \n"+content);
             values = new Gson().fromJson(content, Map.class);
             Assert.assertTrue(values.size()>=3, "Map is too small: "+values);
             Assert.assertTrue(values.size()<=6, "Map is too big: "+values);
@@ -175,15 +209,19 @@ public class BrooklynJacksonSerializerTest {
             app.setConfig(TestEntity.CONF_OBJECT, angry);
             content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
             log.info("CONFIG ANGRY is:\n"+content);
-            String valueS = new Gson().fromJson(content, String.class);
-            Assert.assertEquals(valueS, angry.toString());
+            assertErrorObjectMatchingToString(content, angry);
             
             // as does Server
             app.setConfig(TestEntity.CONF_OBJECT, server);
             content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
-            log.info("CONFIG SERVER is:\n"+content);
-            valueS = new Gson().fromJson(content, String.class);
-            Assert.assertEquals(valueS, server.toString());
+            // don't log -- it's very long (7MB? 70MB?) and wreaks havoc w eclipse console regex parsing!
+            // surprising that so much of it is renderable!
+//            log.info("CONFIG SERVER is:\n"+content);
+            log.debug("CONFIG SERVER is:\n"+content);
+            Assert.assertNotNull(content);
+            new Gson().fromJson(content, Object.class);
+            Assert.assertTrue(content.indexOf(NotSerializableException.class.getCanonicalName())>=0, "server should have contained things which are not serializable");
+            Assert.assertTrue(content.length() > 500, "content should have been very long; instead was: "+content);
             
         } finally {
             try {
@@ -193,6 +231,12 @@ public class BrooklynJacksonSerializerTest {
             }
             Entities.destroyAll(mgmt);
         }
+    }
+
+    private void assertErrorObjectMatchingToString(String content, Object expected) {
+        Object value = new Gson().fromJson(content, Object.class);
+        Assert.assertTrue(value instanceof Map, "Expected map, got: "+value);
+        Assert.assertEquals(((Map<?,?>)value).get("toString"), expected.toString());
     }
         
 }

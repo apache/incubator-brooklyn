@@ -128,7 +128,9 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
         }
         
         ObjectMapper mapper;
-        mapper = new ObjectMapper();
+        ConfigurableSerializerProvider sp = new ConfigurableSerializerProvider();
+        sp.setUnknownTypeSerializer(new ErrorAndToStringUnknownTypeSerializer());
+        mapper = new ObjectMapper(null, sp, null);
         SimpleModule mapperModule = new SimpleModule("Brooklyn", new Version(0, 0, 0, "ignored"));
         
         new BidiSerialization.ManagementContextSerialization(mgmt).install(mapperModule);
