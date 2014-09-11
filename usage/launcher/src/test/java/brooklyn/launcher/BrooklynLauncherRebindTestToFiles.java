@@ -116,18 +116,23 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         populatePersistenceDir(persistenceDir, appSpec);
         
         File destinationDir = Files.createTempDir();
+        String destinationLocation = null; // i.e. file system, rather than object store
         try {
             // Auto will rebind if the dir exists
-            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO);
+            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO)
+                    .webconsole(false);
             BrooklynMementoRawData memento = launcher.retrieveState();
-            launcher.persistState(memento, destinationDir);
+            launcher.persistState(memento, destinationDir.getAbsolutePath(), destinationLocation);
             launcher.terminate();
             
             assertEquals(memento.getEntities().size(), 1, "entityMementos="+memento.getEntities().keySet());
             
             // Should now have a usable copy in the destionationDir
             // Auto will rebind if the dir exists
-            newLauncherDefault(PersistMode.AUTO).start();
+            newLauncherDefault(PersistMode.AUTO)
+                    .webconsole(false)
+                    .persistenceDir(destinationDir)
+                    .start();
             assertOnlyApp(lastMgmt(), TestApplication.class);
             
         } finally {

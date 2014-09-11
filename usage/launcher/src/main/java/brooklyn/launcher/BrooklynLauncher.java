@@ -73,7 +73,6 @@ import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
@@ -452,16 +451,27 @@ public class BrooklynLauncher {
         }
     }
 
-    public void persistState(BrooklynMementoRawData memento, File destinationDir) {
+    public void persistState(BrooklynMementoRawData memento, String destinationDir, String destinationLocation) {
+        LOG.info("Persisting state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
+
         initManagementContext();
         
         try {
-            FileBasedObjectStore objectStore = new FileBasedObjectStore(destinationDir);
-            objectStore.injectManagementContext(managementContext);
-            objectStore.prepareForSharedUse(persistMode, highAvailabilityMode);
+            destinationDir = BrooklynServerConfig.resolvePersistencePath(destinationDir, brooklynProperties, destinationLocation);
+            PersistenceObjectStore destinationObjectStore;
+            
+            if (Strings.isBlank(destinationLocation)) {
+                File persistenceDirF = new File(destinationDir);
+                if (persistenceDirF.isFile()) throw new FatalConfigurationRuntimeException("Destination directory must not be a file");
+                destinationObjectStore = new FileBasedObjectStore(persistenceDirF);
+            } else {
+                destinationObjectStore = new JcloudsBlobStoreBasedObjectStore(destinationLocation, destinationDir);
+            }
+            destinationObjectStore.injectManagementContext(managementContext);
+            destinationObjectStore.prepareForSharedUse(persistMode, highAvailabilityMode);
 
             BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
-                    objectStore,
+                    destinationObjectStore,
                     ((ManagementContextInternal)managementContext).getBrooklynProperties(),
                     managementContext.getCatalog().getRootClassLoader());
 

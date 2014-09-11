@@ -18,6 +18,8 @@
  */
 package brooklyn.cli;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 import io.airlift.command.Cli;
@@ -26,7 +28,6 @@ import io.airlift.command.Command;
 import io.airlift.command.Option;
 
 import java.io.Console;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -63,7 +64,6 @@ import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
@@ -693,17 +693,19 @@ public class Main extends AbstractMain {
                 description = "The directory to copy persistence data to")
             public String destinationDir;
         
+        @Option(name = { "--destinationLocation" }, title = "persistence location",
+                description = "The location spec for an object store to copy data to")
+            public String destinationLocation;
+        
         @Override
         public Void call() throws Exception {
-            File destinationDirF = new File(Os.tidyPath(destinationDir));
-            if (destinationDirF.isFile()) throw new FatalConfigurationRuntimeException("Destination directory is a file: "+destinationDir);
-
-
+            checkNotNull(destinationDir, "destinationDir"); // presumably because required=true this will never be null!
+            
             // Configure launcher
             BrooklynLauncher launcher;
             failIfArguments();
             try {
-                log.info("Retrieving and copying persisted state to "+destinationDirF.getAbsolutePath());
+                log.info("Retrieving and copying persisted state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
                 
                 if (!quiet) stdout.println(BANNER);
     
@@ -725,7 +727,7 @@ public class Main extends AbstractMain {
             
             try {
                 BrooklynMementoRawData memento = launcher.retrieveState();
-                launcher.persistState(memento, destinationDirF);
+                launcher.persistState(memento, destinationDir, destinationLocation);
                 
             } catch (FatalRuntimeException e) {
                 // rely on caller logging this propagated exception
