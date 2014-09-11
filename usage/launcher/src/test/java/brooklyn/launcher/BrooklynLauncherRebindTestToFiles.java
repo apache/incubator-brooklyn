@@ -26,13 +26,12 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.management.ManagementContext;
-import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
@@ -120,11 +119,11 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         try {
             // Auto will rebind if the dir exists
             BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO);
-            BrooklynMemento memento = launcher.retrieveState();
+            BrooklynMementoRawData memento = launcher.retrieveState();
             launcher.persistState(memento, destinationDir);
             launcher.terminate();
             
-            assertEquals(memento.getApplicationIds().size(), 1, "apps="+memento.getApplicationIds());
+            assertEquals(memento.getEntities().size(), 1, "entityMementos="+memento.getEntities().keySet());
             
             // Should now have a usable copy in the destionationDir
             // Auto will rebind if the dir exists

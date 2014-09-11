@@ -74,6 +74,7 @@ import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.exceptions.Exceptions;
@@ -431,7 +432,7 @@ public class BrooklynLauncher {
         return this;
     }
     
-    public BrooklynMemento retrieveState() {
+    public BrooklynMementoRawData retrieveState() {
         initManagementContext();
 
         try {
@@ -440,9 +441,8 @@ public class BrooklynLauncher {
             handleSubsystemStartupError(ignorePersistenceErrors, "persistence", e);
         }
 
-        ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
         try {
-            return managementContext.getRebindManager().retrieveMemento(classLoader);
+            return managementContext.getRebindManager().retrieveMementoRawData();
             
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
@@ -452,7 +452,7 @@ public class BrooklynLauncher {
         }
     }
 
-    public void persistState(BrooklynMemento memento, File destinationDir) {
+    public void persistState(BrooklynMementoRawData memento, File destinationDir) {
         initManagementContext();
         
         try {

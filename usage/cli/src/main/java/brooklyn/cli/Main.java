@@ -53,7 +53,7 @@ import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.rest.security.PasswordHasher;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -682,11 +682,11 @@ public class Main extends AbstractMain {
         public String localBrooklynProperties;
 
         @Option(name = { "--persistenceDir" }, title = "persistence dir",
-                description = "The directory to read/write persisted state (or container name if using an object store)")
+                description = "The directory to read persisted state (or container name if using an object store)")
         public String persistenceDir;
 
         @Option(name = { "--persistenceLocation" }, title = "persistence location",
-            description = "The location spec for an object store to read/write persisted state")
+            description = "The location spec for an object store to read persisted state")
         public String persistenceLocation;
     
         @Option(name = { "--destinationDir" }, required = true, title = "destination dir",
@@ -724,7 +724,7 @@ public class Main extends AbstractMain {
             }
             
             try {
-                BrooklynMemento memento = launcher.retrieveState();
+                BrooklynMementoRawData memento = launcher.retrieveState();
                 launcher.persistState(memento, destinationDirF);
                 
             } catch (FatalRuntimeException e) {

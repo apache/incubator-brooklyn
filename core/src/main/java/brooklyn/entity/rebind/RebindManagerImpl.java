@@ -44,6 +44,7 @@ import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -54,6 +55,7 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -273,22 +275,15 @@ public class RebindManagerImpl implements RebindManager {
     }
     
     @Override
-    public BrooklynMemento retrieveMemento(ClassLoader classLoader) throws IOException {
+    public BrooklynMementoRawData retrieveMementoRawData() throws IOException {
         RebindExceptionHandler exceptionHandler = RebindExceptionHandlerImpl.builder()
                 .danglingRefFailureMode(danglingRefFailureMode)
                 .rebindFailureMode(rebindFailureMode)
                 .addPolicyFailureMode(addPolicyFailureMode)
                 .loadPolicyFailureMode(loadPolicyFailureMode)
                 .build();
-        RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
-        BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
         
-        RebindTracker.setRebinding();
-        try {
-            return retrieveMemento(classLoader, exceptionHandler, rebindContext, mementoManifest);
-        } finally {
-            RebindTracker.reset();
-        }
+        return loadMementoRawData(exceptionHandler);
     }
 
     /**
@@ -296,26 +291,59 @@ public class RebindManagerImpl implements RebindManager {
      * 
      * In so doing, it instantiates the entities + locations, registering them with the rebindContext.
      */
-    protected BrooklynMemento retrieveMemento(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler, RebindContextImpl rebindContext, BrooklynMementoManifest mementoManifest) throws IOException {
+    protected BrooklynMementoRawData loadMementoRawData(final RebindExceptionHandler exceptionHandler) throws IOException {
+        try {
+            if (!(persister instanceof BrooklynMementoPersisterToObjectStore)) {
+                throw new IllegalStateException("Cannot load raw memento with persister "+persister);
+            }
+            
+            return ((BrooklynMementoPersisterToObjectStore)persister).loadMementoRawData(exceptionHandler);
+            
+        } catch (RuntimeException e) {
+            throw exceptionHandler.onFailed(e);
+        }
+    }
+
+    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
         checkNotNull(classLoader, "classLoader");
 
+        RebindTracker.setRebinding();
         try {
             Reflections reflections = new Reflections(classLoader);
-            
+            RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
             LookupContext realLookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
             
-            // Two-phase deserialization.
+            // Mutli-phase deserialization.
             //  1. deserialize just the "manifest" to find all instances (and their types).
-            //     (this is now passed in; we are just left with instantiating the instances that may be cross-referenced.
-            //  2. deserialize so that inter-entity references can be set (and entity config/state is set).
+            //  2. instantiate entities+locations so that inter-entity references can subsequently be set during deserialize (and entity config/state is set).
+            //  3. deserialize the memento
+            //  4. instantiate policies+enrichers (could perhaps merge this with (2), depending how they are implemented)
+            //  5. reconstruct the entities etc (i.e. calling init on the already-instantiated instances).
+            //  6. add policies+enrichers to all the entities.
+            //  7. manage the entities
             
             // TODO if underlying data-store is changed between first and second phase (e.g. to add an
             // entity), then second phase might try to reconstitute an entity that has not been put in
             // the rebindContext. This should not affect normal production usage, because rebind is run
             // against a data-store that is not being written to by other brooklyn instance(s).
+
             
             //
             // PHASE ONE
+            //
+            
+            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
+            
+            boolean isEmpty = mementoManifest.isEmpty();
+            if (!isEmpty) {
+                LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
+            } else {
+                LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
+            }
+
+            
+            //
+            // PHASE TWO
             //
             
             // Instantiate locations
@@ -348,52 +376,17 @@ public class RebindManagerImpl implements RebindManager {
                 }
             }
             
-            //
-            // PHASE TWO
-            //
-            
-            return persister.loadMemento(realLookupContext, exceptionHandler);
-            
-        } catch (RuntimeException e) {
-            throw exceptionHandler.onFailed(e);
-        }
-    }
-    
-    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
-        checkNotNull(classLoader, "classLoader");
-
-        RebindTracker.setRebinding();
-        try {
-            Reflections reflections = new Reflections(classLoader);
-            RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
-            
-            // Five-phase deserialization.
-            //  1. deserialize just the "manifest" to find all instances (and their types).
-            //  2. deserialize so that inter-entity references can be set (and entity config/state is set).
-            //  3. reconstruct the entities etc (i.e. calling init on the already-instantiated instances).
-            //  4. add policies+enrichers to all the entities.
-            //  5. manage the entities
-            
             
             //
-            // PHASE ONE
+            // PHASE THREE
             //
             
-            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
-            
-            boolean isEmpty = mementoManifest.isEmpty();
-            if (!isEmpty) {
-                LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
-            } else {
-                LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
-            }
+            BrooklynMemento memento = persister.loadMemento(realLookupContext, exceptionHandler);
 
             
             //
-            // PHASE TWO CONTINUED...
+            // PHASE FOUR
             //
-            
-            BrooklynMemento memento = retrieveMemento(classLoader, exceptionHandler, rebindContext, mementoManifest);
             
             // Instantiate policies
             if (persistPoliciesEnabled) {
@@ -431,7 +424,7 @@ public class RebindManagerImpl implements RebindManager {
             
             
             //
-            // PHASE THREE
+            // PHASE FIVE
             //
             
             // Reconstruct locations
@@ -515,7 +508,7 @@ public class RebindManagerImpl implements RebindManager {
 
             
             //
-            // PHASE FOUR
+            // PHASE SIX
             //
             
             // Associate policies+enrichers with entities
@@ -540,7 +533,7 @@ public class RebindManagerImpl implements RebindManager {
             
             
             //
-            // PHASE FIVE
+            // PHASE SEVEN
             //
 
             LOG.debug("RebindManager managing locations");

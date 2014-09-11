@@ -64,8 +64,8 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.OsgiManager;
-import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
@@ -469,7 +469,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
-        public BrooklynMemento retrieveMemento(ClassLoader classLoader) {
+        public BrooklynMementoRawData retrieveMementoRawData() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }
