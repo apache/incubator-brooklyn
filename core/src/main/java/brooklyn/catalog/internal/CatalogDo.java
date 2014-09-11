@@ -38,6 +38,7 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
+import com.google.api.client.util.Maps;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -52,12 +53,13 @@ public class CatalogDo {
     
     List<CatalogDo> childrenCatalogs = new ArrayList<CatalogDo>();
     CatalogClasspathDo classpath;
-    Map<String, CatalogItemDo<?,?>> cache;
-    
+    private Map<String, CatalogItemDo<?,?>> cacheById;
+    private Map<String, CatalogItemDo<?,?>> cacheByRegisteredTypeName;
+
     AggregateClassLoader childrenClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
     ClassLoader recursiveClassLoader;
 
-    public CatalogDo(CatalogDto dto) {
+    protected CatalogDo(CatalogDto dto) {
         this.dto = Preconditions.checkNotNull(dto);
     }
     
@@ -70,6 +72,16 @@ public class CatalogDo {
         return isLoaded;
     }
 
+    /** Calls {@link #load(CatalogDo)} with a null parent. */
+    public CatalogDo load() {
+        return load(null);
+    }
+
+    /** Calls {@link #load(ManagementContext, CatalogDo)} with the catalog's existing management context. */
+    public CatalogDo load(CatalogDo parent) {
+        return load(mgmt, parent);
+    }
+
     /** causes all URL-based catalogs to have their manifests loaded,
      * and all scanning-based classpaths to scan the classpaths
      * (but does not load all JARs)
@@ -78,7 +90,7 @@ public class CatalogDo {
         if (isLoaded()) return this;
         loadThisCatalog(mgmt, parent);
         loadChildrenCatalogs();
-        getCache();
+        buildCaches();
         return this;
     }
 
@@ -153,15 +165,21 @@ public class CatalogDo {
         return childL;
     }
 
-    protected Map<String, CatalogItemDo<?,?>> getCache() {
-        Map<String, CatalogItemDo<?,?>> cache = this.cache;
-        if (cache==null) cache = buildCache();
+    protected Map<String, CatalogItemDo<?,?>> getIdCache() {
+        Map<String, CatalogItemDo<?,?>> cache = this.cacheById;
+        if (cache==null) cache = buildCaches();
         return cache;
     }
-    
+
+    protected Map<String, CatalogItemDo<?,?>> getRegisteredTypeNameCache() {
+        Map<String, CatalogItemDo<?,?>> cache = this.cacheByRegisteredTypeName;
+        if (cache==null) cache = buildCaches();
+        return cache;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected synchronized Map<String, CatalogItemDo<?,?>> buildCache() {
-        if (cache!=null) return cache;
+    protected synchronized Map<String, CatalogItemDo<?,?>> buildCaches() {
+        if (cacheById != null) return cacheById;
         log.debug("Building cache for "+this);
         if (!isLoaded()) 
             log.debug("Catalog not fully loaded when loading cache of "+this);
@@ -176,8 +194,9 @@ public class CatalogDo {
         if (dto.catalogs!=null) { 
             List<CatalogDo> catalogsReversed = new ArrayList<CatalogDo>(childrenCatalogs);
             Collections.reverse(catalogsReversed);
-            for (CatalogDo child: catalogsReversed)
-                cache.putAll(child.getCache());
+            for (CatalogDo child: catalogsReversed) {
+                cache.putAll(child.getIdCache());
+            }
         }
         if (dto.entries!=null) {
             List<CatalogItemDtoAbstract<?,?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?,?>>(dto.entries);
@@ -185,47 +204,64 @@ public class CatalogDo {
             for (CatalogItemDtoAbstract<?,?> entry: entriesReversed)
                 cache.put(entry.getId(), new CatalogItemDo(this, entry));
         }
-        
-        this.cache = cache;
+        Map<String, CatalogItemDo<?, ?>> typeNameCache = Maps.newHashMap();
+        for (CatalogItemDo<?, ?> entry : cache.values()) {
+            typeNameCache.put(entry.getRegisteredTypeName(), entry);
+        }
+        this.cacheById = cache;
+        this.cacheByRegisteredTypeName = typeNameCache;
         return cache;
     }
     
     protected synchronized void clearCache(boolean deep) {
-        this.cache = null;
-        if (deep) 
-            for (CatalogDo child: childrenCatalogs) child.clearCache(true); 
+        this.cacheById = null;
+        this.cacheByRegisteredTypeName = null;
+        if (deep) {
+            for (CatalogDo child : childrenCatalogs) {
+                child.clearCache(true);
+            }
+        }
     }
     
-    /** adds the given entry to the catalog, with no enrichment;
-     * callers may prefer {@link CatalogClasspathDo#addCatalogEntry(CatalogItemDtoAbstract, Class)}
+    /**
+     * Adds the given entry to the catalog, with no enrichment.
+     * Callers may prefer {@link CatalogClasspathDo#addCatalogEntry(CatalogItemDtoAbstract, Class)}
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public synchronized void addEntry(CatalogItemDtoAbstract<?,?> entry) {
-        if (dto.entries==null) 
+        if (dto.entries == null)
             dto.entries = new ArrayList<CatalogItemDtoAbstract<?,?>>();
         dto.entries.add(entry);
-        if (cache!=null)
-            cache.put(entry.getId(), new CatalogItemDo(this, entry));
-    }
+        if (cacheById != null) {
+            CatalogItemDo<?, ?> cdo = new CatalogItemDo(this, entry);
+            cacheById.put(entry.getId(), cdo);
+            cacheByRegisteredTypeName.put(entry.getRegisteredTypeName(), cdo);
+        }
+        if (mgmt != null) {
+            mgmt.getRebindManager().getChangeListener().onManaged(entry);
+        }
+   }
 
+    /**
+     * Removes the given entry from the catalog.
+     */
     public synchronized void deleteEntry(CatalogItemDtoAbstract<?, ?> entry) {
         if (dto.entries != null)
             dto.entries.remove(entry);
-        if (cache!=null)
-            cache.remove(entry.getId());
-    }
-
-    /** removes the given entry from the catalog;
-     */
-    public synchronized void removeEntry(CatalogItemDtoAbstract<?,?> entry) {
-        dto.entries.remove(entry);
-        if (cache!=null)
-            cache.remove(entry.getId());
+        if (cacheById != null) {
+            cacheById.remove(entry.getId());
+            cacheByRegisteredTypeName.remove(entry.getRegisteredTypeName());
+        }
+        if (mgmt != null) {
+            // TODO: Can the entry be in more than one catalogue? The management context has no notion of
+            // catalogue hierarchy so this will effectively remove it from all catalogues.
+            mgmt.getRebindManager().getChangeListener().onUnmanaged(entry);
+        }
     }
 
     /** returns loaded catalog, if this has been loaded */
     CatalogDo addCatalog(CatalogDto child) {
-        if (dto.catalogs==null) 
+        if (dto.catalogs == null)
             dto.catalogs = new ArrayList<CatalogDto>();
         dto.catalogs.add(child);
         if (!isLoaded())
@@ -234,7 +270,7 @@ public class CatalogDo {
     }
     
     public synchronized void addToClasspath(String ...urls) {
-        if (dto.classpath==null)
+        if (dto.classpath == null)
             dto.classpath = new CatalogClasspathDto();
         for (String url: urls)
             dto.classpath.addEntry(url);
@@ -248,7 +284,7 @@ public class CatalogDo {
     }
 
     public synchronized void setClasspathScanForEntities(CatalogScanningModes value) {
-        if (dto.classpath==null)
+        if (dto.classpath == null)
             dto.classpath = new CatalogClasspathDto();
         dto.classpath.scan = value;
         if (isLoaded()) 
@@ -258,33 +294,31 @@ public class CatalogDo {
 
     @Override
     public String toString() {
-        return "Loaded:"+dto+"("+
-                (cache==null ? "not yet loaded" : "size "+cache.size())+
-                ")";
+        String size = cacheById == null ? "not yet loaded" : "size " + cacheById.size();
+        return "Loaded:" + dto + "(" + size + ")";
     }
 
     /** is "local" if it and all ancestors are not based on any remote urls */ 
     public boolean isLocal() {
-        if (dto.url!=null) {
+        if (dto.url != null) {
             String proto = Urls.getProtocol(dto.url);
-            if (proto!=null) {
+            if (proto != null) {
                 // 'file' is the only protocol accepted as "local"
                 if (!"file".equals(proto)) return false;
             }
         }
-        if (parent==null) return true;
-        return parent.isLocal();
+        return parent == null || parent.isLocal();
     }
 
     /** classloader for only the entries in this catalog's classpath */ 
     public ClassLoader getLocalClassLoader() {
-        if (classpath!=null) return classpath.getLocalClassLoader();
+        if (classpath != null) return classpath.getLocalClassLoader();
         return null;
     }
 
     /** recursive classloader is the local classloader plus all children catalog's classloader */
     public ClassLoader getRecursiveClassLoader() {
-        if (recursiveClassLoader==null) loadRecursiveClassLoader();
+        if (recursiveClassLoader == null) loadRecursiveClassLoader();
         return recursiveClassLoader;
     }
     
@@ -293,11 +327,11 @@ public class CatalogDo {
         AggregateClassLoader cl = AggregateClassLoader.newInstanceWithNoLoaders();
         cl.addFirst(childrenClassLoader);
         ClassLoader local = getLocalClassLoader();
-        if (local!=null) cl.addFirst(local);
-        if (parent==null) {
+        if (local != null) cl.addFirst(local);
+        if (parent == null) {
             // we are root.  include the mgmt base classloader and/or standard class loaders 
-            ClassLoader base = mgmt!=null ? ((ManagementContextInternal)mgmt).getBaseClassLoader() : null;
-            if (base!=null) cl.addFirst(base);
+            ClassLoader base = mgmt != null ? ((ManagementContextInternal)mgmt).getBaseClassLoader() : null;
+            if (base != null) cl.addFirst(base);
             else {
                 cl.addFirst(getClass().getClassLoader());
                 cl.addFirst(Object.class.getClassLoader());
@@ -309,7 +343,7 @@ public class CatalogDo {
     /** the root classloader is the recursive CL from the outermost catalog
      * (which includes the base classloader from the mgmt context, if set) */
     public ClassLoader getRootClassLoader() {
-        if (parent!=null) return parent.getRootClassLoader();
+        if (parent != null) return parent.getRootClassLoader();
         return getRecursiveClassLoader();
     }
     

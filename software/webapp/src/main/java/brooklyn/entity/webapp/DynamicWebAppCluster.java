@@ -37,7 +37,8 @@ import brooklyn.util.time.Duration;
  */
 @Catalog(name="Dynamic Web-app Cluster", description="A cluster of web-apps, which can be dynamically re-sized; this does not include a load-balancer")
 @ImplementedBy(DynamicWebAppClusterImpl.class)
-public interface DynamicWebAppCluster extends DynamicCluster, WebAppService, JavaWebAppService, JavaWebAppService.CanDeployAndUndeploy, JavaWebAppService.CanRedeployAll {
+public interface DynamicWebAppCluster extends DynamicCluster, WebAppService, JavaWebAppService,
+        JavaWebAppService.CanDeployAndUndeploy, JavaWebAppService.CanRedeployAll {
 
     public static final AttributeSensor<Double> REQUEST_COUNT_PER_NODE = new BasicAttributeSensor<Double>(
             Double.class, "webapp.reqs.total.perNode", "Cluster entity request average");
@@ -54,7 +55,8 @@ public interface DynamicWebAppCluster extends DynamicCluster, WebAppService, Jav
     public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME_PER_NODE = ApplyDisplayHints.TOTAL_PROCESSING_TIME_PER_NODE;
 
     public static final AttributeSensor<Double> PROCESSING_TIME_FRACTION_IN_WINDOW_PER_NODE = new BasicAttributeSensor<Double>(
-            Double.class, "webapp.reqs.processingTime.fraction.windowed.perNode", "Fraction of time spent processing reported by webserver (percentage, over time window) averaged over all nodes");
+            Double.class, "webapp.reqs.processingTime.fraction.windowed.perNode", "Fraction of time spent processing " +
+            "reported by webserver (percentage, over time window) averaged over all nodes");
 
     class ApplyDisplayHints {
         public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME_PER_NODE = new BasicAttributeSensor<Integer>(

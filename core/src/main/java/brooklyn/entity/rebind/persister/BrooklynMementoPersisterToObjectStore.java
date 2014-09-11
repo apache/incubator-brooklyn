@@ -35,6 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -50,6 +51,7 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccess
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -118,6 +120,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         objectStore.createSubPath("locations");
         objectStore.createSubPath("policies");
         objectStore.createSubPath("enrichers");
+        objectStore.createSubPath("catalog");
 
         // FIXME does it belong here or to ManagementPlaneSyncRecordPersisterToObjectStore ?
         objectStore.createSubPath("plane");
@@ -173,11 +176,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         List<String> locationSubPathList;
         List<String> policySubPathList;
         List<String> enricherSubPathList;
+        List<String> catalogSubPathList;
         try {
             entitySubPathList = objectStore.listContentsWithSubPath("entities");
             locationSubPathList = objectStore.listContentsWithSubPath("locations");
             policySubPathList = objectStore.listContentsWithSubPath("policies");
             enricherSubPathList = objectStore.listContentsWithSubPath("enrichers");
+            catalogSubPathList = objectStore.listContentsWithSubPath("catalog");
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
@@ -186,8 +191,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        LOG.debug("Scanning persisted state: {} entities, {} locations, {} policies, {} enrichers, from {}", new Object[]{
-            entitySubPathList.size(), locationSubPathList.size(), policySubPathList.size(), enricherSubPathList.size(),
+        LOG.debug("Scanning persisted state: {} entities, {} locations, {} policies, {} enrichers, {} catalog items from {}", new Object[]{
+            entitySubPathList.size(), locationSubPathList.size(), policySubPathList.size(), enricherSubPathList.size(), catalogSubPathList.size(),
             objectStore.getSummaryName() });
 
         final BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
@@ -250,6 +255,21 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                     }
                 }}));
         }
+        for (final String subPath : catalogSubPathList) {
+            futures.add(executor.submit(new Runnable() {
+                public void run() {
+                    try {
+                        String contents = read(subPath);
+                        String id = (String) XmlUtil.xpath(contents, "/catalogItem/id");
+                        String type = (String) XmlUtil.xpath(contents, "/catalogItem/type");
+                        builder.catalogItem(id, type);
+                    } catch (Exception e) {
+                        Exceptions.propagateIfFatal(e);
+                        exceptionHandler.onLoadMementoFailed(BrooklynObjectType.CATALOG_ITEM, "Memento "+subPath, e);
+                    }
+                }}));
+        }
+
 
         try {
             // Wait for all, failing fast if any exceptions.
@@ -283,9 +303,11 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         BrooklynMementoManifest result = builder.build();
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded memento manifest; took {}; {} entities, {} locations, {} policies, {} enrichers, from {}", new Object[]{
+            LOG.debug("Loaded memento manifest; took {}; {} entities, {} locations, {} policies, {} enrichers, {} catalog items, from {}",
+                    new Object[]{
                      Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), result.getEntityIdToType().size(), 
                      result.getLocationIdToType().size(), result.getPolicyIdToType().size(), result.getEnricherIdToType().size(),
+                     result.getCatalogIdToType().size(),
                      objectStore.getSummaryName() });
         }
 
@@ -307,20 +329,22 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         List<String> locationSubPathList;
         List<String> policySubPathList;
         List<String> enricherSubPathList;
+        List<String> catalogItemSubPathList;
         try {
             entitySubPathList = objectStore.listContentsWithSubPath("entities");
             locationSubPathList = objectStore.listContentsWithSubPath("locations");
             policySubPathList = objectStore.listContentsWithSubPath("policies");
             enricherSubPathList = objectStore.listContentsWithSubPath("enrichers");
+            catalogItemSubPathList = objectStore.listContentsWithSubPath("catalog");
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+objectStore+": "+e, e);
         }
         
-        LOG.debug("Loading persisted state: {} entities, {} locations, {} policies, {} enrichers, from {}", new Object[]{
-            entitySubPathList.size(), locationSubPathList.size(), policySubPathList.size(), enricherSubPathList.size(),
-            objectStore.getSummaryName() });
+        LOG.debug("Loading persisted state: {} entities, {} locations, {} policies, {} enrichers, {} catalog items, from {}",
+                new Object[]{ entitySubPathList.size(), locationSubPathList.size(), policySubPathList.size(),
+                        enricherSubPathList.size(), catalogItemSubPathList.size(), objectStore.getSummaryName() });
 
         final BrooklynMementoImpl.Builder builder = BrooklynMementoImpl.builder();
         serializer.setLookupContext(lookupContext);
@@ -361,7 +385,10 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             for (final String subPath : enricherSubPathList) {
                 futures.add(executor.submit(new MementoLoader(subPath, BrooklynObjectType.ENRICHER)));
             }
-            
+            for (final String subPath : catalogItemSubPathList) {
+                futures.add(executor.submit(new MementoLoader(subPath, BrooklynObjectType.CATALOG_ITEM)));
+            }
+
             try {
                 // Wait for all, failing fast if any exceptions.
                 Futures.allAsList(futures).get();
@@ -386,7 +413,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                 if (exceptions.isEmpty()) {
                     throw Exceptions.propagate(e);
                 } else {
-                    // Normally there should be at lesat one failure; otherwise all.get() would not have failed.
+                    // Normally there should be at least one failure; otherwise all.get() would not have failed.
                     throw new CompoundRuntimeException("Problem loading mementos", exceptions);
                 }
             }
@@ -398,10 +425,10 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         BrooklynMemento result = builder.build();
         
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded memento; took {}; {} entities, {} locations, {} policies, {} enrichers, from {}", new Object[]{
-                      Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), result.getEntityIds().size(), 
-                      result.getLocationIds().size(), result.getPolicyIds().size(), result.getEnricherIds().size(),
-                      objectStore.getSummaryName() });
+            LOG.debug("Loaded memento; took {}; {} entities, {} locations, {} policies, {} enrichers, {} catalog items, from {}",
+                    new Object[]{Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)),
+                            result.getEntityIds().size(), result.getLocationIds().size(), result.getPolicyIds().size(),
+                            result.getEnricherIds().size(), result.getCatalogItemIds().size(), objectStore.getSummaryName()});
         }
         
         return result;
@@ -413,12 +440,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
             return;
         }
-        
+
         Delta delta = PersisterDeltaImpl.builder()
                 .entities(newMemento.getEntityMementos().values())
                 .locations(newMemento.getLocationMementos().values())
                 .policies(newMemento.getPolicyMementos().values())
                 .enrichers(newMemento.getEnricherMementos().values())
+                .catalogItems(newMemento.getCatalogItemMementos().values())
                 .build();
         Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
         
@@ -433,10 +461,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
         Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}; updated {} entities, {} locations and {} policies; " +
-                "removing {} entities, {} locations and {} policies", 
-                new Object[] {Time.makeTimeStringRounded(stopwatch), delta.entities(), delta.locations(), delta.policies(),
-                delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds()});
+        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}; updated {} entities, {} locations, " +
+                        "{} policies, {} enrichers and {} catalog items; " +
+                        "removing {} entities, {} locations, {} policies, {} enrichers and {} catalog items",
+                new Object[] {Time.makeTimeStringRounded(stopwatch),
+                        delta.entities().size(), delta.locations().size(), delta.policies().size(), delta.enrichers().size(), delta.catalogItems().size(),
+                        delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size(),
+                        delta.removedEnricherIds().size(), delta.removedCatalogItemIds().size()});
     }
     
     /**
@@ -470,7 +501,10 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             for (EnricherMemento enricher : delta.enrichers()) {
                 futures.add(asyncPersist("enrichers", enricher, exceptionHandler));
             }
-            
+            for (CatalogItemMemento catalogItem : delta.catalogItems()) {
+                futures.add(asyncPersist("catalog", catalogItem, exceptionHandler));
+            }
+
             for (String id : delta.removedEntityIds()) {
                 futures.add(asyncDelete("entities", id, exceptionHandler));
             }
@@ -482,6 +516,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             }
             for (String id : delta.removedEnricherIds()) {
                 futures.add(asyncDelete("enrichers", id, exceptionHandler));
+            }
+            for (String id : delta.removedCatalogItemIds()) {
+                futures.add(asyncDelete("catalog", id, exceptionHandler));
             }
             
             try {

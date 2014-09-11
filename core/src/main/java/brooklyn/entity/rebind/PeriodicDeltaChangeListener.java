@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.internal.BrooklynFeatureEnablement;
@@ -71,14 +72,18 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         Set<Entity> entities = Sets.newLinkedHashSet();
         Set<Policy> policies = Sets.newLinkedHashSet();
         Set<Enricher> enrichers = Sets.newLinkedHashSet();
+        Set<CatalogItem<?, ?>> catalogItems = Sets.newLinkedHashSet();
         Set<String> removedLocationIds = Sets.newLinkedHashSet();
         Set<String> removedEntityIds = Sets.newLinkedHashSet();
         Set<String> removedPolicyIds = Sets.newLinkedHashSet();
         Set<String> removedEnricherIds = Sets.newLinkedHashSet();
-        
+        Set<String> removedCatalogItemIds = Sets.newLinkedHashSet();
+
         public boolean isEmpty() {
-            return locations.isEmpty() && entities.isEmpty() && policies.isEmpty() && enrichers.isEmpty() &&
-                    removedEntityIds.isEmpty() && removedLocationIds.isEmpty() && removedPolicyIds.isEmpty() && removedEnricherIds.isEmpty();
+            return locations.isEmpty() && entities.isEmpty() && policies.isEmpty() &&
+                    enrichers.isEmpty() && catalogItems.isEmpty() &&
+                    removedEntityIds.isEmpty() && removedLocationIds.isEmpty() && removedPolicyIds.isEmpty() &&
+                    removedEnricherIds.isEmpty() && removedCatalogItemIds.isEmpty();
         }
     }
     
@@ -250,10 +255,18 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                         exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.ENRICHER, enricher, e);
                     }
                 }
+                for (CatalogItem<?, ?> catalogItem : prevDeltaCollector.catalogItems) {
+                    try {
+                        persisterDelta.catalogItems.add(catalogItem.getRebindSupport().getMemento());
+                    } catch (Exception e) {
+                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.CATALOG_ITEM, catalogItem, e);
+                    }
+                }
                 persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
                 persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
                 persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
                 persisterDelta.removedEnricherIds = prevDeltaCollector.removedEnricherIds;
+                persisterDelta.removedCatalogItemIds = prevDeltaCollector.removedCatalogItemIds;
 
                 /*
                  * Need to guarantee "happens before", with any thread that subsequently reads
@@ -312,6 +325,9 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             } else if (instance instanceof Enricher) {
                 deltaCollector.removedEnricherIds.add(instance.getId());
                 deltaCollector.enrichers.remove(instance);
+            } else if (instance instanceof CatalogItem) {
+                deltaCollector.removedCatalogItemIds.add(instance.getId());
+                deltaCollector.catalogItems.remove(instance);
             } else {
                 throw new IllegalStateException("Unexpected brooklyn type: "+instance);
             }
@@ -346,6 +362,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 deltaCollector.policies.add((Policy) instance);
             } else if (instance instanceof Enricher) {
                 deltaCollector.enrichers.add((Enricher) instance);
+            } else if (instance instanceof CatalogItem) {
+                deltaCollector.catalogItems.add((CatalogItem) instance);
             } else {
                 throw new IllegalStateException("Unexpected brooklyn type: "+instance);
             }

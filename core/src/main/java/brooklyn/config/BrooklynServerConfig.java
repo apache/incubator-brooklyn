@@ -19,6 +19,9 @@
 package brooklyn.config;
 
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
+
+import brooklyn.catalog.CatalogLoadMode;
+import brooklyn.entity.rebind.persister.PersistMode;
 import io.brooklyn.camp.CampPlatform;
 
 import java.io.File;
@@ -35,13 +38,14 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 
-/** config keys for the brooklyn server */
+/** Config keys for the brooklyn server */
 public class BrooklynServerConfig {
 
-
     private static final Logger log = LoggerFactory.getLogger(BrooklynServerConfig.class);
-    
-    /** provided for setting; consumers should use {@link #getMgmtBaseDir(ManagementContext)} */ 
+
+    /**
+     * Provided for setting; consumers should use {@link #getMgmtBaseDir(ManagementContext)}
+     */
     public static final ConfigKey<String> MGMT_BASE_DIR = newStringConfigKey(
             "brooklyn.base.dir", "Directory for reading and writing all brooklyn server data", 
             Os.fromHome(".brooklyn"));
@@ -55,8 +59,11 @@ public class BrooklynServerConfig {
     /** on file system, the 'data' subdir is used so that there is an obvious place to put backup dirs */ 
     public static final String DEFAULT_PERSISTENCE_DIR_FOR_FILESYSTEM = Os.mergePaths(DEFAULT_PERSISTENCE_CONTAINER_NAME, "data");
     
-    /** provided for setting; consumers should query the management context persistence subsystem for the actual target,
-     * or use {@link #resolvePersistencePath(String, StringConfigMap, String)} if trying to resolve the value */
+    /**
+     * Provided for setting; consumers should query the management context persistence subsystem
+     * for the actual target, or use {@link #resolvePersistencePath(String, StringConfigMap, String)}
+     * if trying to resolve the value
+     */
     public static final ConfigKey<String> PERSISTENCE_DIR = newStringConfigKey(
         "brooklyn.persistence.dir", 
         "Directory or container name for writing brooklyn persisted state");
@@ -73,6 +80,23 @@ public class BrooklynServerConfig {
             + "if false, the persistence store will be overwritten with changes (but files not removed if they are unreadable); "
             + "if null or not set, the legacy beahviour of creating backups where possible (e.g. file system) is currently used, "
             + "but this may be changed in future versions");
+
+    public static final ConfigKey<String> BROOKLYN_CATALOG_URL = ConfigKeys.newStringConfigKey("brooklyn.catalog.url",
+        "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
+        "or empty for no URL (use default scanner)",
+        new File(Os.fromHome(".brooklyn/catalog.xml")).toURI().toString());
+
+    public static final ConfigKey<CatalogLoadMode> CATALOG_LOAD_MODE = ConfigKeys.newConfigKey(CatalogLoadMode.class,
+            "brooklyn.catalog.mode",
+            "The mode the management context should use to load the catalog when first starting",
+            CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL);
+
+    public static final ConfigKey<Boolean> USE_OSGI = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.enabled",
+        "Whether OSGi is enabled, defaulting to true", true);
+
+    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
+        "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
+
 
     public static String getMgmtBaseDir(ManagementContext mgmt) {
         return getMgmtBaseDir(mgmt.getConfig());
@@ -109,14 +133,19 @@ public class BrooklynServerConfig {
         return resolvePersistencePath(null, brooklynProperties, null);
     }
     
-    /** container name or full path for where persist state should be kept
-     * @param optionalSuppliedValue  a value which has been supplied explicitly, optionally
-     * @param brooklynProperties  the properties map where the persistence path should be looked up
-     *   if not supplied, along with finding the brooklyn.base.dir if needed (using file system persistence with a relative path)
-     * @param optionalObjectStoreLocationSpec  if a location spec is supplied, this will return a container name
-     *    suitable for use with the given object store based on brooklyn.persistence.dir;
-     *    if null this method will return a full file system path, relative 
-     *    to the brooklyn.base.dir if the configured brooklyn.persistence.dir is not absolute
+    /**
+     * @param optionalSuppliedValue
+     *     An optional value which has been supplied explicitly
+     * @param brooklynProperties
+     *     The properties map where the persistence path should be looked up if not supplied,
+     *     along with finding the brooklyn.base.dir if needed (using file system persistence
+     *     with a relative path)
+     * @param optionalObjectStoreLocationSpec
+     *     If a location spec is supplied, this will return a container name suitable for use
+     *     with the given object store based on brooklyn.persistence.dir; if null this method
+     *     will return a full file system path, relative to the brooklyn.base.dir if the
+     *     configured brooklyn.persistence.dir is not absolute
+     * @return The container name or full path for where persist state should be kept
      */
     public static String resolvePersistencePath(String optionalSuppliedValue, StringConfigMap brooklynProperties, String optionalObjectStoreLocationSpec) {
         String path = optionalSuppliedValue;
@@ -147,25 +176,18 @@ public class BrooklynServerConfig {
         }
     }
 
-    public static final ConfigKey<String> BROOKLYN_CATALOG_URL = ConfigKeys.newStringConfigKey("brooklyn.catalog.url",
-        "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
-        "or empty for no URL (use default scanner)", 
-        new File(Os.fromHome(".brooklyn/catalog.xml")).toURI().toString());
-    
-    public static final ConfigKey<Boolean> USE_OSGI = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.enabled",
-        "Whether OSGi is enabled, defaulting to true", true);
-
-    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
-        "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
-
-    /** Returns the CAMP platform associated with a management context, if there is one. */
+    /**
+     * @return the CAMP platform associated with a management context, if there is one.
+     */
     public static Maybe<CampPlatform> getCampPlatform(ManagementContext mgmt) {
         CampPlatform result = mgmt.getConfig().getConfig(BrooklynServerConfig.CAMP_PLATFORM);
         if (result!=null) return Maybe.of(result);
         return Maybe.absent("No CAMP Platform is registered with this Brooklyn management context.");
     }
 
-    /** Returns {@link ManagementContext#getManagementNodeUri()}, located in this utility class for convenience. */
+    /**
+     * @return {@link ManagementContext#getManagementNodeUri()}, located in this utility class for convenience.
+     */
     public static Maybe<URI> getBrooklynWebUri(ManagementContext mgmt) {
         return mgmt.getManagementNodeUri();
     }

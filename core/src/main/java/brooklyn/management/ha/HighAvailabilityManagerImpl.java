@@ -643,8 +643,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     /**
-     * Gets the current time, using the {@link #tickerUtc}. Normally this is equivalent of {@link System#currentTimeMillis()},
-     * but in test environments a custom {@link Ticker} can be injected via {@link #setTicker(Ticker)} to allow testing of
+     * Gets the current time, using the {@link #localTickerUtc}. Normally this is equivalent of {@link System#currentTimeMillis()},
+     * but in test environments a custom {@link Ticker} can be injected via {@link #setLocalTicker(Ticker)} to allow testing of
      * specific timing scenarios.
      */
     protected long currentTimeMillis() {

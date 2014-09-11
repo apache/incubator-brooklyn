@@ -107,7 +107,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     /**
      * @param mgmt not used much at present but handy to ensure we know it so that obj store is prepared
      * @param objectStore the objectStore use to read/write management-plane data;
-     *   this must have been {@link PersistenceObjectStore#prepareForSharedUse(ManagementContext, brooklyn.entity.rebind.persister.PersistMode)}
+     *   this must have been {@link PersistenceObjectStore#prepareForSharedUse(brooklyn.entity.rebind.persister.PersistMode, HighAvailabilityMode)}
      * @param classLoader ClassLoader to use when deserializing data
      */
     public ManagementPlaneSyncRecordPersisterToObjectStore(ManagementContext mgmt, PersistenceObjectStore objectStore, ClassLoader classLoader) {

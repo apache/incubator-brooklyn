@@ -40,5 +40,5 @@ public class CatalogConfigurationDto extends CatalogItemDtoAbstract<ConfigKey,Vo
     public Class<Void> getSpecType() {
         return null;
     }
-    
+
 }

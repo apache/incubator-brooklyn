@@ -153,9 +153,10 @@ public class StoreObjectAccessorLocking implements PersistenceObjectStore.StoreO
             lock.writeLock().lockInterruptibly();
             try {
                 queuedWriters.remove(Thread.currentThread());
-                if (hasScheduledPutOrDeleteWithNoRead()) 
+                if (hasScheduledPutOrDeleteWithNoRead()) {
                     // don't bother deleting if someone will write after us and no one is reading
                     return;
+                }
                 delegate.delete();
                 
             } finally {

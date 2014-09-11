@@ -19,6 +19,8 @@
 package brooklyn.camp.lite;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.pdp.PdpYamlTest;
@@ -61,6 +63,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.stream.Streams;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -167,9 +170,8 @@ public class CampYamlLiteTest {
         Assert.assertEquals(retrievedItem.getLibraries().getBundles(), expectedBundles);
         // Assert.assertEquals(retrievedItem.getVersion(), "0.9");
 
-
         EntitySpec<?> spec1 = (EntitySpec<?>) mgmt.getCatalog().createSpec(retrievedItem);
-        Assert.assertNotNull(spec1);
+        assertNotNull(spec1);
         Assert.assertEquals(spec1.getConfig().get(TestEntity.CONF_NAME), "sample");
         
         // TODO other assertions, about children
@@ -185,46 +187,6 @@ public class CampYamlLiteTest {
 
         assertMgmtHasSampleMyCatalogApp(registeredTypeName, bundleUrl);
     }
-
-    private String getSampleMyCatalogAppYaml(String registeredTypeName, String bundleUrl) {
-        return "brooklyn.catalog:\n" +
-                "  id: " + registeredTypeName + "\n" +
-                "  name: My Catalog App\n" +
-                "  description: My description\n" +
-                "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n" +
-                "  version: 0.1.2\n" +
-                "  libraries:\n" +
-                "  - url: " + bundleUrl + "\n" +
-                "\n" +
-                "services:\n" +
-                "- type: brooklyn.test.entity.TestEntity\n";
-    }
-
-    private void assertMgmtHasSampleMyCatalogApp(String registeredTypeName, String bundleUrl) {
-        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName);
-        assertEquals(item.getRegisteredTypeName(), registeredTypeName);
-
-        // stored as yaml, not java
-//      assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
-        Assert.assertNotNull(item.getPlanYaml());
-        Assert.assertTrue(item.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
-
-        assertEquals(item.getId(), registeredTypeName);
-
-        // and let's check we have libraries
-        List<String> libs = item.getLibraries().getBundles();
-        assertEquals(libs, MutableList.of(bundleUrl));
-
-        // now let's check other things on the item
-        assertEquals(item.getName(), "My Catalog App");
-        assertEquals(item.getDescription(), "My description");
-        assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
-
-        // and confirm we can resolve ICON
-        byte[] iconData = Streams.readFully(ResourceUtils.create(item.newClassLoadingContext(mgmt)).getResourceFromUrl(item.getIconUrl()));
-        assertEquals(iconData.length, 43);
-    }
-
 
     @Test
     public void testResetXmlWithCustomEntity() throws IOException {
@@ -245,6 +207,47 @@ public class CampYamlLiteTest {
         }
 
         assertMgmtHasSampleMyCatalogApp(registeredTypeName, bundleUrl);
+    }
+
+    private String getSampleMyCatalogAppYaml(String registeredTypeName, String bundleUrl) {
+        return "brooklyn.catalog:\n" +
+                "  id: " + registeredTypeName + "\n" +
+                "  name: My Catalog App\n" +
+                "  description: My description\n" +
+                "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n" +
+                "  version: 0.1.2\n" +
+                "  libraries:\n" +
+                "  - url: " + bundleUrl + "\n" +
+                "\n" +
+                "services:\n" +
+                "- type: brooklyn.test.entity.TestEntity\n";
+    }
+
+    private void assertMgmtHasSampleMyCatalogApp(String registeredTypeName, String bundleUrl) {
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName);
+        assertNotNull(item, "failed to load item with id=" + registeredTypeName + " from catalog. Entries were: " +
+                Joiner.on(",").join(mgmt.getCatalog().getCatalogItems()));
+        assertEquals(item.getRegisteredTypeName(), registeredTypeName);
+
+        // stored as yaml, not java
+//      assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
+        assertNotNull(item.getPlanYaml());
+        Assert.assertTrue(item.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
+
+        assertEquals(item.getId(), registeredTypeName);
+
+        // and let's check we have libraries
+        List<String> libs = item.getLibraries().getBundles();
+        assertEquals(libs, MutableList.of(bundleUrl));
+
+        // now let's check other things on the item
+        assertEquals(item.getName(), "My Catalog App");
+        assertEquals(item.getDescription(), "My description");
+        assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
+
+        // and confirm we can resolve ICON
+        byte[] iconData = Streams.readFully(ResourceUtils.create(item.newClassLoadingContext(mgmt)).getResourceFromUrl(item.getIconUrl()));
+        assertEquals(iconData.length, 43);
     }
 
 }

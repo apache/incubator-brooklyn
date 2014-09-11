@@ -47,7 +47,7 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
 
 /** 
- * emits {@link HASensors#ENTITY_FAILED} whenever the parent's default logic ({@link ComputeServiceState}) would detect a problem,
+ * Emits {@link HASensors#ENTITY_FAILED} whenever the parent's default logic ({@link ComputeServiceState}) would detect a problem,
  * and similarly {@link HASensors#ENTITY_RECOVERED} when recovered.
  * <p>
  * gives more control over suppressing {@link Lifecycle#ON_FIRE}, 

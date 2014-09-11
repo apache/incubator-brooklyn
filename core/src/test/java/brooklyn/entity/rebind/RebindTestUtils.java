@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.collections.Maps;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.Dumpers.Pointer;
@@ -139,6 +140,7 @@ public class RebindTestUtils {
         PersistenceObjectStore objectStore;
         Duration persistPeriod = Duration.millis(100);
         boolean forLive;
+        boolean emptyCatalog;
         
         ManagementContextBuilder(File mementoDir, ClassLoader classLoader) {
             this(classLoader, new FileBasedObjectStore(mementoDir));
@@ -171,20 +173,28 @@ public class RebindTestUtils {
             return this;
         }
 
+        public ManagementContextBuilder emptyCatalog() {
+            this.emptyCatalog = true;
+            return this;
+        }
+
+        public ManagementContextBuilder emptyCatalog(boolean val) {
+            this.emptyCatalog = val;
+            return this;
+        }
+
         public LocalManagementContext buildUnstarted() {
             LocalManagementContext unstarted;
+            BrooklynProperties properties = this.properties != null
+                    ? this.properties
+                    : BrooklynProperties.Factory.newDefault();
+            if (this.emptyCatalog) {
+                properties.putIfAbsent(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn-catalog-empty.xml");
+            }
             if (forLive) {
-                if (properties != null) {
-                    unstarted = new LocalManagementContext(properties);
-                } else {
-                    unstarted = new LocalManagementContext();
-                }
+                unstarted = new LocalManagementContext(properties);
             } else {
-                if (properties != null) {
-                    unstarted = new LocalManagementContextForTests(properties);
-                } else {
-                    unstarted = new LocalManagementContextForTests();
-                }
+                unstarted = new LocalManagementContextForTests(properties);
             }
             
             objectStore.injectManagementContext(unstarted);

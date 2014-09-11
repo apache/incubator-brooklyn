@@ -26,6 +26,7 @@ import java.util.Set;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynTypes;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
@@ -41,6 +42,7 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -71,7 +73,9 @@ public class MementosGenerators {
         } else if (instance instanceof Policy) {
             return newPolicyMemento((Policy)instance);
         } else if (instance instanceof Enricher) {
-            return newEnricherMemento((Enricher)instance);
+            return newEnricherMemento((Enricher) instance);
+        } else if (instance instanceof CatalogItem) {
+            return newCatalogItemMemento((CatalogItem) instance);
         } else {
             throw new IllegalArgumentException("Unexpected brooklyn type: "+(instance == null ? "null" : instance.getClass())+" ("+instance+")");
         }
@@ -295,7 +299,6 @@ public class MementosGenerators {
         };
     }
 
-    
     /**
      * Given an enricher, extracts its state for serialization.
      */
@@ -321,6 +324,23 @@ public class MementosGenerators {
                 .build();
         builder.config.putAll(persistableFlags);
 
+        return builder.build();
+    }
+
+    public static CatalogItemMemento newCatalogItemMemento(CatalogItem<?, ?> catalogItem) {
+        BasicCatalogItemMemento.Builder builder = BasicCatalogItemMemento.builder();
+        populateBrooklynObjectMementoBuilder(catalogItem, builder);
+        builder.catalogItemJavaType(catalogItem.getCatalogItemJavaType())
+                .catalogItemType(catalogItem.getCatalogItemType())
+                .description(catalogItem.getDescription())
+                .iconUrl(catalogItem.getIconUrl())
+                .javaType(catalogItem.getJavaType())
+                .libraries(catalogItem.getLibraries())
+                .registeredTypeName(catalogItem.getRegisteredTypeName())
+                .specType(catalogItem.getSpecType())
+                .version(catalogItem.getVersion())
+                .planYaml(catalogItem.getPlanYaml())
+                ;
         return builder.build();
     }
     

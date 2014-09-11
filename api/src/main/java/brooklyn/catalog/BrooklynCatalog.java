@@ -18,14 +18,16 @@
  */
 package brooklyn.catalog;
 
+import java.util.Collection;
 import java.util.NoSuchElementException;
 
 import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
 
-    /** @return The item with the given ID, or null if not found */
-    CatalogItem<?,?> getCatalogItem(String id);
+    /** @return The item with the given ID or {@link brooklyn.catalog.CatalogItem#getRegisteredTypeName()
+     * registeredTypeName}, or null if not found. */
+    CatalogItem<?,?> getCatalogItem(String idOrRegisteredTypeName);
 
     /** @return Deletes the item with the given ID
      * @throws NoSuchElementException if not found */
@@ -56,7 +58,6 @@ public interface BrooklynCatalog {
     @Deprecated
     <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass);
 
-    
     /**
      * Adds an item (represented in yaml) to the catalog.
      * 
@@ -73,11 +74,12 @@ public interface BrooklynCatalog {
     @Deprecated
     void addItem(CatalogItem<?,?> item);
 
-    /** creates a catalog item and adds it to the 'manual' catalog,
+    /**
+     * Creates a catalog item and adds it to the 'manual' catalog,
      * with the corresponding Class definition (loaded by a classloader)
      * registered and available in the classloader.
      * <p>
-     * note that the class will be available for this session only,
+     * Note that the class will be available for this session only,
      * although the record of the item will appear in the catalog DTO if exported,
      * so it is recommended to edit the 'manual' catalog DTO if using it to
      * generate a catalog, either adding the appropriate classpath URL or removing this entry.
@@ -86,5 +88,7 @@ public interface BrooklynCatalog {
      */
     @Deprecated
     CatalogItem<?,?> addItem(Class<?> clazz);
+
+    void reset(Collection<CatalogItem<?, ?>> entries);
 
 }

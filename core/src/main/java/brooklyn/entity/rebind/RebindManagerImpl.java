@@ -21,6 +21,7 @@ package brooklyn.entity.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -30,7 +31,12 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogLoadMode;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
@@ -54,6 +60,7 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -73,6 +80,7 @@ import brooklyn.util.time.Duration;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -115,6 +123,7 @@ public class RebindManagerImpl implements RebindManager {
 
     private final boolean persistPoliciesEnabled;
     private final boolean persistEnrichersEnabled;
+    private final boolean persistCatalogItemsEnabled;
     private RebindFailureMode danglingRefFailureMode;
     private RebindFailureMode rebindFailureMode;
     private RebindFailureMode addPolicyFailureMode;
@@ -149,13 +158,15 @@ public class RebindManagerImpl implements RebindManager {
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
         this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
+        this.persistCatalogItemsEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
 
         danglingRefFailureMode = managementContext.getConfig().getConfig(DANGLING_REFERENCE_FAILURE_MODE);
         rebindFailureMode = managementContext.getConfig().getConfig(REBIND_FAILURE_MODE);
         addPolicyFailureMode = managementContext.getConfig().getConfig(ADD_POLICY_FAILURE_MODE);
         loadPolicyFailureMode = managementContext.getConfig().getConfig(LOAD_POLICY_FAILURE_MODE);
-        
-        LOG.debug("Persistence in "+this+" of: policies="+persistEnrichersEnabled+" enrichers="+persistEnrichersEnabled);
+
+        LOG.debug("Persistence in {} of: policies={}, enrichers={}, catalog={}",
+                new Object[]{this, persistPoliciesEnabled, persistEnrichersEnabled, persistCatalogItemsEnabled});
     }
 
     /**
@@ -380,12 +391,12 @@ public class RebindManagerImpl implements RebindManager {
             //
             
             BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
-            
+
             boolean isEmpty = mementoManifest.isEmpty();
             if (!isEmpty) {
-                LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
+                LOG.info("Rebinding from {} ...", getPersister().getBackingStoreDescription());
             } else {
-                LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
+                LOG.info("Rebind check: no existing state; will persist new items to {}", getPersister().getBackingStoreDescription());
             }
 
             
@@ -429,6 +440,21 @@ public class RebindManagerImpl implements RebindManager {
                 LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
             } 
             
+            // Instantiate catalog items
+            if (persistCatalogItemsEnabled) {
+                LOG.debug("RebindManager instantiating catalog items: {}", memento.getCatalogItemIds());
+                for (CatalogItemMemento catalogItemMemento : memento.getCatalogItemMementos().values()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating catalog item {}", catalogItemMemento);
+                    try {
+                        CatalogItem<?, ?> catalogItem = newCatalogItem(catalogItemMemento, reflections);
+                        rebindContext.registerCatalogItem(catalogItemMemento.getId(), catalogItem);
+                    } catch (Exception e) {
+                        exceptionHandler.onCreateFailed(BrooklynObjectType.CATALOG_ITEM, catalogItemMemento.getId(), catalogItemMemento.getType(), e);
+                    }
+                }
+            } else {
+                LOG.debug("Not rebinding catalog; feature disabled: {}", memento.getCatalogItemIds());
+            }
             
             //
             // PHASE THREE
@@ -490,10 +516,9 @@ public class RebindManagerImpl implements RebindManager {
                             rebindContext.unregisterEnricher(enricher);
                         }
                     }
-
                 }
             }
-    
+
             // Reconstruct entities
             LOG.debug("RebindManager reconstructing entities");
             for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
@@ -513,7 +538,27 @@ public class RebindManagerImpl implements RebindManager {
                 }
             }
 
-            
+            // Reconstruct catalog entries
+            if (persistCatalogItemsEnabled) {
+                LOG.debug("RebindManager reconstructing catalog items");
+                for (CatalogItemMemento catalogItemMemento : memento.getCatalogItemMementos().values()) {
+                    CatalogItem<?, ?> item = rebindContext.getCatalogItem(catalogItemMemento.getId());
+                    LOG.debug("RebindManager reconstructing catalog item {}", catalogItemMemento);
+                    if (item == null) {
+                        exceptionHandler.onNotFound(BrooklynObjectType.CATALOG_ITEM, catalogItemMemento.getId());
+                    } else {
+                        try {
+                            item.getRebindSupport().reconstruct(rebindContext, catalogItemMemento);
+                            if (item instanceof AbstractBrooklynObject) {
+                                AbstractBrooklynObject.class.cast(item).setManagementContext(managementContext);
+                            }
+                        } catch (Exception e) {
+                            exceptionHandler.onRebindFailed(BrooklynObjectType.CATALOG_ITEM, item, e);
+                        }
+                    }
+                }
+            }
+
             //
             // PHASE FOUR
             //
@@ -573,16 +618,48 @@ public class RebindManagerImpl implements RebindManager {
                     apps.add((Application)entity);
                 }
             }
-            
+
+            // Register catalogue items with the management context.
+            CatalogLoadMode catalogLoadMode = managementContext.getConfig().getConfig(BrooklynServerConfig.CATALOG_LOAD_MODE);
+            if (persistCatalogItemsEnabled) {
+                boolean shouldResetCatalog = catalogLoadMode == CatalogLoadMode.LOAD_PERSISTED_STATE
+                        || (!isEmpty && catalogLoadMode == CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL_IF_NO_PERSISTED_STATE);
+                boolean shouldLoadDefaultCatalog = catalogLoadMode == CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL
+                        || (isEmpty && catalogLoadMode == CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL_IF_NO_PERSISTED_STATE);
+                if (shouldResetCatalog) {
+                    // Reset catalog with previously persisted state
+                    LOG.debug("RebindManager resetting management context catalog to previously persisted state");
+                    managementContext.getCatalog().reset(rebindContext.getCatalogItems());
+                } else if (shouldLoadDefaultCatalog) {
+                    // Load catalogue as normal
+                    LOG.debug("RebindManager loading default catalog");
+                    ((BasicBrooklynCatalog) managementContext.getCatalog()).resetCatalogToContentsAtConfiguredUrl();
+                } else {
+                    // Management context should have taken care of loading the catalogue
+                    Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
+                    String message = "RebindManager not resetting catalog to persisted state. Catalog load mode is {}.";
+                    if (!catalogItems.isEmpty()) {
+                        LOG.info(message + " There {} {} item{} persisted.", new Object[]{
+                                catalogLoadMode, catalogItems.size() == 1 ? "was" : "were", catalogItems.size(), Strings.s(catalogItems)});
+                    } else if (LOG.isDebugEnabled()) {
+                        LOG.debug(message, catalogLoadMode);
+                    }
+                }
+            } else {
+                LOG.debug("RebindManager not resetting catalog because catalog persistence is disabled");
+            }
+
             exceptionHandler.onDone();
 
             if (!isEmpty) {
-                LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}", new Object[]{
+                LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}, {} catalog item{}", new Object[]{
                     apps.size(), Strings.s(apps),
                     rebindContext.getEntities().size(), Strings.ies(rebindContext.getEntities()),
                     rebindContext.getLocations().size(), Strings.s(rebindContext.getLocations()),
                     rebindContext.getPolicies().size(), Strings.ies(rebindContext.getPolicies()),
-                    rebindContext.getEnrichers().size(), Strings.s(rebindContext.getEnrichers()) });
+                    rebindContext.getEnrichers().size(), Strings.s(rebindContext.getEnrichers()),
+                    rebindContext.getCatalogItems().size(), Strings.s(rebindContext.getCatalogItems())
+                });
             }
 
             // Return the top-level applications
@@ -760,7 +837,13 @@ public class RebindManagerImpl implements RebindManager {
 
             return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});
         }
+    }
 
+    private CatalogItem<?, ?> newCatalogItem(CatalogItemMemento memento, Reflections reflections) {
+        String id = memento.getId();
+        String itemType = checkNotNull(memento.getType(), "catalog item type of %s must not be null in memento", id);
+        Class<? extends CatalogItem> clazz = (Class<? extends CatalogItem>) reflections.loadClass(itemType);
+        return invokeConstructor(reflections, clazz, new Object[]{});
     }
 
     private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {

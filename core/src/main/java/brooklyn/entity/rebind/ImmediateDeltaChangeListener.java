@@ -23,10 +23,12 @@ import java.util.Map;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -76,6 +78,8 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
                 delta.removedPolicyIds.add(instance.getId());
             } else if (instance instanceof Enricher) {
                 delta.removedEnricherIds.add(instance.getId());
+            } else if (instance instanceof CatalogItem) {
+                delta.removedCatalogItemIds.add(instance.getId());
             } else {
                 throw new IllegalStateException("Unexpected brooklyn type: "+instance);
             }
@@ -97,6 +101,8 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
                 delta.policies.add((PolicyMemento) memento);
             } else if (instance instanceof Enricher) {
                 delta.enrichers.add((EnricherMemento) memento);
+            } else if (instance instanceof CatalogItem) {
+                delta.catalogItems.add((CatalogItemMemento) instance);
             } else {
                 throw new IllegalStateException("Unexpected brooklyn type: "+instance);
             }
