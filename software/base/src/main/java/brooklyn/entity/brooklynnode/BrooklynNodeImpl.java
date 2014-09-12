@@ -30,6 +30,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -42,6 +43,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -76,6 +78,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         super.init();
         getMutableEntityType().addEffector(DeployBlueprintEffectorBody.DEPLOY_BLUEPRINT);
         getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
+        getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);
+        getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
     }
     
     public static class DeployBlueprintEffectorBody extends EffectorBody<String> implements DeployBlueprintEffector {
@@ -169,6 +173,36 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             return Long.toString(parameters.get(DELAY).toMilliseconds());
         }
 
+    }
+
+    public static class StopNodeButLeaveAppsEffectorBody extends EffectorBody<Void> implements StopNodeButLeaveAppsEffector {
+        public static final Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS).impl(new StopNodeButLeaveAppsEffectorBody()).build();
+
+        @Override
+        public Void call(ConfigBag parameters) {
+            MutableMap<?, ?> params = MutableMap.of(
+                    ShutdownEffector.STOP_APPS, Boolean.FALSE,
+                    ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_HOUR);
+            Entity entity = entity();
+            DynamicTasks.queue(Effectors.invocation(entity, SHUTDOWN, params)).asTask().getUnchecked();
+            Entities.unmanage(entity);
+            return null;
+        }
+    }
+
+    public static class StopNodeAndKillAppsEffectorBody extends EffectorBody<Void> implements StopNodeAndKillAppsEffector {
+        public static final Effector<Void> STOP_NODE_AND_KILL_APPS = Effectors.effector(BrooklynNode.STOP_NODE_AND_KILL_APPS).impl(new StopNodeAndKillAppsEffectorBody()).build();
+
+        @Override
+        public Void call(ConfigBag parameters) {
+            MutableMap<?, ?> params = MutableMap.of(
+                    ShutdownEffector.STOP_APPS, Boolean.TRUE,
+                    ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_HOUR);
+            Entity entity = entity();
+            DynamicTasks.queue(Effectors.invocation(entity, SHUTDOWN, params)).asTask().getUnchecked();
+            Entities.unmanage(entity);
+            return null;
+        }
     }
 
     public List<String> getClasspath() {

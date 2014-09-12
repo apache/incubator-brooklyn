@@ -23,7 +23,9 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
@@ -35,6 +37,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.Effector;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
@@ -51,6 +55,7 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
@@ -396,6 +401,56 @@ public class BrooklynNodeIntegrationTest {
             .build();
         HttpToolResponse response = HttpTool.httpGet(http, webConsoleUri, MutableMap.<String,String>of());
         Assert.assertEquals(response.getResponseCode(), 200);
+    }
+
+    @Test(groups="Integration", expectedExceptions = PropagatedRuntimeException.class)
+    public void testStopPlainThrowsException() throws Exception {
+        BrooklynNode brooklynNode = setUpBrooklynNodeWithApp();
+
+        brooklynNode.stop();
+    }
+
+    @Test(groups="Integration")
+    public void testStopAndKillAppsEffector() throws Exception {
+        createNodeAndExecStopEffector(BrooklynNode.STOP_NODE_AND_KILL_APPS);
+    }
+
+    @Test(groups="Integration")
+    public void testStopButLeaveAppsEffector() throws Exception {
+        createNodeAndExecStopEffector(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS);
+    }
+
+    private void createNodeAndExecStopEffector(Effector<?> eff) throws Exception {
+        BrooklynNode brooklynNode = setUpBrooklynNodeWithApp();
+
+        brooklynNode.invoke(eff, Collections.<String, Object>emptyMap()).getUnchecked();
+
+        EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, false);
+    }
+
+    private BrooklynNode setUpBrooklynNodeWithApp() throws InterruptedException,
+            ExecutionException {
+        BrooklynNode brooklynNode = app.createAndManageChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, Boolean.TRUE));
+        app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
+
+        EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, true);
+
+        final String id = brooklynNode.invoke(BrooklynNode.DEPLOY_BLUEPRINT, ConfigBag.newInstance()
+                .configure(DeployBlueprintEffector.BLUEPRINT_TYPE, BasicApplication.class.getName())
+                .getAllConfig()).get();
+
+        String baseUrl = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI).toString();
+        String entityUrl = baseUrl + "v1/applications/" + id + "/entities/" + id;
+        
+        Entity mirror = brooklynNode.addChild(EntitySpec.create(BrooklynEntityMirror.class)
+                .configure(BrooklynEntityMirror.MIRRORED_ENTITY_URL, entityUrl)
+                .configure(BrooklynEntityMirror.MIRRORED_ENTITY_ID, id));
+        Entities.manage(mirror);
+
+        assertEquals(brooklynNode.getChildren().size(), 1);
+        return brooklynNode;
     }
 
     private <T> T parseJson(String json, List<String> elements, Class<T> clazz) {

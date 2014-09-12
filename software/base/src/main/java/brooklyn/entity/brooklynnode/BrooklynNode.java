@@ -238,6 +238,21 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     public static final Effector<Void> SHUTDOWN = ShutdownEffector.SHUTDOWN;
 
+    public interface StopNodeButLeaveAppsEffector {
+        Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(Void.class, "stopNodeButLeaveApps")
+                .description("Stop the node without stopping the running applications")
+                .buildAbstract();
+    }
+
+    public static final Effector<Void> STOP_NODE_BUT_LEAVE_APPS = StopNodeButLeaveAppsEffector.STOP_NODE_BUT_LEAVE_APPS;
+
+    public interface StopNodeAndKillAppsEffector {
+        Effector<Void> STOP_NODE_AND_KILL_APPS = Effectors.effector(Void.class, "stopNodeAndKillApps")
+                .description("Stop all apps running on the node and shutdown the node")
+                .buildAbstract();
+    }
+
+    public static final Effector<Void> STOP_NODE_AND_KILL_APPS = StopNodeAndKillAppsEffector.STOP_NODE_AND_KILL_APPS;
 
     public EntityHttpClient http();
 
