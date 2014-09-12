@@ -1,0 +1,3 @@
+#Don't auto-convert line endings for shell scripts on Windows (breaks the scripts)
+brooklyn text eol=lf
+cloud-explorer text eol=lf
