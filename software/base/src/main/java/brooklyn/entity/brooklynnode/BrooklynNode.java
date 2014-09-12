@@ -41,6 +41,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -220,8 +221,23 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             .parameter(BLUEPRINT_CAMP_PLAN)
             .buildAbstract();
     }
-    
-    public static Effector<String> DEPLOY_BLUEPRINT = DeployBlueprintEffector.DEPLOY_BLUEPRINT;
+
+    public static final Effector<String> DEPLOY_BLUEPRINT = DeployBlueprintEffector.DEPLOY_BLUEPRINT;
+
+    public interface ShutdownEffector {
+        ConfigKey<Boolean> STOP_APPS = ConfigKeys.newBooleanConfigKey("stop_apps", "Whether to stop apps before shutting down", true);
+        ConfigKey<Duration> DELAY = ConfigKeys.newConfigKey(Duration.class, "delay", "How long to wait before exiting the process", Duration.ZERO);
+        ConfigKey<Duration> HTTP_RETURN_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "httpReturnTimeout", "Maximum time to block the request for the shutdown to finish. 0 for infinity, positive to block");
+        Effector<Void> SHUTDOWN = Effectors.effector(Void.class, "shutdown")
+            .description("Shutdown the remote brooklyn instance")
+            .parameter(STOP_APPS)
+            .parameter(DELAY)
+            .parameter(HTTP_RETURN_TIMEOUT)
+            .buildAbstract();
+    }
+
+    public static final Effector<Void> SHUTDOWN = ShutdownEffector.SHUTDOWN;
+
 
     public EntityHttpClient http();
 

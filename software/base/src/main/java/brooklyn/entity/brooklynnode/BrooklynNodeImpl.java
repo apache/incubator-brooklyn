@@ -22,8 +22,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.HttpClient;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -42,18 +40,12 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.net.Urls;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
@@ -83,6 +75,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     public void init() {
         super.init();
         getMutableEntityType().addEffector(DeployBlueprintEffectorBody.DEPLOY_BLUEPRINT);
+        getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
     }
     
     public static class DeployBlueprintEffectorBody extends EffectorBody<String> implements DeployBlueprintEffector {
@@ -150,6 +143,32 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             byte[] content = result.getContent();
             return (String)new Gson().fromJson(new String(content), Map.class).get("entityId");
         }
+    }
+
+    public static class ShutdownEffectorBody extends EffectorBody<Void> implements ShutdownEffector {
+        public static final Effector<Void> SHUTDOWN = Effectors.effector(BrooklynNode.SHUTDOWN).impl(new ShutdownEffectorBody()).build();
+
+        @Override
+        public Void call(ConfigBag parameters) {
+            Map<String, String> formParams = MutableMap.<String, String>of(
+                    "stopAppsFirst", parameters.get(STOP_APPS).toString(),
+                    "delayMillis", getDelayMillis(parameters));
+            Duration httpReturnTimeout = parameters.get(HTTP_RETURN_TIMEOUT);
+            if (httpReturnTimeout != null) {
+                formParams.put("httpReturnTimeout", httpReturnTimeout.toString());
+            }
+            HttpToolResponse resp = ((BrooklynNode)entity()).http()
+                .post("/v1/server/shutdown", MutableMap.<String, String>of(), formParams);
+            if (resp.getResponseCode() != HttpStatus.SC_NO_CONTENT) {
+                throw new IllegalStateException("Remote node shutdown failed.");
+            }
+            return null;
+        }
+
+        private String getDelayMillis(ConfigBag parameters) {
+            return Long.toString(parameters.get(DELAY).toMilliseconds());
+        }
+
     }
 
     public List<String> getClasspath() {
