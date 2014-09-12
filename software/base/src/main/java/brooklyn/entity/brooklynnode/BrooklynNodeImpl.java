@@ -48,6 +48,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
@@ -81,7 +82,14 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);
         getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
     }
-    
+
+    @Override
+    protected void doStop() {
+        Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
+        DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_MINUTE)));
+        super.doStop();
+    }
+
     public static class DeployBlueprintEffectorBody extends EffectorBody<String> implements DeployBlueprintEffector {
         public static final Effector<String> DEPLOY_BLUEPRINT = Effectors.effector(BrooklynNode.DEPLOY_BLUEPRINT).impl(new DeployBlueprintEffectorBody()).build();
         
