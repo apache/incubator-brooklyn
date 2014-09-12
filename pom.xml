@@ -143,6 +143,7 @@
         <commons-compress.version>1.4</commons-compress.version>
         <qpid.version>0.20</qpid.version>
         <mongodb.version>2.11.4</mongodb.version>
+        <riak.version>1.4.0</riak.version>
         <maven-war-plugin.version>2.4</maven-war-plugin.version>
         <snakeyaml.version>1.11</snakeyaml.version>
         <validation-api.version>1.0.0.GA</validation-api.version>
