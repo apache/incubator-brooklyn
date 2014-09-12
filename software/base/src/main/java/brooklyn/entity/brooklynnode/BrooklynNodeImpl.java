@@ -140,39 +140,14 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             return (String)planRaw;
         }
         
-        protected String submitPlan(String plan) {
-            URI baseUri = Preconditions.checkNotNull(entity().getAttribute(WEB_CONSOLE_URI), "Cannot be invoked until the web console URL is available");
-            HttpClientBuilder builder = HttpTool.httpClientBuilder()
-                .trustAll()
-                .laxRedirect(true)
-                .uri(baseUri);
-            if (entity().getConfig(MANAGEMENT_USER)!=null)
-                builder.credentials(new UsernamePasswordCredentials(entity().getConfig(MANAGEMENT_USER), entity().getConfig(MANAGEMENT_PASSWORD)));
-            HttpClient client = builder.build();
-            
-            return submitPlan(client, baseUri, plan);
-        }
-
         @VisibleForTesting
         // Integration test for this in BrooklynNodeIntegrationTest in this project doesn't use this method,
         // but a Unit test for this does, in DeployBlueprintTest -- but in the REST server project (since it runs against local) 
-        public static String submitPlan(HttpClient client, URI baseUri, String plan) {
-            URI uri = URI.create(Urls.mergePaths(baseUri.toString(), "/v1/applications"));
-            
-            HttpToolResponse result = null;
-            byte[] content;
-            try {
-                result = HttpTool.httpPost(client, uri, MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml"), plan.getBytes());
-                content = result.getContent();
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                throw new IllegalStateException("Invalid response invoking "+uri+": "+e, e);
-            }
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForStream("http_response", Streams.byteArray(content)));
-            if (!HttpTool.isStatusCodeHealthy(result.getResponseCode())) {
-                log.warn("Invalid response invoking "+uri+": response code "+result.getResponseCode()+"\n"+result+": "+new String(content));
-                throw new IllegalStateException("Invalid response invoking "+uri+": response code "+result.getResponseCode());
-            }
+        public String submitPlan(String plan) {
+            MutableMap<String, String> headers = MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml");
+            HttpToolResponse result = ((BrooklynNode)entity()).http()
+                    .post("/v1/applications", headers, plan.getBytes());
+            byte[] content = result.getContent();
             return (String)new Gson().fromJson(new String(content), Map.class).get("entityId");
         }
     }
@@ -252,4 +227,10 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         
         if (httpFeed != null) httpFeed.stop();
     }
+
+    @Override
+    public EntityHttpClient http() {
+        return new EntityHttpClientImpl(this);
+    }
+
 }

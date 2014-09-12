@@ -222,5 +222,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     }
     
     public static Effector<String> DEPLOY_BLUEPRINT = DeployBlueprintEffector.DEPLOY_BLUEPRINT;
-    
+
+    public EntityHttpClient http();
+
 }
