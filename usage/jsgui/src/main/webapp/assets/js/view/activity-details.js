@@ -20,12 +20,12 @@
  * Displays details on an activity/task
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils", "formatJson", "moment",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils", "moment",
     "model/task-summary",
     "text!tpl/apps/activity-details.html", "text!tpl/apps/activity-table.html", 
 
     "bootstrap", "jquery-datatables", "datatables-extensions"
-], function (_, $, Backbone, Util, ViewUtils, FormatJSON, moment,
+], function (_, $, Backbone, Util, ViewUtils, moment,
     TaskSummary,
     ActivityDetailsHtml, ActivityTableHtml) {
 
@@ -158,8 +158,9 @@ define([
                  })
             this.updateFieldWith('tags', function(tags) {
                 var tagBody = "";
-                for (var tag in tags)
-                    tagBody += "<div class='activity-tag-giftlabel'>"+_.escape(tags[tag])+"</div>";
+                for (var tag in tags) {
+                    tagBody += "<div class='activity-tag-giftlabel'>"+Util.toDisplayString(tags[tag])+"</div>";
+                }
                 return tagBody;
             })
             
@@ -171,7 +172,7 @@ define([
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).from(startTimeUtc, true)+" later</i>" })
 
             ViewUtils.updateTextareaWithData(this.$(".task-json .for-textarea"), 
-                FormatJSON(this.task.toJSON()), false, false, 150, 400)
+                Util.toTextAreaString(this.task), false, false, 150, 400)
 
             ViewUtils.updateTextareaWithData(this.$(".task-detail .for-textarea"), 
                 this.task.get('detailedStatus'), false, false, 30, 250)

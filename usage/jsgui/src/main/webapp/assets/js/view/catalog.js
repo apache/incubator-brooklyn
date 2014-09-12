@@ -17,7 +17,7 @@
  * under the License.
 */
 define([
-    "underscore", "jquery", "backbone", "formatJson", "brooklyn",
+    "underscore", "jquery", "backbone", "brooklyn",
     "model/location", "model/entity",
     "text!tpl/catalog/page.html",
     "text!tpl/catalog/details-entity.html",
@@ -29,7 +29,7 @@ define([
     "text!tpl/catalog/nav-entry.html",
 
     "bootstrap", "jquery-form"
-], function(_, $, Backbone, FormatJSON, Brooklyn,
+], function(_, $, Backbone, Brooklyn,
         Location, Entity,
         CatalogPageHtml, DetailsEntityHtml, DetailsGenericHtml, LocationDetailsHtml,
         AddCatalogEntryHtml, AddEntityHtml, AddLocationHtml, EntryHtml) {

@@ -1,5 +1,7 @@
 /**
  * Code from: http://joncom.be/
+ * 
+ * TODO remove? JSON.stringify seems to do this and more, including correctly handling double quotes and indentation
  */
 define([
     "jquery"

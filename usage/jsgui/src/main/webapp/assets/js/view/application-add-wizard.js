@@ -21,7 +21,7 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "formatJson",
+    "underscore", "jquery", "backbone", "brooklyn-utils",
     "model/entity", "model/application", "model/location",
     "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
@@ -35,7 +35,7 @@ define([
     "text!tpl/app-add-wizard/preview.html",
     "bootstrap"
     
-], function (_, $, Backbone, FormatJSON, Entity, Application, Location,
+], function (_, $, Backbone, Util, Entity, Application, Location,
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
@@ -701,7 +701,7 @@ define([
             if (!this.model.spec.get("config") || _.keys(this.model.spec.get("config")).length==0) {
                 delete this.model.spec.attributes["config"]
             }
-            this.$('#app-summary').val(FormatJSON(this.model.spec.toJSON()))
+            this.$('#app-summary').val(Util.toTextAreaString(this.model.spec))
         },
         render:function () {
             this.delegateEvents()
