@@ -775,4 +775,10 @@ public class Reflections {
             return false;
         }
     }
+
+    public static boolean hasNoNonObjectFields(Class<? extends Object> clazz) {
+        if (Object.class.equals(clazz)) return true;
+        if (clazz.getDeclaredFields().length>0) return false;
+        return hasNoNonObjectFields(clazz.getSuperclass());
+    }
 }

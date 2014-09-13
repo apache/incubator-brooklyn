@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +35,8 @@ import brooklyn.management.Task;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.text.Strings;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -161,6 +162,16 @@ public class BrooklynTaskTags extends TaskTags {
             this.streamType = streamType;
             this.streamContents = Strings.toStringSupplier(stream);
             this.streamSize = Streams.sizeSupplier(stream);
+        }
+        // fix for https://github.com/FasterXML/jackson-databind/issues/543 (which also applies to codehaus jackson)
+        @JsonProperty
+        public Integer getStreamSize() {
+            return streamSize.get();
+        }
+        // there is a stream api so don't return everything unless explicitly requested!
+        @JsonProperty("streamContents")
+        public String getStreamContentsAbbreviated() {
+            return Strings.maxlenWithEllipsis(streamContents.get(), 80);
         }
         @Override
         public String toString() {

@@ -20,6 +20,8 @@ package brooklyn.rest.util.json;
 
 import java.io.IOException;
 import java.io.NotSerializableException;
+import java.util.Collections;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -29,42 +31,43 @@ import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonStreamContext;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.SerializerProvider;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.ser.impl.UnknownSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.javalang.Reflections;
 
 /**
  * for non-json-serializable classes (quite a lot of them!) simply provide a sensible error message and a toString.
  * TODO maybe we want to attempt to serialize fields instead?  (but being careful not to be self-referential!) 
  */
 public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
-
-    protected final static ThreadLocal<Boolean> STRICT_SERIALIZATION = new ThreadLocal<Boolean>(); 
     
     private static final Logger log = LoggerFactory.getLogger(ErrorAndToStringUnknownTypeSerializer.class);
+    private static Set<String> WARNED_CLASSES = Collections.synchronizedSet(MutableSet.<String>of());
     
     @Override
     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-        if (Boolean.TRUE.equals(STRICT_SERIALIZATION.get()))
+        if (BidiSerialization.isStrictSerialization())
             throw new JsonMappingException("Cannot containing "+value.getClass().getName()+" and strict serialization requested");
 
         serializeFromError(jgen.getOutputContext(), null, value, jgen, provider);
-    }
-
-    public static void setStrictSerialization(Boolean value) {
-        STRICT_SERIALIZATION.set(value);
-    }
-    public static void clearStrictSerialization() {
-        STRICT_SERIALIZATION.remove();
     }
 
     public void serializeFromError(JsonStreamContext ctxt, @Nullable Exception error, Object value, JsonGenerator jgen, SerializerProvider configurableSerializerProvider) throws JsonGenerationException, IOException {
         if (log.isDebugEnabled())
             log.debug("Recovering from json serialization error, serializing "+value+": "+error);
         
-        if (Boolean.TRUE.equals(STRICT_SERIALIZATION.get()))
-            throw new JsonMappingException("Cannot containing "+value.getClass().getName()+" and strict serialization requested");
+        if (BidiSerialization.isStrictSerialization())
+            throw new JsonMappingException("Cannot serialize "
+                + (ctxt!=null && !ctxt.inRoot() ? "object containing " : "")
+                + value.getClass().getName()+" when strict serialization requested");
         
+        if (WARNED_CLASSES.add(value.getClass().getCanonicalName())) {
+            log.warn("Standard serialization not possible for "+value.getClass()+" ("+value+")", error);
+        }
         JsonStreamContext newCtxt = jgen.getOutputContext();
 
         // very odd, but flush seems necessary when working with large objects; presumably a buffer which is allowed to clear itself?
@@ -77,21 +80,27 @@ public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
             jgen.writeStartObject();
         }
         
-        jgen.writeFieldName("error");
-        jgen.writeBoolean(true);
+        if (allowEmpty(value.getClass())) {
+            // write nothing
+        } else {
 
-        jgen.writeFieldName("errorType");
-        jgen.writeString(NotSerializableException.class.getCanonicalName());
+            jgen.writeFieldName("error");
+            jgen.writeBoolean(true);
 
-        jgen.writeFieldName("type");
-        jgen.writeString(value.getClass().getCanonicalName());
+            jgen.writeFieldName("errorType");
+            jgen.writeString(NotSerializableException.class.getCanonicalName());
 
-        jgen.writeFieldName("toString");
-        jgen.writeString(value.toString());
-        
-        if (error!=null) {
-            jgen.writeFieldName("causedByError");
-            jgen.writeString(error.toString());
+            jgen.writeFieldName("type");
+            jgen.writeString(value.getClass().getCanonicalName());
+
+            jgen.writeFieldName("toString");
+            jgen.writeString(value.toString());
+
+            if (error!=null) {
+                jgen.writeFieldName("causedByError");
+                jgen.writeString(error.toString());
+            }
+            
         }
         
         if (createObject) {
@@ -104,6 +113,14 @@ public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
             break;
         }
 
+    }
+
+    protected boolean allowEmpty(Class<? extends Object> clazz) {
+        if (clazz.getAnnotation(JsonSerialize.class)!=null && Reflections.hasNoNonObjectFields(clazz)) {
+            return true;
+        } else {
+            return false;
+        }
     }
     
 }

@@ -600,8 +600,19 @@ public class Strings {
 
     /** returns up to maxlen characters from the start of s */
     public static String maxlen(String s, int maxlen) {
+        return maxlenWithEllipsis(s, maxlen, "");
+    }
+
+    /** as {@link #maxlenWithEllipsis(String, int, String) with "..." as the ellipsis */
+    public static String maxlenWithEllipsis(String s, int maxlen) {
+        return maxlenWithEllipsis(s, maxlen, "...");
+    }
+    /** as {@link #maxlenWithEllipsis(String, int) but replacing the last few chars with the given ellipsis */
+    public static String maxlenWithEllipsis(String s, int maxlen, String ellipsis) {
         if (s==null) return null;
-        return s.substring(0, Math.min(s.length(), maxlen));
+        if (ellipsis==null) ellipsis="";
+        if (s.length()<=maxlen) return s;
+        return s.substring(0, Math.max(maxlen-ellipsis.length(), 0))+ellipsis;
     }
 
     /** returns toString of the object if it is not null, otherwise null */
@@ -796,6 +807,12 @@ public class Strings {
     
     public static char getDefaultDecimalSeparator() {
         return getDecimalSeparator(Locale.getDefault());
+    }
+
+    /** replaces each sequence of whitespace in the first string with the replacement in the second string */ 
+    public static String collapseWhitespace(String x, String whitespaceReplacement) {
+        if (x==null) return null;
+        return replaceAllRegex(x, "\\s+", whitespaceReplacement);
     }
 
 }

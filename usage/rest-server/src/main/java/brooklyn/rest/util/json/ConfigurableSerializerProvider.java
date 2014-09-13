@@ -36,6 +36,11 @@ final class ConfigurableSerializerProvider extends StdSerializerProvider {
     
     public ConfigurableSerializerProvider() {}
     
+    public ConfigurableSerializerProvider(SerializationConfig config) {
+        // NB: not usually necessary to pass config, as object mapper gets its own config set explicitly
+        this(config, new ConfigurableSerializerProvider(), null);
+    }
+    
     public ConfigurableSerializerProvider(SerializationConfig config, ConfigurableSerializerProvider src, SerializerFactory jsf) {
         super(config, src, jsf);
         unknownTypeSerializer = src.unknownTypeSerializer;

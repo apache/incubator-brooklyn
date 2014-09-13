@@ -54,11 +54,29 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
     }
     
     @Test
+    public void testRootSerializesSensibly() throws Exception {
+        String data = client().resource("/v1/apidoc/").get(String.class);
+        log.info("apidoc gives: "+data);
+        // make sure no scala gets in
+        Assert.assertFalse(data.contains("$"));
+        Assert.assertFalse(data.contains("scala"));
+    }
+    
+    @Test
     public void testCountRestResources() throws Exception {
         ApidocRoot response = client().resource("/v1/apidoc/").get(ApidocRoot.class);
         assertEquals(response.getApis().size(), 1 + Iterables.size(BrooklynRestApi.getBrooklynRestResources()));
     }
 
+    @Test
+    public void testEndpointSerializesSensibly() throws Exception {
+        String data = client().resource("/v1/apidoc/brooklyn.rest.resources.ApidocResource").get(String.class);
+        log.info("apidoc endpoint resource gives: "+data);
+        // make sure no scala gets in
+        Assert.assertFalse(data.contains("$"));
+        Assert.assertFalse(data.contains("scala"));
+    }
+    
     @Test
     public void testApiDocDetails() throws Exception {
         ApidocRoot response = client().resource("/v1/apidoc/brooklyn.rest.resources.ApidocResource").get(ApidocRoot.class);
