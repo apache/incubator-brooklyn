@@ -15,6 +15,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.TemplateProcessor;
 
+import com.google.api.client.repackaged.com.google.common.annotations.VisibleForTesting;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -149,5 +150,10 @@ public class CompoundTransformer {
                 .policies(policies)
                 .enrichers(enrichers)
                 .build();
+    }
+    
+    @VisibleForTesting
+    Multimap<BrooklynObjectType, RawDataTransformer> getRawDataTransformers() {
+        return ArrayListMultimap.create(rawDataTransformers);
     }
 }

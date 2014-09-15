@@ -19,7 +19,6 @@
 package brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 import io.airlift.command.Cli;
@@ -48,6 +47,8 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.PersistMode;
+import brooklyn.entity.rebind.transformer.CompoundTransformer;
+import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -697,6 +698,10 @@ public class Main extends AbstractMain {
                 description = "The location spec for an object store to copy data to")
             public String destinationLocation;
         
+        @Option(name = { "--transformations" }, title = "transformations",
+                description = "local transformations file, to be applied to the copy of the data before uploading it")
+        public String transformations;
+        
         @Override
         public Void call() throws Exception {
             checkNotNull(destinationDir, "destinationDir"); // presumably because required=true this will never be null!
@@ -727,6 +732,8 @@ public class Main extends AbstractMain {
             
             try {
                 BrooklynMementoRawData memento = launcher.retrieveState();
+                CompoundTransformer transformer = loadTransformer(transformations);
+                BrooklynMementoRawData newMemento = transformer.transform(memento);
                 launcher.persistState(memento, destinationDir, destinationLocation);
                 
             } catch (FatalRuntimeException e) {
@@ -749,6 +756,15 @@ public class Main extends AbstractMain {
             return null;
         }
 
+        protected CompoundTransformer loadTransformer(String transformations) {
+            if (transformations == null) {
+                return CompoundTransformer.NOOP; 
+            } else {
+                String contents = ResourceUtils.create(this).getResourceAsString(transformations);
+                return CompoundTransformerLoader.load(contents);
+            }
+        }
+        
         @Override
         public ToStringHelper string() {
             return super.string()
