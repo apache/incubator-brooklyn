@@ -48,6 +48,7 @@ public class DownloadProducerFromLocalRepo implements Function<DownloadRequireme
             .defaultValue(true)
             .build();
 
+    // TODO explain why this is this in lower_case!  it's surprising
     public static final String LOCAL_REPO_URL_PATTERN = "file://%s/"+
             "${simpletype}/${version}/"+
             "<#if filename??>"+

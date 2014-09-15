@@ -530,13 +530,22 @@ public class BrooklynLauncher {
         if (managementContext == null) {
             if (brooklynProperties == null) {
                 BrooklynProperties.Factory.Builder builder = BrooklynProperties.Factory.builderDefault();
-                if (globalBrooklynPropertiesFile != null && fileExists(globalBrooklynPropertiesFile)) {
-                    // brooklyn.properties stores passwords (web-console and cloud credentials), 
-                    // so ensure it has sensible permissions
-                    checkFileReadable(globalBrooklynPropertiesFile);
-                    checkFilePermissionsX00(globalBrooklynPropertiesFile);
+                if (globalBrooklynPropertiesFile != null) {
+                    if (fileExists(globalBrooklynPropertiesFile)) {
+                        LOG.debug("Using global properties file "+globalBrooklynPropertiesFile);
+                        // brooklyn.properties stores passwords (web-console and cloud credentials), 
+                        // so ensure it has sensible permissions
+                        checkFileReadable(globalBrooklynPropertiesFile);
+                        checkFilePermissionsX00(globalBrooklynPropertiesFile);
+                    } else {
+                        LOG.debug("Global properties file "+globalBrooklynPropertiesFile+" does not exist, will ignore");
+                    }
                     builder.globalPropertiesFile(globalBrooklynPropertiesFile);
+                } else {
+                    LOG.debug("Global properties file disabled");
+                    builder.globalPropertiesFile(null);
                 }
+                
                 if (localBrooklynPropertiesFile != null) {
                     checkFileReadable(localBrooklynPropertiesFile);
                     checkFilePermissionsX00(localBrooklynPropertiesFile);
