@@ -52,7 +52,11 @@ public class BrooklynUserWithRandomPasswordSecurityProvider extends AbstractSecu
 
     private boolean isRemoteAddressLocalhost(HttpSession session) {
         Object remoteAddress = session.getAttribute(BrooklynPropertiesSecurityFilter.REMOTE_ADDRESS_SESSION_ATTRIBUTE);
-        return remoteAddress != null && "127.0.0.1".equals(remoteAddress);
+        return remoteAddress != null && (
+            "127.0.0.1".equals(remoteAddress) || 
+            "0:0:0:0:0:0:0:1".equals(remoteAddress) ||
+            "0:0:0:0:0:0:0:1%0".equals(remoteAddress)
+            );
     }
 
 }
