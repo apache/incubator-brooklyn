@@ -45,7 +45,7 @@ import com.google.common.reflect.TypeToken;
 
 /** Building on {@link AbstractAggregator} for a single source sensor (on multiple children and/or members) */
 @SuppressWarnings("serial")
-@Catalog(name="Aggregator", description="Aggregates attributes from multiple entities into a single attribute value; see Enrichers.builder().aggregating(...)")
+//@Catalog(name="Aggregator", description="Aggregates attributes from multiple entities into a single attribute value; see Enrichers.builder().aggregating(...)")
 public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEventListener<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Aggregator.class);

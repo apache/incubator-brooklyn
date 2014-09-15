@@ -50,7 +50,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
-@Catalog(name="Combiner", description="Combines attributes; see Enrichers.builder().combining(...)")
+//@Catalog(name="Combiner", description="Combines attributes; see Enrichers.builder().combining(...)")
 public class Combiner<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Combiner.class);
