@@ -23,6 +23,7 @@ import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.base.Throwables.getCausalChain;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -38,7 +39,7 @@ import com.google.common.collect.Iterables;
 public class Exceptions {
 
     private static final List<Class<? extends Throwable>> BORING_THROWABLE_SUPERTYPES = ImmutableList.<Class<? extends Throwable>>of(
-        ExecutionException.class, InvocationTargetException.class, PropagatedRuntimeException.class);
+        ExecutionException.class, InvocationTargetException.class, PropagatedRuntimeException.class, UndeclaredThrowableException.class);
 
     private static boolean isBoring(Throwable t) {
         for (Class<? extends Throwable> type: BORING_THROWABLE_SUPERTYPES)
