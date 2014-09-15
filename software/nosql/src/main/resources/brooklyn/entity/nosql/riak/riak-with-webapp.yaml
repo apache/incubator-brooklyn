@@ -29,13 +29,12 @@ services:
   initialSize: 2
   id: mycluster
   brooklyn.config:
-    install.version: 1.4.10
+    install.version: 2.0.0
     provisioning.properties:
       osFamily: centos
 
 - serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: My Web
-  location: localhost
   brooklyn.config:
     initialSize: 2
     wars.root: "classpath://brooklyn-example-hello-world-sql-webapp.war"

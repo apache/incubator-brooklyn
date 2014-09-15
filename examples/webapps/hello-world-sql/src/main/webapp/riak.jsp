@@ -86,7 +86,8 @@
 
         IRiakClient httpClient = RiakFactory.newClient(httpClusterConfig);
 
-        Bucket bucket = httpClient.fetchBucket("visitors").execute();
+        // If the bucket already exists, createBucket simply fetches the bucket
+        Bucket bucket = httpClient.createBucket("visitors").execute();
 
         if (request.getParameter("name") != null) {
             Message message = new Message(request.getParameter("name"), request.getParameter("message"));
