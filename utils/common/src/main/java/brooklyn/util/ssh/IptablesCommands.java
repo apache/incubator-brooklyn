@@ -19,6 +19,7 @@
 package brooklyn.util.ssh;
 
 import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.chain;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static brooklyn.util.ssh.BashCommands.sudo;
 
@@ -95,14 +96,9 @@ public class IptablesCommands {
      *
      */
     public static String saveIptablesRules() {
-        return alternatives(sudo("service iptables save"), installPackage("iptables-persistent"));
+        return alternatives(sudo("service iptables save"),
+                            chain(installPackage("iptables-persistent"), sudo("/etc/init.d/iptables-persistent save")));
     }
-        /*
-        return BashCommands.chain(
-                BashCommands.ifExecutableElse1("apt-get", installPackage("iptables-persistent")),
-                // rhel derivatives already have iptables-save installed
-                BashCommands.ifExecutableElse1("iptables-save", String.format("iptables-save > %s", filename)));
-        */
 
     /**
      * Returns the command that cleans up iptables rules.
