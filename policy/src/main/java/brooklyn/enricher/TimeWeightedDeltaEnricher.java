@@ -43,9 +43,9 @@ import com.google.common.base.Functions;
  * <p>
  * NB for time (e.g. "total milliseconds consumed") use {@link TimeFractionDeltaEnricher}
  */
-@Catalog(name="Time-weighted Delta", description="Converts an absolute sensor into a delta sensor "
-        + "(i.e. the diff between the current and previous value), presented as a units/timeUnit "
-        + "based on the event timing.")
+//@Catalog(name="Time-weighted Delta", description="Converts an absolute sensor into a delta sensor "
+//        + "(i.e. the diff between the current and previous value), presented as a units/timeUnit "
+//        + "based on the event timing.")
 public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {
     private static final Logger LOG = LoggerFactory.getLogger(TimeWeightedDeltaEnricher.class);
     

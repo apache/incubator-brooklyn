@@ -65,7 +65,7 @@ import com.google.common.reflect.TypeToken;
  * optionally returned from sensors.  It does not currently support POST 
  * and has limited support for https.
  */
-@Catalog(name="HTTP Latency Detector", description="An Enricher which computes latency in accessing a URL, normally by periodically polling that URL")
+//@Catalog(name="HTTP Latency Detector", description="An Enricher which computes latency in accessing a URL, normally by periodically polling that URL")
 public class HttpLatencyDetector extends AbstractEnricher {
 
     private static final Logger log = LoggerFactory.getLogger(HttpLatencyDetector.class);

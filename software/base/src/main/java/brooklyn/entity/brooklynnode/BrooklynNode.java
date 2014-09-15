@@ -98,13 +98,13 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
         null);
 
     static enum ExistingFileBehaviour {
-        USE_EXISTING, OVERWRITE, FAIL
+        DO_NOT_USE, USE_EXISTING, OVERWRITE, FAIL
     }
     
     @SetFromFlag("onExistingProperties")
     ConfigKey<ExistingFileBehaviour> ON_EXISTING_PROPERTIES_FILE = ConfigKeys.newConfigKey(ExistingFileBehaviour.class,
         "brooklynnode.properties.file.ifExists",
-        "What to do in the case where brooklyn.properties already exists", 
+        "What to do in the case where a global brooklyn.properties already exists", 
         ExistingFileBehaviour.FAIL);
 
     @SetFromFlag("launchCommand")
@@ -133,7 +133,9 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @VisibleForTesting
     @SetFromFlag("brooklynGlobalPropertiesRemotePath")
     public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_REMOTE_PATH = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.global.remotepath", "Remote path for the global brooklyn.properties file to be uploaded", "${HOME}/.brooklyn/brooklyn.properties");
+            "brooklynnode.brooklynproperties.global.remotepath", 
+            "Remote path for the global brooklyn.properties file to be uploaded", "${HOME}/.brooklyn/brooklyn.properties; "+
+                "only useful for testing as this path will not be used on the remote system");
     
     @SetFromFlag("brooklynGlobalPropertiesUri")
     public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_URI = ConfigKeys.newStringConfigKey(
