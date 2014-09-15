@@ -19,8 +19,6 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
@@ -33,6 +31,7 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +77,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
@@ -530,13 +530,22 @@ public class BrooklynLauncher {
         if (managementContext == null) {
             if (brooklynProperties == null) {
                 BrooklynProperties.Factory.Builder builder = BrooklynProperties.Factory.builderDefault();
-                if (globalBrooklynPropertiesFile != null && fileExists(globalBrooklynPropertiesFile)) {
-                    // brooklyn.properties stores passwords (web-console and cloud credentials), 
-                    // so ensure it has sensible permissions
-                    checkFileReadable(globalBrooklynPropertiesFile);
-                    checkFilePermissionsX00(globalBrooklynPropertiesFile);
+                if (globalBrooklynPropertiesFile != null) {
+                    if (fileExists(globalBrooklynPropertiesFile)) {
+                        LOG.debug("Using global properties file "+globalBrooklynPropertiesFile);
+                        // brooklyn.properties stores passwords (web-console and cloud credentials), 
+                        // so ensure it has sensible permissions
+                        checkFileReadable(globalBrooklynPropertiesFile);
+                        checkFilePermissionsX00(globalBrooklynPropertiesFile);
+                    } else {
+                        LOG.debug("Global properties file "+globalBrooklynPropertiesFile+" does not exist, will ignore");
+                    }
                     builder.globalPropertiesFile(globalBrooklynPropertiesFile);
+                } else {
+                    LOG.debug("Global properties file disabled");
+                    builder.globalPropertiesFile(null);
                 }
+                
                 if (localBrooklynPropertiesFile != null) {
                     checkFileReadable(localBrooklynPropertiesFile);
                     checkFilePermissionsX00(localBrooklynPropertiesFile);
@@ -598,17 +607,18 @@ public class BrooklynLauncher {
 
     protected void startWebApps() {
         // No security options in properties and no command line options overriding.
-        if (Boolean.TRUE.equals(skipSecurityFilter) && bindAddress == null) {
-            LOG.info("Starting Brooklyn web-console on loopback because security is explicitly disabled and no bind address was given");
+        if (Boolean.TRUE.equals(skipSecurityFilter) && isTrivialBindAddress(bindAddress)) {
+            LOG.info("Starting Brooklyn web-console on loopback because security is explicitly disabled and not binding to public address");
             bindAddress = Networking.LOOPBACK;
-        } else if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties) && bindAddress == null) {
-            LOG.info("Starting Brooklyn web-console with passwordless access on localhost and protected access from other interfaces");
+        } else if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties) && isTrivialBindAddress(bindAddress)) {
+            LOG.info("Starting Brooklyn web-console with passwordless access on localhost and protected access from any other interfaces");
             bindAddress = Networking.ANY_NIC;
             brooklynProperties.put(
                     BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
                     BrooklynUserWithRandomPasswordSecurityProvider.class.getName());
         }
 
+        LOG.debug("Starting Brooklyn web-console with bindAddress "+bindAddress+" and properties "+brooklynProperties);
         try {
             webServer = new BrooklynWebServer(webconsoleFlags, managementContext);
             webServer.setBindAddress(bindAddress);
@@ -627,6 +637,12 @@ public class BrooklynLauncher {
             LOG.warn("Failed to start Brooklyn web-console (rethrowing): " + Exceptions.collapseText(e));
             throw new FatalRuntimeException("Failed to start Brooklyn web-console: " + Exceptions.collapseText(e), e);
         }
+    }
+
+    protected boolean isTrivialBindAddress(InetAddress bindAddress) {
+        if (bindAddress==null) return true;
+        if (Arrays.equals(new byte[] { 127, 0, 0, 1 }, bindAddress.getAddress())) return true;
+        return false;
     }
 
     protected void initPersistence() {

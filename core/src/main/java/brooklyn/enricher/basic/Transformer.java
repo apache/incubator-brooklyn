@@ -37,7 +37,7 @@ import brooklyn.event.basic.BasicSensorEvent;
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
 
-@Catalog(name="Transformer", description="Transformers attributes of an entity; see Enrichers.builder().transforming(...)")
+//@Catalog(name="Transformer", description="Transformers attributes of an entity; see Enrichers.builder().transforming(...)")
 @SuppressWarnings("serial")
 public class Transformer<T,U> extends AbstractEnricher implements SensorEventListener<T> {
 

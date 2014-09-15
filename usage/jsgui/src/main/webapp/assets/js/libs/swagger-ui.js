@@ -197,9 +197,10 @@ function program1(depth0,data) {
 function program3(depth0,data) {
   
   var buffer = "", stack1, stack2;
-  buffer += "\n                    <h4>Response Class</h4>\n                    ";
   foundHelper = helpers.responseClassSignature;
   stack1 = foundHelper || depth0.responseClassSignature;
+ if (stack1 !== "ok") {
+  buffer += "\n                    <h4>Response Class</h4>\n                    ";
   stack2 = helpers['if'];
   tmp1 = self.program(4, program4, data);
   tmp1.hash = {};
@@ -208,6 +209,7 @@ function program3(depth0,data) {
   stack1 = stack2.call(depth0, stack1, tmp1);
   if(stack1 || stack1 === 0) { buffer += stack1; }
   buffer += "\n                ";
+ }
   return buffer;}
 function program4(depth0,data) {
   

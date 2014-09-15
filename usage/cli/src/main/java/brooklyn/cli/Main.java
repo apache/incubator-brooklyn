@@ -173,6 +173,10 @@ public class Main extends AbstractMain {
                 description = "local brooklyn.properties file, specific to this launch (appending to and overriding global properties)")
         public String localBrooklynProperties;
 
+        @Option(name = { "--noGlobalBrooklynProperties" }, title = "do not use any global brooklyn.properties file found",
+            description = "do not use the default global brooklyn.properties file found")
+        public boolean noGlobalBrooklynProperties = false;
+
         @Option(name = { "-a", "--app" }, title = "application class or file",
                 description = "The Application to start. " +
                         "For example, my.AppName, file://my/app.yaml, or classpath://my/AppName.groovy -- "
@@ -491,16 +495,24 @@ public class Main extends AbstractMain {
                     .ignoreWebErrors(ignoreWebErrors)
                     .ignoreAppErrors(ignoreAppErrors)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : JavaStringEscapes.unwrapJsonishListIfPossible(locations));
+            if (noGlobalBrooklynProperties) {
+                log.debug("Configuring to disable global brooklyn.properties");
+                launcher.globalBrooklynPropertiesFile(null);
+            }
             if (noConsoleSecurity) {
+                log.info("Configuring to disable console security");
                 launcher.installSecurityFilter(false);
             }
             if (Strings.isNonEmpty(bindAddress)) {
+                log.debug("Configuring bind address as "+bindAddress);
                 launcher.bindAddress( Networking.getInetAddressWithFixedName(bindAddress) );
             }
             if (Strings.isNonEmpty(publicAddress)) {
+                log.debug("Configuring public address as "+publicAddress);
                 launcher.publicAddress( URI.create(publicAddress) );
             }
             if (explicitManagementContext!=null) {
+                log.debug("Configuring explicit management context "+explicitManagementContext);
                 launcher.managementContext(explicitManagementContext);
             }
             return launcher;

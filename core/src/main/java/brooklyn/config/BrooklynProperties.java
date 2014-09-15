@@ -140,10 +140,11 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
             }
             
             /**
-             * The URL of a shared brooklyn.properties file. Defaults to ~/.brooklyn/brooklyn.properties
+             * The URL of a shared brooklyn.properties file. Defaults to ~/.brooklyn/brooklyn.properties.
+             * Can be null to disable.
              */
             public Builder globalPropertiesFile(String val) {
-                globalPropertiesFile = checkNotNull(val, "file");
+                globalPropertiesFile = val;
                 return this;
             }
             

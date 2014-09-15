@@ -159,20 +159,26 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
         // Override the ~/.brooklyn/brooklyn.properties if required
         if (brooklynGlobalPropertiesContents != null || brooklynGlobalPropertiesUri != null) {
+            ExistingFileBehaviour onExisting = entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE);
             Integer checkExists = DynamicTasks.queue(SshEffectorTasks.ssh("ls \""+brooklynGlobalPropertiesRemotePath+"\"").allowingNonZeroExitCode()).get();
             boolean doUpload = true;
             if (checkExists==0) {
-                ExistingFileBehaviour response = entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE);
-                switch (response) {
+                switch (onExisting) {
                 case USE_EXISTING: doUpload = false; break;
                 case OVERWRITE: break;
+                case DO_NOT_USE: 
+                    throw new IllegalStateException("Properties file "+brooklynGlobalPropertiesContents+" already exists and "+
+                        "even though it is not being used, content for it was supplied");
                 case FAIL: 
-                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
+                    throw new IllegalStateException("Properties file "+brooklynGlobalPropertiesContents+" already exists and "+
                         BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response is to fail");
                 default:
-                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
-                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response "+response+" is unknown");
+                    throw new IllegalStateException("Properties file "+brooklynGlobalPropertiesContents+" already exists and "+
+                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response "+onExisting+" is unknown");
                 }
+            }
+            if (onExisting==ExistingFileBehaviour.DO_NOT_USE) {
+                log.warn("Global properties supplied when told not to use them; no global properties exists, so it will be installed, but it will not be used.");
             }
             if (doUpload)
                 uploadFileContents(brooklynGlobalPropertiesContents, brooklynGlobalPropertiesUri, brooklynGlobalPropertiesRemotePath);
@@ -240,6 +246,9 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         }
         if (locations != null) {
             cmd += " --locations "+locations;
+        }
+        if (entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE)==ExistingFileBehaviour.DO_NOT_USE) {
+            cmd += " --noGlobalBrooklynProperties";
         }
         if (hasLocalBrooklynProperties) {
             cmd += " --localBrooklynProperties "+localBrooklynPropertiesPath;

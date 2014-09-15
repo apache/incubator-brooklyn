@@ -369,6 +369,25 @@ public class Networking {
         return true;
     }
 
+    public static boolean isLocalhost(String remoteIp) {
+        if ("127.0.0.1".equals(remoteIp)) return true;
+        
+        
+        // IPv6 localhost "ip" strings may vary;
+        // comes back as 0:0:0:0:0:0:0:1%1 for me.
+        // following deals with the cases which seem likely.
+        // (svet suggests using InetAddress parsing but I -- Alex -- am not sure if that's going to have it's own bugs)
+        
+        if (remoteIp.contains("%")) {
+            // trim any description %dex
+            remoteIp = remoteIp.substring(0, remoteIp.indexOf("%"));
+        }
+        if ("0:0:0:0:0:0:0:1".equals(remoteIp)) return true;
+        if ("::1".equals(remoteIp)) return true;
+        
+        return false;
+    }
+    
     public static boolean isReachable(HostAndPort endpoint) {
         try {
             Socket s = new Socket(endpoint.getHostText(), endpoint.getPort());
