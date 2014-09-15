@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,13 +64,19 @@ public class HttpToolResponse implements HttpPollValue {
         
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            response.getEntity().getContentLength();
-            durationMillisOfFirstResponse = System.currentTimeMillis() - startTime;
-            
-            ByteStreams.copy(response.getEntity().getContent(), out);
-            content = out.toByteArray();
-            
-            response.getEntity().getContentLength();
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                entity.getContentLength();
+                durationMillisOfFirstResponse = System.currentTimeMillis() - startTime;
+
+                ByteStreams.copy(entity.getContent(), out);
+                content = out.toByteArray();
+
+                entity.getContentLength();
+            } else {
+                durationMillisOfFirstResponse = System.currentTimeMillis() - startTime;
+                content = new byte[0];
+            }
             durationMillisOfFullContent = System.currentTimeMillis() - startTime;
             if (log.isTraceEnabled())
                 log.trace("HttpPollValue latency "+Time.makeTimeStringRounded(durationMillisOfFirstResponse)+" / "+Time.makeTimeStringRounded(durationMillisOfFullContent)+", content size "+content.length);
