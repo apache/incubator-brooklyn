@@ -53,12 +53,15 @@ a:hover > .card {
 .card {
   position: relative;
   padding: 12px;
-  margin-bottom: 10px;
   background-color: #f8f8f8;
   color: #333;
   border: 1px solid #E1E1E8;
   border-radius: 6px;
   font-size: 11pt;
+}
+.card,
+.filter {
+    margin-bottom: 10px;
 }
 a .glyphicon {
   display: block;
