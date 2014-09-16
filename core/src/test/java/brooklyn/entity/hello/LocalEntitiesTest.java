@@ -266,7 +266,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         app.setConfig(HelloEntity.MY_NAME, "Bob");
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
-        HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
+        HelloEntity son = (HelloEntity)entityManager.createEntity(EntitySpec.create(HelloEntity.class)
                 .parent(dad)
                 .configure(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, (Closure)null), new Function<String,String>() {
                     public String apply(String input) {
