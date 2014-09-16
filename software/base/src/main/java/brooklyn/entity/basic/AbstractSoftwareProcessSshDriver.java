@@ -43,6 +43,7 @@ import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
@@ -284,29 +285,62 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     @Override
-    public void resources() {
-        Map runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
-        copyResources(runtimeFiles);
+    public void installResources() {
+        try {
+            getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host");
 
-        Map runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
-        copyTemplates(runtimeTemplates);
+            getLocation().execCommands("create install directory", ImmutableList.of("mkdir -p " + getInstallDir()));
+
+            Map installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
+            if (installFiles != null && installFiles.size() > 0) {
+                copyResources(installFiles);
+            }
+
+            Map installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
+            if (installTemplates != null && installTemplates.size() > 0) {
+                copyTemplates(installTemplates);
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+        } finally {
+            getLocation().releaseMutex("installing "+elvis(entity,this));
+        }
     }
-    
+
+    @Override
+    public void runtimeResources() {
+        try {
+            getLocation().execCommands("create run directory", ImmutableList.of("mkdir -p " + getRunDir()));
+
+            Map runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
+            if (runtimeFiles != null && runtimeFiles.size() > 0) {
+                copyResources(runtimeFiles);
+            }
+
+            Map runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
+            if (runtimeTemplates != null && runtimeTemplates.size() > 0) {
+                copyTemplates(runtimeTemplates);
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+        }
+    }
+
     @Override
     public void runPreInstallCommand(String command) {
         execute(ImmutableList.of(command), "running pre-install commands");
     }
-    
+
     @Override
     public void runPostInstallCommand(String command) {
         execute(ImmutableList.of(command), "running post-install commands");
     }
-    
+
     @Override
     public void runPreLaunchCommand(String command) {
         execute(ImmutableList.of(command), "running pre-launch commands");
     }
-    
+
     @Override
     public void runPostLaunchCommand(String command) {
         execute(ImmutableList.of(command), "running post-launch commands");

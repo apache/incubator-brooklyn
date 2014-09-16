@@ -452,8 +452,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     @Override
-    public void resources() {
-        super.resources();
+    public void runtimeResources() {
+        super.runtimeResources();
 
         if (isJmxEnabled()) {
             DynamicTasks.queue("install jmx", new Runnable() { public void run() {

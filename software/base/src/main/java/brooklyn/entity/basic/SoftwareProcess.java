@@ -50,14 +50,17 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("setupLatch")
     ConfigKey<Boolean> SETUP_LATCH = BrooklynConfigKeys.SETUP_LATCH;
 
+    @SetFromFlag("installResourcesLatch")
+    ConfigKey<Boolean> INSTALL_RESOURCES_LATCH = BrooklynConfigKeys.INSTALL_RESOURCES_LATCH;
+
     @SetFromFlag("installLatch")
     ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
 
+    @SetFromFlag("runtimeResourcesLatch")
+    ConfigKey<Boolean> RUNTIME_RESOURCES_LATCH = BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH;
+
     @SetFromFlag("customizeLatch")
     ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
-
-    @SetFromFlag("resourcesLatch")
-    ConfigKey<Boolean> RESOURCES_LATCH = BrooklynConfigKeys.RESOURCES_LATCH;
 
     @SetFromFlag("launchLatch")
     ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
@@ -102,17 +105,29 @@ public interface SoftwareProcess extends Entity, Startable {
     @Deprecated
     ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
 
-    /** Files to be copied to the server, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
+    /** Files to be copied to the server before install. Map of "subpath/file.name" to "classpath://foo/file.txt" (or other url) */
+    @SuppressWarnings("serial")
+    @SetFromFlag("installFiles")
+    ConfigKey<Map<String, String>> INSTALL_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "files.install", "Map of files to be copied, before install keyed by destination name relative to runDir");
+
+    /** Templates to be filled in and then copied to the server before install. See {@link #INSTALL_FILES}. */
+    @SuppressWarnings("serial")
+    @SetFromFlag("installTemplates")
+    ConfigKey<Map<String, String>> INSTALL_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "templates.install", "Map of templates to be filled in and copied before install, keyed by destination name relative to runDir");
+
+    /** Files to be copied to the server before customisation, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
     @SuppressWarnings("serial")
     @SetFromFlag("runtimeFiles")
     ConfigKey<Map<String, String>> RUNTIME_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
-            "files.runtime", "Map of files to be copied, keyed by destination name relative to runDir");
+            "files.runtime", "Map of files to be copied before customisation, keyed by destination name relative to runDir");
 
-    /** Templates to be filled in and then copied to the server. See {@link #RUNTIME_FILES}. */
+    /** Templates to be filled in and then copied to the server before customisation. See {@link #RUNTIME_FILES}. */
     @SuppressWarnings("serial")
     @SetFromFlag("runtimeTemplates")
     ConfigKey<Map<String, String>> RUNTIME_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
-            "templates.runtime", "Map of templates to be filled in and copied, keyed by destination name relative to runDir");
+            "templates.runtime", "Map of templates to be filled in and copied before customisation, keyed by destination name relative to runDir");
 
     @SetFromFlag("env")
     MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,
