@@ -38,6 +38,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.io.ByteStreams;
@@ -135,6 +136,15 @@ public class Streams {
             @Override
             public Integer get() {
                 return src.size();
+            }
+        };
+    }
+
+    public static Function<ByteArrayOutputStream,Integer> sizeFunction() {
+        return new Function<ByteArrayOutputStream,Integer>() {
+            @Override
+            public Integer apply(ByteArrayOutputStream input) {
+                return input.size();
             }
         };
     }

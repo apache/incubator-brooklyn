@@ -34,12 +34,14 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -86,6 +88,7 @@ public class BrooklynTaskTags extends TaskTags {
         }
         @Override
         public boolean equals(Object obj) {
+            if (this==obj) return true;
             if (!(obj instanceof WrappedEntity)) return false;
             return 
                 Objects.equal(entity, ((WrappedEntity)obj).entity) &&
@@ -202,6 +205,14 @@ public class BrooklynTaskTags extends TaskTags {
     public static WrappedStream tagForStream(String streamType, ByteArrayOutputStream stream) {
         return new WrappedStream(streamType, stream);
     }
+    /** creates a tag suitable for marking a stream available on a task, but which might be GC'd */
+    public static WrappedStream tagForStreamWeak(String streamType, ByteArrayOutputStream stream) {
+        Maybe<ByteArrayOutputStream> weakStream = Maybe.weakThen(stream, 
+            Maybe.of(Streams.byteArrayOfString("<contents-garbage-collected>")));
+        return new WrappedStream(streamType,
+            Suppliers.compose(Functions.toStringFunction(), weakStream),
+            Suppliers.compose(Streams.sizeFunction(), weakStream));
+    }
 
     /** creates a tag suitable for marking a stream available on a task */
     public static WrappedStream tagForStream(String streamType, Supplier<String> contents, Supplier<Integer> size) {
@@ -241,18 +252,47 @@ public class BrooklynTaskTags extends TaskTags {
 
     // ------ misc
     
-    public static void setTransient(Task<?> task) {
-        addTagDynamically(task, TRANSIENT_TASK_TAG);
-    }
+    public static void setInessential(Task<?> task) { addTagDynamically(task, INESSENTIAL_TASK); }
+    public static void setTransient(Task<?> task) { addTagDynamically(task, TRANSIENT_TASK_TAG); }
+    public static boolean isTransient(Task<?> task) { return hasTag(task, TRANSIENT_TASK_TAG); }
+    public static boolean isSubTask(Task<?> task) { return hasTag(task, SUB_TASK_TAG); }
+    public static boolean isEffectorTask(Task<?> task) { return hasTag(task, EFFECTOR_TAG); }
     
-    public static void setInessential(Task<?> task) {
-        addTagDynamically(task, INESSENTIAL_TASK);
-    }
-
     // ------ effector tags
     
-    public static String tagForEffectorName(String name) {
-        return EFFECTOR_TAG+":"+name;
+    public static class EffectorCallTag {
+        protected final String entityId;
+        protected final String effectorName;
+        protected EffectorCallTag(String entityId, String effectorName) {
+            this.entityId = entityId;
+            this.effectorName = effectorName;
+        }
+        public String toString() {
+            return EFFECTOR_TAG+"@"+entityId+":"+effectorName;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(entityId, effectorName);
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof EffectorCallTag)) return false;
+            EffectorCallTag other = (EffectorCallTag) obj;
+            return 
+                Objects.equal(entityId, other.entityId) && 
+                Objects.equal(effectorName, other.effectorName);
+        }
+        public String getEntityId() {
+            return entityId;
+        }
+        public String getEffectorName() {
+            return effectorName;
+        }
+    }
+    
+    public static EffectorCallTag tagForEffectorCall(Entity entity, String effectorName) {
+        return new EffectorCallTag(entity.getId(), effectorName);
     }
     
     /**
@@ -269,29 +309,43 @@ public class BrooklynTaskTags extends TaskTags {
         while (t!=null) {
             Set<Object> tags = t.getTags();
             if (tags.contains(EFFECTOR_TAG)) {
-                boolean match = true;
-                if (entity!=null && !entity.equals(getTargetOrContextEntity(t)))
-                    match = false;
-                if (effector!=null && !tags.contains(tagForEffectorName(effector.getName())))
-                    match = false;
-                if (match) return true;
+                for (Object tag: tags) {
+                    if (tag instanceof EffectorCallTag) {
+                        EffectorCallTag et = (EffectorCallTag)tag;
+                        if (entity!=null && !et.entityId.equals(entity.getId()))
+                            continue;
+                        if (effector!=null && !et.effectorName.equals(effector.getName()))
+                            continue;
+                        return true;
+                    }
+                }
                 if (!allowNestedEffectorCalls) return false;
             }
             t = t.getSubmittedByTask();
         }
         return false;
     }
-    
-    public static String getEffectorName(Task<?> task) {
+
+    /** finds the first {@link EffectorCallTag} tag on this tag, or optionally on submitters, or null */
+    public static EffectorCallTag getEffectorCallTag(Task<?> task, boolean recurse) {
         Task<?> t = task;
         while (t!=null) {
             for (Object tag: task.getTags()) {
-                if (tag instanceof String && ((String)tag).startsWith(EFFECTOR_TAG+":"))
-                    return Strings.removeFromStart((String)tag, EFFECTOR_TAG+":");
+                if (tag instanceof EffectorCallTag)
+                    return (EffectorCallTag)tag;
             }
+            if (!recurse)
+                return null;
             t = t.getSubmittedByTask();
         }
         return null;
+    }
+
+    /** finds the first {@link EffectorCallTag} tag on this tag or a submitter, and returns the effector name */
+    public static String getEffectorName(Task<?> task) {
+        EffectorCallTag result = getEffectorCallTag(task, true);
+        if (result==null) return null;
+        return result.effectorName;
     }
 
 }

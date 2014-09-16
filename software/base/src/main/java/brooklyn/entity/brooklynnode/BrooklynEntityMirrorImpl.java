@@ -176,7 +176,7 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
                 Exceptions.propagateIfFatal(e);
                 throw new IllegalStateException("Invalid response invoking "+uri+": "+e, e);
             }
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForStream("http_response", Streams.byteArray(content)));
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamWeak("http_response", Streams.byteArray(content)));
             if (!HttpTool.isStatusCodeHealthy(result.getResponseCode())) {
                 log.warn("Invalid response invoking "+uri+": response code "+result.getResponseCode()+"\n"+result+": "+new String(content));
                 throw new IllegalStateException("Invalid response invoking "+uri+": response code "+result.getResponseCode());
