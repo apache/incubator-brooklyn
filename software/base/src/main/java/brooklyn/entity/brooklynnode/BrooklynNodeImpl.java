@@ -91,7 +91,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         //shutdown only if running, any of stop_* could've been already previously
         if (getAttribute(Attributes.SERVICE_UP)) {
             Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
-            DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_MINUTE)));
+            DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.REQUEST_TIMEOUT, Duration.ONE_MINUTE)));
         }
         super.doStop();
     }
@@ -168,13 +168,12 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
         @Override
         public Void call(ConfigBag parameters) {
-            Map<String, String> formParams = MutableMap.<String, String>of(
-                    "stopAppsFirst", parameters.get(STOP_APPS).toString(),
-                    "delayMillis", getDelayMillis(parameters));
-            Duration httpReturnTimeout = parameters.get(HTTP_RETURN_TIMEOUT);
-            if (httpReturnTimeout != null) {
-                formParams.put("httpReturnTimeout", httpReturnTimeout.toString());
-            }
+            Map<String, String> formParams = new MutableMap<String, String>()
+                    .addIfNotNull("stopAppsFirst", toNullableString(parameters.get(STOP_APPS_FIRST)))
+                    .addIfNotNull("forceShutdownOnError", toNullableString(parameters.get(FORCE_SHUTDOWN_ON_ERROR)))
+                    .addIfNotNull("shutdownTimeout", toNullableString(parameters.get(SHUTDOWN_TIMEOUT)))
+                    .addIfNotNull("requestTimeout", toNullableString(parameters.get(REQUEST_TIMEOUT)))
+                    .addIfNotNull("delayForHttpReturn", toNullableString(parameters.get(DELAY_FOR_HTTP_RETURN)));
             HttpToolResponse resp = ((BrooklynNode)entity()).http()
                 .post("/v1/server/shutdown", MutableMap.<String, String>of(), formParams);
             if (resp.getResponseCode() != HttpStatus.SC_NO_CONTENT) {
@@ -184,8 +183,12 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             return null;
         }
 
-        private String getDelayMillis(ConfigBag parameters) {
-            return Long.toString(parameters.get(DELAY).toMilliseconds());
+        private static String toNullableString(Object obj) {
+            if (obj == null) {
+                return null;
+            } else {
+                return obj.toString();
+            }
         }
 
     }
@@ -195,11 +198,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
         @Override
         public Void call(ConfigBag parameters) {
+            Duration timeout = parameters.get(TIMEOUT);
             MutableMap<?, ?> params = MutableMap.of(
-                    ShutdownEffector.STOP_APPS, Boolean.FALSE,
-                    ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_HOUR,
-                    ShutdownEffector.DELAY, Duration.FIVE_SECONDS);
-
+                    ShutdownEffector.STOP_APPS_FIRST, Boolean.FALSE,
+                    ShutdownEffector.SHUTDOWN_TIMEOUT, timeout,
+                    ShutdownEffector.REQUEST_TIMEOUT, timeout);
             Entity entity = entity();
             TaskAdaptable<Void> shutdownTask = Effectors.invocation(entity, SHUTDOWN, params);
             if (!entity.getAttribute(SERVICE_UP)) {
@@ -216,11 +219,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
         @Override
         public Void call(ConfigBag parameters) {
+            Duration timeout = parameters.get(TIMEOUT);
             MutableMap<?, ?> params = MutableMap.of(
-                    ShutdownEffector.STOP_APPS, Boolean.TRUE,
-                    ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_HOUR,
-                    ShutdownEffector.DELAY, Duration.FIVE_SECONDS);
-
+                    ShutdownEffector.STOP_APPS_FIRST, Boolean.TRUE,
+                    ShutdownEffector.SHUTDOWN_TIMEOUT, timeout,
+                    ShutdownEffector.REQUEST_TIMEOUT, timeout);
             Entity entity = entity();
             TaskAdaptable<Void> shutdownTask = Effectors.invocation(entity, SHUTDOWN, params);
             if (!entity.getAttribute(SERVICE_UP)) {

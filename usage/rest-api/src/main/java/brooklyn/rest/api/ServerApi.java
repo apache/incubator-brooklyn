@@ -55,10 +55,16 @@ public interface ServerApi {
     public void shutdown(
         @ApiParam(name = "stopAppsFirst", value = "Whether to stop running applications before shutting down")
         @FormParam("stopAppsFirst") @DefaultValue("false") boolean stopAppsFirst,
-        @ApiParam(name = "delayMillis", value = "Minimum delay before system.exit")
-        @FormParam("delayMillis") @DefaultValue("250") long delayMillis,
-        @ApiParam(name = "httpReturnTimeout", value = "Maximum time to block the request for the shutdown to finish.")
-        @FormParam("httpReturnTimeout") String httpReturnTimeout);
+        @ApiParam(name = "forceShutdownOnError", value ="Force shutdown if apps fail to stop or timeout")
+        @FormParam("forceShutdownOnError") @DefaultValue("false") boolean forceShutdownOnError,
+        @ApiParam(name = "shutdownTimeout", value = "A maximum delay to wait for apps to gracefully stop before giving up or forcibly exiting, 0 to wait infinitely")
+        @FormParam("shutdownTimeout") @DefaultValue("20s") String shutdownTimeout,
+        @ApiParam(name = "requestTimeout", value = "Maximum time to block the request for the shutdown to finish, 0 to wait infinitely")
+        @FormParam("requestTimeout") @DefaultValue("20s") String requestTimeout,
+        @ApiParam(name = "delayForHttpReturn", value = "The delay before exiting the process, to permit the REST response to be returned")
+        @FormParam("delayForHttpReturn") @DefaultValue("5s") String delayForHttpReturn,
+        @ApiParam(name = "delayMillis", value = "Deprecated, analogous to delayForHttpReturn")
+        @FormParam("delayMillis") Long delayMillis);
 
     @GET
     @Path("/version")

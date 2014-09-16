@@ -50,7 +50,7 @@ under the License.
             $.ajax({
                 type:"POST",
                 url:"/v1/server/shutdown",
-                data: { stopAppsFirst: stopAppsFirst, delayMillis: 250 },
+                data: { stopAppsFirst: stopAppsFirst },
                 success:function (data) {
                     $('#help-page').fadeTo(500,0.1);
                 },
