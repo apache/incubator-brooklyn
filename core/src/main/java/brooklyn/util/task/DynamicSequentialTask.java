@@ -311,6 +311,8 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                     return result;
                 }
             }).build();
+            ((BasicTask<?>)secondaryJobMaster).proxyTargetTask = DynamicSequentialTask.this;
+            
             submitBackgroundInheritingContext(secondaryJobMaster);
             
             T result = null;

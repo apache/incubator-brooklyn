@@ -236,13 +236,14 @@ public class EntityExecutionManagerTest {
         for (int count=0; count<5; count++) {
             TaskBuilder<Object> tb = Tasks.builder().name("task-"+count).dynamic(true).body(new Runnable() { @Override public void run() {}})
                 .tag(ManagementContextInternal.NON_TRANSIENT_TASK_TAG).tag("foo");
-            ((EntityInternal)e).getExecutionContext().submit(tb.build());
+            ((EntityInternal)e).getExecutionContext().submit(tb.build()).getUnchecked();
         }
 
         forceGc();
 
-        final int EXTRA_TASKS_PER_DYNAMIC = 1;
-        assertTaskCountForEntity(e, 2*(1+EXTRA_TASKS_PER_DYNAMIC));
+        // might need an eventually here, if the internal job completion and GC is done in the background
+        // (if there are no test failures for a few months, since Sept 2014, then we can remove this comment)
+        assertTaskCountForEntity(e, 2);
     }
     
     @Test
@@ -260,8 +261,6 @@ public class EntityExecutionManagerTest {
         assertTrue(tags.contains(BrooklynTaskTags.tagForContextEntity(e)), "tags="+tags);
         
         Entities.destroy(e);
-        e = null;
-        for (int i = 0; i < 5; i++) System.gc();
         
         Set<Object> tags2 = app.getManagementContext().getExecutionManager().getTaskTags();
         for (Object tag : tags2) {
@@ -277,27 +276,25 @@ public class EntityExecutionManagerTest {
     }
     
     @Test(groups="Integration")
-    public void testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked() throws Exception {
+    public void testSubscriptionAndEffectorTasksGced() throws Exception {
         app = TestApplication.Factory.newManagedInstanceForTests();
+        BasicExecutionManager em = (BasicExecutionManager) app.getManagementContext().getExecutionManager();
+        // allow background enrichers to complete
+        Time.sleep(Duration.ONE_SECOND);
+        forceGc();
+        List<Task<?>> t1 = em.getAllTasks();
         
-        BasicAttributeSensor<Object> byteArrayAttrib = new BasicAttributeSensor<Object>(Object.class, "test.byteArray", "");
-
-        for (int i = 0; i < 1000; i++) {
-            if (i%100==0) LOG.info(JavaClassNames.niceClassAndMethod()+": iteration "+i);
-            try {
-                LOG.debug("testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked: iteration="+i);
-                TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-                entity.setAttribute(byteArrayAttrib, new BigObject(10*1000*1000));
-                entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
-                Entities.destroy(entity);
-                forceGc();
-            } catch (OutOfMemoryError e) {
-                LOG.info("testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked: OOME at iteration="+i);
-                throw e;
-            }
-        }
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        entity.setAttribute(TestEntity.NAME, "bob");
+        entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
+        Entities.destroy(entity);
+        Time.sleep(Duration.ONE_SECOND);
+        forceGc();
+        List<Task<?>> t2 = em.getAllTasks();
+        
+        Assert.assertEquals(t1.size(), t2.size(), "lists are different:\n"+t1+"\n"+t2+"\n");
     }
-    
+
     /**
      * Invoke effector many times, where each would claim 10MB because it stores the return value.
      * If it didn't gc the tasks promptly, it would consume 10GB ram (so would OOME before that).
@@ -321,7 +318,33 @@ public class EntityExecutionManagerTest {
                 Time.sleep(Duration.ONE_MILLISECOND); // Give GC thread a chance to run
                 forceGc();
             } catch (OutOfMemoryError e) {
-                LOG.info("testEffectorTasksGced: OOME at iteration="+i);
+                LOG.warn(JavaClassNames.niceClassAndMethod()+": OOME at iteration="+i);
+                throw e;
+            }
+        }
+    }
+    
+    @Test(groups="Integration")
+    public void testUnmanagedEntityGcedOnUnmanageEvenIfEffectorInvoked() throws Exception {
+        app = TestApplication.Factory.newManagedInstanceForTests();
+        
+        BasicAttributeSensor<Object> byteArrayAttrib = new BasicAttributeSensor<Object>(Object.class, "test.byteArray", "");
+
+        for (int i = 0; i < 1000; i++) {
+            if (i%100==0) LOG.info(JavaClassNames.niceClassAndMethod()+": iteration "+i);
+            try {
+                LOG.debug(JavaClassNames.niceClassAndMethod()+": iteration="+i);
+                TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+                entity.setAttribute(byteArrayAttrib, new BigObject(10*1000*1000));
+                entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
+                Entities.destroy(entity);
+                forceGc();
+                System.gc(); System.gc();
+            } catch (OutOfMemoryError e) {
+                LOG.warn(JavaClassNames.niceClassAndMethod()+": OOME at iteration="+i);
+                ExecutionManager em = app.getManagementContext().getExecutionManager();
+                Collection<Task<?>> tasks = ((BasicExecutionManager)em).getAllTasks();
+                LOG.info("TASKS count "+tasks.size()+": "+tasks);
                 throw e;
             }
         }

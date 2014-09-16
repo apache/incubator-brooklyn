@@ -116,4 +116,9 @@ public interface TaskInternal<T> extends Task<T> {
     void setStartTimeUtc(long currentTimeMillis);
 
     void applyTagModifier(Function<Set<Object>,Void> modifier);
+    
+    /** if a task is a proxy for another one (used mainly for internal tasks),
+     * this returns the "real" task represented by this one */
+    Task<?> getProxyTarget();
+    
 }

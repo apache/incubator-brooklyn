@@ -97,10 +97,20 @@ public class Tasks {
         }
     }
 
-    /** the {@link Task} where the current thread is executing, if executing in a Task, otherwise null */
+    /** the {@link Task} where the current thread is executing, if executing in a Task, otherwise null;
+     * if the current task is a proxy, this returns the target of that proxy */
     @SuppressWarnings("rawtypes")
-    public static Task current() { return BasicExecutionManager.getPerThreadCurrentTask().get(); }
+    public static Task current() { 
+        return getFinalProxyTarget(BasicExecutionManager.getPerThreadCurrentTask().get());
+    }
 
+    public static Task<?> getFinalProxyTarget(Task<?> task) {
+        if (task==null) return null;
+        Task<?> proxy = ((TaskInternal<?>)task).getProxyTarget();
+        if (proxy==null || proxy.equals(task)) return task;
+        return getFinalProxyTarget(proxy);
+    }
+    
     /** creates a {@link ValueResolver} instance which allows significantly more customization than
      * the various {@link #resolveValue(Object, Class, ExecutionContext)} methods here */
     public static <T> ValueResolver<T> resolving(Object v, Class<T> type) {
@@ -177,39 +187,31 @@ public class Tasks {
     public static Task<List<?>> parallel(TaskAdaptable<?> ...tasks) {
         return parallelInternal("parallelised tasks", asTasks(tasks));
     }
-    
     public static Task<List<?>> parallel(String name, TaskAdaptable<?> ...tasks) {
         return parallelInternal(name, asTasks(tasks));
     }
-
     public static Task<List<?>> parallel(String name, Iterable<? extends TaskAdaptable<?>> tasks) {
         return parallelInternal(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
     }
-    
-    public static Task<List<?>> parallelInternal(String name, Task<?>[] tasks) {
+    private static Task<List<?>> parallelInternal(String name, Task<?>[] tasks) {
         return Tasks.<List<?>>builder().name(name).parallel(true).add(tasks).build();
     }
 
     public static Task<List<?>> sequential(TaskAdaptable<?> ...tasks) {
         return sequentialInternal("sequential tasks", asTasks(tasks));
     }
-    
     public static Task<List<?>> sequential(String name, TaskAdaptable<?> ...tasks) {
         return sequentialInternal(name, asTasks(tasks));
     }
-    
-    private static Task<List<?>> sequentialInternal(String name, Task<?>[] tasks) {
-        return Tasks.<List<?>>builder().name(name).parallel(false).add(tasks).build();
-    }
-
     public static TaskFactory<?> sequential(TaskFactory<?> ...taskFactories) {
         return sequentialInternal("sequential tasks", taskFactories);
     }
-    
     public static TaskFactory<?> sequential(String name, TaskFactory<?> ...taskFactories) {
         return sequentialInternal(name, taskFactories);
     }
-    
+    private static Task<List<?>> sequentialInternal(String name, Task<?>[] tasks) {
+        return Tasks.<List<?>>builder().name(name).parallel(false).add(tasks).build();
+    }
     private static TaskFactory<?> sequentialInternal(final String name, final TaskFactory<?> ...taskFactories) {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override

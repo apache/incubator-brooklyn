@@ -42,8 +42,10 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedEntity;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
+import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -54,6 +56,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.collect.Iterables;
 
 /**
  * Deletes record of old tasks, to prevent space leaks and the eating up of more and more memory.
@@ -92,6 +95,12 @@ public class BrooklynGarbageCollector {
     // work offender is {@link DynamicSequentialTask} internal job tracker, but it is marked 
     // transient so it is destroyed prompty; there may be others, however;
     // but OTOH it might be expensive to check for these all the time!
+    // TODO probably we can set this false (remove this and related code),
+    // and just rely on usual GC to pick up background tasks; the lifecycle of background task
+    // should normally be independent of the submitter. (DST was the exception, and marking 
+    // transient there fixes the main problem, which is when the submitter is GC'd but the submitted is not,
+    // and we don't want the submitted to show up at the root in the GUI, which it will if its
+    // submitter has been GC'd)
     @Beta
     public static final ConfigKey<Boolean> CHECK_SUBTASK_SUBMITTERS = ConfigKeys.newBooleanConfigKey(
         "brooklyn.gc.checkSubtaskSubmitters", "whether for subtasks to check the submitters", true);
@@ -239,7 +248,7 @@ public class BrooklynGarbageCollector {
         return shouldDeleteTaskImmediately(task);
     }
     /** whether this task should be deleted on completion,
-     * because it is transient, or because it and all submitter ancestors are completed and neither an effector nor non-transient */
+     * because it is transient, or because it is submitted background without much context information */
     protected boolean shouldDeleteTaskImmediately(Task<?> task) {
         if (!task.isDone()) return false;
         
@@ -248,10 +257,31 @@ public class BrooklynGarbageCollector {
             return true;
         if (tags.contains(ManagementContextInternal.EFFECTOR_TAG) || tags.contains(ManagementContextInternal.NON_TRANSIENT_TASK_TAG))
             return false;
-        if (task.getSubmittedByTask()!=null && !shouldDeleteTaskImmediately(task.getSubmittedByTask()))
-            return false;
+        
+        if (task.getSubmittedByTask()!=null) {
+            Task<?> parent = task.getSubmittedByTask();
+            if (executionManager.getTask(parent.getId())==null) {
+                // parent is already cleaned up
+                return true;
+            }
+            if (parent instanceof HasTaskChildren && Iterables.contains(((HasTaskChildren)parent).getChildren(), task)) {
+                // it is a child, let the parent manage this task's death
+                return false;
+            }
+            Entity associatedEntity = BrooklynTaskTags.getTargetOrContextEntity(task);
+            if (associatedEntity!=null) {
+                // this is associated to an entity; destroy only if the entity is unmanaged
+                return !Entities.isManaged(associatedEntity);
+            }
+            // if not associated to an entity, then delete immediately
+            return true;
+        }
+        
         // e.g. scheduled tasks, sensor events, etc
         // TODO (in future may keep some of these with another limit, based on a new TagCategory)
+        // there may also be a server association for server-side tasks which should be kept
+        // (but be careful not to keep too many subscriptions!)
+        
         return true;
     }
 

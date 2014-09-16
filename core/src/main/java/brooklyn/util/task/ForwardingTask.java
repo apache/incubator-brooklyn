@@ -316,4 +316,9 @@ public abstract class ForwardingTask<T> extends ForwardingObject implements Task
     public void applyTagModifier(Function<Set<Object>, Void> modifier) {
         delegate().applyTagModifier(modifier);
     }
+    
+    @Override
+    public Task<?> getProxyTarget() {
+        return delegate().getProxyTarget();
+    }
 }

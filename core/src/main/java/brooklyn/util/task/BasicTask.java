@@ -36,6 +36,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +49,7 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -59,6 +61,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Callables;
 import com.google.common.util.concurrent.ExecutionList;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -86,6 +89,8 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected final Set<Object> tags = Sets.newConcurrentHashSet();
     // for debugging, to record where tasks were created
 //    { tags.add(new Throwable("Creation stack trace")); }
+    
+    protected Task<?> proxyTargetTask = null;
 
     protected String blockingDetails = null;
     protected Task<?> blockingTask = null;
@@ -189,7 +194,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected long submitTimeUtc = -1;
     protected long startTimeUtc = -1;
     protected long endTimeUtc = -1;
-    protected Task<?> submittedByTask;
+    protected Maybe<Task<?>> submittedByTask;
 
     protected volatile Thread thread = null;
     private volatile boolean cancelled = false;
@@ -227,7 +232,10 @@ public class BasicTask<T> implements TaskInternal<T> {
     public Future<T> getInternalFuture() { return internalFuture; }
     
     @Override
-    public Task<?> getSubmittedByTask() { return submittedByTask; }
+    public Task<?> getSubmittedByTask() { 
+        if (submittedByTask==null) return null;
+        return submittedByTask.orNull(); 
+    }
 
     /** the thread where the task is running, if it is running */
     @Override
@@ -780,9 +788,35 @@ public class BasicTask<T> implements TaskInternal<T> {
         finalizer.onTaskFinalization(this);
     }
     
+    public static class SubmissionErrorCatchingExecutor implements Executor {
+        final Executor target;
+        public SubmissionErrorCatchingExecutor(Executor target) {
+            this.target = target;
+        }
+        @Override
+        public void execute(Runnable command) {
+            if (isShutdown()) {
+                log.debug("Skipping execution of task callback hook "+command+" because executor is shutdown.");
+                return;
+            }
+            try {
+                target.execute(command);
+            } catch (Exception e) {
+                if (isShutdown()) {
+                    log.debug("Ignoring failed execution of task callback hook "+command+" because executor is shutdown.");
+                } else {
+                    log.warn("Execution of task callback hook "+command+" failed: "+e, e);
+                }
+            }
+        }
+        protected boolean isShutdown() {
+            return target instanceof ExecutorService && ((ExecutorService)target).isShutdown();
+        }
+    }
+    
     @Override
     public void addListener(Runnable listener, Executor executor) {
-        listeners.add(listener, executor);
+        listeners.add(listener, new SubmissionErrorCatchingExecutor(executor));
     }
     
     @Override
@@ -820,9 +854,18 @@ public class BasicTask<T> implements TaskInternal<T> {
         submitTimeUtc = val;
     }
     
+    private static <T> Task<T> newGoneTaskFor(Task<?> task) {
+        Task<T> t = Tasks.<T>builder().dynamic(false).name(task.getDisplayName())
+            .description("Details of the original task "+task+" have been forgotten.")
+            .body(Callables.returning((T)null)).build();
+        ((BasicTask<T>)t).ignoreIfNotRun();
+        return t;
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void setSubmittedByTask(Task<?> task) {
-        submittedByTask = task;
+        submittedByTask = (Maybe)Maybe.weakThen((Task)task, (Maybe)Maybe.of(BasicTask.newGoneTaskFor(task)));
     }
     
     @Override
@@ -839,5 +882,9 @@ public class BasicTask<T> implements TaskInternal<T> {
     public void applyTagModifier(Function<Set<Object>,Void> modifier) {
         modifier.apply(tags);
     }
-    
+
+    @Override
+    public Task<?> getProxyTarget() {
+        return proxyTargetTask;
+    }
 }
