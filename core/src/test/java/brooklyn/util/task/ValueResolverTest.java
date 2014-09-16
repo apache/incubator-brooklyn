@@ -55,6 +55,15 @@ public class ValueResolverTest extends BrooklynAppUnitTestSupport {
         ).build();
     }
     
+    public static final Task<String> newThrowTask(final Duration timeout) {
+        return Tasks.<String>builder().body(new Callable<String>() { 
+            public String call() {
+                Time.sleep(timeout); 
+                throw new IllegalStateException("intended, during tests");
+            }}
+        ).build();
+    }
+    
     public void testTimeoutZero() {
         Maybe<String> result = Tasks.resolving(newSleepTask(Duration.TEN_SECONDS, "foo")).as(String.class).context(executionContext).timeout(Duration.ZERO).getMaybe();
         Assert.assertFalse(result.isPresent());
@@ -69,6 +78,54 @@ public class ValueResolverTest extends BrooklynAppUnitTestSupport {
         Task<String> t = newSleepTask(Duration.ZERO, "foo");
         executionContext.submit(t).getUnchecked();
         Maybe<String> result = Tasks.resolving(t).as(String.class).timeout(Duration.ZERO).getMaybe();
+        Assert.assertEquals(result.get(), "foo");
+    }
+
+    public static Throwable assertThrowsOnMaybe(ValueResolver<?> result) {
+        try {
+            result = result.clone();
+            result.getMaybe();
+            Assert.fail("should have thrown");
+            return null;
+        } catch (Exception e) { return e; }
+    }
+    public static Throwable assertThrowsOnGet(ValueResolver<?> result) {
+        result = result.clone();
+        try {
+            result.get();
+            Assert.fail("should have thrown");
+            return null;
+        } catch (Exception e) { return e; }
+    }
+    public static <T> Maybe<T> assertMaybeIsAbsent(ValueResolver<T> result) {
+        result = result.clone();
+        Maybe<T> maybe = result.getMaybe();
+        Assert.assertFalse(maybe.isPresent());
+        return maybe;
+    }
+    
+    public void testSwallowError() {
+        ValueResolver<String> result = Tasks.resolving(newThrowTask(Duration.ZERO)).as(String.class).context(executionContext).swallowExceptions();
+        assertMaybeIsAbsent(result);
+        assertThrowsOnGet(result);
+    }
+
+
+    public void testDontSwallowError() {
+        ValueResolver<String> result = Tasks.resolving(newThrowTask(Duration.ZERO)).as(String.class).context(executionContext);
+        assertThrowsOnMaybe(result);
+        assertThrowsOnGet(result);
+    }
+
+    public void testDefaultWhenSwallowError() {
+        ValueResolver<String> result = Tasks.resolving(newThrowTask(Duration.ZERO)).as(String.class).context(executionContext).swallowExceptions().defaultValue("foo");
+        assertMaybeIsAbsent(result);
+        Assert.assertEquals(result.get(), "foo");
+    }
+
+    public void testDefaultBeforeDelayAndError() {
+        ValueResolver<String> result = Tasks.resolving(newThrowTask(Duration.TEN_SECONDS)).as(String.class).context(executionContext).timeout(Duration.ZERO).defaultValue("foo");
+        assertMaybeIsAbsent(result);
         Assert.assertEquals(result.get(), "foo");
     }
 

@@ -24,6 +24,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -262,7 +264,7 @@ public class BrooklynTaskTags extends TaskTags {
      *   and we are checking eff2, whether to match eff1
      * @return whether the given task is part of the given effector
      */
-    public static boolean isInEffectorTask(Task<?> task, Entity entity, Effector<?> effector, boolean allowNestedEffectorCalls) {
+    public static boolean isInEffectorTask(Task<?> task, @Nullable Entity entity, @Nullable Effector<?> effector, boolean allowNestedEffectorCalls) {
         Task<?> t = task;
         while (t!=null) {
             Set<Object> tags = t.getTags();

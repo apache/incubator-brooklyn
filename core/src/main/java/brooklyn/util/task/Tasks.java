@@ -268,6 +268,7 @@ public class Tasks {
         }        
     }
     
+    /** see also {@link #resolving(Object)} which gives much more control about submission, timeout, etc */
     public static <T> Supplier<T> supplier(final TaskAdaptable<T> task) {
         return new Supplier<T>() {
             @Override

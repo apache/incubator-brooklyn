@@ -28,8 +28,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestEntity;
+import brooklyn.util.guava.Functionals;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -102,4 +107,24 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
         Object result = Tasks.resolveValue(actual, type, executionContext);
         assertEquals(result, expected);
     }
+    
+    @Test
+    public void testErrorsResolvingPropagatesOrSwallowedAllCorrectly() throws Exception {
+        app.setConfig(TestEntity.CONF_OBJECT, ValueResolverTest.newThrowTask(Duration.ZERO));
+        Task<Object> t = Tasks.builder().body(Functionals.callable(EntityFunctions.config(TestEntity.CONF_OBJECT), app)).build();
+        ValueResolver<Object> v = Tasks.resolving(t).as(Object.class).context(app.getExecutionContext());
+        
+        ValueResolverTest.assertThrowsOnMaybe(v);
+        ValueResolverTest.assertThrowsOnGet(v);
+        
+        v.swallowExceptions();
+        ValueResolverTest.assertMaybeIsAbsent(v);
+        ValueResolverTest.assertThrowsOnGet(v);
+        
+        v.defaultValue("foo");
+        ValueResolverTest.assertMaybeIsAbsent(v);
+        assertEquals(v.clone().get(), "foo");
+        assertResolvesValue(v, Object.class, "foo");
+    }
+
 }
