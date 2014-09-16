@@ -178,8 +178,8 @@ public abstract class ForwardingTask<T> extends ForwardingObject implements Task
     }
 
     @Override
-    public void initResult(ListenableFuture<T> result) {
-        delegate().initResult(result);
+    public void initInternalFuture(ListenableFuture<T> result) {
+        delegate().initInternalFuture(result);
     }
 
     @Override
@@ -188,8 +188,8 @@ public abstract class ForwardingTask<T> extends ForwardingObject implements Task
     }
 
     @Override
-    public Future<T> getResult() {
-        return delegate().getResult();
+    public Future<T> getInternalFuture() {
+        return delegate().getInternalFuture();
     }
 
     @Override

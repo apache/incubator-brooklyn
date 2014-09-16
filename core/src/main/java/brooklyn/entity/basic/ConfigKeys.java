@@ -33,6 +33,7 @@ import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -154,11 +155,9 @@ public class ConfigKeys {
     public static ConfigKey<String> newStringConfigKey(String name) {
         return newConfigKey(String.class, name);
     }
-
     public static ConfigKey<String> newStringConfigKey(String name, String description) {
         return newConfigKey(String.class, name, description);
     }
-    
     public static ConfigKey<String> newStringConfigKey(String name, String description, String defaultValue) {
         return newConfigKey(String.class, name, description, defaultValue);
     }
@@ -166,11 +165,9 @@ public class ConfigKeys {
     public static ConfigKey<Integer> newIntegerConfigKey(String name) {
         return newConfigKey(Integer.class, name);
     }
-
     public static ConfigKey<Integer> newIntegerConfigKey(String name, String description) {
         return newConfigKey(Integer.class, name, description);
     }
-    
     public static ConfigKey<Integer> newIntegerConfigKey(String name, String description, Integer defaultValue) {
         return newConfigKey(Integer.class, name, description, defaultValue);
     }
@@ -178,11 +175,9 @@ public class ConfigKeys {
     public static ConfigKey<Long> newLongConfigKey(String name) {
         return newConfigKey(Long.class, name);
     }
-
     public static ConfigKey<Long> newLongConfigKey(String name, String description) {
         return newConfigKey(Long.class, name, description);
     }
-    
     public static ConfigKey<Long> newLongConfigKey(String name, String description, Long defaultValue) {
         return newConfigKey(Long.class, name, description, defaultValue);
     }
@@ -190,11 +185,9 @@ public class ConfigKeys {
     public static ConfigKey<Double> newDoubleConfigKey(String name) {
         return newConfigKey(Double.class, name);
     }
-
     public static ConfigKey<Double> newDoubleConfigKey(String name, String description) {
         return newConfigKey(Double.class, name, description);
     }
-    
     public static ConfigKey<Double> newDoubleConfigKey(String name, String description, Double defaultValue) {
         return newConfigKey(Double.class, name, description, defaultValue);
     }
@@ -202,13 +195,21 @@ public class ConfigKeys {
     public static ConfigKey<Boolean> newBooleanConfigKey(String name) {
         return newConfigKey(Boolean.class, name);
     }
-
     public static ConfigKey<Boolean> newBooleanConfigKey(String name, String description) {
         return newConfigKey(Boolean.class, name, description);
     }
-    
     public static ConfigKey<Boolean> newBooleanConfigKey(String name, String description, Boolean defaultValue) {
         return newConfigKey(Boolean.class, name, description, defaultValue);
+    }
+    
+    public static ConfigKey<Duration> newDurationConfigKey(String name) {
+        return newConfigKey(Duration.class, name);
+    }
+    public static ConfigKey<Duration> newDurationConfigKey(String name, String description) {
+        return newConfigKey(Duration.class, name, description);
+    }
+    public static ConfigKey<Duration> newDurationConfigKey(String name, String description, Duration defaultValue) {
+        return newConfigKey(Duration.class, name, description, defaultValue);
     }
     
     public static class DynamicKeys {

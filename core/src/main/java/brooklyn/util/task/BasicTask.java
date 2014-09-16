@@ -37,6 +37,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -90,6 +91,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected Task<?> blockingTask = null;
     Object extraStatusText = null;
 
+    /** listeners attached at task level; these are stored here, but run on the underlying ListenableFuture */
     protected final ExecutionList listeners = new ExecutionList();
     
     /**
@@ -191,13 +193,14 @@ public class BasicTask<T> implements TaskInternal<T> {
 
     protected volatile Thread thread = null;
     private volatile boolean cancelled = false;
-    protected volatile Future<T> result = null;
+    /** normally a {@link ListenableFuture}, except for scheduled tasks when it may be a {@link ScheduledFuture} */
+    protected volatile Future<T> internalFuture = null;
     
     @Override
-    public synchronized void initResult(ListenableFuture<T> result) {
-        if (this.result != null) 
+    public synchronized void initInternalFuture(ListenableFuture<T> result) {
+        if (this.internalFuture != null) 
             throw new IllegalStateException("task "+this+" is being given a result twice");
-        this.result = result;
+        this.internalFuture = result;
         notifyAll();
     }
 
@@ -221,7 +224,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     public long getEndTimeUtc() { return endTimeUtc; }
 
     @Override
-    public Future<T> getResult() { return result; }
+    public Future<T> getInternalFuture() { return internalFuture; }
     
     @Override
     public Task<?> getSubmittedByTask() { return submittedByTask; }
@@ -282,8 +285,8 @@ public class BasicTask<T> implements TaskInternal<T> {
         if (isDone()) return false;
         boolean cancel = true;
         cancelled = true;
-        if (result!=null) { 
-            cancel = result.cancel(mayInterruptIfRunning);
+        if (internalFuture!=null) { 
+            cancel = internalFuture.cancel(mayInterruptIfRunning);
         }
         notifyAll();
         return cancel;
@@ -291,12 +294,15 @@ public class BasicTask<T> implements TaskInternal<T> {
 
     @Override
     public boolean isCancelled() {
-        return cancelled || (result!=null && result.isCancelled());
+        return cancelled || (internalFuture!=null && internalFuture.isCancelled());
     }
 
     @Override
     public boolean isDone() {
-        return cancelled || (result!=null && result.isDone());
+        // if endTime is set, result might not be completed yet, but it will be set very soon 
+        // (the two values are set close in time, result right after the endTime;
+        // but callback hooks might not see the result yet)
+        return cancelled || (internalFuture!=null && internalFuture.isDone()) || endTimeUtc>0;
     }
 
     /**
@@ -326,7 +332,7 @@ public class BasicTask<T> implements TaskInternal<T> {
             if (!isDone())
                 Tasks.setBlockingTask(this);
             blockUntilStarted();
-            return result.get();
+            return internalFuture.get();
         } finally {
             Tasks.resetBlockingTask();
         }
@@ -351,7 +357,7 @@ public class BasicTask<T> implements TaskInternal<T> {
         Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingUp();
         while (true) {
             if (cancelled) throw new CancellationException();
-            if (result==null)
+            if (internalFuture==null)
                 try {
                     if (timeout==null) {
                         wait();
@@ -366,7 +372,7 @@ public class BasicTask<T> implements TaskInternal<T> {
                     Thread.currentThread().interrupt();
                     Throwables.propagate(e);
                 }
-            if (result!=null) return true;
+            if (internalFuture!=null) return true;
         }
     }
 
@@ -382,11 +388,11 @@ public class BasicTask<T> implements TaskInternal<T> {
             boolean started = blockUntilStarted(timeout);
             if (!started) return false;
             if (timeout==null) {
-                result.get();
+                internalFuture.get();
             } else {
                 long remaining = endTime - System.currentTimeMillis();
                 if (remaining>0)
-                    result.get(remaining, TimeUnit.MILLISECONDS);
+                    internalFuture.get(remaining, TimeUnit.MILLISECONDS);
             }
             return isDone();
         } catch (Throwable t) {
@@ -408,22 +414,22 @@ public class BasicTask<T> implements TaskInternal<T> {
         Long end  = duration==null ? null : start + duration.toMillisecondsRoundingUp();
         while (end==null || end > System.currentTimeMillis()) {
             if (cancelled) throw new CancellationException();
-            if (result == null) {
+            if (internalFuture == null) {
                 synchronized (this) {
                     long remaining = end - System.currentTimeMillis();
-                    if (result==null && remaining>0)
+                    if (internalFuture==null && remaining>0)
                         wait(remaining);
                 }
             }
-            if (result != null) break;
+            if (internalFuture != null) break;
         }
         Long remaining = end==null ? null : end -  System.currentTimeMillis();
         if (isDone()) {
-            return result.get(1, TimeUnit.MILLISECONDS);
+            return internalFuture.get(1, TimeUnit.MILLISECONDS);
         } else if (remaining == null) {
-            return result.get();
+            return internalFuture.get();
         } else if (remaining > 0) {
-            return result.get(remaining, TimeUnit.MILLISECONDS);
+            return internalFuture.get(remaining, TimeUnit.MILLISECONDS);
         } else {
             throw new TimeoutException();
         }

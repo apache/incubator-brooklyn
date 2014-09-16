@@ -20,6 +20,7 @@ package brooklyn.util.task;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import brooklyn.management.ExecutionManager;
@@ -44,13 +45,15 @@ import com.google.common.util.concurrent.ListenableFuture;
 @Beta
 public interface TaskInternal<T> extends Task<T> {
     
-    void initResult(ListenableFuture<T> result);
+    /** sets the internal future object used to record the association to a job submitted to an {@link ExecutorService} */
+    void initInternalFuture(ListenableFuture<T> result);
 
+    /** returns the underlying future where this task's results will come in; see {@link #initInternalFuture(ListenableFuture)} */
+    Future<T> getInternalFuture();
+    
     /** if the job is queued for submission (e.g. by another task) it can indicate that fact (and time) here;
      * note tasks can (and often are) submitted without any queueing, in which case this value may be -1 */
     long getQueuedTimeUtc();
-    
-    Future<T> getResult();
     
     boolean isQueuedOrSubmitted();
     boolean isQueuedAndNotSubmitted();

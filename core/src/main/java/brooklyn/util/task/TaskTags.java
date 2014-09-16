@@ -56,7 +56,11 @@ public class TaskTags {
 
     
     public static boolean isInessential(Task<?> task) {
-        return task.getTags().contains(INESSENTIAL_TASK);
+        return hasTag(task, INESSENTIAL_TASK);
+    }
+
+    public static boolean hasTag(Task<?> task, Object tag) {
+        return task.getTags().contains(tag);
     }
     
     public static <U,V extends TaskAdaptable<U>> V markInessential(V task) {

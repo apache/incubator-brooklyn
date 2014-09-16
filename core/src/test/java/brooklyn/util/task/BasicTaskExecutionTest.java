@@ -372,14 +372,14 @@ public class BasicTaskExecutionTest {
             }});
         assertEquals(null, t.submittedByTask);
         assertEquals(-1, t.submitTimeUtc);
-        assertNull(t.getResult());
+        assertNull(t.getInternalFuture());
 
         em.submit(MutableMap.of("tag", "A"), t);
         assertTrue(signalStarted.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
         
         assertTrue(t.submitTimeUtc > 0);
         assertTrue(t.startTimeUtc >= t.submitTimeUtc);
-        assertNotNull(t.getResult());
+        assertNotNull(t.getInternalFuture());
         assertEquals(-1, t.endTimeUtc);
         assertEquals(false, t.isCancelled());
         

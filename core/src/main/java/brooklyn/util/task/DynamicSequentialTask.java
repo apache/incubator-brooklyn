@@ -40,7 +40,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
@@ -241,6 +240,10 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             // or use some kind of single threaded executor for the queued tasks
             Task<List<Object>> secondaryJobMaster = Tasks.<List<Object>>builder().dynamic(false)
                     .name("DST manager (internal)")
+                    // TODO marking it transient helps it be GC'd sooner, 
+                    // but ideally we wouldn't have this,
+                    // or else it would be a child
+                    .tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
                     .body(new Callable<List<Object>>() {
 
                 @Override

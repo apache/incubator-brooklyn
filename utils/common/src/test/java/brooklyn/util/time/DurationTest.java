@@ -96,4 +96,12 @@ public class DurationTest {
         Assert.assertEquals(Duration.nanos(-1).toMillisecondsRoundingUp(), -1);
     }
 
+    public void testComparison() {
+        Assert.assertTrue(Duration.seconds(1.8).isLongerThan(Duration.millis(1600)));
+        Assert.assertTrue(Duration.millis(1600).isShorterThan(Duration.seconds(1.8)));
+        
+        Assert.assertTrue(Duration.seconds(1).isLongerThan(Duration.ZERO));
+        Assert.assertFalse(Duration.seconds(-1).isLongerThan(Duration.ZERO));
+    }
+
 }
