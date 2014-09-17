@@ -58,16 +58,20 @@
   -->
 
   <properties>
+    <!-- Compilation -->
+    <java.version>1.6</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
-    <logback.version>1.0.7</logback.version>
-    <testng.version>6.3.1</testng.version>
-    <surefire.version>2.13</surefire.version>
-
+    <!-- Testing -->
+    <testng.version>6.8</testng.version>
+    <surefire.version>2.17</surefire.version>
     <includedTestGroups />
     <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
+
+    <!-- Dependencies -->
+    <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+    <logback.version>1.0.7</logback.version>
   </properties>
 
   <dependencies>
@@ -127,23 +131,23 @@
       <plugins>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>
+          <version>3.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.5</version>
+          <version>2.8.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.0</version>
+          <version>1.5</version>
         </plugin>
         <plugin>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.9</version>
+          <version>2.17</version>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>2.4</version>
+          <version>2.5</version>
         </plugin>
         <plugin>
           <groupId>org.apache.felix</groupId>
@@ -152,27 +156,31 @@
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
-          <version>2.4.1</version>
+          <version>2.6</version>
         </plugin>
         <plugin>
           <artifactId>maven-source-plugin</artifactId>
-          <version>2.1.2</version>
+          <version>2.3</version>
         </plugin>
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.8</version>
+          <version>2.9.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.2.2</version>
+          <version>2.4.1</version>
         </plugin>        
         <plugin>
           <artifactId>maven-eclipse-plugin</artifactId>
-          <version>2.8</version>
+          <version>2.9</version>
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>1.5</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -184,8 +192,8 @@
           <compilerId>groovy-eclipse-compiler</compilerId>
           <fork>true</fork>
           <verbose>false</verbose>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
         </configuration>
         <dependencies>
           <dependency>
@@ -222,7 +230,6 @@
       </plugin>
 
       <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <configuration>
               <archive>
@@ -232,7 +239,6 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptors>
@@ -359,9 +365,7 @@
           </plugin>
 
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.1</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
