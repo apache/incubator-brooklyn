@@ -95,7 +95,7 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
 
         DynamicTasks.queueIfPossible(
                 Tasks.<Void>builder()
-                    .description("Start entity mirror feed")
+                    .name("Start entity mirror feed")
                     .body(asyncTask)
                     .build())
             .orSubmitAsync(this);
