@@ -21,9 +21,10 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "view/viewutils",
-    "text!tpl/apps/summary.html"
-], function (_, $, Backbone, ViewUtils, SummaryHtml) {
+    "underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
+    "text!tpl/apps/summary.html", "view/entity-config", 
+], function (_, $, Backbone, Brooklyn, Util, ViewUtils, 
+        SummaryHtml, EntityConfigView) {
 
     var EntitySummaryView = Backbone.View.extend({
         events:{
@@ -31,18 +32,25 @@ define([
         },
         template:_.template(SummaryHtml),
         initialize: function() {
-            _.bindAll(this)
-            var that = this
+            _.bindAll(this);
+            var that = this;
             this.$el.html(this.template({
                 entity:this.model,
                 application:this.options.application,
-            }))
-            ViewUtils.attachToggler(this.$el)
+            }));
+            
+            this.options.tabView.configView = new EntityConfigView({
+                model:this.options.model,
+                tabView:this.options.tabView,
+            });
+            this.$("div#advanced-config").html(this.options.tabView.configView.render().el);
+
+            ViewUtils.attachToggler(this.$el);
 
             // TODO we should have a backbone object exported from the sensors view which we can listen to here
             // (currently we just take the URL from that view) - and do the same for active tasks;
             ViewUtils.getRepeatedlyWithDelay(this, this.model.getSensorUpdateUrl(),
-                function(data) { that.updateWithData(data) });
+                function(data) { that.updateWithData(data); });
             // however if we only use external objects we must either subscribe to their errors also
             // or do our own polling against the server, so we know when to disable ourselves
 //            ViewUtils.fetchRepeatedlyWithDelay(this, this.model, { period: 10*1000 })
@@ -50,7 +58,7 @@ define([
             this.loadSpec();
         },
         render:function () {
-            return this
+            return this;
         },
         revealIfHasValue: function(sensor, $div, renderer, values) {
             var that = this;
