@@ -6,16 +6,13 @@ toc: /toc.json
 
 ## License
 
-Brooklyn is released to the public as open source under the 
+Apache Brooklyn is released to the public as open source under the 
 terms of the [Apache License, v2.0](license.html).
 
-
-## Software Contributor Agreement
-
-If you or your company wish to make contributions to the Brooklyn
-project, we will require the appropriate [Software Contributor Agreement]({{site.url}}/license/contributor-agreements).
+Apache Brooklyn is currently undergoing Incubation at the Apache Software Foundation.
 
 
 ## Trademark
 
-brooklyn and the brooklyn logo are trademarks of Cloudsoft Corporation.
+The Brooklyn name and logo are trademarks owned by the Apache Software Foundation.
+
