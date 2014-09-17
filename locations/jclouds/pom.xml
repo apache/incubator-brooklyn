@@ -110,13 +110,18 @@
         <dependency>
             <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch.agentproxy.usocket-jna</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch.agentproxy.pageant</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>${jclouds.groupId}</groupId>
-            <artifactId>jclouds-blobstore</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
         <dependency>
             <groupId>${jclouds.groupId}</groupId>
             <artifactId>jclouds-allblobstore</artifactId>
@@ -128,6 +133,7 @@
             <artifactId>jclouds-allcompute</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+
         <dependency>
             <groupId>${jclouds.groupId}.labs</groupId>
             <artifactId>abiquo</artifactId>
@@ -143,6 +149,7 @@
             <artifactId>docker</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+
         <!-- these two seem needed here to prevent Eclipse IDE from getting wrong version of logback-core -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
