@@ -35,6 +35,8 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.base.Preconditions;
+
 public class EntityHttpClientImpl implements EntityHttpClient {
     private static final Logger LOG = LoggerFactory.getLogger(EntityHttpClientImpl.class);
 
@@ -68,7 +70,8 @@ public class EntityHttpClientImpl implements EntityHttpClient {
     }
 
     protected HttpToolResponse exec(String path, HttpCall httpCall) {
-        HttpClient client = getHttpClientForBrooklynNode().build();
+        HttpClient client = Preconditions.checkNotNull(getHttpClientForBrooklynNode(), "No address info for "+node)
+            .build();
         URI baseUri = node.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
         URI uri = URI.create(Urls.mergePaths(baseUri.toString(), path));
 

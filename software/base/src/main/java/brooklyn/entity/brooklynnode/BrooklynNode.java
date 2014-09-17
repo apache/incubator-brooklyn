@@ -245,7 +245,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public interface StopNodeButLeaveAppsEffector {
         ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "How long to wait before giving up on stopping the node", Duration.ONE_HOUR);
         Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(Void.class, "stopNodeButLeaveApps")
-                .description("Stop the node without stopping the running applications")
+                .description("Stop the node but if it was managing other applications, leave them running")
                 .parameter(TIMEOUT)
                 .buildAbstract();
     }
@@ -255,7 +255,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public interface StopNodeAndKillAppsEffector {
         ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "How long to wait before giving up on stopping the node", Duration.ONE_HOUR);
         Effector<Void> STOP_NODE_AND_KILL_APPS = Effectors.effector(Void.class, "stopNodeAndKillApps")
-                .description("Stop all apps running on the node and shutdown the node")
+                .description("Stop all apps managed by the node and shutdown the node")
                 .parameter(TIMEOUT)
                 .buildAbstract();
     }

@@ -32,6 +32,8 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -43,10 +45,13 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -174,10 +179,20 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                     .addIfNotNull("shutdownTimeout", toNullableString(parameters.get(SHUTDOWN_TIMEOUT)))
                     .addIfNotNull("requestTimeout", toNullableString(parameters.get(REQUEST_TIMEOUT)))
                     .addIfNotNull("delayForHttpReturn", toNullableString(parameters.get(DELAY_FOR_HTTP_RETURN)));
-            HttpToolResponse resp = ((BrooklynNode)entity()).http()
-                .post("/v1/server/shutdown", MutableMap.<String, String>of(), formParams);
-            if (resp.getResponseCode() != HttpStatus.SC_NO_CONTENT) {
-                throw new IllegalStateException("Remote node shutdown failed.");
+            try {
+                HttpToolResponse resp = ((BrooklynNode)entity()).http()
+                    .post("/v1/server/shutdown", MutableMap.<String, String>of(), formParams);
+                if (resp.getResponseCode() != HttpStatus.SC_NO_CONTENT) {
+                    throw new IllegalStateException("Response code "+resp.getResponseCode());
+                }
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                Lifecycle state = entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL);
+                if (state!=Lifecycle.RUNNING) {
+                    // ignore failure in this task if the node is not currently running
+                    Tasks.markInessential();
+                }
+                throw new PropagatedRuntimeException("Error shutting down remote node "+entity()+" (in state "+state+"): "+Exceptions.collapseText(e), e);
             }
             ServiceNotUpLogic.updateNotUpIndicator(entity(), "brooklynnode.shutdown", "Shutdown of remote node has completed successfuly");
             return null;
