@@ -20,11 +20,16 @@ package brooklyn.rest.apidoc;
 
 import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonSetter;
 
 import com.wordnik.swagger.core.Documentation;
 
+@JsonIgnoreProperties({
+    "com$wordnik$swagger$core$Documentation$$apis",
+    "com$wordnik$swagger$core$Documentation$$models"
+})
 public class ApidocRoot extends Documentation {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -35,14 +35,17 @@ define([
     };
 
     Util.toDisplayString = function(data) {
-        var escaped = Util.roundIfNumberToNumDecimalPlaces(data, 4);
-        if (escaped != null) {
-            if (typeof escaped === 'string')
-                escaped = Util.escape(escaped);
-            else
-                escaped = JSON.stringify(escaped);
-        }
-        return escaped;
+        data = Util.roundIfNumberToNumDecimalPlaces(data, 4);
+        if (typeof data !== 'string')
+            data = JSON.stringify(data);
+        return Util.escape(data);
+    };
+
+    Util.toTextAreaString = function(data) {
+        data = Util.roundIfNumberToNumDecimalPlaces(data, 8);
+        if (typeof data !== 'string')
+            data = JSON.stringify(data, null, 2);
+        return data;
     };
 
     if (!String.prototype.trim) {

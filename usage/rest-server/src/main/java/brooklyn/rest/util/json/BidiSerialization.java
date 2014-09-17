@@ -38,6 +38,27 @@ import brooklyn.management.ManagementContext;
 
 public class BidiSerialization {
 
+    protected final static ThreadLocal<Boolean> STRICT_SERIALIZATION = new ThreadLocal<Boolean>(); 
+
+    /** sets strict serialization on, or off (the default), for the current thread;
+     * recommended to be used in a <code>try { ... } finally { ... }</code> block
+     * with {@link #clearStrictSerialization()} at the end.
+     * <p>
+     * with strict serialization, classes must have public fields or annotated fields, else they will not be serialized
+     */
+    public static void setStrictSerialization(Boolean value) {
+        STRICT_SERIALIZATION.set(value);
+    }
+    public static void clearStrictSerialization() {
+        STRICT_SERIALIZATION.remove();
+    }
+    public static boolean isStrictSerialization() {
+        Boolean result = STRICT_SERIALIZATION.get();
+        if (result!=null) return result;
+        return false;
+    }
+
+
     public abstract static class AbstractWithManagementContextSerialization<T> {
 
         protected class Serializer extends JsonSerializer<T> {

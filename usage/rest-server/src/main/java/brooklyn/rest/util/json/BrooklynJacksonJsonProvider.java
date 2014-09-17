@@ -25,7 +25,9 @@ import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.module.SimpleModule;
+import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,8 +129,17 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
             throw new IllegalStateException("No management context available for creating ObjectMapper");
         }
         
-        ObjectMapper mapper;
-        mapper = new ObjectMapper();
+        SerializationConfig defaultConfig = new ObjectMapper().getSerializationConfig();
+        SerializationConfig sc = new SerializationConfig(
+            defaultConfig.getClassIntrospector() /* ObjectMapper.DEFAULT_INTROSPECTOR */, 
+            defaultConfig.getAnnotationIntrospector() /* ObjectMapper.DEFAULT_ANNOTATION_INTROSPECTOR */, 
+            new PossiblyStrictPreferringFieldsVisibilityChecker(),
+            null, null, TypeFactory.defaultInstance(), null);
+        
+        ConfigurableSerializerProvider sp = new ConfigurableSerializerProvider();
+        sp.setUnknownTypeSerializer(new ErrorAndToStringUnknownTypeSerializer());
+        
+        ObjectMapper mapper = new ObjectMapper(null, sp, null, sc, null);
         SimpleModule mapperModule = new SimpleModule("Brooklyn", new Version(0, 0, 0, "ignored"));
         
         new BidiSerialization.ManagementContextSerialization(mgmt).install(mapperModule);

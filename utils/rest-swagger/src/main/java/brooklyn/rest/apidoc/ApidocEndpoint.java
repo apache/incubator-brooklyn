@@ -21,10 +21,14 @@ package brooklyn.rest.apidoc;
 import java.util.Comparator;
 
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.wordnik.swagger.core.DocumentationEndPoint;
 
+@JsonIgnoreProperties({
+    "com$wordnik$swagger$core$DocumentationEndPoint$$ops"
+})
 public class ApidocEndpoint extends DocumentationEndPoint {
 
     public static final Comparator<ApidocEndpoint> COMPARATOR = new Comparator<ApidocEndpoint>() {

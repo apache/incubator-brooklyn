@@ -22,8 +22,8 @@
  */
 define([
     "underscore", "jquery", "backbone", "view/viewutils",
-    "text!tpl/apps/summary.html", "formatJson"
-], function (_, $, Backbone, ViewUtils, SummaryHtml, FormatJSON) {
+    "text!tpl/apps/summary.html"
+], function (_, $, Backbone, ViewUtils, SummaryHtml) {
 
     var EntitySummaryView = Backbone.View.extend({
         events:{
@@ -33,14 +33,10 @@ define([
         initialize: function() {
             _.bindAll(this)
             var that = this
-            var ej = FormatJSON(this.model.toJSON());
             this.$el.html(this.template({
                 entity:this.model,
                 application:this.options.application,
-                entityJson:ej,
-                applicationJson:FormatJSON(this.options.application.toJSON())
             }))
-            ViewUtils.updateTextareaWithData($(".for-textarea", this.$el), ej, true, false, 150, 400)
             ViewUtils.attachToggler(this.$el)
 
             // TODO we should have a backbone object exported from the sensors view which we can listen to here

@@ -21,9 +21,9 @@
  *
  * @type {*}
  */
-define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils", "formatJson",
+define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
     "text!tpl/apps/advanced.html", "view/entity-config", "view/change-name-invoke", "view/add-child-invoke", "view/policy-new"
-], function(_, $, Backbone, Brooklyn, Util, ViewUtils, FormatJSON,
+], function(_, $, Backbone, Brooklyn, Util, ViewUtils,
         AdvancedHtml, EntityConfigView, ChangeNameInvokeView, AddChildInvokeView, NewPolicyView) {
     var EntityAdvancedView = Backbone.View.extend({
         events: {
@@ -56,15 +56,15 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
         },
         modelChange: function() {
             this.$('#entity-name').html(Util.toDisplayString(this.model.get("name")));
-            ViewUtils.updateTextareaWithData($("#advanced-entity-json", this.$el), FormatJSON(this.model.toJSON()), true, false, 250, 600);
+            ViewUtils.updateTextareaWithData($("#advanced-entity-json", this.$el), Util.toTextAreaString(this.model), true, false, 250, 600);
         },
         renderLocationData: function(data) {
-            ViewUtils.updateTextareaWithData($("#advanced-locations", this.$el), FormatJSON(data), true, false, 250, 600);
+            ViewUtils.updateTextareaWithData($("#advanced-locations", this.$el), Util.toTextAreaString(data), true, false, 250, 600);
         },
         renderTags: function(data) {
             var list = "";
             for (tag in data)
-                list += "<div class='activity-tag-giftlabel'>"+_.escape(JSON.stringify(data[tag]))+"</div>";
+                list += "<div class='activity-tag-giftlabel'>"+Util.toDisplayString(data[tag])+"</div>";
             if (!list) list = "No tags";
             this.$('#advanced-entity-tags').html(list);
         },

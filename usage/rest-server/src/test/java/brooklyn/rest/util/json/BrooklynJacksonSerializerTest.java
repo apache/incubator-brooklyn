@@ -19,12 +19,16 @@
 package brooklyn.rest.util.json;
 
 import java.io.IOException;
+import java.io.NotSerializableException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +36,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncher;
@@ -39,7 +45,11 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Strings;
 
 import com.google.gson.Gson;
 
@@ -90,35 +100,152 @@ public class BrooklynJacksonSerializerTest {
         }
     }
     
-    public static class AngrySelfRefNonSerializableClass {
+    public static class SelfRefNonSerializableClass {
         @JsonProperty
         Object bogus = this;
     }
 
     @Test
-    public void testCustomSerializerWithNonSerializableAngrySelfRef() {
-        checkNonSerializable(new AngrySelfRefNonSerializableClass());
+    public void testSelfReferenceFailsWhenStrict() {
+        checkNonSerializableWhenStrict(new SelfRefNonSerializableClass());
     }
-
-    public static class AngryEmptyNonSerializableClass {
+    @Test
+    public void testSelfReferenceGeneratesErrorMapObject() throws JsonGenerationException, JsonMappingException, IOException {
+        checkSerializesAsMapWithErrorAndToString(new SelfRefNonSerializableClass());
+    }
+    @Test
+    public void testNonSerializableInListIsShownInList() throws JsonGenerationException, JsonMappingException, IOException {
+        List<?> result = checkSerializesAs(MutableList.of(1, new SelfRefNonSerializableClass()), List.class);
+        Assert.assertEquals( result.get(0), 1 );
+        Assert.assertEquals( ((Map<?,?>)result.get(1)).get("errorType"), NotSerializableException.class.getName() );
+    }
+    @Test
+    public void testNonSerializableInMapIsShownInMap() throws JsonGenerationException, JsonMappingException, IOException {
+        Map<?,?> result = checkSerializesAs(MutableMap.of("x", new SelfRefNonSerializableClass()), Map.class);
+        Assert.assertEquals( ((Map<?,?>)result.get("x")).get("errorType"), NotSerializableException.class.getName() );
+    }
+    static class TupleWithNonSerializable {
+        String good = "bon";
+        SelfRefNonSerializableClass bad = new SelfRefNonSerializableClass();
+    }
+    @Test
+    public void testNonSerializableInObjectIsShownInMap() throws JsonGenerationException, JsonMappingException, IOException {
+        String resultS = checkSerializesAs(new TupleWithNonSerializable(), null);
+        log.info("nested non-serializable json is "+resultS);
+        Assert.assertTrue(resultS.startsWith("{\"good\":\"bon\",\"bad\":{"), "expected a nested map for the error field, not "+resultS);
+        
+        Map<?,?> result = checkSerializesAs(new TupleWithNonSerializable(), Map.class);
+        Assert.assertEquals( result.get("good"), "bon" );
+        Assert.assertTrue( result.containsKey("bad"), "Should have had a key for field 'bad'" );
+        Assert.assertEquals( ((Map<?,?>)result.get("bad")).get("errorType"), NotSerializableException.class.getName() );
+    }
+    
+    public static class EmptyClass {
     }
 
     @Test
-    public void testCustomSerializerWithNonSerializableAngryEmpty() {
-        checkNonSerializable(new AngryEmptyNonSerializableClass());
+    public void testEmptySerializesAsEmpty() throws JsonGenerationException, JsonMappingException, IOException {
+        // deliberately, a class with no fields and no annotations serializes as an error,
+        // because the alternative, {}, is useless.  however if it *is* annotated, as below, then it will serialize fine.
+        checkSerializesAsMapWithErrorAndToString(new SelfRefNonSerializableClass());
+    }
+    @Test
+    public void testEmptyNonSerializableFailsWhenStrict() {
+        checkNonSerializableWhenStrict(new EmptyClass());
     }
 
-    // TODO would like to find an example which is non-serializable because of infinite recursion,
-    // to test StackOverflowError -- tested here and in the Integration test below.
-    // (but I can't seem to make one!)
+    @JsonSerialize
+    public static class EmptyClassWithSerialize {
+    }
+
+    @Test
+    public void testEmptyAnnotatedSerializesAsEmptyEvenWhenStrict() throws JsonGenerationException, JsonMappingException, IOException {
+        try {
+            BidiSerialization.setStrictSerialization(true);
+            testEmptyAnnotatedSerializesAsEmpty();
+        } finally {
+            BidiSerialization.clearStrictSerialization();
+        }
+    }
     
-    protected void checkNonSerializable(Object x) {
+    @Test
+    public void testEmptyAnnotatedSerializesAsEmpty() throws JsonGenerationException, JsonMappingException, IOException {
+        Map<?, ?> map = checkSerializesAs( new EmptyClassWithSerialize(), Map.class );
+        Assert.assertTrue(map.isEmpty(), "Expected an empty map; instead got: "+map);
+
+        String result = checkSerializesAs( MutableList.of(new EmptyClassWithSerialize()), null );
+        result = result.replaceAll(" ", "").trim();
+        Assert.assertEquals(result, "[{}]");
+    }
+
+    @Test
+    public void testSensorFailsWhenStrict() {
+        checkNonSerializableWhenStrict(MutableList.of(Attributes.HTTP_PORT));
+    }
+    @Test
+    public void testSensorSensible() throws JsonGenerationException, JsonMappingException, IOException {
+        Map<?,?> result = checkSerializesAs(Attributes.HTTP_PORT, Map.class);
+        log.info("SENSOR json is: "+result);
+        Assert.assertFalse(result.toString().contains("error"), "Shouldn't have had an error, instead got: "+result);
+    }
+
+    @Test
+    public void testLinkedListSerialization() throws JsonGenerationException, JsonMappingException, IOException {
+        LinkedList<Object> ll = new LinkedList<Object>();
+        ll.add(1); ll.add("two");
+        String result = checkSerializesAs(ll, null);
+        log.info("LLIST json is: "+result);
+        Assert.assertFalse(result.toString().contains("error"), "Shouldn't have had an error, instead got: "+result);
+        Assert.assertEquals(Strings.collapseWhitespace(result, ""), "[1,\"two\"]");
+    }
+
+    @Test
+    public void testSupplierSerialization() throws JsonGenerationException, JsonMappingException, IOException {
+        String result = checkSerializesAs(Strings.toStringSupplier(Streams.byteArrayOfString("x")), null);
+        log.info("SUPPLIER json is: "+result);
+        Assert.assertFalse(result.contains("error"), "Shouldn't have had an error, instead got: "+result);
+    }
+
+    @Test
+    public void testWrappedStreamSerialization() throws JsonGenerationException, JsonMappingException, IOException {
+        String result = checkSerializesAs(BrooklynTaskTags.tagForStream("TEST", Streams.byteArrayOfString("x")), null);
+        log.info("WRAPPED STREAM json is: "+result);
+        Assert.assertFalse(result.contains("error"), "Shouldn't have had an error, instead got: "+result);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T checkSerializesAs(Object x, Class<T> type) {
         ManagementContext mgmt = LocalManagementContextForTests.newInstance();
         try {
             ObjectMapper mapper = BrooklynJacksonJsonProvider.newPrivateObjectMapper(mgmt);
-
             String tS = mapper.writeValueAsString(x);
-
+            log.debug("serialized "+x+" as "+tS);
+            Assert.assertTrue(tS.length() < 1000, "Data too long, size "+tS.length()+" for "+x);
+            if (type==null) return (T) tS;
+            return mapper.readValue(tS, type);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            Entities.destroyAll(mgmt);
+        }
+    }
+    protected Map<?,?> checkSerializesAsMapWithErrorAndToString(Object x) {
+        Map<?,?> rt = checkSerializesAs(x, Map.class);
+        Assert.assertEquals(rt.get("toString"), x.toString());
+        Assert.assertEquals(rt.get("error"), true);
+        return rt;
+    }
+    protected void checkNonSerializableWhenStrict(Object x) {
+        checkNonSerializable(x, true);
+    }
+    protected void checkNonSerializable(Object x, boolean strict) {
+        ManagementContext mgmt = LocalManagementContextForTests.newInstance();
+        try {
+            ObjectMapper mapper = BrooklynJacksonJsonProvider.newPrivateObjectMapper(mgmt);
+            if (strict)
+                BidiSerialization.setStrictSerialization(true);
+            
+            String tS = mapper.writeValueAsString(x);
             Assert.fail("Should not have serialized "+x+"; instead gave: "+tS);
             
         } catch (Exception e) {
@@ -126,6 +253,8 @@ public class BrooklynJacksonSerializerTest {
             log.info("Got expected error, when serializing "+x+": "+e);
             
         } finally {
+            if (strict)
+                BidiSerialization.clearStrictSerialization();
             Entities.destroyAll(mgmt);
         }
     }
@@ -153,8 +282,8 @@ public class BrooklynJacksonSerializerTest {
             Assert.assertEquals(values.get("type"), LocalManagementContextForTests.class.getCanonicalName());
             
             // assert normal API returns the same, containing links
-            log.info("ENTITY is: \n"+content);
             content = HttpTestUtils.getContent(entityUrl);
+            log.info("ENTITY is: \n"+content);
             values = new Gson().fromJson(content, Map.class);
             Assert.assertTrue(values.size()>=3, "Map is too small: "+values);
             Assert.assertTrue(values.size()<=6, "Map is too big: "+values);
@@ -170,20 +299,23 @@ public class BrooklynJacksonSerializerTest {
             Assert.assertEquals(values.get("type"), Entity.class.getCanonicalName());
             Assert.assertEquals(values.get("id"), app.getId());
 
-            // and Angry gives the toString
-            AngrySelfRefNonSerializableClass angry = new AngrySelfRefNonSerializableClass();
+            // and self-ref gives error + toString
+            SelfRefNonSerializableClass angry = new SelfRefNonSerializableClass();
             app.setConfig(TestEntity.CONF_OBJECT, angry);
             content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
             log.info("CONFIG ANGRY is:\n"+content);
-            String valueS = new Gson().fromJson(content, String.class);
-            Assert.assertEquals(valueS, angry.toString());
+            assertErrorObjectMatchingToString(content, angry);
             
             // as does Server
             app.setConfig(TestEntity.CONF_OBJECT, server);
             content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
+            // NOTE, if using the default visibility / object mapper, the getters of the object are invoked
+            // resulting in an object which is huge, 7+MB -- and it wreaks havoc w eclipse console regex parsing!
+            // (but with our custom VisibilityChecker server just gives us the nicer error!)
             log.info("CONFIG SERVER is:\n"+content);
-            valueS = new Gson().fromJson(content, String.class);
-            Assert.assertEquals(valueS, server.toString());
+            assertErrorObjectMatchingToString(content, server);
+            Assert.assertTrue(content.indexOf(NotSerializableException.class.getCanonicalName())>=0, "server should have contained things which are not serializable");
+            Assert.assertTrue(content.length() < 1024, "content should not have been very long; instead was: "+content.length());
             
         } finally {
             try {
@@ -193,6 +325,12 @@ public class BrooklynJacksonSerializerTest {
             }
             Entities.destroyAll(mgmt);
         }
+    }
+
+    private void assertErrorObjectMatchingToString(String content, Object expected) {
+        Object value = new Gson().fromJson(content, Object.class);
+        Assert.assertTrue(value instanceof Map, "Expected map, got: "+value);
+        Assert.assertEquals(((Map<?,?>)value).get("toString"), expected.toString());
     }
         
 }
