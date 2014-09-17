@@ -1185,8 +1185,10 @@ tr.app-add-wizard-config-entry {
     height: 8em;
     margin-right: 4px;
     font-family: Consolas, Lucida Console, Monaco, monospace;
+    font-size: 8.5pt;
+    line-height: 11pt;
     white-space: pre;
-    word-wrap: normal; 
+    word-wrap: normal;
     overflow-x: scroll;
     overflow-y: scroll;
 }
