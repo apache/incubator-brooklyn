@@ -1066,6 +1066,7 @@
                   <exclude>**/*.key.org</exclude>
                   <exclude>**/*.psd</exclude>
                   <exclude>**/*.json</exclude>
+                  <exclude>**/*.yaml</exclude>
                   <exclude>**/*.plxarc</exclude>
                   <exclude>**/services/brooklyn.location.LocationResolver</exclude>
                   <exclude>**/src/test/resources/brooklyn/entity/basic/template_with_extra_substitutions.txt</exclude>
