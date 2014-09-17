@@ -7,7 +7,6 @@
         "underscore":"js/libs/underscore",
         "backbone":"js/libs/backbone",
         "bootstrap":"js/libs/bootstrap",
-        "formatJson":"js/libs/json-formatter",
         "jquery-form":"js/libs/jquery.form",
         "jquery-datatables":"js/libs/jquery.dataTables",
         "jquery-slideto":"js/libs/jquery.slideto.min",

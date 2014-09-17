@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
 */
+
+/* brooklyn extensions for supporting views */
 define([
     "jquery", "underscore", "backbone", "brooklyn-utils",
     "text!tpl/lib/basic-modal.html",
