@@ -41,8 +41,11 @@ public class IfFunctionsTest {
     
     @Test
     public void testPredicateAndSupplier() {
-        checkTF(IfFunctions.ifPredicate(Predicates.equalTo(false)).get(Suppliers.ofInstance("F"))
-            .ifEquals(true).value("T").defaultGet(Suppliers.ofInstance("?")).build(), "?");
+        Function function = IfFunctions.ifPredicate(Predicates.equalTo(false)).get(Suppliers.ofInstance("F"))
+                .ifEquals(true).value("T").defaultGet(Suppliers.ofInstance("?")).build();
+        Assert.assertEquals(function.apply(true), "T");
+        Assert.assertEquals(function.apply(false), "F");
+        Assert.assertEquals(function.apply(null), "?");
     }
 
     @Test

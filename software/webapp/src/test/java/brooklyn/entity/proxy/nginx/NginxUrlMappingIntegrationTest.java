@@ -417,7 +417,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         c1.resize(2);
         List c1jbosses = new ArrayList(c1.getMembers());
         c1jbosses.remove(c1jboss);
-        Entity c1jboss2 = Iterables.getOnlyElement(c1jbosses);
+        Entity c1jboss2 = (Entity)Iterables.getOnlyElement(c1jbosses);
 
         // TODO Have to wait for new app-server; should fix app-servers to block
         // Also wait for TARGET_ADDRESSES to update
