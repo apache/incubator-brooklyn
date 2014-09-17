@@ -22,9 +22,9 @@
  * @type {*}
  */
 define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
-    "text!tpl/apps/advanced.html", "view/entity-config", "view/change-name-invoke", "view/add-child-invoke", "view/policy-new"
+    "text!tpl/apps/advanced.html", "view/change-name-invoke", "view/add-child-invoke", "view/policy-new"
 ], function(_, $, Backbone, Brooklyn, Util, ViewUtils,
-        AdvancedHtml, EntityConfigView, ChangeNameInvokeView, AddChildInvokeView, NewPolicyView) {
+        AdvancedHtml, ChangeNameInvokeView, AddChildInvokeView, NewPolicyView) {
     var EntityAdvancedView = Backbone.View.extend({
         events: {
             "click button#change-name": "showChangeNameModal",
@@ -39,12 +39,6 @@ define(["underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/
         initialize:function() {
             _.bindAll(this);
             this.$el.html(this.template());
-
-            this.options.tabView.configView = new EntityConfigView({
-                model:this.options.model,
-                tabView:this.options.tabView,
-            });
-            this.$("div#advanced-config").html(this.options.tabView.configView.render().el);
 
             this.model.on('change', this.modelChange, this);
             this.modelChange();
