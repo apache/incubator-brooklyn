@@ -26,6 +26,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 public class Functionals {
 
@@ -121,6 +122,9 @@ public class Functionals {
             }
         }
         return new SupplierAsCallable();
+    }
+    public static <T,U> Callable<U> callable(Function<T,U> f, T x) {
+        return callable(Suppliers.compose(f, Suppliers.ofInstance(x)));
     }
 
 }

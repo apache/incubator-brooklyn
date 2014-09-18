@@ -322,7 +322,7 @@ public class EffectorUtils {
                 .put("displayName", effector.getName())
                 .put("tags", MutableList.of(
                         BrooklynTaskTags.EFFECTOR_TAG, 
-                        BrooklynTaskTags.tagForEffectorName(effector.getName()), 
+                        BrooklynTaskTags.tagForEffectorCall(entity, effector.getName()), 
                         BrooklynTaskTags.tagForTargetEntity(entity)))
                 .build();
     }

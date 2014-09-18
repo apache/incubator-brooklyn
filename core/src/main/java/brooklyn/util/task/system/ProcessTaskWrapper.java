@@ -55,8 +55,8 @@ public abstract class ProcessTaskWrapper<RET> extends ProcessTaskStub implements
     protected ProcessTaskWrapper(AbstractProcessTaskFactory<?,RET> constructor) {
         super(constructor);
         TaskBuilder<Object> tb = constructor.constructCustomizedTaskBuilder();
-        if (stdout!=null) tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDOUT, stdout));
-        if (stderr!=null) tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDERR, stderr));
+        if (stdout!=null) tb.tag(BrooklynTaskTags.tagForStreamWeak(BrooklynTaskTags.STREAM_STDOUT, stdout));
+        if (stderr!=null) tb.tag(BrooklynTaskTags.tagForStreamWeak(BrooklynTaskTags.STREAM_STDERR, stderr));
         task = (Task<RET>) tb.body(new ProcessTaskInternalJob()).build();
     }
     

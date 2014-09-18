@@ -269,7 +269,7 @@ public class ScriptHelper {
                 stdin.write(line.getBytes());
                 stdin.write("\n".getBytes());
             }
-            tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDIN, stdin));
+            tb.tag(BrooklynTaskTags.tagForStreamWeak(BrooklynTaskTags.STREAM_STDIN, stdin));
         } catch (IOException e) {
             log.warn("Error registering stream "+BrooklynTaskTags.STREAM_STDIN+" on "+tb+": "+e, e);
         }
@@ -283,9 +283,9 @@ public class ScriptHelper {
         
         if (gatherOutput) {
             stdout = new ByteArrayOutputStream();
-            tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDOUT, stdout));
+            tb.tag(BrooklynTaskTags.tagForStreamWeak(BrooklynTaskTags.STREAM_STDOUT, stdout));
             stderr = new ByteArrayOutputStream();
-            tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDERR, stderr));
+            tb.tag(BrooklynTaskTags.tagForStreamWeak(BrooklynTaskTags.STREAM_STDERR, stderr));
         }
         task = tb.build();
         if (isTransient) BrooklynTaskTags.setTransient(task);

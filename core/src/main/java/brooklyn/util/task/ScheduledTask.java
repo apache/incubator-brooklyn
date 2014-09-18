@@ -34,15 +34,15 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
 
+/**
+ * A task which runs with a fixed period.
+ * <p>
+ * Note that some termination logic, including {@link #addListener(Runnable, java.util.concurrent.Executor)},
+ * is not precisely defined. 
+ */
+// TODO ScheduledTask is a very pragmatic implementation; would be nice to tighten, 
+// reduce external assumptions about internal structure, and clarify "done" semantics
 public class ScheduledTask extends BasicTask {
-
-    // TODO It looks like now groovy callers construct ScheduledTask with these values in the map constructor.
-    // How does that work in pure-java!?
-    // Adding builder-like-setters so can be used in Java. But would be much nicer if this was immutable.
-    // Previous (out-of-date?) todo was:
-    //     See BasicExecutionManager.submitNewScheduledTask for where these fields are actually set.
-    //     Would be nice if the scheduledTask was more self-contained, rather than its fields being
-    //     modified by a different class in a non-obvious way...
     
 	final Callable<Task<?>> taskFactory;
 	/** initial delay before running, set as flag in constructor; defaults to 0 */
@@ -58,7 +58,7 @@ public class ScheduledTask extends BasicTask {
 	protected Task recentRun, nextRun;
 
 	public int getRunCount() { return runCount; }
-	public ScheduledFuture getNextScheduled() { return (ScheduledFuture)result; }
+	public ScheduledFuture getNextScheduled() { return (ScheduledFuture)internalFuture; }
 
     public ScheduledTask(Callable<Task<?>> taskFactory) {
         this(MutableMap.of(), taskFactory);
@@ -160,6 +160,6 @@ public class ScheduledTask extends BasicTask {
 	public Object get() throws InterruptedException, ExecutionException {
 		blockUntilStarted();
         blockUntilFirstScheduleStarted();
-		return (truth(recentRun)) ? recentRun.get() : result.get();
+		return (truth(recentRun)) ? recentRun.get() : internalFuture.get();
 	}
 }

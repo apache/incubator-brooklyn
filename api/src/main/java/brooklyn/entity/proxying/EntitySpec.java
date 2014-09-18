@@ -42,6 +42,7 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -379,6 +380,12 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     }
 
     public <V> EntitySpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
+        checkMutable();
+        config.put(checkNotNull(key, "key"), val);
+        return this;
+    }
+
+    public <V> EntitySpec<T> configure(ConfigKey<V> key, Supplier<? extends V> val) {
         checkMutable();
         config.put(checkNotNull(key, "key"), val);
         return this;

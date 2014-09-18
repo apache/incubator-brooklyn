@@ -25,9 +25,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.CountdownTimer;
@@ -47,7 +51,9 @@ import com.google.common.reflect.TypeToken;
  * <p>
  * Fluent-style API exposes a number of other options.
  */
-public class ValueResolver<T> {
+public class ValueResolver<T> implements DeferredSupplier<T> {
+
+    private static final Logger log = LoggerFactory.getLogger(ValueResolver.class);
     
     final Object value;
     final Class<T> type;
@@ -58,6 +64,10 @@ public class ValueResolver<T> {
     Boolean embedResolutionInTask;
     /** timeout on execution, if possible, or if embedResolutionInTask is true */
     Duration timeout;
+    
+    T defaultValue = null;
+    boolean returnDefaultOnGet = false;
+    boolean swallowExceptions = false;
     
     // internal fields
     final Object parentOriginalValue;
@@ -89,6 +99,8 @@ public class ValueResolver<T> {
         parentTimer = parent.parentTimer;
         if (parentTimer!=null && parentTimer.isExpired())
             expired = true;
+        
+        // default value and swallow exceptions do not need to be nested
     }
 
     public static class ResolverBuilderPretype {
@@ -99,6 +111,18 @@ public class ValueResolver<T> {
         public <T> ValueResolver<T> as(Class<T> type) {
             return new ValueResolver<T>(v, type);
         }
+    }
+
+    /** returns a copy of this resolver which can be queried, even if the original (single-use instance) has already been copied */
+    public ValueResolver<T> clone() {
+        ValueResolver<T> result = new ValueResolver<T>(value, type)
+            .context(exec).description(description)
+            .embedResolutionInTask(embedResolutionInTask)
+            .deep(forceDeep)
+            .timeout(timeout);
+        if (returnDefaultOnGet) result.defaultValue(defaultValue);
+        if (swallowExceptions) result.swallowExceptions();
+        return result;
     }
     
     /** execution context to use when resolving; required if resolving unsubmitted tasks or running with a time limit */
@@ -111,6 +135,38 @@ public class ValueResolver<T> {
     public ValueResolver<T> description(String description) {
         this.description = description;
         return this;
+    }
+    
+    /** sets a default value which will be returned on a call to {@link #get()} if the task does not complete
+     * or completes with an error
+     * <p>
+     * note that {@link #getMaybe()} returns an absent object even in the presence of
+     * a default, so that any error can still be accessed */
+    public ValueResolver<T> defaultValue(T defaultValue) {
+        this.defaultValue = defaultValue;
+        this.returnDefaultOnGet = true;
+        return this;
+    }
+
+    /** indicates that no default value should be returned on a call to {@link #get()}, and instead it should throw
+     * (this is the default; this method is provided to undo a call to {@link #defaultValue(Object)}) */
+    public ValueResolver<T> noDefaultValue() {
+        this.returnDefaultOnGet = false;
+        this.defaultValue = null;
+        return this;
+    }
+    
+    /** indicates that exceptions in resolution should not be thrown on a call to {@link #getMaybe()}, 
+     * but rather used as part of the {@link Maybe#get()} if it's absent, 
+     * and swallowed altogether on a call to {@link #get()} in the presence of a {@link #defaultValue(Object)} */
+    public ValueResolver<T> swallowExceptions() {
+        this.swallowExceptions = true;
+        return this;
+    }
+    
+    public Maybe<T> getDefault() {
+        if (returnDefaultOnGet) return Maybe.of(defaultValue);
+        else return Maybe.absent("No default value set");
     }
     
     /** causes nested structures (maps, lists) to be descended and nested unresolved values resolved */
@@ -145,7 +201,10 @@ public class ValueResolver<T> {
     }
 
     public T get() {
-        return getMaybe().get();
+        Maybe<T> m = getMaybe();
+        if (m.isPresent()) return m.get();
+        if (returnDefaultOnGet) return defaultValue;
+        return m.get();
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -268,7 +327,17 @@ public class ValueResolver<T> {
             }
 
         } catch (Exception e) {
-            throw new IllegalArgumentException("Error resolving "+(description!=null ? description+", " : "")+v+", in "+exec+": "+e, e);
+            Exceptions.propagateIfFatal(e);
+            
+            IllegalArgumentException problem = new IllegalArgumentException("Error resolving "+(description!=null ? description+", " : "")+v+", in "+exec+": "+e, e);
+            if (swallowExceptions) {
+                if (log.isDebugEnabled())
+                    log.debug("Resolution of "+this+" failed, swallowing and returning: "+e);
+                return Maybe.absent(problem);
+            }
+            if (log.isDebugEnabled())
+                log.debug("Resolution of "+this+" failed, throwing: "+e);
+            throw problem;
         }
         
         return new ValueResolver(v, type, this).getMaybe();

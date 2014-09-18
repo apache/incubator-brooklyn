@@ -146,6 +146,16 @@ public class Duration implements Comparable<Duration>, Serializable {
     }
 
     /** creates new {@link Duration} instance of the given length of time */
+    public static Duration days(Number n) {
+        return new Duration((long) (n.doubleValue() * TimeUnit.DAYS.toNanos(1)), TimeUnit.NANOSECONDS);
+    }
+
+    /** creates new {@link Duration} instance of the given length of time */
+    public static Duration hours(Number n) {
+        return new Duration((long) (n.doubleValue() * TimeUnit.HOURS.toNanos(1)), TimeUnit.NANOSECONDS);
+    }
+
+    /** creates new {@link Duration} instance of the given length of time */
     public static Duration minutes(Number n) {
         return new Duration((long) (n.doubleValue() * TimeUnit.MINUTES.toNanos(1)), TimeUnit.NANOSECONDS);
     }
@@ -261,6 +271,14 @@ public class Duration implements Comparable<Duration>, Serializable {
 
     public boolean isPositive() {
         return nanos()>0;
+    }
+
+    public boolean isLongerThan(Duration x) {
+        return compareTo(x) > 0;
+    }
+
+    public boolean isShorterThan(Duration x) {
+        return compareTo(x) < 0;
     }
 
 }

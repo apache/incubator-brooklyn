@@ -79,7 +79,7 @@ public class ScheduledExecutionTest {
 		    public Task<?> call() throws Exception {
 		        return new BasicTask<Integer>(new Callable<Integer>() {
 		            public Integer call() {
-		                ScheduledTask submitter = (ScheduledTask) ((BasicTask)Tasks.current()).submittedByTask;
+		                ScheduledTask submitter = (ScheduledTask) ((BasicTask)Tasks.current()).getSubmittedByTask();
             			if (i.get() >= 4) submitter.period = null;
             			log.info("task running ("+i+"): "+Tasks.current()+" "+Tasks.current().getStatusDetail(false));
             			return i.incrementAndGet();
@@ -109,7 +109,7 @@ public class ScheduledExecutionTest {
                 return new BasicTask<Integer>(new Callable<Integer>() {
                     public Integer call() {
             			log.info("task running ("+i+"): "+Tasks.current()+" "+Tasks.current().getStatusDetail(false));
-            			ScheduledTask submitter = (ScheduledTask) ((BasicTask)Tasks.current()).submittedByTask;
+            			ScheduledTask submitter = (ScheduledTask) ((BasicTask)Tasks.current()).getSubmittedByTask();
             			i.incrementAndGet();
             			if (i.get() >= 5) submitter.cancel();
             			return i.get();
