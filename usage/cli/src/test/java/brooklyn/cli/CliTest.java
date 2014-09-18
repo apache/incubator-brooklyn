@@ -49,8 +49,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.cli.AbstractMain.BrooklynCommand;
 import brooklyn.cli.AbstractMain.HelpCommand;
+import brooklyn.cli.AbstractMain.LaunchCommand;
 import brooklyn.cli.Main.GeneratePasswordCommand;
-import brooklyn.cli.Main.LaunchCommand;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
