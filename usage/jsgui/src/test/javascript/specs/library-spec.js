@@ -23,8 +23,8 @@
  */
 
 define([
-    'underscore', 'jquery', 'backbone', 'formatJson'
-], function (_, $, Backbone, formatJson) {
+    'underscore', 'jquery', 'backbone',
+], function (_, $, Backbone) {
 
     describe('Test the libraries', function () {
 
@@ -39,12 +39,6 @@ define([
                 expect(jQuery.fn.jquery).toEqual('1.7.2')
                 expect(jQuery).toEqual($);
             })
-        })
-
-        describe('json-formatter', function () {
-            it ('must be able to format a JSON', function () {
-                expect(formatJson({ test:'twest'}).length).toEqual(23)
-            });
         })
 
         describe('backbone', function () {

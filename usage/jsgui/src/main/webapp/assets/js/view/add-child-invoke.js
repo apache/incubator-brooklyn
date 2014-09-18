@@ -20,9 +20,9 @@
  * Render as a modal
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils", "formatJson",
+    "underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
     "text!tpl/apps/add-child-modal.html"
-], function(_, $, Backbone, Brooklyn, Util, ViewUtils, FormatJSON,
+], function(_, $, Backbone, Brooklyn, Util, ViewUtils, 
         AddChildModalHtml) {
     return Backbone.View.extend({
         template: _.template(AddChildModalHtml),

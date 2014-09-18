@@ -1,3 +1,5 @@
+// brooklyn note: from https://github.com/wordnik/swagger-ui, apache 2.0 license
+
 $(function() {
 
 	// Helper function for vertically aligning DOM elements
