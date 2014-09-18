@@ -63,7 +63,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
 
     private volatile HttpFeed httpFeed;
     private final Set<String> installedKeysCache = Sets.newLinkedHashSet();
-    private UrlMappingsMemberTrackerPolicy urlMappingsMemberTrackerPolicy;
+    protected UrlMappingsMemberTrackerPolicy urlMappingsMemberTrackerPolicy;
 
     @Override
     public void reload() {

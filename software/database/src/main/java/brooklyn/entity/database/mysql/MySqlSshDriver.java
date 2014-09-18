@@ -176,7 +176,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         stop();
     }
 
-    private void copyDatabaseConfigScript() {
+    protected void copyDatabaseConfigScript() {
         newScript(CUSTOMIZING).execute();  //create the directory
 
         String configScriptContents = processTemplate(entity.getAttribute(MySqlNode.TEMPLATE_CONFIGURATION_URL));
@@ -185,7 +185,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         getMachine().copyTo(configContents, Urls.mergePaths(getRunDir(), getConfigFile()));
     }
 
-    private boolean copyDatabaseCreationScript() {
+    protected boolean copyDatabaseCreationScript() {
         InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
         if (creationScript==null) return false;
         getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
