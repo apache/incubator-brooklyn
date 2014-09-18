@@ -18,7 +18,7 @@ it's easy to give back to the community.  Just:
 
 1. **Push it**, and tell everyone about it
 
-1. **Sign the relevant [contributor agreement(s)]({{site.url}}/license/contributor-agreements/index.html)**
+1. **Sign the relevant Apache contributor agreement(s)**
 
 1. **Issue a pull request** from your GitHub repo
 

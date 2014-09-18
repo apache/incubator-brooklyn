@@ -15,17 +15,19 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */
-package brooklyn.util.text;
+ * 
 
-/*
+BROOKLYN NOTE: This is based on code from Pierre-Luc Paour,
+adapted for the Brooklyn project in accordance with the original terms below.
+Main changes are the package and edits for more recent Java compatibility.
+
+--
+
 NaturalOrderComparator.java -- Perform 'natural order' comparisons of strings in Java.
 Copyright (C) 2003 by Pierre-Luc Paour <natorder@paour.com>
 
 Based on the C version by Martin Pool, of which this is more or less a straight conversion.
 Copyright (C) 2000 by Martin Pool <mbp@humbug.org.au>
-
-Edited for minor java 1.5 isms, -- tef
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -42,7 +44,9 @@ appreciated but is not required.
 2. Altered source versions must be plainly marked as such, and must not be
 misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
-*/
+
+ */
+package brooklyn.util.text;
 
 import java.util.Comparator;
 

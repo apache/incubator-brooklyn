@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+# for newer version of jekyll, based on what is used for incubator-brooklyn-site
+
+set -x
+
+echo > _config_local.yml "url: "
+
+rm -rf _site
+
+jekyll serve --config _config_local.yml --watch

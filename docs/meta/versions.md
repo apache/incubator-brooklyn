@@ -73,7 +73,11 @@ This is the archived documentation for Brooklyn {{ site.brooklyn-version }}
 
 ### Version History
 
-* **[0.6.0-SNAPSHOT (master)](/v/0.6.0-SNAPSHOT)**: no major changes yet since 0.5.0
+* **[0.7.0-SNAPSHOT (master)](/v/0.7.0-SNAPSHOT)**: since 0.6.0, lots of work on yaml, persistence, policies, and more supported systems
+
+* **[0.7.0](/v/0.7.0-M1/)**: most recent milestone release
+
+* **[0.6.0](/v/0.6.0/)**: use of spec objects, chef and windows support, more clouds (Nov 2013)
 
 * **[0.5.0](/v/0.5.0/)**: includes new JS GUI and REST API, rebind/persistence support, cleaner model and naming conventions, more entities (May 2013)
 

@@ -11,7 +11,7 @@
 
 { "title": "Examples",
   "file":  "{{ site.url }}/use/examples/index.html", 
-  "children": {% readj ../examples/toc.json %} },
+  "children": {% readj /use/examples/toc.json %} },
 { "title": "API Reference",
   "file": "{{ site.url }}/use/api/index.html" },
   
