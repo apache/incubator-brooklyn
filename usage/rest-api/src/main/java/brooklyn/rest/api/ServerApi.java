@@ -33,6 +33,7 @@ import brooklyn.rest.domain.VersionSummary;
 
 import com.google.common.annotations.Beta;
 import com.wordnik.swagger.core.ApiOperation;
+import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/server")
 @Apidoc("Server")
@@ -52,8 +53,12 @@ public interface ServerApi {
     @ApiOperation(value = "Terminate this Brooklyn server instance")
     @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
     public void shutdown(
+        @ApiParam(name = "stopAppsFirst", value = "Whether to stop running applications before shutting down")
         @FormParam("stopAppsFirst") @DefaultValue("false") boolean stopAppsFirst,
-        @FormParam("delayMillis") @DefaultValue("250") long delayMillis);
+        @ApiParam(name = "delayMillis", value = "Minimum delay before system.exit")
+        @FormParam("delayMillis") @DefaultValue("250") long delayMillis,
+        @ApiParam(name = "httpReturnTimeout", value = "Maximum time to block the request for the shutdown to finish.")
+        @FormParam("httpReturnTimeout") String httpReturnTimeout);
 
     @GET
     @Path("/version")

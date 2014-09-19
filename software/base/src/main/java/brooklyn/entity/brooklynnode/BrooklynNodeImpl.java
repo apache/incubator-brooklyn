@@ -22,8 +22,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.HttpClient;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -39,18 +39,16 @@ import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.net.Urls;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.task.Tasks;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskTags;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -83,8 +81,21 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     public void init() {
         super.init();
         getMutableEntityType().addEffector(DeployBlueprintEffectorBody.DEPLOY_BLUEPRINT);
+        getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
+        getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);
+        getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
     }
-    
+
+    @Override
+    protected void doStop() {
+        //shutdown only if running, any of stop_* could've been already previously
+        if (getAttribute(Attributes.SERVICE_UP)) {
+            Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
+            DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_MINUTE)));
+        }
+        super.doStop();
+    }
+
     public static class DeployBlueprintEffectorBody extends EffectorBody<String> implements DeployBlueprintEffector {
         public static final Effector<String> DEPLOY_BLUEPRINT = Effectors.effector(BrooklynNode.DEPLOY_BLUEPRINT).impl(new DeployBlueprintEffectorBody()).build();
         
@@ -140,40 +151,84 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             return (String)planRaw;
         }
         
-        protected String submitPlan(String plan) {
-            URI baseUri = Preconditions.checkNotNull(entity().getAttribute(WEB_CONSOLE_URI), "Cannot be invoked until the web console URL is available");
-            HttpClientBuilder builder = HttpTool.httpClientBuilder()
-                .trustAll()
-                .laxRedirect(true)
-                .uri(baseUri);
-            if (entity().getConfig(MANAGEMENT_USER)!=null)
-                builder.credentials(new UsernamePasswordCredentials(entity().getConfig(MANAGEMENT_USER), entity().getConfig(MANAGEMENT_PASSWORD)));
-            HttpClient client = builder.build();
-            
-            return submitPlan(client, baseUri, plan);
-        }
-
         @VisibleForTesting
         // Integration test for this in BrooklynNodeIntegrationTest in this project doesn't use this method,
         // but a Unit test for this does, in DeployBlueprintTest -- but in the REST server project (since it runs against local) 
-        public static String submitPlan(HttpClient client, URI baseUri, String plan) {
-            URI uri = URI.create(Urls.mergePaths(baseUri.toString(), "/v1/applications"));
-            
-            HttpToolResponse result = null;
-            byte[] content;
-            try {
-                result = HttpTool.httpPost(client, uri, MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml"), plan.getBytes());
-                content = result.getContent();
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                throw new IllegalStateException("Invalid response invoking "+uri+": "+e, e);
-            }
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForStream("http_response", Streams.byteArray(content)));
-            if (!HttpTool.isStatusCodeHealthy(result.getResponseCode())) {
-                log.warn("Invalid response invoking "+uri+": response code "+result.getResponseCode()+"\n"+result+": "+new String(content));
-                throw new IllegalStateException("Invalid response invoking "+uri+": response code "+result.getResponseCode());
-            }
+        public String submitPlan(String plan) {
+            MutableMap<String, String> headers = MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml");
+            HttpToolResponse result = ((BrooklynNode)entity()).http()
+                    .post("/v1/applications", headers, plan.getBytes());
+            byte[] content = result.getContent();
             return (String)new Gson().fromJson(new String(content), Map.class).get("entityId");
+        }
+    }
+
+    public static class ShutdownEffectorBody extends EffectorBody<Void> implements ShutdownEffector {
+        public static final Effector<Void> SHUTDOWN = Effectors.effector(BrooklynNode.SHUTDOWN).impl(new ShutdownEffectorBody()).build();
+
+        @Override
+        public Void call(ConfigBag parameters) {
+            Map<String, String> formParams = MutableMap.<String, String>of(
+                    "stopAppsFirst", parameters.get(STOP_APPS).toString(),
+                    "delayMillis", getDelayMillis(parameters));
+            Duration httpReturnTimeout = parameters.get(HTTP_RETURN_TIMEOUT);
+            if (httpReturnTimeout != null) {
+                formParams.put("httpReturnTimeout", httpReturnTimeout.toString());
+            }
+            HttpToolResponse resp = ((BrooklynNode)entity()).http()
+                .post("/v1/server/shutdown", MutableMap.<String, String>of(), formParams);
+            if (resp.getResponseCode() != HttpStatus.SC_NO_CONTENT) {
+                throw new IllegalStateException("Remote node shutdown failed.");
+            }
+            ServiceNotUpLogic.updateNotUpIndicator(entity(), "brooklynnode.shutdown", "Shutdown of remote node has completed successfuly");
+            return null;
+        }
+
+        private String getDelayMillis(ConfigBag parameters) {
+            return Long.toString(parameters.get(DELAY).toMilliseconds());
+        }
+
+    }
+
+    public static class StopNodeButLeaveAppsEffectorBody extends EffectorBody<Void> implements StopNodeButLeaveAppsEffector {
+        public static final Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS).impl(new StopNodeButLeaveAppsEffectorBody()).build();
+
+        @Override
+        public Void call(ConfigBag parameters) {
+            MutableMap<?, ?> params = MutableMap.of(
+                    ShutdownEffector.STOP_APPS, Boolean.FALSE,
+                    ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_HOUR,
+                    ShutdownEffector.DELAY, Duration.FIVE_SECONDS);
+
+            Entity entity = entity();
+            TaskAdaptable<Void> shutdownTask = Effectors.invocation(entity, SHUTDOWN, params);
+            if (!entity.getAttribute(SERVICE_UP)) {
+                TaskTags.markInessential(shutdownTask);
+            }
+            DynamicTasks.queue(shutdownTask);
+            DynamicTasks.queue(Effectors.invocation(entity, STOP, params));
+            return null;
+        }
+    }
+
+    public static class StopNodeAndKillAppsEffectorBody extends EffectorBody<Void> implements StopNodeAndKillAppsEffector {
+        public static final Effector<Void> STOP_NODE_AND_KILL_APPS = Effectors.effector(BrooklynNode.STOP_NODE_AND_KILL_APPS).impl(new StopNodeAndKillAppsEffectorBody()).build();
+
+        @Override
+        public Void call(ConfigBag parameters) {
+            MutableMap<?, ?> params = MutableMap.of(
+                    ShutdownEffector.STOP_APPS, Boolean.TRUE,
+                    ShutdownEffector.HTTP_RETURN_TIMEOUT, Duration.ONE_HOUR,
+                    ShutdownEffector.DELAY, Duration.FIVE_SECONDS);
+
+            Entity entity = entity();
+            TaskAdaptable<Void> shutdownTask = Effectors.invocation(entity, SHUTDOWN, params);
+            if (!entity.getAttribute(SERVICE_UP)) {
+                TaskTags.markInessential(shutdownTask);
+            }
+            DynamicTasks.queue(shutdownTask);
+            DynamicTasks.queue(Effectors.invocation(entity, STOP, params));
+            return null;
         }
     }
 
@@ -252,4 +307,10 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         
         if (httpFeed != null) httpFeed.stop();
     }
+
+    @Override
+    public EntityHttpClient http() {
+        return new EntityHttpClientImpl(this);
+    }
+
 }

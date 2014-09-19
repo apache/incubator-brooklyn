@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +44,10 @@ import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
@@ -58,9 +62,13 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     }
 
     @Override
-    public void shutdown(final boolean stopAppsFirst, final long delayMillis) {
+    public void shutdown(final boolean stopAppsFirst, final long delayMillis, String httpReturnTimeout) {
         log.info("REST call to shutdown server, stopAppsFirst="+stopAppsFirst+", delayMillis="+delayMillis);
-        
+
+        Duration httpReturnTimeoutDuration = Duration.parse(httpReturnTimeout);
+        final boolean shouldBlock = (httpReturnTimeoutDuration != null);
+        final AtomicBoolean completed = new AtomicBoolean();
+
         new Thread() {
             public void run() {
                 Duration delayBeforeSystemExit = Duration.millis(delayMillis);
@@ -82,10 +90,32 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
                 ((ManagementContextInternal)mgmt()).terminate(); 
                 timer.waitForExpiryUnchecked();
-                
+
+                synchronized (completed) {
+                    completed.set(true);
+                    completed.notifyAll();
+                }
+
+                if (shouldBlock) {
+                    //give the http request a chance to complete gracefully
+                    Time.sleep(Duration.FIVE_SECONDS);
+                }
+
                 System.exit(0);
             }
         }.start();
+
+        if (shouldBlock) {
+            synchronized (completed) {
+                if (!completed.get()) {
+                    try {
+                        completed.wait(httpReturnTimeoutDuration.toMilliseconds());
+                    } catch (InterruptedException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                }
+            }
+        }
     }
 
     @Override
