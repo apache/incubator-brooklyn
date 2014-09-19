@@ -24,15 +24,17 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpFeed;
@@ -40,7 +42,6 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.DynamicTasks;
@@ -48,14 +49,11 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.net.MediaType;
 import com.google.gson.Gson;
 
 public class BrooklynEntityMirrorImpl extends AbstractEntity implements BrooklynEntityMirror {
 
-    private static final Logger log = LoggerFactory.getLogger(BrooklynEntityMirrorImpl.class);
-    
     private HttpFeed mirror;
     
 
@@ -108,16 +106,27 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
 
         String sensorsUri = Urls.mergePaths(mirroredEntityUrl, "sensors/current-state");
 
+        final BrooklynEntityMirrorImpl self = this;
         mirror = HttpFeed.builder().entity(this)
             .baseUri(sensorsUri)
             .credentialsIfNotNull(getConfig(BrooklynNode.MANAGEMENT_USER), getConfig(BrooklynNode.MANAGEMENT_PASSWORD))
             .period(getConfig(POLL_PERIOD))
             .poll(HttpPollConfig.forMultiple()
                 .onSuccess(mirrorSensors)
-                .onFailureOrException(Functionals.function(EntityFunctions.updatingSensorMapEntry(this, Attributes.SERVICE_PROBLEMS, "mirror-feed",
-                        Suppliers.ofInstance("error contacting service")
-                    ))))
-            .build();
+                .onFailureOrException(new Function<Object, Void>() {
+                    @Override
+                    public Void apply(Object input) {
+                        ServiceStateLogic.updateMapSensorEntry(self, Attributes.SERVICE_PROBLEMS, "mirror-feed", "error contacting service");
+                        if (input instanceof HttpToolResponse) {
+                            int responseCode = ((HttpToolResponse)input).getResponseCode();
+                            if (responseCode == HttpStatus.SC_NOT_FOUND) {
+                                //the remote entity no longer exists
+                                Entities.unmanage(self);
+                            }
+                        }
+                        return null;
+                    }
+                })).build();
 
         populateEffectors();
     }
