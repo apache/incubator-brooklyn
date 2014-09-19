@@ -225,30 +225,38 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public static final Effector<String> DEPLOY_BLUEPRINT = DeployBlueprintEffector.DEPLOY_BLUEPRINT;
 
     public interface ShutdownEffector {
-        ConfigKey<Boolean> STOP_APPS = ConfigKeys.newBooleanConfigKey("stop_apps", "Whether to stop apps before shutting down", true);
-        ConfigKey<Duration> DELAY = ConfigKeys.newConfigKey(Duration.class, "delay", "How long to wait before exiting the process", Duration.ZERO);
-        ConfigKey<Duration> HTTP_RETURN_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "httpReturnTimeout", "Maximum time to block the request for the shutdown to finish. 0 for infinity, positive to block");
+        ConfigKey<Boolean> STOP_APPS_FIRST = ConfigKeys.newBooleanConfigKey("stopAppsFirst", "Whether to stop apps before shutting down");
+        ConfigKey<Boolean> FORCE_SHUTDOWN_ON_ERROR = ConfigKeys.newBooleanConfigKey("forceShutdownOnError", "Force shutdown if apps fail to stop or timeout");
+        ConfigKey<Duration> SHUTDOWN_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "shutdownTimeout", "A maximum delay to wait for apps to gracefully stop before giving up or forcibly exiting");
+        ConfigKey<Duration> REQUEST_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "requestTimeout", "Maximum time to block the request for the shutdown to finish, 0 to wait infinitely");
+        ConfigKey<Duration> DELAY_FOR_HTTP_RETURN = ConfigKeys.newConfigKey(Duration.class, "delayForHttpReturn", "The delay before exiting the process, to permit the REST response to be returned");
         Effector<Void> SHUTDOWN = Effectors.effector(Void.class, "shutdown")
             .description("Shutdown the remote brooklyn instance")
-            .parameter(STOP_APPS)
-            .parameter(DELAY)
-            .parameter(HTTP_RETURN_TIMEOUT)
+            .parameter(STOP_APPS_FIRST)
+            .parameter(FORCE_SHUTDOWN_ON_ERROR)
+            .parameter(SHUTDOWN_TIMEOUT)
+            .parameter(REQUEST_TIMEOUT)
+            .parameter(DELAY_FOR_HTTP_RETURN)
             .buildAbstract();
     }
 
     public static final Effector<Void> SHUTDOWN = ShutdownEffector.SHUTDOWN;
 
     public interface StopNodeButLeaveAppsEffector {
+        ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "How long to wait before giving up on stopping the node", Duration.ONE_HOUR);
         Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(Void.class, "stopNodeButLeaveApps")
                 .description("Stop the node without stopping the running applications")
+                .parameter(TIMEOUT)
                 .buildAbstract();
     }
 
     public static final Effector<Void> STOP_NODE_BUT_LEAVE_APPS = StopNodeButLeaveAppsEffector.STOP_NODE_BUT_LEAVE_APPS;
 
     public interface StopNodeAndKillAppsEffector {
+        ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "How long to wait before giving up on stopping the node", Duration.ONE_HOUR);
         Effector<Void> STOP_NODE_AND_KILL_APPS = Effectors.effector(Void.class, "stopNodeAndKillApps")
                 .description("Stop all apps running on the node and shutdown the node")
+                .parameter(TIMEOUT)
                 .buildAbstract();
     }
 

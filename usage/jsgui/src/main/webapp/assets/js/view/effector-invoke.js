@@ -115,7 +115,10 @@ define([
                 var value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
                         $(this).find(".param-value option:selected").attr("value") : 
                         $(this).find(".param-value").val();
-                parameters[key] = value;
+                //treat empty field as null value
+                if (value !== '') {
+                    parameters[key] = value;
+                }
             })
             return parameters
         },
