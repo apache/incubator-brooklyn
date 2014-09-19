@@ -19,9 +19,12 @@
 package brooklyn.entity.brooklynnode;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +47,7 @@ import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
+import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.Location;
@@ -55,6 +59,7 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
@@ -425,7 +430,20 @@ public class BrooklynNodeIntegrationTest {
 
         brooklynNode.invoke(eff, Collections.<String, Object>emptyMap()).getUnchecked();
 
-        EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, false);
+        EntityTestUtils.assertAttributeEquals(brooklynNode, BrooklynNode.SERVICE_UP, false);
+        //Use the driver's check of isRunning instead of local command since on Windows
+        //the test would be running remotely (needs some extra hoops to do it).
+        assertFalse(getDriver(brooklynNode).isRunning(), "Service process still running");
+    }
+
+    private BrooklynNodeSshDriver getDriver(BrooklynNode brooklynNode) {
+        try {
+            EntityProxyImpl entityProxy = (EntityProxyImpl)Proxy.getInvocationHandler(brooklynNode);
+            Method getDriver = BrooklynNodeImpl.class.getMethod("getDriver");
+            return (BrooklynNodeSshDriver)entityProxy.invoke(brooklynNode, getDriver, new Object[]{});
+        } catch (Throwable e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
     private BrooklynNode setUpBrooklynNodeWithApp() throws InterruptedException,
