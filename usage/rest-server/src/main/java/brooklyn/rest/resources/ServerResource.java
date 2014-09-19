@@ -50,6 +50,7 @@ import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -74,11 +75,11 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             Long delayMillis) {
         log.info("REST call to shutdown server, stopAppsFirst="+stopAppsFirst+", delayForHttpReturn="+shutdownTimeoutRaw);
 
-        final Duration shutdownTimeout = Duration.parse(shutdownTimeoutRaw);
-        Duration requestTimeout = Duration.parse(requestTimeoutRaw);
+        final Duration shutdownTimeout = parseDuration(shutdownTimeoutRaw, Duration.of(20, TimeUnit.SECONDS));
+        Duration requestTimeout = parseDuration(requestTimeoutRaw, Duration.of(20, TimeUnit.SECONDS));
         final Duration delayForHttpReturn;
         if (delayMillis == null) {
-            delayForHttpReturn = Duration.parse(delayForHttpReturnRaw);
+            delayForHttpReturn = parseDuration(delayForHttpReturnRaw, Duration.FIVE_SECONDS);
         } else {
             log.warn("'delayMillis' is deprecated, use 'delayForHttpReturn' instead.");
             delayForHttpReturn = Duration.of(delayMillis, TimeUnit.MILLISECONDS);
@@ -185,6 +186,14 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
         if (hasAppErrorsOrTimeout.get()) {
             WebResourceUtils.badRequest("Error or timeout while stopping applications. See log for details.");
+        }
+    }
+
+    private Duration parseDuration(String str, Duration defaultValue) {
+        if (Strings.isEmpty(str)) {
+            return defaultValue;
+        } else {
+            return Duration.parse(str);
         }
     }
 
