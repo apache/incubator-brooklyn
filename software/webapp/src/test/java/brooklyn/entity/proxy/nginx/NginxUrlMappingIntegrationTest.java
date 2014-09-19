@@ -417,6 +417,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         c1.resize(2);
         List c1jbosses = new ArrayList(c1.getMembers());
         c1jbosses.remove(c1jboss);
+        // the unnecessary (Entity) cast is required as a work-around to an IntelliJ issue that prevents Brooklyn from launching from the IDE
         Entity c1jboss2 = (Entity)Iterables.getOnlyElement(c1jbosses);
 
         // TODO Have to wait for new app-server; should fix app-servers to block

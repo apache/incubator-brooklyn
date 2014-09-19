@@ -266,6 +266,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         app.setConfig(HelloEntity.MY_NAME, "Bob");
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
+        // the unnecessary (HelloEntity) cast is required as a work-around to an IntelliJ issue that prevents Brooklyn from launching from the IDE
         HelloEntity son = (HelloEntity)entityManager.createEntity(EntitySpec.create(HelloEntity.class)
                 .parent(dad)
                 .configure(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, (Closure)null), new Function<String,String>() {

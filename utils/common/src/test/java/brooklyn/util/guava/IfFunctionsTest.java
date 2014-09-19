@@ -41,6 +41,8 @@ public class IfFunctionsTest {
     
     @Test
     public void testPredicateAndSupplier() {
+        // we cannot use checkTF here as an IntelliJ issues causes the project to fail to launch as IntelliJ does not
+        // recognize the return value of IfFunctions.ifPredicate as Function<Boolean, String>
         Function function = IfFunctions.ifPredicate(Predicates.equalTo(false)).get(Suppliers.ofInstance("F"))
                 .ifEquals(true).value("T").defaultGet(Suppliers.ofInstance("?")).build();
         Assert.assertEquals(function.apply(true), "T");
