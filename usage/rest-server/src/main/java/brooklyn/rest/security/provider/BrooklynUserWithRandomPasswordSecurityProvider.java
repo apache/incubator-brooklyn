@@ -45,16 +45,23 @@ public class BrooklynUserWithRandomPasswordSecurityProvider extends AbstractSecu
 
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
-        if (isRemoteAddressLocalhost(session) || (USER.equals(user) && this.password.equals(password))) {
+        if ((USER.equals(user) && this.password.equals(password)) || isRemoteAddressLocalhost(session)) {
             return allow(session, user);
+        } else {
+            return false;
         }
-        return false;
     }
 
     private boolean isRemoteAddressLocalhost(HttpSession session) {
         Object remoteAddress = session.getAttribute(BrooklynPropertiesSecurityFilter.REMOTE_ADDRESS_SESSION_ATTRIBUTE);
         if (!(remoteAddress instanceof String)) return false;
-        return Networking.isLocalhost((String)remoteAddress);
+        if (Networking.isLocalhost((String)remoteAddress)) {
+            LOG.debug(this+": granting passwordless access to "+session+" originating from "+remoteAddress);
+            return true;
+        } else {
+            LOG.debug(this+": password required for "+session+" originating from "+remoteAddress);
+            return false;
+        }
     }
 
 }
