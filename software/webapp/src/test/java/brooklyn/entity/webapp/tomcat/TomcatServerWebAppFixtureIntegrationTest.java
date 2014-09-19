@@ -44,6 +44,7 @@ import com.google.common.collect.Lists;
 
 public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(TomcatServerWebAppFixtureIntegrationTest.class);
     
     @DataProvider(name = "basicEntities")
@@ -77,16 +78,17 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
                     "" // no sub-page path
                     });
         }
-        
-        TestApplication tomcatApp = newTestApplication();
-        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
-                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
-        result.add(new Object[] {
-                tomcat,
-                "swf-booking-mvc.war",
-                "swf-booking-mvc/",
-                "spring/intro",
-               });
+
+        // removed so we don't have to include swf-booking-mvc war
+//        TestApplication tomcatApp = newTestApplication();
+//        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
+//                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
+//        result.add(new Object[] {
+//                tomcat,
+//                "swf-booking-mvc.war",
+//                "swf-booking-mvc/",
+//                "spring/intro",
+//               });
         
         return result.toArray(new Object[][] {});
     }

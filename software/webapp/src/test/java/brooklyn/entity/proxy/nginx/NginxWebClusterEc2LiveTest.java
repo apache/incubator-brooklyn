@@ -77,7 +77,7 @@ public class NginxWebClusterEc2LiveTest {
     
     @Test(groups = "Live")
     public void testProvisionAwsCluster() {
-        String warName = "swf-booking-mvc.war";
+        String warName = "hello-world.war";
         URL war = getClass().getClassLoader().getResource(warName);
         assertNotNull(war, "Unable to locate resource "+warName);
         

@@ -1,0 +1,1 @@
+The example tarball in this directory consists simply of the source files in this directory. It is included as a (tiny) binary to prevent build complication when aggregating them for upload to remote servers.

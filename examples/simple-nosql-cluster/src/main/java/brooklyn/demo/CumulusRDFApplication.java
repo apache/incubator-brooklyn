@@ -147,7 +147,7 @@ public class CumulusRDFApplication extends AbstractApplication {
                 .configure(UsesJmx.JMX_AGENT_MODE, UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
                 .configure(UsesJmx.JMX_PORT, PortRanges.fromString("11099+"))
                 .configure(UsesJmx.RMI_REGISTRY_PORT, PortRanges.fromString("9001+"))
-                .configure(JavaWebAppService.ROOT_WAR, "classpath://cumulusrdf.war")
+                .configure(JavaWebAppService.ROOT_WAR, "https://cumulusrdf.googlecode.com/svn/wiki/downloads/cumulusrdf-1.0.1.war")
                 .configure(UsesJava.JAVA_SYSPROPS, MutableMap.of("cumulusrdf.config-file", "/tmp/cumulus.yaml")));
 
         // Add an effector to tomcat to reconfigure with a new YAML config file
