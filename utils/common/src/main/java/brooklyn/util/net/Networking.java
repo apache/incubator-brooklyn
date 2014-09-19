@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Preconditions;
@@ -369,21 +370,36 @@ public class Networking {
         return true;
     }
 
-    public static boolean isLocalhost(String remoteIp) {
-        if ("127.0.0.1".equals(remoteIp)) return true;
+    /** returns true if the supplied string matches any known IP (v4 or v6) for this machine,
+     * or if it can be resolved to any such address */
+    public static boolean isLocalhost(String remoteAddress) {
+        Map<String, InetAddress> addresses = getLocalAddresses();
+        if (addresses.containsKey(remoteAddress)) return true;
         
+        if ("127.0.0.1".equals(remoteAddress)) return true;
         
+        String modifiedIpV6Address = remoteAddress;
         // IPv6 localhost "ip" strings may vary;
         // comes back as 0:0:0:0:0:0:0:1%1 for me.
         // following deals with the cases which seem likely.
         // (svet suggests using InetAddress parsing but I -- Alex -- am not sure if that's going to have it's own bugs)
-        
-        if (remoteIp.contains("%")) {
+        if (modifiedIpV6Address.contains("%")) {
             // trim any description %dex
-            remoteIp = remoteIp.substring(0, remoteIp.indexOf("%"));
+            modifiedIpV6Address = modifiedIpV6Address.substring(0, modifiedIpV6Address.indexOf("%"));
         }
-        if ("0:0:0:0:0:0:0:1".equals(remoteIp)) return true;
-        if ("::1".equals(remoteIp)) return true;
+        if ("0:0:0:0:0:0:0:1".equals(modifiedIpV6Address)) return true;
+        if ("::1".equals(modifiedIpV6Address)) return true;
+        if (addresses.containsKey(remoteAddress) || addresses.containsKey(modifiedIpV6Address))
+            return true;
+        
+        try {
+            InetAddress remote = InetAddress.getByName(remoteAddress);
+            if (addresses.values().contains(remote))
+                return true;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.debug("Error resolving address "+remoteAddress+" when checking if it is local (assuming not: "+e, e);
+        }
         
         return false;
     }
