@@ -26,7 +26,12 @@ import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.client.util.Preconditions;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.event.AttributeSensor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.HttpTool;
@@ -35,8 +40,6 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.Tasks;
 
-import com.google.common.base.Preconditions;
-
 public class EntityHttpClientImpl implements EntityHttpClient {
     private static final Logger LOG = LoggerFactory.getLogger(EntityHttpClientImpl.class);
 
@@ -44,36 +47,41 @@ public class EntityHttpClientImpl implements EntityHttpClient {
         public HttpToolResponse call(HttpClient client, URI uri);
     }
 
-    protected BrooklynNode node;
+    protected Entity entity;
+    protected AttributeSensor<?> urlSensor;
+    protected ConfigKey<?> urlConfig;
 
-    protected EntityHttpClientImpl(BrooklynNode node) {
-        this.node = node;
+    protected EntityHttpClientImpl(Entity entity, AttributeSensor<?> urlSensor) {
+        this.entity = entity;
+        this.urlSensor = urlSensor;
+    }
+
+    protected EntityHttpClientImpl(Entity entity, ConfigKey<?> urlConfig) {
+        this.entity = entity;
+        this.urlConfig = urlConfig;
     }
 
     @Override
     public HttpTool.HttpClientBuilder getHttpClientForBrooklynNode() {
-        URI baseUri = node.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
-        if (baseUri == null) {
-            return null;
-        }
+        String baseUrl = getEntityUrl();
         HttpTool.HttpClientBuilder builder = HttpTool.httpClientBuilder()
                 .trustAll()
                 .laxRedirect(true)
-                .uri(baseUri);
-        if (node.getConfig(BrooklynNode.MANAGEMENT_USER) != null) {
+                .uri(baseUrl);
+        if (entity.getConfig(BrooklynNode.MANAGEMENT_USER) != null) {
             UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(
-                    node.getConfig(BrooklynNode.MANAGEMENT_USER),
-                    node.getConfig(BrooklynNode.MANAGEMENT_PASSWORD));
+                    entity.getConfig(BrooklynNode.MANAGEMENT_USER),
+                    entity.getConfig(BrooklynNode.MANAGEMENT_PASSWORD));
             builder.credentials(credentials);
         }
         return builder;
     }
 
     protected HttpToolResponse exec(String path, HttpCall httpCall) {
-        HttpClient client = Preconditions.checkNotNull(getHttpClientForBrooklynNode(), "No address info for "+node)
-            .build();
-        URI baseUri = node.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
-        URI uri = URI.create(Urls.mergePaths(baseUri.toString(), path));
+        HttpClient client = Preconditions.checkNotNull(getHttpClientForBrooklynNode(), "No address info for "+entity)
+                .build();
+        String baseUri = getEntityUrl();
+        URI uri = URI.create(Urls.mergePaths(baseUri, path));
 
         HttpToolResponse result;
         try {
@@ -119,5 +127,17 @@ public class EntityHttpClientImpl implements EntityHttpClient {
                 return HttpTool.httpPost(client, uri, headers, formParams);
             }
         });
+    }
+
+    protected String getEntityUrl() {
+        Preconditions.checkState(urlSensor == null ^ urlConfig == null, "Exactly one of urlSensor and urlConfig should be non-null for entity " + entity);
+        Object url = null;
+        if (urlSensor != null) {
+            url = entity.getAttribute(urlSensor);
+        } else if (urlConfig != null) {
+            url = entity.getConfig(urlConfig);
+        }
+        Preconditions.checkNotNull(url, "URL sensor " + urlSensor + " for entity " + entity + " is empty");
+        return url.toString();
     }
 }

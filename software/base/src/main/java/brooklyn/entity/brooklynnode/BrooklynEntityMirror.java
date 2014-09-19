@@ -54,5 +54,7 @@ public interface BrooklynEntityMirror extends Entity {
         "Frequency to poll for client sensors", Duration.FIVE_SECONDS);
     
     public static final AttributeSensor<String> MIRROR_STATUS = Sensors.newStringSensor("brooklyn.mirror.monitoring_status");
+    
+    public EntityHttpClient http();
 
 }
