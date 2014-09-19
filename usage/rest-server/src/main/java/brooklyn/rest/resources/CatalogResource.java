@@ -189,7 +189,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         return FluentIterable.from(brooklyn().getCatalog().getCatalogItems())
                 .filter(Predicates.and(filters))
                 .transform(TO_CATALOG_ITEM_SUMMARY)
-                .toSortedList(SummaryComparators.idComparator());
+                .toSortedList(SummaryComparators.displayNameComparator());
     }
 
     @Override
