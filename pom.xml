@@ -1516,9 +1516,9 @@
                         <configuration>
                             <failOnViolation>false</failOnViolation>
                             <linkXref>true</linkXref>
-                            <sourceEncoding>utf-8</sourceEncoding>
+                            <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
                             <minimumTokens>100</minimumTokens>
-                            <targetJdk>1.6</targetJdk>
+                            <targetJdk>${java.version}</targetJdk>
                             <excludes>
                                 <exclude>**/*Test.java</exclude>
                                 <exclude>**/tests/**/*.java</exclude>
