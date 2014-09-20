@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,6 +183,36 @@ public class TypeCoercionsTest {
     public void testSetToListCoercion() {
         List<?> s = TypeCoercions.coerce(ImmutableSet.of(1), List.class);
         Assert.assertEquals(s, ImmutableList.of(1));
+    }
+    
+    @Test
+    public void testListEntryCoercion() {
+        List<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<List<Class<?>>>() { });
+        Assert.assertEquals(s, ImmutableList.of(Integer.class, Double.class));
+    }
+    
+    @Test
+    public void testListEntryToSetCoercion() {
+        Set<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<Set<Class<?>>>() { });
+        Assert.assertEquals(s, ImmutableSet.of(Integer.class, Double.class));
+    }
+    
+    @Test
+    public void testListEntryToCollectionCoercion() {
+        Collection<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<Collection<Class<?>>>() { });
+        Assert.assertEquals(s, ImmutableList.of(Integer.class, Double.class));
+    }
+    
+    @Test
+    public void testMapValueCoercion() {
+        Map<?,?> s = TypeCoercions.coerce(ImmutableMap.of("int", "java.lang.Integer", "double", "java.lang.Double"), new TypeToken<Map<String, Class<?>>>() { });
+        Assert.assertEquals(s, ImmutableMap.of("int", Integer.class, "double", Double.class));
+    }
+    
+    @Test
+    public void testMapKeyCoercion() {
+        Map<?,?> s = TypeCoercions.coerce(ImmutableMap.of("java.lang.Integer", "int", "java.lang.Double", "double"), new TypeToken<Map<Class<?>, String>>() { });
+        Assert.assertEquals(s, ImmutableMap.of(Integer.class, "int", Double.class, "double"));
     }
 
     @Test
