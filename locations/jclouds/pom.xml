@@ -111,15 +111,25 @@
             <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
             <exclusions>
+                <!-- provided versions are LGPL-only -->
                 <exclusion>
-                    <groupId>com.jcraft</groupId>
-                    <artifactId>jsch.agentproxy.usocket-jna</artifactId>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>com.jcraft</groupId>
-                    <artifactId>jsch.agentproxy.pageant</artifactId>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>platform</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <!-- dual-licensed under LGPL and ASL 2 -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
         </dependency>
 
         <dependency>

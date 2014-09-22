@@ -186,6 +186,7 @@
         <hamcrest.version>1.1</hamcrest.version>
         <jsr311-api.version>1.1.1</jsr311-api.version>
         <maxmind.version>0.8.1</maxmind.version>
+        <jna.version>4.0.0</jna.version>
 
         <includedTestGroups />
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
@@ -595,6 +596,16 @@
                 <groupId>com.maxmind.geoip2</groupId>
                 <artifactId>geoip2</artifactId>
                 <version>${maxmind.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>${jna.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
