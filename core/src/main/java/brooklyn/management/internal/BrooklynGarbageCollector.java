@@ -82,7 +82,7 @@ public class BrooklynGarbageCollector {
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynGarbageCollector.class);
 
     public static final ConfigKey<Duration> GC_PERIOD = ConfigKeys.newDurationConfigKey(
-            "brooklyn.gc.period", "the period, in millisconds, for checking if any tasks need to be deleted", 
+            "brooklyn.gc.period", "the period for checking if any tasks need to be deleted", 
             Duration.minutes(1));
     
     public static final ConfigKey<Boolean> DO_SYSTEM_GC = ConfigKeys.newBooleanConfigKey(
@@ -124,7 +124,7 @@ public class BrooklynGarbageCollector {
 
     public static final ConfigKey<Duration> MAX_TASK_AGE = ConfigKeys.newDurationConfigKey(
             "brooklyn.gc.maxTaskAge", 
-            "the number of milliseconds after which a completed task will be automatically deleted", 
+            "the duration after which a completed task will be automatically deleted", 
             Duration.days(30));
     
     protected final static Comparator<Task<?>> TASKS_OLDEST_FIRST_COMPARATOR = new Comparator<Task<?>>() {
