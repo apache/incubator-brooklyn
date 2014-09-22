@@ -18,22 +18,21 @@
  */
 package brooklyn.entity.brooklynnode;
 
-import java.net.URI;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.HttpClient;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Effector;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityFunctions;
+import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.EffectorBody;
@@ -43,27 +42,18 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
-import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.net.MediaType;
 import com.google.gson.Gson;
 
 public class BrooklynEntityMirrorImpl extends AbstractEntity implements BrooklynEntityMirror {
 
-    private static final Logger log = LoggerFactory.getLogger(BrooklynEntityMirrorImpl.class);
-    
     private HttpFeed mirror;
     
 
@@ -116,16 +106,41 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
 
         String sensorsUri = Urls.mergePaths(mirroredEntityUrl, "sensors/current-state");
 
+        final BrooklynEntityMirrorImpl self = this;
         mirror = HttpFeed.builder().entity(this)
             .baseUri(sensorsUri)
             .credentialsIfNotNull(getConfig(BrooklynNode.MANAGEMENT_USER), getConfig(BrooklynNode.MANAGEMENT_PASSWORD))
             .period(getConfig(POLL_PERIOD))
             .poll(HttpPollConfig.forMultiple()
                 .onSuccess(mirrorSensors)
-                .onFailureOrException(Functionals.function(EntityFunctions.updatingSensorMapEntry(this, Attributes.SERVICE_PROBLEMS, "mirror-feed",
-                        Suppliers.ofInstance("error contacting service")
-                    ))))
-            .build();
+                .onFailureOrException(new Function<Object, Void>() {
+                    @Override
+                    public Void apply(Object input) {
+                        ServiceStateLogic.updateMapSensorEntry(self, Attributes.SERVICE_PROBLEMS, "mirror-feed", "error contacting service");
+                        if (input instanceof HttpToolResponse) {
+                            int responseCode = ((HttpToolResponse)input).getResponseCode();
+                            if (responseCode == HttpStatus.SC_NOT_FOUND) {
+                                //the remote entity no longer exists
+                                Entities.unmanage(self);
+                            }
+                        }
+                        return null;
+                    }
+                })).build();
+
+        populateEffectors();
+    }
+
+    private void populateEffectors() {
+        HttpToolResponse result = http().get("/effectors");
+        Collection<?> cfgEffectors = new Gson().fromJson(result.getContentAsString(), Collection.class);
+        Collection<Effector<String>> remoteEntityEffectors = RemoteEffectorBuilder.of(cfgEffectors);
+        EntityDynamicType mutableEntityType = getMutableEntityType();
+        for (Effector<String> eff : remoteEntityEffectors) {
+            //remote already started
+            if ("start".equals(eff.getName())) continue;
+            mutableEntityType.addEffector(eff);
+        }
     }
 
     protected void disconnectSensors() {
@@ -137,64 +152,30 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
         disconnectSensors();
     }
 
+    @Override
+    public EntityHttpClient http() {
+        return new EntityHttpClientImpl(this, MIRRORED_ENTITY_URL);
+    }
+
     public static class RemoteEffector<T> extends EffectorBody<T> {
         public final String remoteEffectorName;
-        public final Function<byte[], T> resultParser;
+        public final Function<HttpToolResponse, T> resultParser;
         
         /** creates an effector implementation which POSTs to a remote effector endpoint, optionally converting
          * the byte[] response (if resultParser is null then null is returned) */
-        public RemoteEffector(String remoteEffectorName, @Nullable Function<byte[],T> resultParser) {
+        public RemoteEffector(String remoteEffectorName, @Nullable Function<HttpToolResponse,T> resultParser) {
             this.remoteEffectorName = remoteEffectorName;
             this.resultParser = resultParser;
         }
 
         @Override
         public T call(ConfigBag parameters) {
-            String baseUri = Preconditions.checkNotNull(entity().getConfig(MIRRORED_ENTITY_URL), "Cannot be invoked without an entity URL");
-            HttpClientBuilder builder = HttpTool.httpClientBuilder()
-                .trustAll()
-                .laxRedirect(true)
-                .uri(baseUri);
-            if (entity().getConfig(MANAGEMENT_USER)!=null)
-                builder.credentials(new UsernamePasswordCredentials(entity().getConfig(MANAGEMENT_USER), entity().getConfig(MANAGEMENT_PASSWORD)));
-            HttpClient client = builder.build();
-            
-            byte[] result = submit(client, URI.create(Urls.mergePaths(baseUri, "effectors", Urls.encode(remoteEffectorName))), parameters.getAllConfig());
+            MutableMap<String, String> headers = MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+            byte[] httpBody = Jsonya.of(parameters.getAllConfig()).toString().getBytes();
+            String effectorUrl = Urls.mergePaths("effectors", Urls.encode(remoteEffectorName));
+            HttpToolResponse result = ((BrooklynEntityMirror)entity()).http().post(effectorUrl, headers, httpBody);
             if (resultParser!=null) return resultParser.apply(result);
             else return null;
-        }
-
-        @VisibleForTesting
-        public static byte[] submit(HttpClient client, URI uri, Map<String,Object> args) {
-            HttpToolResponse result = null;
-            byte[] content;
-            try {
-                result = HttpTool.httpPost(client, uri, MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString()), 
-                    Jsonya.of(args).toString().getBytes());
-                content = result.getContent();
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                throw new IllegalStateException("Invalid response invoking "+uri+": "+e, e);
-            }
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamWeak("http_response", Streams.byteArray(content)));
-            if (!HttpTool.isStatusCodeHealthy(result.getResponseCode())) {
-                log.warn("Invalid response invoking "+uri+": response code "+result.getResponseCode()+"\n"+result+": "+new String(content));
-                throw new IllegalStateException("Invalid response invoking "+uri+": response code "+result.getResponseCode());
-            }
-            return content;
-        }
-
-    }
-
-    public static class StopAndExpungeEffector extends RemoteEffector<Void> {
-        public StopAndExpungeEffector() {
-            super("stop", null);
-        }
-        @Override
-        public Void call(ConfigBag parameters) {
-            super.call(parameters);
-            Entities.unmanage(entity());
-            return null;
         }
     }
 }

@@ -328,7 +328,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
     @Override
     public EntityHttpClient http() {
-        return new EntityHttpClientImpl(this);
+        return new EntityHttpClientImpl(this, BrooklynNode.WEB_CONSOLE_URI);
     }
 
 }
