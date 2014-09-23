@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -264,8 +266,8 @@ public class BrooklynTaskTags extends TaskTags {
         protected final String entityId;
         protected final String effectorName;
         protected EffectorCallTag(String entityId, String effectorName) {
-            this.entityId = entityId;
-            this.effectorName = effectorName;
+            this.entityId = checkNotNull(entityId, "entityId");
+            this.effectorName = checkNotNull(effectorName, "effectorName");
         }
         public String toString() {
             return EFFECTOR_TAG+"@"+entityId+":"+effectorName;
@@ -312,9 +314,9 @@ public class BrooklynTaskTags extends TaskTags {
                 for (Object tag: tags) {
                     if (tag instanceof EffectorCallTag) {
                         EffectorCallTag et = (EffectorCallTag)tag;
-                        if (entity!=null && !et.entityId.equals(entity.getId()))
+                        if (entity!=null && !et.getEntityId().equals(entity.getId()))
                             continue;
-                        if (effector!=null && !et.effectorName.equals(effector.getName()))
+                        if (effector!=null && !et.getEffectorName().equals(effector.getName()))
                             continue;
                         return true;
                     }
@@ -344,8 +346,6 @@ public class BrooklynTaskTags extends TaskTags {
     /** finds the first {@link EffectorCallTag} tag on this tag or a submitter, and returns the effector name */
     public static String getEffectorName(Task<?> task) {
         EffectorCallTag result = getEffectorCallTag(task, true);
-        if (result==null) return null;
-        return result.effectorName;
+        return (result == null) ? null : result.getEffectorName();
     }
-
 }

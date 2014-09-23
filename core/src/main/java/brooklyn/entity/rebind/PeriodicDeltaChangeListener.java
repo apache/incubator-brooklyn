@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.rebind;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
@@ -203,6 +204,42 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         return stopped || executionManager.isShutdown();
     }
     
+    private void addReferencedObjects(DeltaCollector deltaCollector) {
+        Set<Location> referencedLocations = Sets.newLinkedHashSet();
+        Set<Policy> referencedPolicies = Sets.newLinkedHashSet();
+        Set<Enricher> referencedEnrichers = Sets.newLinkedHashSet();
+        
+        for (Entity entity : deltaCollector.entities) {
+            // FIXME How to let the policy/location tell us about changes? Don't do this every time!
+            for (Location location : entity.getLocations()) {
+                Collection<Location> findLocationsInHierarchy = TreeUtils.findLocationsInHierarchy(location);
+                referencedLocations.addAll(findLocationsInHierarchy);
+            }
+            if (persistPoliciesEnabled) {
+                referencedPolicies.addAll(entity.getPolicies());
+            }
+            if (persistEnrichersEnabled) {
+                referencedEnrichers.addAll(entity.getEnrichers());
+            }
+        }
+        
+        for (Location loc : referencedLocations) {
+            if (!deltaCollector.removedLocationIds.contains(loc.getId())) {
+                deltaCollector.locations.add(loc);
+            }
+        }
+        for (Policy pol : referencedPolicies) {
+            if (!deltaCollector.removedPolicyIds.contains(pol.getId())) {
+                deltaCollector.policies.add(pol);
+            }
+        }
+        for (Enricher enr : referencedEnrichers) {
+            if (!deltaCollector.removedEnricherIds.contains(enr.getId())) {
+                deltaCollector.enrichers.add(enr);
+            }
+        }
+    }
+    
     @VisibleForTesting
     public void persistNow() {
         if (!isActive()) return;
@@ -216,7 +253,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 prevDeltaCollector = deltaCollector;
                 deltaCollector = new DeltaCollector();
             }
-
+            addReferencedObjects(prevDeltaCollector);
+            
             // Generate mementos for everything that has changed in this time period
             if (prevDeltaCollector.isEmpty()) {
                 if (LOG.isTraceEnabled()) LOG.trace("No changes to persist since last delta");
@@ -323,23 +361,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", instance);
         if (!isStopped()) {
             if (instance instanceof Entity) {
-                Entity entity = (Entity) instance;
-                deltaCollector.entities.add(entity);
-
-                // FIXME How to let the policy/location tell us about changes? Don't do this every time!
-                for (Location location : entity.getLocations()) {
-                    deltaCollector.locations.addAll(TreeUtils.findLocationsInHierarchy(location));
-                }
-                if (persistPoliciesEnabled) {
-                    for (Policy policy : entity.getPolicies()) {
-                        deltaCollector.policies.add(policy);
-                    }
-                }
-                if (persistEnrichersEnabled) {
-                    for (Enricher enricher : entity.getEnrichers()) {
-                        deltaCollector.enrichers.add(enricher);
-                    }
-                }
+                deltaCollector.entities.add((Entity)instance);
             } else if (instance instanceof Location) {
                 deltaCollector.locations.add((Location) instance);
             } else if (instance instanceof Policy) {

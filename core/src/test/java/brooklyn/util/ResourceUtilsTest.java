@@ -19,7 +19,6 @@
 package brooklyn.util;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -169,12 +168,5 @@ public class ResourceUtilsTest {
         assertEquals(utils.getResourceAsString("data:hello"), "hello");
         assertEquals(utils.getResourceAsString("data://hello"), "hello");
         assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
-    }
-    
-    // See https://github.com/brooklyncentral/brooklyn/issues/1338
-    @Test(groups={"Integration", "WIP"})
-    public void testResourceFromUrlFollowsRedirect() throws Exception {
-        String contents = new ResourceUtils(this).getResourceAsString("http://bit.ly/brooklyn-visitors-creation-script");
-        assertFalse(contents.contains("bit.ly"), "contents="+contents);
     }
 }
