@@ -16,16 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.util;
+package brooklyn.management;
 
 import brooklyn.management.ManagementContext;
 
-/** provides a way for management context to be injected directly.
- * normally it is discovered automatically by the ServletContext, 
- * but in the jersey InMemory test container it is not, so we must inject it manually.  
+/**
+ * Provides a way for the {@link ManagementContext} to be injected directly.
  */
 public interface ManagementContextInjectable {
 
+    /**
+     * Sets the {@link ManagementContext} reference.
+     */
     public void injectManagementContext(ManagementContext managementContext);
-    
+
 }

@@ -36,7 +36,7 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.util.ManagementContextInjectable;
+import brooklyn.management.ManagementContextInjectable;
 
 public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements ManagementContextInjectable {
 

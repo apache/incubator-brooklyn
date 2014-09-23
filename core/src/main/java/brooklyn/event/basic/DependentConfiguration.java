@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 import groovy.lang.Closure;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -298,10 +299,11 @@ public class DependentConfiguration {
     public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, TaskAdaptable<U> ...tasks) {
         return transformMultiple(flags, transformer, Arrays.asList(tasks));
     }
-    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, List<? extends TaskAdaptable<U>> tasks) {
+    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, Collection<? extends TaskAdaptable<U>> tasks) {
         if (tasks.size()==1) {
-            return transform(flags, tasks.get(0), new Function<U,T>() {
-                @Override @Nullable
+            return transform(flags, Iterables.getOnlyElement(tasks), new Function<U,T>() {
+                @Override
+                @Nullable
                 public T apply(@Nullable U input) {
                     return transformer.apply(ImmutableList.of(input));
                 }
