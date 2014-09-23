@@ -18,23 +18,33 @@
  */
 package brooklyn.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +55,8 @@ import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.javalang.Threads;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
@@ -224,7 +236,11 @@ public class ResourceUtils {
                 if ("data".equals(protocol)) {
                     return new DataUriSchemeParser(url).lax().parse().getDataAsInputStream();
                 }
-                
+
+                if ("http".equals(protocol) || "https".equals(protocol)) {
+                    return getResourceViaHttp(url);
+                }
+
                 return new URL(url).openStream();
             }
 
@@ -388,6 +404,60 @@ public class ResourceUtils {
         }
     }
     
+    //For HTTP(S) targets use HttpClient so
+    //we can do authentication
+    private InputStream getResourceViaHttp(String resource) throws IOException {
+        URI uri = URI.create(resource);
+        HttpClientBuilder builder = HttpTool.httpClientBuilder()
+                .laxRedirect(true)
+                .uri(uri);
+        Credentials credentials = getUrlCredentials(uri.getRawUserInfo());
+        if (credentials != null) {
+            builder.credentials(credentials);
+        }
+        HttpClient client = builder.build();
+        HttpResponse result = client.execute(new HttpGet(resource));
+        int statusCode = result.getStatusLine().getStatusCode();
+        if (HttpTool.isStatusCodeHealthy(statusCode)) {
+            HttpEntity entity = result.getEntity();
+            if (entity != null) {
+                return entity.getContent();
+            } else {
+                return new ByteArrayInputStream(new byte[0]);
+            }
+        } else {
+            EntityUtils.consume(result.getEntity());
+            throw new IllegalStateException("Invalid response invoking " + resource + ": response code " + statusCode);
+        }
+    }
+
+    private Credentials getUrlCredentials(String userInfo) {
+        if (userInfo != null) {
+            String[] arr = userInfo.split(":");
+            String username;
+            String password = null;
+            if (arr.length == 1) {
+                username = urlDecode(arr[0]);
+            } else if (arr.length == 2) {
+                username = urlDecode(arr[0]);
+                password = urlDecode(arr[1]);
+            } else {
+                return null;
+            }
+            return new UsernamePasswordCredentials(username, password);
+        } else {
+            return null;
+        }
+    }
+
+    private String urlDecode(String str) {
+        try {
+            return URLDecoder.decode(str, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
     /** takes {@link #getResourceFromUrl(String)} and reads fully, into a string */
     public String getResourceAsString(String url) {
         try {
