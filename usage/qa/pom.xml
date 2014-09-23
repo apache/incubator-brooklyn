@@ -76,7 +76,7 @@
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
-            <classifier>tests</scope>
+            <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
     </dependencies>
