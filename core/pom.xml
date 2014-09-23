@@ -230,8 +230,8 @@
                   <artifactId>apache-rat-plugin</artifactId>
                   <configuration>
                       <excludes combine.children="append">
-                          <exclude>**/src/main/resources/brooklyn/location/geo/external-ip-address-resolvers.txt
-                          </exclude>
+                          <exclude>**/src/main/resources/**/*.txt</exclude>
+                          <exclude>**/src/test/resources/**/*.txt</exclude>
                       </excludes>
                   </configuration>
               </plugin>
