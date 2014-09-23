@@ -62,29 +62,34 @@ public class EffectorUtils {
      *  and in this case also performing type coercion.
      */
     public static Object[] prepareArgsForEffector(Effector<?> eff, Object args) {
-        if (args!=null && args.getClass().isArray()) {
+        if (args != null && args.getClass().isArray()) {
             return prepareArgsForEffectorFromArray(eff, (Object[]) args);
         }
-        if (args instanceof Map) return prepareArgsForEffectorFromMap(eff, (Map)args);
+        if (args instanceof Map) {
+            return prepareArgsForEffectorFromMap(eff, (Map) args);
+        }
         log.warn("Deprecated effector invocation style for call to "+eff+", expecting a map or an array, got: "+args);
-        if (log.isDebugEnabled()) log.debug("Deprecated effector invocation style for call to "+eff+", expecting a map or an array, got: "+args, 
+        if (log.isDebugEnabled()) {
+            log.debug("Deprecated effector invocation style for call to "+eff+", expecting a map or an array, got: "+args,
                 new Throwable("Trace for deprecated effector invocation style"));
+        }
         return oldPrepareArgsForEffector(eff, args);
     }
-    
+
     /** method used for calls such as   entity.effector(arg1, arg2)
      * get routed here from AbstractEntity.invokeMethod */
     private static Object[] prepareArgsForEffectorFromArray(Effector<?> eff, Object args[]) {
         int newArgsNeeded = eff.getParameters().size();
-        if (args.length==1 && args[0] instanceof Map)
-            if (newArgsNeeded!=1 || !eff.getParameters().get(0).getParameterClass().isAssignableFrom(args[0].getClass()))
+        if (args.length==1 && args[0] instanceof Map) {
+            if (newArgsNeeded!=1 || !eff.getParameters().get(0).getParameterClass().isAssignableFrom(args[0].getClass())) {
                 // treat a map in an array as a map passed directly (unless the method takes a single-arg map)
                 // this is to support   effector(param1: val1)
-                return prepareArgsForEffectorFromMap(eff, (Map)args[0]);
-        
+                return prepareArgsForEffectorFromMap(eff, (Map) args[0]);
+            }
+        }
         return prepareArgsForEffectorAsMapFromArray(eff, args).values().toArray(new Object[0]);
     }
-    
+
     public static Map prepareArgsForEffectorAsMapFromArray(Effector<?> eff, Object args[]) {
         int newArgsNeeded = eff.getParameters().size();
         List l = Lists.newArrayList();
@@ -93,12 +98,12 @@ public class EffectorUtils {
 
         for (int index = 0; index < eff.getParameters().size(); index++) {
             ParameterType<?> it = eff.getParameters().get(index);
-            
-            if (l.size() >= newArgsNeeded)
+
+            if (l.size() >= newArgsNeeded) {
                 //all supplied (unnamed) arguments must be used; ignore map
                 newArgs.put(it.getName(), l.remove(0));
-            // TODO do we ignore arguments in the same order that groovy does?
-            else if (!l.isEmpty() && it.getParameterClass().isInstance(l.get(0))) {
+                // TODO do we ignore arguments in the same order that groovy does?
+            } else if (!l.isEmpty() && it.getParameterClass().isInstance(l.get(0))) {
                 //if there are parameters supplied, and type is correct, they get applied before default values
                 //(this is akin to groovy)
                 newArgs.put(it.getName(), l.remove(0));
@@ -111,18 +116,19 @@ public class EffectorUtils {
 
             newArgsNeeded--;
         }
-        if (newArgsNeeded>0)
+        if (newArgsNeeded > 0) {
             throw new IllegalArgumentException("Invalid arguments (missing "+newArgsNeeded+") for effector "+eff+": "+args);
-        if (!l.isEmpty())
+        }
+        if (!l.isEmpty()) {
             throw new IllegalArgumentException("Invalid arguments ("+l.size()+" extra) for effector "+eff+": "+args);
-        return newArgs;    
+        }
+        return newArgs;
     }
 
     private static Object[] prepareArgsForEffectorFromMap(Effector<?> eff, Map m) {
         m = Maps.newLinkedHashMap(m); //make editable copy
         List newArgs = Lists.newArrayList();
         int newArgsNeeded = eff.getParameters().size();
-        boolean mapUsed = false;
 
         for (int index = 0; index < eff.getParameters().size(); index++) {
             ParameterType<?> it = eff.getParameters().get(index);
@@ -137,28 +143,29 @@ public class EffectorUtils {
                 throw new IllegalArgumentException("Invalid arguments (missing argument "+it+") for effector "+eff+": "+m);
             }
 
-            newArgs.add( TypeCoercions.coerce(v, it.getParameterClass()) );
+            newArgs.add(TypeCoercions.coerce(v, it.getParameterClass()));
             newArgsNeeded--;
         }
         if (newArgsNeeded>0)
             throw new IllegalArgumentException("Invalid arguments (missing "+newArgsNeeded+") for effector "+eff+": "+m);
-        return newArgs.toArray(new Object[newArgs.size()]);    
+        return newArgs.toArray(new Object[newArgs.size()]);
     }
 
-    /** 
+    /**
      * Takes arguments, and returns an array of arguments suitable for use by the Effector
      * according to the ParameterTypes it exposes.
-     * 
+     * <p>
      * The args can be:
-     *  1. an array of ordered arguments
-     *  2. a collection (which will be automatically converted to an array)
-     *  3. a single argument (which will then be wrapped in an array)
-     *  4. a map containing the (named) arguments
-     *  5. an array or collection single entry of a map (treated same as 5 above) 
-     *  6. a semi-populated array or collection that also containing a map as first arg -
+     * <ol>
+     * <li>an array of ordered arguments
+     * <li>a collection (which will be automatically converted to an array)
+     * <li>a single argument (which will then be wrapped in an array)
+     * <li>a map containing the (named) arguments
+     * <li>an array or collection single entry of a map (treated same as 5 above)
+     * <li>a semi-populated array or collection that also containing a map as first arg -
      *     uses ordered args in array, but uses named values from map in preference.
-     *  7. semi-populated array or collection, where default values will otherwise be used.
-     *   
+     * <li>semi-populated array or collection, where default values will otherwise be used.
+     * </ol>
      */
     public static Object[] oldPrepareArgsForEffector(Effector<?> eff, Object args) {
         //attempt to coerce unexpected types
@@ -169,9 +176,9 @@ public class EffectorUtils {
             argsArray = (Object[]) args;
         } else {
             if (args instanceof Collection) {
-                argsArray = ((Collection)args).toArray(new Object[((Collection)args).size()]);
+                argsArray = ((Collection) args).toArray(new Object[((Collection) args).size()]);
             } else {
-                argsArray = new Object[] {args};
+                argsArray = new Object[] { args };
             }
         }
 
@@ -179,42 +186,46 @@ public class EffectorUtils {
         //(but only use it when we have insufficient supplied arguments)
         List l = Lists.newArrayList();
         l.addAll(Arrays.asList(argsArray));
-        Map m = (argsArray.length > 0 && argsArray[0] instanceof Map ? Maps.newLinkedHashMap((Map)l.remove(0)) : null);
+        Map m = (argsArray.length > 0 && argsArray[0] instanceof Map ? Maps.newLinkedHashMap((Map) l.remove(0)) : null);
         List newArgs = Lists.newArrayList();
         int newArgsNeeded = eff.getParameters().size();
         boolean mapUsed = false;
 
         for (int index = 0; index < eff.getParameters().size(); index++) {
             ParameterType<?> it = eff.getParameters().get(index);
-            
-            if (l.size() >= newArgsNeeded)
+
+            if (l.size() >= newArgsNeeded) {
                 //all supplied (unnamed) arguments must be used; ignore map
                 newArgs.add(l.remove(0));
-            else if (truth(m) && truth(it.getName()) && m.containsKey(it.getName()))
+            } else if (truth(m) && truth(it.getName()) && m.containsKey(it.getName())) {
                 //some arguments were not supplied, and this one is in the map
                 newArgs.add(m.remove(it.getName()));
-            else if (index==0 && Map.class.isAssignableFrom(it.getParameterClass())) {
+            } else if (index == 0 && Map.class.isAssignableFrom(it.getParameterClass())) {
                 //if first arg is a map it takes the supplied map
                 newArgs.add(m);
                 mapUsed = true;
-            } else if (!l.isEmpty() && it.getParameterClass().isInstance(l.get(0)))
+            } else if (!l.isEmpty() && it.getParameterClass().isInstance(l.get(0))) {
                 //if there are parameters supplied, and type is correct, they get applied before default values
                 //(this is akin to groovy)
                 newArgs.add(l.remove(0));
-            else if (it instanceof BasicParameterType && ((BasicParameterType)it).hasDefaultValue())
+            } else if (it instanceof BasicParameterType && ((BasicParameterType)it).hasDefaultValue()) {
                 //finally, default values are used to make up for missing parameters
                 newArgs.add(((BasicParameterType)it).getDefaultValue());
-            else
+            } else {
                 throw new IllegalArgumentException("Invalid arguments (count mismatch) for effector "+eff+": "+args);
+            }
 
             newArgsNeeded--;
         }
-        if (newArgsNeeded>0)
+        if (newArgsNeeded > 0) {
             throw new IllegalArgumentException("Invalid arguments (missing "+newArgsNeeded+") for effector "+eff+": "+args);
-        if (!l.isEmpty())
+        }
+        if (!l.isEmpty()) {
             throw new IllegalArgumentException("Invalid arguments ("+l.size()+" extra) for effector "+eff+": "+args);
-        if (truth(m) && !mapUsed)
+        }
+        if (truth(m) && !mapUsed) {
             throw new IllegalArgumentException("Invalid arguments ("+m.size()+" extra named) for effector "+eff+": "+args);
+        }
         return newArgs.toArray(new Object[newArgs.size()]);
     }
 
@@ -223,7 +234,7 @@ public class EffectorUtils {
      */
     public static <T> T invokeMethodEffector(Entity entity, Effector<T> eff, Object[] args) {
         String name = eff.getName();
-        
+
         try {
             if (log.isDebugEnabled()) log.debug("Invoking effector {} on {}", new Object[] {name, entity});
             if (log.isTraceEnabled()) log.trace("Invoking effector {} on {} with args {}", new Object[] {name, entity, args});
@@ -231,8 +242,8 @@ public class EffectorUtils {
             if (!mgmtSupport.isDeployed()) {
                 mgmtSupport.attemptLegacyAutodeployment(name);
             }
-            ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal)entity).getManagementContext();
-            
+            ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal) entity).getManagementContext();
+
             mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
             try {
                 return mgmtContext.invokeEffectorMethodSync(entity, eff, args);
@@ -245,24 +256,23 @@ public class EffectorUtils {
             return null;
         }
     }
-    
+
     public static void handleEffectorException(Entity entity, Effector<?> effector, Throwable throwable) {
         log.warn("Error invoking "+effector.getName()+" at "+entity+": "+Exceptions.collapseText(throwable));
         throw new PropagatedRuntimeException("Error invoking "+effector.getName()+" at "+entity, throwable);
     }
 
     public static <T> Task<T> invokeEffectorAsync(Entity entity, Effector<T> eff, Map<String,?> parameters) {
-        String id = entity.getId();
         String name = eff.getName();
-        
-        if (log.isDebugEnabled()) log.debug("Invoking-async effector {} on {}", new Object[] {name, entity});
-        if (log.isTraceEnabled()) log.trace("Invoking-async effector {} on {} with args {}", new Object[] {name, entity, parameters});
+
+        if (log.isDebugEnabled()) log.debug("Invoking-async effector {} on {}", new Object[] { name, entity });
+        if (log.isTraceEnabled()) log.trace("Invoking-async effector {} on {} with args {}", new Object[] { name, entity, parameters });
         EntityManagementSupport mgmtSupport = ((EntityInternal)entity).getManagementSupport();
         if (!mgmtSupport.isDeployed()) {
             mgmtSupport.attemptLegacyAutodeployment(name);
         }
         ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal)entity).getManagementContext();
-        
+
         // FIXME seems brittle to have the listeners in the Utils method; better to move into the context.invokeEff
         // (or whatever the last mile before invoking the effector is - though currently there is not such a canonical place!)
         mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
@@ -277,11 +287,11 @@ public class EffectorUtils {
     /** @deprecated since 0.7.0, not used */
     @Deprecated
     public static Effector<?> findEffectorMatching(Entity entity, Method method) {
-        effector: for (Effector<?> effector : entity.getEntityType().getEffectors()) {
+        outer: for (Effector<?> effector : entity.getEntityType().getEffectors()) {
             if (!effector.getName().equals(entity)) continue;
             if (effector.getParameters().size() != method.getParameterTypes().length) continue;
             for (int i = 0; i < effector.getParameters().size(); i++) {
-                if (effector.getParameters().get(i).getParameterClass() != method.getParameterTypes()[i]) continue effector; 
+                if (effector.getParameters().get(i).getParameterClass() != method.getParameterTypes()[i]) continue outer;
             }
             return effector;
         }
@@ -299,7 +309,7 @@ public class EffectorUtils {
         }
         return null;
     }
-    
+
     /** matches effectors by name only (not parameters) */
     public static Maybe<Effector<?>> findEffector(Collection<? extends Effector<?>> effectors, String effectorName) {
         for (Effector<?> effector : effectors) {
@@ -307,14 +317,14 @@ public class EffectorUtils {
                 return Maybe.<Effector<?>>of(effector);
             }
         }
-        return Maybe.absent( new NoSuchElementException("No effector with name "+effectorName+" (contenders "+effectors+")") );
+        return Maybe.absent(new NoSuchElementException("No effector with name "+effectorName+" (contenders "+effectors+")"));
     }
-    
+
     /** matches effectors by name only (not parameters), based on what is declared on the entity static type */
     public static Maybe<Effector<?>> findEffectorDeclared(Entity entity, String effectorName) {
         return findEffector(entity.getEntityType().getEffectors(), effectorName);
     }
-    
+
     /** returns a (mutable) map of the standard flags which should be placed on an effector */
     public static Map<Object,Object> getTaskFlagsForEffectorInvocation(Entity entity, Effector<?> effector) {
         return MutableMap.builder()
