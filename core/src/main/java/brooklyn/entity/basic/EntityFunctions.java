@@ -92,7 +92,7 @@ public class EntityFunctions {
                     } else if (value==Entities.REMOVE) {
                         ((EntityInternal)input).removeAttribute(sensor);
                     } else {
-                        value = TypeCoercions.coerce(value, sensor.getType());
+                        value = TypeCoercions.coerce(value, sensor.getTypeToken());
                         ((EntityInternal)input).setAttribute(sensor, value);
                     }
                 }

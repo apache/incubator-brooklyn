@@ -347,7 +347,7 @@ public class ChefAttributeFeed extends AbstractFeed {
                     }
                 }
                 if (elementForSensor != null) {
-                    entity.setAttribute((AttributeSensor)sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getType()));
+                    entity.setAttribute((AttributeSensor)sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getTypeToken()));
                 } else {
                     log.debug("Entity {}: no Chef attribute matching {}; setting sensor {} to null", new Object[]{
                             entity.getDisplayName(),

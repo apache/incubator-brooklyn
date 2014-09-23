@@ -88,7 +88,7 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
                 // And use magic of setFieldFromFlag's magic to either set config or field as appropriate.
                 if (ConfigKey.class.isAssignableFrom(fieldType)) {
                     ConfigKey<?> configKey = (ConfigKey<?>) FlagUtils.getField(location, field);
-                    value = TypeCoercions.coerce(entry.getValue(), configKey.getType());
+                    value = TypeCoercions.coerce(entry.getValue(), configKey.getTypeToken());
                 } else {
                     value = TypeCoercions.coerce(entry.getValue(), fieldType);
                 }

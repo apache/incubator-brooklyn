@@ -194,7 +194,7 @@ public class EntityConfigMap implements ConfigMap {
             val = v;
         } else {
             try {
-                val = TypeCoercions.coerce(v, key.getType());
+                val = TypeCoercions.coerce(v, key.getTypeToken());
             } catch (Exception e) {
                 throw new IllegalArgumentException("Cannot coerce or set "+v+" to "+key, e);
             }

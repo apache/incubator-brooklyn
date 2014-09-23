@@ -43,7 +43,6 @@ import javax.annotation.concurrent.GuardedBy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.collections.Maps;
 
 import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
@@ -63,7 +62,6 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.yaml.Yamls;
 
-import com.google.api.client.util.Lists;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -71,6 +69,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.common.net.HostAndPort;
@@ -128,14 +128,13 @@ public class TypeCoercions {
                 if (arguments.length != 1) {
                     throw new IllegalStateException("Unexpected number of parameters in collection type: " + arguments);
                 }
-                Collection coerced = Lists.newArrayList();
-                TypeToken<?> parameterType = TypeToken.of(arguments[0]);
+                Collection coerced = Lists.newLinkedList();
+                TypeToken<?> listEntryType = TypeToken.of(arguments[0]);
                 for (Object entry : (Iterable<?>) value) {
-                    Maybe<?> result = tryCoerce(entry, parameterType);
-                    coerced.add(result.get());
+                    coerced.add(coerce(entry, listEntryType));
                 }
                 if (Set.class.isAssignableFrom(targetType)) {
-                    return (T) Sets.newHashSet(coerced);
+                    return (T) Sets.newLinkedHashSet(coerced);
                 } else {
                     return (T) coerced;
                 }
@@ -144,13 +143,11 @@ public class TypeCoercions {
                 if (arguments.length != 2) {
                     throw new IllegalStateException("Unexpected number of parameters in map type: " + arguments);
                 }
-                Map coerced = Maps.newHashMap();
+                Map coerced = Maps.newLinkedHashMap();
                 TypeToken<?> mapKeyType = TypeToken.of(arguments[0]);
                 TypeToken<?> mapValueType = TypeToken.of(arguments[1]);
                 for (Map.Entry entry : ((Map<?,?>) value).entrySet()) {
-                    Maybe<?> keyResult = tryCoerce(entry.getKey(), mapKeyType);
-                    Maybe<?> valueResult = tryCoerce(entry.getValue(), mapValueType);
-                    coerced.put(keyResult.get(), valueResult.get());
+                    coerced.put(coerce(entry.getKey(), mapKeyType),  coerce(entry.getValue(), mapValueType));
                 }
                 return (T) coerced;
             }
