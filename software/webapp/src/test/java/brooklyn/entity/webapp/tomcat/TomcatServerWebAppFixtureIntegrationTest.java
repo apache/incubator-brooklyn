@@ -79,7 +79,8 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
                     });
         }
 
-        // removed so we don't have to include swf-booking-mvc war
+        // TODO would be nice to test against spring web framework stock booking example
+        // but we'd need an external URL for that (we removed the binary from here for apache compliance reasons)
 //        TestApplication tomcatApp = newTestApplication();
 //        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
 //                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
