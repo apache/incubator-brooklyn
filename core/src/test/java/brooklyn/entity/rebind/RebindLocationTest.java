@@ -121,7 +121,7 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
 
         origLoc.myAtomicLong.incrementAndGet();
         assertEquals(origLoc.myAtomicLong.get(), 124L);
-        ((EntityInternal)origApp).getManagementContext().getRebindManager().getChangeListener().onChanged(origLoc);
+        origApp.getManagementContext().getRebindManager().getChangeListener().onChanged(origLoc);
         
         newApp = (TestApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);

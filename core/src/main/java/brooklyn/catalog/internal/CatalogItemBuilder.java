@@ -47,8 +47,14 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
         return this;
     }
 
+    /** @deprecated since 0.7.0 use {@link #displayName}*/
+    @Deprecated
     public CatalogItemBuilder<CatalogItemType> name(String name) {
-        dto.name = name;
+        return displayName(name);
+    }
+
+    public CatalogItemBuilder<CatalogItemType> displayName(String displayName) {
+        dto.name = displayName;
         return this;
     }
 

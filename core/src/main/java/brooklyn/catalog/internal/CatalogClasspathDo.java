@@ -58,7 +58,7 @@ public class CatalogClasspathDo {
          * for any catalog which is presented over the internet this is recommended (to prevent loading) and is the default; 
          * (you should explicitly list the items to include; it may be useful to autogenerate it by using a local catalog
          * scanning with ANNOTATIONS, viwing that by running mgmt.getCatalog().toXmlString(),
-         * then editting the resulting XML (e.g. setting the classpath and removing the scan attribute) */
+         * then editing the resulting XML (e.g. setting the classpath and removing the scan attribute) */
         NONE, 
         
         /** types in the classpath are scanned for annotations indicating inclusion in the catalog ({@link Catalog});

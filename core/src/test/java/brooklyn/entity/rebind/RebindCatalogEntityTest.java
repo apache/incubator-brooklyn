@@ -63,12 +63,18 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     private URL url;
 
     @Override
+    protected boolean useEmptyCatalog() {
+        return true;
+    }
+
+    @Override
     protected StartableApplication createApp() {
         // do nothing here
         return null;
     }
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
         url = getClass().getClassLoader().getResource(JAR_PATH);
         assertNotNull(url, "Could not find on classpath: "+JAR_PATH);
@@ -111,6 +117,7 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     // TODO Not using RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     //      because that won't have right catalog classpath.
     //      How to reuse that code cleanly?
+    @Override
     protected StartableApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
 

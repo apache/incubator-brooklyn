@@ -19,6 +19,9 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import brooklyn.catalog.CatalogLoadMode;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
@@ -485,12 +488,11 @@ public class BrooklynLauncher {
     public BrooklynLauncher start() {
         if (started) throw new IllegalStateException("Cannot start() or launch() multiple times");
         started = true;
-        
+
+        setCatalogLoadMode();
+
         // Create the management context
         initManagementContext();
-
-        // Create the locations
-        locations.addAll(managementContext.getLocationRegistry().resolve(locationSpecs));
 
         // Add a CAMP platform (TODO include a flag for this?)
         campPlatform = new BrooklynCampPlatformLauncherNoServer()
@@ -505,7 +507,12 @@ public class BrooklynLauncher {
         } catch (Exception e) {
             handleSubsystemStartupError(ignorePersistenceErrors, "persistence", e);
         }
-        
+
+        // Create the locations. Must happen after persistence is started in case the
+        // management context's catalog is loaded from persisted state. (Location
+        // resolution uses the catalog's classpath to scan for resolvers.)
+        locations.addAll(managementContext.getLocationRegistry().resolve(locationSpecs));
+
         // Start the web-console
         if (startWebApps) {
             try {
@@ -521,8 +528,24 @@ public class BrooklynLauncher {
         } catch (Exception e) {
             handleSubsystemStartupError(ignoreAppErrors, "managed apps", e);
         }
-        
+
         return this;
+    }
+
+    /**
+     * Sets {@link BrooklynServerConfig#CATALOG_LOAD_MODE} in {@link #brooklynAdditionalProperties}.
+     * <p>
+     * Checks {@link brooklyn.internal.BrooklynFeatureEnablement#FEATURE_CATALOG_PERSISTENCE_PROPERTY}
+     * and the {@link #persistMode persistence mode}.
+     */
+    private void setCatalogLoadMode() {
+        CatalogLoadMode catalogLoadMode;
+        if (!BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY)) {
+            catalogLoadMode = CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL;
+        } else {
+            catalogLoadMode = CatalogLoadMode.forPersistMode(persistMode);
+        }
+        brooklynProperties(BrooklynServerConfig.CATALOG_LOAD_MODE, catalogLoadMode);
     }
 
     private void initManagementContext() {

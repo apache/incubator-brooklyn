@@ -24,45 +24,50 @@ import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 class CatalogItems {
 
     public static CatalogTemplateItemDto newTemplateFromJava(String javaType, String name) {
-        return newTemplateFromJava(null, javaType, name, null);
+        return newTemplateFromJava(javaType, name, null, null);
     }
-    public static CatalogTemplateItemDto newTemplateFromJava(String id, String javaType, String name, String description) {
-        return newTemplateFromJava(id, javaType, name, description, null);
+
+    public static CatalogTemplateItemDto newTemplateFromJava(String javaType, String name, String description) {
+        return newTemplateFromJava(javaType, name, description, null);
     }
-    public static CatalogTemplateItemDto newTemplateFromJava(String id, String javaType, String name, String description, CatalogLibrariesDto libraries) {
-        return set(new CatalogTemplateItemDto(), id, javaType, javaType, name, description, libraries);
+
+    public static CatalogTemplateItemDto newTemplateFromJava(String javaType, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogTemplateItemDto(), javaType, javaType, name, description, libraries);
     }
 
     public static CatalogEntityItemDto newEntityFromPlan(String registeredTypeName, CatalogLibrariesDto libraries, DeploymentPlan plan, String underlyingPlanYaml) {
-        CatalogEntityItemDto target = set(new CatalogEntityItemDto(), null, registeredTypeName, null, plan.getName(), plan.getDescription(), libraries);
+        CatalogEntityItemDto target = set(new CatalogEntityItemDto(), registeredTypeName, null, plan.getName(), plan.getDescription(), libraries);
         target.planYaml = underlyingPlanYaml;
         return target;
     }
     
     public static CatalogEntityItemDto newEntityFromJava(String javaType, String name) {
-        return newEntityFromJava(null, javaType, name, null);
+        return newEntityFromJava(javaType, name, null, null);
     }
-    public static CatalogEntityItemDto newEntityFromJava(String id, String javaType, String name, String description) {
-        return newEntityFromJava(id, javaType, name, description, null);
+
+    public static CatalogEntityItemDto newEntityFromJava(String javaType, String name, String description) {
+        return newEntityFromJava(javaType, name, description, null);
     }
-    public static CatalogEntityItemDto newEntityFromJava(String id, String javaType, String name, String description, CatalogLibrariesDto libraries) {
-        return set(new CatalogEntityItemDto(), id, javaType, javaType, name, description, libraries);
+
+    public static CatalogEntityItemDto newEntityFromJava(String javaType, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogEntityItemDto(), javaType, javaType, name, description, libraries);
     }
 
     public static CatalogPolicyItemDto newPolicyFromJava(String javaType, String name) {
-        return newPolicyFromJava(null, javaType, name, null);
+        return newPolicyFromJava(javaType, name, null, null);
     }
-    public static CatalogPolicyItemDto newPolicyFromJava(String id, String javaType, String name, String description) {
-        return newPolicyFromJava(id, javaType, name, description, null);
+
+    public static CatalogPolicyItemDto newPolicyFromJava(String javaType, String name, String description) {
+        return newPolicyFromJava(javaType, name, description, null);
     }
-    public static CatalogPolicyItemDto newPolicyFromJava(String id, String javaType, String name, String description, CatalogLibrariesDto libraries) {
-        return set(new CatalogPolicyItemDto(), id, javaType, javaType, name, description, libraries);
+
+    public static CatalogPolicyItemDto newPolicyFromJava(String javaType, String name, String description, CatalogLibrariesDto libraries) {
+        return set(new CatalogPolicyItemDto(), javaType, javaType, name, description, libraries);
     }
  
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static <T extends CatalogItemDtoAbstract> T set(T target, String id, String registeredType, String javaType, String name,
+    private static <T extends CatalogItemDtoAbstract> T set(T target, String registeredType, String javaType, String name,
             String description, CatalogLibrariesDto libraries) {
-        target.id = id;
         target.registeredType = registeredType;
         target.javaType = javaType;
         target.name = name;

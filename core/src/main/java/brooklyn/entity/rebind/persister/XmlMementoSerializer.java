@@ -27,12 +27,14 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
+import brooklyn.entity.rebind.dto.BasicCatalogItemMemento;
 import brooklyn.entity.rebind.dto.BasicEnricherMemento;
 import brooklyn.entity.rebind.dto.BasicEntityMemento;
 import brooklyn.entity.rebind.dto.BasicLocationMemento;
@@ -84,8 +86,9 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.alias("policy", BasicPolicyMemento.class);
         xstream.alias("enricher", BasicEnricherMemento.class);
         xstream.alias("configKey", BasicConfigKey.class);
+        xstream.alias("catalogItem", BasicCatalogItemMemento.class);
         xstream.alias("attributeSensor", BasicAttributeSensor.class);
-        
+
         xstream.alias("effector", Effector.class);
         xstream.addDefaultImplementation(EffectorAndBody.class, Effector.class);
         xstream.alias("parameter", BasicParameterType.class);
@@ -100,7 +103,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.registerConverter(new PolicyConverter());
         xstream.registerConverter(new EnricherConverter());
         xstream.registerConverter(new EntityConverter());
-        
+        xstream.registerConverter(new CatalogItemConverter());
+
         xstream.registerConverter(new ManagementContextConverter());
         
         xstream.registerConverter(new TaskConverter(xstream.getMapper()));
@@ -191,7 +195,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         @Override
         public Object fromString(String str) {
             if (lookupContext == null) {
-                LOG.warn("Cannot unmarshall from persisted xml {} {}; no lookup context supplied!", clazz.getSimpleName(), str);
+                LOG.warn("Cannot unmarshal from persisted xml {} {}; no lookup context supplied!", clazz.getSimpleName(), str);
                 return null;
             } else {
                 return lookup(str);
@@ -240,6 +244,17 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             return lookupContext.lookupEntity(id);
         }
     }
+
+    public class CatalogItemConverter extends IdentifiableConverter<CatalogItem> {
+        CatalogItemConverter() {
+            super(CatalogItem.class);
+        }
+        @Override
+        protected CatalogItem lookup(String id) {
+            return lookupContext.lookupCatalogItem(id);
+        }
+    }
+
 
     static boolean loggedTaskWarning = false;
     public class TaskConverter implements Converter {

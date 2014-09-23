@@ -21,6 +21,7 @@ package brooklyn.entity.rebind;
 import java.util.Collection;
 
 import brooklyn.mementos.BrooklynMementoPersister.Delta;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
@@ -53,6 +54,10 @@ public class PersisterDeltaImpl implements Delta {
             delta.enrichers.addAll(vals);
             return this;
         }
+        public Builder catalogItems(Collection<? extends CatalogItemMemento> vals) {
+            delta.catalogItems.addAll(vals);
+            return this;
+        }
         public Builder removedLocationIds(Collection<String> vals) {
             delta.removedLocationIds.addAll(vals);
             return this;
@@ -69,6 +74,10 @@ public class PersisterDeltaImpl implements Delta {
             delta.removedEnricherIds.addAll(vals);
             return this;
         }
+        public Builder removedCatalogItemIds(Collection<String> vals) {
+            delta.removedCatalogItemIds.addAll(vals);
+            return this;
+        }
         public Delta build() {
             return delta;
         }
@@ -78,11 +87,13 @@ public class PersisterDeltaImpl implements Delta {
     Collection<EntityMemento> entities = Sets.newLinkedHashSet();
     Collection<PolicyMemento> policies = Sets.newLinkedHashSet();
     Collection<EnricherMemento> enrichers = Sets.newLinkedHashSet();
-    Collection <String> removedLocationIds = Sets.newLinkedHashSet();
-    Collection <String> removedEntityIds = Sets.newLinkedHashSet();
-    Collection <String> removedPolicyIds = Sets.newLinkedHashSet();
-    Collection <String> removedEnricherIds = Sets.newLinkedHashSet();
-    
+    Collection<CatalogItemMemento> catalogItems = Sets.newLinkedHashSet();
+    Collection<String> removedLocationIds = Sets.newLinkedHashSet();
+    Collection<String> removedEntityIds = Sets.newLinkedHashSet();
+    Collection<String> removedPolicyIds = Sets.newLinkedHashSet();
+    Collection<String> removedEnricherIds = Sets.newLinkedHashSet();
+    Collection<String> removedCatalogItemIds = Sets.newLinkedHashSet();
+
     @Override
     public Collection<LocationMemento> locations() {
         return locations;
@@ -104,6 +115,11 @@ public class PersisterDeltaImpl implements Delta {
     }
 
     @Override
+    public Collection<CatalogItemMemento> catalogItems() {
+        return catalogItems;
+    }
+
+    @Override
     public Collection<String> removedLocationIds() {
         return removedLocationIds;
     }
@@ -121,5 +137,10 @@ public class PersisterDeltaImpl implements Delta {
     @Override
     public Collection<String> removedEnricherIds() {
         return removedEnricherIds;
+    }
+
+    @Override
+    public Collection<String> removedCatalogItemIds() {
+        return removedCatalogItemIds;
     }
 }

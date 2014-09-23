@@ -18,14 +18,24 @@
  */
 package brooklyn.entity.rebind;
 
+import static org.testng.Assert.assertEquals;
+
 import java.io.File;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import com.google.api.client.util.Sets;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
+
+import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
@@ -62,17 +72,31 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         LOG.info("Test "+getClass()+" persisting to "+mementoDir);
     }
 
+    /** @return A started management context */
     protected LocalManagementContext createOrigManagementContext() {
         return RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
                 .persistPeriodMillis(getPersistPeriodMillis())
                 .forLive(useLiveManagementContext())
+                .emptyCatalog(useEmptyCatalog())
                 .buildStarted();
     }
-    
+
+    /** @return An unstarted management context */
+    protected LocalManagementContext createNewManagementContext() {
+        return RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
+                .forLive(useLiveManagementContext())
+                .emptyCatalog(useEmptyCatalog())
+                .buildUnstarted();
+    }
+
     protected boolean useLiveManagementContext() {
         return false;
     }
-    
+
+    protected boolean useEmptyCatalog() {
+        return false;
+    }
+
     protected int getPersistPeriodMillis() {
         return 1;
     }
@@ -116,9 +140,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         if (terminateOrigManagementContext) {
             origManagementContext.terminate();
         }
-        LocalManagementContext newManagementContext = RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
-                .forLive(useLiveManagementContext())
-                .buildUnstarted();
+        LocalManagementContext newManagementContext = createNewManagementContext();
 
         return (T) RebindTestUtils.rebind(newManagementContext, classLoader);
     }
@@ -148,5 +170,41 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
         persister.stop(false);
         return mementoManifest;
+    }
+
+    protected void assertCatalogsEqual(BrooklynCatalog actual, BrooklynCatalog expected) {
+        Set<String> actualIds = getCatalogItemIds(actual.getCatalogItems());
+        Set<String> expectedIds = getCatalogItemIds(expected.getCatalogItems());
+        assertEquals(actualIds.size(), Iterables.size(actual.getCatalogItems()), "id keyset size != size of catalog. Are there duplicates in the catalog?");
+        assertEquals(actualIds, expectedIds);
+        for (String id : actualIds) {
+            assertCatalogItemsEqual(actual.getCatalogItem(id), expected.getCatalogItem(id));
+        }
+    }
+
+    private Set<String> getCatalogItemIds(Iterable<CatalogItem<Object, Object>> catalogItems) {
+        return FluentIterable.from(catalogItems)
+                .transform(EntityFunctions.id())
+                .copyInto(Sets.<String>newHashSet());
+    }
+
+    protected void assertCatalogItemsEqual(CatalogItem<?, ?> actual, CatalogItem<?, ?> expected) {
+        assertEquals(actual.getClass(), expected.getClass());
+        assertEquals(actual.getId(), expected.getId());
+        assertEquals(actual.getDisplayName(), expected.getDisplayName());
+        assertEquals(actual.getVersion(), expected.getVersion());
+        assertEquals(actual.getJavaType(), expected.getJavaType());
+        assertEquals(actual.getDescription(), expected.getDescription());
+        assertEquals(actual.getIconUrl(), expected.getIconUrl());
+        assertEquals(actual.getVersion(), expected.getVersion());
+        assertEquals(actual.getCatalogItemJavaType(), expected.getCatalogItemJavaType());
+        assertEquals(actual.getCatalogItemType(), expected.getCatalogItemType());
+        assertEquals(actual.getSpecType(), expected.getSpecType());
+        assertEquals(actual.getRegisteredTypeName(), expected.getRegisteredTypeName());
+        if (actual.getLibraries() != null && expected.getLibraries() != null) {
+            assertEquals(actual.getLibraries().getBundles(), expected.getLibraries().getBundles());
+        } else {
+            assertEquals(actual.getLibraries(), expected.getLibraries());
+        }
     }
 }

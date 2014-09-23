@@ -16,16 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.mementos;
 
 import com.google.common.annotations.Beta;
 
-@Beta
-public enum BrooklynObjectType {
-    ENTITY,
-    LOCATION,
-    POLICY,
-    ENRICHER,
-    CATALOG_ITEM,
-    UNKNOWN;
+import brooklyn.catalog.CatalogItem;
+
+public interface CatalogItemMemento extends Memento {
+
+    String getDescription();
+
+    String getRegisteredTypeName();
+
+    String getIconUrl();
+
+    String getVersion();
+
+    String getPlanYaml();
+
+    String getJavaType();
+
+    // necessary or part of plan yaml? Necessary for now, but .. ?
+    @Beta
+    CatalogItem.CatalogItemLibraries getLibraries();
+
+    CatalogItem.CatalogItemType getCatalogItemType();
+
+    Class<?> getCatalogItemJavaType();
+
+    Class<?> getSpecType();
+
 }

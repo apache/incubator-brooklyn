@@ -152,7 +152,8 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
 
         FileFilter fileFilter = new FileFilter() {
             @Override public boolean accept(File file) {
-                return !file.getName().endsWith(".tmp");
+                // An inclusion filter would be safer than exclusion
+                return !file.getName().endsWith(".tmp") && !file.getName().endsWith(".swp");
             }
         };
         File[] subPathDirFiles = subPathDir.listFiles(fileFilter);

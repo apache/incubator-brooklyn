@@ -52,7 +52,7 @@ public class CatalogLoadTest {
         assertEquals(catalog.entries.size(), 1, "Catalog entries = " + Joiner.on(", ").join(catalog.entries));
 
         CatalogItemDtoAbstract<?,?> template = Iterables.getOnlyElement(catalog.entries);
-        assertEquals(template.getName(), "Entity name");
+        assertEquals(template.getDisplayName(), "Entity name");
         assertEquals(template.getVersion(), "9.1.3");
         assertEquals(template.getJavaType(), "com.example.ExampleApp");
         assertEquals(template.getLibraries().getBundles().size(), 2,

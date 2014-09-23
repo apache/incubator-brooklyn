@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind;
 
 import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
@@ -56,6 +57,11 @@ public interface RebindExceptionHandler {
      * @return the enricher to use in place of the missing one, or null (if hasn't thrown an exception)
      */
     Enricher onDanglingEnricherRef(String id);
+
+    /**
+     * @return the catalog item to use in place of the missing one
+     */
+    CatalogItem<?, ?> onDanglingCatalogItemRef(String id);
 
     void onCreateFailed(BrooklynObjectType type, String id, String instanceType, Exception e);
 

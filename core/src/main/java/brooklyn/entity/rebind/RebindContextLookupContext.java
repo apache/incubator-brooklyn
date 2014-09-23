@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -81,6 +82,15 @@ public class RebindContextLookupContext implements LookupContext {
         Enricher result = rebindContext.getEnricher(id);
         if (result == null) {
             result = exceptionHandler.onDanglingEnricherRef(id);
+        }
+        return result;
+    }
+
+    @Override
+    public CatalogItem<?, ?> lookupCatalogItem(String id) {
+        CatalogItem<?, ?> result = rebindContext.getCatalogItem(id);
+        if (result == null) {
+            result = exceptionHandler.onDanglingCatalogItemRef(id);
         }
         return result;
     }

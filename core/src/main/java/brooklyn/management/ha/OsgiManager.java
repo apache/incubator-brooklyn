@@ -89,8 +89,9 @@ public class OsgiManager {
                 }
             }
             Bundle b = Osgis.install(framework, bundleUrl);
-            log.debug("Bundle from "+bundleUrl+" successfully installed as "+nv);
-            bundleUrlToNameVersionString.put(bundleUrl, b.getSymbolicName()+":"+b.getVersion().toString());
+            nv = b.getSymbolicName()+":"+b.getVersion().toString();
+            bundleUrlToNameVersionString.put(bundleUrl, nv);
+            log.debug("Bundle from "+bundleUrl+" successfully installed as " + nv);
         } catch (BundleException e) {
             log.debug("Bundle from "+bundleUrl+" failed to install (rethrowing): "+e);
             throw Throwables.propagate(e);

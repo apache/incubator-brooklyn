@@ -21,6 +21,7 @@ package brooklyn.catalog.internal;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.util.xstream.EnumCaseForgivingSingleValueConverter;
 import brooklyn.util.xstream.XmlSerializer;
@@ -54,6 +55,12 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
 
         xstream.aliasType("libraries", CatalogLibrariesDto.class);
         xstream.addImplicitCollection(CatalogLibrariesDto.class, "bundles", "bundle", String.class);
+
+        // Note: the management context is being omitted because it is unnecessary for
+        // representations of catalogues generated with this serializer.
+        xstream.omitField(AbstractBrooklynObject.class, "managementContext");
+        xstream.omitField(AbstractBrooklynObject.class, "_legacyConstruction");
+        xstream.omitField(AbstractBrooklynObject.class, "hasWarnedOfNoManagementContextWhenPersistRequested");
     }
 
 }

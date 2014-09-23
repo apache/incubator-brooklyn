@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
@@ -36,6 +37,7 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, Location> locations = Maps.newLinkedHashMap();
     private final Map<String, Policy> policies = Maps.newLinkedHashMap();
     private final Map<String, Enricher> enrichers = Maps.newLinkedHashMap();
+    private final Map<String, CatalogItem<?, ?>> catalogItems = Maps.newLinkedHashMap();
     private final ClassLoader classLoader;
     private final RebindExceptionHandler exceptionHandler;
     
@@ -58,6 +60,10 @@ public class RebindContextImpl implements RebindContext {
     
     public void registerEnricher(String id, Enricher enricher) {
         enrichers.put(id, enricher);
+    }
+
+    public void registerCatalogItem(String id, CatalogItem<?, ?> catalogItem) {
+        catalogItems.put(id, catalogItem);
     }
     
     public void unregisterPolicy(Policy policy) {
@@ -87,7 +93,12 @@ public class RebindContextImpl implements RebindContext {
     public Enricher getEnricher(String id) {
         return enrichers.get(id);
     }
-    
+
+    @Override
+    public CatalogItem<?, ?> getCatalogItem(String id) {
+        return catalogItems.get(id);
+    }
+
     @Override
     public Class<?> loadClass(String className) throws ClassNotFoundException {
         return classLoader.loadClass(className);
@@ -112,5 +123,9 @@ public class RebindContextImpl implements RebindContext {
 
     protected Collection<Enricher> getEnrichers() {
         return enrichers.values();
+    }
+
+    protected Collection<CatalogItem<?, ?>> getCatalogItems() {
+        return catalogItems.values();
     }
 }

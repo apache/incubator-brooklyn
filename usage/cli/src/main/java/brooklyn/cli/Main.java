@@ -291,7 +291,6 @@ public class Main extends AbstractMain {
         @Option(name = { "--persistenceLocation" }, title = "persistence location",
             description = "The location spec for an object store to read/write persisted state")
         public String persistenceLocation;
-    
 
         final static String HA_OPTION = "--highAvailability";
         protected final static String HA_OPTION_DISABLED = "disabled";
@@ -351,7 +350,7 @@ public class Main extends AbstractMain {
                 launcher.persistMode(persistMode);
                 launcher.persistenceDir(persistenceDir);
                 launcher.persistenceLocation(persistenceLocation);
-                
+
                 launcher.highAvailabilityMode(highAvailabilityMode);
 
                 launcher.stopWhichAppsOnShutdown(stopWhichAppsOnShutdownMode);

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
@@ -36,6 +37,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -53,6 +55,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<String> missingLocations = Sets.newConcurrentHashSet();
     protected final Set<String> missingPolicies = Sets.newConcurrentHashSet();
     protected final Set<String> missingEnrichers = Sets.newConcurrentHashSet();
+    protected final Set<String> missingCatalogItems = Sets.newConcurrentHashSet();
     protected final Set<String> creationFailedIds = Sets.newConcurrentHashSet();
     protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
     protected final Set<Exception> loadPolicyFailures = Sets.newConcurrentHashSet();
@@ -163,6 +166,17 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             throw new IllegalStateException("No enricher found with id "+id);
         } else {
             LOG.warn("No enricher found with id "+id+"; returning null");
+            return null;
+        }
+    }
+
+    @Override
+    public CatalogItem<?, ?> onDanglingCatalogItemRef(String id) {
+        missingCatalogItems.add(id);
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
+            throw new IllegalStateException("No catalog item found with id "+id);
+        } else {
+            LOG.warn("No catalog item found with id "+id+"; returning null");
             return null;
         }
     }
@@ -301,17 +315,20 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             allExceptions.addAll(loadPolicyFailures);
         }
         if (danglingRefFailureMode != RebindManager.RebindFailureMode.CONTINUE) {
-            if (missingEntities.size() > 0) {
-                allExceptions.add(new IllegalStateException("Missing referenced entit"+(missingEntities.size() == 1 ? "y" : "ies")+": "+missingEntities));
+            if (!missingEntities.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced entit" + Strings.ies(missingEntities) + ": " + missingEntities));
             }
-            if (missingLocations.size() > 0) {
-                allExceptions.add(new IllegalStateException("Missing referenced location"+(missingLocations.size() == 1 ? "" : "s")+": "+missingLocations));
+            if (!missingLocations.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced location" + Strings.s(missingLocations) + ": " + missingLocations));
             }
-            if (missingPolicies.size() > 0) {
-                allExceptions.add(new IllegalStateException("Missing referenced polic"+(missingPolicies.size() == 1 ? "y" : "ies")+": "+missingPolicies));
+            if (!missingPolicies.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced polic" + Strings.ies(missingPolicies) + ": " + ": " + missingPolicies));
             }
-            if (missingEnrichers.size() > 0) {
-                allExceptions.add(new IllegalStateException("Missing referenced enricher"+(missingEnrichers.size() == 1 ? "" : "s")+": "+missingEnrichers));
+            if (!missingEnrichers.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced enricher" + Strings.s(missingEnrichers) + ": " + missingEnrichers));
+            }
+            if (!missingCatalogItems.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced catalog item" + Strings.s(missingCatalogItems) + ": " + missingCatalogItems));
             }
         }
         if (rebindFailureMode != RebindManager.RebindFailureMode.CONTINUE) {

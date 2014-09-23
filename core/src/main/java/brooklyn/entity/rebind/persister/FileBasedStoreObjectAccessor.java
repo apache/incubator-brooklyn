@@ -39,10 +39,6 @@ import com.google.common.io.Files;
  */
 public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.StoreObjectAccessor {
 
-    /**
-     * @param file
-     * @param executor A sequential executor (e.g. SingleThreadedExecutor, or equivalent)
-     */
     public FileBasedStoreObjectAccessor(File file, String tmpExtension) {
         this.file = file;
         this.tmpFile = new File(file.getParentFile(), file.getName()+(Strings.isBlank(tmpExtension) ? ".tmp" : tmpExtension));
