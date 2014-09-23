@@ -1,0 +1,1 @@
+The file hello-world.war contains its source code. It is included as a (small) binary to prevent build complication.

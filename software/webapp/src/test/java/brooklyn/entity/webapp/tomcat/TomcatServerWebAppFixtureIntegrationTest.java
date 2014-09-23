@@ -44,6 +44,7 @@ import com.google.common.collect.Lists;
 
 public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(TomcatServerWebAppFixtureIntegrationTest.class);
     
     @DataProvider(name = "basicEntities")
@@ -77,16 +78,18 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
                     "" // no sub-page path
                     });
         }
-        
-        TestApplication tomcatApp = newTestApplication();
-        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
-                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
-        result.add(new Object[] {
-                tomcat,
-                "swf-booking-mvc.war",
-                "swf-booking-mvc/",
-                "spring/intro",
-               });
+
+        // TODO would be nice to test against spring web framework stock booking example
+        // but we'd need an external URL for that (we removed the binary from here for apache compliance reasons)
+//        TestApplication tomcatApp = newTestApplication();
+//        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
+//                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
+//        result.add(new Object[] {
+//                tomcat,
+//                "swf-booking-mvc.war",
+//                "swf-booking-mvc/",
+//                "spring/intro",
+//               });
         
         return result.toArray(new Object[][] {});
     }
