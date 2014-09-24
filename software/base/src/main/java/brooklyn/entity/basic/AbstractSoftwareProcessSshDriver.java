@@ -291,14 +291,22 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
             getLocation().execCommands("create install directory", ImmutableList.of("mkdir -p " + getInstallDir()));
 
-            Map installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
+            Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
             if (installFiles != null && installFiles.size() > 0) {
-                copyResources(installFiles);
+                for (String source : installFiles.keySet()) {
+                    String target = installFiles.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
+                    copyResource(source, destination);
+                }
             }
 
-            Map installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
+            Map<String, String> installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
             if (installTemplates != null && installTemplates.size() > 0) {
-                copyTemplates(installTemplates);
+                for (String source : installFiles.keySet()) {
+                    String target = installFiles.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
+                    copyTemplate(source, destination);
+                }
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
@@ -312,12 +320,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         try {
             getLocation().execCommands("create run directory", ImmutableList.of("mkdir -p " + getRunDir()));
 
-            Map runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
+            Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
             if (runtimeFiles != null && runtimeFiles.size() > 0) {
                 copyResources(runtimeFiles);
             }
 
-            Map runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
+            Map<String, String> runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
             if (runtimeTemplates != null && runtimeTemplates.size() > 0) {
                 copyTemplates(runtimeTemplates);
             }
@@ -383,17 +391,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * @return The exit code of the SSH command run.
      */
     public int copyTemplate(String template, String target, Map<String, ?> extraSubstitutions) {
-        // prefix with runDir if relative target
-        String dest = target;
-        if (!Os.isAbsolutish(target)) {
-            dest = Os.mergePathsUnix(getRunDir(), target);
-        }
-        
         String data = processTemplate(template, extraSubstitutions);
-        int result = getMachine().copyTo(new StringReader(data), dest);
-        if (log.isDebugEnabled())
-            log.debug("Copied filtered template for {}: {} to {} - result {}", new Object[] { entity, template, dest, result });
-        return result;
+        return copyResource(new StringReader(data), target);
     }
 
     /**
