@@ -23,6 +23,7 @@ import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
 import static brooklyn.util.ssh.BashCommands.alternatives;
 import static brooklyn.util.ssh.BashCommands.chainGroup;
 import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
+import static brooklyn.util.ssh.BashCommands.ok;
 import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
@@ -103,19 +104,26 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     private List<String> installLinux(String expandedInstallDir) {
         LOG.info("Ignoring version config ({}) and installing from package manager", getEntity().getConfig(RiakNode.SUGGESTED_VERSION));
         isPackageInstall = true;
+        OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
+        String osVersion = osDetails.getVersion();
+        String osMajorVersion = osVersion.contains(".") ? osVersion.substring(0, osVersion.indexOf(".")) : osVersion;
+        String fullVersion = getEntity().getConfig(RiakNode.SUGGESTED_VERSION);
+        String majorVersion = fullVersion.substring(0, 3);
         String installBin = Urls.mergePaths(expandedInstallDir, "bin");
         String apt = chainGroup(
                 //debian fix
                 "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
                 "which apt-get",
-                "curl http://apt.basho.com/gpg/basho.apt.key | " + sudo("apt-key add -"),
-                sudo("bash -c \"echo deb http://apt.basho.com $(lsb_release -sc) main > /etc/apt/sources.list.d/basho.list\""),
-                sudo("apt-get update"),
-                sudo("apt-get -y --allow-unauthenticated install riak=" + getEntity().getConfig(RiakNode.SUGGESTED_VERSION) + "*"));
+                ok(sudo("apt-get -y --allow-unauthenticated install apt-get install libpam0g-dev")),
+                ok(sudo("apt-get -y --allow-unauthenticated install apt-get install libssl0.9.8")),
+                // TODO: Debian support (default debian image fails with 'sudo: command not found')
+                "[[ \"lucid natty precise\" =~ (^| )`lsb_release -sc`($| )  ]] && export OS_RELEASE=`lsb_release -sc` || export OS_RELEASE=precise",
+                String.format("wget http://s3.amazonaws.com/downloads.basho.com/riak/%s/%s/ubuntu/$OS_RELEASE/riak_%<s-1_amd64.deb", majorVersion, fullVersion),
+                sudo(String.format("dpkg -i riak_%s-1_amd64.deb", fullVersion)));
         String yum = chainGroup(
                 "which yum",
-                sudo("yum -y --nogpgcheck install http://yum.basho.com/gpg/basho-release-5-1.noarch.rpm"),
-                sudo("yum -y --nogpgcheck install riak-" + getEntity().getConfig(RiakNode.SUGGESTED_VERSION) + "*"));
+                String.format("wget http://s3.amazonaws.com/downloads.basho.com/riak/%s/%s/rhel/%s/riak-%s-1.el6.x86_64.rpm", majorVersion, fullVersion, osMajorVersion, fullVersion),
+                sudo(String.format("rpm -Uvh riak-%s-1.el6.x86_64.rpm", fullVersion)));
         return ImmutableList.<String>builder()
                 .add("mkdir -p " + installBin)
                 .add(INSTALL_CURL)
@@ -229,8 +237,9 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     @Override
     public boolean isRunning() {
 
+        // Version 2.0.0 requires sudo for `riak ping`
         ScriptHelper checkRunningScript = newScript(CHECK_RUNNING)
-                .body.append(format("%s ping", getRiakCmd()));
+                .body.append(sudo(format("%s ping", getRiakCmd())));
 
         if (!isRiakOnPath) {
             Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
@@ -262,7 +271,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             if (!hasJoinedCluster()) {
 
                 ScriptHelper joinClusterScript = newScript("joinCluster")
-                        .body.append(format("%s cluster join %s", getRiakAdminCmd(), nodeName))
+                        .body.append(sudo(format("%s cluster join %s", getRiakAdminCmd(), nodeName)))
                         .failOnNonZeroResultCode();
 
                 if (!isRiakOnPath) {
@@ -282,15 +291,15 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void leaveCluster() {
-        //TODO: add 'riak-admin cluster force-remove' for erreneous and unrecoverable nodes.
+        //TODO: add 'riak-admin cluster force-remove' for erroneous and unrecoverable nodes.
         //FIXME: find a way to batch commit the changes, instead of committing for every operation.
         //FIXME: find a way to check if the node is the last in the cluster to avoid removing the only member and getting "last node error"
 
         if (hasJoinedCluster()) {
             ScriptHelper leaveClusterScript = newScript("leaveCluster")
-                    .body.append(format("%s cluster leave", getRiakAdminCmd()))
-                    .body.append(format("%s cluster plan", getRiakAdminCmd()))
-                    .body.append(format("%s cluster commit", getRiakAdminCmd()));
+                    .body.append(sudo(format("%s cluster leave", getRiakAdminCmd())))
+                    .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
+                    .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())));
 
             if (!isRiakOnPath) {
                 Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
@@ -348,9 +357,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     .body.append(format("%s down %s", getRiakAdminCmd(), failedNodeName))
                     .body.append(sudo(format("rm -rf %s", getRingStateDir())))
                     .body.append(startCommand)
-                    .body.append(format("%s cluster join %s", getRiakAdminCmd(), nodeName))
-                    .body.append(format("%s cluster plan", getRiakAdminCmd()))
-                    .body.append(format("%s cluster commit", getRiakAdminCmd()));
+                    .body.append(sudo(format("%s cluster join %s", getRiakAdminCmd(), nodeName)))
+                    .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
+                    .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
+                    .failOnNonZeroResultCode();
 
             if (!isRiakOnPath) {
                 Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);

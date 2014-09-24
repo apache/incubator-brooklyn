@@ -42,7 +42,7 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "1.4.10");
+            "2.0.0");
 
     @SetFromFlag("vmArgsTemplateUrl")
     ConfigKey<String> RIAK_VM_ARGS_TEMPLATE_URL = ConfigKeys.newStringConfigKey(

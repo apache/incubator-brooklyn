@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
@@ -172,6 +173,23 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         
         ServiceNotUpLogic.updateNotUpIndicatorRequiringNonEmptyMap(this, RIAK_CLUSTER_NODES);
         if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
+        
+        calculateClusterAddresses();
+    }
+
+    private void calculateClusterAddresses() {
+        String addresses = "";
+        for (Entity entity : this.getMembers()) {
+            if (entity instanceof RiakNode && entity.getAttribute(Attributes.SERVICE_UP)) {
+                RiakNode riakNode = (RiakNode) entity;
+                addresses += riakNode.getAttribute(Attributes.HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_WEB_PORT) + ",";
+            }
+        }
+        if (addresses.length() > 0) {
+            setAttribute(RiakCluster.NODE_LIST, addresses.substring(0, addresses.length() -1));
+        } else {
+            setAttribute(RiakCluster.NODE_LIST, null);
+        }
     }
 
     protected boolean belongsInServerPool(Entity member) {
