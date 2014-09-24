@@ -149,6 +149,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = ConfigKeys.newBooleanConfigKey(
             "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", true);
 
+    /** @deprecated since 0.7.0; use {@link #JCLOUDS_LOCATION_CUSTOMIZERS} instead */
+    @Deprecated
     public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = ConfigKeys.newConfigKey(JcloudsLocationCustomizer.class,
             "customizer", "Optional location customizer");
 
@@ -157,9 +159,13 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
             "customizers", "Optional location customizers");
 
+    /** @deprecated since 0.7.0; use {@link #JCLOUDS_LOCATION_CUSTOMIZERS} instead */
+    @Deprecated
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZER_TYPE = ConfigKeys.newStringConfigKey(
             "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)");
 
+    /** @deprecated since 0.7.0; use {@link #JCLOUDS_LOCATION_CUSTOMIZERS} instead */
+    @Deprecated
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZERS_SUPPLIER_TYPE = ConfigKeys.newStringConfigKey(
             "customizersSupplierType", "Optional type of a Supplier<Collection<JcloudsLocationCustomizer>> " +
             "(to be class-loaded and constructed with ConfigBag or no-arg constructor)");

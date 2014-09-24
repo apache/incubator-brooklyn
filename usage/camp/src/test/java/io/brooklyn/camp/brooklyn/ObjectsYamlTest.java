@@ -18,6 +18,8 @@
  */
 package io.brooklyn.camp.brooklyn;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -32,6 +34,8 @@ import brooklyn.test.entity.TestEntity;
 @Test
 public class ObjectsYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(ObjectsYamlTest.class);
+
+    private static final AtomicBoolean managementContextInjected = new AtomicBoolean(false);
 
     public static class TestObject implements ManagementContextInjectable {
         private String string;
@@ -48,10 +52,12 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         @Override
         public void injectManagementContext(ManagementContext managementContext) {
             log.info("Detected injection of {}", managementContext);
+            managementContextInjected.set(true);
         }
     }
 
     protected Entity setupAndCheckTestEntityInBasicYamlWith(String ...extras) throws Exception {
+        managementContextInjected.set(false);
         Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml", extras));
         waitForApplicationTasks(app);
 
@@ -87,6 +93,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
 
         Assert.assertTrue(testObject instanceof TestObject);
+        Assert.assertTrue(managementContextInjected.get());
         Assert.assertEquals(((TestObject) testObject).getNumber(), Integer.valueOf(5));
         Assert.assertEquals(((TestObject) testObject).getString(), "frog");
     }
@@ -107,6 +114,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
 
         Assert.assertTrue(testObject instanceof TestObject);
+        Assert.assertTrue(managementContextInjected.get());
         Assert.assertEquals(((TestObject) testObject).getNumber(), Integer.valueOf(7));
         Assert.assertEquals(((TestObject) testObject).getString(), "7");
     }
