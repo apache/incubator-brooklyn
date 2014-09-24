@@ -69,6 +69,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -134,9 +135,9 @@ public class TypeCoercions {
                     coerced.add(coerce(entry, listEntryType));
                 }
                 if (Set.class.isAssignableFrom(targetType)) {
-                    return (T) Sets.newLinkedHashSet(coerced);
+                    return (T) ImmutableSet.copyOf(coerced);
                 } else {
-                    return (T) coerced;
+                    return (T) ImmutableList.copyOf(coerced);
                 }
             } else if (value instanceof Map && Map.class.isAssignableFrom(targetType)) {
                 Type[] arguments = ((ParameterizedType) targetTypeToken.getType()).getActualTypeArguments();
@@ -149,7 +150,7 @@ public class TypeCoercions {
                 for (Map.Entry entry : ((Map<?,?>) value).entrySet()) {
                     coerced.put(coerce(entry.getKey(), mapKeyType),  coerce(entry.getValue(), mapValueType));
                 }
-                return (T) coerced;
+                return (T) ImmutableMap.copyOf(coerced);
             }
         }
 
