@@ -82,20 +82,18 @@ function usage() {
 }
 
 function retry() {
-    n=1
-    COMMAND="ssh ${SSH_OPTS} ${USER}@${HOST} \"test -x ./brooklyn-${BROOKLYN_VERSION}/brooklyn-console.log\""
-    INTERVAL="${2:-1}"
-    MAX_ATTEMPTS="${2:-10}"
-    log "Execute command '${1}' every ${INTERVAL} second(s) for ${MAX_ATTEMPTS} attempts"
-    while [[ $n -le $MAX_ATTEMPTS ]]; do
-        eval "${1}" 2>&1
-        RESULT=$?
-        if [[ $RESULT -eq 0 ]]; then
+    COMMAND="$@"
+    MAX=10
+    N=1
+    while [ ${N} -le ${MAX} ]; do
+        eval "${COMMAND}" 2>&1
+        if [ $? -eq 0 ]; then
             return 0
-        fi
-            log "waiting ${INTERVAL} before next retry [${n} of ${MAX_ATTEMPTS}]"
+        else
+            echo -n "..."
             sleep 1
-            let n=$n+1
+            N=$(($N + 1))
+        fi
     done
     return 1
 }
@@ -104,8 +102,8 @@ QUIET=false
 GENERATE_PASSWORD=false
 LOG="brooklyn-install.log"
 BROOKLYN_VERSION="0.7.0-M1"
-SSH=ssh
 ROOT=root
+SSH_PORT=22
 
 while getopts ":hqsegu:r:k:p:v:" o; do
     case "${o}" in
@@ -118,6 +116,7 @@ while getopts ":hqsegu:r:k:p:v:" o; do
         e)  SETUP_RANDOM=true
             ;;
         g)  GENERATE_PASSWORD=true
+            log "Warning: Not supported in 0.7.0-M1 and earlier releases"
             ;;
         u)  BROOKLYN_USER="${OPTARG}"
             ;;
@@ -125,7 +124,7 @@ while getopts ":hqsegu:r:k:p:v:" o; do
             ;;
         k)  PRIVATE_KEY_FILE="${OPTARG}"
             ;;
-        p)  PORT="${OPTARG}"
+        p)  SSH_PORT="${OPTARG}"
             ;;
         v)  BROOKLYN_VERSION="${OPTARG}"
             ;;
@@ -142,11 +141,11 @@ fi
 HOST="$1"
 USER="${BROOKLYN_USER:-brooklyn}"
 PRIVATE_KEY_FILE="${PRIVATE_KEY_FILE:-${HOME}/.ssh/id_rsa}"
-SSH_PORT=${PORT:-22}
 if [ "${ROOT}" != "root" ]; then
     SUDO="sudo"
 fi
 
+# Configure SSH
 SSH_OPTS="-o StrictHostKeyChecking=no -p ${SSH_PORT}"
 if [ -f "${PRIVATE_KEY_FILE}" ]; then
     SSH_OPTS="${SSH_OPTS} -i ${PRIVATE_KEY_FILE}"
@@ -155,21 +154,23 @@ else
 fi
 SSH_PUBLIC_KEY_DATA=$(ssh-keygen -y -f ${PRIVATE_KEY_FILE})
 
-echo "Installing Brooklyn ${BROOKLYN_VERSION} on ${HOST}:${SSH_PORT} as user: '${USER}'"
+log "Installing Brooklyn ${BROOKLYN_VERSION}"
 
 # Pre-requisites for this script
-log "Configuring '${HOST}:${PORT}'... "
+log -n "Checking '${HOST}:${SSH_PORT}' SSH connection... "
+ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} id" >> ${LOG} 2>&1 || fail "SSH connection as ${ROOT} failed"
+log "...ok!"
 
 # Install packages
-log -n "Installing packages for curl, sed, tar, wget on '${HOST}:${SSH_PORT}'..."
+log -n "Installing prerequisite packages..."
 ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} yum check-update || ${SUDO} apt-get update" >> ${LOG} 2>&1
 for package in "curl" "sed" "tar" "wget"; do
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "which ${package} || { ${SUDO} yum -y --nogpgcheck -q install ${package} || ${SUDO} ${SUDO} apt-get -y --allow-unauthenticated install ${package}; }" >> ${LOG} 2>&1
 done
-log " done!"
+log "...done!"
 
 # Install Java 7
-log -n "Installing java 7 on '${HOST}:${SSH_PORT}'... "
+log -n "Installing Java 7 packages..."
 if [ "${INSTALL_EXAMPLES}" ]; then
     check="javac"
 else
@@ -183,20 +184,20 @@ for java in "jre" "jdk" "java-1.7.0-openjdk" "java-1.7.0-openjdk-amd64"; do
     fi
 done
 ssh ${SSH_OPTS} ${ROOT}@${HOST}  "test -x ${JAVA_HOME}/bin/${check}" >> ${LOG} 2>&1 || fail "Java is not installed"
-log "done!"
+log "...done!"
 
 # Increase linux kernel entropy for faster ssh connections
 if [ "${SETUP_RANDOM}" ]; then
-    log -n "Installing rng-tool to increase entropy on '${HOST}:${SSH_PORT}'... "
+    log -n "Installing rng-tool to increase entropy..."
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "which rng-tools || { ${SUDO} yum -y -q install rng-tools || ${SUDO} apt-get -y install rng-tools; }" >> ${LOG} 2>&1
     if ssh ${SSH_OPTS} ${ROOT}@${HOST} "test -f /etc/default/rng-tools"; then
-        echo "HRNGDEVICE=/dev/urandom" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} cat >> /etc/default/rng-tools"
+        echo "HRNGDEVICE=/dev/urandom" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /etc/default/rng-tools" > /dev/null 2>&1
         ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} /etc/init.d/rng-tools start" >> ${LOG} 2>&1
     else
-        echo "EXTRAOPTIONS=\"-r /dev/urandom\"" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "cat >> /etc/sysconfig/rngd"
+        echo "EXTRAOPTIONS=\"-r /dev/urandom\"" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /etc/sysconfig/rngd" > /dev/null 2>&1
         ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} /etc/init.d/rngd start" >> ${LOG} 2>&1
     fi
-    log "done!"
+    log "...done!"
 fi
 
 # Create Brooklyn user if required
@@ -204,39 +205,39 @@ if ! ssh ${SSH_OPTS} ${ROOT}@${HOST} "id ${USER} > /dev/null 2>&1"; then
     if [ -z "${SETUP_USER}" ]; then
         error "User '${USER}' does not exist on ${HOST}"
     fi
-    log -n "Creating user '${USER}'..."
+    log -n "Creating '${USER}' user..."
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} useradd ${USER} -s /bin/bash -d /home/${USER} -m" >> ${LOG} 2>&1
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "id ${USER}" >> ${LOG} 2>&1 || fail "User was not created"
-    log "done!"
+    log "...done!"
 fi
 
 # Setup Brooklyn user
 if [ "${SETUP_USER}" ]; then
-    log -n "Setting up user '${USER}'... "
-    echo "${USER} ALL = (ALL) NOPASSWD: ALL" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /etc/sudoers"
+    log -n "Setting up '${USER}' user... "
+    echo "${USER} ALL = (ALL) NOPASSWD: ALL" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /etc/sudoers" > /dev/null 2>&1
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' /etc/sudoers"
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} mkdir -p /home/${USER}/.ssh"
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} chmod 700 /home/${USER}/.ssh"
-    echo "${SSH_PUBLIC_KEY_DATA}" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /home/${USER}/.ssh/authorized_keys"
+    echo "${SSH_PUBLIC_KEY_DATA}" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /home/${USER}/.ssh/authorized_keys" > /dev/null 2>&1
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} chown -R ${USER}.${USER} /home/${USER}/.ssh"
     ssh ${SSH_OPTS} ${USER}@${HOST} "ssh-keygen -q -t rsa -N \"\" -f .ssh/id_rsa"
     ssh ${SSH_OPTS} ${USER}@${HOST} "ssh-keygen -y -f .ssh/id_rsa >> .ssh/authorized_keys"
-    log "done!"
+    log "...done!"
 fi
 
 # Setup Brooklyn
-log -n "Downloading Brooklyn... "
-ssh ${SSH_OPTS} ${USER}@${HOST} "curl -s -o brooklyn-${BROOKLYN_VERSION}.tar.gz http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${BROOKLYN_VERSION}/brooklyn-dist-${BROOKLYN_VERSION}-dist.tar.gz"
+log -n "Downloading Brooklyn distribution..."
+ssh ${SSH_OPTS} ${USER}@${HOST} "curl -L -s -o brooklyn-${BROOKLYN_VERSION}.tar.gz http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${BROOKLYN_VERSION}/brooklyn-dist-${BROOKLYN_VERSION}-dist.tar.gz"
 ssh ${SSH_OPTS} ${USER}@${HOST} "tar zxvf brooklyn-${BROOKLYN_VERSION}.tar.gz" >> ${LOG} 2>&1
 ssh ${SSH_OPTS} ${USER}@${HOST} "test -x brooklyn-${BROOKLYN_VERSION}/bin/brooklyn" || fail "Brooklyn was not downloaded correctly"
-log "done!"
+log "...done!"
 
 # Configure Brooklyn if no brooklyn.properties
 if ! ssh ${SSH_OPTS} ${USER}@${HOST} "test -f .brooklyn/brooklyn.properties"; then
-    log -n "Configuring Brooklyn... "
+    log -n "Configuring Brooklyn properties..."
     ssh ${SSH_OPTS} ${USER}@${HOST} "mkdir -p .brooklyn"
-    ssh ${SSH_OPTS} ${USER}@${HOST} "curl -s -o .brooklyn/brooklyn.properties http://brooklyncentral.github.io/use/guide/quickstart/brooklyn.properties"
-    ssh ${SSH_OPTS} ${USER}@${HOST} "curl -s -o .brooklyn/catalog.xml http://brooklyncentral.github.io/use/guide/quickstart/catalog.xml"
+    ssh ${SSH_OPTS} ${USER}@${HOST} "curl -L -s -o .brooklyn/brooklyn.properties http://brooklyncentral.github.io/use/guide/quickstart/brooklyn.properties"
+    ssh ${SSH_OPTS} ${USER}@${HOST} "curl -L -s -o .brooklyn/catalog.xml http://brooklyncentral.github.io/use/guide/quickstart/catalog.xml"
 
     # Generate Brooklyn admin password
     if ${GENERATE_PASSWORD}; then
@@ -246,7 +247,7 @@ if ! ssh ${SSH_OPTS} ${USER}@${HOST} "test -f .brooklyn/brooklyn.properties"; th
         which shasum && SHA256="shasum -a 256"
         which sha256sumi && SHA256="sha256sum"
         HASH=$(echo -n ${SALT}${PASSWORD} | ${SHA256} | cut -d\  -f1)
-        cat <<EOF | ssh ${SSH_OPTS} ${USER}@${HOST} "tee -a .brooklyn/brooklyn.properties"
+        ssh ${SSH_OPTS} ${USER}@${HOST} "tee -a .brooklyn/brooklyn.properties" > /dev/null 2>&1 <<EOF
 brooklyn.webconsole.security.users=admin
 brooklyn.webconsole.security.user.admin.salt=${SALT}
 brooklyn.webconsole.security.user.admin.sha256=${HASH}
@@ -254,11 +255,11 @@ EOF
     else
         ssh ${SSH_OPTS} ${USER}@${HOST} "sed -i.bak 's/^# brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/' .brooklyn/brooklyn.properties"
     fi
-    log "done!"
+    log "...done!"
 fi
 
 # Install example Jars and catalog
-log -n "Installing examples and configure catalog.xml ..."
+log -n "Installing examples and configuring catalog..."
 ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
 <?xml version="1.0"?>
 <catalog>
@@ -276,7 +277,7 @@ ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
 
     <template type="brooklyn.demo.NodeJsTodoApplication" name="NodeJs TODO application">
         <description>Deploys a Nodejs TODO application around the world</description>
-        <iconUrl>classpath://nodejs-logo.png</iconUrl>
+        <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/nodejs-logo.png</iconUrl>
     </template>
 
     <template type="brooklyn.demo.SimpleCassandraCluster" name="Demo Cassandra Cluster">
@@ -295,26 +296,26 @@ ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
     </classpath>
 </catalog>
 EOF
-log "done!"
+log "...done!"
 
 # Run Brooklyn
-log "Starting Brooklyn..."
-
+log -n "Starting Brooklyn..."
 ssh -n -f ${SSH_OPTS} ${USER}@${HOST} "nohup ./brooklyn-${BROOKLYN_VERSION}/bin/brooklyn launch >> ./brooklyn-${BROOKLYN_VERSION}/brooklyn-console.log 2>&1 &"
-
 retry "ssh ${SSH_OPTS} ${USER}@${HOST} \"test -e ./brooklyn-${BROOKLYN_VERSION}/brooklyn-console.log\""
 retry "ssh ${SSH_OPTS} ${USER}@${HOST} \"grep -q \"Started Brooklyn console at\" ./brooklyn-${BROOKLYN_VERSION}/brooklyn-console.log &>/dev/null\""
+log "...done!"
 
 URL=$(ssh ${SSH_OPTS} ${USER}@${HOST} "grep 'Started Brooklyn console at' ./brooklyn-${BROOKLYN_VERSION}/brooklyn-console.log | cut -d' ' -f9 | tr -d ," | sed -e "s/127\.0\.0\.1/${HOST}/g" -e "s/0\.0\.0\.0/${HOST}/g" 2>&1)
-log "Brooklyn Console URL at ${URL}"
+log "Brooklyn Console URL is ${URL}"
 
 if ${GENERATE_PASSWORD}; then
     log "Brooklyn Console password for the 'admin' user is '${PASSWORD}'"
     CREDENTIALS="--user=admin --password=${PASSWORD}"
 fi
 
+log -n "Checking Brooklyn connection..."
 if wget -qO- --retry-connrefused --no-check-certificate ${CREDENTIALS} ${URL} &> /dev/null; then
-    log "Brooklyn is running at ${URL}"
+    log "...success!"
 else
-    log "Brooklyn is not running at ${URL}"
+    fail "Cannot connect to Console URL"
 fi
