@@ -18,7 +18,7 @@
 # Brooklyn remote install script.
 #
 # Usage:
-#     brooklyn-install.sh [-h] [-q] [-s] [-e] [-u user] [-k key] [-r root] [-p port] [-v version] hostname
+#     brooklyn-install.sh [-h] [-q] [-s] [-e] [-g] [-u user] [-k key] [-r root] [-p port] [-v version] hostname
 #
 #set -x # DEBUG
 
@@ -32,6 +32,7 @@ Options
     -q  Quiet install
     -s  Create and set up user account (set with -u option)
     -e  Set up random entropy for SSH
+    -g  Generate a password for the Brooklyn admin user
     -u  Change the Brooklyn username (default 'brooklyn')
     -r  Change the remote root username (default 'root')
     -k  The private key to use for SSH (default '~/.ssh/id_rsa')
@@ -40,7 +41,7 @@ Options
 
 Usage
 
-    brooklyn-install.sh [-q] [-s] [-e] [-u user] [-r root] [-k key] [-p port] [-v version] hostname
+    brooklyn-install.sh [-q] [-s] [-e] [-g] [-u user] [-r root] [-k key] [-p port] [-v version] hostname
 
 Installs Brooklyn on the given hostname as 'brooklyn' or the specified
 user. Optionally it creates and configures the Brooklyn user.
@@ -76,7 +77,7 @@ function error() {
 }
 
 function usage() {
-    echo "Usage: $(basename ${0}) [-h] [-q] [-s] [-e] [-u user] [-r root] [-k key] [-p port] [-v version] hostname"
+    echo "Usage: $(basename ${0}) [-h] [-q] [-s] [-e] [-g] [-u user] [-r root] [-k key] [-p port] [-v version] hostname"
     exit 1
 }
 
@@ -100,12 +101,13 @@ function retry() {
 }
 
 QUIET=false
+GENERATE_PASSWORD=false
 LOG="brooklyn-install.log"
 BROOKLYN_VERSION="0.7.0-M1"
 SSH=ssh
 ROOT=root
 
-while getopts ":hqseu:r:k:p:v:" o; do
+while getopts ":hqsegu:r:k:p:v:" o; do
     case "${o}" in
         h)  help
             ;;
@@ -114,6 +116,8 @@ while getopts ":hqseu:r:k:p:v:" o; do
         s)  SETUP_USER=true
             ;;
         e)  SETUP_RANDOM=true
+            ;;
+        g)  GENERATE_PASSWORD=true
             ;;
         u)  BROOKLYN_USER="${OPTARG}"
             ;;
@@ -232,14 +236,29 @@ if ! ssh ${SSH_OPTS} ${USER}@${HOST} "test -f .brooklyn/brooklyn.properties"; th
     log -n "Configuring Brooklyn... "
     ssh ${SSH_OPTS} ${USER}@${HOST} "mkdir -p .brooklyn"
     ssh ${SSH_OPTS} ${USER}@${HOST} "curl -s -o .brooklyn/brooklyn.properties http://brooklyncentral.github.io/use/guide/quickstart/brooklyn.properties"
-    ssh ${SSH_OPTS} ${USER}@${HOST} "sed -i.bak 's/^# brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/' .brooklyn/brooklyn.properties"
     ssh ${SSH_OPTS} ${USER}@${HOST} "curl -s -o .brooklyn/catalog.xml http://brooklyncentral.github.io/use/guide/quickstart/catalog.xml"
+
+    # Generate Brooklyn admin password
+    if ${GENERATE_PASSWORD}; then
+        GENERATED=$(dd if=/dev/random bs=1 count=8 2> /dev/null | uuencode -m - | sed -n 2p | tr -dc "A-Za-z0-9")
+        SALT=$(echo ${GENERATED} | cut -c1-4)
+        PASSWORD=$(echo ${GENERATED} | cut -c5-12)
+        which shasum && SHA256="shasum -a 256"
+        which sha256sumi && SHA256="sha256sum"
+        HASH=$(echo -n ${SALT}${PASSWORD} | ${SHA256} | cut -d\  -f1)
+        cat <<EOF | ssh ${SSH_OPTS} ${USER}@${HOST} "tee -a .brooklyn/brooklyn.properties"
+brooklyn.webconsole.security.users=admin
+brooklyn.webconsole.security.user.admin.salt=${SALT}
+brooklyn.webconsole.security.user.admin.sha256=${HASH}
+EOF
+    else
+        ssh ${SSH_OPTS} ${USER}@${HOST} "sed -i.bak 's/^# brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/' .brooklyn/brooklyn.properties"
+    fi
     log "done!"
 fi
 
 # Install example Jars and catalog
 log -n "Installing examples and configure catalog.xml ..."
-
 ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
 <?xml version="1.0"?>
 <catalog>
@@ -276,7 +295,6 @@ ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
     </classpath>
 </catalog>
 EOF
-
 log "done!"
 
 # Run Brooklyn
@@ -290,7 +308,12 @@ retry "ssh ${SSH_OPTS} ${USER}@${HOST} \"grep -q \"Started Brooklyn console at\"
 URL=$(ssh ${SSH_OPTS} ${USER}@${HOST} "grep 'Started Brooklyn console at' ./brooklyn-${BROOKLYN_VERSION}/brooklyn-console.log | cut -d' ' -f9 | tr -d ," | sed -e "s/127\.0\.0\.1/${HOST}/g" -e "s/0\.0\.0\.0/${HOST}/g" 2>&1)
 log "Brooklyn Console URL at ${URL}"
 
-if wget -qO- --retry-connrefused --no-check-certificate ${URL} &> /dev/null; then
+if ${GENERATE_PASSWORD}; then
+    log "Brooklyn Console password for the 'admin' user is '${PASSWORD}'"
+    CREDENTIALS="--user=admin --password=${PASSWORD}"
+fi
+
+if wget -qO- --retry-connrefused --no-check-certificate ${CREDENTIALS} ${URL} &> /dev/null; then
     log "Brooklyn is running at ${URL}"
 else
     log "Brooklyn is not running at ${URL}"
