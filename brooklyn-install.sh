@@ -18,7 +18,7 @@
 # Brooklyn remote install script.
 #
 # Usage:
-#     brooklyn-install.sh [-h] [-q] [-s] [-e] [-u user] [-k key] [-r root] [-p port] hostname
+#     brooklyn-install.sh [-h] [-q] [-s] [-e] [-u user] [-k key] [-r root] [-p port] [-v version] hostname
 #
 #set -x # DEBUG
 
@@ -30,20 +30,23 @@ Brooklyn remote install script.
 Options
 
     -q  Quiet install
-    -s  Create and set up user account
+    -s  Create and set up user account (set with -u option)
     -e  Set up random entropy for SSH
     -u  Change the Brooklyn username (default 'brooklyn')
     -r  Change the remote root username (default 'root')
     -k  The private key to use for SSH (default '~/.ssh/id_rsa')
     -p  The SSH port to connect to (default 22)
+    -v  Set the Brooklyn version to install (default '0.7.0-M1')
 
 Usage
 
-    brooklyn-install.sh [-q] [-s] [-e] [-u user] [-r root] [-k key] [-p port] hostname
+    brooklyn-install.sh [-q] [-s] [-e] [-u user] [-r root] [-k key] [-p port] [-v version] hostname
 
 Installs Brooklyn on the given hostname as 'brooklyn' or the specified
-user. Optionally it creates and configures the Brooklyn user. 
-Passwordless SSH access as root to the remote host must be enabled with the given key.
+user. Optionally it creates and configures the Brooklyn user.
+
+Passwordless SSH access as 'root' (or a user that has 'sudo' privileges) to the
+remote host must be available, with the given key.
 
 EOF
     exit 0
@@ -73,7 +76,7 @@ function error() {
 }
 
 function usage() {
-    echo "Usage: $(basename ${0}) [-h] [-q] [-s] [-e] [-u user] [-r root] [-k key] [-p port] hostname"
+    echo "Usage: $(basename ${0}) [-h] [-q] [-s] [-e] [-u user] [-r root] [-k key] [-p port] [-v version] hostname"
     exit 1
 }
 
@@ -86,7 +89,7 @@ function retry() {
     while [[ $n -le $MAX_ATTEMPTS ]]; do
         eval "${1}" 2>&1
         RESULT=$?
-        if [[ $RESULT -eq 0 ]]; then         
+        if [[ $RESULT -eq 0 ]]; then
             return 0
         fi
             log "waiting ${INTERVAL} before next retry [${n} of ${MAX_ATTEMPTS}]"
@@ -102,7 +105,7 @@ BROOKLYN_VERSION="0.7.0-M1"
 SSH=ssh
 ROOT=root
 
-while getopts ":hqseu:r:k:p:" o; do
+while getopts ":hqseu:r:k:p:v:" o; do
     case "${o}" in
         h)  help
             ;;
@@ -119,7 +122,9 @@ while getopts ":hqseu:r:k:p:" o; do
         k)  PRIVATE_KEY_FILE="${OPTARG}"
             ;;
         p)  PORT="${OPTARG}"
-            ;;            
+            ;;
+        v)  BROOKLYN_VERSION="${OPTARG}"
+            ;;
         *)  usage "Invalid option: $*"
             ;;
     esac
@@ -253,7 +258,7 @@ ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
     <template type="brooklyn.demo.NodeJsTodoApplication" name="NodeJs TODO application">
         <description>Deploys a Nodejs TODO application around the world</description>
         <iconUrl>classpath://nodejs-logo.png</iconUrl>
-    </template>    
+    </template>
 
     <template type="brooklyn.demo.SimpleCassandraCluster" name="Demo Cassandra Cluster">
         <description>Deploys a demonstration Cassandra clusters around the world</description>
