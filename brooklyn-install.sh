@@ -53,6 +53,9 @@ EOF
     exit 0
 }
 
+# Global settings
+LOG="brooklyn-install.log"
+
 function log() {
     if ! ${QUIET}; then
         echo $@
@@ -98,11 +101,15 @@ function retry() {
     return 1
 }
 
+# Default options
 QUIET=false
 GENERATE_PASSWORD=false
-LOG="brooklyn-install.log"
+SETUP_USER=false
+SETUP_RANDOM=false
 BROOKLYN_VERSION="0.7.0-M1"
-ROOT=root
+ROOT="root"
+USER="brooklyn"
+PRIVATE_KEY_FILE="${HOME}/.ssh/id_rsa"
 SSH_PORT=22
 
 while getopts ":hqsegu:r:k:p:v:" o; do
@@ -118,9 +125,13 @@ while getopts ":hqsegu:r:k:p:v:" o; do
         g)  GENERATE_PASSWORD=true
             log "Warning: Not supported in 0.7.0-M1 and earlier releases"
             ;;
-        u)  BROOKLYN_USER="${OPTARG}"
+        u)  USER="${OPTARG}"
+            SETUP_USER=true
             ;;
         r)  ROOT="${OPTARG}"
+            if [ "${ROOT}" != "root" ]; then
+                SUDO="sudo"
+            fi
             ;;
         k)  PRIVATE_KEY_FILE="${OPTARG}"
             ;;
@@ -133,21 +144,14 @@ while getopts ":hqsegu:r:k:p:v:" o; do
     esac
 done
 shift $((OPTIND-1))
-
 if [ $# -ne 1 ]; then
     error "Must specify remote hostname as last argument"
 fi
-
 HOST="$1"
-USER="${BROOKLYN_USER:-brooklyn}"
-PRIVATE_KEY_FILE="${PRIVATE_KEY_FILE:-${HOME}/.ssh/id_rsa}"
-if [ "${ROOT}" != "root" ]; then
-    SUDO="sudo"
-fi
 
 # Configure SSH
 SSH_OPTS="-o StrictHostKeyChecking=no -p ${SSH_PORT}"
-if [ -f "${PRIVATE_KEY_FILE}" ]; then
+if [ -r "${PRIVATE_KEY_FILE}" ]; then
     SSH_OPTS="${SSH_OPTS} -i ${PRIVATE_KEY_FILE}"
 else
     error "SSH private key '${PRIVATE_KEY_FILE}' not found"
@@ -164,32 +168,28 @@ log "...ok!"
 # Install packages
 log -n "Installing prerequisite packages..."
 ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} yum check-update || ${SUDO} apt-get update" >> ${LOG} 2>&1
-for package in "curl" "sed" "tar" "wget"; do
-    ssh ${SSH_OPTS} ${ROOT}@${HOST} "which ${package} || { ${SUDO} yum -y --nogpgcheck -q install ${package} || ${SUDO} ${SUDO} apt-get -y --allow-unauthenticated install ${package}; }" >> ${LOG} 2>&1
+for PACKAGE in "curl" "sed" "tar" "wget"; do
+    ssh ${SSH_OPTS} ${ROOT}@${HOST} "which ${PACKAGE} || { ${SUDO} yum -y --nogpgcheck -q install ${PACKAGE} || ${SUDO} apt-get -y --allow-unauthenticated install ${PACKAGE}; }" >> ${LOG} 2>&1
 done
 log "...done!"
 
 # Install Java 7
 log -n "Installing Java 7 packages..."
-if [ "${INSTALL_EXAMPLES}" ]; then
-    check="javac"
-else
-    check="java"
-    JAVA_HOME="/usr"
-fi
-ssh ${SSH_OPTS} ${ROOT}@${HOST} "which ${check} || { ${SUDO} yum -y -q install java-1.7.0-openjdk-devel || ${SUDO} apt-get -y install openjdk-7-jdk; }" >> ${LOG} 2>&1
-for java in "jre" "jdk" "java-1.7.0-openjdk" "java-1.7.0-openjdk-amd64"; do
-    if ssh ${SSH_OPTS} ${ROOT}@${HOST} "test -d /usr/lib/jvm/${java}"; then
-        JAVA_HOME="/usr/lib/jvm/${java}/" && echo "Java: ${JAVA_HOME}" >> ${LOG}
+JAVA="java"
+JAVA_HOME="/usr"
+ssh ${SSH_OPTS} ${ROOT}@${HOST} "which ${JAVA} || { ${SUDO} yum -y --nogpgcheck -q install java-1.7.0-openjdk-devel || ${SUDO} apt-get -y --allow-unauthenticated install openjdk-7-jdk; }" >> ${LOG} 2>&1
+for JVM in "jre" "jdk" "java-1.7.0-openjdk" "java-1.7.0-openjdk-amd64"; do
+    if ssh ${SSH_OPTS} ${ROOT}@${HOST} "test -d /usr/lib/jvm/${JVM}"; then
+        JAVA_HOME="/usr/lib/jvm/${JVM}/" && echo "Java: ${JAVA_HOME}" >> ${LOG}
     fi
 done
-ssh ${SSH_OPTS} ${ROOT}@${HOST}  "test -x ${JAVA_HOME}/bin/${check}" >> ${LOG} 2>&1 || fail "Java is not installed"
+ssh ${SSH_OPTS} ${ROOT}@${HOST}  "which ${JAVA} || test -x ${JAVA_HOME}/bin/${JAVA}" >> ${LOG} 2>&1 || fail "Java is not installed"
 log "...done!"
 
 # Increase linux kernel entropy for faster ssh connections
-if [ "${SETUP_RANDOM}" ]; then
+if ${SETUP_RANDOM}; then
     log -n "Installing rng-tool to increase entropy..."
-    ssh ${SSH_OPTS} ${ROOT}@${HOST} "which rng-tools || { ${SUDO} yum -y -q install rng-tools || ${SUDO} apt-get -y install rng-tools; }" >> ${LOG} 2>&1
+    ssh ${SSH_OPTS} ${ROOT}@${HOST} "which rng-tools || { ${SUDO} yum -y --nogpgcheck -q install rng-tools || ${SUDO} apt-get -y --allow-unauthenticated install rng-tools; }" >> ${LOG} 2>&1
     if ssh ${SSH_OPTS} ${ROOT}@${HOST} "test -f /etc/default/rng-tools"; then
         echo "HRNGDEVICE=/dev/urandom" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /etc/default/rng-tools" > /dev/null 2>&1
         ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} /etc/init.d/rng-tools start" >> ${LOG} 2>&1
@@ -202,7 +202,7 @@ fi
 
 # Create Brooklyn user if required
 if ! ssh ${SSH_OPTS} ${ROOT}@${HOST} "id ${USER} > /dev/null 2>&1"; then
-    if [ -z "${SETUP_USER}" ]; then
+    if ! ${SETUP_USER}; then
         error "User '${USER}' does not exist on ${HOST}"
     fi
     log -n "Creating '${USER}' user..."
@@ -212,7 +212,7 @@ if ! ssh ${SSH_OPTS} ${ROOT}@${HOST} "id ${USER} > /dev/null 2>&1"; then
 fi
 
 # Setup Brooklyn user
-if [ "${SETUP_USER}" ]; then
+if ${SETUP_USER}; then
     log -n "Setting up '${USER}' user... "
     echo "${USER} ALL = (ALL) NOPASSWD: ALL" | ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} tee -a /etc/sudoers" > /dev/null 2>&1
     ssh ${SSH_OPTS} ${ROOT}@${HOST} "${SUDO} sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' /etc/sudoers"
@@ -245,12 +245,12 @@ if ! ssh ${SSH_OPTS} ${USER}@${HOST} "test -f .brooklyn/brooklyn.properties"; th
         SALT=$(echo ${GENERATED} | cut -c1-4)
         PASSWORD=$(echo ${GENERATED} | cut -c5-12)
         which shasum && SHA256="shasum -a 256"
-        which sha256sumi && SHA256="sha256sum"
+        which sha256sum && SHA256="sha256sum"
         HASH=$(echo -n ${SALT}${PASSWORD} | ${SHA256} | cut -d\  -f1)
         ssh ${SSH_OPTS} ${USER}@${HOST} "tee -a .brooklyn/brooklyn.properties" > /dev/null 2>&1 <<EOF
-brooklyn.webconsole.security.users=admin
-brooklyn.webconsole.security.user.admin.salt=${SALT}
-brooklyn.webconsole.security.user.admin.sha256=${HASH}
+brooklyn.webconsole.security.users=${USER}
+brooklyn.webconsole.security.user.${USER}=${SALT}
+brooklyn.webconsole.security.user.${USER}=${HASH}
 EOF
     else
         ssh ${SSH_OPTS} ${USER}@${HOST} "sed -i.bak 's/^# brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/' .brooklyn/brooklyn.properties"
@@ -266,7 +266,7 @@ ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
     <name>Brooklyn Demos</name>
 
     <template type="brooklyn.demo.WebClusterDatabaseExample" name="Demo Web Cluster with DB">
-        <description>Deploys a demonstration web application to a managed JBoss cluster with elasticity, persisting to a MySQL</description>
+        <description>Deploys a demonstration web application to a managed JBoss cluster with elasticity, persisting to MySQL</description>
         <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/JBoss_by_Red_Hat.png</iconUrl>
     </template>
 
@@ -276,17 +276,17 @@ ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
     </template>
 
     <template type="brooklyn.demo.NodeJsTodoApplication" name="NodeJs TODO application">
-        <description>Deploys a Nodejs TODO application around the world</description>
+        <description>Deploys a Nodejs TODO application with a Redis back end</description>
         <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/nodejs-logo.png</iconUrl>
     </template>
 
     <template type="brooklyn.demo.SimpleCassandraCluster" name="Demo Cassandra Cluster">
-        <description>Deploys a demonstration Cassandra clusters around the world</description>
+        <description>Deploys a demonstration Cassandra cluster</description>
         <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/cassandra-sq-icon.jpg</iconUrl>
     </template>
 
     <template type="brooklyn.demo.SimpleCouchDBCluster" name="Demo CouchDB">
-        <description>Deploys a demonstration CouchDB clusters around the world</description>
+        <description>Deploys a demonstration CouchDB cluster</description>
         <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/couchdb-logo-icon.png</iconUrl>
     </template>
 
@@ -309,7 +309,7 @@ URL=$(ssh ${SSH_OPTS} ${USER}@${HOST} "grep 'Started Brooklyn console at' ./broo
 log "Brooklyn Console URL is ${URL}"
 
 if ${GENERATE_PASSWORD}; then
-    log "Brooklyn Console password for the 'admin' user is '${PASSWORD}'"
+    log "Brooklyn Console password for the '${USER}' user is '${PASSWORD}'"
     CREDENTIALS="--user=admin --password=${PASSWORD}"
 fi
 
