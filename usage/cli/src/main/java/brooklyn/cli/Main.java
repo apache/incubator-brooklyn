@@ -18,6 +18,7 @@
  */
 package brooklyn.cli;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 import io.airlift.command.Cli;
@@ -26,7 +27,6 @@ import io.airlift.command.Command;
 import io.airlift.command.Option;
 
 import java.io.Console;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -47,13 +47,15 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.PersistMode;
+import brooklyn.entity.rebind.transformer.CompoundTransformer;
+import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.rest.security.PasswordHasher;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -63,7 +65,6 @@ import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
@@ -693,28 +694,34 @@ public class Main extends AbstractMain {
         public String localBrooklynProperties;
 
         @Option(name = { "--persistenceDir" }, title = "persistence dir",
-                description = "The directory to read/write persisted state (or container name if using an object store)")
+                description = "The directory to read persisted state (or container name if using an object store)")
         public String persistenceDir;
 
         @Option(name = { "--persistenceLocation" }, title = "persistence location",
-            description = "The location spec for an object store to read/write persisted state")
+            description = "The location spec for an object store to read persisted state")
         public String persistenceLocation;
     
         @Option(name = { "--destinationDir" }, required = true, title = "destination dir",
                 description = "The directory to copy persistence data to")
             public String destinationDir;
         
+        @Option(name = { "--destinationLocation" }, title = "persistence location",
+                description = "The location spec for an object store to copy data to")
+            public String destinationLocation;
+        
+        @Option(name = { "--transformations" }, title = "transformations",
+                description = "local transformations file, to be applied to the copy of the data before uploading it")
+        public String transformations;
+        
         @Override
         public Void call() throws Exception {
-            File destinationDirF = new File(Os.tidyPath(destinationDir));
-            if (destinationDirF.isFile()) throw new FatalConfigurationRuntimeException("Destination directory is a file: "+destinationDir);
-
-
+            checkNotNull(destinationDir, "destinationDir"); // presumably because required=true this will never be null!
+            
             // Configure launcher
             BrooklynLauncher launcher;
             failIfArguments();
             try {
-                log.info("Retrieving and copying persisted state to "+destinationDirF.getAbsolutePath());
+                log.info("Retrieving and copying persisted state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
                 
                 if (!quiet) stdout.println(BANNER);
     
@@ -735,8 +742,10 @@ public class Main extends AbstractMain {
             }
             
             try {
-                BrooklynMemento memento = launcher.retrieveState();
-                launcher.persistState(memento, destinationDirF);
+                BrooklynMementoRawData memento = launcher.retrieveState();
+                CompoundTransformer transformer = loadTransformer(transformations);
+                BrooklynMementoRawData newMemento = transformer.transform(memento);
+                launcher.persistState(newMemento, destinationDir, destinationLocation);
                 
             } catch (FatalRuntimeException e) {
                 // rely on caller logging this propagated exception
@@ -758,6 +767,15 @@ public class Main extends AbstractMain {
             return null;
         }
 
+        protected CompoundTransformer loadTransformer(String transformations) {
+            if (transformations == null) {
+                return CompoundTransformer.NOOP; 
+            } else {
+                String contents = ResourceUtils.create(this).getResourceAsString(transformations);
+                return CompoundTransformerLoader.load(contents);
+            }
+        }
+        
         @Override
         public ToStringHelper string() {
             return super.string()

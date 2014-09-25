@@ -37,5 +37,7 @@ public interface PersistenceExceptionHandler {
     
     void onPersistMementoFailed(Memento memento, Exception e);
     
+    void onPersistRawMementoFailed(BrooklynObjectType type, String id, Exception e);
+
     void onDeleteMementoFailed(String id, Exception e);
 }

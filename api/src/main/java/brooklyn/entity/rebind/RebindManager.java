@@ -26,6 +26,7 @@ import java.util.concurrent.TimeoutException;
 import brooklyn.entity.Application;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -66,7 +67,7 @@ public interface RebindManager {
 
     public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws IOException;
 
-    public BrooklynMemento retrieveMemento(ClassLoader classLoader) throws IOException;
+    public BrooklynMementoRawData retrieveMementoRawData() throws IOException;
 
     public ChangeListener getChangeListener();
 

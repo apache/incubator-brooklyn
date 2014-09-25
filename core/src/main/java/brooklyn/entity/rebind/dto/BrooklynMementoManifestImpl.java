@@ -116,7 +116,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     }
 
     @Override
-    public Map<String, String> getCatalogIdToType() {
+    public Map<String, String> getCatalogItemIdToType() {
         return Collections.unmodifiableMap(catalogItemIdToType);
     }
 

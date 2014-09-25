@@ -16,28 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.mementos;
+package brooklyn.entity.rebind.transformer;
 
-import java.io.Serializable;
-import java.util.Map;
+import brooklyn.mementos.BrooklynMemento;
+
+import com.google.common.annotations.Beta;
 
 /**
- * Represents a manifest of the entities etc in the overall memento.
- * 
- * @author aled
+ * Transforms the raw data of persisted state (e.g. of an entity).
  */
-public interface BrooklynMementoManifest extends Serializable {
+@Beta
+public interface BrooklynMementoTransformer {
 
-    public Map<String, String> getEntityIdToType();
-
-    public Map<String, String> getLocationIdToType();
-
-    public Map<String, String> getPolicyIdToType();
-
-    public Map<String, String> getEnricherIdToType();
-
-    public Map<String, String> getCatalogItemIdToType();
-
-    public boolean isEmpty();
-    
+    public BrooklynMemento transform(BrooklynMemento input) throws Exception;
 }

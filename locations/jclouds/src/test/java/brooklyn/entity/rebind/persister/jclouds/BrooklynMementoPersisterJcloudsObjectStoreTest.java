@@ -19,9 +19,6 @@
 package brooklyn.entity.rebind.persister.jclouds;
 
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -52,14 +49,19 @@ public class BrooklynMementoPersisterJcloudsObjectStoreTest extends BrooklynMeme
     
     @Test(groups={"Live", "Live-sanity"})
     @Override
-    public void testCheckPointAndLoadMemento() throws IOException, TimeoutException, InterruptedException {
+    public void testCheckPointAndLoadMemento() throws Exception {
         super.testCheckPointAndLoadMemento();
     }
     
     @Test(groups={"Live", "Live-sanity"})
     @Override
-    public void testDeleteAndLoadMemento() throws TimeoutException, InterruptedException, IOException {
+    public void testDeleteAndLoadMemento() throws Exception {
         super.testDeleteAndLoadMemento();
     }
     
+    @Test(groups={"Live", "Live-sanity"})
+    @Override
+    public void testLoadAndCheckpointRawMemento() throws Exception {
+        super.testLoadAndCheckpointRawMemento();
+    }
 }

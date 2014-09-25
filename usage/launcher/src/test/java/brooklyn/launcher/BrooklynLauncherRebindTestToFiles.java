@@ -26,13 +26,12 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.management.ManagementContext;
-import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
@@ -117,18 +116,23 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         populatePersistenceDir(persistenceDir, appSpec);
         
         File destinationDir = Files.createTempDir();
+        String destinationLocation = null; // i.e. file system, rather than object store
         try {
             // Auto will rebind if the dir exists
-            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO);
-            BrooklynMemento memento = launcher.retrieveState();
-            launcher.persistState(memento, destinationDir);
+            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO)
+                    .webconsole(false);
+            BrooklynMementoRawData memento = launcher.retrieveState();
+            launcher.persistState(memento, destinationDir.getAbsolutePath(), destinationLocation);
             launcher.terminate();
             
-            assertEquals(memento.getApplicationIds().size(), 1, "apps="+memento.getApplicationIds());
+            assertEquals(memento.getEntities().size(), 1, "entityMementos="+memento.getEntities().keySet());
             
             // Should now have a usable copy in the destionationDir
             // Auto will rebind if the dir exists
-            newLauncherDefault(PersistMode.AUTO).start();
+            newLauncherDefault(PersistMode.AUTO)
+                    .webconsole(false)
+                    .persistenceDir(destinationDir)
+                    .start();
             assertOnlyApp(lastMgmt(), TestApplication.class);
             
         } finally {

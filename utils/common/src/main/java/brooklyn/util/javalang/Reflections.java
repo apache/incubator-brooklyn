@@ -129,6 +129,11 @@ public class Reflections {
 			throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader + ": " + Exceptions.collapseText(e), e);
 		}
 	}
+	
+	@SuppressWarnings("unchecked")
+    public <T> Class<? extends T> loadClass(String classname, Class<T> superType) throws ReflectionNotFoundException {
+	    return (Class<? extends T>) loadClass(classname);
+	}
 
 	/** given a nested part, e.g. Inner$VeryInner, this will recurse through clazz.Inner, looking for VeryInner,
 	 * then looking in each supertype (interface) of clazz for Inner.VeryInner;

@@ -147,7 +147,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                         return (Enricher) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public CatalogItem<?, ?> lookupCatalogItem(String id) {
-                        Class<?> clazz = loadClass(manifest.getCatalogIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getCatalogItemIdToType().get(id));
                         return (CatalogItem) invokeConstructor(clazz, new Object[0]);
                     }
 

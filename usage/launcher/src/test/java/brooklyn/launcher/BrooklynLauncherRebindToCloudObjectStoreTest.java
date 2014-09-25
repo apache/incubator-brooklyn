@@ -20,17 +20,26 @@ package brooklyn.launcher;
 
 import static org.testng.Assert.assertEquals;
 
+import java.io.File;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.io.Files;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.jclouds.BlobStoreTest;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.management.ManagementContext;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 
 @Test(groups="Integration")
@@ -122,4 +131,36 @@ public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLaunch
         super.testExplicitRebindFailsIfEmpty();
     }
 
+    // TODO Remove duplication from BrooklynLauncherRebindTestToFiles.testCopyPersistedState()
+    @Test(groups="Integration")
+    public void testCopyPersistedState() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        populatePersistenceDir(persistenceDir, appSpec);
+        
+        String destinationDir = newTempPersistenceContainerName();
+        String destinationLocation = persistenceLocationSpec;
+        try {
+            // Auto will rebind if the dir exists
+            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO)
+                    .webconsole(false)
+                    .persistenceLocation(persistenceLocationSpec);
+            BrooklynMementoRawData memento = launcher.retrieveState();
+            launcher.persistState(memento, destinationDir, destinationLocation);
+            launcher.terminate();
+            
+            assertEquals(memento.getEntities().size(), 1, "entityMementos="+memento.getEntities().keySet());
+            
+            // Should now have a usable copy in the destionationDir
+            // Auto will rebind if the dir exists
+            newLauncherDefault(PersistMode.AUTO)
+                    .webconsole(false)
+                    .persistenceDir(destinationDir)
+                    .persistenceLocation(destinationLocation)
+                    .start();
+            assertOnlyApp(lastMgmt(), TestApplication.class);
+            
+        } finally {
+            Os.deleteRecursively(destinationDir);
+        }
+    }
 }

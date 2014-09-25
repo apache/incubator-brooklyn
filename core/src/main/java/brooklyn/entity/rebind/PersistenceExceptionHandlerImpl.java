@@ -71,6 +71,12 @@ public class PersistenceExceptionHandlerImpl implements PersistenceExceptionHand
     }
     
     @Override
+    public void onPersistRawMementoFailed(BrooklynObjectType type, String id, Exception e) {
+        String errmsg = "persist for "+type+" "+"("+id+")";
+        onErrorImpl(errmsg, e, prevFailedPersisters.add(id));
+    }
+    
+    @Override
     public void onDeleteMementoFailed(String id, Exception e) {
         String errmsg = "delete for memento "+id;
         onErrorImpl(errmsg, e, prevFailedPersisters.add(id));
