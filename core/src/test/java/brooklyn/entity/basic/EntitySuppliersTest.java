@@ -19,7 +19,7 @@
 package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -27,51 +27,44 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
+import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestEntity;
 
-import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
-public class EntityFunctionsTest extends BrooklynAppUnitTestSupport {
+public class EntitySuppliersTest extends BrooklynAppUnitTestSupport {
 
     private TestEntity entity;
     private Location loc;
+    private SshMachineLocation machine;
     
     @BeforeMethod(alwaysRun=true)
+    @SuppressWarnings("unchecked")
     @Override
     public void setUp() throws Exception {
         super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("mydisplayname"));
         loc = app.getManagementContext().getLocationRegistry().resolve("localhost");
+        machine = ((MachineProvisioningLocation<SshMachineLocation>)loc).obtain(ImmutableMap.of());
     }
 
     @Test
-    public void testAttribute() throws Exception {
-        entity.setAttribute(TestEntity.NAME, "myname");
-        assertEquals(EntityFunctions.attribute(TestEntity.NAME).apply(entity), "myname");
-        assertNull(EntityFunctions.attribute(TestEntity.SEQUENCE).apply(entity));
+    public void testUniqueSshMachineLocation() throws Exception {
+        entity.addLocations(ImmutableList.of(machine));
+        assertEquals(EntitySuppliers.uniqueSshMachineLocation(entity).get(), machine);
     }
     
     @Test
-    public void testConfig() throws Exception {
-        entity.setConfig(TestEntity.CONF_NAME, "myname");
-        assertEquals(EntityFunctions.config(TestEntity.CONF_NAME).apply(entity), "myname");
-        assertNull(EntityFunctions.config(TestEntity.CONF_OBJECT).apply(entity));
-    }
-    
-    @Test
-    public void testDisplayName() throws Exception {
-        assertEquals(EntityFunctions.displayName().apply(entity), "mydisplayname");
-    }
-    
-    @Test
-    public void testId() throws Exception {
-        assertEquals(EntityFunctions.id().apply(entity), entity.getId());
-    }
-    
-    @Test
-    public void testLocationMatching() throws Exception {
-        entity.addLocations(ImmutableList.of(loc));
-        assertEquals(EntityFunctions.locationMatching(Predicates.alwaysTrue()).apply(entity), loc);
+    public void testUniqueSshMachineLocationWhenNoLocation() throws Exception {
+        Supplier<SshMachineLocation> supplier = EntitySuppliers.uniqueSshMachineLocation(entity);
+        try {
+            supplier.get();
+            fail();
+        } catch (IllegalStateException e) {
+            // expected: success
+        }
     }
 }

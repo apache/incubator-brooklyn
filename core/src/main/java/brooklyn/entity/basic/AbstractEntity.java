@@ -38,6 +38,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
+import brooklyn.entity.Feed;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.proxying.EntitySpec;
@@ -50,6 +51,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
@@ -173,6 +175,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
     Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
     Collection<AbstractEnricher> enrichers = Lists.newCopyOnWriteArrayList();
+    Collection<Feed> feeds = Lists.newCopyOnWriteArrayList();
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
     // orphaning (i.e. removing ownership). This flag notes if the entity has previously had a parent, and if an attempt is made to
@@ -1211,6 +1214,63 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             changed = removeEnricher(enricher) || changed;
         }
         return changed;
+    }
+    
+    // -------- FEEDS --------------------
+
+    /**
+     * Convenience, which calls {@link EntityInternal#getFeedSupport()} and {@link FeedSupport#addFeed(Feed)}.
+     */
+    public <T extends Feed> T addFeed(T feed) {
+        return getFeedSupport().addFeed(feed);
+    }
+
+    public FeedSupport getFeedSupport() {
+        return new FeedSupport() {
+            @Override
+            public Collection<Feed> getFeeds() {
+                return ImmutableList.<Feed>copyOf(feeds);
+            }
+
+            @Override
+            public <T extends Feed> T addFeed(T feed) {
+                Feed old = findApparentlyEqualAndWarnIfNotSameUniqueTag(feeds, feed);
+                if (old != null) {
+                    LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
+                    removeFeed(old);
+                }
+                
+                feeds.add(feed);
+                ((AbstractFeed)feed).setEntity(AbstractEntity.this);
+
+                getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
+                getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
+                // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+
+                return feed;
+            }
+
+            @Override
+            public boolean removeFeed(Feed feed) {
+                feed.stop();destroy();
+                boolean changed = feeds.remove(feed);
+                
+                if (changed) {
+                    getManagementContext().getRebindManager().getChangeListener().onUnmanaged(feed);
+                    getManagementSupport().getEntityChangeListener().onFeedRemoved(feed);
+                }
+                return changed;
+            }
+
+            @Override
+            public boolean removeAllFeeds() {
+                boolean changed = false;
+                for (Feed feed : feeds) {
+                    changed = removeFeed(feed) || changed;
+                }
+                return changed;
+            }
+        };
     }
     
     // -------- SENSORS --------------------

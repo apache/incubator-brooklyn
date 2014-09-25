@@ -28,13 +28,16 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Iterables;
 
 public class EntityFunctions {
 
@@ -127,5 +130,22 @@ public class EntityFunctions {
             }
         }
         return new AppsSupplier();
+    }
+    
+    public static Function<Entity, Location> locationMatching(Predicate<? super Location> filter) {
+        return new LocationMatching(filter);
+    }
+    
+    private static class LocationMatching implements Function<Entity, Location> {
+        private Predicate<? super Location> filter;
+        
+        private LocationMatching() { /* for xstream */
+        }
+        public LocationMatching(Predicate<? super Location> filter) {
+            this.filter = filter;
+        }
+        @Override public Location apply(Entity input) {
+            return Iterables.find(input.getLocations(), filter);
+        }
     }
 }

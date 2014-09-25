@@ -80,12 +80,20 @@ public interface BrooklynMementoPersister {
         Collection<EntityMemento> entities();
         Collection<PolicyMemento> policies();
         Collection<EnricherMemento> enrichers();
+<<<<<<< HEAD
         Collection<CatalogItemMemento> catalogItems();
+=======
+        Collection<FeedMemento> feeds();
+>>>>>>> apache-gh/pr/108
         Collection<String> removedLocationIds();
         Collection<String> removedEntityIds();
         Collection<String> removedPolicyIds();
         Collection<String> removedEnricherIds();
+<<<<<<< HEAD
         Collection<String> removedCatalogItemIds();
+=======
+        Collection<String> removedFeedIds();
+>>>>>>> apache-gh/pr/108
     }
 
 }

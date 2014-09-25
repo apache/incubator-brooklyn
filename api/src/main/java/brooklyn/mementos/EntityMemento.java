@@ -24,6 +24,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.Feed;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 
@@ -72,4 +73,9 @@ public interface EntityMemento extends Memento, TreeNode {
      * The ids of the enrichers of this entity.
      */
     public Collection<String> getEnrichers();
+
+    /**
+     * The ids of the sensor feeds attached to this entity.
+     */
+    public Collection<String> getFeeds();
 }

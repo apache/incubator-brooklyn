@@ -25,6 +25,7 @@ import java.util.Map;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -37,7 +38,11 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, Location> locations = Maps.newLinkedHashMap();
     private final Map<String, Policy> policies = Maps.newLinkedHashMap();
     private final Map<String, Enricher> enrichers = Maps.newLinkedHashMap();
+<<<<<<< HEAD
     private final Map<String, CatalogItem<?, ?>> catalogItems = Maps.newLinkedHashMap();
+=======
+    private final Map<String, Feed> feeds = Maps.newLinkedHashMap();
+>>>>>>> apache-gh/pr/108
     private final ClassLoader classLoader;
     private final RebindExceptionHandler exceptionHandler;
     
@@ -66,12 +71,20 @@ public class RebindContextImpl implements RebindContext {
         catalogItems.put(id, catalogItem);
     }
     
+    public void registerFeed(String id, Feed feed) {
+        feeds.put(id, feed);
+    }
+    
     public void unregisterPolicy(Policy policy) {
         policies.remove(policy.getId());
     }
 
     public void unregisterEnricher(Enricher enricher) {
         enrichers.remove(enricher.getId());
+    }
+
+    public void unregisterFeed(Feed feed) {
+        feeds.remove(feed.getId());
     }
 
     @Override
@@ -100,6 +113,11 @@ public class RebindContextImpl implements RebindContext {
     }
 
     @Override
+    public Feed getFeed(String id) {
+        return feeds.get(id);
+    }
+    
+    @Override
     public Class<?> loadClass(String className) throws ClassNotFoundException {
         return classLoader.loadClass(className);
     }
@@ -125,7 +143,12 @@ public class RebindContextImpl implements RebindContext {
         return enrichers.values();
     }
 
+<<<<<<< HEAD
     protected Collection<CatalogItem<?, ?>> getCatalogItems() {
         return catalogItems.values();
+=======
+    protected Collection<Feed> getFeeds() {
+        return feeds.values();
+>>>>>>> apache-gh/pr/108
     }
 }

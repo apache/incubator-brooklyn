@@ -30,6 +30,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -379,6 +380,11 @@ public class EntityManagementSupport {
             getManagementContext().getRebindManager().getChangeListener().onManaged(enricher);
         }
         @Override
+        public void onFeedAdded(Feed feed) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
+        }
+        @Override
         public void onPolicyRemoved(Policy policy) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
             getManagementContext().getRebindManager().getChangeListener().onUnmanaged(policy);
@@ -387,6 +393,11 @@ public class EntityManagementSupport {
         public void onEnricherRemoved(Enricher enricher) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
             getManagementContext().getRebindManager().getChangeListener().onUnmanaged(enricher);
+        }
+        @Override
+        public void onFeedRemoved(Feed feed) {
+            getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
+            getManagementContext().getRebindManager().getChangeListener().onUnmanaged(feed);
         }
         @Override
         public void onAttributeChanged(AttributeSensor<?> attribute) {

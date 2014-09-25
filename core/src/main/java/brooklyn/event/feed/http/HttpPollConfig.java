@@ -52,6 +52,14 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
             return input != null && input.getResponseCode() >= 200 && input.getResponseCode() <= 399;
         }};
     
+    public static <T> HttpPollConfig<T> forSensor(AttributeSensor<T> sensor) {
+        return new HttpPollConfig<T>(sensor);
+    }
+    
+    public static HttpPollConfig<Void> forMultiple() {
+        return new HttpPollConfig<Void>(PollConfig.NO_SENSOR);
+    }
+    
     public HttpPollConfig(AttributeSensor<T> sensor) {
         super(sensor);
         super.checkSuccess(DEFAULT_SUCCESS);
@@ -63,14 +71,6 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
         vars = other.vars;
         method = other.method;
         headers = other.headers;
-    }
-    
-    public static <T> HttpPollConfig<T> forSensor(AttributeSensor<T> sensor) {
-        return new HttpPollConfig<T>(sensor);
-    }
-    
-    public static HttpPollConfig<Void> forMultiple() {
-        return new HttpPollConfig<Void>(PollConfig.NO_SENSOR);
     }
     
     public String getSuburl() {

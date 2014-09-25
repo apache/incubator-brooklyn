@@ -41,6 +41,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -50,7 +51,11 @@ import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+<<<<<<< HEAD
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+=======
+import brooklyn.event.feed.AbstractFeed;
+>>>>>>> apache-gh/pr/108
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
@@ -65,6 +70,7 @@ import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
@@ -124,7 +130,11 @@ public class RebindManagerImpl implements RebindManager {
 
     private final boolean persistPoliciesEnabled;
     private final boolean persistEnrichersEnabled;
+<<<<<<< HEAD
     private final boolean persistCatalogItemsEnabled;
+=======
+    private final boolean persistFeedsEnabled;
+>>>>>>> apache-gh/pr/108
     private RebindFailureMode danglingRefFailureMode;
     private RebindFailureMode rebindFailureMode;
     private RebindFailureMode addPolicyFailureMode;
@@ -159,7 +169,11 @@ public class RebindManagerImpl implements RebindManager {
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
         this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
+<<<<<<< HEAD
         this.persistCatalogItemsEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
+=======
+        this.persistFeedsEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_FEED_PERSISTENCE_PROPERTY);
+>>>>>>> apache-gh/pr/108
 
         danglingRefFailureMode = managementContext.getConfig().getConfig(DANGLING_REFERENCE_FAILURE_MODE);
         rebindFailureMode = managementContext.getConfig().getConfig(REBIND_FAILURE_MODE);
@@ -432,6 +446,7 @@ public class RebindManagerImpl implements RebindManager {
                 LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
             } 
             
+<<<<<<< HEAD
             // Instantiate catalog items
             if (persistCatalogItemsEnabled) {
                 LOG.debug("RebindManager instantiating catalog items: {}", memento.getCatalogItemIds());
@@ -448,6 +463,25 @@ public class RebindManagerImpl implements RebindManager {
                 LOG.debug("Not rebinding catalog; feature disabled: {}", memento.getCatalogItemIds());
             }
             
+=======
+            // Instantiate feeds
+            if (persistFeedsEnabled) {
+                LOG.debug("RebindManager instantiating feeds: {}", memento.getFeedIds());
+                for (FeedMemento feedMemento : memento.getFeedMementos().values()) {
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating feed {}", feedMemento);
+
+                    try {
+                        Feed feed = newFeed(feedMemento, reflections);
+                        rebindContext.registerFeed(feedMemento.getId(), feed);
+                    } catch (Exception e) {
+                        exceptionHandler.onCreateFailed(BrooklynObjectType.FEED, feedMemento.getId(), feedMemento.getType(), e);
+                    }
+                }
+            } else {
+                LOG.debug("Not rebinding feeds; feature disabled: {}", memento.getFeedIds());
+            } 
+
+>>>>>>> apache-gh/pr/108
             //
             // PHASE FIVE
             //
@@ -510,7 +544,33 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             }
+<<<<<<< HEAD
 
+=======
+    
+            // Reconstruct feeds
+            if (persistFeedsEnabled) {
+                LOG.debug("RebindManager reconstructing feeds");
+                for (FeedMemento feedMemento : memento.getFeedMementos().values()) {
+                    Feed feed = rebindContext.getFeed(feedMemento.getId());
+                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing feed {}", feedMemento);
+        
+                    if (feed == null) {
+                        // usually because of creation-failure, when not using fail-fast
+                        exceptionHandler.onNotFound(BrooklynObjectType.FEED, feedMemento.getId());
+                    } else {
+                        try {
+                            feed.getRebindSupport().reconstruct(rebindContext, feedMemento);
+                        } catch (Exception e) {
+                            exceptionHandler.onRebindFailed(BrooklynObjectType.FEED, feed, e);
+                            rebindContext.unregisterFeed(feed);
+                        }
+                    }
+
+                }
+            }
+    
+>>>>>>> apache-gh/pr/108
             // Reconstruct entities
             LOG.debug("RebindManager reconstructing entities");
             for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
@@ -569,6 +629,7 @@ public class RebindManagerImpl implements RebindManager {
                         entityMemento.injectTypeClass(entity.getClass());
                         ((EntityInternal)entity).getRebindSupport().addPolicies(rebindContext, entityMemento);
                         ((EntityInternal)entity).getRebindSupport().addEnrichers(rebindContext, entityMemento);
+                        ((EntityInternal)entity).getRebindSupport().addFeeds(rebindContext, entityMemento);
                     } catch (Exception e) {
                         exceptionHandler.onRebindFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
@@ -644,14 +705,22 @@ public class RebindManagerImpl implements RebindManager {
             exceptionHandler.onDone();
 
             if (!isEmpty) {
+<<<<<<< HEAD
                 LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}, {} catalog item{}", new Object[]{
+=======
+                LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}, {} feed{}", new Object[] {
+>>>>>>> apache-gh/pr/108
                     apps.size(), Strings.s(apps),
                     rebindContext.getEntities().size(), Strings.ies(rebindContext.getEntities()),
                     rebindContext.getLocations().size(), Strings.s(rebindContext.getLocations()),
                     rebindContext.getPolicies().size(), Strings.ies(rebindContext.getPolicies()),
                     rebindContext.getEnrichers().size(), Strings.s(rebindContext.getEnrichers()),
+<<<<<<< HEAD
                     rebindContext.getCatalogItems().size(), Strings.s(rebindContext.getCatalogItems())
                 });
+=======
+                    rebindContext.getFeeds().size(), Strings.s(rebindContext.getFeeds()) });
+>>>>>>> apache-gh/pr/108
             }
 
             // Return the top-level applications
@@ -830,12 +899,34 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
 
+<<<<<<< HEAD
     @SuppressWarnings({ "rawtypes" })
     private CatalogItem<?, ?> newCatalogItem(CatalogItemMemento memento, Reflections reflections) {
         String id = memento.getId();
         String itemType = checkNotNull(memento.getType(), "catalog item type of %s must not be null in memento", id);
         Class<? extends CatalogItem> clazz = reflections.loadClass(itemType, CatalogItem.class);
         return invokeConstructor(reflections, clazz, new Object[]{});
+=======
+    /**
+     * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
+     */
+    private Feed newFeed(FeedMemento memento, Reflections reflections) {
+        String id = memento.getId();
+        String feedType = checkNotNull(memento.getType(), "feed type of %s must not be null in memento", id);
+        Class<? extends Feed> feedClazz = (Class<? extends Feed>) reflections.loadClass(feedType);
+
+        if (InternalFactory.isNewStyle(feedClazz)) {
+            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+            Feed feed = policyFactory.constructFeed(feedClazz);
+            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), feed);
+            ((AbstractFeed)feed).setManagementContext(managementContext);
+            
+            return feed;
+
+        } else {
+            throw new IllegalStateException("rebind of feed without no-arg constructor unsupported: id="+id+"; type="+feedType);
+        }
+>>>>>>> apache-gh/pr/108
     }
 
     private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {

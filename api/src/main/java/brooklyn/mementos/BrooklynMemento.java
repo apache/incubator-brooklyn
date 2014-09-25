@@ -44,8 +44,13 @@ public interface BrooklynMemento extends Serializable {
     public PolicyMemento getPolicyMemento(String id);
     
     public EnricherMemento getEnricherMemento(String id);
+<<<<<<< HEAD
 
     public CatalogItemMemento getCatalogItemMemento(String id);
+=======
+    
+    public FeedMemento getFeedMemento(String id);
+>>>>>>> apache-gh/pr/108
 
     public Collection<String> getApplicationIds();
     
@@ -59,7 +64,11 @@ public interface BrooklynMemento extends Serializable {
 
     public Collection<String> getEnricherIds();
 
+<<<<<<< HEAD
     public Collection<String> getCatalogItemIds();
+=======
+    public Collection<String> getFeedIds();
+>>>>>>> apache-gh/pr/108
 
     public Map<String, EntityMemento> getEntityMementos();
 
@@ -68,7 +77,12 @@ public interface BrooklynMemento extends Serializable {
     public Map<String, PolicyMemento> getPolicyMementos();
 
     public Map<String, EnricherMemento> getEnricherMementos();
+<<<<<<< HEAD
 
     public Map<String, CatalogItemMemento> getCatalogItemMementos();
 
+=======
+    
+    public Map<String, FeedMemento> getFeedMementos();
+>>>>>>> apache-gh/pr/108
 }

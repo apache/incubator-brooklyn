@@ -28,7 +28,7 @@ import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Maps;
 
 /**
- * The persisted state of a location.
+ * The persisted state of an enricher.
  *
  * @author aled
  */

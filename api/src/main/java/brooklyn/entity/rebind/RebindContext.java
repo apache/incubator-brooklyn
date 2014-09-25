@@ -20,6 +20,7 @@ package brooklyn.entity.rebind;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -43,7 +44,11 @@ public interface RebindContext {
 
     Enricher getEnricher(String id);
 
+<<<<<<< HEAD
     CatalogItem<?, ?> getCatalogItem(String id);
+=======
+    Feed getFeed(String id);
+>>>>>>> apache-gh/pr/108
 
     Class<?> loadClass(String typeName) throws ClassNotFoundException;
     

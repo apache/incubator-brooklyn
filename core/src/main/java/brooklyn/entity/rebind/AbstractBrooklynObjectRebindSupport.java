@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.entity.rebind.dto.MementosGenerators;
+import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.Memento;
 
 public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> implements RebindSupport<T> {
@@ -73,6 +74,11 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
 
     @Override
     public void addEnrichers(RebindContext rebindContext, T Memento) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addFeeds(RebindContext rebindContext, T Memento) {
         throw new UnsupportedOperationException();
     }
 

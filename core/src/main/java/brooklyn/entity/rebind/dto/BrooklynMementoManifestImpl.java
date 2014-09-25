@@ -40,8 +40,13 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         protected final Map<String, String> locationIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> policyIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> enricherIdToType = Maps.newConcurrentMap();
+<<<<<<< HEAD
         protected final Map<String, String> catalogItemIdToType = Maps.newConcurrentMap();
 
+=======
+        protected final Map<String, String> feedIdToType = Maps.newConcurrentMap();
+        
+>>>>>>> apache-gh/pr/108
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
         }
@@ -69,6 +74,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         public Builder enrichers(Map<String, String> vals) {
             enricherIdToType.putAll(vals); return this;
         }
+<<<<<<< HEAD
         public Builder catalogItem(String id, String type) {
             catalogItemIdToType.put(id, type); return this;
         }
@@ -76,6 +82,14 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
             catalogItemIdToType.putAll(vals); return this;
         }
 
+=======
+        public Builder feed(String id, String type) {
+            feedIdToType.put(id, type); return this;
+        }
+        public Builder feed(Map<String, String> vals) {
+            feedIdToType.putAll(vals); return this;
+        }
+>>>>>>> apache-gh/pr/108
         public BrooklynMementoManifest build() {
             return new BrooklynMementoManifestImpl(this);
         }
@@ -85,14 +99,23 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     private final Map<String, String> locationIdToType;
     private final Map<String, String> policyIdToType;
     private final Map<String, String> enricherIdToType;
+<<<<<<< HEAD
     private final Map<String, String> catalogItemIdToType;
 
+=======
+    private final Map<String, String> feedIdToType;
+    
+>>>>>>> apache-gh/pr/108
     private BrooklynMementoManifestImpl(Builder builder) {
         entityIdToType = builder.entityIdToType;
         locationIdToType = builder.locationIdToType;
         policyIdToType = builder.policyIdToType;
         enricherIdToType = builder.enricherIdToType;
+<<<<<<< HEAD
         catalogItemIdToType = builder.catalogItemIdToType;
+=======
+        feedIdToType = builder.feedIdToType;
+>>>>>>> apache-gh/pr/108
     }
 
     @Override
@@ -120,6 +143,11 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         return Collections.unmodifiableMap(catalogItemIdToType);
     }
 
+    @Override
+    public Map<String, String> getFeedIdToType() {
+        return Collections.unmodifiableMap(feedIdToType);
+    }
+    
     @Override
     public boolean isEmpty() {
         return entityIdToType.isEmpty() &&

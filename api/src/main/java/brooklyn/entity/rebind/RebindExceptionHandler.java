@@ -21,6 +21,7 @@ package brooklyn.entity.rebind;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
@@ -72,6 +73,8 @@ public interface RebindExceptionHandler {
     void onAddPolicyFailed(EntityLocal entity, Policy policy, Exception e);
 
     void onAddEnricherFailed(EntityLocal entity, Enricher enricher, Exception e);
+
+    void onAddFeedFailed(EntityLocal entity, Feed feed, Exception e);
 
     void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
 

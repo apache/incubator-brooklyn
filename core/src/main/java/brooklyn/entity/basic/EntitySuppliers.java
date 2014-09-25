@@ -16,28 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.guava;
+package brooklyn.entity.basic;
+
+import brooklyn.entity.Entity;
+import brooklyn.location.basic.Machines;
+import brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Supplier;
 
-public class IllegalStateExceptionSupplier implements Supplier<RuntimeException> {
+public class EntitySuppliers {
 
-    public static final IllegalStateExceptionSupplier EMPTY_EXCEPTION = new IllegalStateExceptionSupplier();
-    
-    protected final String message;
-    protected final Throwable cause;
-    
-    public IllegalStateExceptionSupplier() { this(null, null); }
-    public IllegalStateExceptionSupplier(String message) { this(message, null); }
-    public IllegalStateExceptionSupplier(Throwable cause) { this(null, cause); }
-    public IllegalStateExceptionSupplier(String message, Throwable cause) { 
-        this.message = message;
-        this.cause = cause;
+    public static Supplier<SshMachineLocation> uniqueSshMachineLocation(Entity entity) {
+        return new UniqueSshMchineLocation(entity);
     }
     
-    @Override
-    public RuntimeException get() {
-        return new IllegalStateException(message, cause);
-    }
+    private static class UniqueSshMchineLocation implements Supplier<SshMachineLocation> {
+        private Entity entity;
 
+        private UniqueSshMchineLocation() { /* for xstream */
+        }
+        
+        private UniqueSshMchineLocation(Entity entity) {
+            this.entity = entity;
+        }
+        
+        @Override public SshMachineLocation get() {
+            return Machines.findUniqueSshMachineLocation(entity.getLocations()).get();
+        }
+    }
 }

@@ -36,6 +36,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.feed.AbstractFeed;
 import brooklyn.location.Location;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.basic.AbstractPolicy;
@@ -141,6 +142,34 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
             } else {
                 LOG.warn("Enricher not found; discarding enricher {} of entity {}({})",
                         new Object[] {enricherId, memento.getType(), memento.getId()});
+            }
+        }
+    }
+    
+    @Override
+    public void addFeeds(RebindContext rebindContext, EntityMemento memento) {
+        for (String feedId : memento.getFeeds()) {
+            AbstractFeed feed = (AbstractFeed) rebindContext.getFeed(feedId);
+            if (feed != null) {
+                try {
+                    ((EntityInternal)entity).getFeedSupport().addFeed(feed);
+                } catch (Exception e) {
+                    rebindContext.getExceptionHandler().onAddFeedFailed(entity, feed, e);
+                }
+            } else {
+                LOG.warn("Feed not found; discarding feed {} of entity {}({})",
+                        new Object[] {feedId, memento.getType(), memento.getId()});
+            }
+            
+            if (feed != null) {
+                try {
+                    feed.start();
+                } catch (Exception e) {
+                    rebindContext.getExceptionHandler().onRebindFailed(BrooklynObjectType.ENTITY, entity, e);
+                }
+            } else {
+                LOG.warn("Feed not found; discarding feed of entity {}({})",
+                        new Object[] {memento.getType(), memento.getId()});
             }
         }
     }

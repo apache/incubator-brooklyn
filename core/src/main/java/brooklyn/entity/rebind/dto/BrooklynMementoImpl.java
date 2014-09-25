@@ -29,6 +29,7 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
@@ -53,8 +54,13 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         protected final Map<String, LocationMemento> locations = Maps.newConcurrentMap();
         protected final Map<String, PolicyMemento> policies = Maps.newConcurrentMap();
         protected final Map<String, EnricherMemento> enrichers = Maps.newConcurrentMap();
+<<<<<<< HEAD
         protected final Map<String, CatalogItemMemento> catalogItems = Maps.newConcurrentMap();
 
+=======
+        protected final Map<String, FeedMemento> feeds = Maps.newConcurrentMap();
+        
+>>>>>>> apache-gh/pr/108
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
         }
@@ -75,9 +81,15 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
             } else if (memento instanceof PolicyMemento) {
                 policy((PolicyMemento)memento);
             } else if (memento instanceof EnricherMemento) {
+<<<<<<< HEAD
                 enricher((EnricherMemento) memento);
             } else if (memento instanceof CatalogItemMemento) {
                 catalogItem((CatalogItemMemento) memento);
+=======
+                enricher((EnricherMemento)memento);
+            } else if (memento instanceof FeedMemento) {
+                feed((FeedMemento)memento);
+>>>>>>> apache-gh/pr/108
             } else {
                 throw new IllegalStateException("Unexpected memento type :"+memento);
             }
@@ -93,6 +105,9 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         }
         public Builder enricher(EnricherMemento val) {
             enrichers.put(val.getId(), val); return this;
+        }
+        public Builder feed(FeedMemento val) {
+            feeds.put(val.getId(), val); return this;
         }
         public Builder entity(EntityMemento val) {
             entities.put(val.getId(), val);
@@ -110,11 +125,16 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         public Builder enrichers(Map<String, EnricherMemento> vals) {
             enrichers.putAll(vals); return this;
         }
+<<<<<<< HEAD
         public Builder catalogItems(Map<String, CatalogItemMemento> vals) {
             catalogItems.putAll(vals); return this;
         }
         public Builder catalogItem(CatalogItemMemento val) {
             catalogItems.put(val.getId(), val); return this;
+=======
+        public Builder feeds(Map<String, FeedMemento> vals) {
+            feeds.putAll(vals); return this;
+>>>>>>> apache-gh/pr/108
         }
         public BrooklynMemento build() {
             return new BrooklynMementoImpl(this);
@@ -129,8 +149,13 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     private Map<String, LocationMemento> locations;
     private Map<String, PolicyMemento> policies;
     private Map<String, EnricherMemento> enrichers;
+<<<<<<< HEAD
     private Map<String, CatalogItemMemento> catalogItems;
 
+=======
+    private Map<String, FeedMemento> feeds;
+    
+>>>>>>> apache-gh/pr/108
     private BrooklynMementoImpl(Builder builder) {
         brooklynVersion = builder.brooklynVersion;
         applicationIds = builder.applicationIds;
@@ -139,7 +164,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         locations = builder.locations;
         policies = builder.policies;
         enrichers = builder.enrichers;
+<<<<<<< HEAD
         catalogItems = builder.catalogItems;
+=======
+        feeds = builder.feeds;
+>>>>>>> apache-gh/pr/108
     }
 
     @Override
@@ -163,8 +192,13 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     }
 
     @Override
+<<<<<<< HEAD
     public CatalogItemMemento getCatalogItemMemento(String id) {
         return catalogItems.get(id);
+=======
+    public FeedMemento getFeedMemento(String id) {
+        return feeds.get(id);
+>>>>>>> apache-gh/pr/108
     }
 
     @Override
@@ -198,6 +232,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     }
 
     @Override
+    public Collection<String> getFeedIds() {
+        return Collections.unmodifiableSet(feeds.keySet());
+    }
+    
+    @Override
     public Collection<String> getTopLevelLocationIds() {
         return Collections.unmodifiableList(topLevelLocationIds);
     }
@@ -220,9 +259,16 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     public Map<String, EnricherMemento> getEnricherMementos() {
         return Collections.unmodifiableMap(enrichers);
     }
+<<<<<<< HEAD
 
     @Override
     public Map<String, CatalogItemMemento> getCatalogItemMementos() {
         return Collections.unmodifiableMap(catalogItems);
+=======
+    
+    @Override
+    public Map<String, FeedMemento> getFeedMementos() {
+        return Collections.unmodifiableMap(feeds);
+>>>>>>> apache-gh/pr/108
     }
 }
