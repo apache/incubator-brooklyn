@@ -59,6 +59,9 @@ public class BasicPolicyMemento extends AbstractMemento implements PolicyMemento
     private Map<String,Object> config;
     private Map<String, Object> fields;
 
+    @SuppressWarnings("unused") // For deserialisation
+    private BasicPolicyMemento() {}
+
     // Trusts the builder to not mess around with mutability after calling build()
     protected BasicPolicyMemento(Builder builder) {
         super(builder);

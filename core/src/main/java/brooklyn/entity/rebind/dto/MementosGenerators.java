@@ -76,15 +76,11 @@ public class MementosGenerators {
         } else if (instance instanceof Policy) {
             return newPolicyMemento((Policy)instance);
         } else if (instance instanceof Enricher) {
-<<<<<<< HEAD
             return newEnricherMemento((Enricher) instance);
-        } else if (instance instanceof CatalogItem) {
-            return newCatalogItemMemento((CatalogItem) instance);
-=======
-            return newEnricherMemento((Enricher)instance);
         } else if (instance instanceof Feed) {
             return newFeedMemento((Feed)instance);
->>>>>>> apache-gh/pr/108
+        } else if (instance instanceof CatalogItem) {
+            return newCatalogItemMemento((CatalogItem<?,?>) instance);
         } else {
             throw new IllegalArgumentException("Unexpected brooklyn type: "+(instance == null ? "null" : instance.getClass())+" ("+instance+")");
         }
@@ -341,23 +337,6 @@ public class MementosGenerators {
         return builder.build();
     }
 
-    public static CatalogItemMemento newCatalogItemMemento(CatalogItem<?, ?> catalogItem) {
-        BasicCatalogItemMemento.Builder builder = BasicCatalogItemMemento.builder();
-        populateBrooklynObjectMementoBuilder(catalogItem, builder);
-        builder.catalogItemJavaType(catalogItem.getCatalogItemJavaType())
-                .catalogItemType(catalogItem.getCatalogItemType())
-                .description(catalogItem.getDescription())
-                .iconUrl(catalogItem.getIconUrl())
-                .javaType(catalogItem.getJavaType())
-                .libraries(catalogItem.getLibraries())
-                .registeredTypeName(catalogItem.getRegisteredTypeName())
-                .specType(catalogItem.getSpecType())
-                .version(catalogItem.getVersion())
-                .planYaml(catalogItem.getPlanYaml())
-                ;
-        return builder.build();
-    }
-    
     /**
      * Given a feed, extracts its state for serialization.
      */
@@ -376,6 +355,23 @@ public class MementosGenerators {
             builder.config.put(key.getName(), value); 
         }
         
+        return builder.build();
+    }
+    
+    public static CatalogItemMemento newCatalogItemMemento(CatalogItem<?, ?> catalogItem) {
+        BasicCatalogItemMemento.Builder builder = BasicCatalogItemMemento.builder();
+        populateBrooklynObjectMementoBuilder(catalogItem, builder);
+        builder.catalogItemJavaType(catalogItem.getCatalogItemJavaType())
+        .catalogItemType(catalogItem.getCatalogItemType())
+        .description(catalogItem.getDescription())
+        .iconUrl(catalogItem.getIconUrl())
+        .javaType(catalogItem.getJavaType())
+        .libraries(catalogItem.getLibraries())
+        .registeredTypeName(catalogItem.getRegisteredTypeName())
+        .specType(catalogItem.getSpecType())
+        .version(catalogItem.getVersion())
+        .planYaml(catalogItem.getPlanYaml())
+        ;
         return builder.build();
     }
     

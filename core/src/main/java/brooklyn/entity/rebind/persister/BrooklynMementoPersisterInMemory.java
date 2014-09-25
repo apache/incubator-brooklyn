@@ -30,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
@@ -146,9 +147,13 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                         Class<?> clazz = loadClass(manifest.getEnricherIdToType().get(id));
                         return (Enricher) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
+                    @Override public Feed lookupFeed(String id) {
+                        Class<?> clazz = loadClass(manifest.getFeedIdToType().get(id));
+                        return (Feed) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
+                    }
                     @Override public CatalogItem<?, ?> lookupCatalogItem(String id) {
                         Class<?> clazz = loadClass(manifest.getCatalogItemIdToType().get(id));
-                        return (CatalogItem) invokeConstructor(clazz, new Object[0]);
+                        return (CatalogItem<?,?>) invokeConstructor(clazz, new Object[0]);
                     }
 
                     private Class<?> loadClass(String name) {

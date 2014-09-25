@@ -44,11 +44,9 @@ public interface RebindContext {
 
     Enricher getEnricher(String id);
 
-<<<<<<< HEAD
-    CatalogItem<?, ?> getCatalogItem(String id);
-=======
     Feed getFeed(String id);
->>>>>>> apache-gh/pr/108
+    
+    CatalogItem<?, ?> getCatalogItem(String id);
 
     Class<?> loadClass(String typeName) throws ClassNotFoundException;
     

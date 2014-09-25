@@ -21,23 +21,19 @@ package brooklyn.entity.rebind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-
-import brooklyn.basic.AbstractBrooklynObject;
-import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
-import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.mementos.CatalogItemMemento;
-import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.FlagUtils;
 
 public class BasicCatalogItemRebindSupport extends AbstractBrooklynObjectRebindSupport<CatalogItemMemento> {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(BasicCatalogItemRebindSupport.class);
-    private final CatalogItemDtoAbstract instance;
+    
+    private final CatalogItemDtoAbstract<?,?> instance;
 
-    public BasicCatalogItemRebindSupport(CatalogItemDtoAbstract instance) {
+    public BasicCatalogItemRebindSupport(CatalogItemDtoAbstract<?,?> instance) {
         super(instance);
         this.instance = instance;
     }

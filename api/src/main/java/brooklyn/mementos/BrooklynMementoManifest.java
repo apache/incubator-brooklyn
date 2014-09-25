@@ -36,11 +36,9 @@ public interface BrooklynMementoManifest extends Serializable {
 
     public Map<String, String> getEnricherIdToType();
 
-<<<<<<< HEAD
-    public Map<String, String> getCatalogItemIdToType();
-=======
     public Map<String, String> getFeedIdToType();
->>>>>>> apache-gh/pr/108
+    
+    public Map<String, String> getCatalogItemIdToType();
 
     public boolean isEmpty();
     

@@ -72,6 +72,9 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
 	private Set<String> locationConfigUnused;
 	private String locationConfigDescription;
 
+    @SuppressWarnings("unused") // For deserialisation
+    private BasicLocationMemento() {}
+
     // Trusts the builder to not mess around with mutability after calling build()
 	protected BasicLocationMemento(Builder builder) {
 	    super(builder);

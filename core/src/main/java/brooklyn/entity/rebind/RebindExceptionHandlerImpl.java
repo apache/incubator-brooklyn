@@ -56,6 +56,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<String> missingLocations = Sets.newConcurrentHashSet();
     protected final Set<String> missingPolicies = Sets.newConcurrentHashSet();
     protected final Set<String> missingEnrichers = Sets.newConcurrentHashSet();
+    protected final Set<String> missingFeeds = Sets.newConcurrentHashSet();
     protected final Set<String> missingCatalogItems = Sets.newConcurrentHashSet();
     protected final Set<String> creationFailedIds = Sets.newConcurrentHashSet();
     protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
@@ -168,6 +169,17 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             throw new IllegalStateException("No enricher found with id "+id);
         } else {
             LOG.warn("No enricher found with id "+id+"; returning null");
+            return null;
+        }
+    }
+
+    @Override
+    public Feed onDanglingFeedRef(String id) {
+        missingFeeds.add(id);
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
+            throw new IllegalStateException("No feed found with id "+id);
+        } else {
+            LOG.warn("No feed found with id "+id+"; returning null");
             return null;
         }
     }
@@ -348,6 +360,9 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             }
             if (!missingEnrichers.isEmpty()) {
                 allExceptions.add(new IllegalStateException("Missing referenced enricher" + Strings.s(missingEnrichers) + ": " + missingEnrichers));
+            }
+            if (!missingFeeds.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced feed" + Strings.s(missingFeeds) + ": " + missingFeeds));
             }
             if (!missingCatalogItems.isEmpty()) {
                 allExceptions.add(new IllegalStateException("Missing referenced catalog item" + Strings.s(missingCatalogItems) + ": " + missingCatalogItems));

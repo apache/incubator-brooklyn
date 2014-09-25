@@ -1245,7 +1245,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
                 getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
                 getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
-                // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+                // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for feeds; no use-case for that yet
 
                 return feed;
             }

@@ -59,6 +59,9 @@ public class BasicFeedMemento extends AbstractMemento implements FeedMemento, Se
     private Map<String,Object> config;
     private Map<String, Object> fields;
 
+    @SuppressWarnings("unused") // For deserialisation
+    private BasicFeedMemento() {}
+
     // Trusts the builder to not mess around with mutability after calling build()
     protected BasicFeedMemento(Builder builder) {
         super(builder);

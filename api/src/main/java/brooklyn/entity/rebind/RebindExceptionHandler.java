@@ -59,6 +59,12 @@ public interface RebindExceptionHandler {
      */
     Enricher onDanglingEnricherRef(String id);
 
+    //XXX
+    /**
+     * @return the feed to use in place of the missing one, or null (if hasn't thrown an exception)
+     */
+    Feed onDanglingFeedRef(String id);
+    
     /**
      * @return the catalog item to use in place of the missing one
      */

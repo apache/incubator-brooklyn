@@ -132,9 +132,8 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     private Class<?> catalogItemJavaType;
     private Class<?> specType;
 
-    private BasicCatalogItemMemento() {
-        // For deserialisation
-    }
+    @SuppressWarnings("unused") // For deserialisation
+    private BasicCatalogItemMemento() {}
 
     protected BasicCatalogItemMemento(Builder builder) {
         super(builder);

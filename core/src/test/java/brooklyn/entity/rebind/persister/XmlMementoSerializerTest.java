@@ -37,6 +37,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogLibrariesDto;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
@@ -132,7 +133,7 @@ public class XmlMementoSerializerTest {
         try {
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
-                    ImmutableList.<Enricher>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
+                    ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
             assertSerializeAndDeserialize(app);
         } finally {
             Entities.destroyAll(managementContext);
@@ -148,7 +149,7 @@ public class XmlMementoSerializerTest {
             final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(brooklyn.location.basic.SimulatedLocation.class));
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.<Entity>of(), ImmutableList.of(loc), ImmutableList.<Policy>of(),
-                    ImmutableList.<Enricher>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
+                    ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
             assertSerializeAndDeserialize(loc);
         } finally {
             Entities.destroyAll(managementContext);
@@ -161,7 +162,7 @@ public class XmlMementoSerializerTest {
         ManagementContext managementContext = app.getManagementContext();
         try {
             CatalogItem<?, ?> catalogItem = CatalogItemBuilder.newEntity("registeredtypename")
-                    .name("test catalog item")
+                    .displayName("test catalog item")
                     .description("description")
                     .plan("yaml plan")
                     .iconUrl("iconUrl")
@@ -169,7 +170,7 @@ public class XmlMementoSerializerTest {
                     .build();
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
-                    ImmutableList.<Enricher>of(), ImmutableList.of(catalogItem), true));
+                    ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.of(catalogItem), true));
             assertSerializeAndDeserialize(catalogItem);
         } finally {
             Entities.destroyAll(managementContext);
@@ -187,7 +188,7 @@ public class XmlMementoSerializerTest {
         try {
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
-                    ImmutableList.<Enricher>of(), ImmutableList.<CatalogItem<?, ?>>of(), false));
+                    ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?, ?>>of(), false));
             
             List<?> resultList = serializeAndDeserialize(ImmutableList.of(app, entity));
             assertEquals(resultList, ImmutableList.of(app));
@@ -211,7 +212,7 @@ public class XmlMementoSerializerTest {
         try {
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
-                    ImmutableList.<Enricher>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
+                    ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
             ReffingEntity reffer2 = assertSerializeAndDeserialize(reffer);
             assertEquals(reffer2.entity, app);
         } finally {
@@ -227,7 +228,7 @@ public class XmlMementoSerializerTest {
         try {
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.of(app), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
-                    ImmutableList.<Enricher>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
+                    ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));
             ReffingEntity reffer2 = assertSerializeAndDeserialize(reffer);
             assertEquals(reffer2.obj, app);
         } finally {
@@ -276,33 +277,37 @@ public class XmlMementoSerializerTest {
         private final Map<String, Location> locations;
         private final Map<String, Policy> policies;
         private final Map<String, Enricher> enrichers;
+        private final Map<String, Feed> feeds;
         private final Map<String, CatalogItem<?, ?>> catalogItems;
         private final boolean failOnDangling;
 
         LookupContextImpl(ManagementContext mgmt, Iterable<? extends Entity> entities, Iterable<? extends Location> locations,
-                Iterable<? extends Policy> policies, Iterable<? extends Enricher> enrichers,
+                Iterable<? extends Policy> policies, Iterable<? extends Enricher> enrichers, Iterable<? extends Feed> feeds,
                 Iterable<? extends CatalogItem<?, ?>> catalogItems, boolean failOnDangling) {
             this.mgmt = mgmt;
             this.entities = Maps.newLinkedHashMap();
             this.locations = Maps.newLinkedHashMap();
             this.policies = Maps.newLinkedHashMap();
             this.enrichers = Maps.newLinkedHashMap();
+            this.feeds = Maps.newLinkedHashMap();
             this.catalogItems = Maps.newLinkedHashMap();
             for (Entity entity : entities) this.entities.put(entity.getId(), entity);
             for (Location location : locations) this.locations.put(location.getId(), location);
             for (Policy policy : policies) this.policies.put(policy.getId(), policy);
             for (Enricher enricher : enrichers) this.enrichers.put(enricher.getId(), enricher);
+            for (Feed feed : feeds) this.feeds.put(feed.getId(), feed);
             for (CatalogItem<?, ?> catalogItem : catalogItems) this.catalogItems.put(catalogItem.getId(), catalogItem);
             this.failOnDangling = failOnDangling;
         }
         LookupContextImpl(ManagementContext mgmt, Map<String,? extends Entity> entities, Map<String,? extends Location> locations,
-                Map<String,? extends Policy> policies, Map<String,? extends Enricher> enrichers,
+                Map<String,? extends Policy> policies, Map<String,? extends Enricher> enrichers, Map<String,? extends Feed> feeds,
                 Map<String, ? extends CatalogItem<?, ?>> catalogItems, boolean failOnDangling) {
             this.mgmt = mgmt;
             this.entities = ImmutableMap.copyOf(entities);
             this.locations = ImmutableMap.copyOf(locations);
             this.policies = ImmutableMap.copyOf(policies);
             this.enrichers = ImmutableMap.copyOf(enrichers);
+            this.feeds = ImmutableMap.copyOf(feeds);
             this.catalogItems = ImmutableMap.copyOf(catalogItems);
             this.failOnDangling = failOnDangling;
         }
@@ -342,6 +347,15 @@ public class XmlMementoSerializerTest {
             }
             if (failOnDangling) {
                 throw new NoSuchElementException("no enricher with id "+id+"; contenders are "+enrichers.keySet());
+            }
+            return null;
+        }
+        @Override public Feed lookupFeed(String id) {
+            if (feeds.containsKey(id)) {
+                return feeds.get(id);
+            }
+            if (failOnDangling) {
+                throw new NoSuchElementException("no feed with id "+id+"; contenders are "+feeds.keySet());
             }
             return null;
         }

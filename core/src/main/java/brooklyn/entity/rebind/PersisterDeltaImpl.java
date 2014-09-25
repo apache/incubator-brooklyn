@@ -55,13 +55,12 @@ public class PersisterDeltaImpl implements Delta {
             delta.enrichers.addAll(vals);
             return this;
         }
-<<<<<<< HEAD
-        public Builder catalogItems(Collection<? extends CatalogItemMemento> vals) {
-            delta.catalogItems.addAll(vals);
-=======
         public Builder feeds(Collection<? extends FeedMemento> vals) {
             delta.feeds.addAll(vals);
->>>>>>> apache-gh/pr/108
+            return this;
+        }
+        public Builder catalogItems(Collection<? extends CatalogItemMemento> vals) {
+            delta.catalogItems.addAll(vals);
             return this;
         }
         public Builder removedLocationIds(Collection<String> vals) {
@@ -80,6 +79,10 @@ public class PersisterDeltaImpl implements Delta {
             delta.removedEnricherIds.addAll(vals);
             return this;
         }
+        public Builder removedFeedIds(Collection<String> vals) {
+            delta.removedFeedIds.addAll(vals);
+            return this;
+        }
         public Builder removedCatalogItemIds(Collection<String> vals) {
             delta.removedCatalogItemIds.addAll(vals);
             return this;
@@ -93,23 +96,15 @@ public class PersisterDeltaImpl implements Delta {
     Collection<EntityMemento> entities = Sets.newLinkedHashSet();
     Collection<PolicyMemento> policies = Sets.newLinkedHashSet();
     Collection<EnricherMemento> enrichers = Sets.newLinkedHashSet();
-<<<<<<< HEAD
+    Collection<FeedMemento> feeds = Sets.newLinkedHashSet();
     Collection<CatalogItemMemento> catalogItems = Sets.newLinkedHashSet();
     Collection<String> removedLocationIds = Sets.newLinkedHashSet();
     Collection<String> removedEntityIds = Sets.newLinkedHashSet();
     Collection<String> removedPolicyIds = Sets.newLinkedHashSet();
     Collection<String> removedEnricherIds = Sets.newLinkedHashSet();
+    Collection <String> removedFeedIds = Sets.newLinkedHashSet();
     Collection<String> removedCatalogItemIds = Sets.newLinkedHashSet();
 
-=======
-    Collection<FeedMemento> feeds = Sets.newLinkedHashSet();
-    Collection <String> removedLocationIds = Sets.newLinkedHashSet();
-    Collection <String> removedEntityIds = Sets.newLinkedHashSet();
-    Collection <String> removedPolicyIds = Sets.newLinkedHashSet();
-    Collection <String> removedEnricherIds = Sets.newLinkedHashSet();
-    Collection <String> removedFeedIds = Sets.newLinkedHashSet();
-    
->>>>>>> apache-gh/pr/108
     @Override
     public Collection<LocationMemento> locations() {
         return locations;
@@ -129,15 +124,15 @@ public class PersisterDeltaImpl implements Delta {
     public Collection<EnricherMemento> enrichers() {
         return enrichers;
     }
-
+    
     @Override
-<<<<<<< HEAD
-    public Collection<CatalogItemMemento> catalogItems() {
-        return catalogItems;
-=======
     public Collection<FeedMemento> feeds() {
         return feeds;
->>>>>>> apache-gh/pr/108
+    }
+
+    @Override
+    public Collection<CatalogItemMemento> catalogItems() {
+        return catalogItems;
     }
 
     @Override
@@ -159,16 +154,14 @@ public class PersisterDeltaImpl implements Delta {
     public Collection<String> removedEnricherIds() {
         return removedEnricherIds;
     }
-<<<<<<< HEAD
-
-    @Override
-    public Collection<String> removedCatalogItemIds() {
-        return removedCatalogItemIds;
-=======
     
     @Override
     public Collection<String> removedFeedIds() {
         return removedFeedIds;
->>>>>>> apache-gh/pr/108
+    }
+
+    @Override
+    public Collection<String> removedCatalogItemIds() {
+        return removedCatalogItemIds;
     }
 }

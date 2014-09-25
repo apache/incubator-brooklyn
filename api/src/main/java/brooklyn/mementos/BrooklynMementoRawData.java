@@ -43,6 +43,7 @@ public class BrooklynMementoRawData {
         protected final Map<String, String> locations = Maps.newConcurrentMap();
         protected final Map<String, String> policies = Maps.newConcurrentMap();
         protected final Map<String, String> enrichers = Maps.newConcurrentMap();
+        protected final Map<String, String> feeds = Maps.newConcurrentMap();
         protected final Map<String, String> catalogItems = Maps.newConcurrentMap();
         
         public Builder brooklynVersion(String val) {
@@ -72,6 +73,12 @@ public class BrooklynMementoRawData {
         public Builder enrichers(Map<String, String> vals) {
             enrichers.putAll(vals); return this;
         }
+        public Builder feed(String id, String val) {
+            feeds.put(id, val); return this;
+        }
+        public Builder feeds(Map<String, String> vals) {
+            feeds.putAll(vals); return this;
+        }
         public Builder catalogItem(String id, String val) {
             catalogItems.put(id, val); return this;
         }
@@ -87,6 +94,7 @@ public class BrooklynMementoRawData {
     private final Map<String, String> locations;
     private final Map<String, String> policies;
     private final Map<String, String> enrichers;
+    private final Map<String, String> feeds;
     private final Map<String, String> catalogItems;
     
     private BrooklynMementoRawData(Builder builder) {
@@ -94,6 +102,7 @@ public class BrooklynMementoRawData {
         locations = builder.locations;
         policies = builder.policies;
         enrichers = builder.enrichers;
+        feeds = builder.feeds;
         catalogItems = builder.catalogItems;
     }
 
@@ -113,11 +122,15 @@ public class BrooklynMementoRawData {
         return Collections.unmodifiableMap(enrichers);
     }
     
+    public Map<String, String> getFeeds() {
+        return Collections.unmodifiableMap(feeds);
+    }
+    
     public Map<String, String> getCatalogItems() {
         return Collections.unmodifiableMap(catalogItems);
     }
     
     public boolean isEmpty() {
-        return entities.isEmpty() && locations.isEmpty() && policies.isEmpty() && enrichers.isEmpty() && catalogItems.isEmpty();
+        return entities.isEmpty() && locations.isEmpty() && policies.isEmpty() && enrichers.isEmpty() && feeds.isEmpty() && catalogItems.isEmpty();
     }
 }

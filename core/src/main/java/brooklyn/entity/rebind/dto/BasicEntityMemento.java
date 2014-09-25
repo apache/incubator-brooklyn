@@ -30,7 +30,6 @@ import brooklyn.basic.BrooklynTypes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindSupport;
@@ -119,10 +118,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     private transient Map<String, Object> configUnmatched;
     private transient Map<AttributeSensor<?>, Object> attributesByKey;
 
-    // for de-serialization
-    @SuppressWarnings("unused")
-    private BasicEntityMemento() {
-    }
+    @SuppressWarnings("unused") // For deserialisation
+    private BasicEntityMemento() {}
 
     // Trusts the builder to not mess around with mutability after calling build() -- with invalidate pattern
     // Does not make any attempt to make unmodifiable, or immutable copy, to have cleaner (and faster) output

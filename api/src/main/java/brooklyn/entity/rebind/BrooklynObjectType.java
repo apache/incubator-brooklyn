@@ -26,10 +26,7 @@ public enum BrooklynObjectType {
     LOCATION,
     POLICY,
     ENRICHER,
-<<<<<<< HEAD
-    CATALOG_ITEM,
-=======
     FEED,
->>>>>>> apache-gh/pr/108
+    CATALOG_ITEM,
     UNKNOWN;
 }

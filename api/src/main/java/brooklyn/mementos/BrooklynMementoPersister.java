@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
@@ -48,6 +49,7 @@ public interface BrooklynMementoPersister {
         Location lookupLocation(String id);
         Policy lookupPolicy(String id);
         Enricher lookupEnricher(String id);
+        Feed lookupFeed(String id);
         CatalogItem<?, ?> lookupCatalogItem(String id);
     }
 
@@ -80,20 +82,15 @@ public interface BrooklynMementoPersister {
         Collection<EntityMemento> entities();
         Collection<PolicyMemento> policies();
         Collection<EnricherMemento> enrichers();
-<<<<<<< HEAD
-        Collection<CatalogItemMemento> catalogItems();
-=======
         Collection<FeedMemento> feeds();
->>>>>>> apache-gh/pr/108
+        Collection<CatalogItemMemento> catalogItems();
+        
         Collection<String> removedLocationIds();
         Collection<String> removedEntityIds();
         Collection<String> removedPolicyIds();
         Collection<String> removedEnricherIds();
-<<<<<<< HEAD
-        Collection<String> removedCatalogItemIds();
-=======
         Collection<String> removedFeedIds();
->>>>>>> apache-gh/pr/108
+        Collection<String> removedCatalogItemIds();
     }
 
 }

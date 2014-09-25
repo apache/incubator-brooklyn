@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
@@ -78,7 +79,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     public XmlMementoSerializer(ClassLoader classLoader) {
         this.classLoader = checkNotNull(classLoader, "classLoader");
         
-        // old (deprecated in 070? or earlier) single-file persistence uses this keyword; TODO remove soon
+        // old (deprecated in 070? or earlier) single-file persistence uses this keyword; TODO remove soon in 080 ?
         xstream.alias("brooklyn", MutableBrooklynMemento.class);
         
         xstream.alias("entity", BasicEntityMemento.class);
@@ -103,6 +104,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.registerConverter(new PolicyConverter());
         xstream.registerConverter(new EnricherConverter());
         xstream.registerConverter(new EntityConverter());
+        xstream.registerConverter(new FeedConverter());
         xstream.registerConverter(new CatalogItemConverter());
 
         xstream.registerConverter(new ManagementContextConverter());
@@ -235,6 +237,16 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
     
+    public class FeedConverter extends IdentifiableConverter<Feed> {
+        FeedConverter() {
+            super(Feed.class);
+        }
+        @Override
+        protected Feed lookup(String id) {
+            return lookupContext.lookupFeed(id);
+        }
+    }
+    
     public class EntityConverter extends IdentifiableConverter<Entity> {
         EntityConverter() {
             super(Entity.class);
@@ -245,12 +257,13 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
     }
 
+    @SuppressWarnings("rawtypes")
     public class CatalogItemConverter extends IdentifiableConverter<CatalogItem> {
         CatalogItemConverter() {
             super(CatalogItem.class);
         }
         @Override
-        protected CatalogItem lookup(String id) {
+        protected CatalogItem<?,?> lookup(String id) {
             return lookupContext.lookupCatalogItem(id);
         }
     }
@@ -267,6 +280,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
             return Task.class.isAssignableFrom(type);
         }
+        @SuppressWarnings("deprecation")
         @Override
         public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
             if (source == null) return;
@@ -312,15 +326,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         }
         @Override
         public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
-            // we write nothing, and always insert the current mgmt context
-            
-            // if we want to explore this further, see #1422; but in short, mgmt is a common part of DSL resolution
-//            if (!loggedMgmtContextWarning) {
-//                LOG.warn("Intercepting request to serialize management context"
-//                    + (context instanceof ReferencingMarshallingContext ? " at "+((ReferencingMarshallingContext)context).currentPath() : "")+
-//                    " (only logging this once): "+source);
-//                loggedMgmtContextWarning = true;
-//            }
+            // write nothing, and always insert the current mgmt context
         }
         @Override
         public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {

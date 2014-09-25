@@ -130,6 +130,7 @@ public class CompoundTransformer {
         Map<String, String> locations = MutableMap.copyOf(rawData.getLocations());
         Map<String, String> policies = MutableMap.copyOf(rawData.getPolicies());
         Map<String, String> enrichers = MutableMap.copyOf(rawData.getEnrichers());
+        Map<String, String> feeds = MutableMap.copyOf(rawData.getFeeds());
         Map<String, String> catalogItems = MutableMap.copyOf(rawData.getCatalogItems());
 
         // TODO @neykov asks whether transformers should be run in registration order,
@@ -160,6 +161,11 @@ public class CompoundTransformer {
                             entry.setValue(transformer.transform(entry.getValue()));
                         }
                         break;
+                    case FEED:
+                        for (Map.Entry<String, String> entry : feeds.entrySet()) {
+                            entry.setValue(transformer.transform(entry.getValue()));
+                        }
+                        break;
                     case CATALOG_ITEM:
                         for (Map.Entry<String, String> entry : catalogItems.entrySet()) {
                             entry.setValue(transformer.transform(entry.getValue()));
@@ -178,6 +184,8 @@ public class CompoundTransformer {
                 .locations(locations)
                 .policies(policies)
                 .enrichers(enrichers)
+                .feeds(feeds)
+                .catalogItems(catalogItems)
                 .build();
     }
     

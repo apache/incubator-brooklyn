@@ -38,11 +38,9 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, Location> locations = Maps.newLinkedHashMap();
     private final Map<String, Policy> policies = Maps.newLinkedHashMap();
     private final Map<String, Enricher> enrichers = Maps.newLinkedHashMap();
-<<<<<<< HEAD
-    private final Map<String, CatalogItem<?, ?>> catalogItems = Maps.newLinkedHashMap();
-=======
     private final Map<String, Feed> feeds = Maps.newLinkedHashMap();
->>>>>>> apache-gh/pr/108
+    private final Map<String, CatalogItem<?, ?>> catalogItems = Maps.newLinkedHashMap();
+    
     private final ClassLoader classLoader;
     private final RebindExceptionHandler exceptionHandler;
     
@@ -66,13 +64,13 @@ public class RebindContextImpl implements RebindContext {
     public void registerEnricher(String id, Enricher enricher) {
         enrichers.put(id, enricher);
     }
-
-    public void registerCatalogItem(String id, CatalogItem<?, ?> catalogItem) {
-        catalogItems.put(id, catalogItem);
-    }
     
     public void registerFeed(String id, Feed feed) {
         feeds.put(id, feed);
+    }
+    
+    public void registerCatalogItem(String id, CatalogItem<?, ?> catalogItem) {
+        catalogItems.put(id, catalogItem);
     }
     
     public void unregisterPolicy(Policy policy) {
@@ -85,6 +83,10 @@ public class RebindContextImpl implements RebindContext {
 
     public void unregisterFeed(Feed feed) {
         feeds.remove(feed.getId());
+    }
+
+    public void unregisterCatalogItem(CatalogItem<?,?> item) {
+        catalogItems.remove(item.getId());
     }
 
     @Override
@@ -142,13 +144,12 @@ public class RebindContextImpl implements RebindContext {
     protected Collection<Enricher> getEnrichers() {
         return enrichers.values();
     }
-
-<<<<<<< HEAD
-    protected Collection<CatalogItem<?, ?>> getCatalogItems() {
-        return catalogItems.values();
-=======
+    
     protected Collection<Feed> getFeeds() {
         return feeds.values();
->>>>>>> apache-gh/pr/108
+    }
+
+    protected Collection<CatalogItem<?, ?>> getCatalogItems() {
+        return catalogItems.values();
     }
 }

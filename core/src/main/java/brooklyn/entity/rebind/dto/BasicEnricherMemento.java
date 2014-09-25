@@ -59,6 +59,9 @@ public class BasicEnricherMemento extends AbstractMemento implements EnricherMem
     private Map<String,Object> config;
     private Map<String, Object> fields;
 
+    @SuppressWarnings("unused") // For deserialisation
+    private BasicEnricherMemento() {}
+
     // Trusts the builder to not mess around with mutability after calling build()
     protected BasicEnricherMemento(Builder builder) {
         super(builder);
