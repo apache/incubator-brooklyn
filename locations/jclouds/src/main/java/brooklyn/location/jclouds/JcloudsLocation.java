@@ -1531,8 +1531,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (isManaged()) {
             return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
                     .configure("displayName", vmHostname)
-                    .configure("address", address) 
-                    .configure("port", sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort()) 
+                    .configure("address", address)
+                    .configure("port", sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort())
                     .configure("user", getUser(setup))
                     // don't think "config" does anything
                     .configure(sshConfig)

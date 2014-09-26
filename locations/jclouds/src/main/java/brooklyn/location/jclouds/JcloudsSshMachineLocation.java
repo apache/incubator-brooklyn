@@ -299,8 +299,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Machine details for {} missing from Jclouds, using SSH test instead. name={}, version={}, " +
                                 "arch={}, ram={}, #cpus={}",
-                        new Object[]{this, name, version, architecture, ram, cpus}
-                );
+                        new Object[]{this, name, version, architecture, ram, cpus});
             }
             return super.getMachineDetails();
         }
