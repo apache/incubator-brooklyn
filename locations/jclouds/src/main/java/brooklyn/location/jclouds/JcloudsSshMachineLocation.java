@@ -25,6 +25,7 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -294,6 +295,15 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             }
             OsDetails osD = new BasicOsDetails(name.get(), architecture.get(), version.get());
             HardwareDetails hwD = new BasicHardwareDetails(cpus.get(), ram.get());
+            return new BasicMachineDetails(hwD, osD);
+        } else if ("false".equalsIgnoreCase(getConfig(JcloudsLocation.WAIT_FOR_SSHABLE))) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Machine details for {} missing from Jclouds, but skipping SSH test because waitForSshable=false. name={}, version={}, " +
+                        "arch={}, ram={}, #cpus={}",
+                        new Object[]{this, name, version, architecture, ram, cpus});
+            }
+            OsDetails osD = new BasicOsDetails(name.orNull(), architecture.orNull(), version.orNull());
+            HardwareDetails hwD = new BasicHardwareDetails(cpus.orNull(), ram.orNull());
             return new BasicMachineDetails(hwD, osD);
         } else {
             if (LOG.isTraceEnabled()) {
