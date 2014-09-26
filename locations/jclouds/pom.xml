@@ -159,6 +159,11 @@
             <artifactId>docker</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}.labs</groupId>
+            <artifactId>vcloud-director</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
 
         <!-- these two seem needed here to prevent Eclipse IDE from getting wrong version of logback-core -->
         <dependency>
