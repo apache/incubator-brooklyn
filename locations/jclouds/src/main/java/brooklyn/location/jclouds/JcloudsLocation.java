@@ -1135,7 +1135,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * Create the user immediately - executing ssh commands as required.
      */
     protected LoginCredentials createUser(ComputeService computeService, NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, ConfigBag config) {
-        UserCreation userCreation = createUserStatements(computeService.getImage(node.getImageId()), config);
+        Image image = (node.getImageId() != null) ? computeService.getImage(node.getImageId()) : null;
+        UserCreation userCreation = createUserStatements(image, config);
         
         if (!userCreation.statements.isEmpty()) {
             org.jclouds.compute.domain.OsFamily osFamily = node.getOperatingSystem().getFamily();
@@ -1260,7 +1261,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * @param config Configuration for creating the VM
      * @return       The commands required to create the user, along with the expected login credentials.
      */
-    protected UserCreation createUserStatements(Image image, ConfigBag config) {
+    protected UserCreation createUserStatements(@Nullable Image image, ConfigBag config) {
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
         //also, it may not be valid for first login (it is created before login e.g. on amazon, so valid there;
         //but not elsewhere, e.g. on rackspace).
@@ -1268,7 +1269,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         LoginCredentials loginCreds = null;
         String user = getUser(config);
         String explicitLoginUser = config.get(LOGIN_USER);
-        String loginUser = groovyTruth(explicitLoginUser) ? explicitLoginUser : (image.getDefaultCredentials() != null) ? image.getDefaultCredentials().identity : null;
+        String loginUser = groovyTruth(explicitLoginUser) ? explicitLoginUser : (image != null && image.getDefaultCredentials() != null) ? image.getDefaultCredentials().identity : null;
         Boolean dontCreateUser = config.get(DONT_CREATE_USER);
         Boolean grantUserSudo = config.get(GRANT_USER_SUDO);
         String publicKeyData = LocationConfigUtils.getPublicKeyData(config);
