@@ -144,6 +144,21 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         return jcloudsParent;
     }
     
+    @Override
+    public String getHostname() {
+        return node.getHostname();
+    }
+    
+    @Override
+    public Set<String> getPublicAddresses() {
+        return node.getPublicAddresses();
+    }
+    
+    @Override
+    public Set<String> getPrivateAddresses() {
+        return node.getPrivateAddresses();
+    }
+
     /** returns the hostname (or sometimes IP) for use by peers in the same subnet,
      * defaulting to public hostname if nothing special
      * <p>
