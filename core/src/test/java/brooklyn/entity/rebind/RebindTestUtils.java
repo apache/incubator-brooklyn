@@ -211,7 +211,7 @@ public class RebindTestUtils {
         public LocalManagementContext buildStarted() {
             LocalManagementContext unstarted = buildUnstarted();
             unstarted.getHighAvailabilityManager().disabled();
-            unstarted.getRebindManager().start();
+            unstarted.getRebindManager().startPersistence();
             return unstarted;
         }
 
@@ -256,7 +256,7 @@ public class RebindTestUtils {
             newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
         }
         if (newApps.isEmpty()) throw new IllegalStateException("Application could not be rebinded; serialization probably failed");
-        newManagementContext.getRebindManager().start();
+        newManagementContext.getRebindManager().startPersistence();
         return newApps;
     }
 
@@ -292,7 +292,7 @@ public class RebindTestUtils {
         } else {
             newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
         }
-        newManagementContext.getRebindManager().start();
+        newManagementContext.getRebindManager().startPersistence();
         return newApps;
     }
 

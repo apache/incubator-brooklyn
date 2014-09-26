@@ -51,6 +51,7 @@ import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
 
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -98,6 +99,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     // TODO Should we pass in a classloader on construction, so it can be passed to {@link RebindManager#rebind(ClassLoader)} 
     
+    @VisibleForTesting /* only used in tests currently */
     public static interface PromotionListener {
         public void promotingToMaster();
     }
@@ -602,8 +604,21 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     /** starts hot standby, in foreground; the caller is responsible for publishing health afterwards.
      * @return whether hot standby was possible (if not, errors should be stored elsewhere) */
     protected boolean attemptHotStandby() {
-        nodeState = ManagementNodeState.HOT_STANDBY;
-        return true;
+        try {
+            Preconditions.checkState(nodeStateTransitionComplete==false, "Must be in transitioning state to go into hot standby");
+            nodeState = ManagementNodeState.HOT_STANDBY;
+            
+            // XXX
+            managementContext.getRebindManager().startReadOnly();
+            
+            return true;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            // TODO maybe move to failure state?  and record problems somewhere else for investigation subsequently.
+            nodeState = ManagementNodeState.STANDBY;
+            LOG.warn("Unable to promote "+ownNodeId+" to hot standby: "+e, e);
+            return false;
+        }
     }
     
     /**

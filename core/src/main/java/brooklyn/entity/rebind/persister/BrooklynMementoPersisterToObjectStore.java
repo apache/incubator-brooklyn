@@ -102,6 +102,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     private final ListeningExecutorService executor;
 
     private volatile boolean running = true;
+    private volatile boolean shuttingDown = false;
 
     /**
      * Lock used on writes (checkpoint + delta) so that {@link #waitForWritesCompleted(Duration)} can block
@@ -136,20 +137,25 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     @Override
     public void stop(boolean graceful) {
-        running = false;
-        if (executor != null) {
-            if (graceful) {
-                // a very long timeout to ensure we don't lose state. 
-                // If persisting thousands of entities over slow network to Object Store, could take minutes.
-                executor.shutdown();
-                try {
-                    executor.awaitTermination(1, TimeUnit.HOURS);
-                } catch (InterruptedException e) {
-                    throw Exceptions.propagate(e);
+        shuttingDown = true;
+        try {
+            running = false;
+            if (executor != null) {
+                if (graceful) {
+                    // a very long timeout to ensure we don't lose state. 
+                    // If persisting thousands of entities over slow network to Object Store, could take minutes.
+                    executor.shutdown();
+                    try {
+                        executor.awaitTermination(1, TimeUnit.HOURS);
+                    } catch (InterruptedException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                } else {
+                    executor.shutdownNow();
                 }
-            } else {
-                executor.shutdownNow();
             }
+        } finally {
+            shuttingDown = false;
         }
     }
     
@@ -325,7 +331,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         public void visit(String contents, BrooklynObjectType type, String subPath) throws Exception;
     }
     protected void visitMemento(final Visitor visitor, final RebindExceptionHandler exceptionHandler) throws IOException {
-        if (!running) {
+        if (!running && !shuttingDown) {
             throw new IllegalStateException("Persister not running; cannot load memento manifest from " + objectStore.getSummaryName());
         }
 
@@ -425,7 +431,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     @Beta
     public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
-        if (!running) {
+        if (!running && !shuttingDown) {
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
             return;
         }
@@ -480,7 +486,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     @Override
     public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
-        if (!running) {
+        if (!running && !shuttingDown) {
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
             return;
         }
@@ -500,7 +506,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     @Override
     public void delta(Delta delta, PersistenceExceptionHandler exceptionHandler) {
-        if (!running) {
+        if (!running && !shuttingDown) {
             if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointed delta of memento, because not running");
             return;
         }

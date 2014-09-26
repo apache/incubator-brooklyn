@@ -579,7 +579,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         RebindTestUtils.waitForPersisted(origManagementContext);
         newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
-        newManagementContext.getRebindManager().start();
+        newManagementContext.getRebindManager().startPersistence();
         
         assertEquals(newApps.size(), 0, "apps="+newApps);
         assertEquals(newManagementContext.getApplications().size(), 0, "apps="+newManagementContext.getApplications());

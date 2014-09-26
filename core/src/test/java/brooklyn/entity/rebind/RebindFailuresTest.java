@@ -160,7 +160,7 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         RebindFailureMode danglingRefFailureMode = RebindManager.RebindFailureMode.CONTINUE;
         RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.FAIL_AT_END;
         
-        origManagementContext.getRebindManager().stop();
+        origManagementContext.getRebindManager().stopPersistence();
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
         File entitiesDir = Os.mkdirs(new File(mementoDir, "entities"));
         Files.write("invalid text", new File(entitiesDir, "mycorruptfile"), Charsets.UTF_8);

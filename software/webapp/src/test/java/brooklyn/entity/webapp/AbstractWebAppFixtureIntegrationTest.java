@@ -227,7 +227,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
             newManagementContext = new LocalManagementContextForTests();
             newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
             newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
-            newManagementContext.getRebindManager().start();
+            newManagementContext.getRebindManager().startPersistence();
             SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(tokill.getId());
             entity2.stop();
         } finally {

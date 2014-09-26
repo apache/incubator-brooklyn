@@ -36,7 +36,6 @@ import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
-import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
@@ -375,8 +374,8 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (allExceptions.isEmpty()) {
             return; // no errors
         } else {
-            CompoundRuntimeException compoundException = new CompoundRuntimeException("Problem"+(allExceptions.size() == 1 ? "" : "s")+" rebinding", allExceptions);
-            LOG.info("RebindManager failed (throwing): "+compoundException.toString());
+            RuntimeException compoundException = Exceptions.create("Failure rebinding", allExceptions);
+            LOG.debug(compoundException.getMessage()+" (rethrowing)");
             throw compoundException;
         }
     }

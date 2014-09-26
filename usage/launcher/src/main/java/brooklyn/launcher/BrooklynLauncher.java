@@ -790,7 +790,7 @@ public class BrooklynLauncher {
             throw new FatalRuntimeException("Error rebinding to persisted state: "+
                 Exceptions.collapseText(e), e);
         }
-        rebindManager.start();
+        rebindManager.startPersistence();
     }
 
     protected void createApps() {

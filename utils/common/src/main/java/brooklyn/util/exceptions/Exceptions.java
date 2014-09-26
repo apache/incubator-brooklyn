@@ -196,25 +196,31 @@ public class Exceptions {
         return t2.toString();
     }
 
-    public static RuntimeException propagate(String prefix, Collection<? extends Throwable> exceptions) {
-        if (exceptions.size()==1)
-            throw new CompoundRuntimeException(prefix + ": " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
-        if (exceptions.isEmpty())
-            throw new CompoundRuntimeException(prefix, exceptions);
-        throw new CompoundRuntimeException(prefix + ", including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
-    }
 
     public static RuntimeException propagate(Collection<? extends Throwable> exceptions) {
         throw propagate(create(exceptions));
     }
+    public static RuntimeException propagate(String prefix, Collection<? extends Throwable> exceptions) {
+        throw propagate(create(prefix, exceptions));
+    }
 
     /** creates the given exception, but without propagating it, for use when caller will be wrapping */
     public static Throwable create(Collection<? extends Throwable> exceptions) {
-        if (exceptions.size()==1)
-            return exceptions.iterator().next();
-        if (exceptions.isEmpty())
-            return new CompoundRuntimeException("(empty compound exception)", exceptions);
-        return new CompoundRuntimeException(exceptions.size()+" errors, including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
+        return create(null, exceptions);
+    }
+    /** creates the given exception, but without propagating it, for use when caller will be wrapping */
+    public static RuntimeException create(String prefix, Collection<? extends Throwable> exceptions) {
+        if (exceptions.size()==1) {
+            Throwable e = exceptions.iterator().next();
+            if (Strings.isBlank(prefix)) return new PropagatedRuntimeException(e);
+            return new PropagatedRuntimeException(prefix + ": " + Exceptions.collapseText(e), e);
+        }
+        if (exceptions.isEmpty()) {
+            if (Strings.isBlank(prefix)) return new CompoundRuntimeException("(empty compound exception)", exceptions);
+            return new CompoundRuntimeException(prefix+": (empty compound exception)", exceptions);
+        }
+        if (Strings.isBlank(prefix)) return new CompoundRuntimeException(exceptions.size()+" errors, including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
+        return new CompoundRuntimeException(prefix+", "+exceptions.size()+" errors including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
     }
 
 }

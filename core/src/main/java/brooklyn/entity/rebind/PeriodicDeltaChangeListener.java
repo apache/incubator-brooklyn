@@ -117,11 +117,17 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final Semaphore persistingMutex = new Semaphore(1);
     
+    /** @deprecated since 0.7.0 pass in a {@link Duration} */
+    @Deprecated
     public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, long periodMillis) {
+        this(executionManager, persister, exceptionHandler, Duration.of(periodMillis, TimeUnit.MILLISECONDS));
+    }
+    
+    public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, Duration period) {
         this.executionManager = executionManager;
         this.persister = persister;
         this.exceptionHandler = exceptionHandler;
-        this.period = Duration.of(periodMillis, TimeUnit.MILLISECONDS);
+        this.period = period;
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
         this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
@@ -130,6 +136,10 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @SuppressWarnings("unchecked")
     public void start() {
+        if (running || (scheduledTask!=null && !scheduledTask.isDone())) {
+            LOG.warn("Request to start "+this+" when already running - "+scheduledTask+"; ignoring");
+            return;
+        }
         running = true;
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {

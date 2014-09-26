@@ -129,7 +129,7 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         
         ClassLoader classLoader = newManagementContext.getCatalog().getRootClassLoader();
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
-        newManagementContext.getRebindManager().start();
+        newManagementContext.getRebindManager().startPersistence();
         return (StartableApplication) newApps.get(0);
     }
 
