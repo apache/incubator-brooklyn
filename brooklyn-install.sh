@@ -275,11 +275,6 @@ ssh ${SSH_OPTS} ${USER}@${HOST} "cat > .brooklyn/catalog.xml" <<EOF
         <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/JBoss_by_Red_Hat.png</iconUrl>
     </template>
 
-    <template type="brooklyn.demo.NodeJsTodoApplication" name="NodeJs TODO application">
-        <description>Deploys a Nodejs TODO application with a Redis back end</description>
-        <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/nodejs-logo.png</iconUrl>
-    </template>
-
     <template type="brooklyn.demo.SimpleCassandraCluster" name="Demo Cassandra Cluster">
         <description>Deploys a demonstration Cassandra cluster</description>
         <iconUrl>http://downloads.cloudsoftcorp.com/brooklyn/catalog/logos/cassandra-sq-icon.jpg</iconUrl>
