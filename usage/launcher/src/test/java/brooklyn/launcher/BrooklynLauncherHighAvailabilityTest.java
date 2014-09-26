@@ -130,7 +130,8 @@ public class BrooklynLauncherHighAvailabilityTest {
         ManagementContext secondaryManagementContext = secondary.getServerDetails().getManagementContext();
         log.info("started mgmt secondary "+secondaryManagementContext);
         
-        assertNoApps(secondary.getServerDetails().getManagementContext());
+        // TODO can assert it sees the apps read only
+//        assertNoApps(secondary.getServerDetails().getManagementContext());
 
         // Terminate primary; expect secondary to take over
         if (stopGracefully) {
@@ -143,11 +144,11 @@ public class BrooklynLauncherHighAvailabilityTest {
         
         assertOnlyAppEventually(secondaryManagementContext, TestApplication.class);
         
-        // Start tertiary (will come up as standby)
+        // Start tertiary (force up as standby)
         tertiary = BrooklynLauncher.newInstance();
         tertiary.webconsole(false)
                 .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
-                .highAvailabilityMode(HighAvailabilityMode.AUTO)
+                .highAvailabilityMode(HighAvailabilityMode.STANDBY)
                 .persistMode(PersistMode.AUTO)
                 .persistenceDir(persistenceDir)
                 .persistPeriod(Duration.millis(10))

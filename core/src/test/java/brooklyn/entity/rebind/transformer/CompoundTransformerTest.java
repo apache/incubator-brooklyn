@@ -141,6 +141,7 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
                 objectStore,
                 ((ManagementContextInternal)origManagementContext).getBrooklynProperties(),
                 origManagementContext.getCatalog().getRootClassLoader());
+        persister.enableWriteAccess();
 
         PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
         persister.checkpoint(rawData, exceptionHandler);

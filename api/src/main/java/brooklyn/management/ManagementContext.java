@@ -98,6 +98,12 @@ public interface ManagementContext {
      * to submit tasks and to observe what tasks are occurring
      */
     ExecutionManager getExecutionManager();
+    
+    /** 
+     * Returns an {@link ExecutionContext} within the {@link ExecutionManager} for tasks
+     * associated to the Brooklyn node's operation (not any entities). 
+     **/
+    ExecutionContext getServerExecutionContext();
 
     /**
      * Returns the {@link EntityDriverManager} entities can use to create drivers. This

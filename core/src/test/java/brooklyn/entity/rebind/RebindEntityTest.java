@@ -61,6 +61,7 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationConfigTest.MyLocation;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.Asserts;
@@ -338,7 +339,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         Thread thread = new Thread() {
             public void run() {
                 try {
-                    newManagementContext.getRebindManager().rebind(classLoader);
+                    newManagementContext.getRebindManager().rebind(classLoader, null, ManagementNodeState.MASTER);
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
@@ -578,7 +579,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
 
         RebindTestUtils.waitForPersisted(origManagementContext);
         newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, null, ManagementNodeState.MASTER);
         newManagementContext.getRebindManager().startPersistence();
         
         assertEquals(newApps.size(), 0, "apps="+newApps);

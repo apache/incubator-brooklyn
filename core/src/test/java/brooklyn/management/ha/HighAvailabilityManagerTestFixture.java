@@ -91,7 +91,7 @@ public abstract class HighAvailabilityManagerTestFixture {
                 managementContext.getBrooklynProperties(), 
                 classLoader);
         managementContext.getRebindManager().setPersister(persisterObj, PersistenceExceptionHandlerImpl.builder().build());
-        manager = new HighAvailabilityManagerImpl(managementContext)
+        manager = ((HighAvailabilityManagerImpl)managementContext.getHighAvailabilityManager())
                 .setPollPeriod(getPollPeriod())
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
                 .setPromotionListener(promotionListener)

@@ -45,6 +45,7 @@ import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
@@ -249,12 +250,8 @@ public class RebindTestUtils {
     public static Collection<Application> rebindAll(LocalManagementContext newManagementContext, ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws Exception {
         LOG.info("Rebinding app");
 
-        List<Application> newApps;
-        if (exceptionHandler == null) {
-            newApps = newManagementContext.getRebindManager().rebind(classLoader);
-        } else {
-            newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
-        }
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler, ManagementNodeState.MASTER);
+        
         if (newApps.isEmpty()) throw new IllegalStateException("Application could not be rebinded; serialization probably failed");
         newManagementContext.getRebindManager().startPersistence();
         return newApps;
@@ -286,12 +283,7 @@ public class RebindTestUtils {
                 ((ManagementContextInternal)newManagementContext).getBrooklynProperties(),
                 classLoader);
         newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
-        List<Application> newApps;
-        if (exceptionHandler == null) {
-            newApps = newManagementContext.getRebindManager().rebind(classLoader);
-        } else {
-            newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler);
-        }
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler, ManagementNodeState.MASTER);
         newManagementContext.getRebindManager().startPersistence();
         return newApps;
     }

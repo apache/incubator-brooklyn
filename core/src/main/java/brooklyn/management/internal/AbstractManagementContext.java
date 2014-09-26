@@ -212,7 +212,13 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         // BEC is a thin wrapper around EM so fine to create a new one here
         return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
     }
-    
+
+    @Override
+    public ExecutionContext getServerExecutionContext() {
+        // BEC is a thin wrapper around EM so fine to create a new one here
+        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.BROOKLYN_SERVER_TASK_TAG), getExecutionManager());
+    }
+
     @Override
     public SubscriptionContext getSubscriptionContext(Entity e) {
         // BSC is a thin wrapper around SM so fine to create a new one here

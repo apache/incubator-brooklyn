@@ -81,7 +81,7 @@ public class HotStandbyTest {
                 .setPollPeriod(Duration.PRACTICALLY_FOREVER)
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
                 .setPersister(persister);
-            log.info("Created "+nodeName+" "+ownNodeId+" - RM "+mgmt.getRebindManager());
+            log.info("Created "+nodeName+" "+ownNodeId);
         }
         
         public void tearDown() throws Exception {

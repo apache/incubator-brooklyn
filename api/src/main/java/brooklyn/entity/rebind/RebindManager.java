@@ -57,15 +57,14 @@ public interface RebindManager {
     @VisibleForTesting
     public BrooklynMementoPersister getPersister();
 
-    /**
-     * @deprecated since 0.7; use {@link #rebind(ClassLoader)}
-     */
-    @Deprecated
+    /** @deprecated since 0.7; use {@link #rebind(ClassLoader, RebindExceptionHandler, ManagementNodeState)} */ @Deprecated
     public List<Application> rebind() throws IOException;
     
+    /** @deprecated since 0.7; use {@link #rebind(ClassLoader, RebindExceptionHandler, ManagementNodeState)} */ @Deprecated
     public List<Application> rebind(ClassLoader classLoader) throws IOException;
-
+    /** @deprecated since 0.7; use {@link #rebind(ClassLoader, RebindExceptionHandler, ManagementNodeState)} */ @Deprecated
     public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws IOException;
+    public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode) throws IOException;
 
     public BrooklynMementoRawData retrieveMementoRawData() throws IOException;
 

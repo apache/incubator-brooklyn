@@ -42,6 +42,7 @@ import brooklyn.util.text.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+/** Stateful handler, meant for a single rebind pass */
 public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(RebindExceptionHandlerImpl.class);
@@ -61,6 +62,9 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
     protected final Set<Exception> loadPolicyFailures = Sets.newConcurrentHashSet();
     protected final List<Exception> exceptions = Collections.synchronizedList(Lists.<Exception>newArrayList());
+    
+    protected boolean started = false;
+    protected boolean done = false;
     
     public static Builder builder() {
         return new Builder();
@@ -98,6 +102,16 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         this.rebindFailureMode = checkNotNull(builder.rebindFailureMode, "rebindFailureMode");
         this.addPolicyFailureMode = checkNotNull(builder.addPolicyFailureMode, "addPolicyFailureMode");
         this.loadPolicyFailureMode = checkNotNull(builder.deserializePolicyFailureMode, "deserializePolicyFailureMode");
+    }
+
+    public void onStart() {
+        if (done) {
+            throw new IllegalStateException(this+" has already been used on a finished run");
+        }
+        if (started) {
+            throw new IllegalStateException(this+" has already been used on a started run");
+        }
+        started = true;
     }
     
     @Override
@@ -329,6 +343,9 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
 
     @Override
     public RuntimeException onFailed(Exception e) {
+        if (done) 
+            throw Exceptions.propagate(e);
+        
         onDoneImpl(e);
         throw new IllegalStateException("Rebind failed", e); // should have thrown exception above
     }
@@ -338,9 +355,17 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         
         List<Exception> allExceptions = Lists.newArrayList();
         
+        if (done) {
+            allExceptions.add(new IllegalStateException(this+" has already been informed of rebind done"));
+        }
+        done = true;
+        if (!started) {
+            allExceptions.add(new IllegalStateException(this+" was not informed of start of rebind run"));
+        }
         if (e != null) {
             allExceptions.add(e);
         }
+        
         if (addPolicyFailureMode != RebindManager.RebindFailureMode.CONTINUE) {
             allExceptions.addAll(addPolicyFailures);
         }

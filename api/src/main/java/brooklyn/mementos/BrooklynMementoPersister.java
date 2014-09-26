@@ -64,6 +64,9 @@ public interface BrooklynMementoPersister {
 
     void delta(Delta delta, PersistenceExceptionHandler exceptionHandler);
 
+    void enableWriteAccess();
+    void disableWriteAccess(boolean graceful);
+    /** permanently shuts down all access to the remote store */
     void stop(boolean graceful);
 
     @VisibleForTesting

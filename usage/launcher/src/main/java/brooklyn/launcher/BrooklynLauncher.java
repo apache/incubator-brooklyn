@@ -19,7 +19,6 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import io.brooklyn.camp.CampPlatform;
@@ -73,6 +72,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
@@ -783,7 +783,7 @@ public class BrooklynLauncher {
 
         ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
         try {
-            rebindManager.rebind(classLoader);
+            rebindManager.rebind(classLoader, null, ManagementNodeState.MASTER);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             LOG.debug("Error rebinding to persisted state (rethrowing): "+e, e);

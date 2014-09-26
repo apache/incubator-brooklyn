@@ -101,7 +101,7 @@ public class HighAvailabilityManagerSplitBrainTest {
             ((ManagementPlaneSyncRecordPersisterToObjectStore)persister).allowRemoteTimestampInMemento();
             BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(objectStore, mgmt.getBrooklynProperties(), classLoader);
             mgmt.getRebindManager().setPersister(persisterObj, PersistenceExceptionHandlerImpl.builder().build());
-            ha = new HighAvailabilityManagerImpl(mgmt)
+            ha = ((HighAvailabilityManagerImpl)mgmt.getHighAvailabilityManager())
                 .setPollPeriod(Duration.PRACTICALLY_FOREVER)
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
                 .setLocalTicker(ticker)
@@ -270,9 +270,9 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);
         assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time2);
 
-        // and no entities at n1
-        assertEquals(n1.mgmt.getApplications().size(), 0);
+        // right number of entities at n2; n1 may or may not depending whether hot standby is default
         assertEquals(n2.mgmt.getApplications().size(), 1);
+//        assertEquals(n1.mgmt.getApplications().size(), 0);
     }
     
     @Test(invocationCount=50, groups="Integration")

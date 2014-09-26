@@ -20,6 +20,7 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
@@ -229,6 +230,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
         checkInitialManagementContextReal();
         return initialManagementContext.getExecutionContext(entity);
+    }
+
+    @Override
+    public ExecutionContext getServerExecutionContext() {
+        return initialManagementContext.getServerExecutionContext();
     }
 
     // TODO the methods below should delegate to the application?
@@ -443,6 +449,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
         @Override
         public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        
+        @Override
+        public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode) throws IOException {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
 

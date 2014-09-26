@@ -37,6 +37,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -44,6 +45,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
@@ -93,7 +95,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
     
-    private final ExecutionManager executionManager;
+    private final ExecutionContext executionContext;
     
     private final BrooklynMementoPersister persister;
 
@@ -117,14 +119,14 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final Semaphore persistingMutex = new Semaphore(1);
     
-    /** @deprecated since 0.7.0 pass in a {@link Duration} */
+    /** @deprecated since 0.7.0 pass in an {@link ExecutionContext} and a {@link Duration} */
     @Deprecated
     public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, long periodMillis) {
-        this(executionManager, persister, exceptionHandler, Duration.of(periodMillis, TimeUnit.MILLISECONDS));
+        this(new BasicExecutionContext(executionManager), persister, exceptionHandler, Duration.of(periodMillis, TimeUnit.MILLISECONDS));
     }
     
-    public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, Duration period) {
-        this.executionManager = executionManager;
+    public PeriodicDeltaChangeListener(ExecutionContext executionContext, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, Duration period) {
+        this.executionContext = executionContext;
         this.persister = persister;
         this.exceptionHandler = exceptionHandler;
         this.period = period;
@@ -165,7 +167,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     }});
             }
         };
-        scheduledTask = (ScheduledTask) executionManager.submit(new ScheduledTask(taskFactory).period(period));
+        scheduledTask = (ScheduledTask) executionContext.submit(new ScheduledTask(taskFactory).period(period));
     }
     
     void stop() {
@@ -223,7 +225,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
      * Whether we have been stopped, in which case will not persist or store anything.
      */
     private boolean isStopped() {
-        return stopped || executionManager.isShutdown();
+        return stopped || executionContext.isShutdown();
     }
     
     private void addReferencedObjects(DeltaCollector deltaCollector) {

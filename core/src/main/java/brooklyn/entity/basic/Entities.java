@@ -1007,7 +1007,7 @@ public class Entities {
     @Beta
     public static ProcessTaskWrapper<Integer> shell(ManagementContext mgmt, String command) {
         ProcessTaskWrapper<Integer> t = SystemTasks.exec(command).newTask();
-        mgmt.getExecutionManager().submit(t).getUnchecked();
+        mgmt.getServerExecutionContext().submit(t).getUnchecked();
         System.out.println(t.getStdout());
         System.err.println(t.getStderr());
         return t;

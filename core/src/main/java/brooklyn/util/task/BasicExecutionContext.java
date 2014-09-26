@@ -190,7 +190,12 @@ public class BasicExecutionContext extends AbstractExecutionContext {
     private void registerPerThreadExecutionContext() { perThreadExecutionContext.set(this); }
 
     private void clearPerThreadExecutionContext() { perThreadExecutionContext.remove(); }
-    
+
+    @Override
+    public boolean isShutdown() {
+        return getExecutionManager().isShutdown();
+    }
+
     @Override
     public String toString() {
         return super.toString()+"("+tags+")";

@@ -74,7 +74,7 @@ import com.google.common.collect.Iterables;
  * Promotion to master involves:
  * <ol>
  *   <li>notifying the other management-nodes that it is now master
- *   <li>calling {@link RebindManager#rebind()} to read all persisted entity state, and thus reconstitute the entities.
+ *   <li>calling {@link RebindManager#rebind(ClassLoader, brooklyn.entity.rebind.RebindExceptionHandler, ManagementNodeState)} to read all persisted entity state, and thus reconstitute the entities.
  * </ol>
  * <p>
  * Future improvements in this area will include brooklyn-managing-brooklyn to decide + promote
@@ -211,6 +211,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         // TODO Small race in that we first check, and then we'll do checkMaster() on first poll,
         // so another node could have already become master or terminated in that window.
         ManagementNodeSyncRecord existingMaster = hasHealthyMaster();
+        
+        // catch error in some tests where mgmt context has a different mgmt context
+        if (managementContext.getHighAvailabilityManager()!=this)
+            throw new IllegalStateException("Cannot start an HA manager on a management context with a different HA manager!");
         
         switch (startMode) {
         case AUTO:
@@ -531,10 +535,16 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 LOG.warn("Problem in promption-listener (continuing)", e);
             }
         }
+        boolean wasHotStandby = nodeState==ManagementNodeState.HOT_STANDBY;
         nodeState = ManagementNodeState.MASTER;
         publishPromotionToMaster();
         try {
-            managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader());
+            if (wasHotStandby) {
+                // could just promote the standby items; but for now we stop the old read-only and re-load them, to make sure nothing has been missed
+                // TODO ideally there'd be an incremental rebind as well as an incremental persist
+                managementContext.getRebindManager().stopReadOnly();
+            }
+            managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader(), null, nodeState);
         } catch (Exception e) {
             LOG.error("Management node enountered problem during rebind when promoting self to master; demoting to FAILED and rethrowing: "+e);
             demoteToFailed();
@@ -568,7 +578,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     protected void onDemotionStopTasks() {
-        managementContext.getRebindManager().stop();
+        managementContext.getRebindManager().stopPersistence();
         for (Application app: managementContext.getApplications())
             Entities.unmanage(app);
         // let's try forcibly interrupting tasks on managed entities
