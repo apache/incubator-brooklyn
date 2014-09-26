@@ -151,18 +151,11 @@ public class Tasks {
      * their values to the given type. For example, the following will return a list containing a map with "1"="true":
      * 
      *   {@code Object result = resolveDeepValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
-     * 
-     * This differs from {@link #resolveValue(Object, Class, ExecutionContext, String)} mainly in its 
-     * use of generics and its return type. Even though the {@link #resolveValue(Object, Class, ExecutionContext, String)}
-     * method does "deep" conversion of futures contained within iterables/maps, the return type implies
-     * that it is the top-level object that should be coerced. For example, the following will try to return a String, 
-     * when in fact it is a map, giving a {@link ClassCastException}.
-     * 
-     *   {@code String result = resolveValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)}
-     *   
-     * The one other difference of note is that this forces the resolution to go deep when the type is vague,
-     * e.g. if the requested type is an Object, {@link #resolveValue(Object, Class, ExecutionContext, String)}
-     * will decide that it matches a Map and not recurse on it, whereas this will recurse on it.
+     *
+     * To perform a deep conversion of futures contained within Iterables or Maps without coercion of each element,
+     * the type should normally be Object, not the type of the collection. This differs from
+     * {@link #resolveValue(Object, Class, ExecutionContext, String)} which will accept Map and Iterable
+     * as the required type.
      */
     public static <T> T resolveDeepValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
         return new ValueResolver<T>(v, type).context(exec).deep(true).description(contextMessage).get();
