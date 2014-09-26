@@ -19,7 +19,7 @@
 package brooklyn.util.guava;
 
 import java.io.Serializable;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -71,14 +71,14 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         return new Present<T>(value);
     }
 
-    /** creates an instance wrapping a {@link WeakReference}, so it might go absent later on */
-    public static <T> Maybe<T> weak(T value) {
-        return weakThen(value, null);
+    /** creates an instance wrapping a {@link SoftReference}, so it might go absent later on */
+    public static <T> Maybe<T> soft(T value) {
+        return softThen(value, null);
     }
-    /** creates an instance wrapping a {@link WeakReference}, using the second item given if lost */
-    public static <T> Maybe<T> weakThen(T value, Maybe<T> ifEmpty) {
+    /** creates an instance wrapping a {@link SoftReference}, using the second item given if lost */
+    public static <T> Maybe<T> softThen(T value, Maybe<T> ifEmpty) {
         if (value==null) return of((T)null);
-        return new WeaklyPresent<T>(value).usingAfterExpiry(ifEmpty);
+        return new SoftlyPresent<T>(value).usingAfterExpiry(ifEmpty);
     }
 
     /** like {@link Optional#fromNullable(Object)}, returns absent if the argument is null */
@@ -205,18 +205,18 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         }
     }
 
-    public static class WeaklyPresent<T> extends Maybe<T> {
+    public static class SoftlyPresent<T> extends Maybe<T> {
         private static final long serialVersionUID = 436799990500336015L;
-        private final WeakReference<T> value;
+        private final SoftReference<T> value;
         private Maybe<T> defaultValue;
-        protected WeaklyPresent(@Nonnull T value) {
-            this.value = new WeakReference<T>(value);
+        protected SoftlyPresent(@Nonnull T value) {
+            this.value = new SoftReference<T>(value);
         }
         @Override
         public T get() {
             T result = value.get();
             if (result==null) {
-                if (defaultValue==null) throw new IllegalStateException("Weakly present item has been GC'd");
+                if (defaultValue==null) throw new IllegalStateException("Softly present item has been GC'd");
                 return defaultValue.get();
             }
             return result;
@@ -228,7 +228,7 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         public Maybe<T> solidify() {
             return Maybe.fromNullable(value.get());
         }
-        WeaklyPresent<T> usingAfterExpiry(Maybe<T> defaultValue) {
+        SoftlyPresent<T> usingAfterExpiry(Maybe<T> defaultValue) {
             this.defaultValue = defaultValue;
             return this;
         }

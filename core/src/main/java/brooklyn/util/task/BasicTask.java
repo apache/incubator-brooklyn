@@ -865,7 +865,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void setSubmittedByTask(Task<?> task) {
-        submittedByTask = (Maybe)Maybe.weakThen((Task)task, (Maybe)Maybe.of(BasicTask.newGoneTaskFor(task)));
+        submittedByTask = (Maybe)Maybe.softThen((Task)task, (Maybe)Maybe.of(BasicTask.newGoneTaskFor(task)));
     }
     
     @Override

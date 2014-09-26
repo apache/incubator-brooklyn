@@ -208,8 +208,8 @@ public class BrooklynTaskTags extends TaskTags {
         return new WrappedStream(streamType, stream);
     }
     /** creates a tag suitable for marking a stream available on a task, but which might be GC'd */
-    public static WrappedStream tagForStreamWeak(String streamType, ByteArrayOutputStream stream) {
-        Maybe<ByteArrayOutputStream> weakStream = Maybe.weakThen(stream, 
+    public static WrappedStream tagForStreamSoft(String streamType, ByteArrayOutputStream stream) {
+        Maybe<ByteArrayOutputStream> weakStream = Maybe.softThen(stream, 
             Maybe.of(Streams.byteArrayOfString("<contents-garbage-collected>")));
         return new WrappedStream(streamType,
             Suppliers.compose(Functions.toStringFunction(), weakStream),
