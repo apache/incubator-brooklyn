@@ -55,9 +55,10 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.stream.InputStreamSupplier;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -68,7 +69,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
 
@@ -267,10 +267,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
         InputStream contents = acquire(new GetFileAction(pathAndFileOnRemoteServer));
         try {
-            Files.copy(InputStreamSupplier.of(contents), localFile);
+            FileUtil.copyTo(contents, localFile);
             return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
+        } finally {
+            Streams.closeQuietly(contents);
         }
     }
 

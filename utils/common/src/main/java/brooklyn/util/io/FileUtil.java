@@ -20,6 +20,8 @@ package brooklyn.util.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -145,6 +147,20 @@ public class FileUtil {
             }
             String stdout = new String(out.toByteArray());
             return (stdout.trim().isEmpty() ? Maybe.<String>absent("empty output") : Maybe.of(stdout.split("\\s")[0]));
+        }
+    }
+
+    // guava's Files.copy(InputStreamSupplier, File) is deprecated, and will be deleted in guava 18.0
+    @Beta
+    public static void copyTo(InputStream in, File dest) {
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(dest);
+            Streams.copy(in, out);
+        } catch (FileNotFoundException e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            Streams.closeQuietly(out);
         }
     }
     

@@ -35,6 +35,7 @@ import java.util.zip.ZipOutputStream;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveUtils.ArchiveType;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.os.Os;
 
 import com.google.common.annotations.Beta;
@@ -413,9 +414,7 @@ public class ArchiveBuilder {
         JarEntry entry = new JarEntry(name);
         entry.setTime(source.lastModified());
         target.putNextEntry(entry);
-        ByteStreams.copy(Files.newInputStreamSupplier(source), target);
+        Files.asByteSource(source).copyTo(target);
         target.closeEntry();
     }
-    
-
 }
