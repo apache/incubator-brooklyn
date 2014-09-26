@@ -99,7 +99,7 @@ public abstract class HighAvailabilityManagerTestFixture {
                 .setRemoteTicker(getRemoteTicker())
                 .setPersister(persister);
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-            .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+            .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
             .build());
 
     }
@@ -142,7 +142,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     // next poll fixes it.
     public void testPromotes() throws Exception {
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
                 .node(newManagerMemento("node1", ManagementNodeState.MASTER))
                 .setMaster("node1")
                 .build());
@@ -160,7 +160,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     @Test(groups="Integration") // because one second wait in succeedsContinually
     public void testDoesNotPromoteIfMasterTimeoutNotExpired() throws Exception {
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
                 .node(newManagerMemento("node1", ManagementNodeState.MASTER))
                 .setMaster("node1")
                 .build());
@@ -211,7 +211,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     @Test
     public void testGetManagementPlaneSyncStateInfersTimedOutNodeAsFailed() throws Exception {
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
                 .node(newManagerMemento("node1", ManagementNodeState.MASTER))
                 .setMaster("node1")
                 .build());
@@ -220,7 +220,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         
         ManagementPlaneSyncRecord state = manager.getManagementPlaneSyncState();
         assertEquals(state.getManagementNodes().get("node1").getStatus(), ManagementNodeState.MASTER);
-        assertEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.STANDBY);
+        assertEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
         
         // Simulate passage of time; ticker used by this HA-manager so it will "correctly" publish
         // its own heartbeat with the new time; but node1's record is now out-of-date.

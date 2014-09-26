@@ -20,6 +20,7 @@ package brooklyn.management.ha;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -201,7 +202,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         log.info(n2+" HA: "+memento2);
         assertEquals(memento2.getMasterNodeId(), n1.ownNodeId);
         assertEquals(memento2.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
-        assertEquals(memento2.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.STANDBY);
+        assertEquals(memento2.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
         assertEquals(memento2.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time0);
         assertEquals(memento2.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time0);
         
@@ -254,7 +255,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         log.info(n1+" HA now: "+memento1b);
         
         // n1 comes back and demotes himself 
-        assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.STANDBY);
+        assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
         assertEquals(memento1b.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
         assertEquals(memento1b.getMasterNodeId(), n2.ownNodeId);
         assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);
@@ -263,7 +264,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         // n2 now sees itself as master, with n1 in standby again
         ManagementPlaneSyncRecord memento2c = n2.ha.getManagementPlaneSyncState();
         log.info(n2+" HA now: "+memento2c);
-        assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.STANDBY);
+        assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
         assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
         assertEquals(memento2c.getMasterNodeId(), n2.ownNodeId);
         assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);
@@ -314,28 +315,33 @@ public class HighAvailabilityManagerSplitBrainTest {
             Asserts.succeedsEventually(new Runnable() {
                 @Override public void run() {
                     ManagementPlaneSyncRecord memento = nodes.get(0).ha.getManagementPlaneSyncState();
-                    int masters=0, standbys=0, savedMasters=0, savedStandbys=0;
+                    List<ManagementNodeState> counts = MutableList.of(), savedCounts = MutableList.of();
                     for (HaMgmtNode n: nodes) {
-                        if (n.ha.getNodeState()==ManagementNodeState.MASTER) masters++;
-                        if (n.ha.getNodeState()==ManagementNodeState.STANDBY) standbys++;
+                        counts.add(n.ha.getNodeState());
                         ManagementNodeSyncRecord m = memento.getManagementNodes().get(n.ownNodeId);
                         if (m!=null) {
-                            if (m.getStatus()==ManagementNodeState.MASTER) savedMasters++;
-                            if (m.getStatus()==ManagementNodeState.STANDBY) savedStandbys++;
+                            savedCounts.add(m.getStatus());
                         }
                     }
-                    log.info("while starting "+nodes.size()+" nodes: "+masters+" M + "+standbys+" zzz; "
+                    log.info("while starting "+nodes.size()+" nodes: "
+                        +Collections.frequency(counts, ManagementNodeState.MASTER)+" M + "
+                        +Collections.frequency(counts, ManagementNodeState.HOT_STANDBY)+" hot + "
+                        +Collections.frequency(counts, ManagementNodeState.STANDBY)+" warm + "
+                        +Collections.frequency(counts, ManagementNodeState.INITIALIZING)+" init; "
                         + memento.getManagementNodes().size()+" saved, "
-                        + memento.getMasterNodeId()+" master, "+savedMasters+" M + "+savedStandbys+" zzz");
+                        +Collections.frequency(savedCounts, ManagementNodeState.MASTER)+" M + "
+                        +Collections.frequency(savedCounts, ManagementNodeState.HOT_STANDBY)+" hot + "
+                        +Collections.frequency(savedCounts, ManagementNodeState.STANDBY)+" warm + "
+                        +Collections.frequency(savedCounts, ManagementNodeState.INITIALIZING)+" init");
 
                     if (timer.isRunning() && Duration.of(timer).compareTo(Duration.TEN_SECONDS)>0) {
                         log.warn("we seem to have a problem stabilizing");  //handy place to set a suspend-VM breakpoint!
                         timer.stop();
                     }
-                    assertEquals(masters, 1);
-                    assertEquals(standbys, nodes.size()-1);
-                    assertEquals(savedMasters, 1);
-                    assertEquals(savedStandbys, nodes.size()-1);
+                    assertEquals(Collections.frequency(counts, ManagementNodeState.MASTER), 1);
+                    assertEquals(Collections.frequency(counts, ManagementNodeState.HOT_STANDBY), nodes.size()-1);
+                    assertEquals(Collections.frequency(savedCounts, ManagementNodeState.MASTER), 1);
+                    assertEquals(Collections.frequency(savedCounts, ManagementNodeState.HOT_STANDBY), nodes.size()-1);
                 }});
         } catch (Throwable t) {
             log.warn("Failed to stabilize (rethrowing): "+t, t);

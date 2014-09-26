@@ -216,6 +216,24 @@ public class BrooklynLauncherHighAvailabilityTest {
         }
     }
     
+    @Test
+    public void testHighAvailabilityHotStandbyModeFailsIfNoExistingMaster() throws Exception {
+        try {
+            primary = BrooklynLauncher.newInstance();
+            primary.webconsole(false)
+                    .brooklynProperties(LocalManagementContextForTests.setEmptyCatalogAsDefault(BrooklynProperties.Factory.newEmpty()))
+                    .highAvailabilityMode(HighAvailabilityMode.HOT_STANDBY)
+                    .persistMode(PersistMode.AUTO)
+                    .persistenceDir(persistenceDir)
+                    .persistPeriod(Duration.millis(10))
+                    .application(EntitySpec.create(TestApplication.class))
+                    .start();
+            fail();
+        } catch (IllegalStateException e) {
+            // success
+        }
+    }
+    
     private void assertOnlyApp(ManagementContext managementContext, Class<? extends Application> expectedType) {
         assertEquals(managementContext.getApplications().size(), 1, "apps="+managementContext.getApplications());
         assertNotNull(Iterables.find(managementContext.getApplications(), Predicates.instanceOf(TestApplication.class), null), "apps="+managementContext.getApplications());

@@ -30,12 +30,22 @@ public enum HighAvailabilityMode {
     AUTO,
     
     /**
-     * Means node must be standby; if there is not already a master then fail fast on startup. 
+     * Means node must be lukewarm standby; if there is not already a master then fail fast on startup.
+     * See {@link ManagementNodeState#STANDBY}. 
      */
     STANDBY,
     
     /**
-     * Means node must be master; if there is already a master then fail fast on startup.
+     * Means node must be hot standby; if there is not already a master then fail fast on startup.
+     * See {@link ManagementNodeState#HOT_STANDBY}. 
      */
+    HOT_STANDBY,
+    
+    /**
+     * Means node must be master; if there is already a master then fail fast on startup.
+     * See {@link ManagementNodeState#MASTER}.
+     */
+    // TODO when multi-master supported we will of course not fail fast on startup when there is already a master;
+    // instead the responsibility for master entities will be divided among masters
     MASTER;
 }

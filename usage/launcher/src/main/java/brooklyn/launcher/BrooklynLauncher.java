@@ -758,6 +758,7 @@ public class BrooklynLauncher {
                 case AUTO:
                 case MASTER:
                 case STANDBY:
+                case HOT_STANDBY:
                     startMode = highAvailabilityMode;
                     break;
                 case DISABLED:

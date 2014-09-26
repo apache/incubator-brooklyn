@@ -21,15 +21,20 @@ package brooklyn.management.ha;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
+import java.util.List;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
+import brooklyn.management.ha.BasicMasterChooser.ScoredRecord;
 import brooklyn.util.time.Duration;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class MasterChooserTest {
 
@@ -67,18 +72,42 @@ public class MasterChooserTest {
         memento.addNode(newManagerMemento("node2", ManagementNodeState.STANDBY, now - 20*1000));
         memento.addNode(newManagerMemento("node3", ManagementNodeState.STANDBY, now));
         Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
-        assertEquals(chooser.filterHealthy(memento, heartbeatTimeout, now).keySet(), ImmutableSet.of("node2", "node3"));
+        assertEquals(getIds(chooser.sort(chooser.filterHealthy(memento, heartbeatTimeout, now))), ImmutableList.of("node2", "node3"));
+    }
+    
+    protected static List<String> getIds(List<ScoredRecord<?>> filterHealthy) {
+        return ImmutableList.copyOf(Iterables.transform(filterHealthy, EntityFunctions.id()));
+    }
+
+    @Test
+    public void testFiltersOutByStatusNotPreferringMaster() throws Exception {
+        assertEquals(doTestFiltersOutByStatus(false, false), ImmutableList.of("node4", "node5"));
+    }
+    @Test
+    public void testFiltersOutByStatusPreferringMaster() throws Exception {
+        assertEquals(doTestFiltersOutByStatus(true, false), ImmutableList.of("node5", "node4"));
     }
     
     @Test
-    public void testFiltersOutByStatus() throws Exception {
+    public void testFiltersOutByStatusNotPreferringHot() throws Exception {
+        assertEquals(doTestFiltersOutByStatus(false, true), ImmutableList.of("node4", "node5", "node6"));
+    }
+    @Test
+    public void testFiltersOutByStatusPreferringHot() throws Exception {
+        assertEquals(doTestFiltersOutByStatus(true, true), ImmutableList.of("node5", "node6", "node4"));
+    }
+    
+    protected List<String> doTestFiltersOutByStatus(boolean preferHot, boolean includeHot) throws Exception {
+        chooser = new AlphabeticMasterChooser(preferHot);
         memento.addNode(newManagerMemento("node1", ManagementNodeState.FAILED, now));
         memento.addNode(newManagerMemento("node2", ManagementNodeState.TERMINATED, now));
         memento.addNode(newManagerMemento("node3", null, now));
         memento.addNode(newManagerMemento("node4",  ManagementNodeState.STANDBY, now));
         memento.addNode(newManagerMemento("node5", ManagementNodeState.MASTER, now));
+        if (includeHot)
+            memento.addNode(newManagerMemento("node6",  ManagementNodeState.HOT_STANDBY, now));
         Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
-        assertEquals(chooser.filterHealthy(memento, heartbeatTimeout, now).keySet(), ImmutableSet.of("node4", "node5"));
+        return getIds(chooser.sort(chooser.filterHealthy(memento, heartbeatTimeout, now)));
     }
     
     private ManagementNodeSyncRecord newManagerMemento(String nodeId, ManagementNodeState status, long timestamp) {
