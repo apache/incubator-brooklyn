@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.beanutils.BeanUtils;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.event.Sensor;
@@ -38,21 +40,16 @@ import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.gson.Gson;
 
 /** static import functions which can be used in `$brooklyn:xxx` contexts */
 public class BrooklynDslCommon {
-
-    private static final ThreadLocal<Gson> gson = new ThreadLocal<Gson>() {
-        protected Gson initialValue() {
-            return new Gson();
-        }
-    };
 
     // Access specific entities
 
@@ -135,18 +132,27 @@ public class BrooklynDslCommon {
      * yet fully resolved.
      */
     public static Object object(Map<String, Object> arguments) {
+        ConfigBag config = ConfigBag.newInstance(arguments);
+        String typeName = BrooklynYamlTypeInstantiator.InstantiatorFromKey.extractTypeName("object", config).orNull();
+        Map<String,Object> fields = Maybe.fromNullable((Map<String, Object>) config.getStringKey("object.fields"))
+                .or(MutableMap.<String, Object>of());
         try {
-            ConfigBag config = ConfigBag.newInstance(arguments);
-            String typeName = BrooklynYamlTypeInstantiator.InstantiatorFromKey.extractTypeName("object", config).orNull();
-            Map<String,Object> fields = (Map<String, Object>) config.getStringKey("object.fields");
             Class<?> type = Class.forName(typeName);
-            if (DslUtils.resolved(fields.values())) {
-                String json = gson.get().toJson(fields);
-                return gson.get().fromJson(json, type);
+            if (!Reflections.hasNoArgConstructor(type)) {
+                throw new IllegalStateException(String.format("Cannot construct %s bean: No public no-arg constructor available present", type));
+            }
+            if (fields.isEmpty() || DslUtils.resolved(fields.values())) {
+                try {
+                    Object bean = Reflections.invokeConstructorWithArgs(type).get();
+                    BeanUtils.populate(bean, fields);
+                    return bean;
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
             } else {
                 return new DslObject(type, fields);
             }
-        } catch (Exception e) {
+        } catch (ClassNotFoundException e) {
             throw Exceptions.propagate(e);
         }
     }
@@ -162,12 +168,13 @@ public class BrooklynDslCommon {
      * Returns a formatted string or a {@link BrooklynDslDeferredSupplier} if the arguments
      * are not yet fully resolved.
      */
-    public static Object formatString(final String pattern, final Object ...args) {
+    public static Object formatString(final String pattern, final Object...args) {
         if (DslUtils.resolved(args)) {
             // if all args are resolved, apply the format string now
             return String.format(pattern, args);
+        } else {
+            return new DslFormatString(pattern, args);
         }
-        return new DslFormatString(pattern, args);
     }
 
     /**
@@ -236,11 +243,16 @@ public class BrooklynDslCommon {
                                 } else if (fieldValue instanceof DeferredSupplier) {
                                      output.put(fieldName, ((DeferredSupplier<?>) fieldValue).get());
                                 } else {
-                                     output.put(fieldName, fieldValue);
+                                    output.put(fieldName, fieldValue);
                                 }
                             }
-                            String json = gson.get().toJson(output);
-                            return gson.get().fromJson(json, type);
+                            try {
+                                Object bean = Reflections.invokeConstructorWithArgs(type).get();
+                                BeanUtils.populate(bean, output);
+                                return bean;
+                            } catch (Exception e) {
+                                throw Exceptions.propagate(e);
+                            }
                         }
                     }, tasks);
         }

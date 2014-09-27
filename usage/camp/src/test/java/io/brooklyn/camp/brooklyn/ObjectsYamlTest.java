@@ -18,6 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.test.entity.TestEntity;
@@ -40,6 +42,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
     public static class TestObject implements ManagementContextInjectable {
         private String string;
         private Integer number;
+        private Object object;
 
         public TestObject() { }
 
@@ -48,6 +51,9 @@ public class ObjectsYamlTest extends AbstractYamlTest {
 
         public Integer getNumber() { return number; }
         public void setNumber(Integer number) { this.number = number; }
+
+        public Object getObject() { return object; }
+        public void setObject(Object object) { this.object = object; }
 
         @Override
         public void injectManagementContext(ManagementContext managementContext) {
@@ -85,17 +91,44 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "  brooklyn.config:",
             "    test.confObject:",
             "      $brooklyn:object:",
-            "        objectType: io.brooklyn.camp.brooklyn.ObjectsYamlTest$TestObject",
+            "        type: io.brooklyn.camp.brooklyn.ObjectsYamlTest$TestObject",
             "        object.fields:",
-            "          number: 5",
+            "          number: 7",
+            "          object:",
+            "            $brooklyn:object:",
+            "              type: brooklyn.entity.proxy.ProxySslConfig",
             "          string: \"frog\"");
 
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
 
-        Assert.assertTrue(testObject instanceof TestObject);
+        Assert.assertTrue(testObject instanceof TestObject, "Expected a TestObject: "+testObject);
         Assert.assertTrue(managementContextInjected.get());
-        Assert.assertEquals(((TestObject) testObject).getNumber(), Integer.valueOf(5));
+        Assert.assertEquals(((TestObject) testObject).getNumber(), Integer.valueOf(7));
         Assert.assertEquals(((TestObject) testObject).getString(), "frog");
+
+        Object testObjectObject = ((TestObject) testObject).getObject();
+        Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testBrooklynObjectPrefix() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
+            "  brooklyn.config:",
+            "    test.confListPlain:",
+            "    - $brooklyn:object:",
+            "        objectType: brooklyn.entity.proxy.ProxySslConfig",
+            "    - $brooklyn:object:",
+            "        object_type: brooklyn.entity.proxy.ProxySslConfig",
+            "    - $brooklyn:object:",
+            "        type: brooklyn.entity.proxy.ProxySslConfig");
+
+        List testList = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
+
+        Assert.assertEquals(testList.size(), 3);
+        for (Object entry : testList) {
+            Assert.assertTrue(entry instanceof ProxySslConfig, "Expected a ProxySslConfig: "+entry);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -105,18 +138,24 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "  brooklyn.config:",
             "    test.confObject:",
             "      $brooklyn:object:",
-            "        objectType: io.brooklyn.camp.brooklyn.ObjectsYamlTest$TestObject",
+            "        type: io.brooklyn.camp.brooklyn.ObjectsYamlTest$TestObject",
             "        object.fields:",
             "          number: 7",
+            "          object:",
+            "            $brooklyn:object:",
+            "              type: brooklyn.entity.proxy.ProxySslConfig",
             "          string:",
-            "            $brooklyn:formatString(\"%s\", \"7\")");
+            "            $brooklyn:formatString(\"%s\", \"frog\")");
 
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
 
-        Assert.assertTrue(testObject instanceof TestObject);
+        Assert.assertTrue(testObject instanceof TestObject, "Expected a TestObject: "+testObject);
         Assert.assertTrue(managementContextInjected.get());
         Assert.assertEquals(((TestObject) testObject).getNumber(), Integer.valueOf(7));
-        Assert.assertEquals(((TestObject) testObject).getString(), "7");
+        Assert.assertEquals(((TestObject) testObject).getString(), "frog");
+
+        Object testObjectObject = ((TestObject) testObject).getObject();
+        Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
     }
 
     @Override

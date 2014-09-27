@@ -73,7 +73,14 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        
+
+        <!-- for $brooklyn:object -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.1</version>
+        </dependency>
+
         <!-- TODO not enamoured of including software-base here, but it allows us to reference chef and vanilla for short names;
              ideally there is a mixin strategy by which they can be discovered (eg using java service discovery) -->
         <dependency>
