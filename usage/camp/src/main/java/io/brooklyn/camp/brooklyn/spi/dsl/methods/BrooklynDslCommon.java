@@ -182,7 +182,7 @@ public class BrooklynDslCommon {
      *
      * @see DependentConfiguration#formatString(String, Object...)
      */
-    protected static final class DslFormatString extends BrooklynDslDeferredSupplier<String> {
+    protected static class DslFormatString extends BrooklynDslDeferredSupplier<String> {
 
         private static final long serialVersionUID = -4849297712650560863L;
 
@@ -205,10 +205,18 @@ public class BrooklynDslCommon {
         }
     }
 
-    /** Deferred execution of Object creation. */
-    protected static final class DslObject extends BrooklynDslDeferredSupplier<Object> {
+    /** @deprecated since 0.7.0; use {@link DslFormatString} */
+    @Deprecated
+    protected static class FormatString extends DslFormatString {
+        public FormatString(String pattern, Object[] args) {
+            super(pattern, args);
+        }
+    }
 
-        private static final long serialVersionUID = -1;
+    /** Deferred execution of Object creation. */
+    protected static class DslObject extends BrooklynDslDeferredSupplier<Object> {
+
+        private static final long serialVersionUID = 8878388748085419L;
 
         private Class<?> type;
         private Map<String,?> fields;
