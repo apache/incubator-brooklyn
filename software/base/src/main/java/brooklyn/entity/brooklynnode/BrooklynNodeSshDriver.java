@@ -24,6 +24,7 @@ import static java.lang.String.format;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,7 +237,8 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         String locations = getEntity().getAttribute(BrooklynNode.LOCATIONS);
         boolean hasLocalBrooklynProperties = getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS) != null || getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI) != null;
         String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
-        String bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
+        InetAddress bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
+        InetAddress publicAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_PUBLIC_ADDRESS);
 
         String cmd = entity.getConfig(BrooklynNode.LAUNCH_COMMAND);
         if (Strings.isBlank(cmd)) cmd = "./bin/brooklyn";
@@ -271,8 +273,11 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 + "("+getEntity().getEnabledHttpProtocols()+"); expecting 'http' or 'https'");
         }
         
-        if (Strings.isNonEmpty(bindAddress)) {
-            cmd += " --bindAddress "+bindAddress;
+        if (bindAddress != null) {
+            cmd += " --bindAddress "+bindAddress.getHostAddress();
+        }
+        if (publicAddress != null) {
+            cmd += " --publicAddress "+publicAddress.getHostName();
         }
         if (getEntity().getAttribute(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION)) {
             cmd += " --noConsoleSecurity";

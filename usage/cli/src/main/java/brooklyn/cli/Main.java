@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.util.Collection;
 
 import org.slf4j.Logger;
@@ -210,7 +209,7 @@ public class Main extends AbstractMain {
         public String bindAddress = null;
 
         @Option(name = { "-pa", "--publicAddress" },
-                description = "Specifies the IP address or URL that the Brooklyn Management Console Rest API will be available on")
+                description = "Specifies the IP address or hostname that the Brooklyn Management Console will be available on")
         public String publicAddress = null;
 
         @Option(name = { "--noConsoleSecurity" },
@@ -507,11 +506,11 @@ public class Main extends AbstractMain {
             }
             if (Strings.isNonEmpty(bindAddress)) {
                 log.debug("Configuring bind address as "+bindAddress);
-                launcher.bindAddress( Networking.getInetAddressWithFixedName(bindAddress) );
+                launcher.bindAddress(Networking.getInetAddressWithFixedName(bindAddress));
             }
             if (Strings.isNonEmpty(publicAddress)) {
                 log.debug("Configuring public address as "+publicAddress);
-                launcher.publicAddress( URI.create(publicAddress) );
+                launcher.publicAddress(Networking.getInetAddressWithFixedName(publicAddress));
             }
             if (explicitManagementContext!=null) {
                 log.debug("Configuring explicit management context "+explicitManagementContext);

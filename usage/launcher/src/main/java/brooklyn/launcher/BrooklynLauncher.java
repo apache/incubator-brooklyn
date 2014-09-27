@@ -135,7 +135,7 @@ public class BrooklynLauncher {
     private boolean startWebApps = true;
     private PortRange port = PortRanges.fromString("8081+");
     private InetAddress bindAddress = null;
-    private URI publicAddress = null;
+    private InetAddress publicAddress = null;
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
     private Map<String, ?> webconsoleFlags = Maps.newLinkedHashMap();
     private Boolean skipSecurityFilter = null;
@@ -350,7 +350,7 @@ public class BrooklynLauncher {
      * to {@link #bindAddress} if it is not 0.0.0.0.
      * @see #bindAddress(java.net.InetAddress)
      */
-    public BrooklynLauncher publicAddress(URI publicAddress) {
+    public BrooklynLauncher publicAddress(InetAddress publicAddress) {
         this.publicAddress = publicAddress;
         return this;
     }
