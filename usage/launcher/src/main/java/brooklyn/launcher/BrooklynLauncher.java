@@ -19,8 +19,7 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import brooklyn.catalog.CatalogLoadMode;
-import brooklyn.internal.BrooklynFeatureEnablement;
+
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
@@ -31,7 +30,6 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.StringReader;
 import java.net.InetAddress;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -44,6 +42,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
@@ -52,7 +51,9 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
@@ -64,9 +65,11 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.entity.trait.Startable;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.location.Location;
 import brooklyn.location.PortRange;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityManager;
@@ -94,6 +97,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -535,6 +539,7 @@ public class BrooklynLauncher {
         try {
             createApps();
             startApps();
+            startBrooklynNode();
         } catch (Exception e) {
             handleSubsystemStartupError(ignoreAppErrors, "managed apps", e);
         }
@@ -807,6 +812,32 @@ public class BrooklynLauncher {
             // Note: BrooklynAssemblyTemplateInstantiator automatically puts applications under management.
             apps.add(app);
         }
+    }
+
+    protected void startBrooklynNode() {
+        final String classpath = System.getenv("INITIAL_CLASSPATH");
+        if (classpath == null || Strings.isBlank(classpath)) {
+            LOG.warn("Cannot find INITIAL_CLASSPATH environment variable, skipping BrooklynNode entity creation");
+            return;
+        }
+        ApplicationBuilder brooklyn = new ApplicationBuilder() {
+            @Override
+            protected void doBuild() {
+                addChild(EntitySpec.create(BrooklynNode.class)
+                        .configure(SoftwareProcess.ENTITY_STARTED, true)
+                        .configure(SoftwareProcess.RUN_DIR, System.getenv("ROOT"))
+                        .configure(SoftwareProcess.INSTALL_DIR, System.getenv("BROOKLYN_HOME"))
+                        .configure(BrooklynNode.ENABLED_HTTP_PROTOCOLS, ImmutableList.of(webServer.getHttpsEnabled() ? "https" : "http"))
+                        .configure(webServer.getHttpsEnabled() ? BrooklynNode.HTTPS_PORT : BrooklynNode.HTTP_PORT, PortRanges.fromInteger(webServer.getActualPort()))
+                        .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, bindAddress)
+                        .configure(BrooklynNode.WEB_CONSOLE_PUBLIC_ADDRESS, publicAddress)
+                        .configure(BrooklynNode.CLASSPATH, Splitter.on(":").splitToList(classpath))
+                        .displayName("Brooklyn Console"));
+            }
+        };
+        brooklyn.appDisplayName("Brooklyn")
+                .manage(managementContext)
+                .start(ImmutableList.of(new LocalhostMachine()));
     }
 
     protected Application getAppFromYaml(String input) {
