@@ -94,14 +94,15 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
             if (lo.isPresent()) {
                 Location l = lo.get();
                 Boolean skip = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION)).or(false);
+                Boolean started = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_STARTED)).or(false);
                 if (l instanceof PortSupplier) {
                     int p = ((PortSupplier) l).obtainPort(value);
                     if (p != -1) {
                         LOG.debug("{}: choosing port {} for {}", new Object[] { entity, p, getName() });
                         return p;
                     }
-                    // If we are not skipping install, fail now
-                    if (!skip) {
+                    // If we are not skipping install or already started, fail now
+                    if (!(skip || started)) {
                         int rangeSize = Iterables.size(value);
                         if (rangeSize == 0) {
                             LOG.warn("{}: no port available for {} (empty range {})", new Object[] { entity, getName(), value });

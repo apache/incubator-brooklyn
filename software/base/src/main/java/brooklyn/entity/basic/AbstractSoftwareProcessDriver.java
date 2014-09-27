@@ -79,6 +79,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
     @Override
     public void start() {
+        Boolean started = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_STARTED)).or(false);
+        if (started) return;
+
         DynamicTasks.queue("pre-install", new Runnable() { public void run() {
             preInstall();
         }});

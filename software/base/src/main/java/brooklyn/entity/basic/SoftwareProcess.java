@@ -66,6 +66,9 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("launchLatch")
     ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
 
+    @SetFromFlag("entityStarted")
+    ConfigKey<Boolean> ENTITY_STARTED = BrooklynConfigKeys.ENTITY_STARTED;
+
     @SetFromFlag("skipInstall")
     ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_INSTALLATION;
 
