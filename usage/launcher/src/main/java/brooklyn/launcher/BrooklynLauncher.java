@@ -137,6 +137,7 @@ public class BrooklynLauncher {
     private final List<Application> apps = new ArrayList<Application>();
     
     private boolean startWebApps = true;
+    private boolean startBrooklynNode = false;
     private PortRange port = PortRanges.fromString("8081+");
     private InetAddress bindAddress = null;
     private InetAddress publicAddress = null;
@@ -382,6 +383,7 @@ public class BrooklynLauncher {
         this.ignorePersistenceErrors = ignorePersistenceErrors;
         return this;
     }
+
     public BrooklynLauncher ignoreWebErrors(boolean ignoreWebErrors) {
         this.ignoreWebErrors = ignoreWebErrors;
         return this;
@@ -396,6 +398,7 @@ public class BrooklynLauncher {
         this.stopWhichAppsOnShutdown = stopWhich;
         return this;
     }
+
     public BrooklynLauncher shutdownOnExit(boolean val) {
         LOG.warn("Call to deprecated `shutdownOnExit`", new Throwable("source of deprecated call"));
         stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
@@ -406,12 +409,12 @@ public class BrooklynLauncher {
         this.persistMode = persistMode;
         return this;
     }
-    
+
     public BrooklynLauncher highAvailabilityMode(HighAvailabilityMode highAvailabilityMode) {
         this.highAvailabilityMode = highAvailabilityMode;
         return this;
     }
-    
+
     public BrooklynLauncher persistenceDir(@Nullable String persistenceDir) {
         this.persistenceDir = persistenceDir;
         return this;
@@ -432,6 +435,11 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher startBrooklynNode(boolean val) {
+        this.startBrooklynNode = val;
+        return this;
+    }
+
     /**
      * Controls both the frequency of heartbeats, and the frequency of checking the health of other nodes.
      */
@@ -439,7 +447,7 @@ public class BrooklynLauncher {
         this.haHeartbeatPeriod = val;
         return this;
     }
-    
+
     public BrooklynMementoRawData retrieveState() {
         initManagementContext();
 
@@ -535,13 +543,20 @@ public class BrooklynLauncher {
                 handleSubsystemStartupError(ignoreWebErrors, "web apps", e);
             }
         }
-        
+
         try {
             createApps();
             startApps();
-            startBrooklynNode();
         } catch (Exception e) {
             handleSubsystemStartupError(ignoreAppErrors, "managed apps", e);
+        }
+
+        if (startBrooklynNode) {
+            try {
+                startBrooklynNode();
+            } catch (Exception e) {
+                handleSubsystemStartupError(ignoreWebErrors, "web apps", e);
+            }
         }
 
         return this;

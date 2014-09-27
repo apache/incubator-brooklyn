@@ -229,7 +229,12 @@ public class Main extends AbstractMain {
                 + "(default is to abort if they fail to start)")
         public boolean ignoreAppErrors = false;
 
-        // Note in some cases, you can get java.util.concurrent.RejectedExecutionException 
+        @Beta
+        @Option(name = { "--startBrooklynNode" },
+                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance")
+        public boolean startBrooklynNode = false;
+
+        // Note in some cases, you can get java.util.concurrent.RejectedExecutionException
         // if shutdown is not co-ordinated, e.g. with Whirr:
         // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
@@ -503,6 +508,10 @@ public class Main extends AbstractMain {
             if (noConsoleSecurity) {
                 log.info("Configuring to disable console security");
                 launcher.installSecurityFilter(false);
+            }
+            if (startBrooklynNode) {
+                log.info("Configuring BrooklynNode entity startup");
+                launcher.startBrooklynNode(true);
             }
             if (Strings.isNonEmpty(bindAddress)) {
                 log.debug("Configuring bind address as "+bindAddress);
