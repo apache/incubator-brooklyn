@@ -69,7 +69,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -124,7 +123,7 @@ public class TypeCoercions {
 
         //recursive coercion of parameterized collections and map entries
         if (targetTypeToken.getType() instanceof ParameterizedType) {
-            if (value instanceof Iterable && Collection.class.isAssignableFrom(targetType)) {
+            if (value instanceof Collection && Collection.class.isAssignableFrom(targetType)) {
                 Type[] arguments = ((ParameterizedType) targetTypeToken.getType()).getActualTypeArguments();
                 if (arguments.length != 1) {
                     throw new IllegalStateException("Unexpected number of parameters in collection type: " + arguments);
@@ -135,9 +134,9 @@ public class TypeCoercions {
                     coerced.add(coerce(entry, listEntryType));
                 }
                 if (Set.class.isAssignableFrom(targetType)) {
-                    return (T) ImmutableSet.copyOf(coerced);
+                    return (T) Sets.newLinkedHashSet(coerced);
                 } else {
-                    return (T) ImmutableList.copyOf(coerced);
+                    return (T) Lists.newArrayList(coerced);
                 }
             } else if (value instanceof Map && Map.class.isAssignableFrom(targetType)) {
                 Type[] arguments = ((ParameterizedType) targetTypeToken.getType()).getActualTypeArguments();
@@ -150,7 +149,7 @@ public class TypeCoercions {
                 for (Map.Entry entry : ((Map<?,?>) value).entrySet()) {
                     coerced.put(coerce(entry.getKey(), mapKeyType),  coerce(entry.getValue(), mapValueType));
                 }
-                return (T) ImmutableMap.copyOf(coerced);
+                return (T) Maps.newLinkedHashMap(coerced);
             }
         }
 
@@ -477,24 +476,17 @@ public class TypeCoercions {
                 return new String(input);
             }
         });
-        registerAdapter(Iterable.class, Set.class, new Function<Iterable,Set>() {
+        registerAdapter(Collection.class, Set.class, new Function<Collection,Set>() {
             @SuppressWarnings("unchecked")
             @Override
-            public Set apply(Iterable input) {
+            public Set apply(Collection input) {
                 return Sets.newLinkedHashSet(input);
             }
         });
-        registerAdapter(Iterable.class, List.class, new Function<Iterable,List>() {
+        registerAdapter(Collection.class, List.class, new Function<Collection,List>() {
             @SuppressWarnings("unchecked")
             @Override
-            public List apply(Iterable input) {
-                return Lists.newArrayList(input);
-            }
-        });
-        registerAdapter(Iterable.class, Collection.class, new Function<Iterable,Collection>() {
-            @SuppressWarnings("unchecked")
-            @Override
-            public Collection apply(Iterable input) {
+            public List apply(Collection input) {
                 return Lists.newArrayList(input);
             }
         });

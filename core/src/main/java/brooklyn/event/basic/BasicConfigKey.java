@@ -214,7 +214,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     }
     
     protected Object resolveValue(Object v, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        if (v instanceof Iterable || v instanceof Map) {
+        if (v instanceof Collection || v instanceof Map) {
             return Tasks.resolveDeepValue(v, Object.class, exec, "config "+name);
         } else {
             return Tasks.resolveValue(v, getType(), exec, "config "+name);
