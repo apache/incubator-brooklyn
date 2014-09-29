@@ -27,4 +27,15 @@ public interface EntityManagerInternal extends EntityManager {
     /** gets all entities currently known to the application, including entities that are not yet managed */
     Iterable<Entity> getAllEntitiesInApplication(Application application);
 
+    /**
+     * Indicates that the given entity should be treated as read only
+     * when it is subsequently managed.
+     * @throws IllegalStateException if the entity is already managed.
+     */
+    void setReadOnly(Entity e);
+
+    /** Whether the entity and its adjuncts should be treated as read-only;
+     * may be null when initializing if RO status is unknown. */
+    Boolean isReadOnly(Entity item);
+
 }

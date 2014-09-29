@@ -35,6 +35,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.internal.LocalEntityManager;
@@ -51,6 +52,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.task.Tasks;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -83,6 +85,7 @@ public class InternalEntityFactory extends InternalFactory {
         this.policyFactory = checkNotNull(policyFactory, "policyFactory");
     }
 
+    @VisibleForTesting
     public <T extends Entity> T createEntityProxy(EntitySpec<T> spec, T entity) {
         Set<Class<?>> interfaces = Sets.newLinkedHashSet();
         if (spec.getType().isInterface()) {
@@ -96,9 +99,10 @@ public class InternalEntityFactory extends InternalFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Entity> T createEntityProxy(Iterable<Class<?>> interfaces, T entity) {
-        // TODO Don't want the proxy to have to implement EntityLocal, but required by how 
-        // AbstractEntity.parent is used (e.g. parent.getAllConfig)
+    protected <T extends Entity> T createEntityProxy(Iterable<Class<?>> interfaces, T entity) {
+        // We don't especially want the proxy to have to implement EntityLocal, 
+        // but required by how AbstractEntity.parent is used (e.g. parent.getAllConfig).
+        // However within EntityProxyImpl we place add'l guards to prevent read-only access to such methods
         Set<Class<?>> allInterfaces = MutableSet.<Class<?>>builder()
                 .add(EntityProxy.class, Entity.class, EntityLocal.class, EntityInternal.class)
                 .addAll(interfaces)
@@ -149,6 +153,12 @@ public class InternalEntityFactory extends InternalFactory {
         }
     }
 
+    /** creates a new entity instance from a spec, with all children, policies, etc,
+     * fully initialized ({@link AbstractEntity#init()} invoked) and ready for
+     * management -- commonly the caller will next call 
+     * {@link Entities#manage(Entity)} (if it's in a managed application)
+     * or {@link Entities#startManagement(brooklyn.entity.Application, brooklyn.management.ManagementContext)}
+     * (if it's an application) */
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
         /* Order is important here. Changed Jul 2014 when supporting children in spec.
          * (Previously was much simpler, and parent was set right after running initializers; and there were no children.)
@@ -317,9 +327,16 @@ public class InternalEntityFactory extends InternalFactory {
     }
     
     /**
-     * Constructs an entity (if new-style, calls no-arg constructor; if old-style, uses spec to pass in config).
-     * Sets the entity's proxy. If {@link EntitySpec#id(String)} was set then uses that to override the entity's id, 
+     * Constructs an entity, i.e. instantiate the actual class given a spec,
+     * and sets the entity's proxy. Used by this factory to {@link #createEntity(EntitySpec)}
+     * and also used during rebind.
+     * <p> 
+     * If {@link EntitySpec#id(String)} was set then uses that to override the entity's id, 
      * but that behaviour is deprecated.
+     * <p>
+     * The new-style no-arg constructor is preferred, and   
+     * configuration from the {@link EntitySpec} is <b>not</b> normally applied,
+     * although for old-style entities flags from the spec are passed to the constructor.
      */
     public <T extends Entity> T constructEntity(Class<? extends T> clazz, EntitySpec<T> spec) {
         @SuppressWarnings("deprecation")
@@ -331,7 +348,10 @@ public class InternalEntityFactory extends InternalFactory {
     /**
      * Constructs a new-style entity (fails if no no-arg constructor).
      * Sets the entity's id and proxy.
+     * <p>
+     * As {@link #constructEntity(Class, EntitySpec)} but when no spec is used.
      */
+    // TODO would it be cleaner to have callers just create a spec? and deprecate this?
     public <T extends Entity> T constructEntity(Class<T> clazz, Iterable<Class<?>> interfaces, String entityId) {
         if (!isNewStyle(clazz)) {
             throw new IllegalStateException("Cannot construct old-style entity "+clazz);

@@ -89,6 +89,7 @@ public class EntityManagementSupport {
     protected final AtomicBoolean managementContextUsable = new AtomicBoolean(false);
     protected final AtomicBoolean currentlyDeployed = new AtomicBoolean(false);
     protected final AtomicBoolean everDeployed = new AtomicBoolean(false);
+    protected Boolean readOnly = null;
     protected final AtomicBoolean managementFailed = new AtomicBoolean(false);
     
     private volatile EntityChangeListener entityChangeListener = EntityChangeListener.NOOP;
@@ -101,7 +102,28 @@ public class EntityManagementSupport {
     public boolean isNoLongerManaged() {
         return wasDeployed() && !isDeployed();
     }
+    /** whether entity has ever been deployed (managed) */
     public boolean wasDeployed() { return everDeployed.get(); }
+    
+    @Beta
+    public void setReadOnly() {
+        if (isDeployed())
+            throw new IllegalStateException("Cannot set read only after deployment");
+        readOnly = true;
+    }
+
+    /** as {@link EntityManagerInternal#isReadOnly(Entity)} */
+    @Beta
+    public Boolean isReadOnly() {
+        if (readOnly==null) {
+            // readOnly is set in two places, by rebindManagerImpl when the entity is created,
+            // and again when the entity manager is told we should be read only;
+            // TODO twice setting read-only is redundant; possibly doesn't even need to be on managementContext?
+            // however we must check here to discover canonically when it IS fully managed and it is NOT read only
+            readOnly = ((EntityManagerInternal)managementContext.getEntityManager()).isReadOnly(entity);
+        }
+        return readOnly;
+    }
 
     /**
      * Whether the entity's management lifecycle is complete (i.e. both "onManagementStarting" and "onManagementStarted" have
@@ -421,4 +443,5 @@ public class EntityManagementSupport {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
     }
+
 }

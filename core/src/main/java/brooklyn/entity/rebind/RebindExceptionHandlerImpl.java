@@ -332,6 +332,11 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (rebindFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("Rebind: aborting due to "+errmsg, e);
         } else {
+            if (Thread.currentThread().isInterrupted()) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Rebind: while interrupted, received "+errmsg+"/"+e+"; throwing interruption", e);
+                throw Exceptions.propagate(new InterruptedException("Detected interruptiong while not sleeping, due to secondary error rebinding: "+errmsg+"/"+e));
+            }
             LOG.warn("Rebind: continuing after "+errmsg, e);
         }
     }

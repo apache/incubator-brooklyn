@@ -67,6 +67,7 @@ import brooklyn.util.xstream.XmlUtil;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -612,12 +613,17 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         boolean locked = lock.readLock().tryLock(timeout.toMillisecondsRoundingUp(), TimeUnit.MILLISECONDS);
         if (locked) {
+            ImmutableSet<StoreObjectAccessorWithLock> wc;
+            synchronized (writers) {
+                wc = ImmutableSet.copyOf(writers.values());
+            }
             lock.readLock().unlock();
             
             // Belt-and-braces: the lock above should be enough to ensure no outstanding writes, because
             // each writer is now synchronous.
-            for (StoreObjectAccessorWithLock writer : writers.values())
+            for (StoreObjectAccessorWithLock writer : wc) {
                 writer.waitForCurrentWrites(timeout);
+            }
         } else {
             throw new TimeoutException("Timeout waiting for writes to "+objectStore);
         }

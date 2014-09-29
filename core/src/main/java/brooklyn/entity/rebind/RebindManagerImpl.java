@@ -45,7 +45,6 @@ import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalFactory;
@@ -61,6 +60,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
@@ -85,6 +85,7 @@ import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -308,6 +309,10 @@ public class RebindManagerImpl implements RebindManager {
         if (readOnlyTask!=null) {
             readOnlyTask.cancel(true);
             readOnlyTask.blockUntilEnded();
+            boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(readOnlyTask, Duration.TEN_SECONDS);
+            if (!reallyEnded) {
+                LOG.warn("Rebind (read-only) tasks took too long to die after interrupt (ignoring): "+readOnlyTask);
+            }
             readOnlyTask = null;
         }
         LOG.debug("Stopped read-only rebinding, mgmt "+managementContext.getManagementNodeId());
@@ -440,11 +445,9 @@ public class RebindManagerImpl implements RebindManager {
             throw exceptionHandler.onFailed(e);
         }
     }
-
+    
     protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler, ManagementNodeState mode) throws IOException {
         checkNotNull(classLoader, "classLoader");
-        boolean isReadOnly = mode==ManagementNodeState.HOT_STANDBY;
-        if (!isReadOnly) Preconditions.checkState(mode==ManagementNodeState.MASTER, "Must be either master or read only to rebind (mode "+mode+")");
 
         RebindTracker.setRebinding();
         try {
@@ -452,6 +455,12 @@ public class RebindManagerImpl implements RebindManager {
             
             Reflections reflections = new Reflections(classLoader);
             RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
+            if (mode==ManagementNodeState.HOT_STANDBY) {
+                rebindContext.setAllReadOnly();
+            } else {
+                Preconditions.checkState(mode==ManagementNodeState.MASTER, "Must be either master or read only to rebind (mode "+mode+")");
+            }
+            
             LookupContext realLookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
             
             // Mutli-phase deserialization.
@@ -477,9 +486,15 @@ public class RebindManagerImpl implements RebindManager {
             
             boolean isEmpty = mementoManifest.isEmpty();
             if (!isEmpty) {
-                LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
+                if (mode==ManagementNodeState.HOT_STANDBY)
+                    LOG.debug("Rebinding (read-only) from "+getPersister().getBackingStoreDescription()+"...");
+                else
+                    LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
             } else {
-                LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
+                if (mode==ManagementNodeState.HOT_STANDBY)
+                    LOG.debug("Rebind check (read-only): no existing state, reading from "+getPersister().getBackingStoreDescription());
+                else
+                    LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
             }
 
             
@@ -511,6 +526,9 @@ public class RebindManagerImpl implements RebindManager {
                 
                 try {
                     Entity entity = newEntity(entityId, entityType, reflections);
+                    if (rebindContext.isReadOnly(entity)) {
+                        ((EntityInternal)entity).getManagementSupport().setReadOnly();
+                    }
                     rebindContext.registerEntity(entityId, entity);
                 } catch (Exception e) {
                     exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityType, e);
@@ -774,8 +792,10 @@ public class RebindManagerImpl implements RebindManager {
                     exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, appId);
                 } else {
                     try {
-                        // TODO if read only we must do something special here!
-                        Entities.startManagement((Application)entity, managementContext);
+                        if (rebindContext.isReadOnly(entity)) { 
+                            ((EntityManagerInternal)managementContext.getEntityManager()).setReadOnly(entity);
+                        }
+                        managementContext.getEntityManager().manage(entity);
                     } catch (Exception e) {
                         exceptionHandler.onManageFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
@@ -816,7 +836,7 @@ public class RebindManagerImpl implements RebindManager {
 
             exceptionHandler.onDone();
 
-            if (!isEmpty) {
+            if (!isEmpty && mode!=ManagementNodeState.HOT_STANDBY) {
                 LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}, {} feed{}, {} catalog item{}", new Object[]{
                     apps.size(), Strings.s(apps),
                     rebindContext.getEntities().size(), Strings.ies(rebindContext.getEntities()),

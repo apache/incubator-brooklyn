@@ -72,6 +72,7 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
         if (transformationFromEvent != null) {
             transformation = transformationFromEvent;
         } else {
+            // TODO new named class
             transformation = new Function<SensorEvent<T>, U>() {
                 @Override public U apply(SensorEvent<T> input) {
                     return transformationFromValue.apply(input.getValue());

@@ -199,10 +199,9 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
                 }});
             subscriptionHandle2 = subscribe(t, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> event) {
-                    boolean changed = removeMember(event.getValue());
-                    if (changed) {
-                        recomputeAddresses();
-                    }
+                    removeMember(event.getValue());
+                    // recompute, irrespective of change, because framework may have already invoked the removeMember call
+                    recomputeAddresses();
                 }});
             setMembers(t.getChildren(), EntityPredicates.attributeEqualTo(Startable.SERVICE_UP, true));
         }

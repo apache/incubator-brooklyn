@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -32,7 +33,10 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityReadOnlyInternal;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.EffectorUtils;
+import brooklyn.management.internal.EntityManagerInternal;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
@@ -53,6 +57,7 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
     private static final Logger LOG = LoggerFactory.getLogger(EntityProxyImpl.class);
 
     private final Entity delegate;
+    private Boolean isMaster;
     
     private static final Set<MethodSignature> OBJECT_METHODS = Sets.newLinkedHashSet();
     static {
@@ -60,7 +65,7 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
             OBJECT_METHODS.add(new MethodSignature(m));
         }
     }
-
+    
     private static final Set<MethodSignature> ENTITY_NON_EFFECTOR_METHODS = Sets.newLinkedHashSet();
     static {
         for (Method m : Entity.class.getMethods()) {
@@ -74,6 +79,19 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
         }
     }
 
+    private static final Set<MethodSignature> ENTITY_PERMITTED_READ_ONLY_METHODS = Sets.newLinkedHashSet();
+    static {
+        for (Method m : EntityReadOnlyInternal.class.getMethods()) {
+            ENTITY_PERMITTED_READ_ONLY_METHODS.add(new MethodSignature(m));
+        }
+        if (!ENTITY_NON_EFFECTOR_METHODS.containsAll(ENTITY_PERMITTED_READ_ONLY_METHODS)) {
+            Set<MethodSignature> extras = new LinkedHashSet<EntityProxyImpl.MethodSignature>(ENTITY_PERMITTED_READ_ONLY_METHODS);
+            extras.removeAll(ENTITY_NON_EFFECTOR_METHODS);
+            throw new IllegalStateException("Entity read-only methods contains items not known as Entity methods: "+
+                extras);
+        }
+    }
+
     public EntityProxyImpl(Entity entity) {
         this.delegate = checkNotNull(entity, "entity");
     }
@@ -81,6 +99,15 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
     @Override
     public String toString() {
         return delegate.toString();
+    }
+    
+    protected boolean isMaster() {
+        if (isMaster!=null) return isMaster;
+        ManagementContext mgmt = ((EntityInternal)delegate).getManagementContext();
+        Boolean isReadOnlyNow = ((EntityManagerInternal)mgmt.getEntityManager()).isReadOnly(delegate);
+        if (isReadOnlyNow==null) return false;
+        isMaster = !isReadOnlyNow;
+        return isMaster;
     }
     
     public Object invoke(Object proxy, final Method m, final Object[] args) throws Throwable {
@@ -93,6 +120,15 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
         Object result;
         if (OBJECT_METHODS.contains(sig)) {
             result = m.invoke(this, args);
+        } else if (!isMaster()) {
+            if (ENTITY_PERMITTED_READ_ONLY_METHODS.contains(sig)) {
+                result = m.invoke(delegate, args);
+            } else if (isMaster==null) {
+                // rebinding or caller manipulating before management; permit all access
+                result = m.invoke(delegate, args);
+            } else {
+                throw new UnsupportedOperationException("Call to '"+sig+"' not permitted on read-only entity "+delegate);
+            }
         } else if (ENTITY_NON_EFFECTOR_METHODS.contains(sig)) {
             result = m.invoke(delegate, args);
         } else {
@@ -138,6 +174,11 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
             if (!(obj instanceof MethodSignature)) return false;
             MethodSignature o = (MethodSignature) obj;
             return name.equals(o.name) && Arrays.equals(parameterTypes, o.parameterTypes);
+        }
+        
+        @Override
+        public String toString() {
+            return name+Arrays.toString(parameterTypes);
         }
     }
     

@@ -84,7 +84,9 @@ public class LocalEntityManager implements EntityManagerInternal {
     
     /** Real managed entities */
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
-    
+
+    protected final Set<String> readOnlyEntityIds = Sets.newLinkedHashSet();
+
     /** Proxies of the managed entities */
     protected final ObservableList entities = new ObservableList();
     
@@ -220,6 +222,16 @@ public class LocalEntityManager implements EntityManagerInternal {
         preRegisteredEntitiesById.put(entity.getId(), entity);
     }
 
+    public void setReadOnly(Entity e) {
+        readOnlyEntityIds.add(e.getId());
+        ((EntityInternal)e).getManagementSupport().setReadOnly();
+    }
+    
+    @Override
+    public Boolean isReadOnly(Entity item) {
+        return readOnlyEntityIds.contains(item.getId());
+    }
+    
     // TODO synchronization issues here. We guard with isManaged(), but if another thread executing 
     // concurrently then the managed'ness could be set after our check but before we do 
     // onManagementStarting etc. However, we can't just synchronize because we're calling alien code 
@@ -265,24 +277,28 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
     
     @Override
-    public void unmanage(Entity e) {
+    public void unmanage(final Entity e) {
         if (shouldSkipUnmanagement(e)) return;
-        // Need to store all child entities as onManagementStopping removes a child from the parent entity
-        final List<EntityInternal> allEntities =  Lists.newArrayList();        
-        final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
-        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
-            if (shouldSkipUnmanagement(it)) return false;
-            allEntities.add(it);
-            it.getManagementSupport().onManagementStopping(info); 
-            return true;
-        } });
-        
-        for (EntityInternal it : allEntities) {
-            if (shouldSkipUnmanagement(it)) continue;
-            unmanageNonRecursive(it);            
-            it.getManagementSupport().onManagementStopped(info);
-            managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
-            if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
+        if (isReadOnly(e)) {
+            unmanageNonRecursive(e);
+        } else {
+            // Need to store all child entities as onManagementStopping removes a child from the parent entity
+            final List<EntityInternal> allEntities =  Lists.newArrayList();        
+            final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
+            recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
+                if (shouldSkipUnmanagement(it)) return false;
+                allEntities.add(it);
+                it.getManagementSupport().onManagementStopping(info);
+                return true;
+            } });
+
+            for (EntityInternal it : allEntities) {
+                if (shouldSkipUnmanagement(it)) continue;
+                unmanageNonRecursive(it);
+                it.getManagementSupport().onManagementStopped(info);
+                managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
+                if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
+            }
         }
     }
     
@@ -298,6 +314,8 @@ public class LocalEntityManager implements EntityManagerInternal {
         } else if (isManaged(entity)) {
             return;
         } else if (isPreManaged(entity)) {
+            return;
+        } else if (Boolean.TRUE.equals(((EntityInternal)entity).getManagementSupport().isReadOnly())) {
             return;
         } else {
             Entity rootUnmanaged = entity;
@@ -415,16 +433,20 @@ public class LocalEntityManager implements EntityManagerInternal {
          * from its groups?
          */
         
-        Collection<Group> groups = e.getGroups();
-        e.clearParent();
-        for (Group group : groups) {
-            group.removeMember(e);
-        }
-        if (e instanceof Group) {
-            Collection<Entity> members = ((Group)e).getMembers();
-            for (Entity member : members) {
-                member.removeGroup((Group)e);
+        if (!isReadOnly(e)) {
+            Collection<Group> groups = e.getGroups();
+            e.clearParent();
+            for (Group group : groups) {
+                group.removeMember(e);
             }
+            if (e instanceof Group) {
+                Collection<Entity> members = ((Group)e).getMembers();
+                for (Entity member : members) {
+                    member.removeGroup((Group)e);
+                }
+            }
+        } else {
+            log.debug("No relations being updated on unmanage of read only {}", e);
         }
 
         synchronized (this) {
@@ -436,6 +458,7 @@ public class LocalEntityManager implements EntityManagerInternal {
 
             entities.remove(proxyE);
             entityProxiesById.remove(e.getId());
+            readOnlyEntityIds.remove(e.getId());
             Object old = entitiesById.remove(e.getId());
 
             entityTypes.remove(e.getId());

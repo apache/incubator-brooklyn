@@ -48,6 +48,8 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -110,6 +112,7 @@ public class UrlMappingTest {
     @Test(groups = "Integration")
     public void testTargetMappingsRemovesUnmanagedMember() {
         Iterable<StubAppServer> members = Iterables.filter(cluster.getChildren(), StubAppServer.class);
+        assertEquals(Iterables.size(members), 2);
         StubAppServer target1 = Iterables.get(members, 0);
         StubAppServer target2 = Iterables.get(members, 1);
         
@@ -120,6 +123,11 @@ public class UrlMappingTest {
         Entities.unmanage(target1);
 
         assertExpectedTargetsEventually(ImmutableSet.of(target2));
+    }
+    
+    @Test(groups = "Integration", invocationCount=50)
+    public void testTargetMappingsRemovesUnmanagedMemberManyTimes() {
+        testTargetMappingsRemovesUnmanagedMember();
     }
     
     @Test(groups = "Integration")

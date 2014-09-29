@@ -90,8 +90,6 @@ public class ServiceStateLogic {
     public static <TKey,TVal> void updateMapSensorEntry(EntityLocal entity, AttributeSensor<Map<TKey,TVal>> sensor, TKey key, TVal v) {
         Map<TKey, TVal> map = entity.getAttribute(sensor);
 
-        // TODO synchronize
-        
         boolean created = (map==null);
         if (created) map = MutableMap.of();
                 
@@ -109,8 +107,10 @@ public class ServiceStateLogic {
             if (changed)
                 map.put(key, (TVal)v);
         }
-        if (changed || created)
+        if (changed || created) {
+            // TODO synchronize; then emit a copy to prevent CME's e.g. UrlMappingTest
             entity.setAttribute(sensor, map);
+        }
     }
     
     public static void setExpectedState(Entity entity, Lifecycle state) {

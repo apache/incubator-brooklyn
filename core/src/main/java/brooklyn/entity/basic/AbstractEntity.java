@@ -676,7 +676,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
-    public synchronized ManagementContext getManagementContext() {
+    public ManagementContext getManagementContext() {
+        // NB Sept 2014 - removed synch keyword above due to deadlock;
+        // it also synchs in ManagementSupport..getManagementContext();
+        // no apparent reason why it was here also.  @aledsage can you review?
         return getManagementSupport().getManagementContext();
     }
 
@@ -1423,7 +1426,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        if (!getManagementSupport().wasDeployed())
-            LOG.warn("Entity "+this+" was never deployed -- explicit call to manage(Entity) required.");
+        if (!getManagementSupport().wasDeployed() && !Boolean.TRUE.equals(getManagementSupport().isReadOnly()))
+            LOG.warn("Entity "+this+" ("+Integer.toHexString(System.identityHashCode(this))+") was never deployed -- explicit call to manage(Entity) required.");
     }
 }

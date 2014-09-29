@@ -155,4 +155,15 @@ public class NonDeploymentEntityManager implements EntityManagerInternal {
             throw new IllegalStateException("Non-deployment context "+this+" (with no initial management context supplied) is not valid for this operation.");
         }
     }
+    
+    @Override
+    public void setReadOnly(Entity e) {
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot manage "+e);
+    }
+
+    @Override
+    public Boolean isReadOnly(Entity item) {
+        // NB: must return null here, otherwise callers may cache this value
+        return null;
+    }
 }

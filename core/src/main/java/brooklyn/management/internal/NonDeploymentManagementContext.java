@@ -31,6 +31,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
@@ -74,6 +77,8 @@ import com.google.common.base.Objects;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
 
+    private static final Logger log = LoggerFactory.getLogger(NonDeploymentManagementContext.class);
+    
     public enum NonDeploymentManagementContextMode {
         PRE_MANAGEMENT,
         MANAGEMENT_REBINDING,
@@ -374,12 +379,14 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
     @Override
     public void prePreManage(Entity entity) {
-        // no-op
+        // should throw?  but in 0.7.0-SNAPSHOT it was no-op
+        log.warn("Ignoring call to prePreManage("+entity+") on "+this);
     }
 
     @Override
     public void prePreManage(Location location) {
-        // no-op
+        // should throw?  but in 0.7.0-SNAPSHOT it was no-op
+        log.warn("Ignoring call to prePreManage("+location+") on "+this);
     }
 
     private boolean isInitialManagementContextReal() {

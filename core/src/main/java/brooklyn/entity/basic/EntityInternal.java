@@ -80,13 +80,13 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     ConfigBag getLocalConfigBag();
 
     @Beta
-    public Map<AttributeSensor, Object> getAllAttributes();
+    Map<AttributeSensor, Object> getAllAttributes();
 
     @Beta
-    public void removeAttribute(AttributeSensor<?> attribute);
+    void removeAttribute(AttributeSensor<?> attribute);
     
     @Beta
-    public void refreshInheritedConfig();
+    void refreshInheritedConfig();
 
     /**
      * Must be called before the entity is started.

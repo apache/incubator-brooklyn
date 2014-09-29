@@ -26,12 +26,10 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
@@ -43,17 +41,16 @@ import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 
 @Test
-public class HotStandbyTest {
+public class WarmStandbyTest {
 
-    private static final Logger log = LoggerFactory.getLogger(HotStandbyTest.class);
+    private static final Logger log = LoggerFactory.getLogger(WarmStandbyTest.class);
     
-    private List<HaMgmtNode> nodes = new MutableList<HotStandbyTest.HaMgmtNode>();
+    private List<HaMgmtNode> nodes = new MutableList<WarmStandbyTest.HaMgmtNode>();
     Map<String,String> sharedBackingStore = MutableMap.of();
     Map<String,Date> sharedBackingStoreDates = MutableMap.of();
     private ClassLoader classLoader = getClass().getClassLoader();
@@ -88,8 +85,6 @@ public class HotStandbyTest {
         
         public void tearDown() throws Exception {
             if (ha != null) ha.stop();
-            if (mgmt!=null) mgmt.getRebindManager().stop();
-            
             if (mgmt != null) Entities.destroyAll(mgmt);
             if (objectStore != null) objectStore.deleteCompletely();
         }
@@ -127,36 +122,28 @@ public class HotStandbyTest {
         return new InMemoryObjectStore(sharedBackingStore, sharedBackingStoreDates);
     }
 
+    // TODO refactor above -- routines above this line are shared among HotStandbyTest and SplitBrainTest
+    
     @Test
-    public void testHotStandby() throws Exception {
+    public void testWarmStandby() throws Exception {
         HaMgmtNode n1 = newNode();
         n1.ha.start(HighAvailabilityMode.AUTO);
         assertEquals(n1.ha.getNodeState(), ManagementNodeState.MASTER);
         
         TestApplication app = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
         app.start(MutableList.<Location>of());
-        app.setAttribute(TestEntity.SEQUENCE, 3);
         
         n1.mgmt.getRebindManager().forcePersistNow();
 
         HaMgmtNode n2 = newNode();
-        n2.ha.start(HighAvailabilityMode.AUTO);
-        assertEquals(n2.ha.getNodeState(), ManagementNodeState.HOT_STANDBY);
+        n2.ha.start(HighAvailabilityMode.STANDBY);
+        assertEquals(n2.ha.getNodeState(), ManagementNodeState.STANDBY);
 
-        assertEquals(n2.mgmt.getApplications().size(), 1);
-        Application app2 = n2.mgmt.getApplications().iterator().next();
-        assertEquals(app2.getAttribute(TestEntity.SEQUENCE), (Integer)3);
-
-        try {
-            ((TestApplication)app2).setAttribute(TestEntity.SEQUENCE, 4);
-            Assert.fail("Should not have allowed sensor to be set");
-        } catch (Exception e) {
-            Assert.assertTrue(e.toString().toLowerCase().contains("read-only"), "Error message did not contain expected text: "+e);
-        }
+        assertEquals(n2.mgmt.getApplications().size(), 0);
     }
     
-    @Test(groups="Integration", invocationCount=50)
-    public void testHotStandbyManyTimes() throws Exception {
-        testHotStandby();
-    }
+    // TODO support forcible demotion, and check that a master forcibly demoted 
+    // to warm standby clears its apps, policies, and locations  
+    
+
 }
