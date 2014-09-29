@@ -82,14 +82,31 @@ If the pain starts to be too much, come find us on IRC #brooklyncentral or [else
 
 
 
-## Intelli-J IDEA
+## IntelliJ IDEA
 
-Many of our contributers prefer Intelli-J.  However none of them have yet volunteered any set-up tips.
-[Be the first!]({{site.url}}/dev/tips/update-docs.html)
-
+To develop or debug Brooklyn in IntelliJ, you will need to ensure that the Groovy and TestNG plugins are installed
+via the IntelliJ IDEA | Preferences | Plugins menu. Once installed, you can open Brooklyn from the root folder, 
+(e.g. ``~/myfiles/brooklyn``) which will automatically open the subprojects.
 
 
 ## Netbeans
 
 Tips from Netbeans users wanted!
 
+
+
+## Debugging Tips
+
+To debug Brooklyn, create a launch configuration which launches the ``BrooklynJavascriptGuiLauncher`` class. NOTE: You may
+need to add additional projects or folders to the classpath of the run configuration (e.g. add the brooklyn-software-nosql
+project if you wish to deploy a MongoDBServer).
+
+To debug the jsgui (the Brooklyn web console), you will need to build Brooklyn with -DskipOptimization to prevent the build from minifying the javascript.
+When building via the command line, use the command ``mvn clean install -DskipOptimization``, and if you are using IntelliJ IDEA, you can add the option
+to the Maven Runner by clicking on the Maven Settings icon in the Maven Projects tool window  and adding the ``skipOptimization`` property with no value.
+
+When running at the command line you can enable remote connections so that one can attach a debugger to the Java process:
+    Run Java with the following on the command line or in JAVA_OPTS: ``-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005``
+
+To debug a brooklyn instance that has been run with the above JAVA_OPTS, create a remote build configuration (IntelliJ - 
+Run | Edit Configurations | + | Remote) with the default options, ensuring the port matches the address specified in JAVA_OPTS.
