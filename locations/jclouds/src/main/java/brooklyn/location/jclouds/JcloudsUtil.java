@@ -72,7 +72,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.jclouds.config.AlwaysRetryOnRenew;
-import brooklyn.location.jclouds.config.BrooklynStandardJcloudsGuiceModule;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -318,8 +317,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         return ImmutableSet.<Module> of(
                 new SshjSshClientModule(), 
                 new SLF4JLoggingModule(),
-                new BouncyCastleCryptoModule(),
-                new BrooklynStandardJcloudsGuiceModule());
+                new BouncyCastleCryptoModule());
     }
      
     /** 
