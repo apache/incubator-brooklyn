@@ -276,7 +276,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     }
 
     @Override
-    public synchronized boolean cancel() { return cancel(true); }
+    public final synchronized boolean cancel() { return cancel(true); }
 
     /** doesn't resume it, just means if something was cancelled but not submitted it could now be submitted;
      * probably going to be removed and perhaps some mechanism for running again made available

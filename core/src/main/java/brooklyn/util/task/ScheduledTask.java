@@ -32,6 +32,7 @@ import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Throwables;
 
 /**
@@ -161,5 +162,22 @@ public class ScheduledTask extends BasicTask {
 		blockUntilStarted();
         blockUntilFirstScheduleStarted();
 		return (truth(recentRun)) ? recentRun.get() : internalFuture.get();
+	}
+	
+	@Override
+	public synchronized boolean cancel(boolean mayInterrupt) {
+	    boolean result = super.cancel(mayInterrupt);
+	    if (nextRun!=null) {
+	        nextRun.cancel(mayInterrupt);
+	        notifyAll();
+	    }
+	    return result;
+	}
+	
+	/** internal method used to allow callers to wait for underlying tasks to finished in the case of cancellation 
+	 * @param duration */ 
+	@Beta
+	public boolean blockUntilNextRunFinished(Duration timeout) {
+	    return Tasks.blockUntilInternalTasksEnded(nextRun, timeout);
 	}
 }
