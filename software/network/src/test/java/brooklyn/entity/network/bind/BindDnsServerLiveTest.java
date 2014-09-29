@@ -68,7 +68,7 @@ public class BindDnsServerLiveTest {
     protected void testOperatingSystemProvider(String imageId, String provider) throws Exception {
         LOG.info("Testing BIND on {} using {}", provider, imageId);
 
-        Map<String, String> properties = MutableMap.of("image-id", imageId);
+        Map<String, String> properties = MutableMap.of("imageId", imageId);
         testLocation = app.getManagementContext().getLocationRegistry().resolve(provider, properties);
 
         BindDnsServer dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class));
