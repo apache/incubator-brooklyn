@@ -100,18 +100,14 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         return get(true, application, entityToken, sensorName, raw);
     }
 
-    public static final Object applyDisplayValueHint(AttributeSensor<?> sensor, Object initialValue) {
-        Iterable<RendererHints.DisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(sensor), RendererHints.DisplayValue.class);
+    public static Object applyDisplayValueHint(AttributeSensor<?> sensor, Object initialValue) {
+        Iterable<RendererHints.AttributeDisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(sensor), RendererHints.AttributeDisplayValue.class);
         if (Iterables.size(hints) > 1) {
             log.warn("Multiple display value hints set for sensor {}; Only one will be applied, using first", sensor);
         }
 
-        Optional<RendererHints.DisplayValue> hint = Optional.fromNullable(Iterables.getFirst(hints, null));
-        if (hint.isPresent()) {
-            return hint.get().getDisplayValue(initialValue);
-        } else {
-            return initialValue;
-        }
+        Optional<RendererHints.AttributeDisplayValue> hint = Optional.fromNullable(Iterables.getFirst(hints, null));
+        return hint.isPresent() ? hint.get().getDisplayValue(initialValue) : initialValue;
     }
 
     private AttributeSensor<?> findSensor(EntityLocal entity, String name) {

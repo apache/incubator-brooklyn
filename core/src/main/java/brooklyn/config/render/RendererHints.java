@@ -18,6 +18,7 @@
  */
 package brooklyn.config.render;
 
+import brooklyn.config.ConfigKey;
 import groovy.lang.Closure;
 
 import java.util.Set;
@@ -30,6 +31,7 @@ import brooklyn.util.GroovyJavaMethods;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -133,23 +135,21 @@ public class RendererHints {
     }
 
     /**
-     * This hint describes a transformation used to generate a display value for sensors.
+     * This hint describes a transformation used to generate a display value for config keys and sensors.
      * <p>
      * <em><strong>Warning</strong> This is currently a {@link Beta} implementation, and
      * may be changed or removed if there is a suitable alternative mechanism to achieve
      * this functionality.</em>
      */
     @Beta
-    public static class DisplayValue extends Hint<AttributeSensor<?>> {
+    public static abstract class DisplayValue<T> extends Hint<T> {
         private final Function<Object, String> transform;
 
-        public DisplayValue(Function<?, String> transform) {
+        DisplayValue(Function<?, String> transform) {
             this.transform = (Function<Object, String>) Preconditions.checkNotNull(transform, "transform");
         }
 
-        public String getDisplayValue(Entity e, AttributeSensor<?> s) {
-            return getDisplayValue(e.getAttribute(s));
-        }
+        public abstract String getDisplayValue(Entity e, T v);
 
         public String getDisplayValue(Object v) {
             String dv = transform.apply(v);
@@ -163,24 +163,61 @@ public class RendererHints {
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof DisplayValue)) return false;
+            if (obj == null || !(obj instanceof DisplayValue)) return false;
             DisplayValue o = (DisplayValue) obj;
             return Objects.equal(transform, o.transform);
         }
     }
 
     @Beta
-    public static RendererHints.DisplayValue displayValue(Function<?, String> transform) {
-        return new RendererHints.DisplayValue(transform);
+    public static class AttributeDisplayValue extends DisplayValue<AttributeSensor<?>> {
+        AttributeDisplayValue(Function<?, String> transform) {
+            super(transform);
+        }
+        public String getDisplayValue(Entity e, AttributeSensor<?> sensor) {
+            return getDisplayValue(e.getAttribute(sensor));
+        }
     }
 
     @Beta
-    public static RendererHints.NamedActionWithUrl namedActionWithUrl(String actionName, Function<Object, String> transform) {
+    public static class ConfigKeyDisplayValue extends DisplayValue<ConfigKey<?>> {
+        ConfigKeyDisplayValue(Function<?, String> transform) {
+            super(transform);
+        }
+        public String getDisplayValue(Entity e, ConfigKey<?> configKey) {
+            return getDisplayValue(e.getConfig(configKey));
+        }
+    }
+
+    /** @deprecated Since 0.7.0 use attributeDisplayValue or configKeyDisplay value as appropriate. */
+    @Deprecated
+    @Beta
+    public static DisplayValue<AttributeSensor<?>> displayValue(Function<?, String> transform) {
+        return new AttributeDisplayValue(transform);
+    }
+
+    @Beta
+    public static DisplayValue<AttributeSensor<?>> attributeDisplayValue(Function<?, String> transform) {
+        return new AttributeDisplayValue(transform);
+    }
+
+    @Beta
+    public static DisplayValue<ConfigKey<?>> configKeyDisplayValue(Function<?, String> transform) {
+        return new ConfigKeyDisplayValue(transform);
+    }
+
+    @Beta
+    public static NamedActionWithUrl namedActionWithUrl(String actionName, Function<Object, String> transform) {
         return new RendererHints.NamedActionWithUrl(actionName, transform);
     }
 
     @Beta
-    public static RendererHints.NamedActionWithUrl openWithUrl(Function<Object, String> transform) {
+    public static NamedActionWithUrl openWithUrl(Function<Object, String> transform) {
         return new RendererHints.NamedActionWithUrl("Open", transform);
+    }
+
+    @Beta
+    public static DisplayValue<ConfigKey<?>> censoredConfigKey() {
+        return new ConfigKeyDisplayValue(Functions.constant("********"));
     }
 }
