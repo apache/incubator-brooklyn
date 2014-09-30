@@ -47,6 +47,7 @@
     <!-- Dependencies -->
     <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
     <!-- versions should match those used by Brooklyn, to avoid conflicts -->
+    <jclouds.version>1.8.0</jclouds.version>
     <logback.version>1.0.7</logback.version>
     <guava.version>17.0</guava.version>
     <xstream.version>1.4.7</xstream.version>

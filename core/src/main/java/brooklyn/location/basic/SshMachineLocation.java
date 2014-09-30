@@ -386,6 +386,22 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return address;
     }
 
+    @Override
+    public String getHostname() {
+        String hostname = address.getHostName();
+        return (hostname == null || hostname.equals(address.getHostAddress())) ? null : hostname;
+    }
+    
+    @Override
+    public Set<String> getPublicAddresses() {
+        return ImmutableSet.of(address.getHostAddress());
+    }
+    
+    @Override
+    public Set<String> getPrivateAddresses() {
+        return ImmutableSet.of();
+    }
+
     public HostAndPort getSshHostAndPort() {
         String host = getConfig(SSH_HOST);
         if (host == null || Strings.isEmpty(host))
