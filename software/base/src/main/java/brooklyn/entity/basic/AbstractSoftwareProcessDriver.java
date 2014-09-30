@@ -80,68 +80,68 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     @Override
     public void start() {
         Boolean started = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_STARTED)).or(false);
-        if (started) return;
-
-        DynamicTasks.queue("pre-install", new Runnable() { public void run() {
-            preInstall();
-        }});
-
-        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND))) {
-            DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
-                runPreInstallCommand(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND));
-            }});
-        };
-
-        Boolean skip = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION)).or(false);
-        if (!skip) {
-            DynamicTasks.queue("setup", new Runnable() { public void run() {
-                waitForConfigKey(BrooklynConfigKeys.SETUP_LATCH);
-                setup();
+        if (!started) {
+            DynamicTasks.queue("pre-install", new Runnable() { public void run() {
+                preInstall();
             }});
 
-            DynamicTasks.queue("copy-install-resources", new Runnable() { public void run() {
-                waitForConfigKey(BrooklynConfigKeys.INSTALL_RESOURCES_LATCH);
-                copyInstallResources();
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND))) {
+                DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
+                    runPreInstallCommand(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND));
+                }});
+            };
+
+            Boolean skip = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION)).or(false);
+            if (!skip) {
+                DynamicTasks.queue("setup", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.SETUP_LATCH);
+                    setup();
+                }});
+
+                DynamicTasks.queue("copy-install-resources", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.INSTALL_RESOURCES_LATCH);
+                    copyInstallResources();
+                }});
+
+                DynamicTasks.queue("install", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
+                    install();
+                }});
+            }
+
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND))) {
+                DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
+                    runPostInstallCommand(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND));
+                }});
+            };
+
+            DynamicTasks.queue("customize", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
+                customize();
             }});
 
-            DynamicTasks.queue("install", new Runnable() { public void run() {
-                waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
-                install();
+            DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
+                copyRuntimeResources();
             }});
+
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
+                DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
+                    runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
+                }});
+            };
+
+            DynamicTasks.queue("launch", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
+                launch();
+            }});
+
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
+                DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
+                    runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
+                }});
+            };
         }
-
-        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND))) {
-            DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
-                runPostInstallCommand(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND));
-            }});
-        };
-
-        DynamicTasks.queue("customize", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
-            customize();
-        }});
-
-        DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
-            copyRuntimeResources();
-        }});
-
-        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
-            DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
-                runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
-            }});
-        };
-
-        DynamicTasks.queue("launch", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
-            launch();
-        }});
-
-        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
-            DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
-                runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
-            }});
-        };
 
         DynamicTasks.queue("post-launch", new Runnable() { public void run() {
             postLaunch();

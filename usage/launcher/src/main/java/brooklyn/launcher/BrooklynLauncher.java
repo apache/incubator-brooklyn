@@ -68,6 +68,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.location.basic.PortRanges;
@@ -850,9 +851,11 @@ public class BrooklynLauncher {
                         .displayName("Brooklyn Console"));
             }
         };
+        LocationSpec<?> spec = LocationSpec.create(LocalhostMachine.class).displayName("Local Brooklyn");
+        Location localhost = managementContext.getLocationManager().createLocation(spec);
         brooklyn.appDisplayName("Brooklyn")
                 .manage(managementContext)
-                .start(ImmutableList.of(new LocalhostMachine()));
+                .start(ImmutableList.of(localhost));
     }
 
     protected Application getAppFromYaml(String input) {
