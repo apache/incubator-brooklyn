@@ -100,6 +100,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     @Override
     public void init() {
+        super.init();
         entities = addChild(EntitySpec.create(DynamicGroup.class)
                 .configure("entityFilter", getConfig(ENTITY_FILTER)));
     }
