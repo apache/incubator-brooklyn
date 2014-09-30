@@ -32,6 +32,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.reflect.TypeToken;
 
 public interface SoftwareProcess extends Entity, Startable {
@@ -105,29 +106,51 @@ public interface SoftwareProcess extends Entity, Startable {
     @Deprecated
     ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
 
-    /** Files to be copied to the server before install. Map of "subpath/file.name" to "classpath://foo/file.txt" (or other url) */
+    /**
+     * Files to be copied to the server before install.
+     * <p>
+     * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
+     * as {@code subdir/file} relative to installation directory or {@code /absolute/path/to/file}.
+     */
+    @Beta
     @SuppressWarnings("serial")
     @SetFromFlag("installFiles")
     ConfigKey<Map<String, String>> INSTALL_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
-            "files.install", "Map of files to be copied, before install keyed by destination name relative to runDir");
+            "files.install", "Mapping of files, to be copied before install, to destination name relative to installDir");
 
-    /** Templates to be filled in and then copied to the server before install. See {@link #INSTALL_FILES}. */
+    /**
+     * Templates to be filled in and then copied to the server before install.
+     *
+     * @see #INSTALL_FILES
+     */
+    @Beta
     @SuppressWarnings("serial")
     @SetFromFlag("installTemplates")
     ConfigKey<Map<String, String>> INSTALL_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
-            "templates.install", "Map of templates to be filled in and copied before install, keyed by destination name relative to runDir");
+            "templates.install", "Mapping of templates, to be filled in and copied before install, to destination name relative to installDir");
 
-    /** Files to be copied to the server before customisation, map of "subpath/file.name": "classpath://foo/file.txt" (or other url) */
+    /**
+     * Files to be copied to the server before customisation.
+     * <p>
+     * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
+     * as {@code subdir/file} relative to runtime directory or {@code /absolute/path/to/file}.
+     */
+    @Beta
     @SuppressWarnings("serial")
     @SetFromFlag("runtimeFiles")
     ConfigKey<Map<String, String>> RUNTIME_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
-            "files.runtime", "Map of files to be copied before customisation, keyed by destination name relative to runDir");
+            "files.runtime", "Mapping of files, to be copied before customisation, to destination name relative to runDir");
 
-    /** Templates to be filled in and then copied to the server before customisation. See {@link #RUNTIME_FILES}. */
+    /**
+     * Templates to be filled in and then copied to the server before customisation.
+     *
+     * @see #RUNTIME_FILES
+     */
+    @Beta
     @SuppressWarnings("serial")
     @SetFromFlag("runtimeTemplates")
     ConfigKey<Map<String, String>> RUNTIME_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
-            "templates.runtime", "Map of templates to be filled in and copied before customisation, keyed by destination name relative to runDir");
+            "templates.runtime", "Mapping of templates, to be filled in and copied before customisation, to destination name relative to runDir");
 
     @SetFromFlag("env")
     MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,

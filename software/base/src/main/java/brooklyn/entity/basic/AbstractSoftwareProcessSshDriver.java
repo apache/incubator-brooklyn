@@ -284,11 +284,18 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return getMachine().execScript(flags, summaryForLogging, script, environment);
     }
 
-    // Will be prefixed with the entity's {@link #getInstallDir() install directory} if relative.
+    /**
+     * Files and templates to be copied to the server before install.
+     * <p>
+     * Will be prefixed with the entity's {@link #getInstallDir() install directory} if relative.
+     *
+     * @see SoftwareProcess#INSTALL_FILES
+     * @see SoftwareProcess#INSTALL_TEMPLATES
+     */
     @Override
-    public void installResources() {
+    public void copyInstallResources() {
         try {
-            getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host");
+            getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
 
             getLocation().execCommands("create install directory", ImmutableList.of("mkdir -p " + getInstallDir()));
 
@@ -316,9 +323,16 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
     }
 
-    // Will be prefixed with the entity's {@link #getRunDir() run directory} if relative.
+    /**
+     * Files and templates to be copied to the server before customisation.
+     * <p>
+     * Will be prefixed with the entity's {@link #getRunDir() run directory} if relative.
+     *
+     * @see SoftwareProcess#RUNTIME_FILES
+     * @see SoftwareProcess#RUNTIME_TEMPLATES
+     */
     @Override
-    public void runtimeResources() {
+    public void copyRuntimeResources() {
         try {
             getLocation().execCommands("create run directory", ImmutableList.of("mkdir -p " + getRunDir()));
 

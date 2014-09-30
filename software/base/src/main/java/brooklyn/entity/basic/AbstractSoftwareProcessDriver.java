@@ -96,9 +96,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 setup();
             }});
 
-            DynamicTasks.queue("installResources", new Runnable() { public void run() {
+            DynamicTasks.queue("copyInstallResources", new Runnable() { public void run() {
                 waitForConfigKey(BrooklynConfigKeys.INSTALL_RESOURCES_LATCH);
-                installResources();
+                copyInstallResources();
             }});
 
             DynamicTasks.queue("install", new Runnable() { public void run() {
@@ -113,9 +113,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             }});
         };
 
-        DynamicTasks.queue("runtimeResources", new Runnable() { public void run() {
+        DynamicTasks.queue("copyRuntimeResources", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
-            runtimeResources();
+            copyRuntimeResources();
         }});
 
         DynamicTasks.queue("customize", new Runnable() { public void run() {
@@ -155,10 +155,10 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
     public abstract void runPreInstallCommand(String command);
     public abstract void setup();
-    public abstract void installResources();
+    public abstract void copyInstallResources();
     public abstract void install();
     public abstract void runPostInstallCommand(String command);
-    public abstract void runtimeResources();
+    public abstract void copyRuntimeResources();
     public abstract void customize();
     public abstract void runPreLaunchCommand(String command);
     public abstract void launch();
