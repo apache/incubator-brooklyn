@@ -289,7 +289,7 @@ public abstract class MachineLifecycleEffectorTasks {
                     for (MachineLocation oldLoc: oldSshLocs) {
                         // machines are deemed compatible if hostname and address are the same, or they are localhost
                         // this allows a machine create by jclouds to then be defined with an ip-based spec
-                        if (machine.getConfig(AbstractLocation.ORIGINAL_SPEC)!="localhost") {
+                        if (!"localhost".equals(machine.getConfig(AbstractLocation.ORIGINAL_SPEC))) {
                             checkLocationParametersCompatible(machine, oldLoc, "hostname",
                                 oldLoc.getAddress().getHostName(), machine.getAddress().getHostName());
                             checkLocationParametersCompatible(machine, oldLoc, "address",
@@ -339,7 +339,7 @@ public abstract class MachineLifecycleEffectorTasks {
         if (base==null) base = machine.getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR);
         if (base==null) base = entity.getManagementContext().getConfig().getConfig(BrooklynConfigKeys.BROOKLYN_DATA_DIR);
         if (base==null) base = "~/brooklyn-managed-processes";
-        if (base=="~") base=".";
+        if (base.equals("~")) base=".";
         if (base.startsWith("~/")) base = "."+base.substring(1);
 
         String resolvedBase = null;

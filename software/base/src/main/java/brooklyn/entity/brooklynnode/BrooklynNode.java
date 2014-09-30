@@ -140,11 +140,11 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     
     @SetFromFlag("brooklynGlobalPropertiesUri")
     public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_URI = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.global.uri", "URI for the global brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+            "brooklynnode.brooklynproperties.global.uri", "URI for the global brooklyn properties file (uploaded to ~/.brooklyn/brooklyn.properties)", null);
 
     @SetFromFlag("brooklynGlobalPropertiesContents")
     public static final ConfigKey<String> BROOKLYN_GLOBAL_PROPERTIES_CONTENTS = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.global.contents", "Contents for the global brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+            "brooklynnode.brooklynproperties.global.contents", "Contents for the global brooklyn properties file (uploaded to ~/.brooklyn/brooklyn.properties)", null);
 
     @SetFromFlag("brooklynLocalPropertiesRemotePath")
     public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH = ConfigKeys.newStringConfigKey(
@@ -152,11 +152,11 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     
     @SetFromFlag("brooklynLocalPropertiesUri")
     public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_URI = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.local.uri", "URI for the launch-specific brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+            "brooklynnode.brooklynproperties.local.uri", "URI for the launch-specific brooklyn properties file (uploaded to ~/.brooklyn/brooklyn.properties)", null);
 
     @SetFromFlag("brooklynLocalPropertiesContents")
     public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_CONTENTS = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.local.contents", "Contents for the launch-specific brooklyn properties file (to upload to ~/.brooklyn/brooklyn.properties", null);
+            "brooklynnode.brooklynproperties.local.contents", "Contents for the launch-specific brooklyn properties file (uploaded to ~/.brooklyn/brooklyn.properties)", null);
     
     // For use in testing primarily
     @SetFromFlag("brooklynCatalogRemotePath")
@@ -165,11 +165,11 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     
     @SetFromFlag("brooklynCatalogUri")
     public static final ConfigKey<String> BROOKLYN_CATALOG_URI = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklyncatalog.uri", "URI for the brooklyn catalog.xml file (to upload to ~/.brooklyn/catalog.xml", null);
+            "brooklynnode.brooklyncatalog.uri", "URI for the brooklyn catalog.xml file (uploaded to ~/.brooklyn/catalog.xml)", null);
 
     @SetFromFlag("brooklynCatalogContents")
     public static final ConfigKey<String> BROOKLYN_CATALOG_CONTENTS = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklyncatalog.contents", "Contents for the brooklyn catalog.xml file (to upload to ~/.brooklyn/catalog.xml", null);
+            "brooklynnode.brooklyncatalog.contents", "Contents for the brooklyn catalog.xml file (uploaded to ~/.brooklyn/catalog.xml)", null);
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @SetFromFlag("enabledHttpProtocols")
@@ -208,7 +208,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("noShutdownOnExit")
     public static final ConfigKey<Boolean> NO_SHUTDOWN_ON_EXIT = ConfigKeys.newBooleanConfigKey("brooklynnode.noshutdownonexit", 
         "Whether to shutdown entities on exit", false);
-    
+
     public interface DeployBlueprintEffector {
         ConfigKey<Map<String,Object>> BLUEPRINT_CAMP_PLAN = new MapConfigKey<Object>(Object.class, "blueprintPlan",
             "CAMP plan for the blueprint to be deployed; currently only supports Java map or JSON string (not yet YAML)");
