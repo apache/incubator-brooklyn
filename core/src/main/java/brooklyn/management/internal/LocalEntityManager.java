@@ -39,6 +39,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.BasicEntityTypeRegistry;
 import brooklyn.entity.proxying.EntityProxy;
+import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.proxying.InternalEntityFactory;
@@ -54,6 +55,7 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -84,8 +86,9 @@ public class LocalEntityManager implements EntityManagerInternal {
     
     /** Real managed entities */
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
-
-    protected final Set<String> readOnlyEntityIds = Sets.newLinkedHashSet();
+    
+    /** Management mode for each entity */
+    protected final Map<String,ManagementTransitionMode> entityModesById = Maps.newLinkedHashMap();
 
     /** Proxies of the managed entities */
     protected final ObservableList entities = new ObservableList();
@@ -168,6 +171,11 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
     
     @Override
+    public synchronized Collection<String> getEntityIds() {
+        return ImmutableList.copyOf(entityProxiesById.keySet());
+    }
+    
+    @Override
     public synchronized Collection<Entity> getEntitiesInApplication(Application application) {
         Predicate<Entity> predicate = EntityPredicates.applicationIdEqualTo(application.getId());
         return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), predicate));
@@ -221,15 +229,15 @@ public class LocalEntityManager implements EntityManagerInternal {
         }
         preRegisteredEntitiesById.put(entity.getId(), entity);
     }
-
-    public void setReadOnly(Entity e) {
-        readOnlyEntityIds.add(e.getId());
-        ((EntityInternal)e).getManagementSupport().setReadOnly();
+    
+    @Override
+    public ManagementTransitionMode getLastManagementTransitionMode(String itemId) {
+        return entityModesById.get(itemId);
     }
     
     @Override
-    public Boolean isReadOnly(Entity item) {
-        return readOnlyEntityIds.contains(item.getId());
+    public void setManagementTransitionMode(Entity item, ManagementTransitionMode mode) {
+        entityModesById.put(item.getId(), mode);
     }
     
     // TODO synchronization issues here. We guard with isManaged(), but if another thread executing 
@@ -249,27 +257,64 @@ public class LocalEntityManager implements EntityManagerInternal {
                     new Exception("source of duplicate management of "+e));
             return;
         }
+        manageRecursive(e, ManagementTransitionMode.CREATING);
+    }
 
+    @Override
+    public void manageRebindedRoot(Entity item) {
+        ManagementTransitionMode mode = getLastManagementTransitionMode(item.getId());
+        Preconditions.checkNotNull(mode, "Mode not set for rebinding %s", item);
+        manageRecursive(item, mode);
+    }
+    
+    protected void manageRecursive(Entity e, final ManagementTransitionMode initialMode) {
         AccessController.Response access = managementContext.getAccessController().canManageEntity(e);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids management of "+e+": "+access.getMsg());
         }
 
-        final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
         final List<EntityInternal> allEntities =  Lists.newArrayList();
         recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
-            if (it.getManagementSupport().isDeployed()) {
-                return false;
-            } else {
-                allEntities.add(it);
-                preManageNonRecursive(it);
-                it.getManagementSupport().onManagementStarting(info); 
-                return manageNonRecursive(it);
+            ManagementTransitionMode mode = getLastManagementTransitionMode(it.getId());
+            if (mode==null) {
+                setManagementTransitionMode(it, mode = initialMode);
             }
+            if (it.getManagementSupport().isReadOnlyRaw()==null) {
+                if (mode.isReadOnly()) {
+                    // should have been marked by rebinder
+                    log.warn("Read-only entity "+it+" not marked as such on call to manage");
+                }
+                it.getManagementSupport().setReadOnly(mode.isReadOnly());
+            }
+            
+            if (it.getManagementSupport().isDeployed()) {
+                if (mode==ManagementTransitionMode.CREATING) {
+                    // silently bail out
+                    return false;
+                } else {
+                    // on rebind, should not have any deployed instances
+                    log.warn("Already deployed "+it+" when managing "+mode+"/"+initialMode+"; ignoring this and all descendants");
+                    return false;
+                }
+            }
+            
+            // check RO status is consistent
+            boolean isNowReadOnly = Boolean.TRUE.equals( ((EntityInternal)it).getManagementSupport().isReadOnly() );
+            if (mode.isReadOnly()!=isNowReadOnly) {
+                throw new IllegalStateException("Read-only status mismatch for "+it+": "+mode+" / RO="+isNowReadOnly);
+            }
+
+            allEntities.add(it);
+            preManageNonRecursive(it, mode);
+            it.getManagementSupport().onManagementStarting( new ManagementTransitionInfo(managementContext, mode) ); 
+            return manageNonRecursive(it, mode);
         } });
         
         for (EntityInternal it : allEntities) {
             if (!it.getManagementSupport().isFullyManaged()) {
+                ManagementTransitionMode mode = getLastManagementTransitionMode(it.getId());
+                ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, mode);
+                
                 it.getManagementSupport().onManagementStarted(info);
                 managementContext.getRebindManager().getChangeListener().onManaged(it);
             }
@@ -278,13 +323,47 @@ public class LocalEntityManager implements EntityManagerInternal {
     
     @Override
     public void unmanage(final Entity e) {
+        unmanage(e, ManagementTransitionMode.DESTROYING);
+    }
+    
+    public void unmanage(final Entity e, final ManagementTransitionMode mode) {
+        unmanage(e, mode, false);
+    }
+    
+    private void unmanage(final Entity e, ManagementTransitionMode mode, boolean hasBeenReplaced) {
         if (shouldSkipUnmanagement(e)) return;
-        if (isReadOnly(e)) {
+        final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, mode);
+        
+        if (hasBeenReplaced) {
+            // we are unmanaging an old instance after having replaced it
+            
+            if (mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
+                // when migrating away, these all need to be called
+                ((EntityInternal)e).getManagementSupport().onManagementStopping(info);
+                ((EntityInternal)e).getManagementSupport().onManagementStopped(info);
+                managementContext.getRebindManager().getChangeListener().onUnmanaged(e);
+                if (managementContext.gc != null) managementContext.gc.onUnmanaged(e);
+            } else {
+                // should be coming *from* read only; nothing needed
+                if (!mode.wasReadOnly())
+                    log.warn("Should not be unmanaging "+e+" in mode "+mode);
+            }
+            
+        } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED) {
+            // we are unmanaging an instance (secondary) for which the primary has been destroyed elsewhere
+            ((EntityInternal)e).getManagementSupport().onManagementStopping(info);
+            ((EntityInternal)e).getManagementSupport().onManagementStopped(info);
             unmanageNonRecursive(e);
-        } else {
+            managementContext.getRebindManager().getChangeListener().onUnmanaged(e);
+            if (managementContext.gc != null) managementContext.gc.onUnmanaged(e);
+            
+        } else if (mode==ManagementTransitionMode.DESTROYING) {
+            // we are unmanaging an instance either because it is being destroyed (primary), 
+            // or due to an explicit call (shutting down all things, read-only and primary);
+            // in either case, should be recursive
+            
             // Need to store all child entities as onManagementStopping removes a child from the parent entity
             final List<EntityInternal> allEntities =  Lists.newArrayList();        
-            final ManagementTransitionInfo info = new ManagementTransitionInfo(managementContext, ManagementTransitionMode.NORMAL);
             recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
                 if (shouldSkipUnmanagement(it)) return false;
                 allEntities.add(it);
@@ -299,6 +378,9 @@ public class LocalEntityManager implements EntityManagerInternal {
                 managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
                 if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
             }
+            
+        } else {
+            log.warn("Invalid mode for unmanage: "+mode+" on "+e+" (ignoring)");
         }
     }
     
@@ -357,14 +439,15 @@ public class LocalEntityManager implements EntityManagerInternal {
      * Note that refs to the given entity are stored in a a weak hashmap so if the subsequent management
      * attempt fails then this reference to the entity will eventually be discarded (if no-one else holds 
      * a reference).
+     * @param isOrWasReadOnly 
      */
-    private synchronized boolean preManageNonRecursive(Entity e) {
+    private synchronized boolean preManageNonRecursive(Entity e, ManagementTransitionMode mode) {
         Entity realE = toRealEntity(e);
         
         Object old = preManagedEntitiesById.put(e.getId(), realE);
         preRegisteredEntitiesById.remove(e.getId());
         
-        if (old!=null) {
+        if (old!=null && mode==ManagementTransitionMode.CREATING) {
             if (old.equals(e)) {
                 log.warn("{} redundant call to pre-start management of entity {}", this, e);
             } else {
@@ -372,7 +455,8 @@ public class LocalEntityManager implements EntityManagerInternal {
             }
             return false;
         } else {
-            if (log.isTraceEnabled()) log.trace("{} pre-start management of entity {}", this, e);
+            if (log.isTraceEnabled()) log.trace("{} pre-start management of entity {}, mode {}", 
+                new Object[] { this, e, mode });
             return true;
         }
     }
@@ -380,35 +464,53 @@ public class LocalEntityManager implements EntityManagerInternal {
     /**
      * Should ensure that the entity is now managed somewhere, and known about in all the lists.
      * Returns true if the entity has now become managed; false if it was already managed (anything else throws exception)
+     * @param isOrWasReadOnly 
      */
-    private synchronized boolean manageNonRecursive(Entity e) {
-        Entity realE = toRealEntity(e);
-        Entity proxyE = toProxyEntityIfAvailable(e);
+    private synchronized boolean manageNonRecursive(Entity e, ManagementTransitionMode mode) {
+        Entity old = entitiesById.get(e.getId());
         
-        // If we don't already know about the proxy, then use the real thing; presumably it's 
-        // the legacy way of creating the entity so didn't get a preManage() call
-        entityProxiesById.put(e.getId(), proxyE);
-        
-        entityTypes.put(e.getId(), realE.getClass().getName());
-        
-        Object old = entitiesById.put(e.getId(), realE);
-        if (old!=null) {
+        if (old!=null && mode==ManagementTransitionMode.CREATING) {
             if (old.equals(e)) {
                 log.warn("{} redundant call to start management of entity {}", this, e);
             } else {
                 throw new IllegalStateException("call to manage entity "+e+" but different entity "+old+" already known under that id at "+this);
             }
             return false;
-        } else {
-            if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
-            preManagedEntitiesById.remove(e.getId());
-            if ((e instanceof Application) && (e.getParent()==null)) {
-                applications.add((Application)proxyE);
-                applicationIds.add(e.getId());
-            }
-            entities.add(proxyE);
-            return true;
         }
+        
+        if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
+        Entity realE = toRealEntity(e);
+        
+        Entity oldProxy = entityProxiesById.get(e.getId());
+        Entity proxyE;
+        if (oldProxy!=null) {
+            if (mode==ManagementTransitionMode.CREATING) {
+                throw new IllegalStateException("call to manage entity "+e+" but already had proxy "+oldProxy+" already known under that id at "+this);
+            }
+            // set the new entity to the old proxy
+            ((AbstractEntity)realE).resetProxy(oldProxy);
+            proxyE = oldProxy;
+            ((EntityProxyImpl)(Proxy.getInvocationHandler(proxyE))).resetDelegate(realE);
+        } else {
+            proxyE = toProxyEntityIfAvailable(e);
+        }
+        entityProxiesById.put(e.getId(), proxyE);
+        entityTypes.put(e.getId(), realE.getClass().getName());
+        entitiesById.put(e.getId(), realE);
+
+        preManagedEntitiesById.remove(e.getId());
+        if ((e instanceof Application) && (e.getParent()==null)) {
+            applications.add((Application)proxyE);
+            applicationIds.add(e.getId());
+        }
+        entities.add(proxyE);
+        
+        if (old!=null && old!=e) {
+            // passing the transition info will ensure the right shutdown steps invoked for old instance
+            unmanage(old, mode, true);
+        }
+        
+        return true;
     }
 
     /**
@@ -433,7 +535,7 @@ public class LocalEntityManager implements EntityManagerInternal {
          * from its groups?
          */
         
-        if (!isReadOnly(e)) {
+        if (!getLastManagementTransitionMode(e.getId()).isReadOnly()) {
             Collection<Group> groups = e.getGroups();
             e.clearParent();
             for (Group group : groups) {
@@ -458,7 +560,7 @@ public class LocalEntityManager implements EntityManagerInternal {
 
             entities.remove(proxyE);
             entityProxiesById.remove(e.getId());
-            readOnlyEntityIds.remove(e.getId());
+            entityModesById.remove(e.getId());
             Object old = entitiesById.remove(e.getId());
 
             entityTypes.remove(e.getId());
@@ -509,6 +611,9 @@ public class LocalEntityManager implements EntityManagerInternal {
             Entity result = ((AbstractEntity)e).getProxy();
             return (result == null) ? e : result;
         } else {
+            // If we don't already know about the proxy, then use the real thing; presumably it's 
+            // the legacy way of creating the entity so didn't get a preManage() call
+
             return e;
         }
     }
@@ -545,4 +650,5 @@ public class LocalEntityManager implements EntityManagerInternal {
     private boolean isRunning() {
         return managementContext.isRunning();
     }
+
 }

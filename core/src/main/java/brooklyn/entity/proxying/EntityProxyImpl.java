@@ -34,9 +34,11 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTransientCopyInternal;
+import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagerInternal;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
@@ -53,10 +55,9 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
     // TODO Currently the proxy references the real entity and invokes methods on it directly.
     // As we work on remoting/distribution, this will be replaced by RPC.
 
-    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(EntityProxyImpl.class);
 
-    private final Entity delegate;
+    private Entity delegate;
     private Boolean isMaster;
     
     private static final Set<MethodSignature> OBJECT_METHODS = Sets.newLinkedHashSet();
@@ -96,6 +97,15 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
         this.delegate = checkNotNull(entity, "entity");
     }
     
+    /** invoked to specify that a different underlying delegate should be used, 
+     * e.g. because we are switching copy impls or switching primary/copy*/
+    // TODO XXX because the delegate has a backpointer to the proxy, there is potentially
+    // a nasty problem wherein an old proxy is kept, with a pointer to an old delegate.  
+    public synchronized void resetDelegate(Entity delegate) {
+        this.delegate = delegate;
+        this.isMaster = null;
+    }
+    
     @Override
     public String toString() {
         return delegate.toString();
@@ -103,11 +113,23 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
     
     protected boolean isMaster() {
         if (isMaster!=null) return isMaster;
+        
         ManagementContext mgmt = ((EntityInternal)delegate).getManagementContext();
-        Boolean isReadOnlyNow = ((EntityManagerInternal)mgmt.getEntityManager()).isReadOnly(delegate);
-        if (isReadOnlyNow==null) return false;
-        isMaster = !isReadOnlyNow;
-        return isMaster;
+        ManagementTransitionMode mode = ((EntityManagerInternal)mgmt.getEntityManager()).getLastManagementTransitionMode(delegate.getId());
+        Boolean ro = ((EntityInternal)delegate).getManagementSupport().isReadOnlyRaw();
+        
+        if (mode==null || ro==null) {
+            // not configured yet
+            return false;
+        }
+        boolean isMasterX = !mode.isReadOnly();
+        if (isMasterX != !ro) {
+            LOG.warn("Inconsistent read-only state for "+delegate+" (possibly rebinding); "
+                + "management thinks "+isMasterX+" but entity thinks "+!ro);
+            return false;
+        }
+        isMaster = isMasterX;
+        return isMasterX;
     }
     
     public Object invoke(Object proxy, final Method m, final Object[] args) throws Throwable {
@@ -119,25 +141,29 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
 
         Object result;
         if (OBJECT_METHODS.contains(sig)) {
-            result = m.invoke(this, args);
-        } else if (!isMaster()) {
-            if (ENTITY_PERMITTED_READ_ONLY_METHODS.contains(sig)) {
-                result = m.invoke(delegate, args);
-            } else if (isMaster==null) {
-                // rebinding or caller manipulating before management; permit all access
-                result = m.invoke(delegate, args);
-            } else {
-                throw new UnsupportedOperationException("Call to '"+sig+"' not permitted on read-only entity "+delegate);
-            }
-        } else if (ENTITY_NON_EFFECTOR_METHODS.contains(sig)) {
+            result = m.invoke(delegate, args);
+        } else if (ENTITY_PERMITTED_READ_ONLY_METHODS.contains(sig)) {
             result = m.invoke(delegate, args);
         } else {
-            Object[] nonNullArgs = (args == null) ? new Object[0] : args;
-            Effector<?> eff = findEffector(m, nonNullArgs);
-            if (eff != null) {
-                result = EffectorUtils.invokeMethodEffector(delegate, eff, nonNullArgs);
+            if (!isMaster()) {
+                if (isMaster==null || RebindTracker.isRebinding()) {
+                    // rebinding or caller manipulating before management; permit all access
+                    // (as of this writing, things seem to work fine without the isRebinding check;
+                    // but including in it may allow us to tighten the methods in EntityTransientCopyInternal) 
+                    result = m.invoke(delegate, args);
+                } else {
+                    throw new UnsupportedOperationException("Call to '"+sig+"' not permitted on read-only entity "+delegate);
+                }
+            } else if (ENTITY_NON_EFFECTOR_METHODS.contains(sig)) {
+                result = m.invoke(delegate, args);
             } else {
-                result = m.invoke(delegate, nonNullArgs);
+                Object[] nonNullArgs = (args == null) ? new Object[0] : args;
+                Effector<?> eff = findEffector(m, nonNullArgs);
+                if (eff != null) {
+                    result = EffectorUtils.invokeMethodEffector(delegate, eff, nonNullArgs);
+                } else {
+                    result = m.invoke(delegate, nonNullArgs);
+                }
             }
         }
         

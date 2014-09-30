@@ -50,11 +50,9 @@ import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.collect.Iterables;
 
-@Test
 public class HotStandbyTest {
 
     private static final Logger log = LoggerFactory.getLogger(HotStandbyTest.class);
@@ -158,12 +156,23 @@ public class HotStandbyTest {
         return app;
     }
     
-    private Application waitForRebindSequenceNumber(HaMgmtNode master, HaMgmtNode hotStandby, Application app, int expectedSensorSequenceValue) {
-        Time.sleep(Duration.FIVE_SECONDS);
+    private Application expectRebindSequenceNumber(HaMgmtNode master, HaMgmtNode hotStandby, Application app, int expectedSensorSequenceValue, boolean immediate) {
         Application appRO = hotStandby.mgmt.lookup(app.getId(), Application.class);
-        // TODO drop the sleep and the new lookup, when the implementation can do in-place replace
+
+        if (immediate) {
+            master.mgmt.getRebindManager().forcePersistNow();
+            hotStandby.mgmt.getRebindManager().rebind(null, null, ManagementNodeState.HOT_STANDBY);
+            EntityTestUtils.assertAttributeEquals(appRO, TestEntity.SEQUENCE, expectedSensorSequenceValue);
+        } else {
+            EntityTestUtils.assertAttributeEqualsEventually(appRO, TestEntity.SEQUENCE, expectedSensorSequenceValue);
+        }
         
-        EntityTestUtils.assertAttributeEqualsEventually(appRO, TestEntity.SEQUENCE, expectedSensorSequenceValue);
+        log.info("got sequence number "+expectedSensorSequenceValue+" from "+appRO);
+        
+        // make sure the instance (proxy) is unchanged
+        Application appRO2 = hotStandby.mgmt.lookup(app.getId(), Application.class);
+        Assert.assertTrue(appRO2==appRO);
+        
         return appRO;
     }
     
@@ -189,6 +198,7 @@ public class HotStandbyTest {
         }
     }
 
+    @Test
     public void testHotStandbySeesChangedNameConfigAndSensorValue() throws Exception {
         HaMgmtNode n1 = createMaster();
         TestApplication app = createFirstAppAndPersist(n1);
@@ -205,7 +215,7 @@ public class HotStandbyTest {
         app.setConfig(TestEntity.CONF_NAME, "first-app-renamed");
         app.setAttribute(TestEntity.SEQUENCE, 4);
 
-        appRO = waitForRebindSequenceNumber(n1, n2, app, 4);
+        appRO = expectRebindSequenceNumber(n1, n2, app, 4, true);
         assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
         assertEquals(appRO.getDisplayName(), "First App Renamed");
         assertEquals(appRO.getConfig(TestEntity.CONF_NAME), "first-app-renamed");
@@ -216,20 +226,23 @@ public class HotStandbyTest {
         app.setConfig(TestEntity.CONF_NAME, "first-app-restored");
         app.setAttribute(TestEntity.SEQUENCE, 5);
         
-        appRO = waitForRebindSequenceNumber(n1, n2, app, 4);
+        appRO = expectRebindSequenceNumber(n1, n2, app, 5, true);
         assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
         assertEquals(appRO.getDisplayName(), "First App");
         assertEquals(appRO.getConfig(TestEntity.CONF_NAME), "first-app-restored");
     }
 
 
-    @Test(groups="Integration", invocationCount=50)
-    public void testHotStandbySeesAdditionAndRemovalManyTimes() throws Exception {
-        testHotStandbySeesStructuralChangesIncludingRemoval();
+    public void testHotStandbySeesStructuralChangesIncludingRemoval() throws Exception {
+        doTestHotStandbySeesStructuralChangesIncludingRemoval(true);
     }
     
-    @Test(groups="Integration") // due to time (could speed up by forcing persist and rebind)
-    public void testHotStandbySeesStructuralChangesIncludingRemoval() throws Exception {
+    @Test(groups="Integration") // due to time (it waits for background persistence)
+    public void testHotStandbyUnforcedSeesStructuralChangesIncludingRemoval() throws Exception {
+        doTestHotStandbySeesStructuralChangesIncludingRemoval(false);
+    }
+    
+    public void doTestHotStandbySeesStructuralChangesIncludingRemoval(boolean immediate) throws Exception {
         HaMgmtNode n1 = createMaster();
         TestApplication app = createFirstAppAndPersist(n1);
         HaMgmtNode n2 = createHotStandby();
@@ -242,10 +255,12 @@ public class HotStandbyTest {
         // test additions - new child, new app
         
         TestEntity child = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
+        Entities.manage(child);
         TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
+        app2.setConfig(TestEntity.CONF_NAME, "second-app");
         
         app.setAttribute(TestEntity.SEQUENCE, 4);
-        appRO = waitForRebindSequenceNumber(n1, n2, app, 4);
+        appRO = expectRebindSequenceNumber(n1, n2, app, 4, immediate);
         
         assertEquals(appRO.getChildren().size(), 1);
         Entity childRO = Iterables.getOnlyElement(appRO.getChildren());
@@ -265,7 +280,7 @@ public class HotStandbyTest {
         Entities.unmanage(app2);
         
         app.setAttribute(TestEntity.SEQUENCE, 5);
-        appRO = waitForRebindSequenceNumber(n1, n2, app, 5);
+        appRO = expectRebindSequenceNumber(n1, n2, app, 5, immediate);
         
         EntityTestUtils.assertAttributeEqualsEventually(appRO, TestEntity.SEQUENCE, 5);
         assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
@@ -273,6 +288,11 @@ public class HotStandbyTest {
         assertEquals(n2.mgmt.getApplications().size(), 1);
         Assert.assertNull(n2.mgmt.lookup(app2.getId(), Application.class));
         Assert.assertNull(n2.mgmt.lookup(child.getId(), Application.class));
+    }
+
+    @Test(groups="Integration", invocationCount=50)
+    public void testHotStandbySeesStructuralChangesIncludingRemovalManyTimes() throws Exception {
+        doTestHotStandbySeesStructuralChangesIncludingRemoval(true);
     }
     
 }

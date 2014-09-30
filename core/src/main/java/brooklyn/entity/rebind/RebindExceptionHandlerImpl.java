@@ -356,7 +356,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
     
     protected void onDoneImpl(Exception e) {
-        if (e != null) Exceptions.propagateIfFatal(e);
+        Exceptions.propagateIfFatal(e);
         
         List<Exception> allExceptions = Lists.newArrayList();
         

@@ -29,6 +29,7 @@ import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -58,13 +59,18 @@ public interface RebindManager {
     public BrooklynMementoPersister getPersister();
 
     /** @deprecated since 0.7; use {@link #rebind(ClassLoader, RebindExceptionHandler, ManagementNodeState)} */ @Deprecated
-    public List<Application> rebind() throws IOException;
+    public List<Application> rebind();
     
     /** @deprecated since 0.7; use {@link #rebind(ClassLoader, RebindExceptionHandler, ManagementNodeState)} */ @Deprecated
-    public List<Application> rebind(ClassLoader classLoader) throws IOException;
+    public List<Application> rebind(ClassLoader classLoader);
     /** @deprecated since 0.7; use {@link #rebind(ClassLoader, RebindExceptionHandler, ManagementNodeState)} */ @Deprecated
-    public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) throws IOException;
-    public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode) throws IOException;
+    public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler);
+    /** causes this management context to rebind, loading data from the given backing store.
+     * use wisely, as this can cause local entities to be completely lost, or will throw in many other situations.
+     * in general it may be invoked for a new node becoming {@link ManagementNodeState#MASTER} 
+     * or periodically for a node in {@link ManagementNodeState#HOT_STANDBY}. */
+    @Beta
+    public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode);
 
     public BrooklynMementoRawData retrieveMementoRawData() throws IOException;
 

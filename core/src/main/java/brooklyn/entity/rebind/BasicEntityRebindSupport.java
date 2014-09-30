@@ -192,11 +192,15 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
         }
     }
     
+    protected Entity proxy(Entity target) {
+        return target instanceof AbstractEntity ? ((AbstractEntity)target).getProxyIfAvailable() : target;
+    }
+    
     protected void addChildren(RebindContext rebindContext, EntityMemento memento) {
         for (String childId : memento.getChildren()) {
             Entity child = rebindContext.getEntity(childId);
             if (child != null) {
-                entity.addChild(child);
+                entity.addChild(proxy(child));
             } else {
                 LOG.warn("Entity not found; discarding child {} of entity {}({})",
                         new Object[] {childId, memento.getType(), memento.getId()});
@@ -207,7 +211,7 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
     protected void setParent(RebindContext rebindContext, EntityMemento memento) {
         Entity parent = (memento.getParent() != null) ? rebindContext.getEntity(memento.getParent()) : null;
         if (parent != null) {
-            entity.setParent(parent);
+            entity.setParent(proxy(parent));
         } else if (memento.getParent() != null){
             LOG.warn("Entity not found; discarding parent {} of entity {}({}), so entity will be orphaned and unmanaged",
                     new Object[] {memento.getParent(), memento.getType(), memento.getId()});

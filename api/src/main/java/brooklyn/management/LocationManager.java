@@ -21,10 +21,7 @@ package brooklyn.management;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import brooklyn.location.Location;
-import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationSpec;
 
 /**

@@ -39,7 +39,6 @@ import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.InternalEntityFactory;
@@ -55,7 +54,6 @@ import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.ha.OsgiManager;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
@@ -135,7 +133,7 @@ public class LocalManagementContext extends AbstractManagementContext {
      * Creates a LocalManagement with default BrooklynProperties.
      */
     public LocalManagementContext() {
-        this(new Builder());
+        this(BrooklynProperties.Factory.builderDefault());
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {

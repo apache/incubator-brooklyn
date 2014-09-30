@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -61,7 +63,9 @@ import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.EntityManagerInternal;
+import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -95,6 +99,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /** Manages the persistence/rebind process.
  * <p>
@@ -132,6 +137,7 @@ public class RebindManagerImpl implements RebindManager {
     
     private volatile boolean readOnlyRunning = false;
     private volatile ScheduledTask readOnlyTask = null;
+    private transient Semaphore rebindActive = new Semaphore(1);
     
     private volatile BrooklynMementoPersister persistenceStoreAccess;
 
@@ -369,22 +375,22 @@ public class RebindManagerImpl implements RebindManager {
     }
     
     @Override
-    public List<Application> rebind() throws IOException {
+    public List<Application> rebind() {
         return rebind(null, null, null);
     }
     
     @Override
-    public List<Application> rebind(final ClassLoader classLoader) throws IOException {
+    public List<Application> rebind(final ClassLoader classLoader) {
         return rebind(classLoader, null, null);
     }
 
     @Override
-    public List<Application> rebind(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
+    public List<Application> rebind(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) {
         return rebind(classLoader, exceptionHandler, null);
     }
     
     @Override
-    public List<Application> rebind(ClassLoader classLoaderO, RebindExceptionHandler exceptionHandlerO, ManagementNodeState modeO) throws IOException {
+    public List<Application> rebind(ClassLoader classLoaderO, RebindExceptionHandler exceptionHandlerO, ManagementNodeState modeO) {
         final ClassLoader classLoader = classLoaderO!=null ? classLoaderO :
             managementContext.getCatalog().getRootClassLoader();
         final RebindExceptionHandler exceptionHandler = exceptionHandlerO!=null ? exceptionHandlerO :
@@ -446,9 +452,12 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
     
-    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler, ManagementNodeState mode) throws IOException {
+    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler, ManagementNodeState mode) {
         checkNotNull(classLoader, "classLoader");
 
+        try {
+            rebindActive.acquire();
+        } catch (InterruptedException e1) { Exceptions.propagate(e1); }
         RebindTracker.setRebinding();
         try {
             exceptionHandler.onStart();
@@ -526,9 +535,6 @@ public class RebindManagerImpl implements RebindManager {
                 
                 try {
                     Entity entity = newEntity(entityId, entityType, reflections);
-                    if (rebindContext.isReadOnly(entity)) {
-                        ((EntityInternal)entity).getManagementSupport().setReadOnly();
-                    }
                     rebindContext.registerEntity(entityId, entity);
                 } catch (Exception e) {
                     exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityType, e);
@@ -770,20 +776,41 @@ public class RebindManagerImpl implements RebindManager {
             //
 
             LOG.debug("RebindManager managing locations");
+            LocationManagerInternal locationManager = (LocationManagerInternal)managementContext.getLocationManager();
+            Set<String> oldLocations = Sets.newLinkedHashSet(locationManager.getLocationIds());
+            for (Location location: rebindContext.getLocations()) {
+                ManagementTransitionMode oldMode = locationManager.getLastManagementTransitionMode(location.getId());
+                locationManager.setManagementTransitionMode(location, computeMode(location, oldMode, rebindContext.isReadOnly(location)) );
+                if (oldMode!=null)
+                    oldLocations.remove(location.getId());
+            }
             for (Location location: rebindContext.getLocations()) {
                 if (location.getParent()==null) {
                     // manage all root locations
-                    // LocationManager.manage perhaps should not be deprecated, as we need to do this I think?
                     try {
-                        managementContext.getLocationManager().manage(location);
+                        ((LocationManagerInternal)managementContext.getLocationManager()).manageRebindedRoot(location);
                     } catch (Exception e) {
                         exceptionHandler.onManageFailed(BrooklynObjectType.LOCATION, location, e);
                     }
                 }
             }
+            // destroy old
+            for (String oldLocationId: oldLocations) {
+               locationManager.unmanage(locationManager.getLocation(oldLocationId), ManagementTransitionMode.REBINDING_DESTROYED); 
+            }
             
             // Manage the top-level apps (causing everything under them to become managed)
             LOG.debug("RebindManager managing entities");
+            EntityManagerInternal entityManager = (EntityManagerInternal)managementContext.getEntityManager();
+            Set<String> oldEntities = Sets.newLinkedHashSet(entityManager.getEntityIds());
+            for (Entity entity: rebindContext.getEntities()) {
+                ((EntityInternal)entity).getManagementSupport().setReadOnly( rebindContext.isReadOnly(entity) );
+                
+                ManagementTransitionMode oldMode = entityManager.getLastManagementTransitionMode(entity.getId());
+                entityManager.setManagementTransitionMode(entity, computeMode(entity, oldMode, rebindContext.isReadOnly(entity)) );
+                if (oldMode!=null)
+                    oldEntities.remove(entity.getId());
+            }
             List<Application> apps = Lists.newArrayList();
             for (String appId : memento.getApplicationIds()) {
                 Entity entity = rebindContext.getEntity(appId);
@@ -792,15 +819,16 @@ public class RebindManagerImpl implements RebindManager {
                     exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, appId);
                 } else {
                     try {
-                        if (rebindContext.isReadOnly(entity)) { 
-                            ((EntityManagerInternal)managementContext.getEntityManager()).setReadOnly(entity);
-                        }
-                        managementContext.getEntityManager().manage(entity);
+                        entityManager.manageRebindedRoot(entity);
                     } catch (Exception e) {
                         exceptionHandler.onManageFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
                     apps.add((Application)entity);
                 }
+            }
+            // destroy old
+            for (String oldEntityId: oldEntities) {
+               entityManager.unmanage(entityManager.getEntity(oldEntityId), ManagementTransitionMode.REBINDING_DESTROYED); 
             }
 
             // Register catalogue items with the management context.
@@ -851,14 +879,36 @@ public class RebindManagerImpl implements RebindManager {
             // Return the top-level applications
             LOG.debug("RebindManager complete; return apps: {}", memento.getApplicationIds());
             return apps;
-            
-        } catch (RuntimeException e) {
+
+        } catch (Exception e) {
             throw exceptionHandler.onFailed(e);
         } finally {
+            rebindActive.release();
             RebindTracker.reset();
         }
     }
     
+    static ManagementTransitionMode computeMode(BrooklynObject item, ManagementTransitionMode oldMode, boolean isNowReadOnly) {
+        return computeMode(item, oldMode==null ? null : oldMode.wasReadOnly(), isNowReadOnly);
+    }
+
+    static ManagementTransitionMode computeMode(BrooklynObject item, Boolean wasReadOnly, boolean isNowReadOnly) {
+        if (wasReadOnly==null) {
+            // not known
+            if (Boolean.TRUE.equals(isNowReadOnly)) return ManagementTransitionMode.REBINDING_READONLY;
+            else return ManagementTransitionMode.CREATING;
+        } else {
+            if (wasReadOnly && isNowReadOnly)
+                return ManagementTransitionMode.REBINDING_READONLY;
+            else if (wasReadOnly)
+                return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
+            else if (isNowReadOnly)
+                return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
+            else
+                throw new IllegalStateException("Rebinding master not supported: "+item);
+        }
+    }
+
     /**
      * Sorts the map of nodes, so that a node's parent is guaranteed to come before that node
      * (unless the parent is missing).
