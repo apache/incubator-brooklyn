@@ -187,6 +187,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         HaMgmtNode n1 = newNode();
         HaMgmtNode n2 = newNode();
         
+        // first auto should become master
         n1.ha.start(HighAvailabilityMode.AUTO);
         ManagementPlaneSyncRecord memento1 = n1.ha.getManagementPlaneSyncState();
         
@@ -196,7 +197,8 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento1.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time0);
         assertEquals(memento1.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
 
-        n2.ha.start(HighAvailabilityMode.AUTO);
+        // second - make explicit hot; that's a strictly more complex case than cold standby, so provides pretty good coverage
+        n2.ha.start(HighAvailabilityMode.HOT_STANDBY);
         ManagementPlaneSyncRecord memento2 = n2.ha.getManagementPlaneSyncState();
         
         log.info(n2+" HA: "+memento2);
@@ -339,9 +341,9 @@ public class HighAvailabilityManagerSplitBrainTest {
                         timer.stop();
                     }
                     assertEquals(Collections.frequency(counts, ManagementNodeState.MASTER), 1);
-                    assertEquals(Collections.frequency(counts, ManagementNodeState.HOT_STANDBY), nodes.size()-1);
+                    assertEquals(Collections.frequency(counts, ManagementNodeState.HOT_STANDBY)+Collections.frequency(counts, ManagementNodeState.STANDBY), nodes.size()-1);
                     assertEquals(Collections.frequency(savedCounts, ManagementNodeState.MASTER), 1);
-                    assertEquals(Collections.frequency(savedCounts, ManagementNodeState.HOT_STANDBY), nodes.size()-1);
+                    assertEquals(Collections.frequency(savedCounts, ManagementNodeState.HOT_STANDBY)+Collections.frequency(savedCounts, ManagementNodeState.STANDBY), nodes.size()-1);
                 }});
         } catch (Throwable t) {
             log.warn("Failed to stabilize (rethrowing): "+t, t);

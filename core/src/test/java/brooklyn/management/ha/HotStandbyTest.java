@@ -32,7 +32,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
@@ -41,12 +43,16 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
+
+import com.google.common.collect.Iterables;
 
 @Test
 public class HotStandbyTest {
@@ -127,36 +133,146 @@ public class HotStandbyTest {
         return new InMemoryObjectStore(sharedBackingStore, sharedBackingStoreDates);
     }
 
-    @Test
-    public void testHotStandby() throws Exception {
+    private HaMgmtNode createMaster() throws Exception {
         HaMgmtNode n1 = newNode();
         n1.ha.start(HighAvailabilityMode.AUTO);
         assertEquals(n1.ha.getNodeState(), ManagementNodeState.MASTER);
-        
+        return n1;
+    }
+    
+    private HaMgmtNode createHotStandby() throws Exception {
+        HaMgmtNode n2 = newNode();
+        n2.ha.start(HighAvailabilityMode.HOT_STANDBY);
+        assertEquals(n2.ha.getNodeState(), ManagementNodeState.HOT_STANDBY);
+        return n2;
+    }
+
+    private TestApplication createFirstAppAndPersist(HaMgmtNode n1) throws Exception {        
         TestApplication app = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
+        app.setDisplayName("First App");
         app.start(MutableList.<Location>of());
+        app.setConfig(TestEntity.CONF_NAME, "first-app");
         app.setAttribute(TestEntity.SEQUENCE, 3);
         
         n1.mgmt.getRebindManager().forcePersistNow();
-
-        HaMgmtNode n2 = newNode();
-        n2.ha.start(HighAvailabilityMode.AUTO);
-        assertEquals(n2.ha.getNodeState(), ManagementNodeState.HOT_STANDBY);
+        return app;
+    }
+    
+    private Application waitForRebindSequenceNumber(HaMgmtNode master, HaMgmtNode hotStandby, Application app, int expectedSensorSequenceValue) {
+        Time.sleep(Duration.FIVE_SECONDS);
+        Application appRO = hotStandby.mgmt.lookup(app.getId(), Application.class);
+        // TODO drop the sleep and the new lookup, when the implementation can do in-place replace
+        
+        EntityTestUtils.assertAttributeEqualsEventually(appRO, TestEntity.SEQUENCE, expectedSensorSequenceValue);
+        return appRO;
+    }
+    
+    @Test
+    public void testHotStandbySeesChangedNameConfigAndSensorValueButDoesntAllowChange() throws Exception {
+        HaMgmtNode n1 = createMaster();
+        TestApplication app = createFirstAppAndPersist(n1);
+        HaMgmtNode n2 = createHotStandby();
 
         assertEquals(n2.mgmt.getApplications().size(), 1);
-        Application app2 = n2.mgmt.getApplications().iterator().next();
-        assertEquals(app2.getAttribute(TestEntity.SEQUENCE), (Integer)3);
+        Application appRO = n2.mgmt.lookup(app.getId(), Application.class);
+        Assert.assertNotNull(appRO);
+        Assert.assertTrue(appRO instanceof TestApplication);
+        assertEquals(appRO.getDisplayName(), "First App");
+        assertEquals(appRO.getConfig(TestEntity.CONF_NAME), "first-app");
+        assertEquals(appRO.getAttribute(TestEntity.SEQUENCE), (Integer)3);
 
         try {
-            ((TestApplication)app2).setAttribute(TestEntity.SEQUENCE, 4);
+            ((TestApplication)appRO).setAttribute(TestEntity.SEQUENCE, 4);
             Assert.fail("Should not have allowed sensor to be set");
         } catch (Exception e) {
             Assert.assertTrue(e.toString().toLowerCase().contains("read-only"), "Error message did not contain expected text: "+e);
         }
     }
-    
-    @Test(groups="Integration", invocationCount=50)
-    public void testHotStandbyManyTimes() throws Exception {
-        testHotStandby();
+
+    public void testHotStandbySeesChangedNameConfigAndSensorValue() throws Exception {
+        HaMgmtNode n1 = createMaster();
+        TestApplication app = createFirstAppAndPersist(n1);
+        HaMgmtNode n2 = createHotStandby();
+
+        assertEquals(n2.mgmt.getApplications().size(), 1);
+        Application appRO = n2.mgmt.lookup(app.getId(), Application.class);
+        Assert.assertNotNull(appRO);
+        assertEquals(appRO.getChildren().size(), 0);
+        
+        // test changes
+
+        app.setDisplayName("First App Renamed");
+        app.setConfig(TestEntity.CONF_NAME, "first-app-renamed");
+        app.setAttribute(TestEntity.SEQUENCE, 4);
+
+        appRO = waitForRebindSequenceNumber(n1, n2, app, 4);
+        assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
+        assertEquals(appRO.getDisplayName(), "First App Renamed");
+        assertEquals(appRO.getConfig(TestEntity.CONF_NAME), "first-app-renamed");
+        
+        // and change again for good measure!
+
+        app.setDisplayName("First App");
+        app.setConfig(TestEntity.CONF_NAME, "first-app-restored");
+        app.setAttribute(TestEntity.SEQUENCE, 5);
+        
+        appRO = waitForRebindSequenceNumber(n1, n2, app, 4);
+        assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
+        assertEquals(appRO.getDisplayName(), "First App");
+        assertEquals(appRO.getConfig(TestEntity.CONF_NAME), "first-app-restored");
     }
+
+
+    @Test(groups="Integration", invocationCount=50)
+    public void testHotStandbySeesAdditionAndRemovalManyTimes() throws Exception {
+        testHotStandbySeesStructuralChangesIncludingRemoval();
+    }
+    
+    @Test(groups="Integration") // due to time (could speed up by forcing persist and rebind)
+    public void testHotStandbySeesStructuralChangesIncludingRemoval() throws Exception {
+        HaMgmtNode n1 = createMaster();
+        TestApplication app = createFirstAppAndPersist(n1);
+        HaMgmtNode n2 = createHotStandby();
+
+        assertEquals(n2.mgmt.getApplications().size(), 1);
+        Application appRO = n2.mgmt.lookup(app.getId(), Application.class);
+        Assert.assertNotNull(appRO);
+        assertEquals(appRO.getChildren().size(), 0);
+        
+        // test additions - new child, new app
+        
+        TestEntity child = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
+        TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
+        
+        app.setAttribute(TestEntity.SEQUENCE, 4);
+        appRO = waitForRebindSequenceNumber(n1, n2, app, 4);
+        
+        assertEquals(appRO.getChildren().size(), 1);
+        Entity childRO = Iterables.getOnlyElement(appRO.getChildren());
+        assertEquals(childRO.getId(), child.getId());
+        assertEquals(childRO.getConfig(TestEntity.CONF_NAME), "first-child");
+        
+        assertEquals(n2.mgmt.getApplications().size(), 2);
+        Application app2RO = n2.mgmt.lookup(app2.getId(), Application.class);
+        Assert.assertNotNull(app2RO);
+        assertEquals(app2RO.getConfig(TestEntity.CONF_NAME), "second-app");
+        
+        assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 3);
+        
+        // now test removals
+        
+        Entities.unmanage(child);
+        Entities.unmanage(app2);
+        
+        app.setAttribute(TestEntity.SEQUENCE, 5);
+        appRO = waitForRebindSequenceNumber(n1, n2, app, 5);
+        
+        EntityTestUtils.assertAttributeEqualsEventually(appRO, TestEntity.SEQUENCE, 5);
+        assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
+        assertEquals(appRO.getChildren().size(), 0);
+        assertEquals(n2.mgmt.getApplications().size(), 1);
+        Assert.assertNull(n2.mgmt.lookup(app2.getId(), Application.class));
+        Assert.assertNull(n2.mgmt.lookup(child.getId(), Application.class));
+    }
+    
 }

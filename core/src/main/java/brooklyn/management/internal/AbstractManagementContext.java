@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
@@ -405,4 +406,19 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public Maybe<URI> getManagementNodeUri() {
         return uri;
     }
+    
+    
+    public BrooklynObject lookup(String id) {
+        return lookup(id, BrooklynObject.class);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> T lookup(String id, Class<T> type) {
+        Object result;
+        result = getEntityManager().getEntity(id);
+        if (result!=null && type.isInstance(result)) return (T)result;
+        // TODO policies, etc
+        return null;
+    }
+
 }

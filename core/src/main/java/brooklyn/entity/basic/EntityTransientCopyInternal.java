@@ -25,7 +25,6 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Application;
@@ -34,8 +33,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.EntityType;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
+import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -50,10 +49,14 @@ import com.google.common.annotations.Beta;
 
 /** 
  * Selected methods from {@link EntityInternal} and parents which are permitted
- * in read-only mode.
+ * for entities being loaded in read-only mode, enforced by {@link EntityProxyImpl}.
+ * <p>
+ * Some of these methods do expose write capabilities, but such modifications are likely
+ * to be temporary, discarded on next rebind. Callers must take care with any such invocations.
+ * (The primary intent of this interface is to catch and prevent *most* such invocations!)
  */
 @Beta
-public interface EntityReadOnlyInternal {
+public interface EntityTransientCopyInternal {
 
     // from Entity
     
@@ -81,17 +84,18 @@ public interface EntityReadOnlyInternal {
     
     // from entity local
     
-    void setDisplayName(String displayName);
     @Deprecated <T> T getConfig(ConfigKey<T> key, T defaultValue);
     @Deprecated <T> T getConfig(HasConfigKey<T> key, T defaultValue);
+
     
     // from EntityInternal:
     
     EntityConfigMap getConfigMap();
     Map<ConfigKey<?>,Object> getAllConfig();
-    // for rebind mainly
+    // for rebind mainly:
     ConfigBag getAllConfigBag();
     ConfigBag getLocalConfigBag();
+    @SuppressWarnings("rawtypes")
     Map<AttributeSensor, Object> getAllAttributes();
     EntityManagementSupport getManagementSupport();
     ManagementContext getManagementContext();

@@ -34,6 +34,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
@@ -417,6 +418,18 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         initialManagementContext.removePropertiesReloadListener(listener);
     }
 
+    @Override
+    public BrooklynObject lookup(String id) {
+        checkInitialManagementContextReal();
+        return initialManagementContext.lookup(id);
+    }
+
+    @Override
+    public <T> T lookup(String id, Class<T> type) {
+        checkInitialManagementContextReal();
+        return initialManagementContext.lookup(id, type);
+    }
+
     /**
      * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
      * 
@@ -551,4 +564,5 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }
+    
 }

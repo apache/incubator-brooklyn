@@ -23,6 +23,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.management.ha.HighAvailabilityMode;
+
 import com.google.common.collect.Maps;
 
 /**
@@ -44,6 +46,10 @@ public class BrooklynFeatureEnablement {
     public static final String FEATURE_FEED_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.feedPersistence";
 
     public static final String FEATURE_CATALOG_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.catalogPersistence";
+    
+    /** whether the default standby mode is {@link HighAvailabilityMode#HOT_STANDBY} or falling back to the traditional
+     * {@link HighAvailabilityMode#STANDBY} */
+    public static final String FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY = "brooklyn.experimental.feature.defaultStandbyIsHot";
 
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
@@ -58,6 +64,7 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_FEED_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_CATALOG_PERSISTENCE_PROPERTY, true);
+        setDefault(FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY, false);
     }
     
     static {

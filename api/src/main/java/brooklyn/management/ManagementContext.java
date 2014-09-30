@@ -21,6 +21,7 @@ package brooklyn.management;
 import java.net.URI;
 import java.util.Collection;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
@@ -211,5 +212,12 @@ public interface ManagementContext {
 
     /** Active entitlements checker instance. */
     EntitlementManager getEntitlementManager();
-    
+ 
+
+    /** as {@link #lookup(String, Class)} but not constraining the return type */
+    public BrooklynObject lookup(String id);
+    /** finds an entity with the given ID known at this management context */
+    // TODO in future support policies etc
+    public <T> T lookup(String id, Class<T> type); 
+
 }

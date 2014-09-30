@@ -216,7 +216,7 @@ public abstract class HighAvailabilityManagerTestFixture {
                 .setMaster("node1")
                 .build());
         
-        manager.start(HighAvailabilityMode.AUTO);
+        manager.start(HighAvailabilityMode.HOT_STANDBY);
         
         ManagementPlaneSyncRecord state = manager.getManagementPlaneSyncState();
         assertEquals(state.getManagementNodes().get("node1").getStatus(), ManagementNodeState.MASTER);

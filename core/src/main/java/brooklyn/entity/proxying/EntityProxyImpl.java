@@ -33,7 +33,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.EntityReadOnlyInternal;
+import brooklyn.entity.basic.EntityTransientCopyInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagerInternal;
@@ -81,7 +81,7 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
 
     private static final Set<MethodSignature> ENTITY_PERMITTED_READ_ONLY_METHODS = Sets.newLinkedHashSet();
     static {
-        for (Method m : EntityReadOnlyInternal.class.getMethods()) {
+        for (Method m : EntityTransientCopyInternal.class.getMethods()) {
             ENTITY_PERMITTED_READ_ONLY_METHODS.add(new MethodSignature(m));
         }
         if (!ENTITY_NON_EFFECTOR_METHODS.containsAll(ENTITY_PERMITTED_READ_ONLY_METHODS)) {

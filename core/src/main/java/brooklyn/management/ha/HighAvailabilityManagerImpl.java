@@ -40,6 +40,7 @@ import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.Task;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
@@ -204,8 +205,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     @Override
     public void start(HighAvailabilityMode startMode) {
         ownNodeId = managementContext.getManagementNodeId();
-        nodeState = ManagementNodeState.STANDBY;
         nodeStateTransitionComplete = true;
+        // always start in standby; it may get promoted to master or hot_standby in this method
+        nodeState = ManagementNodeState.STANDBY;
         running = true;
         
         // TODO Small race in that we first check, and then we'll do checkMaster() on first poll,
@@ -225,8 +227,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 ManagementNodeSyncRecord masterNodeDetails = getManagementPlaneSyncState().getManagementNodes().get(masterNodeId);
                 LOG.info("Management node "+ownNodeId+" started as HA " + nodeState + " autodetected, master is "+masterNodeId +
                     (masterNodeDetails==null || masterNodeDetails.getUri()==null ? " (no url)" : " at "+masterNodeDetails.getUri()));
-            } else {
+            } else if (nodeState == ManagementNodeState.MASTER) {
                 LOG.info("Management node "+ownNodeId+" starting as HA MASTER autodetected");
+            } else {
+                throw new IllegalStateException("Management node "+ownNodeId+" started as auto in unexpected mode "+nodeState);
             }
             break;
         case MASTER:
@@ -250,9 +254,15 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             throw new IllegalStateException("Unexpected high availability start-mode "+startMode+" for "+this);
         }
         
-        if (nodeState==ManagementNodeState.STANDBY && startMode!=HighAvailabilityMode.STANDBY) {
-            // if standby not explicitly requested, we need promote to hot standby
-            // TODO may want a flag which enables/disables hot standby; for now, always enabled unless told to start in standby
+        if (startMode==HighAvailabilityMode.AUTO) {
+            if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY)) {
+                startMode = HighAvailabilityMode.HOT_STANDBY;
+            } else {
+                startMode = HighAvailabilityMode.STANDBY;
+            }
+        }
+        if (nodeState==ManagementNodeState.STANDBY && startMode==HighAvailabilityMode.HOT_STANDBY) {
+            // if it should be hot standby, then we need to promote
             nodeStateTransitionComplete = false;
             // inform the world that we are transitioning (not eligible for promotion while going in to hot standby)
             publishHealth();
@@ -624,9 +634,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return true;
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            // TODO maybe move to failure state?  and record problems somewhere else for investigation subsequently.
-            nodeState = ManagementNodeState.STANDBY;
-            LOG.warn("Unable to promote "+ownNodeId+" to hot standby: "+e, e);
+            LOG.warn("Unable to promote "+ownNodeId+" to hot standby, switching to FAILED: "+e, e);
+            demoteToFailed();
             return false;
         }
     }
