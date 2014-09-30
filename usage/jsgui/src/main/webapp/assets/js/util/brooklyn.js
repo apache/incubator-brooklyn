@@ -21,8 +21,8 @@
 /** brooklyn extension to make console methods available and simplify access to other utils */
 
 define([
-    "brooklyn-view", "brooklyn-utils"
-], function (BrooklynViews, BrooklynUtils) {
+    "underscore", "brooklyn-view", "brooklyn-utils"
+], function (_, BrooklynViews, BrooklynUtils) {
 
     /**
      * Makes the console API safe to use:
@@ -59,6 +59,23 @@ define([
             };
         }
     })();
+
+    var template = _.template;
+    _.mixin({
+        /**
+         * @param {string} text
+         * @return string The text with HTML comments removed.
+         */
+        stripComments: function (text) {
+            return text.replace(/<!--(.|[\n\r\t])*?-->\r?\n?/g, "");
+        },
+        /**
+         * As the real _.template, calling stripComments on text.
+         */
+        template: function (text, data, settings) {
+            return template(_.stripComments(text), data, settings);
+        }
+    });
 
     var Brooklyn = {
         view: BrooklynViews,
