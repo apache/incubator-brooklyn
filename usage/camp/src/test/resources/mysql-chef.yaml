@@ -26,6 +26,9 @@ services:
     mysql: https://github.com/opscode-cookbooks/mysql/archive/v4.0.12.tar.gz
     openssl: https://github.com/opscode-cookbooks/openssl/archive/v1.1.0.tar.gz
     build-essential: https://github.com/opscode-cookbooks/build-essential/archive/v1.4.4.tar.gz
+    # NB: this also supports new style community url links, assuming TGZ and directory name,
+    # (eg https://community.opscode.com/cookbooks/mysql/download) but github versioned links
+    # are recommended because they point to a specific released version and explicit archive type
   
   launch_run_list: [ "mysql::server" ]
   launch_attributes:
