@@ -18,6 +18,8 @@
  */
 package brooklyn.util.guava;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.Collections;
@@ -29,10 +31,12 @@ import javax.annotation.Nullable;
 
 import brooklyn.util.javalang.JavaClassNames;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableSet;
 
 /** Like Guava Optional but permitting null and permitting errors to be thrown. */
@@ -159,6 +163,35 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
             }
         };
         return absent();
+    }
+
+    /**
+     * Returns the value of each present instance from the supplied {@code maybes}, in order,
+     * skipping over occurrences of {@link Maybe#absent()}. Iterators are unmodifiable and are
+     * evaluated lazily.
+     *
+     * @see Optional#presentInstances(Iterable)
+     */
+    @Beta
+    public static <T> Iterable<T> presentInstances(final Iterable<? extends Maybe<? extends T>> maybes) {
+        checkNotNull(maybes);
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return new AbstractIterator<T>() {
+                    private final Iterator<? extends Maybe<? extends T>> iterator = checkNotNull(maybes.iterator());
+
+                    @Override
+                    protected T computeNext() {
+                        while (iterator.hasNext()) {
+                            Maybe<? extends T> maybe = iterator.next();
+                            if (maybe.isPresent()) { return maybe.get(); }
+                        }
+                        return endOfData();
+                    }
+                };
+            }
+        };
     }
     
     public static class Absent<T> extends Maybe<T> {
