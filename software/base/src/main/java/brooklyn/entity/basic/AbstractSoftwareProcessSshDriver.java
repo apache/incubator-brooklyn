@@ -22,11 +22,11 @@ import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +47,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
-import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
@@ -57,6 +56,7 @@ import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -271,14 +271,23 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
-        Map flags = new LinkedHashMap();
-        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+        Map flags = Maps.newLinkedHashMap();
+        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
+        }
         flags.putAll(flags2);
-        Map<String, String> environment = (Map<String, String>) ((flags.get("env") != null) ? flags.get("env") : getShellEnvironment());
-        if (environment!=null && Tasks.current()!=null) {
+        Map<String, String> environment = Optional.fromNullable((Map<String,String>) flags.get("env")).or(getShellEnvironment());
+        if (Tasks.current()!=null) {
             // attach tags here, as well as in ScriptHelper, because they may have just been read from the driver
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
+            if (environment!=null) {
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
+            }
+            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdout));
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stderr));
+            flags.put("out", stdout);
+            flags.put("err", stderr);
         }
         if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getDisplayName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
