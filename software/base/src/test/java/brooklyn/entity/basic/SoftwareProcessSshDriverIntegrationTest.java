@@ -248,10 +248,11 @@ public class SoftwareProcessSshDriverIntegrationTest {
     @Test
     public void testInstallResourcesCopy() throws IOException {
         localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        File template = new File(Os.tmp(), "template.yaml");
         VanillaSoftwareProcess entity = app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
                 .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
                 .configure(SoftwareProcess.INSTALL_FILES, MutableMap.of("classpath://brooklyn/entity/basic/frogs.txt", "frogs.txt"))
-                .configure(SoftwareProcess.INSTALL_TEMPLATES, MutableMap.of("classpath://brooklyn/entity/basic/template.yaml", "/tmp/template.yaml"))
+                .configure(SoftwareProcess.INSTALL_TEMPLATES, MutableMap.of("classpath://brooklyn/entity/basic/template.yaml", template.getAbsolutePath()))
                 .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "date"));
         app.start(ImmutableList.of(localhost));
 
@@ -264,7 +265,6 @@ public class SoftwareProcessSshDriverIntegrationTest {
             frogs.delete();
         }
 
-        File template = new File("/tmp", "template.yaml");
         try {
             Map<?,?> data = (Map) Iterables.getOnlyElement(Yamls.parseAll(Files.toString(template, Charsets.UTF_8)));
             Assert.assertEquals(data.size(), 3);
@@ -279,10 +279,11 @@ public class SoftwareProcessSshDriverIntegrationTest {
     @Test
     public void testRuntimeResourcesCopy() throws IOException {
         localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        File template = new File(Os.tmp(), "template.yaml");
         VanillaSoftwareProcess entity = app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
                 .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
                 .configure(SoftwareProcess.RUNTIME_FILES, MutableMap.of("classpath://brooklyn/entity/basic/frogs.txt", "frogs.txt"))
-                .configure(SoftwareProcess.RUNTIME_TEMPLATES, MutableMap.of("classpath://brooklyn/entity/basic/template.yaml", "/tmp/template.yaml"))
+                .configure(SoftwareProcess.RUNTIME_TEMPLATES, MutableMap.of("classpath://brooklyn/entity/basic/template.yaml", template.getAbsolutePath()))
                 .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "date"));
         app.start(ImmutableList.of(localhost));
 
@@ -295,7 +296,6 @@ public class SoftwareProcessSshDriverIntegrationTest {
             frogs.delete();
         }
 
-        File template = new File("/tmp", "template.yaml");
         try {
             Map<?,?> data = (Map) Iterables.getOnlyElement(Yamls.parseAll(Files.toString(template, Charsets.UTF_8)));
             Assert.assertEquals(data.size(), 3);

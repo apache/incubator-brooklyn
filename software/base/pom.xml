@@ -160,6 +160,16 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes combine.children="append">
+                        <exclude>**/src/test/resources/brooklyn/entity/basic/frogs.txt</exclude>
+                        <exclude>**/src/test/resources/brooklyn/entity/basic/template.yaml</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <!-- copy the JMX agent JAR  files so they are available on the classpath for programmatic deployment -->
                 <!-- NB this can fail in eclipse trying to copy _from_ target/classes. see http://jira.codehaus.org/browse/MDEP-259 -->
