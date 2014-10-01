@@ -38,7 +38,6 @@ import brooklyn.util.time.Duration;
 
 import com.google.api.client.util.Maps;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class CatalogDo {
 
@@ -121,15 +120,10 @@ public class CatalogDo {
     }
 
     private void loadCatalogItems() {
-        List<CatalogLibrariesDo> loadedLibraries = Lists.newLinkedList();
         List<CatalogItemDtoAbstract<?, ?>> entries = dto.entries;
         if (entries!=null) {
             for (CatalogItemDtoAbstract<?,?> entry : entries) {
-                if (entry.getLibrariesDto()!=null) {
-                    CatalogLibrariesDo library = new CatalogLibrariesDo(entry.getLibrariesDto());
-                    library.load(mgmt);
-                    loadedLibraries.add(library);
-                }
+                CatalogUtils.installLibraries(mgmt, entry.getLibrariesDto());
             }
         }
     }

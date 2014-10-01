@@ -111,40 +111,6 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         deleteCatalogEntity(referencedRegisteredTypeName);
     }
 
-    @Test
-    public void testParentCatalogDoesNotLeakBundlesToChildCatalogItems() throws Exception {
-        String childCatalogId = "my.catalog.policy.id.no_bundles";
-        String parentCatalogId = "my.catalog.policy.id.parent";
-        addCatalogItem(
-            "brooklyn.catalog:",
-            "  id: " + childCatalogId,
-            "",
-            "services:",
-            "- type: " + BasicEntity.class.getName(),
-            "  brooklyn.policies:",
-            "  - type: " + SIMPLE_POLICY_TYPE);
-
-        addCatalogItem(
-            "brooklyn.catalog:",
-            "  id: " + parentCatalogId,
-            "  libraries:",
-            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
-            "",
-            "services:",
-            "- type: " + childCatalogId);
-
-        try {
-            createAndStartApplication(
-                    "services:",
-                    "- type: " + parentCatalogId);
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().startsWith("Unable to load " + SIMPLE_POLICY_TYPE));
-        }
-
-        deleteCatalogEntity(parentCatalogId);
-        deleteCatalogEntity(childCatalogId);
-    }
-
     private void addCatalogOSGiPolicy(String registeredTypeName, String serviceType) {
         addCatalogItem(
             "brooklyn.catalog:",

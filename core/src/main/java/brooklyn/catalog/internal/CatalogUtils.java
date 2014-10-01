@@ -77,4 +77,28 @@ public class CatalogUtils {
         return result;
     }
 
+    /**
+     * Registers all bundles with the management context's OSGi framework.
+     */
+    public static void installLibraries(ManagementContext managementContext, @Nullable CatalogItemLibraries libraries) {
+        if (libraries == null) return;
+
+        ManagementContextInternal mgmt = (ManagementContextInternal) managementContext;
+        List<String> bundles = libraries.getBundles();
+        if (!bundles.isEmpty()) {
+            Maybe<OsgiManager> osgi = mgmt.getOsgiManager();
+            if (osgi.isAbsent()) {
+                throw new IllegalStateException("Unable to load bundles "+bundles+" because OSGi is not running.");
+            }
+            if (log.isDebugEnabled()) log.debug("Loading bundles in {}: {}", 
+                    new Object[] {managementContext, Joiner.on(", ").join(bundles)});
+            Stopwatch timer = Stopwatch.createStarted();
+            for (String bundleUrl : bundles) {
+                osgi.get().registerBundle(bundleUrl);
+            }
+            if (log.isDebugEnabled()) log.debug("Registered {} bundles in {}",
+                new Object[]{bundles.size(), Time.makeTimeStringRounded(timer)});
+        }
+    }
+
 }

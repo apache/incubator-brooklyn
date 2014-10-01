@@ -21,6 +21,8 @@ package brooklyn.entity.rebind;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+import io.brooklyn.camp.BasicCampPlatform;
+import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +30,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.api.client.repackaged.com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-
 import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
+import brooklyn.camp.lite.TestAppAssemblyInstantiator;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.config.BrooklynProperties;
@@ -39,11 +39,16 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.TestEntity;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 
 public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(RebindCatalogItemTest.class);
+    public static class MyPolicy extends AbstractPolicy {}
     private boolean catalogPersistenceWasEnabled;
 
     @BeforeMethod(alwaysRun = true)
@@ -52,7 +57,8 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         super.setUp();
         catalogPersistenceWasEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
         BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
-        new CampPlatformWithJustBrooklynMgmt(origManagementContext);
+        BasicCampPlatform platform = new CampPlatformWithJustBrooklynMgmt(origManagementContext);
+        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
         origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
     }
 
@@ -97,7 +103,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     public void testAddAndRebindEntity() throws Exception {
         String yaml = "name: rebind-yaml-catalog-item-test\n" +
                 "services:\n" +
-                "- type: brooklyn.entity.basic.EmptySoftwareProcess";
+                "- type: io.camp.mock:AppServer";
         CatalogItem<?, ?> added = origManagementContext.getCatalog().addItem(yaml);
         LOG.info("Added item to catalog: {}, id={}", added, added.getId());
         rebindAndAssertCatalogsAreEqual();
@@ -117,7 +123,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
                 "  id: sample_policy\n" +
                 "  version: 0.1.0\n" +
                 "brooklyn.policies: \n" +
-                "- type: com.acme.sample.policy.SamplePolicy\n" +
+                "- type: brooklyn.entity.rebind.RebindCatalogItemTest$MyPolicy\n" +
                 "  brooklyn.config:\n" +
                 "    cfg1: 111\n" +
                 "    cfg2: 222";
