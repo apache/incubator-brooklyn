@@ -59,6 +59,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMemento;
@@ -226,8 +227,8 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
             BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
             newManagementContext = new LocalManagementContextForTests();
             newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
-            newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
-            newManagementContext.getRebindManager().start();
+            newManagementContext.getRebindManager().rebind(getClass().getClassLoader(), null, ManagementNodeState.MASTER);
+            newManagementContext.getRebindManager().startPersistence();
             SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(tokill.getId());
             entity2.stop();
         } finally {

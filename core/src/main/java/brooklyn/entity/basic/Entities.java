@@ -67,6 +67,7 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.internal.EffectorUtils;
+import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.NonDeploymentManagementContext;
@@ -657,11 +658,16 @@ public class Entities {
      */
     public static void destroy(Entity e) {
         if (isManaged(e)) {
-            if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
-            if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
-            unmanage(e);
-            log.debug("destroyed and unmanaged "+e+"; mgmt now "+
+            if (isReadOnly(e)) {
+                unmanage(e);
+                log.debug("destroyed and unmanaged read-only copy of "+e);
+            } else {
+                if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
+                if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
+                unmanage(e);
+                log.debug("destroyed and unmanaged "+e+"; mgmt now "+
                     (e.getApplicationId()==null ? "(no app)" : e.getApplication().getManagementContext())+" - managed? "+isManaged(e));
+            }
         } else {
             log.debug("skipping destroy of "+e+": not managed");
         }
@@ -745,6 +751,12 @@ public class Entities {
 
     public static boolean isNoLongerManaged(Entity e) {
         return ((EntityInternal)e).getManagementSupport().isNoLongerManaged();
+    }
+
+    /** as {@link EntityManagerInternal#isReadOnly(Entity)} */
+    @Beta
+    public static Boolean isReadOnly(Entity e) {
+        return ((EntityInternal)e).getManagementSupport().isReadOnly();
     }
 
     /**
@@ -1007,7 +1019,7 @@ public class Entities {
     @Beta
     public static ProcessTaskWrapper<Integer> shell(ManagementContext mgmt, String command) {
         ProcessTaskWrapper<Integer> t = SystemTasks.exec(command).newTask();
-        mgmt.getExecutionManager().submit(t).getUnchecked();
+        mgmt.getServerExecutionContext().submit(t).getUnchecked();
         System.out.println(t.getStdout());
         System.err.println(t.getStderr());
         return t;

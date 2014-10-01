@@ -37,6 +37,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -44,8 +45,11 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -93,7 +97,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
     
-    private final ExecutionManager executionManager;
+    private final ExecutionContext executionContext;
     
     private final BrooklynMementoPersister persister;
 
@@ -117,11 +121,17 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final Semaphore persistingMutex = new Semaphore(1);
     
+    /** @deprecated since 0.7.0 pass in an {@link ExecutionContext} and a {@link Duration} */
+    @Deprecated
     public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, long periodMillis) {
-        this.executionManager = executionManager;
+        this(new BasicExecutionContext(executionManager), persister, exceptionHandler, Duration.of(periodMillis, TimeUnit.MILLISECONDS));
+    }
+    
+    public PeriodicDeltaChangeListener(ExecutionContext executionContext, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, Duration period) {
+        this.executionContext = executionContext;
         this.persister = persister;
         this.exceptionHandler = exceptionHandler;
-        this.period = Duration.of(periodMillis, TimeUnit.MILLISECONDS);
+        this.period = period;
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
         this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
@@ -130,6 +140,11 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @SuppressWarnings("unchecked")
     public void start() {
+        if (running || (scheduledTask!=null && !scheduledTask.isDone())) {
+            LOG.warn("Request to start "+this+" when already running - "+scheduledTask+"; ignoring");
+            return;
+        }
+        stopped = false;
         running = true;
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
@@ -155,13 +170,34 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     }});
             }
         };
-        scheduledTask = (ScheduledTask) executionManager.submit(new ScheduledTask(taskFactory).period(period));
+        scheduledTask = (ScheduledTask) executionContext.submit(new ScheduledTask(taskFactory).period(period));
     }
-    
+
+    /** stops persistence, waiting for it to complete */
     void stop() {
+        stop(Duration.TEN_SECONDS, Duration.ONE_SECOND);
+    }
+    void stop(Duration timeout, Duration graceTimeoutForSubsequentOperations) {
         stopped = true;
         running = false;
-        if (scheduledTask != null) scheduledTask.cancel();
+        
+        if (scheduledTask != null) {
+            CountdownTimer expiry = timeout.countdownTimer();
+            scheduledTask.cancel(false);
+            try {
+                waitForPendingComplete(expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+            scheduledTask.blockUntilEnded(expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            scheduledTask.cancel(true);
+            boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(scheduledTask, expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            if (!reallyEnded) {
+                LOG.warn("Persistence tasks took too long to complete when stopping persistence (ignoring): "+scheduledTask);
+            }
+            scheduledTask = null;
+        }
+
 
         // Discard all state that was waiting to be persisted
         synchronized (this) {
@@ -213,7 +249,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
      * Whether we have been stopped, in which case will not persist or store anything.
      */
     private boolean isStopped() {
-        return stopped || executionManager.isShutdown();
+        return stopped || executionContext.isShutdown();
     }
     
     private void addReferencedObjects(DeltaCollector deltaCollector) {
@@ -263,7 +299,9 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @VisibleForTesting
     public void persistNow() {
-        if (!isActive()) return;
+        if (!isActive()) {
+            return;
+        }
         try {
             persistingMutex.acquire();
             if (!isActive()) return;

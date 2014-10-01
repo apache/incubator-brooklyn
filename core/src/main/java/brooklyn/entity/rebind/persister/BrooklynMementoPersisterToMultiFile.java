@@ -128,6 +128,14 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         LOG.info("Memento-persister will use directory {}", dir);
     }
     
+    @Override public void enableWriteAccess() {
+        // no-op -- means subsequent writes will not be enabled
+    }
+    
+    @Override public void disableWriteAccess(boolean graceful) {
+        stop(graceful);
+    }
+
     @Override
     public void stop(boolean graceful) {
         running = false;

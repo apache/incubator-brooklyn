@@ -281,4 +281,16 @@ public class Duration implements Comparable<Duration>, Serializable {
         return compareTo(x) < 0;
     }
 
+    /** returns the larger of this value or the argument */
+    public Duration minimum(Duration alternateMinimumValue) {
+        if (isShorterThan(alternateMinimumValue)) return alternateMinimumValue;
+        return this;
+    }
+
+    /** returns the smaller of this value or the argument */
+    public Duration maximum(Duration alternateMaximumValue) {
+        if (isLongerThan(alternateMaximumValue)) return alternateMaximumValue;
+        return this;
+    }
+
 }

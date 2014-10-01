@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -45,7 +47,6 @@ import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalFactory;
@@ -57,8 +58,14 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
+import brooklyn.management.ha.HighAvailabilityManagerImpl;
+import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.internal.EntityManagerInternal;
+import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -76,17 +83,22 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.BasicExecutionContext;
+import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /** Manages the persistence/rebind process.
  * <p>
@@ -114,16 +126,19 @@ public class RebindManagerImpl implements RebindManager {
     
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
+    private final ManagementContextInternal managementContext;
+    
     private volatile Duration periodicPersistPeriod = Duration.ONE_SECOND;
     
-    private volatile boolean running = false;
+    private volatile boolean persistenceRunning = false;
+    private volatile PeriodicDeltaChangeListener persistenceRealChangeListener;
+    private volatile ChangeListener persistencePublicChangeListener;
     
-    private final ManagementContextInternal managementContext;
-
-    private volatile PeriodicDeltaChangeListener realChangeListener;
-    private volatile ChangeListener changeListener;
+    private volatile boolean readOnlyRunning = false;
+    private volatile ScheduledTask readOnlyTask = null;
+    private transient Semaphore rebindActive = new Semaphore(1);
     
-    private volatile BrooklynMementoPersister persister;
+    private volatile BrooklynMementoPersister persistenceStoreAccess;
 
     private final boolean persistPoliciesEnabled;
     private final boolean persistEnrichersEnabled;
@@ -160,7 +175,7 @@ public class RebindManagerImpl implements RebindManager {
 
     public RebindManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
-        this.changeListener = ChangeListener.NOOP;
+        this.persistencePublicChangeListener = ChangeListener.NOOP;
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
         this.persistEnrichersEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_ENRICHER_PERSISTENCE_PROPERTY);
@@ -180,7 +195,7 @@ public class RebindManagerImpl implements RebindManager {
      * Must be called before setPerister()
      */
     public void setPeriodicPersistPeriod(Duration period) {
-        if (persister!=null) throw new IllegalStateException("Cannot set period after persister is generated.");
+        if (persistenceStoreAccess!=null) throw new IllegalStateException("Cannot set period after persister is generated.");
         this.periodicPersistPeriod = period;
     }
 
@@ -191,6 +206,14 @@ public class RebindManagerImpl implements RebindManager {
         setPeriodicPersistPeriod(Duration.of(periodMillis, TimeUnit.MILLISECONDS));
     }
 
+    public boolean isPersistenceRunning() {
+        return persistenceRunning;
+    }
+    
+    public boolean isReadOnlyRunning() {
+        return readOnlyRunning;
+    }
+    
     @Override
     public void setPersister(BrooklynMementoPersister val) {
         PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder()
@@ -200,85 +223,206 @@ public class RebindManagerImpl implements RebindManager {
 
     @Override
     public void setPersister(BrooklynMementoPersister val, PersistenceExceptionHandler exceptionHandler) {
-        if (persister != null && persister != val) {
-            throw new IllegalStateException("Dynamically changing persister is not supported: old="+persister+"; new="+val);
+        if (persistenceStoreAccess != null && persistenceStoreAccess != val) {
+            throw new IllegalStateException("Dynamically changing persister is not supported: old="+persistenceStoreAccess+"; new="+val);
         }
-        this.persister = checkNotNull(val, "persister");
+        this.persistenceStoreAccess = checkNotNull(val, "persister");
         
-        this.realChangeListener = new PeriodicDeltaChangeListener(managementContext.getExecutionManager(), persister, exceptionHandler, periodicPersistPeriod.toMilliseconds());
-        this.changeListener = new SafeChangeListener(realChangeListener);
+        this.persistenceRealChangeListener = new PeriodicDeltaChangeListener(managementContext.getServerExecutionContext(), persistenceStoreAccess, exceptionHandler, periodicPersistPeriod);
+        this.persistencePublicChangeListener = new SafeChangeListener(persistenceRealChangeListener);
         
-        if (running) {
-            realChangeListener.start();
+        if (persistenceRunning) {
+            persistenceRealChangeListener.start();
         }
     }
 
     @Override
     @VisibleForTesting
     public BrooklynMementoPersister getPersister() {
-        return persister;
+        return persistenceStoreAccess;
+    }
+    
+    @Override
+    public void startPersistence() {
+        if (readOnlyRunning) {
+            throw new IllegalStateException("Cannot start read-only when already running with persistence");
+        }
+        LOG.debug("Starting persistence, mgmt "+managementContext.getManagementNodeId());
+        persistenceRunning = true;
+        persistenceStoreAccess.enableWriteAccess();
+        if (persistenceRealChangeListener != null) persistenceRealChangeListener.start();
+    }
+    
+    @Override
+    public void stopPersistence() {
+        LOG.debug("Stopping persistence, mgmt "+managementContext.getManagementNodeId());
+        persistenceRunning = false;
+        if (persistenceRealChangeListener != null) persistenceRealChangeListener.stop();
+        if (persistenceStoreAccess != null) persistenceStoreAccess.disableWriteAccess(true);
+        LOG.debug("Stopped persistence, mgmt "+managementContext.getManagementNodeId());
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public void startReadOnly() {
+        if (persistenceRunning) {
+            throw new IllegalStateException("Cannot start read-only when already running with persistence");
+        }
+        if (readOnlyRunning || readOnlyTask!=null) {
+            LOG.warn("Cannot request read-only mode for "+this+" when already running - "+readOnlyTask+"; ignoring");
+            return;
+        }
+        LOG.debug("Starting read-only rebinding, mgmt "+managementContext.getManagementNodeId());
+        
+        if (persistenceRealChangeListener != null) persistenceRealChangeListener.stop();
+        if (persistenceStoreAccess != null) persistenceStoreAccess.disableWriteAccess(true);
+        
+        readOnlyRunning = true;
+
+        try {
+            rebind(null, null, ManagementNodeState.HOT_STANDBY);
+        } catch (Exception e) {
+            Exceptions.propagate(e);
+        }
+        
+        Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
+            @Override public Task<Void> call() {
+                return Tasks.<Void>builder().dynamic(false).name("rebind (periodic run").body(new Callable<Void>() {
+                    public Void call() {
+                        try {
+                            rebind(null, null, ManagementNodeState.HOT_STANDBY);
+                            return null;
+                        } catch (RuntimeInterruptedException e) {
+                            LOG.debug("Interrupted rebinding (re-interrupting): "+e);
+                            if (LOG.isTraceEnabled())
+                                LOG.trace("Interrupted rebinding (re-interrupting): "+e, e);
+                            Thread.currentThread().interrupt();
+                            return null;
+                        } catch (Exception e) {
+                            // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
+                            // if we throw an exception, then our task will never get executed again
+                            if (!readOnlyRunning) {
+                                if (LOG.isTraceEnabled())
+                                    LOG.trace("Problem rebinding (read-only running turned off): "+e, e);
+                            } else {
+                                LOG.warn("Problem rebinding: "+Exceptions.collapseText(e), e);
+                            }
+                            return null;
+                        } catch (Throwable t) {
+                            LOG.warn("Problem rebinding (rethrowing)", t);
+                            throw Exceptions.propagate(t);
+                        }
+                    }}).build();
+            }
+        };
+        readOnlyTask = (ScheduledTask) managementContext.getServerExecutionContext().submit(
+            new ScheduledTask(MutableMap.of("displayName", "Periodic read-only rebind"), taskFactory).period(periodicPersistPeriod));
+    }
+    
+    @Override
+    public void stopReadOnly() {
+        LOG.debug("Stopping read-only rebinding, mgmt "+managementContext.getManagementNodeId());
+        readOnlyRunning = false;
+        if (readOnlyTask!=null) {
+            readOnlyTask.cancel(true);
+            readOnlyTask.blockUntilEnded();
+            boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(readOnlyTask, Duration.TEN_SECONDS);
+            if (!reallyEnded) {
+                LOG.warn("Rebind (read-only) tasks took too long to die after interrupt (ignoring): "+readOnlyTask);
+            }
+            readOnlyTask = null;
+        }
+        LOG.debug("Stopped read-only rebinding, mgmt "+managementContext.getManagementNodeId());
     }
     
     @Override
     public void start() {
-        running = true;
-        if (realChangeListener != null) realChangeListener.start();
+        ManagementNodeState target = getRebindMode();
+        if (target==ManagementNodeState.HOT_STANDBY) {
+            startReadOnly();
+        } else if (target==ManagementNodeState.MASTER) {
+            startPersistence();
+        } else {
+            LOG.warn("Nothing to start in "+this+" when HA mode is "+target);
+        }
     }
-    
+
     @Override
     public void stop() {
-        running = false;
-        if (realChangeListener != null) realChangeListener.stop();
-        if (persister != null) persister.stop(true);
+        stopReadOnly();
+        stopPersistence();
+        if (persistenceStoreAccess != null) persistenceStoreAccess.stop(true);
+    }
+    
+    protected ManagementNodeState getRebindMode() {
+        if (managementContext==null) throw new IllegalStateException("Invalid "+this+": no management context");
+        if (!(managementContext.getHighAvailabilityManager() instanceof HighAvailabilityManagerImpl))
+            throw new IllegalStateException("Invalid "+this+": unknown HA manager type "+managementContext.getHighAvailabilityManager());
+        ManagementNodeState target = ((HighAvailabilityManagerImpl)managementContext.getHighAvailabilityManager()).getTransitionTargetNodeState();
+        return target;
     }
     
     @Override
     @VisibleForTesting
+    @Deprecated /** @deprecated since 0.7.0 use Duration as argument */
     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         waitForPendingComplete(Duration.of(timeout, unit));
     }
     @Override
     @VisibleForTesting
     public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
-        if (persister == null || !running) return;
-        realChangeListener.waitForPendingComplete(timeout);
-        persister.waitForWritesCompleted(timeout);
+        if (persistenceStoreAccess == null || !persistenceRunning) return;
+        persistenceRealChangeListener.waitForPendingComplete(timeout);
+        persistenceStoreAccess.waitForWritesCompleted(timeout);
     }
     @Override
     @VisibleForTesting
     public void forcePersistNow() {
-        realChangeListener.persistNow();
+        persistenceRealChangeListener.persistNow();
     }
     
     @Override
     public ChangeListener getChangeListener() {
-        return changeListener;
+        return persistencePublicChangeListener;
     }
     
     @Override
-    public List<Application> rebind() throws IOException {
-        return rebind(managementContext.getCatalog().getRootClassLoader());
+    public List<Application> rebind() {
+        return rebind(null, null, null);
     }
     
     @Override
-    public List<Application> rebind(final ClassLoader classLoader) throws IOException {
-        RebindExceptionHandler exceptionHandler = RebindExceptionHandlerImpl.builder()
+    public List<Application> rebind(final ClassLoader classLoader) {
+        return rebind(classLoader, null, null);
+    }
+
+    @Override
+    public List<Application> rebind(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) {
+        return rebind(classLoader, exceptionHandler, null);
+    }
+    
+    @Override
+    public List<Application> rebind(ClassLoader classLoaderO, RebindExceptionHandler exceptionHandlerO, ManagementNodeState modeO) {
+        final ClassLoader classLoader = classLoaderO!=null ? classLoaderO :
+            managementContext.getCatalog().getRootClassLoader();
+        final RebindExceptionHandler exceptionHandler = exceptionHandlerO!=null ? exceptionHandlerO :
+            RebindExceptionHandlerImpl.builder()
                 .danglingRefFailureMode(danglingRefFailureMode)
                 .rebindFailureMode(rebindFailureMode)
                 .addPolicyFailureMode(addPolicyFailureMode)
                 .loadPolicyFailureMode(loadPolicyFailureMode)
                 .build();
-        return rebind(classLoader, exceptionHandler);
-    }
+        final ManagementNodeState mode = modeO!=null ? modeO : getRebindMode();
+        
+        if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.MASTER)
+            throw new IllegalStateException("Must be either master or read only to rebind (mode "+mode+")");
 
-    @Override
-    public List<Application> rebind(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
-        BasicExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
+        ExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
         if (ec == null) {
-            ec = new BasicExecutionContext(managementContext.getExecutionManager());
+            ec = managementContext.getServerExecutionContext();
             Task<List<Application>> task = ec.submit(new Callable<List<Application>>() {
                 @Override public List<Application> call() throws Exception {
-                    return rebindImpl(classLoader, exceptionHandler);
+                    return rebindImpl(classLoader, exceptionHandler, mode);
                 }});
             try {
                 return task.get();
@@ -286,7 +430,7 @@ public class RebindManagerImpl implements RebindManager {
                 throw Exceptions.propagate(e);
             }
         } else {
-            return rebindImpl(classLoader, exceptionHandler);
+            return rebindImpl(classLoader, exceptionHandler, mode);
         }
     }
     
@@ -309,24 +453,35 @@ public class RebindManagerImpl implements RebindManager {
      */
     protected BrooklynMementoRawData loadMementoRawData(final RebindExceptionHandler exceptionHandler) throws IOException {
         try {
-            if (!(persister instanceof BrooklynMementoPersisterToObjectStore)) {
-                throw new IllegalStateException("Cannot load raw memento with persister "+persister);
+            if (!(persistenceStoreAccess instanceof BrooklynMementoPersisterToObjectStore)) {
+                throw new IllegalStateException("Cannot load raw memento with persister "+persistenceStoreAccess);
             }
             
-            return ((BrooklynMementoPersisterToObjectStore)persister).loadMementoRawData(exceptionHandler);
+            return ((BrooklynMementoPersisterToObjectStore)persistenceStoreAccess).loadMementoRawData(exceptionHandler);
             
         } catch (RuntimeException e) {
             throw exceptionHandler.onFailed(e);
         }
     }
-
-    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler) throws IOException {
+    
+    protected List<Application> rebindImpl(final ClassLoader classLoader, final RebindExceptionHandler exceptionHandler, ManagementNodeState mode) {
         checkNotNull(classLoader, "classLoader");
 
+        try {
+            rebindActive.acquire();
+        } catch (InterruptedException e1) { Exceptions.propagate(e1); }
         RebindTracker.setRebinding();
         try {
+            exceptionHandler.onStart();
+            
             Reflections reflections = new Reflections(classLoader);
             RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
+            if (mode==ManagementNodeState.HOT_STANDBY) {
+                rebindContext.setAllReadOnly();
+            } else {
+                Preconditions.checkState(mode==ManagementNodeState.MASTER, "Must be either master or read only to rebind (mode "+mode+")");
+            }
+            
             LookupContext realLookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
             
             // Mutli-phase deserialization.
@@ -348,13 +503,19 @@ public class RebindManagerImpl implements RebindManager {
             // PHASE ONE
             //
             
-            BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
+            BrooklynMementoManifest mementoManifest = persistenceStoreAccess.loadMementoManifest(exceptionHandler);
             
             boolean isEmpty = mementoManifest.isEmpty();
             if (!isEmpty) {
-                LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
+                if (mode==ManagementNodeState.HOT_STANDBY)
+                    LOG.debug("Rebinding (read-only) from "+getPersister().getBackingStoreDescription()+"...");
+                else
+                    LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
             } else {
-                LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
+                if (mode==ManagementNodeState.HOT_STANDBY)
+                    LOG.debug("Rebind check (read-only): no existing state, reading from "+getPersister().getBackingStoreDescription());
+                else
+                    LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
             }
 
             
@@ -397,7 +558,7 @@ public class RebindManagerImpl implements RebindManager {
             // PHASE THREE
             //
             
-            BrooklynMemento memento = persister.loadMemento(realLookupContext, exceptionHandler);
+            BrooklynMemento memento = persistenceStoreAccess.loadMemento(realLookupContext, exceptionHandler);
 
             
             //
@@ -627,20 +788,41 @@ public class RebindManagerImpl implements RebindManager {
             //
 
             LOG.debug("RebindManager managing locations");
+            LocationManagerInternal locationManager = (LocationManagerInternal)managementContext.getLocationManager();
+            Set<String> oldLocations = Sets.newLinkedHashSet(locationManager.getLocationIds());
+            for (Location location: rebindContext.getLocations()) {
+                ManagementTransitionMode oldMode = locationManager.getLastManagementTransitionMode(location.getId());
+                locationManager.setManagementTransitionMode(location, computeMode(location, oldMode, rebindContext.isReadOnly(location)) );
+                if (oldMode!=null)
+                    oldLocations.remove(location.getId());
+            }
             for (Location location: rebindContext.getLocations()) {
                 if (location.getParent()==null) {
                     // manage all root locations
-                    // LocationManager.manage perhaps should not be deprecated, as we need to do this I think?
                     try {
-                        managementContext.getLocationManager().manage(location);
+                        ((LocationManagerInternal)managementContext.getLocationManager()).manageRebindedRoot(location);
                     } catch (Exception e) {
                         exceptionHandler.onManageFailed(BrooklynObjectType.LOCATION, location, e);
                     }
                 }
             }
+            // destroy old
+            for (String oldLocationId: oldLocations) {
+               locationManager.unmanage(locationManager.getLocation(oldLocationId), ManagementTransitionMode.REBINDING_DESTROYED); 
+            }
             
             // Manage the top-level apps (causing everything under them to become managed)
             LOG.debug("RebindManager managing entities");
+            EntityManagerInternal entityManager = (EntityManagerInternal)managementContext.getEntityManager();
+            Set<String> oldEntities = Sets.newLinkedHashSet(entityManager.getEntityIds());
+            for (Entity entity: rebindContext.getEntities()) {
+                ((EntityInternal)entity).getManagementSupport().setReadOnly( rebindContext.isReadOnly(entity) );
+                
+                ManagementTransitionMode oldMode = entityManager.getLastManagementTransitionMode(entity.getId());
+                entityManager.setManagementTransitionMode(entity, computeMode(entity, oldMode, rebindContext.isReadOnly(entity)) );
+                if (oldMode!=null)
+                    oldEntities.remove(entity.getId());
+            }
             List<Application> apps = Lists.newArrayList();
             for (String appId : memento.getApplicationIds()) {
                 Entity entity = rebindContext.getEntity(appId);
@@ -649,12 +831,16 @@ public class RebindManagerImpl implements RebindManager {
                     exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, appId);
                 } else {
                     try {
-                        Entities.startManagement((Application)entity, managementContext);
+                        entityManager.manageRebindedRoot(entity);
                     } catch (Exception e) {
                         exceptionHandler.onManageFailed(BrooklynObjectType.ENTITY, entity, e);
                     }
                     apps.add((Application)entity);
                 }
+            }
+            // destroy old
+            for (String oldEntityId: oldEntities) {
+               entityManager.unmanage(entityManager.getEntity(oldEntityId), ManagementTransitionMode.REBINDING_DESTROYED); 
             }
 
             // Register catalogue items with the management context.
@@ -670,6 +856,7 @@ public class RebindManagerImpl implements RebindManager {
                     managementContext.getCatalog().reset(rebindContext.getCatalogItems());
                 } else if (shouldLoadDefaultCatalog) {
                     // Load catalogue as normal
+                    // TODO in read-only mode, should do this less frequently than entities etc
                     LOG.debug("RebindManager loading default catalog");
                     ((BasicBrooklynCatalog) managementContext.getCatalog()).resetCatalogToContentsAtConfiguredUrl();
                 } else {
@@ -689,7 +876,7 @@ public class RebindManagerImpl implements RebindManager {
 
             exceptionHandler.onDone();
 
-            if (!isEmpty) {
+            if (!isEmpty && mode!=ManagementNodeState.HOT_STANDBY) {
                 LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}, {} feed{}, {} catalog item{}", new Object[]{
                     apps.size(), Strings.s(apps),
                     rebindContext.getEntities().size(), Strings.ies(rebindContext.getEntities()),
@@ -704,14 +891,36 @@ public class RebindManagerImpl implements RebindManager {
             // Return the top-level applications
             LOG.debug("RebindManager complete; return apps: {}", memento.getApplicationIds());
             return apps;
-            
-        } catch (RuntimeException e) {
+
+        } catch (Exception e) {
             throw exceptionHandler.onFailed(e);
         } finally {
+            rebindActive.release();
             RebindTracker.reset();
         }
     }
     
+    static ManagementTransitionMode computeMode(BrooklynObject item, ManagementTransitionMode oldMode, boolean isNowReadOnly) {
+        return computeMode(item, oldMode==null ? null : oldMode.wasReadOnly(), isNowReadOnly);
+    }
+
+    static ManagementTransitionMode computeMode(BrooklynObject item, Boolean wasReadOnly, boolean isNowReadOnly) {
+        if (wasReadOnly==null) {
+            // not known
+            if (Boolean.TRUE.equals(isNowReadOnly)) return ManagementTransitionMode.REBINDING_READONLY;
+            else return ManagementTransitionMode.CREATING;
+        } else {
+            if (wasReadOnly && isNowReadOnly)
+                return ManagementTransitionMode.REBINDING_READONLY;
+            else if (wasReadOnly)
+                return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
+            else if (isNowReadOnly)
+                return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
+            else
+                throw new IllegalStateException("Rebinding master not supported: "+item);
+        }
+    }
+
     /**
      * Sorts the map of nodes, so that a node's parent is guaranteed to come before that node
      * (unless the parent is missing).
@@ -963,5 +1172,10 @@ public class RebindManagerImpl implements RebindManager {
                 LOG.error("Error persisting mememento onUnmanaged("+instance+"); continuing.", t);
             }
         }
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString()+"[mgmt="+managementContext.getManagementNodeId()+"]";
     }
 }

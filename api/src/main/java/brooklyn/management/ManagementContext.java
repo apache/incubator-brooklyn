@@ -21,6 +21,7 @@ package brooklyn.management;
 import java.net.URI;
 import java.util.Collection;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
@@ -98,6 +99,12 @@ public interface ManagementContext {
      * to submit tasks and to observe what tasks are occurring
      */
     ExecutionManager getExecutionManager();
+    
+    /** 
+     * Returns an {@link ExecutionContext} within the {@link ExecutionManager} for tasks
+     * associated to the Brooklyn node's operation (not any entities). 
+     **/
+    ExecutionContext getServerExecutionContext();
 
     /**
      * Returns the {@link EntityDriverManager} entities can use to create drivers. This
@@ -205,5 +212,13 @@ public interface ManagementContext {
 
     /** Active entitlements checker instance. */
     EntitlementManager getEntitlementManager();
+ 
+
+    /** As {@link #lookup(String, Class)} but not constraining the return type */
+    public BrooklynObject lookup(String id);
     
+    /** Finds an entity with the given ID known at this management context */
+    // TODO in future support policies etc
+    public <T extends BrooklynObject> T lookup(String id, Class<T> type); 
+
 }

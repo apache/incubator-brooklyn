@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
@@ -43,6 +44,8 @@ public class RebindContextImpl implements RebindContext {
     
     private final ClassLoader classLoader;
     private final RebindExceptionHandler exceptionHandler;
+    
+    private boolean allAreReadOnly = false;
     
     public RebindContextImpl(RebindExceptionHandler exceptionHandler, ClassLoader classLoader) {
         this.exceptionHandler = checkNotNull(exceptionHandler, "exceptionHandler");
@@ -152,4 +155,13 @@ public class RebindContextImpl implements RebindContext {
     protected Collection<CatalogItem<?, ?>> getCatalogItems() {
         return catalogItems.values();
     }
+
+    public void setAllReadOnly() {
+        allAreReadOnly = true;
+    }
+    
+    public boolean isReadOnly(BrooklynObject item) {
+        return allAreReadOnly;
+    }
+    
 }

@@ -39,6 +39,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.Sensors;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.javalang.UrlClassLoader;
 
@@ -128,8 +129,8 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         newManagementContext.getCatalog().addItem(appClazz);
         
         ClassLoader classLoader = newManagementContext.getCatalog().getRootClassLoader();
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
-        newManagementContext.getRebindManager().start();
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, null, ManagementNodeState.MASTER);
+        newManagementContext.getRebindManager().startPersistence();
         return (StartableApplication) newApps.get(0);
     }
 

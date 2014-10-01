@@ -31,6 +31,14 @@ import com.google.common.annotations.Beta;
 
 /**
  * Handler called on all exceptions to do with rebind.
+ * A handler instance is linked to a single rebind pass;
+ * it should not be invoked after {@link #onDone()}.
+ * <p>
+ * {@link #onStart()} must be invoked before the run.
+ * {@link #onDone()} must be invoked after a successful run, and it may throw.
+ * <p>
+ * Implementations may propagate errors or may catch them until {@link #onDone()} is invoked,
+ * and that may throw or report elsewhere, as appropriate.
  * 
  * @author aled
  */
@@ -59,7 +67,6 @@ public interface RebindExceptionHandler {
      */
     Enricher onDanglingEnricherRef(String id);
 
-    //XXX
     /**
      * @return the feed to use in place of the missing one, or null (if hasn't thrown an exception)
      */
@@ -84,7 +91,13 @@ public interface RebindExceptionHandler {
 
     void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
 
-    void onDone();
-    
+    /** invoked for any high-level, unexpected, or otherwise uncaught failure;
+     * may be invoked on catching above errors */
     RuntimeException onFailed(Exception e);
+
+    /** invoked before the rebind pass */
+    void onStart();
+    
+    /** invoked after the complete rebind pass, always on success and possibly on failure */
+    void onDone();
 }

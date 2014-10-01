@@ -48,6 +48,12 @@ public interface ExecutionContext extends Executor {
      */
     <T> Task<T> submit(Map<?,?> properties, Callable<T> callable);
 
+    /** {@link ExecutionManager#submit(Runnable) */
+    Task<?> submit(Runnable runnable);
+ 
+    /** {@link ExecutionManager#submit(Callable) */
+    <T> Task<T> submit(Callable<T> callable);
+
     /** See {@link ExecutionManager#submit(Map, TaskAdaptable)}. */
     <T> Task<T> submit(TaskAdaptable<T> task);
     
@@ -55,5 +61,7 @@ public interface ExecutionContext extends Executor {
      * See {@link ExecutionManager#submit(Map, TaskAdaptable)} for properties that can be passed in.
      */
     <T> Task<T> submit(Map<?,?> properties, TaskAdaptable<T> task);
+
+    boolean isShutdown();
 
 }

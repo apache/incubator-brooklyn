@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 import javax.annotation.Nullable;
 
@@ -36,6 +37,9 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.time.CountdownTimer;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -369,6 +373,53 @@ public class Tasks {
     public static void addTagDynamically(Object tag) {
         Task<?> t = Tasks.current();
         if (t!=null) TaskTags.addTagDynamically(t, tag);
+    }
+    
+    /** 
+     * Workaround for limitation described at {@link Task#cancel(boolean)};
+     * internal method used to allow callers to wait for underlying tasks to finished in the case of cancellation.
+     * <p> 
+     * It is irritating that {@link FutureTask} sync's object clears the runner thread, 
+     * so even if {@link BasicTask#getInternalFuture()} is used, there is no means of determining if the underlying object is done.
+     * The {@link Task#getEndTimeUtc()} seems the only way.
+     *  
+     * @return true if tasks ended; false if timed out
+     **/ 
+    @Beta
+    public static boolean blockUntilInternalTasksEnded(Task<?> t, Duration timeout) {
+        CountdownTimer timer = timeout.countdownTimer();
+        
+        if (t==null)
+            return true;
+        
+        if (t instanceof ScheduledTask) {
+            boolean result = ((ScheduledTask)t).blockUntilNextRunFinished(timer.getDurationRemaining());
+            if (!result) return false;
+        }
+
+        t.blockUntilEnded(timer.getDurationRemaining());
+        
+        // TODO when the below is confirmed, delete the code below
+//        Future<?> f = ((BasicTask<?>)t).getInternalFuture();
+//        if (f==null) return;
+//        try {
+//            f.isDone();
+//        } catch (Exception e) {
+//            Exceptions.propagateIfFatal(e);
+//            // ignore
+//        }
+        while (true) {
+            if (t.getEndTimeUtc()>=0) return true;
+            // above should be sufficient; but just in case, trying the below
+            Thread tt = t.getThread();
+            if (tt==null || !tt.isAlive()) {
+                log.warn("Internal task thread is dead or null ("+tt+") but task not ended: "+t.getEndTimeUtc()+" ("+t+")");
+                return true;
+            }
+            if (timer.isExpired())
+                return false;
+            Time.sleep(Duration.millis(10));
+        }
     }
     
 }

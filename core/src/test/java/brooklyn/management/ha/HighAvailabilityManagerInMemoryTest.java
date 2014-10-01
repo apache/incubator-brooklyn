@@ -29,5 +29,9 @@ public class HighAvailabilityManagerInMemoryTest extends HighAvailabilityManager
     protected PersistenceObjectStore newPersistenceObjectStore() {
         return new InMemoryObjectStore();
     }
+    
+    public void testGetManagementPlaneStatus() throws Exception {
+        super.testGetManagementPlaneStatus();
+    }
 
 }

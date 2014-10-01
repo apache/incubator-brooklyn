@@ -82,11 +82,6 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
     }
 
     @Override
-    public void onDone() {
-        super.onDone();
-    }
-
-    @Override
     public RuntimeException onFailed(Exception e) {
         failed = e;
         return super.onFailed(e);

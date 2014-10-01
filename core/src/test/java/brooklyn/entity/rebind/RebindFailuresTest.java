@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
@@ -43,12 +44,13 @@ import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.EntityManager;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.os.Os;
 
@@ -91,14 +93,15 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
                 .impl(MyEntityFailingImpl.class)
                 .configure(MyEntityFailingImpl.FAIL_ON_REBIND, true));
         
-        newManagementContext = new LocalManagementContext();
+        newManagementContext = LocalManagementContextForTests.newInstance();
         EntityManager newEntityManager = newManagementContext.getEntityManager();
         RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         try {
             newApp = rebind(newManagementContext, exceptionHandler);
             fail();
         } catch (Exception e) {
-            if (!e.toString().contains("Problems rebinding")) throw e; // expected
+            assertFailureRebindingError(e);
+            Assert.assertTrue(e.toString().toLowerCase().contains("rebinding entity"), "Wrong error: "+e);
         }
 
         // exception handler should have been told about failure
@@ -117,14 +120,15 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
                 .impl(MyEntityFailingImpl.class)
                 .configure(MyEntityFailingImpl.FAIL_ON_REBIND, true));
         
-        newManagementContext = new LocalManagementContext();
+        newManagementContext = LocalManagementContextForTests.newInstance();
         EntityManager newEntityManager = newManagementContext.getEntityManager();
         RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         try {
             newApp = rebind(newManagementContext, exceptionHandler);
             fail();
         } catch (Exception e) {
-            if (!e.toString().contains("Problems rebinding")) throw e; // expected
+            assertFailureRebindingError(e);
+            Assert.assertTrue(e.toString().toLowerCase().contains("rebinding entity"), "Wrong error: "+e);
         }
 
         // exception handler should have been told about failure
@@ -143,7 +147,7 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
                 .impl(MyEntityFailingImpl.class)
                 .configure(MyEntityFailingImpl.FAIL_ON_REBIND, true));
         
-        newManagementContext = new LocalManagementContext();
+        newManagementContext = LocalManagementContextForTests.newInstance();
         EntityManager newEntityManager = newManagementContext.getEntityManager();
         RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         newApp = rebind(newManagementContext, exceptionHandler);
@@ -160,26 +164,31 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         RebindFailureMode danglingRefFailureMode = RebindManager.RebindFailureMode.CONTINUE;
         RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.FAIL_AT_END;
         
-        origManagementContext.getRebindManager().stop();
+        origManagementContext.getRebindManager().stopPersistence();
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
         File entitiesDir = Os.mkdirs(new File(mementoDir, "entities"));
         Files.write("invalid text", new File(entitiesDir, "mycorruptfile"), Charsets.UTF_8);
         
-        newManagementContext = new LocalManagementContext();
+        newManagementContext = LocalManagementContextForTests.newInstance();
         RecordingRebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(danglingRefFailureMode, rebindFailureMode);
         try {
             newApp = rebind(newManagementContext, exceptionHandler);
             fail();
         } catch (Exception e) {
-            if (e.toString().contains("Problem rebinding") || e.toString().contains("Problems rebinding")) 
-                /* expected */ ;
-            else 
-                throw e; 
+            assertFailureRebindingError(e);
         }
         
         // exception handler should have been told about failure
         // two exceptions: one for loadMementoManifest; one for loadMemento
         assertEquals(exceptionHandler.loadMementoFailures.size(), 2, "exceptions="+exceptionHandler.loadMementoFailures);
+    }
+
+    protected void assertFailureRebindingError(Exception e) {
+        if (e.toString().toLowerCase().matches(".*(problem|failure)(s?) rebinding.*")) { 
+            // expected
+        } else {
+            throw Exceptions.propagate(e);
+        }
     }
 
     @Test

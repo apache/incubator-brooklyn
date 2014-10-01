@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.SetFromLiveMap;
 
@@ -69,17 +70,19 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     public void setManagementContext(ManagementContextInternal managementContext) {
         super.setManagementContext(managementContext);
 
-        Set<Entity> oldMembers = members;
+        if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE)) {
+            Set<Entity> oldMembers = members;
+            
+            members = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-members"));
 
-        members = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-members"));
-
-        // Only override stored defaults if we have actual values. We might be in setManagementContext
-        // because we are reconstituting an existing entity in a new brooklyn management-node (in which
-        // case believe what is already in the storage), or we might be in the middle of creating a new
-        // entity. Normally for a new entity (using EntitySpec creation approach), this will get called
-        // before setting the parent etc. However, for backwards compatibility we still support some
-        // things calling the entity's constructor directly.
-        if (oldMembers.size() > 0) members.addAll(oldMembers);
+            // Only override stored defaults if we have actual values. We might be in setManagementContext
+            // because we are reconstituting an existing entity in a new brooklyn management-node (in which
+            // case believe what is already in the storage), or we might be in the middle of creating a new
+            // entity. Normally for a new entity (using EntitySpec creation approach), this will get called
+            // before setting the parent etc. However, for backwards compatibility we still support some
+            // things calling the entity's constructor directly.
+            if (oldMembers.size() > 0) members.addAll(oldMembers);
+        }
     }
 
     @Override

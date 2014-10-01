@@ -94,7 +94,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     }
 
     protected boolean useEmptyCatalog() {
-        return false;
+        return true;
     }
 
     protected int getPersistPeriodMillis() {
@@ -158,7 +158,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     }
     
     protected BrooklynMementoManifest loadMementoManifest() throws Exception {
-        newManagementContext = new LocalManagementContextForTests();
+        newManagementContext = createNewManagementContext();
         FileBasedObjectStore objectStore = new FileBasedObjectStore(mementoDir);
         objectStore.injectManagementContext(newManagementContext);
         objectStore.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.DISABLED);

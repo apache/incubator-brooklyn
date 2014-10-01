@@ -48,7 +48,7 @@ public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPers
         persister = new BrooklynMementoPersisterToMultiFile(mementoDir, BrooklynMementoPersisterToMultiFileTest.class.getClassLoader());
         mgmt.getRebindManager().setPersister(persister, PersistenceExceptionHandlerImpl.builder().build());
         mgmt.getHighAvailabilityManager().disabled();
-        mgmt.getRebindManager().start();
+        mgmt.getRebindManager().startPersistence();
         return mgmt;
     }
 

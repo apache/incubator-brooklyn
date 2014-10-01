@@ -67,11 +67,10 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         }
         return builder.build();
     }
-    
-    @Override
-    public void stop(boolean graceful) {
-        // no-op
-    }
+
+    @Override public void enableWriteAccess() {}
+    @Override public void disableWriteAccess(boolean graceful) {}
+    @Override public void stop(boolean graceful) {}
     
     @Override
     public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {

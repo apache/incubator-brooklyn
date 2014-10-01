@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
@@ -212,7 +213,13 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         // BEC is a thin wrapper around EM so fine to create a new one here
         return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
     }
-    
+
+    @Override
+    public ExecutionContext getServerExecutionContext() {
+        // BEC is a thin wrapper around EM so fine to create a new one here
+        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.BROOKLYN_SERVER_TASK_TAG), getExecutionManager());
+    }
+
     @Override
     public SubscriptionContext getSubscriptionContext(Entity e) {
         // BSC is a thin wrapper around SM so fine to create a new one here
@@ -399,4 +406,19 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public Maybe<URI> getManagementNodeUri() {
         return uri;
     }
+    
+    
+    public BrooklynObject lookup(String id) {
+        return lookup(id, BrooklynObject.class);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T extends BrooklynObject> T lookup(String id, Class<T> type) {
+        Object result;
+        result = getEntityManager().getEntity(id);
+        if (result!=null && type.isInstance(result)) return (T)result;
+        // TODO policies, etc
+        return null;
+    }
+
 }

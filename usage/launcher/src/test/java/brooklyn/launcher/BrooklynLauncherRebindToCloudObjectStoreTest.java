@@ -20,12 +20,8 @@ package brooklyn.launcher;
 
 import static org.testng.Assert.assertEquals;
 
-import java.io.File;
-
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.io.Files;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;

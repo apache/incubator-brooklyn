@@ -133,7 +133,7 @@ public class LocalManagementContext extends AbstractManagementContext {
      * Creates a LocalManagement with default BrooklynProperties.
      */
     public LocalManagementContext() {
-        this(new Builder());
+        this(BrooklynProperties.Factory.builderDefault());
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
@@ -309,7 +309,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         return execution;
     }
-
+    
     @Override
     public void terminate() {
         INSTANCES.remove(this);

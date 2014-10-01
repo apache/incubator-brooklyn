@@ -48,6 +48,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 /**
@@ -85,10 +86,12 @@ public class EntityManagementSupport {
     protected transient ExecutionContext executionContext;
     
     // TODO the application
+    // (elaborate or remove ^^^ ? -AH, Sept 2014)
     
     protected final AtomicBoolean managementContextUsable = new AtomicBoolean(false);
     protected final AtomicBoolean currentlyDeployed = new AtomicBoolean(false);
     protected final AtomicBoolean everDeployed = new AtomicBoolean(false);
+    protected Boolean readOnly = null;
     protected final AtomicBoolean managementFailed = new AtomicBoolean(false);
     
     private volatile EntityChangeListener entityChangeListener = EntityChangeListener.NOOP;
@@ -101,7 +104,30 @@ public class EntityManagementSupport {
     public boolean isNoLongerManaged() {
         return wasDeployed() && !isDeployed();
     }
+    /** whether entity has ever been deployed (managed) */
     public boolean wasDeployed() { return everDeployed.get(); }
+    
+    @Beta
+    public void setReadOnly(boolean isReadOnly) {
+        if (isDeployed())
+            throw new IllegalStateException("Cannot set read only after deployment");
+        this.readOnly = isReadOnly;
+    }
+
+    /** Whether the entity and its adjuncts should be treated as read-only;
+     * may be null briefly when initializing if RO status is unknown. */
+    @Beta
+    public Boolean isReadOnlyRaw() {
+        return readOnly;
+    }
+
+    /** Whether the entity and its adjuncts should be treated as read-only;
+     * error if initializing and RO status is unknown. */
+    @Beta
+    public boolean isReadOnly() {
+        Preconditions.checkNotNull(readOnly, "Read-only status of %s not yet known", entity);
+        return readOnly;
+    }
 
     /**
      * Whether the entity's management lifecycle is complete (i.e. both "onManagementStarting" and "onManagementStarted" have
@@ -152,8 +178,10 @@ public class EntityManagementSupport {
                 this.managementContext = info.getManagementContext();
                 nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
                 
-                nonDeploymentManagementContext.getSubscriptionManager().setDelegate((AbstractSubscriptionManager) managementContext.getSubscriptionManager());
-                nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForSubscribing();
+                if (!isReadOnly()) {
+                    nonDeploymentManagementContext.getSubscriptionManager().setDelegate((AbstractSubscriptionManager) managementContext.getSubscriptionManager());
+                    nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForSubscribing();
+                }
     
                 managementContextUsable.set(true);
                 currentlyDeployed.set(true);
@@ -174,13 +202,16 @@ public class EntityManagementSupport {
              *  then:  set the management context and the entity is "managed" from the perspective of external viewers (ManagementContext.isManaged(entity) returns true)
              */
             
-            entity.onManagementStarting();
+            if (!isReadOnly()) {
+                entity.onManagementStarting();
+            }
         } catch (Throwable t) {
             managementFailed.set(true);
             throw Exceptions.propagate(t);
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void onManagementStarted(ManagementTransitionInfo info) {
         try {
             synchronized (this) {
@@ -209,14 +240,19 @@ public class EntityManagementSupport {
                  * subsequent sensor events and executions occur directly (no queueing)
                  */
                 
-                nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForPublishing();
-                //TODO more of the above
-            
+                if (!isReadOnly()) {
+                    nonDeploymentManagementContext.getSubscriptionManager().startDelegatingForPublishing();
+                }
+                
+                // TODO more of the above
                 // TODO custom started activities
+                // (elaborate or remove ^^^ ? -AH, Sept 2014)
             }
             
-            entity.onManagementBecomingMaster();
-            entity.onManagementStarted();
+            if (!isReadOnly()) {
+                entity.onManagementBecomingMaster();
+                entity.onManagementStarted();
+            }
             
             synchronized (this) {
                 nonDeploymentManagementContext = null;
@@ -227,6 +263,7 @@ public class EntityManagementSupport {
         }
     }
     
+    @SuppressWarnings("deprecation")
     public void onManagementStopping(ManagementTransitionInfo info) {
         synchronized (this) {
             if (managementContext != info.getManagementContext()) {
@@ -256,15 +293,21 @@ public class EntityManagementSupport {
         }
         // TODO custom stopping activities
         // TODO framework stopping events - no more sensors, executions, etc
+        // (elaborate or remove ^^^ ? -AH, Sept 2014)
         
-        if (entity.getParent()!=null) entity.getParent().removeChild(entity.getProxyIfAvailable());
+        if (!isReadOnly()) {
+            // if we support remote parent of local child, the following call will need to be properly remoted
+            if (entity.getParent()!=null) entity.getParent().removeChild(entity.getProxyIfAvailable());
+        }
         // new subscriptions will be queued / not allowed
         nonDeploymentManagementContext.getSubscriptionManager().stopDelegatingForSubscribing();
         // new publications will be queued / not allowed
         nonDeploymentManagementContext.getSubscriptionManager().stopDelegatingForPublishing();
         
-        entity.onManagementNoLongerMaster();
-        entity.onManagementStopped();
+        if (!isReadOnly()) {
+            entity.onManagementNoLongerMaster();
+            entity.onManagementStopped();
+        }
     }
     
     public void onManagementStopped(ManagementTransitionInfo info) {
@@ -272,7 +315,7 @@ public class EntityManagementSupport {
             if (managementContext != info.getManagementContext()) {
                 throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
             }
-            if (subscriptionContext != null) subscriptionContext.unsubscribeAll();
+            getSubscriptionContext().unsubscribeAll();
             entityChangeListener = EntityChangeListener.NOOP;
             managementContextUsable.set(false);
             currentlyDeployed.set(false);
@@ -421,4 +464,5 @@ public class EntityManagementSupport {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
     }
+
 }

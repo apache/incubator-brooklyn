@@ -53,7 +53,8 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
         addCustoms(rebindContext, memento);
         
         doReconstruct(rebindContext, memento);
-        instance.rebind();
+        if (!rebindContext.isReadOnly(instance))
+            instance.rebind();
     }
 
     protected abstract void addConfig(RebindContext rebindContext, T memento);

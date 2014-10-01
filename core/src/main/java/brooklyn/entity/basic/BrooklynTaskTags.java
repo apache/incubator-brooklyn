@@ -61,7 +61,11 @@ public class BrooklynTaskTags extends TaskTags {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynTaskTags.WrappedEntity.class);
 
+    /** Tag for tasks which are running on behalf of the management server, rather than any entity */
+    public static final String BROOKLYN_SERVER_TASK_TAG = "BROOKLYN-SERVER";
+    /** Tag for a task which represents an effector */
     public static final String EFFECTOR_TAG = "EFFECTOR";
+    /** Tag for a task which *is* interesting, in contrast to {@link #TRANSIENT_TASK_TAG} */
     public static final String NON_TRANSIENT_TASK_TAG = "NON-TRANSIENT";
     /** indicates a task is transient, roughly that is to say it is uninteresting -- 
      * specifically this means it can be GC'd as soon as it is completed, 

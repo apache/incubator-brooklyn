@@ -40,6 +40,7 @@ import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.Task;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
@@ -49,11 +50,13 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Ticker;
 import com.google.common.collect.Iterables;
 
@@ -73,7 +76,7 @@ import com.google.common.collect.Iterables;
  * Promotion to master involves:
  * <ol>
  *   <li>notifying the other management-nodes that it is now master
- *   <li>calling {@link RebindManager#rebind()} to read all persisted entity state, and thus reconstitute the entities.
+ *   <li>calling {@link RebindManager#rebind(ClassLoader, brooklyn.entity.rebind.RebindExceptionHandler, ManagementNodeState)} to read all persisted entity state, and thus reconstitute the entities.
  * </ol>
  * <p>
  * Future improvements in this area will include brooklyn-managing-brooklyn to decide + promote
@@ -98,6 +101,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     // TODO Should we pass in a classloader on construction, so it can be passed to {@link RebindManager#rebind(ClassLoader)} 
     
+    @VisibleForTesting /* only used in tests currently */
     public static interface PromotionListener {
         public void promotingToMaster();
     }
@@ -123,7 +127,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile Task<?> pollingTask;
     private volatile boolean disabled;
     private volatile boolean running;
-    private volatile ManagementNodeState nodeState = ManagementNodeState.UNINITIALISED;
+    private volatile ManagementNodeState nodeState = ManagementNodeState.INITIALIZING;
+    private volatile boolean nodeStateTransitionComplete = false;
+    private volatile long priority = 0;
 
     public HighAvailabilityManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
@@ -200,50 +206,159 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     @Override
     public void start(HighAvailabilityMode startMode) {
-        ownNodeId = managementContext.getManagementNodeId();
+        nodeStateTransitionComplete = true;
+        // always start in standby; it may get promoted to master or hot_standby in this method
+        // (depending on startMode; but for startMode STANDBY or HOT_STANDBY it will not promote until the next election)
         nodeState = ManagementNodeState.STANDBY;
         running = true;
+        changeMode(startMode, true, true);
+    }
+    
+    @Override
+    public void changeMode(HighAvailabilityMode startMode) {
+        changeMode(startMode, false, false);
+    }
+    
+    @VisibleForTesting
+    @Beta
+    public void changeMode(HighAvailabilityMode startMode, boolean preventElectionOnExplicitStandbyMode, boolean failOnExplicitStandbyModeIfNoMaster) {
+        if (!running)
+            throw new IllegalStateException("Can only change mode when already running; invoke 'start' first");
         
+        ownNodeId = managementContext.getManagementNodeId();
         // TODO Small race in that we first check, and then we'll do checkMaster() on first poll,
         // so another node could have already become master or terminated in that window.
         ManagementNodeSyncRecord existingMaster = hasHealthyMaster();
+        boolean weAreMaster = existingMaster!=null && ownNodeId.equals(existingMaster.getNodeId());
         
+        // catch error in some tests where mgmt context has a different mgmt context
+        if (managementContext.getHighAvailabilityManager()!=this)
+            throw new IllegalStateException("Cannot start an HA manager on a management context with a different HA manager!");
+        
+        if (weAreMaster) {
+            // demotion may be required; do this before triggering an election
+            switch (startMode) {
+            case MASTER:
+            case AUTO:
+                // no action needed
+                break;
+            case HOT_STANDBY: demoteToStandby(true); break;
+            case STANDBY: demoteToStandby(false); break;
+            case DISABLED: demoteToFailed(); break;
+            default:
+                throw new IllegalStateException("Unexpected high availability mode "+startMode+" requested for "+this);
+            }
+        }
+        
+        // now do election
         switch (startMode) {
         case AUTO:
             // don't care; let's start and see if we promote ourselves
             publishAndCheck(true);
-            if (nodeState == ManagementNodeState.STANDBY) {
-                String masterNodeId = getManagementPlaneSyncState().getMasterNodeId();
-                ManagementNodeSyncRecord masterNodeDetails = getManagementPlaneSyncState().getManagementNodes().get(masterNodeId);
-                LOG.info("Management node "+ownNodeId+" started as HA STANDBY autodetected, master is "+masterNodeId+
-                    (masterNodeDetails==null || masterNodeDetails.getUri()==null ? " (no url)" : " at "+masterNodeDetails.getUri()));
+            if (nodeState == ManagementNodeState.STANDBY || nodeState == ManagementNodeState.HOT_STANDBY) {
+                ManagementPlaneSyncRecord newState = getManagementPlaneSyncState();
+                String masterNodeId = newState.getMasterNodeId();
+                ManagementNodeSyncRecord masterNodeDetails = newState.getManagementNodes().get(masterNodeId);
+                LOG.info("Management node "+ownNodeId+" running as HA " + nodeState + " autodetected, " +
+                    (Strings.isBlank(masterNodeId) ? "no master currently (other node should promote itself soon)" : "master "
+                        + (existingMaster==null ? "(new) " : "")
+                        + "is "+masterNodeId +
+                        (masterNodeDetails==null || masterNodeDetails.getUri()==null ? " (no url)" : " at "+masterNodeDetails.getUri())));
+            } else if (nodeState == ManagementNodeState.MASTER) {
+                LOG.info("Management node "+ownNodeId+" running as HA MASTER autodetected");
             } else {
-                LOG.info("Management node "+ownNodeId+" started as HA MASTER autodetected");
+                throw new IllegalStateException("Management node "+ownNodeId+" set to HA AUTO, encountered unexpected mode "+nodeState);
             }
             break;
         case MASTER:
             if (existingMaster == null) {
                 promoteToMaster();
-                LOG.info("Management node "+ownNodeId+" started as HA MASTER explicitly");
+                LOG.info("Management node "+ownNodeId+" running as HA MASTER explicitly");
+            } else if (!weAreMaster) {
+                throw new IllegalStateException("Master already exists; cannot run as master (master "+existingMaster.toVerboseString()+"); "
+                    + "to trigger a promotion, set a priority and demote the current master");
             } else {
-                throw new IllegalStateException("Master already exists; cannot start as master ("+existingMaster.toVerboseString()+")");
+                LOG.info("Management node "+ownNodeId+" already running as HA MASTER, when set explicitly");
             }
             break;
         case STANDBY:
-            if (existingMaster != null) {
+        case HOT_STANDBY:
+            if (!preventElectionOnExplicitStandbyMode)
                 publishAndCheck(true);
-                LOG.info("Management node "+ownNodeId+" started as HA STANDBY explicitly, status "+nodeState);
-            } else {
-                throw new IllegalStateException("No existing master; cannot start as standby");
+            if (failOnExplicitStandbyModeIfNoMaster && existingMaster==null) {
+                LOG.error("Management node "+ownNodeId+" detected no master when "+startMode+" requested and existing master required; failing.");
+                throw new IllegalStateException("No existing master; cannot start as "+startMode);
             }
+            
+            String message = "Management node "+ownNodeId+" running as HA "+getNodeState()+" (";
+            if (getNodeState().toString().equals(startMode.toString()))
+                message += "explicitly requested";
+            else if (startMode==HighAvailabilityMode.HOT_STANDBY && getNodeState()==ManagementNodeState.STANDBY)
+                message += "caller requested "+startMode+", will attempt rebind directly";
+            else
+                message += "caller requested "+startMode;
+            
+            if (getNodeState()==ManagementNodeState.MASTER) {
+                message += " but election re-promoted this node)";
+            } else {
+                ManagementPlaneSyncRecord newState = getManagementPlaneSyncState();
+                if (Strings.isBlank(newState.getMasterNodeId())) {
+                    message += "); no master currently (subsequent election may repair)";
+                } else {
+                    message += "); master "+newState.getMasterNodeId();
+                }
+            }
+            LOG.info(message);
             break;
         default:
-            throw new IllegalStateException("Unexpected high availability start-mode "+startMode+" for "+this);
+            throw new IllegalStateException("Unexpected high availability mode "+startMode+" requested for "+this);
         }
         
+        if (startMode==HighAvailabilityMode.AUTO) {
+            if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY)) {
+                startMode = HighAvailabilityMode.HOT_STANDBY;
+            } else {
+                startMode = HighAvailabilityMode.STANDBY;
+            }
+        }
+        if (nodeState==ManagementNodeState.STANDBY && startMode==HighAvailabilityMode.HOT_STANDBY) {
+            // if it should be hot standby, then we need to promote
+            nodeStateTransitionComplete = false;
+            // inform the world that we are transitioning (not eligible for promotion while going in to hot standby)
+            publishHealth();
+            try {
+                attemptHotStandby();
+                nodeStateTransitionComplete = true;
+                publishHealth();
+                
+                if (getNodeState()==ManagementNodeState.HOT_STANDBY) {
+                    LOG.info("Management node "+ownNodeId+" now running as HA "+ManagementNodeState.HOT_STANDBY+"; "
+                        + managementContext.getApplications().size()+" application"+Strings.s(managementContext.getApplications().size())+" loaded");
+                } else {
+                    LOG.warn("Management node "+ownNodeId+" unable to promote to "+ManagementNodeState.HOT_STANDBY+" (currently "+getNodeState()+"); "
+                        + "(see log for further details)");
+                }
+            } catch (Exception e) {
+                LOG.warn("Management node "+ownNodeId+" unable to promote to "+ManagementNodeState.HOT_STANDBY+" (currently "+getNodeState()+"); rethrowing: "+Exceptions.collapseText(e));
+                throw Exceptions.propagate(e);
+            }
+        } else {
+            nodeStateTransitionComplete = true;
+        }
         registerPollTask();
     }
 
+    @Override
+    public void setPriority(long priority) {
+        this.priority = priority;
+        if (persister!=null) publishHealth();
+    }
+    
+    @Override
+    public long getPriority() {
+        return priority;
+    }
+    
     @Override
     public void stop() {
         LOG.debug("Stopping "+this);
@@ -263,8 +378,23 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
     
+    /** returns the node state this node is trying to be in */
+    public ManagementNodeState getTransitionTargetNodeState() {
+        return nodeState;
+    }
+    
+    @SuppressWarnings("deprecation")
     @Override
     public ManagementNodeState getNodeState() {
+        if (nodeState==ManagementNodeState.FAILED) return nodeState;
+        // if target is master then we claim already being master, to prevent other nodes from taking it
+        // (we may fail subsequently of course)
+        if (nodeState==ManagementNodeState.MASTER) return nodeState;
+        
+        // for backwards compatibility; remove in 0.8.0
+        if (nodeState==ManagementNodeState.UNINITIALISED) return ManagementNodeState.INITIALIZING;
+        
+        if (!nodeStateTransitionComplete) return ManagementNodeState.INITIALIZING;
         return nodeState;
     }
 
@@ -328,7 +458,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
     }
     
-    protected synchronized void publishDemotionFromMaster(boolean clearMaster) {
+    protected synchronized void publishDemotionFromMaster() {
         checkState(getNodeState() != ManagementNodeState.MASTER, "node status must not be master when demoting", getNodeState());
         
         if (persister == null) {
@@ -339,7 +469,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         ManagementNodeSyncRecord memento = createManagementNodeSyncRecord(false);
         ManagementPlaneSyncRecordDeltaImpl.Builder deltaBuilder = ManagementPlaneSyncRecordDeltaImpl.builder()
                 .node(memento);
-        if (clearMaster) deltaBuilder.clearMaster(ownNodeId);
+        deltaBuilder.clearMaster(ownNodeId);
         
         Delta delta = deltaBuilder.build();
         persister.delta(delta);
@@ -364,12 +494,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 .build();
         persister.delta(delta);
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
-    }
-    
-    protected ManagementNodeState toNodeStateForPersistence(ManagementNodeState nodeState) {
-        // uninitialized is set as null - TODO confirm that's necessary; nicer if we don't need this method at all
-        if (nodeState == ManagementNodeState.UNINITIALISED) return null;
-        return nodeState;
     }
     
     protected boolean isHeartbeatOk(ManagementNodeSyncRecord masterNode, ManagementNodeSyncRecord meNode) {
@@ -427,7 +551,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 return;
             } else {
                 if (ownNodeRecord!=null && ownNodeRecord.getStatus() == ManagementNodeState.MASTER) {
-                    LOG.error("HA subsystem detected change of master, stolen from us ("+ownNodeId+"), deferring to "+currMasterNodeId);
+                    LOG.error("Management node "+ownNodeId+" detected master change, stolen from us, deferring to "+currMasterNodeId);
                     newMasterNodeRecord = currMasterNodeRecord;
                     demotingSelfInFavourOfOtherMaster = true;
                 } else {
@@ -455,7 +579,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         
         if (demotingSelfInFavourOfOtherMaster) {
             LOG.debug("Master-change for this node only, demoting "+ownNodeRecord.toVerboseString()+" in favour of official master "+newMasterNodeRecord.toVerboseString());
-            demoteToStandby();
+            demoteToStandby(BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY));
             return;
         }
         
@@ -477,13 +601,16 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 });
         }
         if (!initializing) {
-            LOG.warn("HA subsystem detected change of master, from " 
-                + currMasterNodeId + " (" + (currMasterNodeRecord==null ? "?" : currMasterNodeRecord.getRemoteTimestamp()) + ")"
+            String message = "Management node "+ownNodeId+" detected ";
+            if (weAreNewMaster) message += "we should be master, changing from ";
+            else message += "master change, from ";
+            message +=currMasterNodeId + " (" + (currMasterNodeRecord==null ? "?" : currMasterNodeRecord.getRemoteTimestamp()) + ")"
                 + " to "
                 + (newMasterNodeId == null ? "<none>" :
                     (weAreNewMaster ? "us " : "")
                     + newMasterNodeId + " (" + newMasterNodeRecord.getRemoteTimestamp() + ")" 
-                    + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  ));
+                    + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  );
+            LOG.warn(message);
         }
 
         // New master is ourself: promote
@@ -506,10 +633,16 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 LOG.warn("Problem in promption-listener (continuing)", e);
             }
         }
+        boolean wasHotStandby = nodeState==ManagementNodeState.HOT_STANDBY;
         nodeState = ManagementNodeState.MASTER;
         publishPromotionToMaster();
         try {
-            managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader());
+            if (wasHotStandby) {
+                // could just promote the standby items; but for now we stop the old read-only and re-load them, to make sure nothing has been missed
+                // TODO ideally there'd be an incremental rebind as well as an incremental persist
+                managementContext.getRebindManager().stopReadOnly();
+            }
+            managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader(), null, nodeState);
         } catch (Exception e) {
             LOG.error("Management node enountered problem during rebind when promoting self to master; demoting to FAILED and rethrowing: "+e);
             demoteToFailed();
@@ -520,23 +653,33 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     
     protected void demoteToFailed() {
         nodeState = ManagementNodeState.FAILED;
-        onDemotion();
-        publishDemotionFromMaster(true);
+        onDemotionStopTasks();
+        nodeStateTransitionComplete = true;
+        publishDemotionFromMaster();
     }
 
-    protected void demoteToStandby() {
+    protected void demoteToStandby(boolean hot) {
         if (!running) {
             LOG.warn("Ignoring demote-from-master request, as HighAvailabilityManager is no longer running");
             return;
         }
 
+        nodeStateTransitionComplete = false;
         nodeState = ManagementNodeState.STANDBY;
-        onDemotion();
-        publishDemotionFromMaster(false);
+        onDemotionStopTasks();
+        nodeStateTransitionComplete = true;
+        publishDemotionFromMaster();
+        
+        if (hot) {
+            nodeStateTransitionComplete = false;
+            attemptHotStandby();
+            nodeStateTransitionComplete = true;
+            publishHealth();
+        }
     }
     
-    protected void onDemotion() {
-        managementContext.getRebindManager().stop();
+    protected void onDemotionStopTasks() {
+        managementContext.getRebindManager().stopPersistence();
         for (Application app: managementContext.getApplications())
             Entities.unmanage(app);
         // let's try forcibly interrupting tasks on managed entities
@@ -569,6 +712,23 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             LOG.info("Cancelled "+tasks+" tasks on demotion");
     }
 
+    /** starts hot standby, in foreground; the caller is responsible for publishing health afterwards.
+     * @return whether hot standby was possible (if not, errors should be stored elsewhere) */
+    protected boolean attemptHotStandby() {
+        try {
+            Preconditions.checkState(nodeStateTransitionComplete==false, "Must be in transitioning state to go into hot standby");
+            nodeState = ManagementNodeState.HOT_STANDBY;
+            managementContext.getRebindManager().startReadOnly();
+            
+            return true;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            LOG.warn("Unable to promote "+ownNodeId+" to hot standby, switching to FAILED: "+e, e);
+            demoteToFailed();
+            return false;
+        }
+    }
+    
     /**
      * @param reportCleanedState - if true, the record for this mgmt node will be replaced with the
      * actual current status known in this JVM (may be more recent than what is persisted);
@@ -580,7 +740,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             // if HA is disabled, then we are the only node - no persistence; just load a memento to describe this node
             Builder builder = ManagementPlaneSyncRecordImpl.builder()
                 .node(createManagementNodeSyncRecord(true));
-            if (getNodeState() == ManagementNodeState.MASTER) {
+            if (getTransitionTargetNodeState() == ManagementNodeState.MASTER) {
                 builder.masterNodeId(ownNodeId);
             }
             return builder.build();
@@ -610,7 +770,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                         .masterNodeId(result.getMasterNodeId())
                         .nodes(allNodes);
                     builder.node(me);
-                    if (getNodeState() == ManagementNodeState.MASTER) {
+                    if (getTransitionTargetNodeState() == ManagementNodeState.MASTER) {
                         builder.masterNodeId(ownNodeId);
                     }
                     result = builder.build();
@@ -631,7 +791,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord.Builder builder = BasicManagementNodeSyncRecord.builder()
                 .brooklynVersion(BrooklynVersion.get())
                 .nodeId(ownNodeId)
-                .status(toNodeStateForPersistence(getNodeState()))
+                .status(getNodeState())
+                .priority(getPriority())
                 .localTimestamp(timestamp)
                 .uri(managementContext.getManagementNodeUri().orNull());
         if (useLocalTimestampAsRemoteTimestamp)
@@ -664,7 +825,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         @Override
         public ManagementNodeSyncRecord apply(@Nullable ManagementNodeSyncRecord input) {
             if (input == null) return null;
-            if (!(input.getStatus() == ManagementNodeState.STANDBY || input.getStatus() == ManagementNodeState.MASTER)) return input;
+            if (!(input.getStatus() == ManagementNodeState.STANDBY || input.getStatus() == ManagementNodeState.HOT_STANDBY || input.getStatus() == ManagementNodeState.MASTER)) return input;
             if (isHeartbeatOk(input, referenceNode)) return input;
             return BasicManagementNodeSyncRecord.builder()
                     .from(input)

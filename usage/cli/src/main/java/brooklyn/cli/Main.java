@@ -298,16 +298,18 @@ public class Main extends AbstractMain {
         protected final static String HA_OPTION_AUTO = "auto";
         protected final static String HA_OPTION_MASTER = "master";
         protected final static String HA_OPTION_STANDBY = "standby";
-        static { Enums.checkAllEnumeratedIgnoreCase(HighAvailabilityMode.class, HA_OPTION_AUTO, HA_OPTION_DISABLED, HA_OPTION_MASTER, HA_OPTION_STANDBY); }
+        protected final static String HA_OPTION_HOT_STANDBY = "hot_standby";
+        static { Enums.checkAllEnumeratedIgnoreCase(HighAvailabilityMode.class, HA_OPTION_AUTO, HA_OPTION_DISABLED, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY); }
         
-        @Option(name = { HA_OPTION }, allowedValues = { HA_OPTION_DISABLED, HA_OPTION_AUTO, HA_OPTION_MASTER, HA_OPTION_STANDBY },
+        @Option(name = { HA_OPTION }, allowedValues = { HA_OPTION_DISABLED, HA_OPTION_AUTO, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY },
                 title = "high availability mode",
                 description =
                         "The high availability mode. Possible values are: \n"+
                         "disabled: management node works in isolation - will not cooperate with any other standby/master nodes in management plane; \n"+
                         "auto: will look for other management nodes, and will allocate itself as standby or master based on other nodes' states; \n"+
                         "master: will startup as master - if there is already a master then fails immediately; \n"+
-                        "standby: will start up as standby - if there is not already a master then fails immediately")
+                        "standby: will start up as lukewarm standby - if there is not already a master then fails immediately; \n"+
+                        "hot_standby: will start up as hot standby - if there is not already a master then fails immediately")
         public String highAvailability = HA_OPTION_AUTO;
 
         @VisibleForTesting
@@ -456,8 +458,8 @@ public class Main extends AbstractMain {
                     if (highAvailabilityMode.get() == HighAvailabilityMode.AUTO)
                         return HighAvailabilityMode.DISABLED;
                     throw new FatalConfigurationRuntimeException("Cannot specify highAvailability when persistence is disabled");
-                } else if (persistMode == PersistMode.CLEAN && highAvailabilityMode.get() == HighAvailabilityMode.STANDBY) {
-                    throw new FatalConfigurationRuntimeException("Cannot specify highAvailability STANDBY when persistence is CLEAN");
+                } else if (persistMode == PersistMode.CLEAN && (highAvailabilityMode.get() == HighAvailabilityMode.STANDBY || highAvailabilityMode.get() == HighAvailabilityMode.HOT_STANDBY)) {
+                    throw new FatalConfigurationRuntimeException("Cannot specify highAvailability "+highAvailabilityMode.get()+" when persistence is CLEAN");
                 }
             }
             return highAvailabilityMode.get();

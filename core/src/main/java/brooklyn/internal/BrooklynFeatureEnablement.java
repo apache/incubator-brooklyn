@@ -23,6 +23,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.internal.storage.BrooklynStorage;
+import brooklyn.management.ha.HighAvailabilityMode;
+
+import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
 
 /**
@@ -33,6 +37,7 @@ import com.google.common.collect.Maps;
  * 
  * @author aled
  */
+@Beta
 public class BrooklynFeatureEnablement {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynFeatureEnablement.class);
@@ -44,6 +49,17 @@ public class BrooklynFeatureEnablement {
     public static final String FEATURE_FEED_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.feedPersistence";
 
     public static final String FEATURE_CATALOG_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.catalogPersistence";
+    
+    /** whether the default standby mode is {@link HighAvailabilityMode#HOT_STANDBY} or falling back to the traditional
+     * {@link HighAvailabilityMode#STANDBY} */
+    public static final String FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY = "brooklyn.experimental.feature.defaultStandbyIsHot";
+    
+    /** whether to attempt to use {@link BrooklynStorage} (datagrid) as a backing store for data;
+     * note this is <b>not</b> compatible with {@link #FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY} 
+     * which uses a blob/file store and a larger-granularity rebind process than was intended with the datagrid */
+    /* not sure if we still even need this? now the rebind/read-only feature reloads on demand from the persistence store;
+     * the data-grid backing  */
+    public static final String FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE = "brooklyn.experimental.feature.useBrooklynLiveObjectsDatagridStorage";
 
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
@@ -58,6 +74,8 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_FEED_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_CATALOG_PERSISTENCE_PROPERTY, true);
+        setDefault(FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY, false);
+        setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
     }
     
     static {

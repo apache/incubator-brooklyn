@@ -180,6 +180,7 @@ public class BrooklynGarbageCollector {
             TimeUnit.MILLISECONDS);
     }
 
+    /** force a round of Brooklyn garbage collection */
     public void gcIteration() {
         try {
             logUsage("brooklyn gc (before)");

@@ -61,6 +61,7 @@ public interface HighAvailabilityManager {
      * instead of {@link #start(HighAvailabilityMode)}. It may be an error if
      * this is called after this HA Manager is started.
      */
+    @Beta
     void disabled();
 
     /** Whether HA mode is operational */
@@ -70,7 +71,8 @@ public interface HighAvailabilityManager {
      * Starts the monitoring of other nodes (and thus potential promotion of this node from standby to master).
      * <p>
      * When this method returns, the status of this node will be set,
-     * either {@link ManagementNodeState#MASTER} if appropriate or {@link ManagementNodeState#STANDBY}.
+     * either {@link ManagementNodeState#MASTER} if appropriate 
+     * or {@link ManagementNodeState#STANDBY} / {@link ManagementNodeState#HOT_STANDBY}.
      *
      * @param startMode mode to start with
      * @throws IllegalStateException if current state of the management-plane doesn't match that desired by {@code startMode} 
@@ -82,6 +84,18 @@ public interface HighAvailabilityManager {
      */
     void stop();
 
+    /** changes the mode that this HA server is running in
+     * <p>
+     * note it will be an error to {@link #changeMode(HighAvailabilityMode)} to {@link ManagementNodeState#MASTER} 
+     * when there is already a master; to promote a node explicitly set its priority higher than
+     * the others and invoke {@link #changeMode(HighAvailabilityMode)} to a standby mode on the existing master */
+    void changeMode(HighAvailabilityMode mode);
+
+    /** sets the priority, and publishes it synchronously so it is canonical */
+    void setPriority(long priority);
+    
+    long getPriority();
+    
     /**
      * Returns a snapshot of the management-plane's current / most-recently-known status.
      * <p>

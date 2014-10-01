@@ -58,6 +58,9 @@ public class RetryingMementoSerializer<T> implements MementoSerializer<T> {
     
     @Override
     public T fromString(String string) {
+        if (string==null)
+            return null;
+        
         RuntimeException lastException = null;
         int attempt = 0;
         do {
@@ -65,6 +68,7 @@ public class RetryingMementoSerializer<T> implements MementoSerializer<T> {
             try {
                 return delegate.fromString(string);
             } catch (RuntimeException e) {
+                // trying multiple times only makes sense for a few errors (namely ConcModExceptions); perhaps deprecate that strategy?
                 LOG.warn("Error deserializing memento (attempt "+attempt+" of "+maxAttempts+")", e);
                 lastException = e;
             }

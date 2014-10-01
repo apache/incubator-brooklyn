@@ -30,6 +30,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
@@ -73,6 +77,8 @@ import com.google.common.base.Objects;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
 
+    private static final Logger log = LoggerFactory.getLogger(NonDeploymentManagementContext.class);
+    
     public enum NonDeploymentManagementContextMode {
         PRE_MANAGEMENT,
         MANAGEMENT_REBINDING,
@@ -231,6 +237,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         return initialManagementContext.getExecutionContext(entity);
     }
 
+    @Override
+    public ExecutionContext getServerExecutionContext() {
+        return initialManagementContext.getServerExecutionContext();
+    }
+
     // TODO the methods below should delegate to the application?
     @Override
     public EntityDriverManager getEntityDriverManager() {
@@ -368,12 +379,14 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
     @Override
     public void prePreManage(Entity entity) {
-        // no-op
+        // should throw?  but in 0.7.0-SNAPSHOT it was no-op
+        log.warn("Ignoring call to prePreManage("+entity+") on "+this);
     }
 
     @Override
     public void prePreManage(Location location) {
-        // no-op
+        // should throw?  but in 0.7.0-SNAPSHOT it was no-op
+        log.warn("Ignoring call to prePreManage("+location+") on "+this);
     }
 
     private boolean isInitialManagementContextReal() {
@@ -402,6 +415,18 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public void removePropertiesReloadListener(PropertiesReloadListener listener) {
         checkInitialManagementContextReal();
         initialManagementContext.removePropertiesReloadListener(listener);
+    }
+
+    @Override
+    public BrooklynObject lookup(String id) {
+        checkInitialManagementContextReal();
+        return initialManagementContext.lookup(id);
+    }
+
+    @Override
+    public <T extends BrooklynObject> T lookup(String id, Class<T> type) {
+        checkInitialManagementContextReal();
+        return initialManagementContext.lookup(id, type);
     }
 
     /**
@@ -443,6 +468,31 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
 
         @Override
         public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        
+        @Override
+        public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public void startPersistence() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        
+        @Override
+        public void stopPersistence() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public void startReadOnly() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        
+        @Override
+        public void stopReadOnly() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
 
@@ -512,5 +562,18 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
+        @Override
+        public void changeMode(HighAvailabilityMode startMode) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void setPriority(long priority) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public long getPriority() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
     }
+    
 }

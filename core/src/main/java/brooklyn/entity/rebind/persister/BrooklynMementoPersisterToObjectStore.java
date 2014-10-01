@@ -67,6 +67,7 @@ import brooklyn.util.xstream.XmlUtil;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -101,7 +102,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     private final ListeningExecutorService executor;
 
-    private volatile boolean running = true;
+    private volatile boolean writesAllowed = false;
+    private volatile boolean writesShuttingDown = false;
 
     /**
      * Lock used on writes (checkpoint + delta) so that {@link #waitForWritesCompleted(Duration)} can block
@@ -134,16 +136,36 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             }}));
     }
 
+    @Override public void enableWriteAccess() {
+        writesAllowed = true;
+    }
+    
     @Override
+    public void disableWriteAccess(boolean graceful) {
+        writesShuttingDown = true;
+        try {
+            writesAllowed = false;
+            // a very long timeout to ensure we don't lose state. 
+            // If persisting thousands of entities over slow network to Object Store, could take minutes.
+            waitForWritesCompleted(Duration.ONE_HOUR);
+            
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            writesShuttingDown = false;
+        }
+    }
+    
+    @Override 
     public void stop(boolean graceful) {
-        running = false;
+        disableWriteAccess(graceful);
+        
         if (executor != null) {
             if (graceful) {
-                // a very long timeout to ensure we don't lose state. 
-                // If persisting thousands of entities over slow network to Object Store, could take minutes.
                 executor.shutdown();
                 try {
-                    executor.awaitTermination(1, TimeUnit.HOURS);
+                    // should be quick because we've just turned off writes, waiting for their completion
+                    executor.awaitTermination(1, TimeUnit.MINUTES);
                 } catch (InterruptedException e) {
                     throw Exceptions.propagate(e);
                 }
@@ -152,7 +174,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             }
         }
     }
-    
+
     public PersistenceObjectStore getObjectStore() {
         return objectStore;
     }
@@ -325,10 +347,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         public void visit(String contents, BrooklynObjectType type, String subPath) throws Exception;
     }
     protected void visitMemento(final Visitor visitor, final RebindExceptionHandler exceptionHandler) throws IOException {
-        if (!running) {
-            throw new IllegalStateException("Persister not running; cannot load memento manifest from " + objectStore.getSummaryName());
-        }
-
         List<String> entitySubPathList;
         List<String> locationSubPathList;
         List<String> policySubPathList;
@@ -423,12 +441,15 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
     }
 
+    protected void checkWritesAllowed() {
+        if (!writesAllowed && !writesShuttingDown) {
+            throw new IllegalStateException("Writes not allowed in "+this);
+        }
+    }
+    
     @Beta
     public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
-        if (!running) {
-            if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
-            return;
-        }
+        checkWritesAllowed();
         
         try {
             lock.writeLock().lockInterruptibly();
@@ -480,10 +501,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     @Override
     public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
-        if (!running) {
-            if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointing entire memento, because not running");
-            return;
-        }
+        checkWritesAllowed();
 
         Delta delta = PersisterDeltaImpl.builder()
                 .entities(newMemento.getEntityMementos().values())
@@ -500,10 +518,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     @Override
     public void delta(Delta delta, PersistenceExceptionHandler exceptionHandler) {
-        if (!running) {
-            if (LOG.isDebugEnabled()) LOG.debug("Ignoring checkpointed delta of memento, because not running");
-            return;
-        }
+        checkWritesAllowed();
+
         Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
         
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}; updated {} entities, {} locations, " +
@@ -597,12 +613,17 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         boolean locked = lock.readLock().tryLock(timeout.toMillisecondsRoundingUp(), TimeUnit.MILLISECONDS);
         if (locked) {
+            ImmutableSet<StoreObjectAccessorWithLock> wc;
+            synchronized (writers) {
+                wc = ImmutableSet.copyOf(writers.values());
+            }
             lock.readLock().unlock();
             
             // Belt-and-braces: the lock above should be enough to ensure no outstanding writes, because
             // each writer is now synchronous.
-            for (StoreObjectAccessorWithLock writer : writers.values())
+            for (StoreObjectAccessorWithLock writer : wc) {
                 writer.waitForCurrentWrites(timeout);
+            }
         } else {
             throw new TimeoutException("Timeout waiting for writes to "+objectStore);
         }
@@ -623,6 +644,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     
     private void persist(String subPath, BrooklynObjectType type, String id, String content, PersistenceExceptionHandler exceptionHandler) {
         try {
+            if (content==null) {
+                LOG.warn("Null content for "+type+" "+id);
+            }
             getWriter(getPath(subPath, id)).put(content);
         } catch (Exception e) {
             exceptionHandler.onPersistRawMementoFailed(type, id, e);

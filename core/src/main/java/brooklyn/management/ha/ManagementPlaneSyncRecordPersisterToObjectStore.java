@@ -248,17 +248,26 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         case NO_CHANGE:
             break; // no-op
         case SET_MASTER:
-            persistMaster(checkNotNull(delta.getNewMasterOrNull()));
+            persistMaster(checkNotNull(delta.getNewMasterOrNull()), null);
             break;
         case CLEAR_MASTER:
-            persistMaster("");
+            persistMaster("", delta.getExpectedMasterToClear());
             break; // no-op
         default:
             throw new IllegalStateException("Unknown state for master-change: "+delta.getMasterChange());
         }
     }
 
-    private void persistMaster(String nodeId) {
+    private void persistMaster(String nodeId, String optionalExpectedId) {
+        if (optionalExpectedId!=null) {
+            String currentRemoteMaster = masterWriter.get();
+            if (currentRemoteMaster==null) {
+                // nothing at remote is okay
+            } else if (!currentRemoteMaster.trim().equals(optionalExpectedId.trim())) {
+                LOG.warn("Master at server is "+currentRemoteMaster+"; expected "+optionalExpectedId+" in order to set as "+nodeId+", so not applying (yet)");
+                return;
+            }
+        }
         masterWriter.put(nodeId);
         try {
             masterWriter.waitForCurrentWrites(SYNC_WRITE_TIMEOUT);
