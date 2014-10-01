@@ -32,6 +32,8 @@ import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.ManagementContextInjectable;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -81,7 +83,12 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
     /** returns an object which jersey will handle nicely, converting to json,
      * sometimes wrapping in quotes if needed (for outermost json return types) */ 
     protected Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
-        return WebResourceUtils.getValueForDisplay(mapper(), value, preferJson, isJerseyReturnValue);
+        Object immediate = getImmediateValue(value);
+        return WebResourceUtils.getValueForDisplay(mapper(), immediate, preferJson, isJerseyReturnValue);
+    }
+
+    private Object getImmediateValue(Object value) {
+        return Tasks.resolving(value).as(Object.class).defaultValue(null).timeout(Duration.ZERO).swallowExceptions().get();
     }
 
     protected CampPlatform camp() {
