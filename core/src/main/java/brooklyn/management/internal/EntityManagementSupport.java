@@ -319,19 +319,21 @@ public class EntityManagementSupport {
         return getManagementContext().getEntitlementManager();
     }
 
-    public synchronized void attemptLegacyAutodeployment(String effectorName) {
-        if (managementContext!=null) {
-            log.warn("Autodeployment suggested but not required for "+entity+"."+effectorName);
-            return;
-        }
-        if (entity instanceof Application) {
-            log.warn("Autodeployment with new management context triggered for "+entity+"."+effectorName+" -- will not be supported in future. Explicit manage call required.");
-            if (initialManagementContext != null) {
-                initialManagementContext.getEntityManager().manage(entity);
-            } else {
-                Entities.startManagement(entity);
+    public void attemptLegacyAutodeployment(String effectorName) {
+        synchronized (this) {
+            if (managementContext != null) {
+                log.warn("Autodeployment suggested but not required for " + entity + "." + effectorName);
+                return;
             }
-            return;
+            if (entity instanceof Application) {
+                log.warn("Autodeployment with new management context triggered for " + entity + "." + effectorName + " -- will not be supported in future. Explicit manage call required.");
+                if (initialManagementContext != null) {
+                    initialManagementContext.getEntityManager().manage(entity);
+                } else {
+                    Entities.startManagement(entity);
+                }
+                return;
+            }
         }
         if ("start".equals(effectorName)) {
             Entity e=entity;
