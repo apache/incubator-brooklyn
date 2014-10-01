@@ -37,6 +37,7 @@ import brooklyn.management.ha.ManagementNodeState;
 
 public class HaMasterCheckFilter implements Filter {
 
+    private static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";
     private static final Set<String> SAFE_STANDBY_METHODS = Sets.newHashSet("GET", "HEAD");
 
     protected ManagementContext mgmt;
@@ -70,8 +71,9 @@ public class HaMasterCheckFilter implements Filter {
     private boolean isUnsafeRequest(ServletRequest request) {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
+            String checkOverridden = httpRequest.getHeader(SKIP_CHECK_HEADER);
             String method = httpRequest.getMethod().toUpperCase();
-            return !SAFE_STANDBY_METHODS.contains(method);
+            return !"true".equalsIgnoreCase(checkOverridden) && !SAFE_STANDBY_METHODS.contains(method);
         }
         return false;
     }
