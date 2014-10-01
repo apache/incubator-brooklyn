@@ -19,17 +19,16 @@
 package brooklyn.catalog;
 
 import java.util.List;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import com.google.common.annotations.Beta;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.mementos.CatalogItemMemento;
+
+import com.google.common.annotations.Beta;
 
 @Beta
 public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
@@ -75,8 +74,6 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
 
     /** @return The underlying YAML for this item, if known */
     @Nullable public String getPlanYaml();
-
-    BrooklynClassLoadingContext newClassLoadingContext(final ManagementContext mgmt);
 
     @Override
     RebindSupport<CatalogItemMemento> getRebindSupport();

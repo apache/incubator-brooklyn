@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
@@ -346,8 +344,5 @@ public class CatalogDo {
         if (parent != null) return parent.getRootClassLoader();
         return getRecursiveClassLoader();
     }
-    
-    public BrooklynClassLoadingContext newClassLoadingContext() {
-        return new JavaBrooklynClassLoadingContext(mgmt, getRootClassLoader());
-    }
+
 }
