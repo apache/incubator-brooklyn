@@ -18,21 +18,6 @@
  */
 package brooklyn.test.entity;
 
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEventListener;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.SubscriptionHandle;
-import brooklyn.util.logging.LoggingSetup;
 
 /**
  * Mock application for testing.

@@ -644,6 +644,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     
     private void persist(String subPath, BrooklynObjectType type, String id, String content, PersistenceExceptionHandler exceptionHandler) {
         try {
+            if (content==null) {
+                LOG.warn("Null content for "+type+" "+id);
+            }
             getWriter(getPath(subPath, id)).put(content);
         } catch (Exception e) {
             exceptionHandler.onPersistRawMementoFailed(type, id, e);

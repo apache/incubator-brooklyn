@@ -87,7 +87,6 @@ import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
@@ -266,8 +265,12 @@ public class RebindManagerImpl implements RebindManager {
             return;
         }
         LOG.debug("Starting read-only rebinding, mgmt "+managementContext.getManagementNodeId());
-        readOnlyRunning = true;
         
+        if (persistenceRealChangeListener != null) persistenceRealChangeListener.stop();
+        if (persistenceStoreAccess != null) persistenceStoreAccess.disableWriteAccess(true);
+        
+        readOnlyRunning = true;
+
         try {
             rebind(null, null, ManagementNodeState.HOT_STANDBY);
         } catch (Exception e) {
@@ -276,7 +279,7 @@ public class RebindManagerImpl implements RebindManager {
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
-                return new BasicTask<Void>(new Callable<Void>() {
+                return Tasks.<Void>builder().dynamic(false).name("rebind (periodic run").body(new Callable<Void>() {
                     public Void call() {
                         try {
                             rebind(null, null, ManagementNodeState.HOT_STANDBY);
@@ -301,7 +304,7 @@ public class RebindManagerImpl implements RebindManager {
                             LOG.warn("Problem rebinding (rethrowing)", t);
                             throw Exceptions.propagate(t);
                         }
-                    }});
+                    }}).build();
             }
         };
         readOnlyTask = (ScheduledTask) managementContext.getServerExecutionContext().submit(
@@ -353,6 +356,7 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     @VisibleForTesting
+    @Deprecated /** @deprecated since 0.7.0 use Duration as argument */
     public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         waitForPendingComplete(Duration.of(timeout, unit));
     }

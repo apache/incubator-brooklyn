@@ -20,7 +20,9 @@ package brooklyn.management.ha;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.ArrayDeque;
 import java.util.Date;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
@@ -36,12 +38,14 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.ListeningObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.Location;
+import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -49,7 +53,10 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.Iterables;
 
@@ -70,8 +77,8 @@ public class HotStandbyTest {
         private ListeningObjectStore objectStore;
         private ManagementPlaneSyncRecordPersister persister;
         private HighAvailabilityManagerImpl ha;
+        private Duration persistOrRebindPeriod = Duration.ONE_SECOND;
 
-        @BeforeMethod(alwaysRun=true)
         public void setUp() throws Exception {
             nodeName = "node "+nodes.size();
             mgmt = newLocalManagementContext();
@@ -82,6 +89,7 @@ public class HotStandbyTest {
             persister = new ManagementPlaneSyncRecordPersisterToObjectStore(mgmt, objectStore, classLoader);
             ((ManagementPlaneSyncRecordPersisterToObjectStore)persister).allowRemoteTimestampInMemento();
             BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(objectStore, mgmt.getBrooklynProperties(), classLoader);
+            ((RebindManagerImpl)mgmt.getRebindManager()).setPeriodicPersistPeriod(persistOrRebindPeriod);
             mgmt.getRebindManager().setPersister(persisterObj, PersistenceExceptionHandlerImpl.builder().build());
             ha = ((HighAvailabilityManagerImpl)mgmt.getHighAvailabilityManager())
                 .setPollPeriod(Duration.PRACTICALLY_FOREVER)
@@ -90,11 +98,15 @@ public class HotStandbyTest {
             log.info("Created "+nodeName+" "+ownNodeId);
         }
         
-        public void tearDown() throws Exception {
+        public void tearDownThisOnly() throws Exception {
             if (ha != null) ha.stop();
             if (mgmt!=null) mgmt.getRebindManager().stop();
-            
             if (mgmt != null) Entities.destroyAll(mgmt);
+        }
+        
+        public void tearDownAll() throws Exception {
+            tearDownThisOnly();
+            // can't delete the object store until all being torn down
             if (objectStore != null) objectStore.deleteCompletely();
         }
         
@@ -110,8 +122,9 @@ public class HotStandbyTest {
         sharedBackingStore.clear();
     }
     
-    public HaMgmtNode newNode() throws Exception {
+    public HaMgmtNode newNode(Duration persistOrRebindPeriod) throws Exception {
         HaMgmtNode node = new HaMgmtNode();
+        node.persistOrRebindPeriod = persistOrRebindPeriod;
         node.setUp();
         nodes.add(node);
         return node;
@@ -120,7 +133,7 @@ public class HotStandbyTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         for (HaMgmtNode n: nodes)
-            n.tearDown();
+            n.tearDownAll();
     }
 
     protected ManagementContextInternal newLocalManagementContext() {
@@ -131,37 +144,43 @@ public class HotStandbyTest {
         return new InMemoryObjectStore(sharedBackingStore, sharedBackingStoreDates);
     }
 
-    private HaMgmtNode createMaster() throws Exception {
-        HaMgmtNode n1 = newNode();
+    private HaMgmtNode createMaster(Duration persistOrRebindPeriod) throws Exception {
+        HaMgmtNode n1 = newNode(persistOrRebindPeriod);
         n1.ha.start(HighAvailabilityMode.AUTO);
         assertEquals(n1.ha.getNodeState(), ManagementNodeState.MASTER);
         return n1;
     }
     
-    private HaMgmtNode createHotStandby() throws Exception {
-        HaMgmtNode n2 = newNode();
+    private HaMgmtNode createHotStandby(Duration rebindPeriod) throws Exception {
+        HaMgmtNode n2 = newNode(rebindPeriod);
         n2.ha.start(HighAvailabilityMode.HOT_STANDBY);
         assertEquals(n2.ha.getNodeState(), ManagementNodeState.HOT_STANDBY);
         return n2;
     }
 
-    private TestApplication createFirstAppAndPersist(HaMgmtNode n1) throws Exception {        
+    private TestApplication createFirstAppAndPersist(HaMgmtNode n1) throws Exception {
         TestApplication app = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
+        // for testing without enrichers, if desired:
+//        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).impl(TestApplicationNoEnrichersImpl.class), n1.mgmt);
         app.setDisplayName("First App");
         app.start(MutableList.<Location>of());
         app.setConfig(TestEntity.CONF_NAME, "first-app");
         app.setAttribute(TestEntity.SEQUENCE, 3);
         
-        n1.mgmt.getRebindManager().forcePersistNow();
+        forcePersistNow(n1);
         return app;
+    }
+
+    protected void forcePersistNow(HaMgmtNode n1) {
+        n1.mgmt.getRebindManager().forcePersistNow();
     }
     
     private Application expectRebindSequenceNumber(HaMgmtNode master, HaMgmtNode hotStandby, Application app, int expectedSensorSequenceValue, boolean immediate) {
         Application appRO = hotStandby.mgmt.lookup(app.getId(), Application.class);
 
         if (immediate) {
-            master.mgmt.getRebindManager().forcePersistNow();
-            hotStandby.mgmt.getRebindManager().rebind(null, null, ManagementNodeState.HOT_STANDBY);
+            forcePersistNow(master);
+            forceRebindNow(hotStandby);
             EntityTestUtils.assertAttributeEquals(appRO, TestEntity.SEQUENCE, expectedSensorSequenceValue);
         } else {
             EntityTestUtils.assertAttributeEqualsEventually(appRO, TestEntity.SEQUENCE, expectedSensorSequenceValue);
@@ -175,12 +194,16 @@ public class HotStandbyTest {
         
         return appRO;
     }
+
+    private void forceRebindNow(HaMgmtNode hotStandby) {
+        hotStandby.mgmt.getRebindManager().rebind(null, null, ManagementNodeState.HOT_STANDBY);
+    }
     
     @Test
     public void testHotStandbySeesChangedNameConfigAndSensorValueButDoesntAllowChange() throws Exception {
-        HaMgmtNode n1 = createMaster();
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
         TestApplication app = createFirstAppAndPersist(n1);
-        HaMgmtNode n2 = createHotStandby();
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
 
         assertEquals(n2.mgmt.getApplications().size(), 1);
         Application appRO = n2.mgmt.lookup(app.getId(), Application.class);
@@ -200,9 +223,9 @@ public class HotStandbyTest {
 
     @Test
     public void testHotStandbySeesChangedNameConfigAndSensorValue() throws Exception {
-        HaMgmtNode n1 = createMaster();
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
         TestApplication app = createFirstAppAndPersist(n1);
-        HaMgmtNode n2 = createHotStandby();
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
 
         assertEquals(n2.mgmt.getApplications().size(), 1);
         Application appRO = n2.mgmt.lookup(app.getId(), Application.class);
@@ -243,9 +266,9 @@ public class HotStandbyTest {
     }
     
     public void doTestHotStandbySeesStructuralChangesIncludingRemoval(boolean immediate) throws Exception {
-        HaMgmtNode n1 = createMaster();
+        HaMgmtNode n1 = createMaster(immediate ? Duration.PRACTICALLY_FOREVER : Duration.millis(200));
         TestApplication app = createFirstAppAndPersist(n1);
-        HaMgmtNode n2 = createHotStandby();
+        HaMgmtNode n2 = createHotStandby(immediate ? Duration.PRACTICALLY_FOREVER : Duration.millis(200));
 
         assertEquals(n2.mgmt.getApplications().size(), 1);
         Application appRO = n2.mgmt.lookup(app.getId(), Application.class);
@@ -294,5 +317,168 @@ public class HotStandbyTest {
     public void testHotStandbySeesStructuralChangesIncludingRemovalManyTimes() throws Exception {
         doTestHotStandbySeesStructuralChangesIncludingRemoval(true);
     }
+
+    Deque<Long> usedMemory = new ArrayDeque<Long>();
+    protected long noteUsedMemory(String message) {
+        Time.sleep(Duration.millis(200));
+        for (HaMgmtNode n: nodes) {
+            ((AbstractManagementContext)n.mgmt).getGarbageCollector().gcIteration();
+        }
+        System.gc(); System.gc();
+        Time.sleep(Duration.millis(50));
+        System.gc(); System.gc();
+        long mem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        usedMemory.addLast(mem);
+        log.info("Memory used - "+message+": "+ByteSizeStrings.java().apply(mem));
+        return mem;
+    }
+    public void assertUsedMemoryLessThan(String event, long max) {
+        noteUsedMemory(event);
+        long nowUsed = usedMemory.peekLast();
+        if (nowUsed > max) {
+            // aggressively try to force GC
+            Time.sleep(Duration.ONE_SECOND);
+            usedMemory.removeLast();
+            noteUsedMemory(event+" (extra GC)");
+            nowUsed = usedMemory.peekLast();
+            if (nowUsed > max) {
+                Assert.fail("Too much memory used - "+ByteSizeStrings.java().apply(nowUsed)+" > max "+ByteSizeStrings.java().apply(max));
+            }
+        }
+    }
+    public void assertUsedMemoryMaxDelta(String event, long deltaMegabytes) {
+        assertUsedMemoryLessThan(event, usedMemory.peekLast() + deltaMegabytes*1024*1024);
+    }
+
+    @Test(groups="Integration")
+    public void testHotStandbyDoesNotLeakLotsOfRebinds() throws Exception {
+        log.info("Starting test "+JavaClassNames.niceClassAndMethod());
+        final int DELTA = 2;
+        
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
+        TestApplication app = createFirstAppAndPersist(n1);
+        long initialUsed = noteUsedMemory("Created app");
+        
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
+        assertUsedMemoryMaxDelta("Standby created", DELTA);
+        
+        forcePersistNow(n1);
+        forceRebindNow(n2);
+        assertUsedMemoryMaxDelta("Persisted and rebinded once", DELTA);
+        
+        for (int i=0; i<10; i++) {
+            forcePersistNow(n1);
+            forceRebindNow(n2);
+        }
+        assertUsedMemoryMaxDelta("Persisted and rebinded 10x", DELTA);
+        
+        for (int i=0; i<1000; i++) {
+            if ((i+1)%100==0) {
+                noteUsedMemory("iteration "+(i+1));
+                usedMemory.removeLast();
+            }
+            forcePersistNow(n1);
+            forceRebindNow(n2);
+        }
+        assertUsedMemoryMaxDelta("Persisted and rebinded 1000x", DELTA);
+        
+        Entities.unmanage(app);
+        forcePersistNow(n1);
+        forceRebindNow(n2);
+        
+        assertUsedMemoryLessThan("And now all unmanaged", initialUsed + DELTA*1000*1000);
+    }
+
+    static class BigObject {
+        public BigObject(int sizeBytes) { array = new byte[sizeBytes]; }
+        byte[] array;
+    }
     
+    @Test(groups="Integration")
+    public void testHotStandbyDoesNotLeakBigObjects() throws Exception {
+        log.info("Starting test "+JavaClassNames.niceClassAndMethod());
+        final int SIZE = 5;
+        final int SIZE_UP_BOUND = SIZE+2;
+        final int SIZE_DOWN_BOUND = SIZE-1;
+        final int GRACE = 2;
+        // the XML persistence uses a lot of space, we approx at between 2x and 3c
+        final int SIZE_IN_XML = 3*SIZE;
+        final int SIZE_IN_XML_DOWN = 2*SIZE;
+        
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
+        TestApplication app = createFirstAppAndPersist(n1);        
+        noteUsedMemory("Finished seeding");
+        Long initialUsed = usedMemory.peekLast();
+        app.setConfig(TestEntity.CONF_OBJECT, new BigObject(SIZE*1000*1000));
+        assertUsedMemoryMaxDelta("Set a big config object", SIZE_UP_BOUND);
+        forcePersistNow(n1);
+        assertUsedMemoryMaxDelta("Persisted a big config object", SIZE_IN_XML);
+        
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
+        forceRebindNow(n2);
+        assertUsedMemoryMaxDelta("Rebinded", SIZE_UP_BOUND);
+        
+        for (int i=0; i<10; i++)
+            forceRebindNow(n2);
+        assertUsedMemoryMaxDelta("Several more rebinds", GRACE);
+        for (int i=0; i<10; i++) {
+            forcePersistNow(n1);
+            forceRebindNow(n2);
+        }
+        assertUsedMemoryMaxDelta("And more rebinds and more persists", GRACE);
+        
+        app.setConfig(TestEntity.CONF_OBJECT, "big is now small");
+        assertUsedMemoryMaxDelta("Big made small at primary", -SIZE_DOWN_BOUND);
+        forcePersistNow(n1);
+        assertUsedMemoryMaxDelta("And persisted", -SIZE_IN_XML_DOWN);
+        
+        forceRebindNow(n2);
+        assertUsedMemoryMaxDelta("And at secondary", -SIZE_DOWN_BOUND);
+        
+        Entities.unmanage(app);
+        forcePersistNow(n1);
+        forceRebindNow(n2);
+        
+        assertUsedMemoryLessThan("And now all unmanaged", initialUsed+GRACE*1000*1000);
+    }
+
+    @Test(groups="Integration") // because it's slow
+    public void testHotStandbyDoesNotLeakLotsOfRebindsCreatingAndDestroyingAChildEntity() throws Exception {
+        log.info("Starting test "+JavaClassNames.niceClassAndMethod());
+        final int DELTA = 2;
+        
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
+        TestApplication app = createFirstAppAndPersist(n1);
+        long initialUsed = noteUsedMemory("Created app");
+        
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
+        assertUsedMemoryMaxDelta("Standby created", DELTA);
+        
+        TestEntity lastChild = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
+        Entities.manage(lastChild);
+        forcePersistNow(n1);
+        forceRebindNow(n2);
+        assertUsedMemoryMaxDelta("Child created and rebinded once", DELTA);
+        
+        for (int i=0; i<1000; i++) {
+            if (i==9 || (i+1)%100==0) {
+                noteUsedMemory("iteration "+(i+1));
+                usedMemory.removeLast();
+            }
+            TestEntity newChild = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
+            Entities.manage(newChild);
+            Entities.unmanage(lastChild);
+            lastChild = newChild;
+            
+            forcePersistNow(n1);
+            forceRebindNow(n2);
+        }
+        assertUsedMemoryMaxDelta("Persisted and rebinded 1000x", DELTA);
+        
+        Entities.unmanage(app);
+        forcePersistNow(n1);
+        forceRebindNow(n2);
+        
+        assertUsedMemoryLessThan("And now all unmanaged", initialUsed + DELTA*1000*1000);
+    }
 }

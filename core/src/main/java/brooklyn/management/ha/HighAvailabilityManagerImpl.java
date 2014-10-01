@@ -245,7 +245,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         case HOT_STANDBY:
             if (existingMaster != null) {
                 publishAndCheck(true);
-                LOG.info("Management node "+ownNodeId+" started as "+startMode+" explicitly, status "+nodeState);
+                LOG.info("Management node "+ownNodeId+" started as "+startMode+" explicitly");
             } else {
                 throw new IllegalStateException("No existing master; cannot start as standby");
             }

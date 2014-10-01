@@ -21,9 +21,11 @@ package brooklyn.entity.proxying;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,8 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
 
     private Entity delegate;
     private Boolean isMaster;
+
+    private WeakHashMap<Entity,Void> temporaryProxies = new WeakHashMap<Entity, Void>();
     
     private static final Set<MethodSignature> OBJECT_METHODS = Sets.newLinkedHashSet();
     static {
@@ -92,18 +96,46 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
                 extras);
         }
     }
-
+    
     public EntityProxyImpl(Entity entity) {
         this.delegate = checkNotNull(entity, "entity");
     }
     
     /** invoked to specify that a different underlying delegate should be used, 
      * e.g. because we are switching copy impls or switching primary/copy*/
-    // TODO XXX because the delegate has a backpointer to the proxy, there is potentially
-    // a nasty problem wherein an old proxy is kept, with a pointer to an old delegate.  
-    public synchronized void resetDelegate(Entity delegate) {
-        this.delegate = delegate;
+    public synchronized void resetDelegate(Entity thisProxy, Entity preferredProxy, Entity newDelegate) {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("updating "+Integer.toHexString(System.identityHashCode(thisProxy))
+                +" to be the same as "+Integer.toHexString(System.identityHashCode(preferredProxy))
+                +" pointing at "+Integer.toHexString(System.identityHashCode(newDelegate)) 
+                +" ("+temporaryProxies.size()+" temporary proxies)");
+        }
+
+        Entity oldDelegate = delegate;
+        this.delegate = newDelegate;
         this.isMaster = null;
+        
+        if (newDelegate==oldDelegate)
+            return;
+        
+        /* we have to make sure that any newly created proxy of the newDelegate 
+         * which have leaked (eg by being set as a child) also get repointed to this new delegate */
+        if (oldDelegate!=null) {
+            Entity temporaryProxy = ((AbstractEntity)oldDelegate).getProxy();
+            if (temporaryProxy!=null) temporaryProxies.put(temporaryProxy, null);
+            ((AbstractEntity)oldDelegate).resetProxy(preferredProxy);
+        }
+        if (newDelegate!=null) {   
+            Entity temporaryProxy = ((AbstractEntity)newDelegate).getProxy();
+            if (temporaryProxy!=null) temporaryProxies.put(temporaryProxy, null);
+            ((AbstractEntity)newDelegate).resetProxy(preferredProxy);
+        }
+        
+        // update any proxies which might be in use
+        for (Entity tp: temporaryProxies.keySet()) {
+            if (tp==thisProxy || tp==preferredProxy) continue;
+            ((EntityProxyImpl)(Proxy.getInvocationHandler(tp))).resetDelegate(tp, preferredProxy, newDelegate);
+        }
     }
     
     @Override

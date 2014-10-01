@@ -487,10 +487,10 @@ public class LocalEntityManager implements EntityManagerInternal {
             if (mode==ManagementTransitionMode.CREATING) {
                 throw new IllegalStateException("call to manage entity "+e+" but already had proxy "+oldProxy+" already known under that id at "+this);
             }
-            // set the new entity to the old proxy
-            ((AbstractEntity)realE).resetProxy(oldProxy);
+            // make the old proxy point at this new delegate
+            // (some other tricks done in the call below)
+            ((EntityProxyImpl)(Proxy.getInvocationHandler(oldProxy))).resetDelegate(oldProxy, oldProxy, realE);
             proxyE = oldProxy;
-            ((EntityProxyImpl)(Proxy.getInvocationHandler(proxyE))).resetDelegate(realE);
         } else {
             proxyE = toProxyEntityIfAvailable(e);
         }

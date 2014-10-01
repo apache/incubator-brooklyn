@@ -315,7 +315,7 @@ public class EntityManagementSupport {
             if (managementContext != info.getManagementContext()) {
                 throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
             }
-            if (subscriptionContext != null) subscriptionContext.unsubscribeAll();
+            getSubscriptionContext().unsubscribeAll();
             entityChangeListener = EntityChangeListener.NOOP;
             managementContextUsable.set(false);
             currentlyDeployed.set(false);

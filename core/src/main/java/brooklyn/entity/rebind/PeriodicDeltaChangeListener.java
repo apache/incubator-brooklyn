@@ -48,6 +48,8 @@ import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -169,11 +171,32 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         };
         scheduledTask = (ScheduledTask) executionContext.submit(new ScheduledTask(taskFactory).period(period));
     }
-    
+
+    /** stops persistence, waiting for it to complete */
     void stop() {
+        stop(Duration.TEN_SECONDS, Duration.ONE_SECOND);
+    }
+    void stop(Duration timeout, Duration graceTimeoutForSubsequentOperations) {
         stopped = true;
         running = false;
-        if (scheduledTask != null) scheduledTask.cancel();
+        
+        if (scheduledTask != null) {
+            CountdownTimer expiry = timeout.countdownTimer();
+            scheduledTask.cancel(false);
+            try {
+                waitForPendingComplete(expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+            scheduledTask.blockUntilEnded(expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            scheduledTask.cancel(true);
+            boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(scheduledTask, expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            if (!reallyEnded) {
+                LOG.warn("Persistence tasks took too long to complete when stopping persistence (ignoring): "+scheduledTask);
+            }
+            scheduledTask = null;
+        }
+
 
         // Discard all state that was waiting to be persisted
         synchronized (this) {
