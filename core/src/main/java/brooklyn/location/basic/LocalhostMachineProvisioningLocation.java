@@ -205,7 +205,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             if (LOG.isDebugEnabled()) LOG.debug("Skipping system availability check for privileged localhost port "+portNumber);
             return true;
         }
-        return Networking.isPortAvailable(portNumber);
+        return Networking.isPortAvailable(localAddress, portNumber);
     }
     public static int obtainPort(PortRange range) {
         return obtainPort(getLocalhostInetAddress(), range);

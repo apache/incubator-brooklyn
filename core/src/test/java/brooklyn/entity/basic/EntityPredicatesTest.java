@@ -79,6 +79,12 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
+    public void testDisplayNameMatches() throws Exception {
+        assertTrue(EntityPredicates.displayNameMatches(entity.getDisplayName()).apply(entity));
+        assertFalse(EntityPredicates.applicationIdEqualTo("wrongname").apply(entity));
+    }
+    
+    @Test
     public void testIsChildOf() throws Exception {
         assertTrue(EntityPredicates.isChildOf(app).apply(entity));
         assertFalse(EntityPredicates.isChildOf(entity).apply(entity));
