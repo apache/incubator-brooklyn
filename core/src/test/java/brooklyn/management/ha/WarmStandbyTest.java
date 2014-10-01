@@ -56,6 +56,7 @@ public class WarmStandbyTest {
     private ClassLoader classLoader = getClass().getClassLoader();
     
     public class HaMgmtNode {
+        // TODO share with HotStandbyTest and SplitBrainTest and a few others (minor differences but worth it ultimately)
         
         private ManagementContextInternal mgmt;
         private String ownNodeId;

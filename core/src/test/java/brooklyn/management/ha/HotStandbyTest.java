@@ -70,7 +70,8 @@ public class HotStandbyTest {
     private ClassLoader classLoader = getClass().getClassLoader();
     
     public class HaMgmtNode {
-        
+        // TODO share with WarmStandbyTest and SplitBrainTest and a few others (minor differences but worth it ultimately)
+
         private ManagementContextInternal mgmt;
         private String ownNodeId;
         private String nodeName;
@@ -204,7 +205,7 @@ public class HotStandbyTest {
     }
     
     @Test
-    public void testHotStandbySeesChangedNameConfigAndSensorValueButDoesntAllowChange() throws Exception {
+    public void testHotStandbySeesInitialCustomNameConfigAndSensorValueButDoesntAllowChange() throws Exception {
         HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
         TestApplication app = createFirstAppAndPersist(n1);
         HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
@@ -223,10 +224,11 @@ public class HotStandbyTest {
         } catch (Exception e) {
             Assert.assertTrue(e.toString().toLowerCase().contains("read-only"), "Error message did not contain expected text: "+e);
         }
+        assertEquals(appRO.getAttribute(TestEntity.SEQUENCE), (Integer)3);
     }
 
     @Test
-    public void testHotStandbySeesChangedNameConfigAndSensorValue() throws Exception {
+    public void testHotStandbySeesChangesToNameConfigAndSensorValue() throws Exception {
         HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
         TestApplication app = createFirstAppAndPersist(n1);
         HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);

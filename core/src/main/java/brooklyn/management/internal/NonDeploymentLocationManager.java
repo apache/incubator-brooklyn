@@ -76,7 +76,7 @@ public class NonDeploymentLocationManager implements LocationManagerInternal {
         if (isInitialManagementContextReal()) {
             return ((LocationManagerInternal)initialManagementContext.getLocationManager()).getLocationIds();
         } else {
-            return null;
+            return Collections.emptyList();
         }
     }
     

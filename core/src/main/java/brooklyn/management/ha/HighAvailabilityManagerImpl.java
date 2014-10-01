@@ -53,10 +53,10 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
-import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Ticker;
 import com.google.common.collect.Iterables;
 
@@ -718,8 +718,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         try {
             Preconditions.checkState(nodeStateTransitionComplete==false, "Must be in transitioning state to go into hot standby");
             nodeState = ManagementNodeState.HOT_STANDBY;
-            
-            // XXX
             managementContext.getRebindManager().startReadOnly();
             
             return true;

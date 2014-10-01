@@ -23,6 +23,7 @@ import groovy.util.ObservableList;
 
 import java.lang.reflect.Proxy;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,7 +89,7 @@ public class LocalEntityManager implements EntityManagerInternal {
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
     
     /** Management mode for each entity */
-    protected final Map<String,ManagementTransitionMode> entityModesById = Maps.newLinkedHashMap();
+    protected final Map<String,ManagementTransitionMode> entityModesById = Collections.synchronizedMap(Maps.<String,ManagementTransitionMode>newLinkedHashMap());
 
     /** Proxies of the managed entities */
     protected final ObservableList entities = new ObservableList();
@@ -282,7 +283,7 @@ public class LocalEntityManager implements EntityManagerInternal {
             if (it.getManagementSupport().isReadOnlyRaw()==null) {
                 if (mode.isReadOnly()) {
                     // should have been marked by rebinder
-                    log.warn("Read-only entity "+it+" not marked as such on call to manage");
+                    log.warn("Read-only entity "+it+" not marked as such on call to manage; marking and continuing");
                 }
                 it.getManagementSupport().setReadOnly(mode.isReadOnly());
             }
@@ -345,8 +346,9 @@ public class LocalEntityManager implements EntityManagerInternal {
                 if (managementContext.gc != null) managementContext.gc.onUnmanaged(e);
             } else {
                 // should be coming *from* read only; nothing needed
-                if (!mode.wasReadOnly())
-                    log.warn("Should not be unmanaging "+e+" in mode "+mode);
+                if (!mode.wasReadOnly()) {
+                    log.warn("Should not be unmanaging "+e+" in mode "+mode+"; ignoring");
+                }
             }
             
         } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED) {
@@ -439,7 +441,6 @@ public class LocalEntityManager implements EntityManagerInternal {
      * Note that refs to the given entity are stored in a a weak hashmap so if the subsequent management
      * attempt fails then this reference to the entity will eventually be discarded (if no-one else holds 
      * a reference).
-     * @param isOrWasReadOnly 
      */
     private synchronized boolean preManageNonRecursive(Entity e, ManagementTransitionMode mode) {
         Entity realE = toRealEntity(e);
@@ -449,7 +450,7 @@ public class LocalEntityManager implements EntityManagerInternal {
         
         if (old!=null && mode==ManagementTransitionMode.CREATING) {
             if (old.equals(e)) {
-                log.warn("{} redundant call to pre-start management of entity {}", this, e);
+                log.warn("{} redundant call to pre-start management of entity {}; ignoring", this, e);
             } else {
                 throw new IllegalStateException("call to pre-manage entity "+e+" but different entity "+old+" already known under that id at "+this);
             }
@@ -471,7 +472,7 @@ public class LocalEntityManager implements EntityManagerInternal {
         
         if (old!=null && mode==ManagementTransitionMode.CREATING) {
             if (old.equals(e)) {
-                log.warn("{} redundant call to start management of entity {}", this, e);
+                log.warn("{} redundant call to start management of entity {}; ignoring", this, e);
             } else {
                 throw new IllegalStateException("call to manage entity "+e+" but different entity "+old+" already known under that id at "+this);
             }
@@ -565,7 +566,7 @@ public class LocalEntityManager implements EntityManagerInternal {
 
             entityTypes.remove(e.getId());
             if (old==null) {
-                log.warn("{} call to stop management of unknown entity (already unmanaged?) {}", this, e);
+                log.warn("{} call to stop management of unknown entity (already unmanaged?) {}; ignoring", this, e);
                 return false;
             } else if (!old.equals(e)) {
                 // shouldn't happen...

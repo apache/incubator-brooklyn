@@ -41,8 +41,8 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 
-import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -251,7 +251,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             } else {
                 // should be coming *from* read only; nothing needed
                 if (!mode.wasReadOnly())
-                    log.warn("Should not be unmanaging "+loc+" in mode "+mode);
+                    log.warn("Should not be unmanaging "+loc+" in mode "+mode+"; ignoring");
             }
 
         } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED) {
@@ -299,7 +299,7 @@ public class LocalLocationManager implements LocationManagerInternal {
         } catch (RuntimeInterruptedException e) {
             throw e;
         } catch (RuntimeException e) {
-            log.warn("Failed to store location lifecycle event for "+loc, e);
+            log.warn("Failed to store location lifecycle event for "+loc+" (ignoring)", e);
         }
     }
 
@@ -352,11 +352,11 @@ public class LocalLocationManager implements LocationManagerInternal {
         locationModesById.remove(loc.getId());
         
         if (old==null) {
-            log.warn("{} call to stop management of unknown location (already unmanaged?) {}", this, loc);
+            log.warn("{} call to stop management of unknown location (already unmanaged?) {}; ignoring", this, loc);
             return false;
         } else if (!old.equals(loc)) {
             // shouldn't happen...
-            log.error("{} call to stop management of location {} removed different location {}", new Object[] { this, loc, old });
+            log.error("{} call to stop management of location {} removed different location {}; ignoring", new Object[] { this, loc, old });
             return true;
         } else {
             if (log.isDebugEnabled()) log.debug("{} stopped management of location {}", this, loc);

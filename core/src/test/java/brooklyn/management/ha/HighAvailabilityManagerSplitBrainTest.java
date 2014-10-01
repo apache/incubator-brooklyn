@@ -69,7 +69,8 @@ public class HighAvailabilityManagerSplitBrainTest {
     private ClassLoader classLoader = getClass().getClassLoader();
     
     public class HaMgmtNode {
-        
+        // TODO share with HotStandbyTest and WarmStandbyTest and a few others (minor differences but worth it ultimately)
+
         private ManagementContextInternal mgmt;
         private String ownNodeId;
         private String nodeName;
@@ -278,7 +279,7 @@ public class HighAvailabilityManagerSplitBrainTest {
 
         // right number of entities at n2; n1 may or may not depending whether hot standby is default
         assertEquals(n2.mgmt.getApplications().size(), 1);
-//        assertEquals(n1.mgmt.getApplications().size(), 0);
+        assertEquals(n1.mgmt.getApplications().size(), BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY) ? 1 : 0);
     }
     
     @Test(invocationCount=50, groups="Integration")
