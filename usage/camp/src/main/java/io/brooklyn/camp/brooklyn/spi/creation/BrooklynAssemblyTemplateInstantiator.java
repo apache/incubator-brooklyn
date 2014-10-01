@@ -109,6 +109,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             // if promoted, apply the transformations done to the app
             // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
             EntityManagementUtils.collapseSpec(oldApp, app);
+        } else {
+            app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
         }
         
         return app;
