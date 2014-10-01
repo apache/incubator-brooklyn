@@ -20,7 +20,6 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
@@ -561,6 +560,18 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
         @Override
         public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void changeMode(HighAvailabilityMode startMode) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public void setPriority(long priority) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public long getPriority() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }

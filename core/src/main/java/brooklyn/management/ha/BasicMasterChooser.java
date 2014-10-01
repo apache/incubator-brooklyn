@@ -27,10 +27,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.text.NaturalOrderComparator;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 /**
  * @since 0.7.0
@@ -92,19 +95,58 @@ public abstract class BasicMasterChooser implements MasterChooser {
         return min.record;
     }
 
-    public static class AlphabeticMasterChooser extends BasicMasterChooser {
-        final boolean preferHot;
-        public AlphabeticMasterChooser(boolean preferHot) { this.preferHot = preferHot; }
-        public AlphabeticMasterChooser() { this.preferHot = true; }
+    public static class AlphabeticChooserScore implements Comparable<AlphabeticChooserScore> {
+        long priority;
+        int versionBias;
+        String brooklynVersion;
+        int statePriority;
+        String nodeId;
+        
         @Override
-        protected String score(ManagementNodeSyncRecord contender) {
-            if (!preferHot)
-                return contender.getNodeId();
-            // simple prefix with the rating
-            String state = (contender.getStatus()==ManagementNodeState.MASTER ? "1" :
-                contender.getStatus()==ManagementNodeState.HOT_STANDBY ? "2" :
-                contender.getStatus()==ManagementNodeState.STANDBY ? "3" : "9");
-            return state + ":" + contender.getNodeId();
+        public int compareTo(AlphabeticChooserScore o) {
+            if (o==null) return -1;
+            return ComparisonChain.start()
+                // invert the order where we prefer higher values
+                .compare(o.priority, this.priority)
+                .compare(o.versionBias, this.versionBias)
+                .compare(o.brooklynVersion, this.brooklynVersion, 
+                    Ordering.from(NaturalOrderComparator.INSTANCE).nullsFirst())
+                .compare(o.statePriority, this.statePriority)
+                .compare(this.nodeId, o.nodeId, Ordering.usingToString().nullsLast())
+                .result();
+        }
+    }
+    
+    /** comparator which prefers, in order:
+     * <li> higher explicit priority
+     * <li> non-snapshot Brooklyn version, then any Brooklyn version, and lastly null version 
+     *      (using {@link NaturalOrderComparator} so e.g. v10 > v3.20 > v3.9 )
+     * <li> higher version (null last)
+     * <li> node which reports it's master, hot standby, then standby 
+     * <li> finally (common case): lower (alphabetically) node id
+     */
+    public static class AlphabeticMasterChooser extends BasicMasterChooser {
+        final boolean preferHotStandby;
+        public AlphabeticMasterChooser(boolean preferHotStandby) { this.preferHotStandby = preferHotStandby; }
+        public AlphabeticMasterChooser() { this.preferHotStandby = true; }
+        @Override
+        protected AlphabeticChooserScore score(ManagementNodeSyncRecord contender) {
+            AlphabeticChooserScore score = new AlphabeticChooserScore();
+            score.priority = contender.getPriority()!=null ? contender.getPriority() : 0;
+            score.brooklynVersion = contender.getBrooklynVersion();
+            score.versionBias = contender.getBrooklynVersion()==null ? -2 :
+                contender.getBrooklynVersion().toLowerCase().indexOf("snapshot")>=0 ? -1 :
+                0;
+            if (preferHotStandby) {
+                // other master should be preferred before we get invoked, but including for good measure
+                score.statePriority = contender.getStatus()==ManagementNodeState.MASTER ? 3 :
+                    contender.getStatus()==ManagementNodeState.HOT_STANDBY ? 2 :
+                        contender.getStatus()==ManagementNodeState.STANDBY ? 1 : -1;
+            } else {
+                score.statePriority = 0;
+            }
+            score.nodeId = contender.getNodeId();
+            return score;
         }
     }
     

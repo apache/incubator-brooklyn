@@ -46,6 +46,8 @@ public interface ManagementNodeSyncRecord {
     
     ManagementNodeState getStatus();
 
+    Long getPriority();
+    
     /** timestamp set by the originating management machine */
     long getLocalTimestamp();
 

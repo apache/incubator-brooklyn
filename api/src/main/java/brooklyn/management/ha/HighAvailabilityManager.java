@@ -61,6 +61,7 @@ public interface HighAvailabilityManager {
      * instead of {@link #start(HighAvailabilityMode)}. It may be an error if
      * this is called after this HA Manager is started.
      */
+    @Beta
     void disabled();
 
     /** Whether HA mode is operational */
@@ -83,6 +84,18 @@ public interface HighAvailabilityManager {
      */
     void stop();
 
+    /** changes the mode that this HA server is running in
+     * <p>
+     * note it will be an error to {@link #changeMode(HighAvailabilityMode)} to {@link ManagementNodeState#MASTER} 
+     * when there is already a master; to promote a node explicitly set its priority higher than
+     * the others and invoke {@link #changeMode(HighAvailabilityMode)} to a standby mode on the existing master */
+    void changeMode(HighAvailabilityMode mode);
+
+    /** sets the priority, and publishes it synchronously so it is canonical */
+    void setPriority(long priority);
+    
+    long getPriority();
+    
     /**
      * Returns a snapshot of the management-plane's current / most-recently-known status.
      * <p>

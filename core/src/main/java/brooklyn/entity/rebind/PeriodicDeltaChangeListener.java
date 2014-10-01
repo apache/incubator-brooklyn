@@ -144,6 +144,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             LOG.warn("Request to start "+this+" when already running - "+scheduledTask+"; ignoring");
             return;
         }
+        stopped = false;
         running = true;
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
@@ -298,7 +299,9 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @VisibleForTesting
     public void persistNow() {
-        if (!isActive()) return;
+        if (!isActive()) {
+            return;
+        }
         try {
             persistingMutex.acquire();
             if (!isActive()) return;

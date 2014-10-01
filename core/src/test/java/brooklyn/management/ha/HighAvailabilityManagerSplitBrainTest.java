@@ -41,6 +41,7 @@ import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.ListeningObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
@@ -256,8 +257,11 @@ public class HighAvailabilityManagerSplitBrainTest {
         ManagementPlaneSyncRecord memento1b = n1.ha.getManagementPlaneSyncState();
         log.info(n1+" HA now: "+memento1b);
         
+        ManagementNodeState expectedStateAfterDemotion = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY) ?
+            ManagementNodeState.HOT_STANDBY : ManagementNodeState.STANDBY;
+        
         // n1 comes back and demotes himself 
-        assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
+        assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getStatus(), expectedStateAfterDemotion);
         assertEquals(memento1b.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
         assertEquals(memento1b.getMasterNodeId(), n2.ownNodeId);
         assertEquals(memento1b.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);
@@ -266,7 +270,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         // n2 now sees itself as master, with n1 in standby again
         ManagementPlaneSyncRecord memento2c = n2.ha.getManagementPlaneSyncState();
         log.info(n2+" HA now: "+memento2c);
-        assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
+        assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getStatus(), expectedStateAfterDemotion);
         assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
         assertEquals(memento2c.getMasterNodeId(), n2.ownNodeId);
         assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getRemoteTimestamp(), time2);

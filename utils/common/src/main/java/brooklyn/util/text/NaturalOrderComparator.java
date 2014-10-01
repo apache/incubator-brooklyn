@@ -54,7 +54,8 @@ import java.util.Comparator;
  * e.g. "10">"9", including when those numbers occur in the midst of equal text; e.g. "a10" > "a9";
  * but not if the text differs; e.g. "a10" < "b9"
  * <p>
- * class is thread-safe  
+ * class is thread-safe. nulls not supported. (to support nulls, wrap in guava:
+ * <code>Ordering.from(NaturalOrderComparator.INSTANCE).nullsFirst()</code>)
  */
 public class NaturalOrderComparator implements Comparator<String> {
     

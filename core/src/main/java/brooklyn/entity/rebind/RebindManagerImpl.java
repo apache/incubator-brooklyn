@@ -206,6 +206,14 @@ public class RebindManagerImpl implements RebindManager {
         setPeriodicPersistPeriod(Duration.of(periodMillis, TimeUnit.MILLISECONDS));
     }
 
+    public boolean isPersistenceRunning() {
+        return persistenceRunning;
+    }
+    
+    public boolean isReadOnlyRunning() {
+        return readOnlyRunning;
+    }
+    
     @Override
     public void setPersister(BrooklynMementoPersister val) {
         PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder()
@@ -905,9 +913,9 @@ public class RebindManagerImpl implements RebindManager {
             if (wasReadOnly && isNowReadOnly)
                 return ManagementTransitionMode.REBINDING_READONLY;
             else if (wasReadOnly)
-                return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
-            else if (isNowReadOnly)
                 return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
+            else if (isNowReadOnly)
+                return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
             else
                 throw new IllegalStateException("Rebinding master not supported: "+item);
         }

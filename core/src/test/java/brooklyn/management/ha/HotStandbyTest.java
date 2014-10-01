@@ -114,6 +114,10 @@ public class HotStandbyTest {
         public String toString() {
             return nodeName+" "+ownNodeId;
         }
+
+        public RebindManagerImpl rebinder() {
+            return (RebindManagerImpl)mgmt.getRebindManager();
+        }
     }
     
     @BeforeMethod(alwaysRun=true)
@@ -443,6 +447,8 @@ public class HotStandbyTest {
     }
 
     @Test(groups="Integration") // because it's slow
+    // Sept 2014 - there is a small leak, of 200 bytes per child created and destroyed;
+    // but this goes away when the app is destroyed; it may be a benign record
     public void testHotStandbyDoesNotLeakLotsOfRebindsCreatingAndDestroyingAChildEntity() throws Exception {
         log.info("Starting test "+JavaClassNames.niceClassAndMethod());
         final int DELTA = 2;
@@ -481,4 +487,76 @@ public class HotStandbyTest {
         
         assertUsedMemoryLessThan("And now all unmanaged", initialUsed + DELTA*1000*1000);
     }
+    
+    protected void assertHotStandby(HaMgmtNode n1) {
+        assertEquals(n1.ha.getNodeState(), ManagementNodeState.HOT_STANDBY);
+        Assert.assertTrue(n1.rebinder().isReadOnlyRunning());
+        Assert.assertFalse(n1.rebinder().isPersistenceRunning());
+    }
+
+    protected void assertMaster(HaMgmtNode n1) {
+        assertEquals(n1.ha.getNodeState(), ManagementNodeState.MASTER);
+        Assert.assertFalse(n1.rebinder().isReadOnlyRunning());
+        Assert.assertTrue(n1.rebinder().isPersistenceRunning());
+    }
+
+    @Test
+    public void testChangeMode() throws Exception {
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
+        TestApplication app = createFirstAppAndPersist(n1);
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
+
+        TestEntity child = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
+        Entities.manage(child);
+        TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
+        app2.setConfig(TestEntity.CONF_NAME, "second-app");
+
+        forcePersistNow(n1);
+        n2.ha.setPriority(1);
+        n1.ha.changeMode(HighAvailabilityMode.HOT_STANDBY);
+        
+        // both now hot standby
+        assertHotStandby(n1);
+        assertHotStandby(n2);
+        
+        assertEquals(n1.mgmt.getApplications().size(), 2);
+        Application app2RO = n1.mgmt.lookup(app2.getId(), Application.class);
+        Assert.assertNotNull(app2RO);
+        assertEquals(app2RO.getConfig(TestEntity.CONF_NAME), "second-app");
+        try {
+            ((TestApplication)app2RO).setAttribute(TestEntity.SEQUENCE, 4);
+            Assert.fail("Should not have allowed sensor to be set");
+        } catch (Exception e) {
+            Assert.assertTrue(e.toString().toLowerCase().contains("read-only"), "Error message did not contain expected text: "+e);
+        }
+
+        n1.ha.changeMode(HighAvailabilityMode.AUTO);
+        n2.ha.changeMode(HighAvailabilityMode.HOT_STANDBY, true, false);
+        // both still hot standby (n1 will defer to n2 as it has higher priority)
+        assertHotStandby(n1);
+        assertHotStandby(n2);
+        
+        // with priority 1, n2 will now be elected
+        n2.ha.changeMode(HighAvailabilityMode.AUTO);
+        assertHotStandby(n1);
+        assertMaster(n2);
+        
+        assertEquals(n2.mgmt.getApplications().size(), 2);
+        Application app2B = n2.mgmt.lookup(app2.getId(), Application.class);
+        Assert.assertNotNull(app2B);
+        assertEquals(app2B.getConfig(TestEntity.CONF_NAME), "second-app");
+        ((TestApplication)app2B).setAttribute(TestEntity.SEQUENCE, 4);
+        
+        forcePersistNow(n2);
+        forceRebindNow(n1);
+        Application app2BRO = n1.mgmt.lookup(app2.getId(), Application.class);
+        Assert.assertNotNull(app2BRO);
+        EntityTestUtils.assertAttributeEquals(app2BRO, TestEntity.SEQUENCE, 4);
+    }
+
+    @Test(groups="Integration", invocationCount=20)
+    public void testChangeModeManyTimes() throws Exception {
+        testChangeMode();
+    }
+    
 }
