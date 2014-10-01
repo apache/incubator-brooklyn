@@ -1,0 +1,6 @@
+[#ftl]
+entity.hostname:
+    ${driver.hostname}
+entity.address:
+    ${driver.address}
+frogs: 12

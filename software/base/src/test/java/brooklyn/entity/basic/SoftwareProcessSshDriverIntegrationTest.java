@@ -18,17 +18,16 @@
  */
 package brooklyn.entity.basic;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -41,13 +40,17 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshException;
+import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.yaml.Yamls;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 
@@ -233,12 +236,75 @@ public class SoftwareProcessSshDriverIntegrationTest {
                 .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, String.format("echo inLaunch >> %s", tempFile.getAbsoluteFile()))
                 .configure(SoftwareProcess.POST_LAUNCH_COMMAND, String.format("echo inPostLaunch >> %s", tempFile.getAbsoluteFile())));
         app.start(ImmutableList.of(localhost));
+
         List<String> output = Files.readLines(tempFile, Charsets.UTF_8);
         assertEquals(output.size(), 3);
         assertEquals(output.get(0), "inPreLaunch");
         assertEquals(output.get(1), "inLaunch");
         assertEquals(output.get(2), "inPostLaunch");
         tempFile.delete();
+    }
+
+    @Test
+    public void testInstallResourcesCopy() throws IOException {
+        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        VanillaSoftwareProcess entity = app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
+                .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
+                .configure(SoftwareProcess.INSTALL_FILES, MutableMap.of("classpath://brooklyn/entity/basic/frogs.txt", "frogs.txt"))
+                .configure(SoftwareProcess.INSTALL_TEMPLATES, MutableMap.of("classpath://brooklyn/entity/basic/template.yaml", "/tmp/template.yaml"))
+                .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "date"));
+        app.start(ImmutableList.of(localhost));
+
+        File frogs = new File(entity.getAttribute(SoftwareProcess.INSTALL_DIR), "frogs.txt");
+        try {
+            Assert.assertTrue(frogs.canRead(), "File not readable: " + frogs);
+            String output = Files.toString(frogs, Charsets.UTF_8);
+            Assert.assertTrue(output.contains("Brekekekex"), "File content not found: " + output);
+        } finally {
+            frogs.delete();
+        }
+
+        File template = new File("/tmp", "template.yaml");
+        try {
+            Map<?,?> data = (Map) Iterables.getOnlyElement(Yamls.parseAll(Files.toString(template, Charsets.UTF_8)));
+            Assert.assertEquals(data.size(), 3);
+            Assert.assertEquals(data.get("entity.hostname"), Networking.getLocalHost().getHostName());
+            Assert.assertEquals(data.get("entity.address"), "127.0.0.1");
+            Assert.assertEquals(data.get("frogs"), Integer.valueOf(12));
+        } finally {
+            template.delete();
+        }
+    }
+
+    @Test
+    public void testRuntimeResourcesCopy() throws IOException {
+        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        VanillaSoftwareProcess entity = app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
+                .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
+                .configure(SoftwareProcess.RUNTIME_FILES, MutableMap.of("classpath://brooklyn/entity/basic/frogs.txt", "frogs.txt"))
+                .configure(SoftwareProcess.RUNTIME_TEMPLATES, MutableMap.of("classpath://brooklyn/entity/basic/template.yaml", "/tmp/template.yaml"))
+                .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "date"));
+        app.start(ImmutableList.of(localhost));
+
+        File frogs = new File(entity.getAttribute(SoftwareProcess.RUN_DIR), "frogs.txt");
+        try {
+            Assert.assertTrue(frogs.canRead(), "File not readable: " + frogs);
+            String output = Files.toString(frogs, Charsets.UTF_8);
+            Assert.assertTrue(output.contains("Brekekekex"), "File content not found: " + output);
+        } finally {
+            frogs.delete();
+        }
+
+        File template = new File("/tmp", "template.yaml");
+        try {
+            Map<?,?> data = (Map) Iterables.getOnlyElement(Yamls.parseAll(Files.toString(template, Charsets.UTF_8)));
+            Assert.assertEquals(data.size(), 3);
+            Assert.assertEquals(data.get("entity.hostname"), Networking.getLocalHost().getHostName());
+            Assert.assertEquals(data.get("entity.address"), "127.0.0.1");
+            Assert.assertEquals(data.get("frogs"), Integer.valueOf(12));
+        } finally {
+            template.delete();
+        }
     }
 
     @ImplementedBy(MyServiceImpl.class)

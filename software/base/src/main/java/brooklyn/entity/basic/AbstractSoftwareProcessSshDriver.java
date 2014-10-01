@@ -524,13 +524,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
         flags.putAll(sshFlags);
 
-        // prefix with runDir if relative target
-        String dest = Os.isAbsolutish(target) ? target : Urls.mergePaths(getRunDir(), target);
-        
         if (createParentDir) {
             // don't use File.separator because it's remote machine's format, rather than local machine's
-            int lastSlashIndex = dest.lastIndexOf("/");
-            String parent = (lastSlashIndex > 0) ? dest.substring(0, lastSlashIndex) : null;
+            int lastSlashIndex = target.lastIndexOf("/");
+            String parent = (lastSlashIndex > 0) ? target.substring(0, lastSlashIndex) : null;
             if (parent != null) {
                 getMachine().execCommands("createParentDir", ImmutableList.of("mkdir -p "+parent));
             }
@@ -541,7 +538,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         int result;
         String prevBlockingDetails = Tasks.setBlockingDetails("copying resource to server at "+target);
         try {
-            result = getMachine().copyTo(flags, source, dest);
+            result = getMachine().copyTo(flags, source, target);
         } finally {
             Tasks.setBlockingDetails(prevBlockingDetails);
         }
