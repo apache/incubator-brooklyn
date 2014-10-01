@@ -303,9 +303,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      */
     @Override
     public void copyInstallResources() {
+        getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
         try {
-            getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
-
             getLocation().execCommands("create install directory", ImmutableList.of("mkdir -p " + getInstallDir()));
 
             Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
@@ -326,7 +325,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 }
             }
         } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
+            log.warn("Error copying install resources", e);
+            throw Exceptions.propagate(e);
         } finally {
             getLocation().releaseMutex("installing "+elvis(entity,this));
         }
@@ -363,7 +363,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 }
             }
         } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
+            log.warn("Error copying runtime resources", e);
+            throw Exceptions.propagate(e);
         }
     }
 
