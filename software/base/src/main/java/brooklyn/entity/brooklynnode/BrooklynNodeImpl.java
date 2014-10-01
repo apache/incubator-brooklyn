@@ -85,6 +85,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     public void init() {
         super.init();
+        RendererHints.register(MANAGEMENT_PASSWORD, RendererHints.censoredConfigKey());
         getMutableEntityType().addEffector(DeployBlueprintEffectorBody.DEPLOY_BLUEPRINT);
         getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
         getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);

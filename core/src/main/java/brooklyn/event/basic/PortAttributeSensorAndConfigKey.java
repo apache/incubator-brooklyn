@@ -133,7 +133,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
 
     @Override
     protected Integer convertConfigToSensor(PortRange value, ManagementContext managementContext) {
-        LOG.warn("ports not applicable, bacause given managementContext rather than entity; ignoring {}", getName());
+        LOG.warn("ports not applicable, because given managementContext rather than entity; ignoring {}", getName());
         return null;
     }
 }
