@@ -424,7 +424,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
 
     @Override
-    public <T> T lookup(String id, Class<T> type) {
+    public <T extends BrooklynObject> T lookup(String id, Class<T> type) {
         checkInitialManagementContextReal();
         return initialManagementContext.lookup(id, type);
     }

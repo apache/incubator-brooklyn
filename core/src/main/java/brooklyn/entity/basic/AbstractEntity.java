@@ -686,8 +686,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     public ManagementContext getManagementContext() {
         // NB Sept 2014 - removed synch keyword above due to deadlock;
-        // it also synchs in ManagementSupport..getManagementContext();
-        // no apparent reason why it was here also.  @aledsage can you review?
+        // it also synchs in ManagementSupport.getManagementContext();
+        // no apparent reason why it was here also
         return getManagementSupport().getManagementContext();
     }
 

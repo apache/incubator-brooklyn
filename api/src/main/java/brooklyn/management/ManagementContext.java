@@ -214,10 +214,11 @@ public interface ManagementContext {
     EntitlementManager getEntitlementManager();
  
 
-    /** as {@link #lookup(String, Class)} but not constraining the return type */
+    /** As {@link #lookup(String, Class)} but not constraining the return type */
     public BrooklynObject lookup(String id);
-    /** finds an entity with the given ID known at this management context */
+    
+    /** Finds an entity with the given ID known at this management context */
     // TODO in future support policies etc
-    public <T> T lookup(String id, Class<T> type); 
+    public <T extends BrooklynObject> T lookup(String id, Class<T> type); 
 
 }

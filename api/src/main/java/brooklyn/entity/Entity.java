@@ -122,13 +122,20 @@ public interface Entity extends BrooklynObject {
     /** 
      * Add a child {@link Entity}, and set this entity as its parent,
      * returning the added child.
+     * <p>
+     * As with {@link #addChild(EntitySpec)} the child is <b>not</b> brought under management
+     * as part of this call.  It should not be managed prior to this call either.
      */
     <T extends Entity> T addChild(T child);
     
     /** 
      * Creates an {@link Entity} from the given spec and adds it, setting this entity as the parent,
-     * returning the added child. The added child is not yet managed, even if the parent is managed,
-     * so if adding post-management an explicit call to manage the child will be needed. */
+     * returning the added child.
+     * <p>
+     * The added child is <b>not</b> managed as part of this call, even if the parent is managed,
+     * so if adding post-management an explicit call to manage the child will be needed;
+     * see the convenience method <code>Entities.manage(...)</code>. 
+     * */
     <T extends Entity> T addChild(EntitySpec<T> spec);
     
     /** 

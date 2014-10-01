@@ -658,13 +658,16 @@ public class Entities {
      */
     public static void destroy(Entity e) {
         if (isManaged(e)) {
-            if (!isReadOnly(e)) {
+            if (isReadOnly(e)) {
+                unmanage(e);
+                log.debug("destroyed and unmanaged read-only copy of "+e);
+            } else {
                 if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
                 if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
-            }
-            unmanage(e);
-            log.debug("destroyed and unmanaged "+e+"; mgmt now "+
+                unmanage(e);
+                log.debug("destroyed and unmanaged "+e+"; mgmt now "+
                     (e.getApplicationId()==null ? "(no app)" : e.getApplication().getManagementContext())+" - managed? "+isManaged(e));
+            }
         } else {
             log.debug("skipping destroy of "+e+": not managed");
         }

@@ -65,7 +65,7 @@ public interface RebindManager {
     public List<Application> rebind(ClassLoader classLoader);
     /** @deprecated since 0.7; use {@link #rebind(ClassLoader, RebindExceptionHandler, ManagementNodeState)} */ @Deprecated
     public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler);
-    /** causes this management context to rebind, loading data from the given backing store.
+    /** Causes this management context to rebind, loading data from the given backing store.
      * use wisely, as this can cause local entities to be completely lost, or will throw in many other situations.
      * in general it may be invoked for a new node becoming {@link ManagementNodeState#MASTER} 
      * or periodically for a node in {@link ManagementNodeState#HOT_STANDBY}. */
@@ -110,7 +110,7 @@ public interface RebindManager {
     /** waits for any needed or pending writes to complete */
     @VisibleForTesting
     public void waitForPendingComplete(Duration duration) throws InterruptedException, TimeoutException;
-    /** forcibly performs persistence, in the foreground */
+    /** Forcibly performs persistence, in the foreground */
     @VisibleForTesting
     public void forcePersistNow();
 }
