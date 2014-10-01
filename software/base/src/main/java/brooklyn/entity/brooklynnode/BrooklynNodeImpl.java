@@ -31,9 +31,9 @@ import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -223,8 +223,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             if (!entity.getAttribute(SERVICE_UP)) {
                 TaskTags.markInessential(shutdownTask);
             }
-            DynamicTasks.queue(shutdownTask);
-            DynamicTasks.queue(Effectors.invocation(entity, STOP, params));
+            DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
+            Entities.destroy(entity);
             return null;
         }
     }
@@ -244,8 +244,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             if (!entity.getAttribute(SERVICE_UP)) {
                 TaskTags.markInessential(shutdownTask);
             }
-            DynamicTasks.queue(shutdownTask);
-            DynamicTasks.queue(Effectors.invocation(entity, STOP, params));
+            DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
+            Entities.destroy(entity);
             return null;
         }
     }
