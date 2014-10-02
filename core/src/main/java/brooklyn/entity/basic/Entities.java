@@ -296,6 +296,8 @@ public class Entities {
     public static void dumpInfo(Entity e, Writer out, String currentIndentation, String tab) throws IOException {
         out.append(currentIndentation+e.toString()+" "+e.getId()+"\n");
 
+        out.append(currentIndentation+tab+tab+"displayName = "+e.getDisplayName()+"\n");
+
         out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
         Set<ConfigKey<?>> keys = Sets.newLinkedHashSet( ((EntityInternal)e).getConfigMap().getLocalConfig().keySet() );

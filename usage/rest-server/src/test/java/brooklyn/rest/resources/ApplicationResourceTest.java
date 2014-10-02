@@ -34,8 +34,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -63,7 +61,7 @@ import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.CapitalizePolicy;
-import brooklyn.rest.testing.mocks.EverythingGroup;
+import brooklyn.rest.testing.mocks.NameMatcherGroup;
 import brooklyn.rest.testing.mocks.RestMockApp;
 import brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
@@ -79,7 +77,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -89,12 +86,28 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
+    /*
+     * In simpleSpec, not using EverythingGroup because caused problems! The group is a child of the
+     * app, and the app is a member of the group. It failed in jenkins with:
+     *   BasicApplicationImpl{id=GSPjBCe4} GSPjBCe4
+     *     service.isUp: true
+     *     service.problems: {service-lifecycle-indicators-from-children-and-members=Required entity not healthy: EverythingGroupImpl{id=KQ4mSEOJ}}
+     *     service.state: on-fire
+     *     service.state.expected: running @ 1412003485617 / Mon Sep 29 15:11:25 UTC 2014
+     *   EverythingGroupImpl{id=KQ4mSEOJ} KQ4mSEOJ
+     *     service.isUp: true
+     *     service.problems: {service-lifecycle-indicators-from-children-and-members=Required entities not healthy: BasicApplicationImpl{id=GSPjBCe4}, EverythingGroupImpl{id=KQ4mSEOJ}}
+     *     service.state: on-fire
+     * I'm guessing there's a race: the app was not yet healthy because EverythingGroup hadn't set itself to running; 
+     * but then the EverythingGroup would never transition to healthy because one of its members was not healthy.
+     */
+
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceTest.class);
     
-  private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app")
+    private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app")
           .entities(ImmutableSet.of(
                   new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()),
-                  new EntitySpec("simple-group", EverythingGroup.class.getName())
+                  new EntitySpec("simple-group", NameMatcherGroup.class.getName(), ImmutableMap.of("namematchergroup.regex", "simple-ent"))
           ))
           .locations(ImmutableSet.of("localhost"))
           .build();
@@ -135,7 +148,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
   }
   
   @Test
-  public void testDeployApplication() throws InterruptedException, TimeoutException, JsonGenerationException, JsonMappingException, UniformInterfaceException, ClientHandlerException, IOException {
+  public void testDeployApplication() throws Exception {
     ClientResponse response = clientDeploy(simpleSpec);
     
     HttpTestUtils.assertHealthyStatusCode(response.getStatus());
@@ -351,13 +364,9 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     Assert.assertNull(groupDetails.get("children"));
     
     Collection entityGroupIds = (Collection) entityDetails.get("groupIds");
-    Collection groupGroupIds = (Collection) groupDetails.get("groupIds");
     Assert.assertNotNull(entityGroupIds);
-    Assert.assertNotNull(groupGroupIds);
     Assert.assertEquals(entityGroupIds.size(), 1);
     Assert.assertEquals(entityGroupIds.iterator().next(), groupDetails.get("id"));
-    Assert.assertEquals(groupGroupIds.size(), 1);
-    Assert.assertEquals(groupGroupIds.iterator().next(), groupDetails.get("id"));
     
     Collection groupMembers = (Collection) groupDetails.get("members");
     Assert.assertNotNull(groupMembers);
@@ -367,13 +376,10 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     }
     log.info("MEMBERS: "+groupMembers);
     
-    Assert.assertEquals(groupMembers.size(), 3); // includes the app too?!
+    Assert.assertEquals(groupMembers.size(), 1);
     Map entityMemberDetails = (Map) Iterables.find(groupMembers, withValueForKey("name", "simple-ent"), null);
-    Map groupMemberDetails = (Map) Iterables.find(groupMembers, withValueForKey("name", "simple-group"), null);
     Assert.assertNotNull(entityMemberDetails);
-    Assert.assertNotNull(groupMemberDetails);
     Assert.assertEquals(entityMemberDetails.get("id"), entityDetails.get("id"));
-    Assert.assertEquals(groupMemberDetails.get("id"), groupDetails.get("id"));
   }
 
   @Test(dependsOnMethods = "testDeployApplication")

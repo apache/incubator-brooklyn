@@ -52,6 +52,24 @@ public class EntityPredicates {
         };
     }
     
+    public static Predicate<Entity> displayNameMatches(final String val) {
+        return new DisplayNameMatches(val);
+    }
+    private static class DisplayNameMatches implements SerializablePredicate<Entity> {
+        private final String val;
+        DisplayNameMatches(String val) {
+            this.val = val;
+        }
+        @Override
+        public boolean apply(@Nullable Entity input) {
+            return (input != null && input.getDisplayName() != null) && input.getDisplayName().matches(val);
+        }
+        @Override
+        public String toString() {
+            return "DisplayNameMatches("+val+")";
+        }
+    };
+    
     public static Predicate<Entity> applicationIdEqualTo(final String val) {
         return new SerializablePredicate<Entity>() {
             @Override

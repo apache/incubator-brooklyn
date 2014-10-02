@@ -141,12 +141,17 @@ public class EntityExecutionManagerTest {
         app = TestApplication.Factory.newManagedInstanceForTests();
         e = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        Task<?> task = runEmptyTaskWithNameAndTags(e, "should-be-kept", ManagementContextInternal.NON_TRANSIENT_TASK_TAG);
+        final Task<?> task = runEmptyTaskWithNameAndTags(e, "should-be-kept", ManagementContextInternal.NON_TRANSIENT_TASK_TAG);
         runEmptyTaskWithNameAndTags(e, "should-be-gcd", ManagementContextInternal.TRANSIENT_TASK_TAG);
         
-        // dead task (and initialization task) should have been GC'd on completion
-        Collection<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
-        assertEquals(tasks, ImmutableList.of(task), "Mismatched tasks, got: "+tasks);
+        // Dead task (and initialization task) should have been GC'd on completion.
+        // However, the GC'ing happens in a listener, executed in a different thread - the task.get()
+        // doesn't block for it. Therefore can't guarantee it will be GC'ed by now.
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                Collection<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
+                assertEquals(tasks, ImmutableList.of(task), "Mismatched tasks, got: "+tasks);
+            }});
     }
 
     @Test
