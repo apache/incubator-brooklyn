@@ -31,8 +31,8 @@ import com.google.common.annotations.VisibleForTesting;
  * Expected lifecycle of methods calls on this is:
  * <ol>
  *   <li>{@link #setPersister(ManagementPlaneSyncRecordPersister)}
- *   <li>Exactly one of {@link #disabled()} or {@link #start(StartMode)}
- *   <li>Exactly one of {@link #stop()} or {@link #terminate()}
+ *   <li>Exactly one of {@link #disabled()} or {@link #start(HighAvailabilityMode)}
+ *   <li>{@link #stop()}
  * </ol>
  * 
  * @since 0.7.0

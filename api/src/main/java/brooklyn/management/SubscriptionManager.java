@@ -87,7 +87,7 @@ public interface SubscriptionManager {
      */
     <T> SubscriptionHandle subscribeToMembers(Map<String, Object> flags, Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
  
-    /** @see #subscribeToChildren(Map, Group, Sensor, SensorEventListener) */
+    /** @see #subscribeToMembers(Map, Group, Sensor, SensorEventListener) */
     <T> SubscriptionHandle subscribeToMembers(Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
 
     /**
