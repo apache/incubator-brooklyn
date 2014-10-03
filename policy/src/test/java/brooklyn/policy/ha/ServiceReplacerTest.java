@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -67,6 +69,8 @@ import com.google.common.collect.Sets;
 
 public class ServiceReplacerTest {
 
+    final static Logger logger = LoggerFactory.getLogger(ServiceReplacerTest.class);
+    
     private ManagementContext managementContext;
     private TestApplication app;
     private SimulatedLocation loc;
@@ -119,7 +123,37 @@ public class ServiceReplacerTest {
             }});
     }
 
-    @Test(invocationCount=100)
+    //https://builds.apache.org/job/incubator-brooklyn-pull-requests/10/io.brooklyn%24brooklyn-policy/console
+//    testSetsOnFireWhenFailToReplaceMemberManyTimes(brooklyn.policy.ha.ServiceReplacerTest)  Time elapsed: 0.133 sec  <<< FAILURE!
+//    java.lang.AssertionError: expected [2] but found [1]
+//    	at org.testng.Assert.fail(Assert.java:94)
+//    	at org.testng.Assert.failNotEquals(Assert.java:494)
+//    	at org.testng.Assert.assertEquals(Assert.java:123)
+//    	at org.testng.Assert.assertEquals(Assert.java:370)
+//    	at org.testng.Assert.assertEquals(Assert.java:380)
+//    	at brooklyn.policy.ha.ServiceReplacerTest.testSetsOnFireWhenFailToReplaceMember(ServiceReplacerTest.java:156)
+//    	at brooklyn.policy.ha.ServiceReplacerTest.testSetsOnFireWhenFailToReplaceMemberManyTimes(ServiceReplacerTest.java:124)
+//    
+//    testSetsOnFireWhenFailToReplaceMemberManyTimes(brooklyn.policy.ha.ServiceReplacerTest)  Time elapsed: 0.11 sec  <<< FAILURE!
+//    java.lang.AssertionError: expected [2] but found [1]
+//    	at org.testng.Assert.fail(Assert.java:94)
+//    	at org.testng.Assert.failNotEquals(Assert.java:494)
+//    	at org.testng.Assert.assertEquals(Assert.java:123)
+//    	at org.testng.Assert.assertEquals(Assert.java:370)
+//    	at org.testng.Assert.assertEquals(Assert.java:380)
+//    	at brooklyn.policy.ha.ServiceReplacerTest.testSetsOnFireWhenFailToReplaceMember(ServiceReplacerTest.java:156)
+//    	at brooklyn.policy.ha.ServiceReplacerTest.testSetsOnFireWhenFailToReplaceMemberManyTimes(ServiceReplacerTest.java:124)
+//    
+//    testSetsOnFireWhenFailToReplaceMemberManyTimes(brooklyn.policy.ha.ServiceReplacerTest)  Time elapsed: 0.157 sec  <<< FAILURE!
+//    java.lang.AssertionError: expected [2] but found [1]
+//    	at org.testng.Assert.fail(Assert.java:94)
+//    	at org.testng.Assert.failNotEquals(Assert.java:494)
+//    	at org.testng.Assert.assertEquals(Assert.java:123)
+//    	at org.testng.Assert.assertEquals(Assert.java:370)
+//    	at org.testng.Assert.assertEquals(Assert.java:380)
+//    	at brooklyn.policy.ha.ServiceReplacerTest.testSetsOnFireWhenFailToReplaceMember(ServiceReplacerTest.java:156)
+//    	at brooklyn.policy.ha.ServiceReplacerTest.testSetsOnFireWhenFailToReplaceMemberManyTimes(ServiceReplacerTest.java:124)
+    @Test(invocationCount=250)
     public void testSetsOnFireWhenFailToReplaceMemberManyTimes() throws Exception {
         testSetsOnFireWhenFailToReplaceMember();
     }
@@ -152,8 +186,16 @@ public class ServiceReplacerTest {
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
         // Expect to have the second failed entity still kicking around as proof (in quarantine)
-        Iterable<Entity> members = Iterables.filter(managementContext.getEntityManager().getEntities(), Predicates.instanceOf(FailingEntity.class));
-        assertEquals(Iterables.size(members), 2);
+        List<Entity> members = Lists.newArrayList(Iterables.filter(managementContext.getEntityManager().getEntities(), Predicates.instanceOf(FailingEntity.class)));
+        int actual = Iterables.size(members);
+        if (actual != 2) {
+            logger.error("Test assertion failed: expected there to be two failed entities, but there isn't");
+            if(members.contains(e1)) logger.error("Contains e1");
+            for(Entity member : members)
+                logger.error(member.toString());
+            logger.error("---");
+        }
+        assertEquals(actual, 2); // java.lang.AssertionError: expected [2] but found [1]
 
         // e2 failed to start, so it won't have called stop on e1
         TestEntity e2 = (TestEntity) Iterables.getOnlyElement(Sets.difference(ImmutableSet.copyOf(members), initialMembers));
