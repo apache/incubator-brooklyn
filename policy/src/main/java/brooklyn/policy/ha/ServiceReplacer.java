@@ -173,7 +173,7 @@ public class ServiceReplacer extends AbstractPolicy {
                         LOG.info("ServiceReplacer: ignoring error reported from stopping failed node "+failedEntity);
                         return;
                     }
-                    onReplacementFailed("Replace failure (error "+e+") at "+entity+": "+reason);
+                    onReplacementFailed("Replace failure ("+Exceptions.collapseText(e)+") at "+entity+": "+reason);
                 }
             }
         });

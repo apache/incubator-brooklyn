@@ -234,6 +234,7 @@ public class ServiceStateLogic {
             if (Boolean.TRUE.equals(serviceUp) && (problems==null || problems.isEmpty())) {
                 return Lifecycle.RUNNING;
             } else {
+                log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected running, up="+serviceUp+", problems: "+problems);
                 return Lifecycle.ON_FIRE;
             }
         }
@@ -245,10 +246,12 @@ public class ServiceStateLogic {
                 
             } else if (problems!=null && !problems.isEmpty()) {
                 // if there is no expected state, then if service is not up, say stopped, else say on fire (whether service up is true or not present)
-                if (Boolean.FALSE.equals(up))
+                if (Boolean.FALSE.equals(up)) {
                     return Lifecycle.STOPPED;
-                else
+                } else {
+                    log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected "+stateTransition+" / up="+up+": "+problems);
                     return Lifecycle.ON_FIRE;
+                }
             } else {
                 // no expected transition and no problems
                 // if the problems map is non-null, then infer from service up;
