@@ -603,6 +603,29 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
         assertEquals(child.getConfig(TestEntity.CONF_NAME), "inchildspec");
     }
+
+    @Test(groups = {"WIP"})
+    public void testEntitySpecWithChildren() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n"+
+                "  brooklyn.config:\n"+
+                "   test.childSpec:\n"+
+                "     $brooklyn:entitySpec:\n"+
+                "       type: brooklyn.test.entity.TestEntity\n"+
+                "       brooklyn.children:\n"+
+                "       - type: brooklyn.test.entity.TestEntity3\n" +
+                "         brooklyn.confName: grandchild\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
+
+        assertEquals(child.getChildren().size(), 1, "Child entity should have one child of its own");
+        TestEntity grandchild = (TestEntity) Iterables.getOnlyElement(child.getChildren());
+        assertEquals(grandchild.getConfig(TestEntity.CONF_NAME), "grandchild");
+    }
     
     @Test
     public void testNestedEntitySpecConfigs() throws Exception {
