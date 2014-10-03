@@ -41,7 +41,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBServerImpl.class);
 
     static {
-        RendererHints.register(HTTP_INTERFACE_URL, new RendererHints.NamedActionWithUrl("Open"));
+        RendererHints.register(HTTP_INTERFACE_URL, RendererHints.namedActionWithUrl());
     }
 
     private FunctionFeed serviceStats;

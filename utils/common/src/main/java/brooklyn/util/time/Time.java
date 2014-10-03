@@ -37,7 +37,7 @@ import com.google.common.base.Stopwatch;
 
 public class Time {
 
-	public static final String DATE_FORMAT_PREFERRED = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final String DATE_FORMAT_PREFERRED = "yyyy-MM-dd HH:mm:ss.SSS";
 	public static final String DATE_FORMAT_STAMP = "yyyyMMdd-HHmmssSSS";
 
 	public static final long MILLIS_IN_SECOND = 1000;
@@ -220,7 +220,19 @@ public class Time {
 		return Strings.removeAllFromEnd(result, " ");
 	}
 
+    public static Function<Long, String> fromLongToTimeStringExact() { return LONG_TO_TIME_STRING_EXACT; }
+    private static final Function<Long, String> LONG_TO_TIME_STRING_EXACT = new FunctionLongToTimeStringExact();
+    private static final class FunctionLongToTimeStringExact implements Function<Long, String> {
+        @Override @Nullable
+        public String apply(@Nullable Long input) {
+            if (input == null) return null;
+            return Time.makeTimeStringExact(input);
+        }
+    }
+
+    /** @deprecated since 0.7.0 use {@link #fromLongToTimeStringExact()} */ @Deprecated
     public static Function<Long, String> toTimeString() { return timeString; }
+    @Deprecated
     private static Function<Long, String> timeString = new Function<Long, String>() {
             @Override
             @Nullable
@@ -229,16 +241,38 @@ public class Time {
                 return Time.makeTimeStringExact(input);
             }
         };
+        
+    public static Function<Long, String> fromLongToTimeStringRounded() { return LONG_TO_TIME_STRING_ROUNDED; }
+    private static final Function<Long, String> LONG_TO_TIME_STRING_ROUNDED = new FunctionLongToTimeStringRounded();
+    private static final class FunctionLongToTimeStringRounded implements Function<Long, String> {
+        @Override @Nullable
+        public String apply(@Nullable Long input) {
+            if (input == null) return null;
+            return Time.makeTimeStringRounded(input);
+        }
+    }
 
+    /** @deprecated since 0.7.0 use {@link #fromLongToTimeStringRounded()} */ @Deprecated
     public static Function<Long, String> toTimeStringRounded() { return timeStringRounded; }
+    @Deprecated
     private static Function<Long, String> timeStringRounded = new Function<Long, String>() {
-            @Override
-            @Nullable
-            public String apply(@Nullable Long input) {
-                if (input == null) return null;
-                return Time.makeTimeStringRounded(input);
-            }
-        };
+        @Override
+        @Nullable
+        public String apply(@Nullable Long input) {
+            if (input == null) return null;
+            return Time.makeTimeStringRounded(input);
+        }
+    };
+
+    public static Function<Duration, String> fromDurationToTimeStringRounded() { return DURATION_TO_TIME_STRING_ROUNDED; }
+    private static final Function<Duration, String> DURATION_TO_TIME_STRING_ROUNDED = new FunctionDurationToTimeStringRounded();
+    private static final class FunctionDurationToTimeStringRounded implements Function<Duration, String> {
+        @Override @Nullable
+        public String apply(@Nullable Duration input) {
+            if (input == null) return null;
+            return Time.makeTimeStringRounded(input);
+        }
+    }
 
 	private static String toDecimal(long intPart, double fracPart, int decimalPrecision) {
 		long powTen = 1;

@@ -22,13 +22,12 @@ import brooklyn.config.render.RendererHints;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.Sensors;
+import brooklyn.util.math.MathFunctions;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
 
 public interface WebAppServiceMetrics {
     
-    public static final AttributeSensor<Integer> REQUEST_COUNT = Initializer.REQUEST_COUNT;
-        
     public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
             new brooklyn.event.basic.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");
     public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = Sensors.newIntegerSensor(
@@ -57,7 +56,10 @@ public interface WebAppServiceMetrics {
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW =
             Sensors.newDoubleSensor("webapp.reqs.perSec.windowed", "Reqs/sec (over time window)");
 
+    public static final AttributeSensor<Integer> REQUEST_COUNT = Initializer.REQUEST_COUNT;
+
     // this class is added because the above need static initialization which unfortunately can't be added to an interface.
+    // (but should only be referenced after the other fields have been set)
     static class Initializer {
         public static final AttributeSensor<Integer> REQUEST_COUNT =
             Sensors.newIntegerSensor("webapp.reqs.total", "Request count");
@@ -67,6 +69,8 @@ public interface WebAppServiceMetrics {
             RendererHints.register(WebAppServiceConstants.MAX_PROCESSING_TIME, RendererHints.displayValue(Duration.millisToStringRounded()));
             RendererHints.register(WebAppServiceConstants.BYTES_RECEIVED, RendererHints.displayValue(ByteSizeStrings.metric()));
             RendererHints.register(WebAppServiceConstants.BYTES_SENT, RendererHints.displayValue(ByteSizeStrings.metric()));
+            RendererHints.register(WebAppServiceConstants.PROCESSING_TIME_FRACTION_LAST, RendererHints.displayValue(MathFunctions.percent(2)));
+            RendererHints.register(WebAppServiceConstants.PROCESSING_TIME_FRACTION_IN_WINDOW, RendererHints.displayValue(MathFunctions.percent(2)));
         }
     }
 

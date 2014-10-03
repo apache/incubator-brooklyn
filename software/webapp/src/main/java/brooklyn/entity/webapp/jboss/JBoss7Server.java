@@ -100,4 +100,5 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, HasShortName {
             Sensors.newBooleanSensor("webapp.jboss.managementUp", "Management server is responding with OK");
     
     public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "jboss.pid.file", "PID file");
+
 }

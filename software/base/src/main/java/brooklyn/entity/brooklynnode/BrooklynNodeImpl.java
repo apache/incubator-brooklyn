@@ -64,7 +64,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     private static final Logger log = LoggerFactory.getLogger(BrooklynNodeImpl.class);
 
     static {
-        RendererHints.register(WEB_CONSOLE_URI, new RendererHints.NamedActionWithUrl("Open"));
+        RendererHints.register(WEB_CONSOLE_URI, RendererHints.namedActionWithUrl());
     }
 
     private HttpFeed httpFeed;
@@ -85,7 +85,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     public void init() {
         super.init();
-        RendererHints.register(MANAGEMENT_PASSWORD, RendererHints.censoredConfigKey());
+        RendererHints.register(MANAGEMENT_PASSWORD, RendererHints.censoredValue());
         getMutableEntityType().addEffector(DeployBlueprintEffectorBody.DEPLOY_BLUEPRINT);
         getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
         getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);
@@ -124,6 +124,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         
         @Override
         public String call(ConfigBag parameters) {
+            if (log.isDebugEnabled())
+                log.debug("Deploying blueprint to "+entity()+": "+parameters);
             String plan = extractPlanYamlString(parameters);
             return submitPlan(plan);
         }

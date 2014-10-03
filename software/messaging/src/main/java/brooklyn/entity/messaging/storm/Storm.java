@@ -97,7 +97,7 @@ public interface Storm extends SoftwareProcess, UsesJmx {
         public static final AttributeSensor<String> STORM_UI_URL = Sensors.newStringSensor("storm.ui.url", "URL");
 
         static {
-            RendererHints.register(STORM_UI_URL, new RendererHints.NamedActionWithUrl("Open"));
+            RendererHints.register(STORM_UI_URL, RendererHints.namedActionWithUrl());
         }
     }
 

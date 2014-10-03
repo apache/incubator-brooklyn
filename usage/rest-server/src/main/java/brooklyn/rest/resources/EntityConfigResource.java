@@ -32,7 +32,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.EntityConfigApi;
@@ -81,13 +80,14 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
         return result;
     }
 
+    @SuppressWarnings("rawtypes")
     public static Object applyDisplayValueHint(ConfigKey<?> configKey, Object value) {
-        Iterable<RendererHints.ConfigKeyDisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(configKey), RendererHints.ConfigKeyDisplayValue.class);
+        Iterable<RendererHints.DisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(configKey), RendererHints.DisplayValue.class);
         if (Iterables.size(hints) > 1) {
             LOG.warn("Multiple display value hints set for sensor {}; Only one will be applied, using first", configKey);
         }
 
-        Optional<RendererHints.ConfigKeyDisplayValue> hint = Optional.fromNullable(Iterables.getFirst(hints, null));
+        Optional<RendererHints.DisplayValue> hint = Optional.fromNullable(Iterables.getFirst(hints, null));
         return hint.isPresent() ? hint.get().getDisplayValue(value) : value;
     }
 

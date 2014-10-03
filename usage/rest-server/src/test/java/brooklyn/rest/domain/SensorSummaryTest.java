@@ -92,8 +92,8 @@ public class SensorSummaryTest {
   public void testSensorWithMultipleOpenUrlActionsRegistered() throws IOException {
       AttributeSensor<String> sensor = Sensors.newStringSensor("sensor1");
       entity.setAttribute(sensor, "http://myval");
-      RendererHints.register(sensor, new RendererHints.NamedActionWithUrl("Open"));
-      RendererHints.register(sensor, new RendererHints.NamedActionWithUrl("Open"));
+      RendererHints.register(sensor, RendererHints.namedActionWithUrl());
+      RendererHints.register(sensor, RendererHints.namedActionWithUrl());
 
       SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
       

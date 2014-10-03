@@ -51,7 +51,7 @@ public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
     @Override
     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
         if (BidiSerialization.isStrictSerialization())
-            throw new JsonMappingException("Cannot containing "+value.getClass().getName()+" and strict serialization requested");
+            throw new JsonMappingException("Cannot serialize object containing "+value.getClass().getName()+" when strict serialization requested");
 
         serializeFromError(jgen.getOutputContext(), null, value, jgen, provider);
     }
