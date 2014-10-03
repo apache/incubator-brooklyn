@@ -1123,8 +1123,13 @@
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
                   <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
                   <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
-                  <!-- FIXME: Check licences for docs -->
+                  
+                  <!--
+                      docs are not part of the distribution: they are just used to populate 
+                      https://brooklyn.incubator.apache.org
+                  -->
                   <exclude>docs/**</exclude>
+
                 </excludes>
               </configuration>
             </plugin>
