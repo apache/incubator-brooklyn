@@ -34,6 +34,30 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!--
+                                Configuration artifacts (for installations) that have been downloaded from other projects, 
+                                and then templated. These are files "without any degree of creativity" from the perspective 
+                                of the Brooklyn/Apache contribution.
+                            -->
+                            <exclude>src/main/resources/brooklyn/entity/database/mariadb/my.cnf</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/database/mysql/mysql.conf</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/database/postgresql/postgresql.conf</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/database/rubyrep/rubyrep.conf</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+    
     <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
