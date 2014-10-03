@@ -46,13 +46,13 @@ import com.google.common.collect.Lists;
 public class WideAreaCassandraCluster extends AbstractApplication {
 
     public static final String DEFAULT_LOCATION_SPEC = "aws-ec2:us-east-1,rackspace-cloudservers-uk";
-	
-	@CatalogConfig(label="Initial Cluster Size (per location)", priority=2)
+    
+    @CatalogConfig(label="Initial Cluster Size (per location)", priority=2)
     public static final ConfigKey<Integer> CASSANDRA_CLUSTER_SIZE = ConfigKeys.newConfigKey(
         "cassandra.cluster.initialSize", "Initial size of the Cassandra clusterss", 2);      
     
     
-	
+    
     @Override
     public void initApp() {
         addChild(EntitySpec.create(CassandraFabric.class)

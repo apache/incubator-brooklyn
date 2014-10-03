@@ -72,10 +72,10 @@ public interface EffectorApi {
       
       // TODO test timeout; and should it be header, form, or what?
       @ApiParam(name = "timeout", value = "Delay before server should respond with activity task ID rather than result (in millis if no unit specified): " +
-      		"'never' (blocking) is default; " +
-      		"'0' means 'always' return task activity ID; " +
-      		"and e.g. '1000' or '1s' will return a result if available within one second otherwise status 202 and the activity task ID", 
-      		required = false, defaultValue = "never")
+              "'never' (blocking) is default; " +
+              "'0' means 'always' return task activity ID; " +
+              "and e.g. '1000' or '1s' will return a result if available within one second otherwise status 202 and the activity task ID", 
+              required = false, defaultValue = "never")
       @QueryParam("timeout")
       String timeout,
       

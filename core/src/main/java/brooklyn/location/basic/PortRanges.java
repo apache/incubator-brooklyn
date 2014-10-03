@@ -41,9 +41,9 @@ public class PortRanges {
     public static final PortRange ANY_HIGH_PORT = new LinearPortRange(1024, MAX_PORT);
     
     public static class SinglePort implements PortRange, Serializable {
-		private static final long serialVersionUID = 7446781416534230401L;
-		
-		final int port;
+        private static final long serialVersionUID = 7446781416534230401L;
+        
+        final int port;
         private SinglePort(int port) { this.port = port; }
         
         @Override
@@ -73,9 +73,9 @@ public class PortRanges {
     }
 
     public static class LinearPortRange implements PortRange, Serializable {
-		private static final long serialVersionUID = -9165280509363743508L;
-		
-		final int start, end, delta;
+        private static final long serialVersionUID = -9165280509363743508L;
+        
+        final int start, end, delta;
         private LinearPortRange(int start, int end, int delta) {
             this.start = start;
             this.end = end;
@@ -140,9 +140,9 @@ public class PortRanges {
     }
     
     public static class AggregatePortRange implements PortRange, Serializable {
-		private static final long serialVersionUID = 7332682500816739660L;
-		
-		final List<PortRange> ranges;
+        private static final long serialVersionUID = 7332682500816739660L;
+        
+        final List<PortRange> ranges;
         private AggregatePortRange(List<PortRange> ranges) {
             this.ranges = ImmutableList.copyOf(ranges);
         }

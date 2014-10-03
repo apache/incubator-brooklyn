@@ -47,9 +47,9 @@ public class EntityTestUtils {
     // TODO would be nice to have this... perhaps moving this class, or perhaps this whole project, to core/src/test ?
 //    public static LocalManagementContext newManagementContext() { return new LocalManagementContextForTests(); }
     
-	// TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
-	// and deprecate methods in TestUtils until deleted).
-	
+    // TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
+    // and deprecate methods in TestUtils until deleted).
+    
     public static <T> void assertAttributeEquals(Entity entity, AttributeSensor<T> attribute, T expected) {
         assertEquals(entity.getAttribute(attribute), expected);
     }

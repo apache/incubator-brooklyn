@@ -159,7 +159,7 @@ public class DefaultBalanceablePoolModel<ContainerType, ItemType> implements Bal
             // Item may have been deleted; order of events received from different sources 
             // (i.e. item itself and for itemGroup membership) is non-deterministic.
             LOG.info("Balanceable pool model ignoring onItemMoved for unknown item {} to container {}; " +
-            		"if onItemAdded subsequently received will get new container then", item, newNode);
+                    "if onItemAdded subsequently received will get new container then", item, newNode);
             return;
         }
         ContainerType newNodeNonNull = toNonNullContainer(newNode);

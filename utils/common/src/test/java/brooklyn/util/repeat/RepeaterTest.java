@@ -217,18 +217,18 @@ public class RepeaterTest {
     @Test
     public void testNoRethrowsException() {
         try {
-	        boolean result = new Repeater("throwRuntimeException")
-	            .every(Duration.millis(10))
-	            .until(callableThrowingUnsupportedFail())
-	            .limitIterationsTo(2)
-	            .run();
-	        assertFalse(result);
+            boolean result = new Repeater("throwRuntimeException")
+                .every(Duration.millis(10))
+                .until(callableThrowingUnsupportedFail())
+                .limitIterationsTo(2)
+                .run();
+            assertFalse(result);
         } catch (RuntimeException re) {
             fail("Exception should not have been thrown: " + re.getMessage());
         }
     }
-	
-	private static Callable<Boolean> callableThrowingUnsupportedFail() {
+    
+    private static Callable<Boolean> callableThrowingUnsupportedFail() {
         return new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
@@ -236,5 +236,5 @@ public class RepeaterTest {
             }
         };
     }
-	
+    
 }

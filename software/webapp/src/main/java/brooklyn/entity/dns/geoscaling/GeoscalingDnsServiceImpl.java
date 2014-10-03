@@ -77,9 +77,9 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         super.onManagementBecomingMaster();
     }
 
-	boolean isConfigured = false;
-	
-    public synchronized void applyConfig() {		
+    boolean isConfigured = false;
+    
+    public synchronized void applyConfig() {        
         randomizeSmartSubdomainName = getConfig(RANDOMIZE_SUBDOMAIN_NAME);
         username = getConfig(GEOSCALING_USERNAME);
         password = getConfig(GEOSCALING_PASSWORD);
@@ -140,8 +140,8 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         }
         
         super.destroy();
-		
-		isConfigured = false;
+        
+        isConfigured = false;
     }
     
     protected void reconfigureService(Collection<HostGeoInfo> targetHosts) {

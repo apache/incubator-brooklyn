@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 
 public class StreamGobbler extends Thread implements Closeable {
-	
+    
     protected final InputStream stream;
     protected final PrintStream out;
     protected final Logger log;
@@ -63,8 +63,8 @@ public class StreamGobbler extends Thread implements Closeable {
     public StreamGobbler setPrefix(String prefix) {
         setLogPrefix(prefix);
         setPrintPrefix(prefix);
-		return this;
-	}
+        return this;
+    }
     public StreamGobbler setPrintPrefix(String prefix) {
         printPrefix = prefix;
         return this;
@@ -83,36 +83,36 @@ public class StreamGobbler extends Thread implements Closeable {
             }
             onClose();
         } catch (IOException e) {
-        	onClose();
-        	//TODO parametrise log level, for this error, and for normal messages
-        	if (log!=null && log.isTraceEnabled()) log.trace(logPrefix+"exception reading from stream ("+e+")");
+            onClose();
+            //TODO parametrise log level, for this error, and for normal messages
+            if (log!=null && log.isTraceEnabled()) log.trace(logPrefix+"exception reading from stream ("+e+")");
         }
     }
     
     private final StringBuilder lineSoFar = new StringBuilder(16);
     public void onChar(int c) {
-    	if (c=='\n' || c=='\r') {
-    		if (lineSoFar.length()>0)
-    		    //suppress blank lines, so that we can treat either newline char as a line separator
-    		    //(eg to show curl updates frequently)
-    		    onLine(lineSoFar.toString());
-    		lineSoFar.setLength(0);
-    	} else {
-    		lineSoFar.append((char)c);
-    	}
+        if (c=='\n' || c=='\r') {
+            if (lineSoFar.length()>0)
+                //suppress blank lines, so that we can treat either newline char as a line separator
+                //(eg to show curl updates frequently)
+                onLine(lineSoFar.toString());
+            lineSoFar.setLength(0);
+        } else {
+            lineSoFar.append((char)c);
+        }
     }
     
     public void onLine(String line) {
-    	//right trim, in case there is \r or other funnies
-    	while (line.length()>0 && Character.isWhitespace(line.charAt(line.length()-1)))
-    		line = line.substring(0, line.length()-1);
-    	//right trim, in case there is \r or other funnies
-    	while (line.length()>0 && (line.charAt(0)=='\n' || line.charAt(0)=='\r'))
-    		line = line.substring(1);
-    	if (!line.isEmpty()) {
-    	    if (out!=null) out.println(printPrefix+line);
-    	    if (log!=null && log.isDebugEnabled()) log.debug(logPrefix+line);
-    	}
+        //right trim, in case there is \r or other funnies
+        while (line.length()>0 && Character.isWhitespace(line.charAt(line.length()-1)))
+            line = line.substring(0, line.length()-1);
+        //right trim, in case there is \r or other funnies
+        while (line.length()>0 && (line.charAt(0)=='\n' || line.charAt(0)=='\r'))
+            line = line.substring(1);
+        if (!line.isEmpty()) {
+            if (out!=null) out.println(printPrefix+line);
+            if (log!=null && log.isDebugEnabled()) log.debug(logPrefix+line);
+        }
     }
     
     public void onClose() {

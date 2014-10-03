@@ -48,64 +48,64 @@ import com.google.common.collect.Lists;
 
 public class ScheduledExecutionTest {
 
-	public static final Logger log = LoggerFactory.getLogger(ScheduledExecutionTest.class);
-	
-	@Test
-	public void testScheduledTask() throws Exception {
-		int PERIOD = 20;
-		BasicExecutionManager m = new BasicExecutionManager("mycontextid");
-		final AtomicInteger i = new AtomicInteger(0);
-		ScheduledTask t = new ScheduledTask(MutableMap.of("delay", 2*PERIOD, "period", PERIOD, "maxIterations", 5), new Callable<Task<?>>() {
+    public static final Logger log = LoggerFactory.getLogger(ScheduledExecutionTest.class);
+    
+    @Test
+    public void testScheduledTask() throws Exception {
+        int PERIOD = 20;
+        BasicExecutionManager m = new BasicExecutionManager("mycontextid");
+        final AtomicInteger i = new AtomicInteger(0);
+        ScheduledTask t = new ScheduledTask(MutableMap.of("delay", 2*PERIOD, "period", PERIOD, "maxIterations", 5), new Callable<Task<?>>() {
             public Task<?> call() throws Exception {
                 return new BasicTask<Integer>(new Callable<Integer>() {
                     public Integer call() {
-            			log.debug("task running: "+Tasks.current()+" "+Tasks.current().getStatusDetail(false));
-            			return i.incrementAndGet();
+                        log.debug("task running: "+Tasks.current()+" "+Tasks.current().getStatusDetail(false));
+                        return i.incrementAndGet();
                     }});
             }});
-	
-		log.info("submitting {} {}", t, t.getStatusDetail(false));
-		m.submit(t);
-		log.info("submitted {} {}", t, t.getStatusDetail(false));
-		Integer interimResult = (Integer) t.get();
-		log.info("done one ({}) {} {}", new Object[] {interimResult, t, t.getStatusDetail(false)});
-		assertTrue(i.get() > 0, "i="+i);
-		t.blockUntilEnded();
-		Integer finalResult = (Integer) t.get();
-		log.info("ended ({}) {} {}", new Object[] {finalResult, t, t.getStatusDetail(false)});
-		assertEquals(finalResult, (Integer)5);
-		assertEquals(i.get(), 5);
-	}
+    
+        log.info("submitting {} {}", t, t.getStatusDetail(false));
+        m.submit(t);
+        log.info("submitted {} {}", t, t.getStatusDetail(false));
+        Integer interimResult = (Integer) t.get();
+        log.info("done one ({}) {} {}", new Object[] {interimResult, t, t.getStatusDetail(false)});
+        assertTrue(i.get() > 0, "i="+i);
+        t.blockUntilEnded();
+        Integer finalResult = (Integer) t.get();
+        log.info("ended ({}) {} {}", new Object[] {finalResult, t, t.getStatusDetail(false)});
+        assertEquals(finalResult, (Integer)5);
+        assertEquals(i.get(), 5);
+    }
 
-	/** like testScheduledTask but the loop is terminated by the task itself adjusting the period */
-	@Test
-	public void testScheduledTaskSelfEnding() throws Exception {
-		int PERIOD = 20;
-		BasicExecutionManager m = new BasicExecutionManager("mycontextid");
-		final AtomicInteger i = new AtomicInteger(0);
-		ScheduledTask t = new ScheduledTask(MutableMap.of("delay", 2*PERIOD, "period", PERIOD), new Callable<Task<?>>() {
-		    public Task<?> call() throws Exception {
-		        return new BasicTask<Integer>(new Callable<Integer>() {
-		            public Integer call() {
-		                ScheduledTask submitter = (ScheduledTask) ((BasicTask)Tasks.current()).getSubmittedByTask();
-            			if (i.get() >= 4) submitter.period = null;
-            			log.info("task running ("+i+"): "+Tasks.current()+" "+Tasks.current().getStatusDetail(false));
-            			return i.incrementAndGet();
-		            }});
-		    }});
-	
-		log.info("submitting {} {}", t, t.getStatusDetail(false));
-		m.submit(t);
-		log.info("submitted {} {}", t, t.getStatusDetail(false));
-		Integer interimResult = (Integer) t.get();
-		log.info("done one ({}) {} {}", new Object[] {interimResult, t, t.getStatusDetail(false)});
-		assertTrue(i.get() > 0);
-		t.blockUntilEnded();
-		Integer finalResult = (Integer) t.get();
-		log.info("ended ({}) {} {}", new Object[] {finalResult, t, t.getStatusDetail(false)});
-		assertEquals(finalResult, (Integer)5);
-		assertEquals(i.get(), 5);
-	}
+    /** like testScheduledTask but the loop is terminated by the task itself adjusting the period */
+    @Test
+    public void testScheduledTaskSelfEnding() throws Exception {
+        int PERIOD = 20;
+        BasicExecutionManager m = new BasicExecutionManager("mycontextid");
+        final AtomicInteger i = new AtomicInteger(0);
+        ScheduledTask t = new ScheduledTask(MutableMap.of("delay", 2*PERIOD, "period", PERIOD), new Callable<Task<?>>() {
+            public Task<?> call() throws Exception {
+                return new BasicTask<Integer>(new Callable<Integer>() {
+                    public Integer call() {
+                        ScheduledTask submitter = (ScheduledTask) ((BasicTask)Tasks.current()).getSubmittedByTask();
+                        if (i.get() >= 4) submitter.period = null;
+                        log.info("task running ("+i+"): "+Tasks.current()+" "+Tasks.current().getStatusDetail(false));
+                        return i.incrementAndGet();
+                    }});
+            }});
+    
+        log.info("submitting {} {}", t, t.getStatusDetail(false));
+        m.submit(t);
+        log.info("submitted {} {}", t, t.getStatusDetail(false));
+        Integer interimResult = (Integer) t.get();
+        log.info("done one ({}) {} {}", new Object[] {interimResult, t, t.getStatusDetail(false)});
+        assertTrue(i.get() > 0);
+        t.blockUntilEnded();
+        Integer finalResult = (Integer) t.get();
+        log.info("ended ({}) {} {}", new Object[] {finalResult, t, t.getStatusDetail(false)});
+        assertEquals(finalResult, (Integer)5);
+        assertEquals(i.get(), 5);
+    }
 
     @Test
     public void testScheduledTaskCancelEnding() throws Exception {

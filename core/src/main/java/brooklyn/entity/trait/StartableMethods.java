@@ -44,21 +44,21 @@ import com.google.common.collect.Lists;
 public class StartableMethods {
 
     public static final Logger log = LoggerFactory.getLogger(StartableMethods.class);
-    	
-	private StartableMethods() {}
+        
+    private StartableMethods() {}
 
     /** Common implementation for start in parent nodes; just invokes start on all children of the entity */
-	public static void start(EntityLocal e, Collection<? extends Location> locations) {
+    public static void start(EntityLocal e, Collection<? extends Location> locations) {
         log.debug("Starting entity "+e+" at "+locations);
         DynamicTasks.queueIfPossible(startingChildren(e, locations)).orSubmitAsync(e).getTask().getUnchecked();
-	}
-	
+    }
+    
     /** Common implementation for stop in parent nodes; just invokes stop on all children of the entity */
-	public static void stop(EntityLocal e) {
+    public static void stop(EntityLocal e) {
         log.debug("Stopping entity "+e);
         DynamicTasks.queueIfPossible(stoppingChildren(e)).orSubmitAsync(e).getTask().getUnchecked();
         if (log.isDebugEnabled()) log.debug("Stopped entity "+e);
-	}
+    }
 
     /** Common implementation for restart in parent nodes; just invokes restart on all children of the entity */
     public static void restart(EntityLocal e) {

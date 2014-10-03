@@ -88,21 +88,21 @@ public class Repeater {
 
     static { TimeExtras.init(); }
 
-	@SetFromFlag
+    @SetFromFlag
     private final String description;
     private Callable<?> body = Callables.returning(null);
     private Callable<Boolean> exitCondition;
-	@SetFromFlag
-	private Long period = null;
-	@SetFromFlag("timeout")
-	private Long durationLimit = null;
+    @SetFromFlag
+    private Long period = null;
+    @SetFromFlag("timeout")
+    private Long durationLimit = null;
     private int iterationLimit = 0;
     private boolean rethrowException = false;
     private boolean rethrowExceptionImmediately = false;
-	private boolean warnOnUnRethrownException = true;
+    private boolean warnOnUnRethrownException = true;
 
-	public Repeater() {
-	    this(MutableMap.of(), null);
+    public Repeater() {
+        this(MutableMap.of(), null);
     }
 
     public Repeater(Map<?,?> flags) {
@@ -120,20 +120,20 @@ public class Repeater {
      * @param description a description of the operation that will appear in debug logs.
      */
     public Repeater(Map<?,?> flags, String description) {
-    	setFromFlags(flags);
-    	this.description = JavaGroovyEquivalents.elvis(description, this.description, "Repeater");
+        setFromFlags(flags);
+        this.description = JavaGroovyEquivalents.elvis(description, this.description, "Repeater");
     }
 
-	public void setFromFlags(Map<?,?> flags) {
-		FlagUtils.setFieldsFromFlags(flags, this);
-	}
-	
+    public void setFromFlags(Map<?,?> flags) {
+        FlagUtils.setFieldsFromFlags(flags, this);
+    }
+    
     public static Repeater create() {
         return create(MutableMap.of());
     }
-	public static Repeater create(Map<?,?> flags) {
-		return create(flags, null);
-	}
+    public static Repeater create(Map<?,?> flags) {
+        return create(flags, null);
+    }
     public static Repeater create(String description) {
         return create(MutableMap.of(), description);
     }
@@ -193,9 +193,9 @@ public class Repeater {
      */
     public Repeater every(Duration duration) {
         Preconditions.checkNotNull(duration, "duration must not be null");
-		Preconditions.checkArgument(duration.toMilliseconds()>0, "period must be positive: %s", duration);
-		this.period = duration.toMilliseconds();
-		return this;
+        Preconditions.checkArgument(duration.toMilliseconds()>0, "period must be positive: %s", duration);
+        this.period = duration.toMilliseconds();
+        return this;
     }
     
     public Repeater every(groovy.time.Duration duration) {
@@ -204,7 +204,7 @@ public class Repeater {
 
     /**
      * @see #every(long, TimeUnit)
-	 * @deprecated specify unit
+     * @deprecated specify unit
      */
     public Repeater every(long duration) {
         return every(duration, TimeUnit.MILLISECONDS);
@@ -244,9 +244,9 @@ public class Repeater {
     }
 
     public Repeater suppressWarnings() {
-		this.warnOnUnRethrownException = false;
-		return this;
-	}
+        this.warnOnUnRethrownException = false;
+        return this;
+    }
 
     /**
      * Set the maximum number of iterations.
@@ -283,8 +283,8 @@ public class Repeater {
      */
     public Repeater limitTimeTo(Duration duration) {
         Preconditions.checkNotNull(duration, "duration must not be null");
-		Preconditions.checkArgument(duration.toMilliseconds() > 0, "deadline must be positive: %s", duration);
-		this.durationLimit = duration.toMilliseconds();
+        Preconditions.checkArgument(duration.toMilliseconds() > 0, "deadline must be positive: %s", duration);
+        this.durationLimit = duration.toMilliseconds();
         return this;
     }
 
@@ -300,9 +300,9 @@ public class Repeater {
 
         Throwable lastError = null;
         int iterations = 0;
-		long endTime = -1;
+        long endTime = -1;
         if (durationLimit != null) {
-			endTime = System.currentTimeMillis() + durationLimit;
+            endTime = System.currentTimeMillis() + durationLimit;
         }
 
         while (true) {
@@ -346,24 +346,24 @@ public class Repeater {
                     log.warn("{}: error caught checking condition (rethrowing): {}", description, lastError.getMessage());
                     throw Exceptions.propagate(lastError);
                 }
-				if (warnOnUnRethrownException && lastError != null)
-					log.warn("{}: error caught checking condition: {}", description, lastError.getMessage());
+                if (warnOnUnRethrownException && lastError != null)
+                    log.warn("{}: error caught checking condition: {}", description, lastError.getMessage());
                 return false;
             }
 
             if (endTime > 0) {
-				if (System.currentTimeMillis() > endTime) {
+                if (System.currentTimeMillis() > endTime) {
                     if (log.isDebugEnabled()) log.debug("{}: condition not satisfied and deadline {} passed", 
                             description, Time.makeTimeStringRounded(endTime - System.currentTimeMillis()));
-	                if (rethrowException && lastError != null) {
-	                    log.error("{}: error caught checking condition: {}", description, lastError.getMessage());
-	                    throw Exceptions.propagate(lastError);
-	                }
+                    if (rethrowException && lastError != null) {
+                        log.error("{}: error caught checking condition: {}", description, lastError.getMessage());
+                        throw Exceptions.propagate(lastError);
+                    }
                     return false;
                 }
             }
 
-			Time.sleep(period);
+            Time.sleep(period);
         }
     }
 }

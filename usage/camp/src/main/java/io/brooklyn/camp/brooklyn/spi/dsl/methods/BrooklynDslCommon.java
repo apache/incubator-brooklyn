@@ -59,12 +59,12 @@ public class BrooklynDslCommon {
     public static DslComponent component(String scopeOrId) {
         return component("global", scopeOrId);
     }
-	public static DslComponent component(String scope, String id) {
-	    if (!DslComponent.Scope.isValid(scope)) {
-	        throw new IllegalArgumentException(scope + " is not a valid scope");
-	    }
-	    return new DslComponent(DslComponent.Scope.fromString(scope), id);
-	}
+    public static DslComponent component(String scope, String id) {
+        if (!DslComponent.Scope.isValid(scope)) {
+            throw new IllegalArgumentException(scope + " is not a valid scope");
+        }
+        return new DslComponent(DslComponent.Scope.fromString(scope), id);
+    }
 
     // --- access things on entities
 

@@ -552,7 +552,7 @@ public class BasicTask<T> implements TaskInternal<T> {
                             rv += "\n\n" + (v==null ? "No return value (null)" : "Result: "+v);
                         } catch (Exception e) {
                             rv += " at first\n" +
-                            		"Error accessing result ["+e+"]"; //shouldn't happen
+                                    "Error accessing result ["+e+"]"; //shouldn't happen
                         }
                         if (verbosity >= 2 && getExtraStatusText()!=null) {
                             rv += "\n\n"+getExtraStatusText();
@@ -561,7 +561,7 @@ public class BasicTask<T> implements TaskInternal<T> {
                 }
             }
         } else {
-			rv = getActiveTaskStatusString(verbosity);
+            rv = getActiveTaskStatusString(verbosity);
         }
         return rv;
     }
@@ -572,28 +572,28 @@ public class BasicTask<T> implements TaskInternal<T> {
         return s;
     }
 
-	protected String getActiveTaskStatusString(int verbosity) {
-		String rv = "";
-		Thread t = getThread();
-	
-		// Normally, it's not possible for thread==null as we were started and not ended
-		
-		// However, there is a race where the task starts sand completes between the calls to getThread()
-		// at the start of the method and this call to getThread(), so both return null even though
-		// the intermediate checks returned started==true isDone()==false.
-		if (t == null) {
-			if (isDone()) {
-				return getStatusString(verbosity);
-			} else {
-			    //should only happen for repeating task which is not active
+    protected String getActiveTaskStatusString(int verbosity) {
+        String rv = "";
+        Thread t = getThread();
+    
+        // Normally, it's not possible for thread==null as we were started and not ended
+        
+        // However, there is a race where the task starts sand completes between the calls to getThread()
+        // at the start of the method and this call to getThread(), so both return null even though
+        // the intermediate checks returned started==true isDone()==false.
+        if (t == null) {
+            if (isDone()) {
+                return getStatusString(verbosity);
+            } else {
+                //should only happen for repeating task which is not active
                 return "Sleeping";
-			}
-		}
+            }
+        }
 
-		ThreadInfo ti = ManagementFactory.getThreadMXBean().getThreadInfo(t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE));
-		if (getThread()==null)
-			//thread might have moved on to a new task; if so, recompute (it should now say "done")
-			return getStatusString(verbosity);
+        ThreadInfo ti = ManagementFactory.getThreadMXBean().getThreadInfo(t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE));
+        if (getThread()==null)
+            //thread might have moved on to a new task; if so, recompute (it should now say "done")
+            return getStatusString(verbosity);
         
         if (verbosity >= 1 && Strings.isNonBlank(blockingDetails)) {
             if (verbosity==1)
@@ -611,70 +611,70 @@ public class BasicTask<T> implements TaskInternal<T> {
             rv = "Waiting on "+blockingTask + "\n\n";
         }
 
-		if (verbosity>=2) {
+        if (verbosity>=2) {
             if (getExtraStatusText()!=null) {
                 rv += getExtraStatusText()+"\n\n";
             }
             
-		    rv += ""+toString()+"\n";
-		    if (submittedByTask!=null) {
-		        rv += "Submitted by "+submittedByTask+"\n";
-		    }
+            rv += ""+toString()+"\n";
+            if (submittedByTask!=null) {
+                rv += "Submitted by "+submittedByTask+"\n";
+            }
 
-		    if (this instanceof HasTaskChildren) {
-		        // list children tasks for compound tasks
-		        try {
-		            Iterable<Task<?>> childrenTasks = ((HasTaskChildren)this).getChildren();
-		            if (childrenTasks.iterator().hasNext()) {
-		                rv += "Children:\n";
-		                for (Task<?> child: childrenTasks) {
-		                    rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
-		                }
-		            }
-		        } catch (ConcurrentModificationException exc) {
-		            rv += "  (children not available - currently being modified)\n";
-		        }
-		    }
-		    rv += "\n";
-		}
-		
-		LockInfo lock = ti.getLockInfo();
-		rv += "In progress";
-		if (verbosity>=1) {
-		    if (lock==null && ti.getThreadState()==Thread.State.RUNNABLE) {
-		        //not blocked
-		        if (ti.isSuspended()) {
-		            // when does this happen?
-		            rv += ", thread suspended";
-		        } else {
-		            if (verbosity >= 2) rv += " ("+ti.getThreadState()+")";
-		        }
-		    } else {
-		        rv +=", thread waiting ";
-		        if (ti.getThreadState() == Thread.State.BLOCKED) {
-		            rv += "(mutex) on "+lookup(lock);
-		            //TODO could say who holds it
-		        } else if (ti.getThreadState() == Thread.State.WAITING) {
-		            rv += "(notify) on "+lookup(lock);
-		        } else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
-		            rv += "(timed) on "+lookup(lock);
-		        } else {
-		            rv = "("+ti.getThreadState()+") on "+lookup(lock);
-		        }
-		    }
-		}
-		if (verbosity>=2) {
-			StackTraceElement[] st = ti.getStackTrace();
-			st = brooklyn.util.javalang.StackTraceSimplifier.cleanStackTrace(st);
-			if (st!=null && st.length>0)
-				rv += "\n" +"At: "+st[0];
-			for (int ii=1; ii<st.length; ii++) {
-				rv += "\n" +"    "+st[ii];
-			}
-		}
-		return rv;
-	}
-	
+            if (this instanceof HasTaskChildren) {
+                // list children tasks for compound tasks
+                try {
+                    Iterable<Task<?>> childrenTasks = ((HasTaskChildren)this).getChildren();
+                    if (childrenTasks.iterator().hasNext()) {
+                        rv += "Children:\n";
+                        for (Task<?> child: childrenTasks) {
+                            rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
+                        }
+                    }
+                } catch (ConcurrentModificationException exc) {
+                    rv += "  (children not available - currently being modified)\n";
+                }
+            }
+            rv += "\n";
+        }
+        
+        LockInfo lock = ti.getLockInfo();
+        rv += "In progress";
+        if (verbosity>=1) {
+            if (lock==null && ti.getThreadState()==Thread.State.RUNNABLE) {
+                //not blocked
+                if (ti.isSuspended()) {
+                    // when does this happen?
+                    rv += ", thread suspended";
+                } else {
+                    if (verbosity >= 2) rv += " ("+ti.getThreadState()+")";
+                }
+            } else {
+                rv +=", thread waiting ";
+                if (ti.getThreadState() == Thread.State.BLOCKED) {
+                    rv += "(mutex) on "+lookup(lock);
+                    //TODO could say who holds it
+                } else if (ti.getThreadState() == Thread.State.WAITING) {
+                    rv += "(notify) on "+lookup(lock);
+                } else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
+                    rv += "(timed) on "+lookup(lock);
+                } else {
+                    rv = "("+ti.getThreadState()+") on "+lookup(lock);
+                }
+            }
+        }
+        if (verbosity>=2) {
+            StackTraceElement[] st = ti.getStackTrace();
+            st = brooklyn.util.javalang.StackTraceSimplifier.cleanStackTrace(st);
+            if (st!=null && st.length>0)
+                rv += "\n" +"At: "+st[0];
+            for (int ii=1; ii<st.length; ii++) {
+                rv += "\n" +"    "+st[ii];
+            }
+        }
+        return rv;
+    }
+    
     protected String lookup(LockInfo info) {
         return info!=null ? ""+info : "unknown (sleep)";
     }

@@ -41,7 +41,7 @@ import com.google.common.net.HostAndPort;
 
 public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements JBoss7Server {
 
-	public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
+    public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
 
     private volatile HttpFeed httpFeed;
     

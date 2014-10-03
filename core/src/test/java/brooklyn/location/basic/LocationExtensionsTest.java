@@ -38,8 +38,8 @@ public class LocationExtensionsTest {
         private static final long serialVersionUID = 2407231019435442876L;
 
         public ConcreteLocation() {
-			super();
-		}
+            super();
+        }
     }
 
     public interface MyExtension {

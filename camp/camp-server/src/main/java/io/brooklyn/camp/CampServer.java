@@ -98,7 +98,7 @@ public class CampServer {
                 // TODO if there is a GUI or other war...
                 //findJsguiWebapp()!=null ? findJsguiWebapp() : 
                 CampServerUtils.createTempWebDirWithIndexHtml("CAMP REST API <p> (no gui available - " +
-                		"rest endpoint at <a href=\""+PlatformRestResource.CAMP_URI_PATH+"\">"+PlatformRestResource.CAMP_URI_PATH+"</a>)"));
+                        "rest endpoint at <a href=\""+PlatformRestResource.CAMP_URI_PATH+"\">"+PlatformRestResource.CAMP_URI_PATH+"</a>)"));
         CampServerUtils.installAsServletFilter(webAppContext);
         
         server = CampServerUtils.startServer(webAppContext, "CAMP server");

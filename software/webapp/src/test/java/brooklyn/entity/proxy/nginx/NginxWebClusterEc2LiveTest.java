@@ -108,6 +108,6 @@ public class NginxWebClusterEc2LiveTest {
                 }
             }});
 
-		nginx.stop();
+        nginx.stop();
     }
 }

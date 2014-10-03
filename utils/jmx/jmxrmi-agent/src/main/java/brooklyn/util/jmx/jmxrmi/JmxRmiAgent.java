@@ -170,8 +170,8 @@ public class JmxRmiAgent {
         String hostname = properties == null ? null : properties.getProperty(RMI_HOSTNAME_PROPERTY);
         if ("0.0.0.0".equals(hostname)) {
             System.err.println("WARN: invalid hostname 0.0.0.0 specified for JmxRmiAgent; " +
-            		"it typically must be an address or hostname which is bindable on the machine where " +
-            		"this service is running AND accessible by a client machine (access will likely be impossible)");
+                    "it typically must be an address or hostname which is bindable on the machine where " +
+                    "this service is running AND accessible by a client machine (access will likely be impossible)");
         }
         if (hostname == null || hostname.isEmpty()) {
             hostname = InetAddress.getLocalHost().getHostName();

@@ -35,14 +35,14 @@ import brooklyn.util.flags.SetFromFlag;
 
 public interface JavaWebAppService extends WebAppService, UsesJava {
 
-	@SetFromFlag("war")
-	public static final ConfigKey<String> ROOT_WAR = new BasicConfigKey<String>(
-	        String.class, "wars.root", "WAR file to deploy as the ROOT, as URL (supporting file: and classpath: prefixes)");
+    @SetFromFlag("war")
+    public static final ConfigKey<String> ROOT_WAR = new BasicConfigKey<String>(
+            String.class, "wars.root", "WAR file to deploy as the ROOT, as URL (supporting file: and classpath: prefixes)");
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("wars")
-	public static final ConfigKey<List<String>> NAMED_WARS = new BasicConfigKey(
-	        List.class, "wars.named", "Archive files to deploy, as URL strings (supporting file: and classpath: prefixes); context (path in user-facing URL) will be inferred by name");
+    public static final ConfigKey<List<String>> NAMED_WARS = new BasicConfigKey(
+            List.class, "wars.named", "Archive files to deploy, as URL strings (supporting file: and classpath: prefixes); context (path in user-facing URL) will be inferred by name");
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("warsByContext")

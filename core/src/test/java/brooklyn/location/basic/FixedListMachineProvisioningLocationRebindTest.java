@@ -56,15 +56,15 @@ public class FixedListMachineProvisioningLocationRebindTest {
         mementoDir = Os.newTempDir(getClass());
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         
-    	origLoc = new FixedListMachineProvisioningLocation.Builder(origManagementContext.getLocationManager())
-    			.addAddresses("localhost", "127.0.0.1")
-    			.user("myuser")
-    			.keyFile("/path/to/myPrivateKeyFile")
-    			.keyData("myKeyData")
-    			.keyPassphrase("myKeyPassphrase")
-    			.build();
+        origLoc = new FixedListMachineProvisioningLocation.Builder(origManagementContext.getLocationManager())
+                .addAddresses("localhost", "127.0.0.1")
+                .user("myuser")
+                .keyFile("/path/to/myPrivateKeyFile")
+                .keyData("myKeyData")
+                .keyPassphrase("myKeyPassphrase")
+                .build();
         origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
-    	origApp.start(ImmutableList.of(origLoc));
+        origApp.start(ImmutableList.of(origLoc));
     }
 
     @AfterMethod(alwaysRun = true)
@@ -76,38 +76,38 @@ public class FixedListMachineProvisioningLocationRebindTest {
     
     @Test
     public void testRebindPreservesConfig() throws Exception {
-    	newApp = rebind();
-    	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
-    	
-    	assertEquals(newLoc.getId(), origLoc.getId());
-    	assertEquals(newLoc.getDisplayName(), origLoc.getDisplayName());
-    	assertEquals(newLoc.getHostGeoInfo(), origLoc.getHostGeoInfo());
-    	assertEquals(newLoc.getConfig(LocationConfigKeys.USER), origLoc.getConfig(LocationConfigKeys.USER));
-    	assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_PASSPHRASE), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_PASSPHRASE));
-    	assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
-    	assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_DATA), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_DATA));
+        newApp = rebind();
+        FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
+        
+        assertEquals(newLoc.getId(), origLoc.getId());
+        assertEquals(newLoc.getDisplayName(), origLoc.getDisplayName());
+        assertEquals(newLoc.getHostGeoInfo(), origLoc.getHostGeoInfo());
+        assertEquals(newLoc.getConfig(LocationConfigKeys.USER), origLoc.getConfig(LocationConfigKeys.USER));
+        assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_PASSPHRASE), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_PASSPHRASE));
+        assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
+        assertEquals(newLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_DATA), origLoc.getConfig(LocationConfigKeys.PRIVATE_KEY_DATA));
     }
 
     @Test
     public void testRebindParentRelationship() throws Exception {
-    	newApp = rebind();
-    	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
-    	
-    	assertLocationIdsEqual(newLoc.getChildren(), origLoc.getChildren());
-    	assertEquals(Iterables.get(newLoc.getChildren(), 0).getParent(), newLoc);
-    	assertEquals(Iterables.get(newLoc.getChildren(), 1).getParent(), newLoc);
+        newApp = rebind();
+        FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
+        
+        assertLocationIdsEqual(newLoc.getChildren(), origLoc.getChildren());
+        assertEquals(Iterables.get(newLoc.getChildren(), 0).getParent(), newLoc);
+        assertEquals(Iterables.get(newLoc.getChildren(), 1).getParent(), newLoc);
     }
 
     @Test
     public void testRebindPreservesInUseMachines() throws Exception {
-    	SshMachineLocation inuseMachine = origLoc.obtain();
-    	origApp.setAttribute(TestApplication.SERVICE_UP, true); // to force persist, and thus avoid race
-    	
-    	newApp = rebind();
-    	FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
-    	
-    	assertLocationIdsEqual(newLoc.getInUse(), origLoc.getInUse());
-    	assertLocationIdsEqual(newLoc.getAvailable(), origLoc.getAvailable());
+        SshMachineLocation inuseMachine = origLoc.obtain();
+        origApp.setAttribute(TestApplication.SERVICE_UP, true); // to force persist, and thus avoid race
+        
+        newApp = rebind();
+        FixedListMachineProvisioningLocation<SshMachineLocation> newLoc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(newApp.getLocations(), 0);
+        
+        assertLocationIdsEqual(newLoc.getInUse(), origLoc.getInUse());
+        assertLocationIdsEqual(newLoc.getAvailable(), origLoc.getAvailable());
     }
 
     private TestApplication rebind() throws Exception {
@@ -116,14 +116,14 @@ public class FixedListMachineProvisioningLocationRebindTest {
     }
     
     private void assertLocationIdsEqual(Iterable<? extends Location> actual, Iterable<? extends Location> expected) {
-    	Function<Location, String> locationIdFunction = new Function<Location, String>() {
-			@Override public String apply(@Nullable Location input) {
-				return (input != null) ? input.getId() : null;
-			}
-    	};
-    	Set<String> actualIds = MutableSet.copyOf(Iterables.transform(actual, locationIdFunction));
-    	Set<String> expectedIds = MutableSet.copyOf(Iterables.transform(expected, locationIdFunction));
-    	
-    	assertEquals(actualIds, expectedIds);
+        Function<Location, String> locationIdFunction = new Function<Location, String>() {
+            @Override public String apply(@Nullable Location input) {
+                return (input != null) ? input.getId() : null;
+            }
+        };
+        Set<String> actualIds = MutableSet.copyOf(Iterables.transform(actual, locationIdFunction));
+        Set<String> expectedIds = MutableSet.copyOf(Iterables.transform(expected, locationIdFunction));
+        
+        assertEquals(actualIds, expectedIds);
     }
 }

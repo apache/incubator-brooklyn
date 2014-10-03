@@ -56,13 +56,13 @@ public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp 
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication newApp;
     private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
-	private ExecutorService executor;
+    private ExecutorService executor;
     
     @BeforeMethod(groups = "Integration")
     @Override
     public void setUp() throws Exception {
         super.setUp();
-    	String warPath = "hello-world.war";
+        String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
         executor = Executors.newCachedThreadPool();
         localhostProvisioningLocation = (LocalhostMachineProvisioningLocation) origManagementContext.getLocationRegistry().resolve("localhost");
@@ -72,24 +72,24 @@ public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         for (WebAppMonitor monitor : webAppMonitors) {
-        	monitor.terminate();
+            monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
         super.tearDown();
     }
 
     private WebAppMonitor newWebAppMonitor(String url) {
-    	WebAppMonitor monitor = new WebAppMonitor(url)
-//    			.delayMillis(0)
-		    	.logFailures(LOG);
-    	webAppMonitors.add(monitor);
-    	executor.execute(monitor);
-    	return monitor;
+        WebAppMonitor monitor = new WebAppMonitor(url)
+//                .delayMillis(0)
+                .logFailures(LOG);
+        webAppMonitors.add(monitor);
+        executor.execute(monitor);
+        return monitor;
     }
     
     @Test(groups = "Integration")
     public void testRebindsToRunningServer() throws Exception {
-    	// Start an app-server, and wait for it to be fully up
+        // Start an app-server, and wait for it to be fully up
         JBoss7Server origServer = origApp.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                     .configure("war", warUrl.toString()));
         

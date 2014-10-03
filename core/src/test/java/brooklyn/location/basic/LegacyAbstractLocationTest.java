@@ -37,12 +37,12 @@ import com.google.common.collect.ImmutableList;
 public class LegacyAbstractLocationTest {
 
     private static class ConcreteLocation extends AbstractLocation {
-		@SetFromFlag(defaultVal="mydefault")
+        @SetFromFlag(defaultVal="mydefault")
         String myfield;
 
         public ConcreteLocation() {
-			super();
-		}
+            super();
+        }
 
         public ConcreteLocation(Map properties) {
             super(properties);
@@ -138,7 +138,7 @@ public class LegacyAbstractLocationTest {
 
     @Test
     public void testFieldSetFromFlag() {
-    	ConcreteLocation loc = new ConcreteLocation(MutableMap.of("myfield", "myval"));
+        ConcreteLocation loc = new ConcreteLocation(MutableMap.of("myfield", "myval"));
         assertEquals(loc.myfield, "myval");
     }
     

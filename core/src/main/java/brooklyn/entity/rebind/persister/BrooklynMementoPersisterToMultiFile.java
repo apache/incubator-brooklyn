@@ -379,7 +379,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             return;
         }
         if (LOG.isTraceEnabled()) LOG.trace("Checkpointed delta of memento; updating {} entities, {} locations, {} policies and {} enrichers; " +
-        		"removing {} entities, {} locations {} policies and {} enrichers", 
+                "removing {} entities, {} locations {} policies and {} enrichers", 
                 new Object[] {delta.entities(), delta.locations(), delta.policies(), delta.enrichers(),
                 delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds(), delta.removedEnricherIds()});
         

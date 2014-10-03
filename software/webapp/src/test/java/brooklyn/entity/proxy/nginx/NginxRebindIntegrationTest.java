@@ -68,41 +68,41 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
-	private ExecutorService executor;
+    private ExecutorService executor;
     
-	@Override
-	protected boolean useLiveManagementContext() {
-	    // For Aled, the test failed without own ~/.brooklyn/brooklyn.properties.
-	    // Suspect that was caused by local environment, with custom brooklyn.ssh.config.scriptHeader
-	    // to set things like correct Java on path.
-	    return true;
-	}
-	
+    @Override
+    protected boolean useLiveManagementContext() {
+        // For Aled, the test failed without own ~/.brooklyn/brooklyn.properties.
+        // Suspect that was caused by local environment, with custom brooklyn.ssh.config.scriptHeader
+        // to set things like correct Java on path.
+        return true;
+    }
+    
     @BeforeMethod(groups = "Integration")
     public void setUp() throws Exception {
         super.setUp();
         warUrl = getClass().getClassLoader().getResource("hello-world.war");
-    	localhostProvisioningLocation = origManagementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+        localhostProvisioningLocation = origManagementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
         executor = Executors.newCachedThreadPool();
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
     public void tearDown() throws Exception {
         for (WebAppMonitor monitor : webAppMonitors) {
-        	monitor.terminate();
+            monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
         super.tearDown();
     }
 
     private WebAppMonitor newWebAppMonitor(String url, int expectedResponseCode) {
-    	WebAppMonitor monitor = new WebAppMonitor(url)
-//    	        .delayMillis(0) FIXME Re-enable to fast polling
-    			.expectedResponseCode(expectedResponseCode)
-		    	.logFailures(LOG);
-    	webAppMonitors.add(monitor);
-    	executor.execute(monitor);
-    	return monitor;
+        WebAppMonitor monitor = new WebAppMonitor(url)
+//                .delayMillis(0) FIXME Re-enable to fast polling
+                .expectedResponseCode(expectedResponseCode)
+                .logFailures(LOG);
+        webAppMonitors.add(monitor);
+        executor.execute(monitor);
+        return monitor;
     }
     
     /**
@@ -110,7 +110,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
      */
     @Test(groups = "Integration")
     public void testRebindsWithEmptyServerPool() throws Exception {
-    	
+        
         // Set up nginx with a server pool
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))

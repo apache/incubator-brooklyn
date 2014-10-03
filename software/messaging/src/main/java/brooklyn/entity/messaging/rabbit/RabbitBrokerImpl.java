@@ -65,7 +65,7 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
         getDriver().configure();
 
         // TODO implement this using AMQP connection, no external mechanism available
-		// queueNames.each { String name -> addQueue(name) }
+        // queueNames.each { String name -> addQueue(name) }
     }
 
     public void setBrokerUrl() {

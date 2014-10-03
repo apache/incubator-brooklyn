@@ -72,9 +72,9 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             SoftwareProcess.DOWNLOAD_URL,
             "<#if version?contains(\"SNAPSHOT\")>"+
                 "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v=${version}&a=brooklyn-dist&c=dist&e=tar.gz" +
-    		"<#else>"+
-    		    "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
-    		"</#if>");
+            "<#else>"+
+                "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
+            "</#if>");
 
     @SetFromFlag("subpathInArchive")
     ConfigKey<String> SUBPATH_IN_ARCHIVE = ConfigKeys.newStringConfigKey("brooklynnode.download.archive.subpath",

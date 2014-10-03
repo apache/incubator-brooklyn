@@ -35,7 +35,7 @@ public class BrooklynServiceAttributes {
      * or battling maven etc to build web-console as jar available to launcher
      * (which would contain a lot of crap as well).
      */
-	
+    
     /** used to hold the instance of ManagementContext which should be used */
     public static final String BROOKLYN_MANAGEMENT_CONTEXT = ManagementContext.class.getName();
     

@@ -50,26 +50,26 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
     private static final long serialVersionUID = -7715984495268724954L;
     
     private final String componentId;
-	private final DslComponent scopeComponent;
-	private final Scope scope;
+    private final DslComponent scopeComponent;
+    private final Scope scope;
 
-	public DslComponent(String componentId) {
-		this(Scope.GLOBAL, componentId);
-	}
-	
-	public DslComponent(Scope scope, String componentId) {
-	    this(null, scope, componentId);
-	}
-	
-	public DslComponent(DslComponent scopeComponent, Scope scope, String componentId) {
-	    Preconditions.checkNotNull(scope, "scope");
-	    this.scopeComponent = scopeComponent;
-	    this.componentId = componentId;
-	    this.scope = scope;
-	}
+    public DslComponent(String componentId) {
+        this(Scope.GLOBAL, componentId);
+    }
+    
+    public DslComponent(Scope scope, String componentId) {
+        this(null, scope, componentId);
+    }
+    
+    public DslComponent(DslComponent scopeComponent, Scope scope, String componentId) {
+        Preconditions.checkNotNull(scope, "scope");
+        this.scopeComponent = scopeComponent;
+        this.componentId = componentId;
+        this.scope = scope;
+    }
 
-	// ---------------------------
-	
+    // ---------------------------
+    
     @Override
     public Task<Entity> newTask() {
         return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(
@@ -173,11 +173,11 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
     // DSL words which return things
     
-	public BrooklynDslDeferredSupplier<?> attributeWhenReady(final String sensorName) {
-		return new AttributeWhenReady(this, sensorName);
-	}
-	// class simply makes the memento XML files nicer
-	protected static class AttributeWhenReady extends BrooklynDslDeferredSupplier<Object> {
+    public BrooklynDslDeferredSupplier<?> attributeWhenReady(final String sensorName) {
+        return new AttributeWhenReady(this, sensorName);
+    }
+    // class simply makes the memento XML files nicer
+    protected static class AttributeWhenReady extends BrooklynDslDeferredSupplier<Object> {
         private static final long serialVersionUID = 1740899524088902383L;
         private final DslComponent component;
         private final String sensorName;
@@ -199,9 +199,9 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         public String toString() {
             return component.toString()+"."+"attributeWhenReady("+sensorName+")";
         }
-	}
+    }
 
-	public BrooklynDslDeferredSupplier<?> config(final String keyName) {
+    public BrooklynDslDeferredSupplier<?> config(final String keyName) {
         return new DslConfigSupplier(this, keyName);
     }
     protected final static class DslConfigSupplier extends BrooklynDslDeferredSupplier<Object> {
@@ -231,41 +231,41 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         }
     }
 
-	public static enum Scope {
-	    GLOBAL ("global"),
-	    CHILD ("child"),
-	    PARENT ("parent"),
-	    SIBLING ("sibling"),
-	    DESCENDANT ("descendant"),
-	    ANCESTOR("ancestor"),
-	    THIS ("this");
-	    
-	    public static final Set<Scope> VALUES = ImmutableSet.of(GLOBAL, CHILD, PARENT, SIBLING, DESCENDANT, ANCESTOR, THIS);
-	    
-	    private final String name;
-	    
-	    private Scope(String name) {
-	        this.name = name;
-	    }
-	    
-	    public static Scope fromString(String name) {
-	        return tryFromString(name).get();
-	    }
-	    
-	    public static Maybe<Scope> tryFromString(String name) {
-	        for (Scope scope : VALUES)
-	            if (scope.name.toLowerCase().equals(name.toLowerCase()))
-	                return Maybe.of(scope);
-	        return Maybe.absent(new IllegalArgumentException(name + " is not a valid scope"));
-	    }
-	    
-	    public static boolean isValid(String name) {
-	        for (Scope scope : VALUES)
-	            if (scope.name.toLowerCase().equals(name.toLowerCase()))
-	                return true;
-	        return false;
-	    }
-	}
+    public static enum Scope {
+        GLOBAL ("global"),
+        CHILD ("child"),
+        PARENT ("parent"),
+        SIBLING ("sibling"),
+        DESCENDANT ("descendant"),
+        ANCESTOR("ancestor"),
+        THIS ("this");
+        
+        public static final Set<Scope> VALUES = ImmutableSet.of(GLOBAL, CHILD, PARENT, SIBLING, DESCENDANT, ANCESTOR, THIS);
+        
+        private final String name;
+        
+        private Scope(String name) {
+            this.name = name;
+        }
+        
+        public static Scope fromString(String name) {
+            return tryFromString(name).get();
+        }
+        
+        public static Maybe<Scope> tryFromString(String name) {
+            for (Scope scope : VALUES)
+                if (scope.name.toLowerCase().equals(name.toLowerCase()))
+                    return Maybe.of(scope);
+            return Maybe.absent(new IllegalArgumentException(name + " is not a valid scope"));
+        }
+        
+        public static boolean isValid(String name) {
+            for (Scope scope : VALUES)
+                if (scope.name.toLowerCase().equals(name.toLowerCase()))
+                    return true;
+            return false;
+        }
+    }
 
 
     @Override

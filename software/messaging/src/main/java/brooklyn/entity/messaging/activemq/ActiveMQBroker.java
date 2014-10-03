@@ -57,7 +57,7 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
         "http://www.mirrorservice.org/sites/ftp.apache.org/activemq/apache-activemq");
 
     @SetFromFlag("openWirePort")
-	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");
+    public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");
 
     @SetFromFlag("jettyPort")
     public static final PortAttributeSensorAndConfigKey AMQ_JETTY_PORT = new PortAttributeSensorAndConfigKey("activemq.jetty.port", "jetty port", "8161+");

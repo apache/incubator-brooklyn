@@ -69,29 +69,29 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
     }
     
     private Map<String,Object> locationConfig;
-	private Set<String> locationConfigUnused;
-	private String locationConfigDescription;
+    private Set<String> locationConfigUnused;
+    private String locationConfigDescription;
 
     @SuppressWarnings("unused") // For deserialisation
     private BasicLocationMemento() {}
 
     // Trusts the builder to not mess around with mutability after calling build()
-	protected BasicLocationMemento(Builder builder) {
-	    super(builder);
-	    locationConfig = toPersistedMap(builder.locationConfig);
-	    locationConfigUnused = toPersistedSet(builder.locationConfigUnused);
-	    locationConfigDescription = builder.locationConfigDescription;
-	}
-	
+    protected BasicLocationMemento(Builder builder) {
+        super(builder);
+        locationConfig = toPersistedMap(builder.locationConfig);
+        locationConfigUnused = toPersistedSet(builder.locationConfigUnused);
+        locationConfigDescription = builder.locationConfigDescription;
+    }
+    
     @Override
     public Map<String,Object> getLocationConfig() {
-		return fromPersistedMap(locationConfig);
-	}
-	
+        return fromPersistedMap(locationConfig);
+    }
+    
     @Override
     public Set<String> getLocationConfigUnused() {
-		return fromPersistedSet(locationConfigUnused);
-	}
+        return fromPersistedSet(locationConfigUnused);
+    }
     
     @Override
     public String getLocationConfigDescription() {

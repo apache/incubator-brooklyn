@@ -38,13 +38,13 @@ import com.google.common.net.HostAndPort;
  * A configuration object is structured like this:
  * <pre>
  * {
- *	"_id" : "replica-set-name",
- * 	"version" : 3,
- *	"members" : [
- *		{ "_id" : 0, "host" : "Sams.local:27017" },
- *		{ "_id" : 1, "host" : "Sams.local:27018" },
- *		{ "_id" : 2, "host" : "Sams.local:27019" }
- *	]
+ *    "_id" : "replica-set-name",
+ *     "version" : 3,
+ *    "members" : [
+ *        { "_id" : 0, "host" : "Sams.local:27017" },
+ *        { "_id" : 1, "host" : "Sams.local:27018" },
+ *        { "_id" : 2, "host" : "Sams.local:27019" }
+ *    ]
  * }
  * </pre>
  * To add or remove servers to a replica set you must redefine this configuration
@@ -199,12 +199,12 @@ public class ReplicaSetConfig {
      * <pre>
      * WARN  emptying DBPortPool to sams.home/192.168.1.64:27019 b/c of error
      * java.io.EOFException: null
-     *	at org.bson.io.Bits.readFully(Bits.java:48) ~[mongo-java-driver-2.11.3.jar:na]
+     *    at org.bson.io.Bits.readFully(Bits.java:48) ~[mongo-java-driver-2.11.3.jar:na]
      * WARN  Command { "replSetReconfig" : ... } on sams.home/192.168.1.64:27019 failed
      * com.mongodb.MongoException$Network: Read operation to server sams.home/192.168.1.64:27019 failed on database admin
-     *	at com.mongodb.DBTCPConnector.innerCall(DBTCPConnector.java:253) ~[mongo-java-driver-2.11.3.jar:na]
+     *    at com.mongodb.DBTCPConnector.innerCall(DBTCPConnector.java:253) ~[mongo-java-driver-2.11.3.jar:na]
      * Caused by: java.io.EOFException: null
-     *	at org.bson.io.Bits.readFully(Bits.java:48) ~[mongo-java-driver-2.11.3.jar:na]
+     *    at org.bson.io.Bits.readFully(Bits.java:48) ~[mongo-java-driver-2.11.3.jar:na]
      * </pre>
      *
      * The MongoDB documentation on <a href=http://docs.mongodb.org/manual/tutorial/configure-a-non-voting-replica-set-member/">

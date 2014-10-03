@@ -50,16 +50,16 @@ public class Publish {
         
         try {
             // Create a producer for the queue
-	        Queue destination = session.createQueue(QUEUE);
-	        MessageProducer messageProducer = session.createProducer(destination);
+            Queue destination = session.createQueue(QUEUE);
+            MessageProducer messageProducer = session.createProducer(destination);
 
-	        // Send 100 messages
-	        for (int n = 0; n < 100; n++) {
-	            String body = String.format("test message %03d", n+1);
-	            TextMessage message = session.createTextMessage(body);
-	            messageProducer.send(message);
-	            System.out.printf("Sent message %s\n", body);
-	        }
+            // Send 100 messages
+            for (int n = 0; n < 100; n++) {
+                String body = String.format("test message %03d", n+1);
+                TextMessage message = session.createTextMessage(body);
+                messageProducer.send(message);
+                System.out.printf("Sent message %s\n", body);
+            }
         } catch (Exception e) {
             System.err.printf("Error while sending - %s\n", e.getMessage());
             System.err.printf("Cause: %s\n", Throwables.getStackTraceAsString(e));
