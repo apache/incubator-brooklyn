@@ -119,12 +119,12 @@ public class OsgiStandaloneTest {
 
     @Test
     public void testDuplicateBundle() throws Exception {
-        helperDuplicateBundle(MavenRetriever.localUrl(new MavenArtifact("io.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
+        helperDuplicateBundle(MavenRetriever.localUrl(new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
     }
 
     @Test(groups="Integration")
     public void testRemoteDuplicateBundle() throws Exception {
-        helperDuplicateBundle(MavenRetriever.hostedUrl(new MavenArtifact("io.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
+        helperDuplicateBundle(MavenRetriever.hostedUrl(new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
     }
 
     public void helperDuplicateBundle(String url) throws Exception {
