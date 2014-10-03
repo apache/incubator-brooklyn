@@ -24,7 +24,7 @@
     <name>hello-world-sql-webapp Maven Webapp</name>
   
     <parent>
-        <groupId>io.brooklyn.example</groupId>
+        <groupId>org.apache.brooklyn.example</groupId>
         <artifactId>brooklyn-examples-webapps-parent</artifactId>
         <version>0.7.0-SNAPSHOT</version> <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>

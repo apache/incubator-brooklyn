@@ -29,7 +29,7 @@
     </description>
 
     <parent>
-        <groupId>io.brooklyn.example</groupId>
+        <groupId>org.apache.brooklyn.example</groupId>
         <artifactId>brooklyn-examples-parent</artifactId>
         <version>0.7.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>
@@ -37,7 +37,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -51,7 +51,7 @@
         </dependency>
 
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-logback-xml</artifactId>
             <version>${project.version}</version>
             <optional>true</optional>
