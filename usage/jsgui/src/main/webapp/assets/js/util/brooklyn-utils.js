@@ -56,6 +56,7 @@ define([
     };
 
     Util.toDisplayString = function(data) {
+        if (data==null) return null;
         data = Util.roundIfNumberToNumDecimalPlaces(data, 4);
         if (typeof data !== 'string')
             data = JSON.stringify(data);
@@ -63,6 +64,7 @@ define([
     };
 
     Util.toTextAreaString = function(data) {
+        if (data==null) return null;
         data = Util.roundIfNumberToNumDecimalPlaces(data, 8);
         if (typeof data !== 'string')
             data = JSON.stringify(data, null, 2);
