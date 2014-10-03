@@ -193,8 +193,6 @@ public abstract class AbstractMain {
     }
     
     protected void execCli(Cli<BrooklynCommand> parser, String ...args) {
-        log.warn("WARNING *** This is the last io.brooklyn build; all subsequent builds will use the org.apache.brooklyn maven group ID ***");
-        
         try {
             log.debug("Parsing command line arguments: {}", Arrays.asList(args));
             BrooklynCommand command = parser.parse(args);
