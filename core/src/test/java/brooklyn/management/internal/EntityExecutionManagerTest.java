@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.ExecutionListener;
 import brooklyn.util.task.TaskBuilder;
@@ -131,9 +133,19 @@ public class EntityExecutionManagerTest {
         return Tasks.builder().name(name).dynamic(false).body(Callables.returning(null));
     }
     
-    protected static void assertTaskCountForEntity(Entity entity, int expectedCount) {
-        Collection<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(((EntityInternal)entity).getManagementContext().getExecutionManager(), entity);
-        Assert.assertEquals(tasks.size(), expectedCount, "Tasks were "+tasks);
+    protected void assertTaskCountForEntitySoon(final Entity entity, final int expectedCount) {
+        // Dead task (and initialization task) should have been GC'd on completion.
+        // However, the GC'ing happens in a listener, executed in a different thread - the task.get()
+        // doesn't block for it. Therefore can't always guarantee it will be GC'ed by now.
+        Repeater.create().backoff(Duration.millis(10), 2, Duration.millis(500)).limitTimeTo(Duration.TEN_SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                forceGc();
+                Collection<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(((EntityInternal)entity).getManagementContext().getExecutionManager(), entity);
+                Assert.assertEquals(tasks.size(), expectedCount, "Tasks were "+tasks);
+                return true;
+            }
+        }).run();
     }
 
     @Test
@@ -144,14 +156,9 @@ public class EntityExecutionManagerTest {
         final Task<?> task = runEmptyTaskWithNameAndTags(e, "should-be-kept", ManagementContextInternal.NON_TRANSIENT_TASK_TAG);
         runEmptyTaskWithNameAndTags(e, "should-be-gcd", ManagementContextInternal.TRANSIENT_TASK_TAG);
         
-        // Dead task (and initialization task) should have been GC'd on completion.
-        // However, the GC'ing happens in a listener, executed in a different thread - the task.get()
-        // doesn't block for it. Therefore can't guarantee it will be GC'ed by now.
-        Asserts.succeedsEventually(new Runnable() {
-            public void run() {
-                Collection<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
-                assertEquals(tasks, ImmutableList.of(task), "Mismatched tasks, got: "+tasks);
-            }});
+        assertTaskCountForEntitySoon(e, 1);
+        Collection<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(app.getManagementContext().getExecutionManager(), e);
+        assertEquals(tasks, ImmutableList.of(task), "Mismatched tasks, got: "+tasks);
     }
 
     @Test
@@ -165,8 +172,7 @@ public class EntityExecutionManagerTest {
         for (int count=0; count<5; count++)
             runEmptyTaskWithNameAndTags(e, "task"+count, ManagementContextInternal.NON_TRANSIENT_TASK_TAG, "boring-tag");
 
-        forceGc();
-        assertTaskCountForEntity(e, 2);
+        assertTaskCountForEntitySoon(e, 2);
     }
     
     @Test
@@ -182,9 +188,8 @@ public class EntityExecutionManagerTest {
         for (int count=0; count<5; count++)
             runEmptyTaskWithNameAndTags(app, "task-app-"+count, ManagementContextInternal.NON_TRANSIENT_TASK_TAG, "boring-tag");
         
-        forceGc();
-        assertTaskCountForEntity(app, 2);
-        assertTaskCountForEntity(e, 2);
+        assertTaskCountForEntitySoon(app, 2);
+        assertTaskCountForEntitySoon(e, 2);
     }
     
     @Test
@@ -219,15 +224,13 @@ public class EntityExecutionManagerTest {
         runEmptyTaskWithNameAndTags(app, "task-"+(count++), ManagementContextInternal.NON_TRANSIENT_TASK_TAG, "another-tag-app", "another-tag");
         runEmptyTaskWithNameAndTags(app, "task-"+(count++), ManagementContextInternal.NON_TRANSIENT_TASK_TAG, "another-tag-app", "another-tag");
         
-        forceGc();
-        assertTaskCountForEntity(e, 6);
-        assertTaskCountForEntity(app, 3);
+        assertTaskCountForEntitySoon(e, 6);
+        assertTaskCountForEntitySoon(app, 3);
         
         // now with a lowered limit, we should remove one more e
         ((BrooklynProperties)app.getManagementContext().getConfig()).put(
             BrooklynGarbageCollector.MAX_TASKS_PER_ENTITY, 5);
-        forceGc();
-        assertTaskCountForEntity(e, 5);
+        assertTaskCountForEntitySoon(e, 5);
     }
     
     @Test
@@ -244,11 +247,9 @@ public class EntityExecutionManagerTest {
             ((EntityInternal)e).getExecutionContext().submit(tb.build()).getUnchecked();
         }
 
-        forceGc();
-
         // might need an eventually here, if the internal job completion and GC is done in the background
         // (if there are no test failures for a few months, since Sept 2014, then we can remove this comment)
-        assertTaskCountForEntity(e, 2);
+        assertTaskCountForEntitySoon(e, 2);
     }
     
     @Test
