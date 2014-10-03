@@ -49,9 +49,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
-import brooklyn.entity.basic.QuorumCheck;
 import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
-import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
@@ -184,8 +182,14 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(entity.getApplication(), app);
     }
 
+    /** two "errors" which could cause this:
+     * <li> TestEntity set expected RUNNING before setting SERVICE_UP, means it goes on fire briefly, so parent might also;
+     * <li> DynamicCluster could see service up false when expected running because it was resizing to/from 0
+     *      (so there may be a moment when UP_QUORUM_CHECK fails as >=1 child, but 0 up, because all children are transitioning;
+     *      this is fixed with logic in {@link DynamicClusterImpl#restoreStateAfterResize(brooklyn.entity.basic.Lifecycle.Transition, int, Integer)}.
+     */
     @Test
-    public void resizeFromZeroToOneDoesNotGoThroughFailing() throws Exception {
+    public void testResizeFromZeroToOneDoesNotGoThroughFailing() throws Exception {
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
             .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class))
             .configure(DynamicCluster.INITIAL_SIZE, 1));
