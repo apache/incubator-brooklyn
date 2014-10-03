@@ -62,7 +62,7 @@ public class RebindTestUtils {
 
     private static final Duration TIMEOUT = Duration.seconds(20);
 
-	public static <T> T serializeAndDeserialize(T memento) throws Exception {
+    public static <T> T serializeAndDeserialize(T memento) throws Exception {
         ObjectReplacer replacer = new ObjectReplacer() {
             private final Map<Pointer, Object> replaced = Maps.newLinkedHashMap();
 
@@ -82,22 +82,22 @@ public class RebindTestUtils {
             }
         };
 
-    	try {
-    	    return Serializers.reconstitute(memento, replacer);
-    	} catch (Exception e) {
-    	    try {
-    	        Dumpers.logUnserializableChains(memento, replacer);
-    	        //Dumpers.deepDumpSerializableness(memento);
-    	    } catch (Throwable t) {
-    	        LOG.warn("Error logging unserializable chains for memento "+memento+" (propagating original exception)", t);
-    	    }
-    	    throw e;
-    	}
+        try {
+            return Serializers.reconstitute(memento, replacer);
+        } catch (Exception e) {
+            try {
+                Dumpers.logUnserializableChains(memento, replacer);
+                //Dumpers.deepDumpSerializableness(memento);
+            } catch (Throwable t) {
+                LOG.warn("Error logging unserializable chains for memento "+memento+" (propagating original exception)", t);
+            }
+            throw e;
+        }
     }
     
-	public static void deleteMementoDir(String path) {
-	    deleteMementoDir(new File(path));
-	}
+    public static void deleteMementoDir(String path) {
+        deleteMementoDir(new File(path));
+    }
 
     public static void deleteMementoDir(File f) {
         FileBasedObjectStore.deleteCompletely(f);

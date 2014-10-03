@@ -36,11 +36,11 @@ public class DynamicWebAppFabricImpl extends DynamicFabricImpl implements Dynami
         // Enricher attribute setup.  A way of automatically discovering these (but avoiding
         // averaging things like HTTP port and response codes) would be neat.
         List<? extends List<? extends AttributeSensor<? extends Number>>> summingEnricherSetup = ImmutableList.of(
-        		ImmutableList.of(REQUEST_COUNT, REQUEST_COUNT),
-        		ImmutableList.of(ERROR_COUNT, ERROR_COUNT),
-        		ImmutableList.of(REQUESTS_PER_SECOND_LAST, REQUESTS_PER_SECOND_LAST),
-        		ImmutableList.of(REQUESTS_PER_SECOND_IN_WINDOW, REQUESTS_PER_SECOND_IN_WINDOW),
-        		ImmutableList.of(TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME)
+                ImmutableList.of(REQUEST_COUNT, REQUEST_COUNT),
+                ImmutableList.of(ERROR_COUNT, ERROR_COUNT),
+                ImmutableList.of(REQUESTS_PER_SECOND_LAST, REQUESTS_PER_SECOND_LAST),
+                ImmutableList.of(REQUESTS_PER_SECOND_IN_WINDOW, REQUESTS_PER_SECOND_IN_WINDOW),
+                ImmutableList.of(TOTAL_PROCESSING_TIME, TOTAL_PROCESSING_TIME)
         );
         
         List<? extends List<? extends AttributeSensor<? extends Number>>> averagingEnricherSetup = ImmutableList.of(

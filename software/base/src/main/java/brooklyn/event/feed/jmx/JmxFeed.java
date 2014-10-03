@@ -90,9 +90,9 @@ import com.google.common.reflect.TypeToken;
  */
 public class JmxFeed extends AbstractFeed {
 
-	public static final Logger log = LoggerFactory.getLogger(JmxFeed.class);
+    public static final Logger log = LoggerFactory.getLogger(JmxFeed.class);
 
-	public static final long JMX_CONNECTION_TIMEOUT_MS = 120*1000;
+    public static final long JMX_CONNECTION_TIMEOUT_MS = 120*1000;
 
     public static final ConfigKey<JmxHelper> HELPER = ConfigKeys.newConfigKey(JmxHelper.class, "helper");
     public static final ConfigKey<Boolean> OWN_HELPER = ConfigKeys.newBooleanConfigKey("ownHelper");

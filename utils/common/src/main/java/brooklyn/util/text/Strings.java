@@ -353,8 +353,7 @@ public class Strings {
      * @return such a string
      */
     public static String makeRealString(double x, int maxlen, int prec, int leftPadLen, double skipDecimalThreshhold, boolean useEForSmallNumbers) {
-        if (x<0) return
-            "-"+makeRealString(-x, maxlen, prec, leftPadLen);
+        if (x<0) return "-"+makeRealString(-x, maxlen, prec, leftPadLen);
         NumberFormat df = DecimalFormat.getInstance();
         //df.setMaximumFractionDigits(maxlen);
         df.setMinimumFractionDigits(0);

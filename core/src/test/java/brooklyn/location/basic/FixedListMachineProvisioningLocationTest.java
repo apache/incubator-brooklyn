@@ -69,7 +69,7 @@ public class FixedListMachineProvisioningLocationTest {
     @Test
     public void testSetsChildLocations() throws NoMachinesAvailableException {
         // Available machines should be listed as children
-		assertEquals(ImmutableList.copyOf(provisioner.getChildren()), ImmutableList.of(machine));
+        assertEquals(ImmutableList.copyOf(provisioner.getChildren()), ImmutableList.of(machine));
         
         // In-use machines should also be listed as children
         provisioner.obtain();

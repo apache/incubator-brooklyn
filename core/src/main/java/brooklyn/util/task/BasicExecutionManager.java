@@ -96,8 +96,8 @@ public class BasicExecutionManager implements ExecutionManager {
     
     private final ExecutorService runner;
         
-	private final ScheduledExecutorService delayedRunner;
-	
+    private final ScheduledExecutorService delayedRunner;
+    
     // TODO Could have a set of all knownTasks; but instead we're having a separate set per tag,
     // so the same task could be listed multiple times if it has multiple tags...
 
@@ -140,18 +140,18 @@ public class BasicExecutionManager implements ExecutionManager {
         }
     }
     
-	/** 
-	 * For use by overriders to use custom thread factory.
-	 * But be extremely careful: called by constructor, so before sub-class' constructor will
-	 * have been invoked!
-	 */
-	protected ThreadFactory newThreadFactory(String contextid) {
-	    return new ThreadFactoryBuilder()
-        	    .setNameFormat("brooklyn-execmanager-"+contextid+"-%d")
-        	    .setUncaughtExceptionHandler(new UncaughtExceptionHandlerImplementation())
+    /** 
+     * For use by overriders to use custom thread factory.
+     * But be extremely careful: called by constructor, so before sub-class' constructor will
+     * have been invoked!
+     */
+    protected ThreadFactory newThreadFactory(String contextid) {
+        return new ThreadFactoryBuilder()
+                .setNameFormat("brooklyn-execmanager-"+contextid+"-%d")
+                .setUncaughtExceptionHandler(new UncaughtExceptionHandlerImplementation())
                 .build();
-	}
-	
+    }
+    
     public void shutdownNow() {
         runner.shutdownNow();
         delayedRunner.shutdownNow();
@@ -508,7 +508,7 @@ public class BasicExecutionManager implements ExecutionManager {
         }
         Future<T> future;
         if (schedulers!=null && !schedulers.isEmpty()) {
-			if (schedulers.size()>1) log.warn("multiple schedulers detected, using only the first, for "+task+": "+schedulers);
+            if (schedulers.size()>1) log.warn("multiple schedulers detected, using only the first, for "+task+": "+schedulers);
             future = schedulers.iterator().next().submit(job);
         } else {
             future = runner.submit(job);

@@ -51,7 +51,7 @@ public class DynamicWebAppFabricTest {
     private static final long TIMEOUT_MS = 10*1000;
     
     private TestApplication app;
-	private SimulatedLocation loc1;
+    private SimulatedLocation loc1;
     private SimulatedLocation loc2;
     private List<SimulatedLocation> locs;
     
@@ -84,18 +84,18 @@ public class DynamicWebAppFabricTest {
         app.start(locs);
         
         for (Entity member : fabric.getChildren()) {
-    		((TestJavaWebAppEntity)member).spoofRequest();
+            ((TestJavaWebAppEntity)member).spoofRequest();
         }
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), fabric, DynamicWebAppFabric.REQUEST_COUNT, 2);
         
         // Note this is time-sensitive: need to do the next two sends before the previous one has dropped out
         // of the time-window.
         for (Entity member : fabric.getChildren()) {
-        	for (int i = 0; i < 2; i++) {
-        		((TestJavaWebAppEntity)member).spoofRequest();
-        	}
+            for (int i = 0; i < 2; i++) {
+                ((TestJavaWebAppEntity)member).spoofRequest();
+            }
         }
-    	EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), fabric, DynamicWebAppFabric.REQUEST_COUNT_PER_NODE, 3d);
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), fabric, DynamicWebAppFabric.REQUEST_COUNT_PER_NODE, 3d);
     }
     
     @Test

@@ -45,10 +45,10 @@ import com.google.common.collect.Lists;
 public class TestEntityImpl extends AbstractEntity implements TestEntity {
     private static final Logger LOG = LoggerFactory.getLogger(TestEntityImpl.class);
 
-	protected int sequenceValue = 0;
-	protected AtomicInteger counter = new AtomicInteger(0);
-	protected Map<?,?> constructorProperties;
-	protected Map<?,?> configureProperties;
+    protected int sequenceValue = 0;
+    protected AtomicInteger counter = new AtomicInteger(0);
+    protected Map<?,?> constructorProperties;
+    protected Map<?,?> configureProperties;
     protected List<String> callHistory = Collections.synchronizedList(Lists.<String>newArrayList());
     
     public TestEntityImpl() {
