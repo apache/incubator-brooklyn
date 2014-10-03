@@ -143,7 +143,7 @@ define([
                                          downMenu = "<div class='floatDown'><div class='light-popup'><div class='light-popup-body'>"
                                              + downMenu +
                                              "</div></div></div>";
-                                         result = "<span class='hasFloatLeft handy dynamic-contents'>" + result +
+                                         result = "<span class='hasFloatLeft dynamic-contents'>" + result +
                                                 "</span>" +
                                                 "<div class='floatLeft'><span class='icon-chevron-down hasFloatDown'></span>" +
                                                 downMenu +
