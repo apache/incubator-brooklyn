@@ -22,6 +22,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.Beta;
+
+@Beta
 public interface HasNetworkAddresses {
 
 	/**
