@@ -27,7 +27,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.time.Duration;
 
-@Catalog(name="Machine Entity", description="Represents a machine, providing metrics (normally optained of ssh) about it")
+@Catalog(name="Machine Entity", description="Represents a machine, providing metrics about it (e.g. obtained from ssh)")
 @ImplementedBy(MachineEntityImpl.class)
 public interface MachineEntity extends EmptySoftwareProcess {
 
