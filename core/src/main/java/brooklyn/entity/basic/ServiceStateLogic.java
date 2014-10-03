@@ -51,11 +51,14 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
@@ -114,6 +117,21 @@ public class ServiceStateLogic {
     }
     
     public static void setExpectedState(Entity entity, Lifecycle state) {
+        if (state==Lifecycle.RUNNING) {
+            Boolean up = ((EntityInternal)entity).getAttribute(Attributes.SERVICE_UP);
+            if (!Boolean.TRUE.equals(up)) {
+                // pause briefly to allow any recent problem-clearing processing to complete
+                Stopwatch timer = Stopwatch.createStarted();
+                boolean nowUp = Repeater.create().every(Duration.millis(10)).limitTimeTo(Duration.millis(200)).until(entity, 
+                    EntityPredicates.attributeEqualTo(Attributes.SERVICE_UP, true)).run();
+                if (nowUp) {
+                    log.debug("Had to wait "+Duration.of(timer)+" for "+entity+" "+Attributes.SERVICE_UP+" to be true before setting "+state);
+                } else {
+                    log.warn("Service is not up when setting "+state+" on "+entity+"; delayed "+Duration.of(timer)+" "
+                        + "but "+Attributes.SERVICE_UP+" did not recover from "+up+"; not-up-indicators="+entity.getAttribute(Attributes.SERVICE_NOT_UP_INDICATORS));
+                }
+            }
+        }
         ((EntityInternal)entity).setAttribute(Attributes.SERVICE_STATE_EXPECTED, new Lifecycle.Transition(state, new Date()));
         
         Maybe<Enricher> enricher = EntityAdjuncts.tryFindWithUniqueTag(entity.getEnrichers(), ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG);
