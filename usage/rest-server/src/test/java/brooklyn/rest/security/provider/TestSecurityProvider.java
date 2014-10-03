@@ -20,10 +20,14 @@ package brooklyn.rest.security.provider;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.http.auth.UsernamePasswordCredentials;
+
 public class TestSecurityProvider implements SecurityProvider {
 
     public static final String USER = "test";
     public static final String PASSWORD = "opensesame";
+    public static final UsernamePasswordCredentials CREDENTIAL =
+            new UsernamePasswordCredentials(TestSecurityProvider.USER, TestSecurityProvider.PASSWORD);
 
     @Override
     public boolean isAuthenticated(HttpSession session) {

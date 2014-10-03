@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractSecurityProvider implements SecurityProvider {
 
-    public static final Logger LOG = LoggerFactory.getLogger(AbstractSecurityProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSecurityProvider.class);
 
     @Override
     public boolean isAuthenticated(HttpSession session) {
@@ -45,11 +45,12 @@ public abstract class AbstractSecurityProvider implements SecurityProvider {
         return true;
     }
 
+
     /**
      * Sets an authentication token for the user on the session. Always returns true.
      */
     protected boolean allow(HttpSession session, String user) {
-        LOG.debug("Web console {} authenticated user {}", getClass().getSimpleName(), user);
+        LOG.debug("REST {} authenticated user {}", getClass().getSimpleName(), user);
         session.setAttribute(getAuthenticationKey(), user);
         return true;
     }
@@ -57,5 +58,6 @@ public abstract class AbstractSecurityProvider implements SecurityProvider {
     protected String getAuthenticationKey() {
         return getClass().getName() + ".AUTHENTICATED";
     }
+
 
 }

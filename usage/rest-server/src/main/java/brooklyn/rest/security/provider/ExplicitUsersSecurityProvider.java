@@ -48,25 +48,26 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
     }
 
     private synchronized void initialize() {
-        if (allowedUsers!=null) return;
+        if (allowedUsers != null) return;
 
         StringConfigMap properties = mgmt.getConfig();
 
         allowedUsers = new LinkedHashSet<String>();
         String users = properties.getConfig(BrooklynWebConfig.USERS);
-        if (users==null) {
-            LOG.warn("Web console has no users configured; no one will be able to log in!");
+        if (users == null) {
+            LOG.warn("REST has no users configured; no one will be able to log in!");
         } else if ("*".equals(users)) {
-            LOG.info("Web console allowing any user (so long as valid password is set)");
+            LOG.info("REST allowing any user (so long as valid password is set)");
             allowAnyUserWithValidPass = true;
         } else {
             StringTokenizer t = new StringTokenizer(users, ",");
             while (t.hasMoreElements()) {
-                allowedUsers.add((""+t.nextElement()).trim());
+                allowedUsers.add(("" + t.nextElement()).trim());
             }
-            LOG.info("Web console allowing users: "+allowedUsers);
-        }       
+            LOG.info("REST allowing users: " + allowedUsers);
+        }
     }
+
     
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
@@ -76,7 +77,7 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
         
         if (!allowAnyUserWithValidPass) {
             if (!allowedUsers.contains(user)) {
-                LOG.info("Web console rejecting unknown user "+user);
+                LOG.debug("REST rejecting unknown user "+user);
                 return false;                
             }
         }
@@ -91,7 +92,7 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
                 // password is good
                 return allow(session, user);
             } else {
-                LOG.info("Web console rejecting bad password for user "+user);
+                LOG.debug("REST rejecting bad password for user "+user);
                 return false;
             }
         }
@@ -101,11 +102,11 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
                 // hashed password is good
                 return allow(session, user);
             } else {
-                LOG.info("Web console rejecting bad password for user "+user);
+                LOG.debug("REST rejecting bad password for user "+user);
                 return false;
             }                
         }
-        LOG.warn("Web console rejecting passwordless user " + user);
+        LOG.debug("REST rejecting passwordless user " + user);
         return false;
     }
 
