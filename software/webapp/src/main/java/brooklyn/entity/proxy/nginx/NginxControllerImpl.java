@@ -160,6 +160,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     @Override
     protected void disconnectSensors() {
         if (httpFeed != null) httpFeed.stop();
+        disconnectServiceUpIsRunning();
         super.disconnectSensors();
     }
 
