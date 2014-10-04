@@ -37,14 +37,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DelegateEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
@@ -416,36 +414,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public Integer resize(Integer desiredSize) {
         synchronized (mutex) {
-            Transition originalExpected = getAttribute(Attributes.SERVICE_STATE_EXPECTED);
-                
             int originalSize = getCurrentSize();
-            if (originalSize==0) {
-                ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
-            }
             int delta = desiredSize - originalSize;
-            if (desiredSize==0) {
-                ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
-            }
             if (delta != 0) {
                 LOG.info("Resize {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             } else {
                 if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             }
             resizeByDelta(delta);
-            
-            restoreStateAfterResize(originalExpected, originalSize, desiredSize);
         }
         return getCurrentSize();
-    }
-
-    // TODO this logic maybe belongs in abstract group? fixes test in
-    // see test in DynamicClusterTest.testResizeFromZeroToOneDoesNotGoThroughFailing
-    protected void restoreStateAfterResize(Transition originalExpected, int originalSize, Integer desiredSize) {
-        if (originalExpected!=null) {
-            ServiceStateLogic.setExpectedState(this, originalExpected.getState());
-        } else {
-            ServiceStateLogic.setExpectedState(this, desiredSize==0 ? Lifecycle.STOPPED : Lifecycle.RUNNING);
-        }
     }
 
     /**

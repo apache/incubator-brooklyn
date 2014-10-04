@@ -51,6 +51,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.FailingEntity;
@@ -182,11 +183,11 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(entity.getApplication(), app);
     }
 
-    /** two "errors" which could cause this:
-     * <li> TestEntity set expected RUNNING before setting SERVICE_UP, means it goes on fire briefly, so parent might also;
-     * <li> DynamicCluster could see service up false when expected running because it was resizing to/from 0
-     *      (so there may be a moment when UP_QUORUM_CHECK fails as >=1 child, but 0 up, because all children are transitioning;
-     *      this is fixed with logic in {@link DynamicClusterImpl#restoreStateAfterResize(brooklyn.entity.basic.Lifecycle.Transition, int, Integer)}.
+    /** This can be sensitive to order, e.g. if TestEntity set expected RUNNING before setting SERVICE_UP, 
+     * there would be a point when TestEntity is ON_FIRE.
+     * <p>
+     * There can also be issues if a cluster is resizing from/to 0 while in a RUNNING state.
+     * To correct that, use {@link ServiceStateLogic#newEnricherFromChildrenUp()}.
      */
     @Test
     public void testResizeFromZeroToOneDoesNotGoThroughFailing() throws Exception {
