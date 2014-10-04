@@ -252,7 +252,8 @@ public class ServiceStateLogic {
             if (Boolean.TRUE.equals(serviceUp) && (problems==null || problems.isEmpty())) {
                 return Lifecycle.RUNNING;
             } else {
-                log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected running, up="+serviceUp+", problems: "+problems);
+                log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected running, up="+serviceUp+", "+
+                    (problems==null || problems.isEmpty() ? "not-up-indicators: "+entity.getAttribute(SERVICE_NOT_UP_INDICATORS) : "problems: "+problems));
                 return Lifecycle.ON_FIRE;
             }
         }
@@ -485,10 +486,11 @@ public class ServiceStateLogic {
         protected void updateMapSensor(AttributeSensor<Map<String, Object>> sensor, Object value) {
             if (log.isTraceEnabled()) log.trace("{} updating map sensor {} with {}", new Object[] { this, sensor, value });
 
-            if (value!=null)
+            if (value!=null) {
                 updateMapSensorEntry(entity, sensor, getKeyForMapSensor(), value);
-            else
+            } else {
                 clearMapSensorEntry(entity, sensor, getKeyForMapSensor());
+            }
         }
 
         /** not used; see specific `computeXxx` methods, invoked by overridden onUpdated */
