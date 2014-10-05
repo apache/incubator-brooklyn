@@ -179,7 +179,7 @@ public abstract class BrooklynYamlTypeInstantiator {
     public abstract Maybe<String> getTypeName();
     
     public BrooklynClassLoadingContext getClassLoadingContext() {
-        Preconditions.checkNotNull("No factory set; cannot use this instance for type loading");
+        Preconditions.checkNotNull(factory, "No factory set; cannot use this instance for type loading");
         return factory.loader;
     }
     

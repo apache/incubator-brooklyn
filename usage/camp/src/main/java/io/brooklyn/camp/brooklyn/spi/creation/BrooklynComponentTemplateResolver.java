@@ -19,6 +19,7 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -31,6 +32,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
@@ -47,6 +51,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -64,13 +69,17 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-/** this converts PlatformComponentTemplate instances whose type is prefixed "brooklyn:"
- * to Brooklyn EntitySpec instances.
+/**
+ * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}
+ * to Brooklyn {@link EntitySpec} instances.
+ * <p>
  * but TODO this should probably be done by {@link BrooklynEntityMatcher} 
  * so we have a spec by the time we come to instantiate.
  * (currently privileges "brooklyn.*" key names are checked in both places!)  
  */
 public class BrooklynComponentTemplateResolver {
+
+    private static final Logger log = LoggerFactory.getLogger(BrooklynDslCommon.class);
 
     BrooklynClassLoadingContext loader;
     final ManagementContext mgmt;
@@ -384,6 +393,11 @@ public class BrooklynComponentTemplateResolver {
                 specConfig.setSpecConfiguration(resolvedConfig);
                 return Factory.newInstance(loader, specConfig.getSpecConfiguration()).resolveSpec();
             }
+            if (flag instanceof ManagementContextInjectable) {
+                if (log.isDebugEnabled()) { log.debug("Injecting Brooklyn management context info object: {}", flag); }
+                ((ManagementContextInjectable) flag).injectManagementContext(loader.getManagementContext());
+            }
+
             return flag;
         }
     }
