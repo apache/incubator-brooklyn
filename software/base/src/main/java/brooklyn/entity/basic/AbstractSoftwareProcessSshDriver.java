@@ -263,11 +263,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     protected Map<String, Object> getSshFlags() {
         return SshEffectorTasks.getSshFlags(getEntity(), getMachine());
     }
-    
+
+    public int execute(String command, String summaryForLogging) {
+        return execute(ImmutableList.of(command), summaryForLogging);
+    }
+
     public int execute(List<String> script, String summaryForLogging) {
         return execute(Maps.newLinkedHashMap(), script, summaryForLogging);
     }
-    
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
@@ -307,7 +311,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public void copyInstallResources() {
         getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
         try {
-            getLocation().execCommands("create install directory", ImmutableList.of("mkdir -p " + getInstallDir()));
+            execute("mkdir -p " + getInstallDir(), "create install directory");
 
             Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
             if (installFiles != null && installFiles.size() > 0) {
@@ -348,7 +352,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     @Override
     public void copyRuntimeResources() {
         try {
-            getLocation().execCommands("create run directory", ImmutableList.of("mkdir -p " + getRunDir()));
+            execute("mkdir -p " + getRunDir(), "create run directory");
 
             Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
             if (runtimeFiles != null && runtimeFiles.size() > 0) {
