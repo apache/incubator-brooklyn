@@ -32,6 +32,7 @@ import org.apache.commons.beanutils.BeanUtils;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityDynamicType;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.management.Task;
@@ -40,13 +41,13 @@ import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /** static import functions which can be used in `$brooklyn:xxx` contexts */
 public class BrooklynDslCommon {
@@ -94,13 +95,12 @@ public class BrooklynDslCommon {
 
     // TODO Would be nice to have sensor(String sensorName), which would take the sensor
     // from the entity in question, but that would require refactoring of Brooklyn DSL
-    // TODO Should use catalog's classloader, rather than Class.forName; how to get that?
-    // Should we return a future?!
 
     /** Returns a {@link Sensor} from the given entity type. */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Sensor<?> sensor(String clazzName, String sensorName) {
         try {
+            // TODO Should use catalog's classloader, rather than Class.forName; how to get that? Should we return a future?!
             Class<?> clazz = Class.forName(clazzName);
             Sensor<?> sensor;
             if (Entity.class.isAssignableFrom(clazz)) {
@@ -134,23 +134,19 @@ public class BrooklynDslCommon {
     public static Object object(Map<String, Object> arguments) {
         ConfigBag config = ConfigBag.newInstance(arguments);
         String typeName = BrooklynYamlTypeInstantiator.InstantiatorFromKey.extractTypeName("object", config).orNull();
-        Map<String,Object> fields = Maybe.fromNullable((Map<String, Object>) config.getStringKey("object.fields"))
-                .or(MutableMap.<String, Object>of());
+        Map<String,Object> objectFields = (Map<String, Object>) config.getStringKeyMaybe("object.fields").or(MutableMap.of());
+        Map<String,Object> brooklynConfig = (Map<String, Object>) config.getStringKeyMaybe("brooklyn.config").or(MutableMap.of());
         try {
+            // TODO Should use catalog's classloader, rather than Class.forName; how to get that? Should we return a future?!
             Class<?> type = Class.forName(typeName);
             if (!Reflections.hasNoArgConstructor(type)) {
-                throw new IllegalStateException(String.format("Cannot construct %s bean: No public no-arg constructor available present", type));
+                throw new IllegalStateException(String.format("Cannot construct %s bean: No public no-arg constructor available", type));
             }
-            if (fields.isEmpty() || DslUtils.resolved(fields.values())) {
-                try {
-                    Object bean = Reflections.invokeConstructorWithArgs(type).get();
-                    BeanUtils.populate(bean, fields);
-                    return bean;
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
+            if ((objectFields.isEmpty() || DslUtils.resolved(objectFields.values())) &&
+                    (brooklynConfig.isEmpty() || DslUtils.resolved(brooklynConfig.values()))) {
+                return DslObject.create(type, objectFields, brooklynConfig);
             } else {
-                return new DslObject(type, fields);
+                return new DslObject(type, objectFields, brooklynConfig);
             }
         } catch (ClassNotFoundException e) {
             throw Exceptions.propagate(e);
@@ -219,50 +215,63 @@ public class BrooklynDslCommon {
         private static final long serialVersionUID = 8878388748085419L;
 
         private Class<?> type;
-        private Map<String,?> fields;
+        private Map<String,Object> fields, config;
 
-        public DslObject(Class<?> type, Map<String,Object> fields) {
+        public DslObject(Class<?> type, Map<String,Object> fields,  Map<String,Object> config) {
             this.type = type;
-            this.fields = fields;
+            this.fields = MutableMap.copyOf(fields);
+            this.config = MutableMap.copyOf(config);
         }
 
         @Override
         public Task<Object> newTask() {
             List<TaskAdaptable<Object>> tasks = Lists.newLinkedList();
-            for (String fieldName : fields.keySet()) {
-                Object field = fields.get(fieldName);
-                if (field instanceof TaskAdaptable) {
-                    tasks.add((TaskAdaptable<Object>) field);
-                } else if (field instanceof TaskFactory) {
-                    tasks.add(((TaskFactory<TaskAdaptable<Object>>) field).newTask());
+            for (Object value : Iterables.concat(fields.values(), config.values())) {
+                if (value instanceof TaskAdaptable) {
+                    tasks.add((TaskAdaptable<Object>) value);
+                } else if (value instanceof TaskFactory) {
+                    tasks.add(((TaskFactory<TaskAdaptable<Object>>) value).newTask());
                 }
             }
-
             Map<String,?> flags = MutableMap.<String,String>of("displayName", "building '"+type+"' with "+tasks.size()+" task"+(tasks.size()!=1?"s":""));
             return DependentConfiguration.transformMultiple(flags, new Function<List<Object>, Object>() {
                         @Override
                         public Object apply(List<Object> input) {
-                            Iterator<?> values = input.iterator();
-                            Map<String,Object> output = Maps.newLinkedHashMap();
-                            for (String fieldName : fields.keySet()) {
-                                Object fieldValue = fields.get(fieldName);
-                                if (fieldValue instanceof TaskAdaptable || fieldValue instanceof TaskFactory) {
-                                     output.put(fieldName, values.next());
-                                } else if (fieldValue instanceof DeferredSupplier) {
-                                     output.put(fieldName, ((DeferredSupplier<?>) fieldValue).get());
-                                } else {
-                                    output.put(fieldName, fieldValue);
+                            Iterator<Object> values = input.iterator();
+                            for (String name : fields.keySet()) {
+                                Object value = fields.get(name);
+                                if (value instanceof TaskAdaptable || value instanceof TaskFactory) {
+                                    fields.put(name, values.next());
+                                } else if (value instanceof DeferredSupplier) {
+                                    fields.put(name, ((DeferredSupplier<?>) value).get());
                                 }
                             }
-                            try {
-                                Object bean = Reflections.invokeConstructorWithArgs(type).get();
-                                BeanUtils.populate(bean, output);
-                                return bean;
-                            } catch (Exception e) {
-                                throw Exceptions.propagate(e);
+                            for (String name : config.keySet()) {
+                                Object value = config.get(name);
+                                if (value instanceof TaskAdaptable || value instanceof TaskFactory) {
+                                    config.put(name, values.next());
+                                } else if (value instanceof DeferredSupplier) {
+                                    config.put(name, ((DeferredSupplier<?>) value).get());
+                                }
                             }
+                            return create(type, fields, config);
                         }
                     }, tasks);
+        }
+
+        public static <T> T create(Class<T> type, Map<String,?> fields, Map<String,?> config) {
+            try {
+                T bean = Reflections.invokeConstructorWithArgs(type).get();
+                BeanUtils.populate(bean, fields);
+                if (bean instanceof Configurable && config.size() > 0) {
+                    ConfigBag brooklyn = ConfigBag.newInstance(config);
+                    FlagUtils.setFieldsFromFlags(bean, brooklyn);
+                    FlagUtils.setAllConfigKeys((Configurable) bean, brooklyn, true);
+                }
+                return bean;
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
         }
 
         @Override

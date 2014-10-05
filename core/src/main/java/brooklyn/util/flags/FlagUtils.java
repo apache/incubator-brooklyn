@@ -44,6 +44,7 @@ import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -170,8 +171,9 @@ public class FlagUtils {
             ConfigKey<?> key = getFieldAsConfigKey(o, f);
             if (key!=null) {
                 FlagConfigKeyAndValueRecord record = getFlagConfigKeyRecord(f, key, bag);
-                if (record.isValuePresent())
+                if ((includeFlags && record.isValuePresent()) || record.getConfigKeyMaybeValue().isPresent()) {
                     setField(o, f, record.getValueOrNullPreferringConfigKey(), null);
+                }
             }
         }
     }

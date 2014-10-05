@@ -26,18 +26,26 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
+
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxy.ProxySslConfig;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.TypeCoercions;
 
 @Test
 public class ObjectsYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(ObjectsYamlTest.class);
 
     private static final AtomicBoolean managementContextInjected = new AtomicBoolean(false);
+    private static final List<String> configKeys = Lists.newLinkedList();
 
     public static class TestObject implements ManagementContextInjectable {
         private String string;
@@ -62,8 +70,42 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         }
     }
 
+    public static class ConfigurableObject implements Configurable {
+        public static final ConfigKey<Integer> INTEGER = ConfigKeys.newIntegerConfigKey("config.number");
+        @SetFromFlag("object")
+        public static final ConfigKey<Object> OBJECT = ConfigKeys.newConfigKey(Object.class, "config.object");
+
+        @SetFromFlag("flag")
+        private String string;
+
+        private Integer number;
+        private Object object;
+        private Double value;
+
+        public ConfigurableObject() { }
+
+        public String getString() { return string; }
+
+        public Integer getNumber() { return number; }
+
+        public Object getObject() { return object; }
+
+        public Double getDouble() { return value; }
+        public void setDouble(Double value) { this.value = value; }
+
+        @Override
+        public <T> T setConfig(ConfigKey<T> key, T value) {
+            log.info("Detected configuration injection for {}: {}", key.getName(), value);
+            configKeys.add(key.getName());
+            if ("config.number".equals(key.getName())) number = TypeCoercions.coerce(value, Integer.class);
+            if ("config.object".equals(key.getName())) object = value;
+            return value;
+        }
+    }
+
     protected Entity setupAndCheckTestEntityInBasicYamlWith(String ...extras) throws Exception {
         managementContextInjected.set(false);
+        configKeys.clear();
         Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml", extras));
         waitForApplicationTasks(app);
 
@@ -108,6 +150,37 @@ public class ObjectsYamlTest extends AbstractYamlTest {
 
         Object testObjectObject = ((TestObject) testObject).getObject();
         Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testBrooklynConfigurableObject() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
+            "  brooklyn.config:",
+            "    test.confObject:",
+            "      $brooklyn:object:",
+            "        type: io.brooklyn.camp.brooklyn.ObjectsYamlTest$ConfigurableObject",
+            "        object.fields:",
+            "          double: 1.4",
+            "        brooklyn.config:",
+            "          flag: frog",
+            "          config.number: 7",
+            "          object:",
+            "            $brooklyn:object:",
+            "              type: brooklyn.entity.proxy.ProxySslConfig");
+
+        Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
+
+        Assert.assertTrue(testObject instanceof ConfigurableObject, "Expected a ConfigurableObject: "+testObject);
+        Assert.assertEquals(((ConfigurableObject) testObject).getDouble(), Double.valueOf(1.4));
+        Assert.assertEquals(((ConfigurableObject) testObject).getString(), "frog");
+        Assert.assertEquals(((ConfigurableObject) testObject).getNumber(), Integer.valueOf(7));
+
+        Object testObjectObject = ((ConfigurableObject) testObject).getObject();
+        Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
+
+        Assert.assertTrue(configKeys.contains(ConfigurableObject.INTEGER.getName()), "Expected INTEGER key: "+configKeys);
+        Assert.assertTrue(configKeys.contains(ConfigurableObject.OBJECT.getName()), "Expected OBJECT key: "+configKeys);
     }
 
     @SuppressWarnings("unchecked")
