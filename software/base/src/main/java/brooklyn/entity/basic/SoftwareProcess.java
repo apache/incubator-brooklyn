@@ -111,6 +111,8 @@ public interface SoftwareProcess extends Entity, Startable {
      * <p>
      * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
      * as {@code subdir/file} relative to installation directory or {@code /absolute/path/to/file}.
+     *
+     * @see #INSTALL_TEMPLATES
      */
     @Beta
     @SuppressWarnings("serial")
@@ -130,10 +132,12 @@ public interface SoftwareProcess extends Entity, Startable {
             "templates.install", "Mapping of templates, to be filled in and copied before install, to destination name relative to installDir");
 
     /**
-     * Files to be copied to the server before customisation.
+     * Files to be copied to the server after customisation.
      * <p>
      * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
      * as {@code subdir/file} relative to runtime directory or {@code /absolute/path/to/file}.
+     *
+     * @see #RUNTIME_TEMPLATES
      */
     @Beta
     @SuppressWarnings("serial")
@@ -142,7 +146,7 @@ public interface SoftwareProcess extends Entity, Startable {
             "files.runtime", "Mapping of files, to be copied before customisation, to destination name relative to runDir");
 
     /**
-     * Templates to be filled in and then copied to the server before customisation.
+     * Templates to be filled in and then copied to the server after customisation.
      *
      * @see #RUNTIME_FILES
      */

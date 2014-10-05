@@ -113,14 +113,14 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             }});
         };
 
-        DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
-            copyRuntimeResources();
-        }});
-
         DynamicTasks.queue("customize", new Runnable() { public void run() {
             waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
             customize();
+        }});
+
+        DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
+            waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
+            copyRuntimeResources();
         }});
 
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {

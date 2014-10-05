@@ -294,12 +294,14 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     /**
-     * Files and templates to be copied to the server before install.
+     * Files and templates to be copied to the server <em>before</em> installation. This allows the {@link #install()}
+     * process to have access to all required resources. 
      * <p>
      * Will be prefixed with the entity's {@link #getInstallDir() install directory} if relative.
      *
      * @see SoftwareProcess#INSTALL_FILES
      * @see SoftwareProcess#INSTALL_TEMPLATES
+     * @see #copyRuntimeResources()
      */
     @Override
     public void copyInstallResources() {
@@ -333,12 +335,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     /**
-     * Files and templates to be copied to the server before customisation.
+     * Files and templates to be copied to the server <em>after</em> customisation. This allows overwriting of
+     * existing files such as entity configuration which may be copied from the installation directory
+     * during the {@link #customize()} process.
      * <p>
      * Will be prefixed with the entity's {@link #getRunDir() run directory} if relative.
      *
      * @see SoftwareProcess#RUNTIME_FILES
      * @see SoftwareProcess#RUNTIME_TEMPLATES
+     * @see #copyInstallResources()
      */
     @Override
     public void copyRuntimeResources() {
