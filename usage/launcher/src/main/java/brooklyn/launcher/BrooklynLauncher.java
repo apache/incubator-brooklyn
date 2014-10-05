@@ -19,7 +19,6 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
@@ -54,6 +53,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.brooklynnode.BrooklynNode;
+import brooklyn.entity.brooklynnode.LocalBrooklynNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
@@ -839,7 +839,7 @@ public class BrooklynLauncher {
         ApplicationBuilder brooklyn = new ApplicationBuilder() {
             @Override
             protected void doBuild() {
-                addChild(EntitySpec.create(BrooklynNode.class)
+                addChild(EntitySpec.create(LocalBrooklynNode.class)
                         .configure(SoftwareProcess.ENTITY_STARTED, true)
                         .configure(SoftwareProcess.RUN_DIR, System.getenv("ROOT"))
                         .configure(SoftwareProcess.INSTALL_DIR, System.getenv("BROOKLYN_HOME"))
