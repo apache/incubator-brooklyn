@@ -245,7 +245,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
         tempFile.delete();
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testInstallResourcesCopy() throws IOException {
         localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
         File template = new File(Os.tmp(), "template.yaml");
@@ -276,7 +276,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
         }
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testRuntimeResourcesCopy() throws IOException {
         localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
         File template = new File(Os.tmp(), "template.yaml");
