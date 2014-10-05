@@ -67,11 +67,11 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
     @Override
     protected String getLogFileLocation() {
-        return format("%s/console", getRunDir());
+        return Os.mergePathsUnix(getRunDir(), "console");
     }
     
     private String getPidFile() {
-        return "pid_java";
+        return Os.mergePathsUnix(getRunDir(), "pid_java");
     }
     
     @Override
