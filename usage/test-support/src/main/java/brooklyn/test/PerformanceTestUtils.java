@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.qa.performance;
+package brooklyn.test;
 
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.ExecutorService;
