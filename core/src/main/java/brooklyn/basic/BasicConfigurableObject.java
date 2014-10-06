@@ -39,7 +39,7 @@ import brooklyn.util.text.Identifiers;
  */
 public class BasicConfigurableObject implements Configurable, Identifiable, ManagementContextInjectable {
 
-    @SetFromFlag(value = "id")
+    @SetFromFlag("id")
     private String id = Identifiers.makeRandomId(8);
 
     private volatile ManagementContext managementContext;
@@ -68,6 +68,10 @@ public class BasicConfigurableObject implements Configurable, Identifiable, Mana
         T old = config.get(key);
         config.configure(key, value);
         return old;
+    }
+
+    public <T> T getConfig(ConfigKey<T> key) {
+        return config.get(key);
     }
 
 }
