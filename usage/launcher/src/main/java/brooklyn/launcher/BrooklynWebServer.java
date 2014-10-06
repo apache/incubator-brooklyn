@@ -76,13 +76,14 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
 import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 
 /**
  * Starts the web-app running, connected to the given management context
@@ -126,9 +127,9 @@ public class BrooklynWebServer {
     @SetFromFlag
     protected InetAddress bindAddress = null;
 
-    /** The URI that this server's management context will be publically available on. */
+    /** The address that this server's management context will be publically available on. */
     @SetFromFlag
-    protected URI publicAddress = null;
+    protected InetAddress publicAddress = null;
 
     /**
      * map of context-prefix to file
@@ -235,7 +236,7 @@ public class BrooklynWebServer {
     
     /** URL for accessing this web server (root context) */
     public String getRootUrl() {
-        String address = (publicAddress != null) ? publicAddress.toString() : getAddress().getHostName();
+        String address = (publicAddress != null) ? publicAddress.getHostName() : getAddress().getHostName();
         if (getActualPort()>0){
             String protocol = getHttpsEnabled()?"https":"http";
             return protocol+"://"+address+":"+getActualPort()+"/";
@@ -268,7 +269,7 @@ public class BrooklynWebServer {
     /**
      * Sets the public address that the server's management context's REST API will be available on
      */
-    public BrooklynWebServer setPublicAddress(URI address) {
+    public BrooklynWebServer setPublicAddress(InetAddress address) {
         publicAddress = address;
         return this;
     }
@@ -322,20 +323,19 @@ public class BrooklynWebServer {
      * Starts the embedded web application server.
      */
     public synchronized void start() throws Exception {
-        if (server!=null) throw new IllegalStateException(""+this+" already running");
+        if (server != null) throw new IllegalStateException(""+this+" already running");
 
-        if (actualPort==-1){
+        if (actualPort == -1){
             actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), getHttpsEnabled()?httpsPort:port);
             if (actualPort == -1) 
                 throw new IllegalStateException("Unable to provision port for web console (wanted "+(getHttpsEnabled()?httpsPort:port)+")");
         }
 
-        if (bindAddress!=null) {
-            actualAddress = bindAddress;
-            server = new Server(new InetSocketAddress(bindAddress, actualPort));
-        } else {
+        server = new Server(new InetSocketAddress(bindAddress, actualPort));
+        if (bindAddress == null || bindAddress.equals(InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }))) {
             actualAddress = BrooklynNetworkUtils.getLocalhostInetAddress();
-            server = new Server(actualPort);
+        } else {
+            actualAddress = bindAddress;
         }
 
         // use a nice name in the thread pool (otherwise this is exactly the same as Server defaults)

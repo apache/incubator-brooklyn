@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;
 
@@ -72,9 +74,9 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             SoftwareProcess.DOWNLOAD_URL,
             "<#if version?contains(\"SNAPSHOT\")>"+
                 "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v=${version}&a=brooklyn-dist&c=dist&e=tar.gz" +
-    		"<#else>"+
-    		    "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
-    		"</#if>");
+            "<#else>"+
+                "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
+            "</#if>");
 
     @SetFromFlag("subpathInArchive")
     ConfigKey<String> SUBPATH_IN_ARCHIVE = ConfigKeys.newStringConfigKey("brooklynnode.download.archive.subpath",
@@ -189,8 +191,12 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             Boolean.class, "brooklynnode.webconsole.nosecurity", "Whether to start the web console with no security", false);
 
     @SetFromFlag("bindAddress")
-    public static final BasicAttributeSensorAndConfigKey<String> WEB_CONSOLE_BIND_ADDRESS = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "brooklynnode.webconsole.bindAddress", "Specifies the IP address of the NIC to bind the Brooklyn Management Console to", null);
+    public static final BasicAttributeSensorAndConfigKey<InetAddress> WEB_CONSOLE_BIND_ADDRESS = new BasicAttributeSensorAndConfigKey<InetAddress>(
+            InetAddress.class, "brooklynnode.webconsole.address.bind", "Specifies the IP address of the NIC to bind the Brooklyn Management Console to (default 0.0.0.0)", Networking.ANY_NIC);
+
+    @SetFromFlag("publicAddress")
+    public static final BasicAttributeSensorAndConfigKey<InetAddress> WEB_CONSOLE_PUBLIC_ADDRESS = new BasicAttributeSensorAndConfigKey<InetAddress>(
+            InetAddress.class, "brooklynnode.webconsole.address.public", "Specifies the public IP address or hostname for the Brooklyn Management Console");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @SetFromFlag("classpath")

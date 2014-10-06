@@ -46,10 +46,10 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.TestUtils;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -190,13 +190,13 @@ public class UrlMappingTest {
     }
     
     private void assertExpectedTargetsEventually(final Iterable<? extends Entity> members) {
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.ONE_MINUTE), new Runnable() {
             public void run() {
                 Iterable<String> expectedTargets = Iterables.transform(members, new Function<Entity,String>() {
                         @Override public String apply(@Nullable Entity input) {
                             return input.getAttribute(Attributes.HOSTNAME)+":"+input.getAttribute(Attributes.HTTP_PORT);
                         }});
-                
+
                 assertEquals(ImmutableSet.copyOf(urlMapping.getAttribute(UrlMapping.TARGET_ADDRESSES)), ImmutableSet.copyOf(expectedTargets));
                 assertEquals(urlMapping.getAttribute(UrlMapping.TARGET_ADDRESSES).size(), Iterables.size(members));
             }});

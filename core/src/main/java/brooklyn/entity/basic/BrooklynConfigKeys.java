@@ -55,6 +55,7 @@ public class BrooklynConfigKeys {
             "this should include something readable, and must include a hash of all data which differentiates an installation " +
             "(e.g. version, plugins, etc), but should be the same where install dirs can be shared to allow for re-use");
 
+    public static final ConfigKey<Boolean> ENTITY_STARTED = newBooleanConfigKey("entity.started", "Skip the startup process entirely, for running services", Boolean.FALSE);
     public static final ConfigKey<Boolean> SKIP_INSTALLATION = newBooleanConfigKey("install.skip", "Skip the driver install commands entirely, for pre-installed software", Boolean.FALSE);
 
     // The implementation in AbstractSoftwareSshDriver runs this command as an SSH command 

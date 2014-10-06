@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -280,13 +281,16 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         // TODO what sensors should we poll?
         ConfigToAttributes.apply(this);
 
-        String host = getAttribute(WEB_CONSOLE_BIND_ADDRESS);
-        if (Strings.isEmpty(host)) {
+        InetAddress address = getAttribute(WEB_CONSOLE_PUBLIC_ADDRESS);
+        String host;
+        if (address == null) {
             if (getAttribute(NO_WEB_CONSOLE_AUTHENTICATION)) {
                 host = "localhost"; // Because of --noConsoleSecurity option
             } else {
                 host = getAttribute(HOSTNAME);
             }
+        } else {
+            host = address.getHostName();
         }
 
         URI webConsoleUri;
@@ -303,6 +307,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             setAttribute(WEB_CONSOLE_URI, null);
             webConsoleUri = null;
         }
+
+        connectServiceUpIsRunning();
 
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
@@ -323,7 +329,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void disconnectSensors() {
         super.disconnectSensors();
-        
+        disconnectServiceUpIsRunning();
         if (httpFeed != null) httpFeed.stop();
     }
 

@@ -19,8 +19,6 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import brooklyn.catalog.CatalogLoadMode;
-import brooklyn.internal.BrooklynFeatureEnablement;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
@@ -31,7 +29,6 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.StringReader;
 import java.net.InetAddress;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -44,6 +41,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
@@ -52,7 +50,10 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.brooklynnode.BrooklynNode;
+import brooklyn.entity.brooklynnode.LocalBrooklynNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
@@ -64,9 +65,12 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.entity.trait.Startable;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.PortRange;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityManager;
@@ -94,6 +98,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -133,9 +138,10 @@ public class BrooklynLauncher {
     private final List<Application> apps = new ArrayList<Application>();
     
     private boolean startWebApps = true;
+    private boolean startBrooklynNode = false;
     private PortRange port = PortRanges.fromString("8081+");
     private InetAddress bindAddress = null;
-    private URI publicAddress = null;
+    private InetAddress publicAddress = null;
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
     private Map<String, ?> webconsoleFlags = Maps.newLinkedHashMap();
     private Boolean skipSecurityFilter = null;
@@ -350,7 +356,7 @@ public class BrooklynLauncher {
      * to {@link #bindAddress} if it is not 0.0.0.0.
      * @see #bindAddress(java.net.InetAddress)
      */
-    public BrooklynLauncher publicAddress(URI publicAddress) {
+    public BrooklynLauncher publicAddress(InetAddress publicAddress) {
         this.publicAddress = publicAddress;
         return this;
     }
@@ -378,6 +384,7 @@ public class BrooklynLauncher {
         this.ignorePersistenceErrors = ignorePersistenceErrors;
         return this;
     }
+
     public BrooklynLauncher ignoreWebErrors(boolean ignoreWebErrors) {
         this.ignoreWebErrors = ignoreWebErrors;
         return this;
@@ -392,6 +399,7 @@ public class BrooklynLauncher {
         this.stopWhichAppsOnShutdown = stopWhich;
         return this;
     }
+
     public BrooklynLauncher shutdownOnExit(boolean val) {
         LOG.warn("Call to deprecated `shutdownOnExit`", new Throwable("source of deprecated call"));
         stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
@@ -402,12 +410,12 @@ public class BrooklynLauncher {
         this.persistMode = persistMode;
         return this;
     }
-    
+
     public BrooklynLauncher highAvailabilityMode(HighAvailabilityMode highAvailabilityMode) {
         this.highAvailabilityMode = highAvailabilityMode;
         return this;
     }
-    
+
     public BrooklynLauncher persistenceDir(@Nullable String persistenceDir) {
         this.persistenceDir = persistenceDir;
         return this;
@@ -428,6 +436,11 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher startBrooklynNode(boolean val) {
+        this.startBrooklynNode = val;
+        return this;
+    }
+
     /**
      * Controls both the frequency of heartbeats, and the frequency of checking the health of other nodes.
      */
@@ -435,7 +448,7 @@ public class BrooklynLauncher {
         this.haHeartbeatPeriod = val;
         return this;
     }
-    
+
     public BrooklynMementoRawData retrieveState() {
         initManagementContext();
 
@@ -531,12 +544,20 @@ public class BrooklynLauncher {
                 handleSubsystemStartupError(ignoreWebErrors, "web apps", e);
             }
         }
-        
+
         try {
             createApps();
             startApps();
         } catch (Exception e) {
             handleSubsystemStartupError(ignoreAppErrors, "managed apps", e);
+        }
+
+        if (startBrooklynNode) {
+            try {
+                startBrooklynNode();
+            } catch (Exception e) {
+                handleSubsystemStartupError(ignoreWebErrors, "web apps", e);
+            }
         }
 
         return this;
@@ -650,6 +671,7 @@ public class BrooklynLauncher {
                     BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
                     BrooklynUserWithRandomPasswordSecurityProvider.class.getName());
         }
+        if (bindAddress == null) bindAddress = Networking.ANY_NIC;
 
         LOG.debug("Starting Brooklyn web-console with bindAddress "+bindAddress+" and properties "+brooklynProperties);
         try {
@@ -807,6 +829,40 @@ public class BrooklynLauncher {
             // Note: BrooklynAssemblyTemplateInstantiator automatically puts applications under management.
             apps.add(app);
         }
+    }
+
+    protected void startBrooklynNode() {
+        final String classpath = System.getenv("INITIAL_CLASSPATH");
+        if (Strings.isBlank(classpath)) {
+            LOG.warn("Cannot find INITIAL_CLASSPATH environment variable, skipping BrooklynNode entity creation");
+            return;
+        }
+        if (webServer == null || !startWebApps) {
+            LOG.info("Skipping BrooklynNode entity creation, BrooklynWebServer not running");
+            return;
+        }
+        ApplicationBuilder brooklyn = new ApplicationBuilder() {
+            @Override
+            protected void doBuild() {
+                addChild(EntitySpec.create(LocalBrooklynNode.class)
+                        .configure(SoftwareProcess.ENTITY_STARTED, true)
+                        .configure(SoftwareProcess.RUN_DIR, System.getenv("ROOT"))
+                        .configure(SoftwareProcess.INSTALL_DIR, System.getenv("BROOKLYN_HOME"))
+                        .configure(BrooklynNode.ENABLED_HTTP_PROTOCOLS, ImmutableList.of(webServer.getHttpsEnabled() ? "https" : "http"))
+                        .configure(webServer.getHttpsEnabled() ? BrooklynNode.HTTPS_PORT : BrooklynNode.HTTP_PORT, PortRanges.fromInteger(webServer.getActualPort()))
+                        .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, bindAddress)
+                        .configure(BrooklynNode.WEB_CONSOLE_PUBLIC_ADDRESS, publicAddress)
+                        .configure(BrooklynNode.CLASSPATH, Splitter.on(":").splitToList(classpath))
+                        .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, Boolean.TRUE.equals(skipSecurityFilter))
+                        .configure(BrooklynNode.NO_SHUTDOWN_ON_EXIT, stopWhichAppsOnShutdown == StopWhichAppsOnShutdown.NONE)
+                        .displayName("Brooklyn Console"));
+            }
+        };
+        LocationSpec<?> spec = LocationSpec.create(LocalhostMachine.class).displayName("Local Brooklyn");
+        Location localhost = managementContext.getLocationManager().createLocation(spec);
+        brooklyn.appDisplayName("Brooklyn")
+                .manage(managementContext)
+                .start(ImmutableList.of(localhost));
     }
 
     protected Application getAppFromYaml(String input) {

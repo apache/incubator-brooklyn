@@ -65,6 +65,7 @@ import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
@@ -130,7 +131,7 @@ public class BrooklynNodeIntegrationTest {
         log.info("Creating entity spec for "+JavaClassNames.callerNiceClassAndMethod(1));
         
         return EntitySpec.create(BrooklynNode.class)
-                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, "127.0.0.1")
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, Networking.LOOPBACK)
                 .configure(BrooklynNode.ON_EXISTING_PROPERTIES_FILE, ExistingFileBehaviour.DO_NOT_USE);
     }
 

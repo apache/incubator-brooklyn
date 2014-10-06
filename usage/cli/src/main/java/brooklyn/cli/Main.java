@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.util.Collection;
 
 import org.slf4j.Logger;
@@ -210,7 +209,7 @@ public class Main extends AbstractMain {
         public String bindAddress = null;
 
         @Option(name = { "-pa", "--publicAddress" },
-                description = "Specifies the IP address or URL that the Brooklyn Management Console Rest API will be available on")
+                description = "Specifies the IP address or hostname that the Brooklyn Management Console will be available on")
         public String publicAddress = null;
 
         @Option(name = { "--noConsoleSecurity" },
@@ -230,7 +229,12 @@ public class Main extends AbstractMain {
                 + "(default is to abort if they fail to start)")
         public boolean ignoreAppErrors = false;
 
-        // Note in some cases, you can get java.util.concurrent.RejectedExecutionException 
+        @Beta
+        @Option(name = { "--startBrooklynNode" },
+                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance")
+        public boolean startBrooklynNode = false;
+
+        // Note in some cases, you can get java.util.concurrent.RejectedExecutionException
         // if shutdown is not co-ordinated, e.g. with Whirr:
         // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
@@ -505,13 +509,17 @@ public class Main extends AbstractMain {
                 log.info("Configuring to disable console security");
                 launcher.installSecurityFilter(false);
             }
+            if (startBrooklynNode) {
+                log.info("Configuring BrooklynNode entity startup");
+                launcher.startBrooklynNode(true);
+            }
             if (Strings.isNonEmpty(bindAddress)) {
                 log.debug("Configuring bind address as "+bindAddress);
-                launcher.bindAddress( Networking.getInetAddressWithFixedName(bindAddress) );
+                launcher.bindAddress(Networking.getInetAddressWithFixedName(bindAddress));
             }
             if (Strings.isNonEmpty(publicAddress)) {
                 log.debug("Configuring public address as "+publicAddress);
-                launcher.publicAddress( URI.create(publicAddress) );
+                launcher.publicAddress(Networking.getInetAddressWithFixedName(publicAddress));
             }
             if (explicitManagementContext!=null) {
                 log.debug("Configuring explicit management context "+explicitManagementContext);
