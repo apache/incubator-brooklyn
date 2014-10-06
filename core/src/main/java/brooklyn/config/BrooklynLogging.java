@@ -22,5 +22,7 @@ package brooklyn.config;
 public class BrooklynLogging {
 
     public static final String SSH_IO = "brooklyn.SSH";
-    
+
+    public static final String REST = "brooklyn.REST";
+
 }

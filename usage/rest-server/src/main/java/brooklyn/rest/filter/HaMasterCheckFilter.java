@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.util;
+package brooklyn.rest.filter;
 
 import java.io.IOException;
 import java.util.Set;
@@ -35,6 +35,11 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 
+/**
+ * Checks that the request is appropriate given the high availability status of the server.
+ *
+ * @see brooklyn.management.ha.ManagementNodeState
+ */
 public class HaMasterCheckFilter implements Filter {
 
     private static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";

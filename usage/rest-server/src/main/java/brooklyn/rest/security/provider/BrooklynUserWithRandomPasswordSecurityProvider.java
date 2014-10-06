@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Identifiers;
 
@@ -56,7 +56,9 @@ public class BrooklynUserWithRandomPasswordSecurityProvider extends AbstractSecu
         Object remoteAddress = session.getAttribute(BrooklynPropertiesSecurityFilter.REMOTE_ADDRESS_SESSION_ATTRIBUTE);
         if (!(remoteAddress instanceof String)) return false;
         if (Networking.isLocalhost((String)remoteAddress)) {
-            LOG.debug(this+": granting passwordless access to "+session+" originating from "+remoteAddress);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(this+": granting passwordless access to "+session+" originating from "+remoteAddress);
+            }
             return true;
         } else {
             LOG.debug(this+": password required for "+session+" originating from "+remoteAddress);

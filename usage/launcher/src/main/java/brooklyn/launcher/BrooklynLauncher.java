@@ -79,7 +79,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.rest.BrooklynWebConfig;
-import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;

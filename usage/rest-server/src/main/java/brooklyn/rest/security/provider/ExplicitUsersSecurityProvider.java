@@ -33,8 +33,10 @@ import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.security.PasswordHasher;
 
-/** security provider which validates users against passwords according to property keys,
- * as set in {@link BrooklynWebConfig#USERS} and {@link BrooklynWebConfig#PASSWORD_FOR_USER(String)}*/
+/**
+ * Security provider which validates users against passwords according to property keys,
+ * as set in {@link BrooklynWebConfig#USERS} and {@link BrooklynWebConfig#PASSWORD_FOR_USER(String)}
+ */
 public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider implements SecurityProvider {
 
     public static final Logger LOG = LoggerFactory.getLogger(ExplicitUsersSecurityProvider.class);
@@ -88,25 +90,12 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
         String expectedSha256 = properties.getConfig(BrooklynWebConfig.SHA256_FOR_USER(user));
         
         if (expectedP != null) {
-            if (expectedP.equals(password)) {
-                // password is good
-                return allow(session, user);
-            } else {
-                LOG.debug("REST rejecting bad password for user "+user);
-                return false;
-            }
-        }
-        if (expectedSha256 != null) {
+            return expectedP.equals(password) && allow(session, user);
+        } else if (expectedSha256 != null) {
             String hashedPassword = PasswordHasher.sha256(salt, password);
-            if (expectedSha256.equals(hashedPassword)) {
-                // hashed password is good
-                return allow(session, user);
-            } else {
-                LOG.debug("REST rejecting bad password for user "+user);
-                return false;
-            }                
+            return expectedSha256.equals(hashedPassword) && allow(session, user);
         }
-        LOG.debug("REST rejecting passwordless user " + user);
+
         return false;
     }
 

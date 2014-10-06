@@ -32,7 +32,7 @@ import brooklyn.util.text.Strings;
 
 public class DelegatingSecurityProvider implements SecurityProvider {
 
-    public static final Logger log = LoggerFactory.getLogger(DelegatingSecurityProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(DelegatingSecurityProvider.class);
     protected final ManagementContext mgmt;
 
     public DelegatingSecurityProvider(ManagementContext mgmt) {
@@ -117,7 +117,13 @@ public class DelegatingSecurityProvider implements SecurityProvider {
 
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
-        return getDelegate().authenticate(session, user, password);
+        boolean authenticated = getDelegate().authenticate(session, user, password);
+        if (log.isTraceEnabled() && authenticated) {
+            log.trace("User {} authenticated with provider {}", user, getDelegate());
+        } else if (!authenticated && log.isDebugEnabled()) {
+            log.debug("Failed authentication for user {} with provider {}", user, getDelegate());
+        }
+        return authenticated;
     }
 
     @Override

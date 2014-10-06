@@ -57,8 +57,10 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynWebConfig;
-import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
-import brooklyn.rest.util.HaMasterCheckFilter;
+import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.HaMasterCheckFilter;
+import brooklyn.rest.filter.LoggingFilter;
+import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
@@ -414,9 +416,11 @@ public class BrooklynWebServer {
         rootContext = deploy("/", rootWar);
         rootContext.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
 
+        rootContext.addFilter(RequestTaggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         if (securityFilterClazz != null) {
             rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
         }
+        rootContext.addFilter(LoggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         installAsServletFilter(rootContext);
 
