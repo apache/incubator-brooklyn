@@ -27,6 +27,8 @@ under the License.
     <% if (name == 'locations' || name == 'location') { %>
     <td><div id="selector-container" class="input-medium param-value"></div></td>
     <% } else { %>
-    <td><input type="text" class="input-medium param-value" value="<%= defaultValue %>"></td>
+    <td><!--  use 1 line textarea so it can be resized -->
+      <textarea class="input-medium param-value" style="height: 18px;"><%= _.escape(defaultValue) %></textarea>
+    </td>
     <% } %>    
 </tr>
