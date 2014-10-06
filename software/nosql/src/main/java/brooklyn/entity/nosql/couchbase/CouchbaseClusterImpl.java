@@ -38,6 +38,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.QuorumCheck;
 import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -69,6 +70,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
@@ -231,6 +233,21 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                     }
                 }
 
+                if (getConfig(REPLICATION)!=null) {
+                    try {
+                        Tasks.setBlockingDetails("Configuring replication rules");
+
+                        List<Map<String, Object>> replRules = getConfig(REPLICATION);
+                        for (Map<String, Object> replRule: replRules) {
+                            DynamicTasks.queue(Effectors.invocation(getPrimaryNode(), CouchbaseNode.ADD_REPLICATION_RULE, replRule));
+                        }
+                        DynamicTasks.waitForLast();
+                    
+                    } finally {
+                        Tasks.resetBlockingDetails();
+                    }
+                }
+
                 setAttribute(IS_CLUSTER_INITIALIZED, true);
             } else {
                 //TODO: add a repeater to wait for a quorum of servers to be up.
@@ -363,8 +380,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         return getAttribute(COUCHBASE_CLUSTER_UP_NODES);
     }
 
-    private Entity getPrimaryNode() {
-        return getAttribute(COUCHBASE_PRIMARY_NODE);
+    private CouchbaseNode getPrimaryNode() {
+        return (CouchbaseNode) getAttribute(COUCHBASE_PRIMARY_NODE);
     }
 
     @Override
@@ -421,6 +438,15 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         }
     }
 
+    /** finds the cluster name specified for a node or a cluster, 
+     * using {@link CouchbaseCluster#CLUSTER_NAME} or falling back to the cluster (or node) ID. */
+    public static String getClusterName(Entity node) {
+        String name = node.getConfig(CLUSTER_NAME);
+        if (!Strings.isBlank(name)) return Strings.makeValidFilename(name);
+        Iterable<CouchbaseCluster> clusterNodes = Iterables.filter(Entities.ancestors(node), CouchbaseCluster.class);
+        return Iterables.getFirst(clusterNodes, node).getId();
+    }
+    
     public boolean isClusterInitialized() {
         return Optional.fromNullable(getAttribute(IS_CLUSTER_INITIALIZED)).or(false);
     }

@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.nosql.couchbase;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcessDriver;
 
 public interface CouchbaseNodeDriver extends SoftwareProcessDriver {
@@ -30,5 +31,7 @@ public interface CouchbaseNodeDriver extends SoftwareProcessDriver {
     public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica);
 
     public void serverAddAndRebalance(String serverToAdd, String username, String password);
+
+    public void addReplicationRule(Entity toCluster, String fromBucket, String toBucket);
 
 }

@@ -35,8 +35,12 @@ import java.util.concurrent.Callable;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.software.SshEffectorTasks;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.OsDetails;
@@ -46,6 +50,8 @@ import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
@@ -340,5 +346,42 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             " --bucket-replica=" + bucketReplica)
             .failOnNonZeroResultCode()
             .execute();
+    }
+
+    @Override
+    public void addReplicationRule(Entity toCluster, String fromBucket, String toBucket) {
+        DynamicTasks.queue(DependentConfiguration.attributeWhenReady(toCluster, Attributes.SERVICE_UP)).getUnchecked();
+        
+        String destName = CouchbaseClusterImpl.getClusterName(getEntity());
+        Entity destPrimaryNode = toCluster.getAttribute(CouchbaseCluster.COUCHBASE_PRIMARY_NODE);
+        String destHostname = destPrimaryNode.getAttribute(Attributes.HOSTNAME);
+        String destUsername = toCluster.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
+        String destPassword = toCluster.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
+
+        // on the REST API there is mention of a 'type' 'continuous' but i don't see other refs to this
+        
+        // PROTOCOL   Select REST protocol or memcached for replication. xmem indicates memcached while capi indicates REST protocol.
+        // looks like xmem is the default; leave off for now
+//        String replMode = "xmem";
+        
+        DynamicTasks.queue(TaskTags.markInessential(SshEffectorTasks.ssh(
+            couchbaseCli("xdcr-setup") +
+            getCouchbaseHostnameAndCredentials() +
+            " --create" +
+            " --xdcr-cluster-name="+destName +
+            " --xdcr-hostname="+destHostname +
+            " --xdcr-username="+destUsername +
+            " --xdcr-password="+destPassword
+            ).summary("create xdcr destination "+destName).newTask()));
+
+        DynamicTasks.queue(SshEffectorTasks.ssh(
+            couchbaseCli("xdcr-setup") +
+            getCouchbaseHostnameAndCredentials() +
+            " --create" +
+            " --xdcr-cluster-name="+destName +
+            " --xdcr-from-bucket="+fromBucket +
+            " --xdcr-to-bucket="+toBucket
+//            + " --xdcr-replication-mode="+replMode
+            ).summary("configure replication for "+fromBucket+" to "+destName+":"+toBucket).newTask());
     }
 }

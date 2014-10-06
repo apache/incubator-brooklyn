@@ -54,6 +54,9 @@ public interface CouchbaseCluster extends DynamicCluster {
 
     AttributeSensor<Boolean> IS_CLUSTER_INITIALIZED = Sensors.newBooleanSensor("couchbase.cluster.isClusterInitialized", "flag to emit if the couchbase cluster was intialized");
 
+    @SetFromFlag("clusterName")
+    ConfigKey<String> CLUSTER_NAME = ConfigKeys.newStringConfigKey("couchbase.cluster.name", "Optional name for this cluster");
+
     @SetFromFlag("intialQuorumSize")
     ConfigKey<Integer> INITIAL_QUORUM_SIZE = ConfigKeys.newIntegerConfigKey("couchbase.cluster.intialQuorumSize", "Initial cluster quorum size - number of initial nodes that must have been successfully started to report success (if < 0, then use value of INITIAL_SIZE)",
             -1);
@@ -115,4 +118,10 @@ public interface CouchbaseCluster extends DynamicCluster {
     @SetFromFlag("createBuckets")
     ConfigKey<List<Map<String, Object>>> CREATE_BUCKETS = ConfigKeys.newConfigKey(new TypeToken<List<Map<String, Object>>>() {}, 
             "couchbase.cluster.createBuckets", "a list of all dedicated port buckets to be created on the couchbase cluster");
+    
+    @SuppressWarnings("serial")
+    @SetFromFlag("replication")
+    ConfigKey<List<Map<String,Object>>> REPLICATION = ConfigKeys.newConfigKey(new TypeToken<List<Map<String,Object>>>() {}, 
+        "couchbase.cluster.replicationConfiguration", "List of replication rules to configure, each rule including target (id of another cluster) and mode (unidirectional or bidirectional)");
+
 }

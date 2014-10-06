@@ -26,6 +26,7 @@ import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
@@ -33,6 +34,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.ByteSizeStrings;
 
@@ -126,6 +128,12 @@ public interface CouchbaseNode extends SoftwareProcess {
     MethodEffector<Void> SERVER_ADD_AND_REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "serverAddAndRebalance");
     MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
     MethodEffector<Void> BUCKET_CREATE = new MethodEffector<Void>(CouchbaseNode.class, "bucketCreate");
+    brooklyn.entity.Effector<Void> ADD_REPLICATION_RULE = Effectors.effector(Void.class, "addReplicationRule")
+        .parameter(String.class, "toCluster")
+        .parameter(String.class, "fromBucket")
+        .parameter(String.class, "toBucket")
+//        .parameter(String.class, "replicationType")
+        .buildAbstract();
 
     @Effector(description = "add a server to a cluster")
     public void serverAdd(@EffectorParam(name = "serverHostname") String serverToAdd, @EffectorParam(name = "username") String username, @EffectorParam(name = "password") String password);

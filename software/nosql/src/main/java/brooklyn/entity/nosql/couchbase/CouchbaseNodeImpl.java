@@ -29,8 +29,10 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -90,8 +92,16 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
                 }
             }
         });
+        
+        getMutableEntityType().addEffector(ADD_REPLICATION_RULE, new EffectorBody<Void>() {
+            @Override
+            public Void call(ConfigBag parameters) {
+                addReplicationRule(parameters);
+                return null;
+            }
+        });
     }
-
+    
     protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
         ConfigBag result = ConfigBag.newInstance(super.obtainProvisioningFlags(location));
         result.configure(CloudLocationConfig.OS_64_BIT, true);
@@ -234,4 +244,31 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
         getDriver().bucketCreate(bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
     }
+    
+    /** exposed through {@link CouchbaseNode#ADD_REPLICATION_RULE} */
+    protected void addReplicationRule(ConfigBag ruleArgs) {
+        Entity fromCluster = (Entity) ruleArgs.getStringKey("fromCluster");
+        Entity toCluster = (Entity) ruleArgs.getStringKey("toCluster");
+        if (fromCluster==null && toCluster==null)
+            throw new IllegalArgumentException("At least one of 'fromCluster' or 'toCluster' must be supplied");
+        if (fromCluster==null) fromCluster = this;
+        if (toCluster==null) toCluster = this;
+        
+        String fromBucket = (String)ruleArgs.getStringKey("fromBucket");
+        String toBucket = (String)ruleArgs.getStringKey("toBucket");
+        if (fromBucket==null && toBucket==null)
+            throw new IllegalArgumentException("At least one of 'fromBucket' or 'toBucket' must be supplied");
+        if (fromBucket==null) fromBucket = toBucket;
+        if (toBucket==null) toBucket = fromBucket;
+        
+//        String replType = (String)ruleArgs.getStringKey("replicationType");
+        
+        if (!ruleArgs.getUnusedConfig().isEmpty()) {
+            throw new IllegalArgumentException("Unsupported replication rule data: "+ruleArgs.getUnusedConfig());
+        }
+
+        
+        getDriver().addReplicationRule(toCluster, fromBucket, toBucket);
+    }
+
 }
