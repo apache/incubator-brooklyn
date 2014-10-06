@@ -67,8 +67,8 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
     /**
      * Start the entity.
-     *
-     * this installs, configures and launches the application process. However,
+     * <p>
+     * This installs, configures and launches the application process. However,
      * users can also call the {@link #install()}, {@link #customize()} and
      * {@link #launch()} steps independently. The {@link #postLaunch()} will
      * be called after the {@link #launch()} metheod is executed, but the
@@ -84,7 +84,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         }});
 
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND))) {
-            DynamicTasks.queue("pre-install command", new Runnable() { public void run() {
+            DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
                 runPreInstallCommand(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND));
             }});
         };
@@ -96,6 +96,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 setup();
             }});
 
+            DynamicTasks.queue("copy-install-resources", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.INSTALL_RESOURCES_LATCH);
+                copyInstallResources();
+            }});
+
             DynamicTasks.queue("install", new Runnable() { public void run() {
                 waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
                 install();
@@ -103,7 +108,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         }
 
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND))) {
-            DynamicTasks.queue("post-install command", new Runnable() { public void run() {
+            DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
                 runPostInstallCommand(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND));
             }});
         };
@@ -113,13 +118,13 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             customize();
         }});
 
-        DynamicTasks.queue("resources", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.RESOURCES_LATCH);
-            resources();
+        DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
+            waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
+            copyRuntimeResources();
         }});
 
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
-            DynamicTasks.queue("pre-launch command", new Runnable() { public void run() {
+            DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
                 runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
             }});
         };
@@ -130,7 +135,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         }});
 
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
-            DynamicTasks.queue("post-launch command", new Runnable() { public void run() {
+            DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
                 runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
             }});
         };
@@ -150,10 +155,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
     public abstract void runPreInstallCommand(String command);
     public abstract void setup();
+    public abstract void copyInstallResources();
     public abstract void install();
     public abstract void runPostInstallCommand(String command);
+    public abstract void copyRuntimeResources();
     public abstract void customize();
-    public abstract void resources();
     public abstract void runPreLaunchCommand(String command);
     public abstract void launch();
     public abstract void runPostLaunchCommand(String command);

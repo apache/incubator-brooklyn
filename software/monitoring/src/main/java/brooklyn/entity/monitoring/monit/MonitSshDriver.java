@@ -76,7 +76,7 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
             .execute();  //create the directory
         String controlFileUrl = getEntity().getConfig(MonitNode.CONTROL_FILE_URL);
         remoteControlFilePath = getRunDir() + "/monit.monitrc";
-        copyTemplate(controlFileUrl, remoteControlFilePath, getEntity().getConfig(MonitNode.CONTROL_FILE_SUBSTITUTIONS));
+        copyTemplate(controlFileUrl, remoteControlFilePath, false, getEntity().getConfig(MonitNode.CONTROL_FILE_SUBSTITUTIONS));
         // Monit demands the control file has permissions <= 0700
         newScript(CUSTOMIZING)
             .body.append("chmod 600 " + remoteControlFilePath)

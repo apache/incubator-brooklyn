@@ -22,11 +22,11 @@ import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,10 +43,10 @@ import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
-import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
@@ -56,6 +56,7 @@ import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -262,51 +263,135 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     protected Map<String, Object> getSshFlags() {
         return SshEffectorTasks.getSshFlags(getEntity(), getMachine());
     }
-    
+
+    public int execute(String command, String summaryForLogging) {
+        return execute(ImmutableList.of(command), summaryForLogging);
+    }
+
     public int execute(List<String> script, String summaryForLogging) {
         return execute(Maps.newLinkedHashMap(), script, summaryForLogging);
     }
-    
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
-        Map flags = new LinkedHashMap();
-        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS))
+        Map flags = Maps.newLinkedHashMap();
+        if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
+        }
         flags.putAll(flags2);
-        Map<String, String> environment = (Map<String, String>) ((flags.get("env") != null) ? flags.get("env") : getShellEnvironment());
-        if (environment!=null && Tasks.current()!=null) {
+        Map<String, String> environment = Optional.fromNullable((Map<String,String>) flags.get("env")).or(getShellEnvironment());
+        if (Tasks.current()!=null) {
             // attach tags here, as well as in ScriptHelper, because they may have just been read from the driver
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
+            if (environment!=null) {
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
+            }
+            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdout));
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stderr));
+            flags.put("out", stdout);
+            flags.put("err", stderr);
         }
         if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getDisplayName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
     }
 
+    /**
+     * Files and templates to be copied to the server <em>before</em> installation. This allows the {@link #install()}
+     * process to have access to all required resources. 
+     * <p>
+     * Will be prefixed with the entity's {@link #getInstallDir() install directory} if relative.
+     *
+     * @see SoftwareProcess#INSTALL_FILES
+     * @see SoftwareProcess#INSTALL_TEMPLATES
+     * @see #copyRuntimeResources()
+     */
     @Override
-    public void resources() {
-        Map runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
-        copyResources(runtimeFiles);
+    public void copyInstallResources() {
+        getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
+        try {
+            execute("mkdir -p " + getInstallDir(), "create install directory");
 
-        Map runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
-        copyTemplates(runtimeTemplates);
+            Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
+            if (installFiles != null && installFiles.size() > 0) {
+                for (String source : installFiles.keySet()) {
+                    String target = installFiles.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
+                    copyResource(source, destination, true);
+                }
+            }
+
+            Map<String, String> installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
+            if (installTemplates != null && installTemplates.size() > 0) {
+                for (String source : installTemplates.keySet()) {
+                    String target = installTemplates.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
+                    copyTemplate(source, destination, true, MutableMap.<String, Object>of());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error copying install resources", e);
+            throw Exceptions.propagate(e);
+        } finally {
+            getLocation().releaseMutex("installing "+elvis(entity,this));
+        }
     }
-    
+
+    /**
+     * Files and templates to be copied to the server <em>after</em> customisation. This allows overwriting of
+     * existing files such as entity configuration which may be copied from the installation directory
+     * during the {@link #customize()} process.
+     * <p>
+     * Will be prefixed with the entity's {@link #getRunDir() run directory} if relative.
+     *
+     * @see SoftwareProcess#RUNTIME_FILES
+     * @see SoftwareProcess#RUNTIME_TEMPLATES
+     * @see #copyInstallResources()
+     */
+    @Override
+    public void copyRuntimeResources() {
+        try {
+            execute("mkdir -p " + getRunDir(), "create run directory");
+
+            Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
+            if (runtimeFiles != null && runtimeFiles.size() > 0) {
+                for (String source : runtimeFiles.keySet()) {
+                    String target = runtimeFiles.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getRunDir(), target);
+                    copyResource(source, destination, true);
+                }
+            }
+
+            Map<String, String> runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
+            if (runtimeTemplates != null && runtimeTemplates.size() > 0) {
+                for (String source : runtimeTemplates.keySet()) {
+                    String target = runtimeTemplates.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getRunDir(), target);
+                    copyTemplate(source, destination, true, MutableMap.<String, Object>of());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error copying runtime resources", e);
+            throw Exceptions.propagate(e);
+        }
+    }
+
     @Override
     public void runPreInstallCommand(String command) {
         execute(ImmutableList.of(command), "running pre-install commands");
     }
-    
+
     @Override
     public void runPostInstallCommand(String command) {
         execute(ImmutableList.of(command), "running post-install commands");
     }
-    
+
     @Override
     public void runPreLaunchCommand(String command) {
         execute(ImmutableList.of(command), "running pre-launch commands");
     }
-    
+
     @Override
     public void runPostLaunchCommand(String command) {
         execute(ImmutableList.of(command), "running post-launch commands");
@@ -322,8 +407,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     /**
      * @param template File to template and copy.
-     * @param target Destination on server. Will be prefixed with the entity's
-     *               {@link #getRunDir() run directory} if relative.
+     * @param target Destination on server.
      * @return The exit code the SSH command run.
      */
     public int copyTemplate(File template, String target) {
@@ -332,74 +416,28 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     /**
      * @param template URI of file to template and copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server. Will be prefixed with the entity's
-     *               {@link #getRunDir() run directory} if relative.
+     * @param target Destination on server.
      * @return The exit code of the SSH command run.
      */
     public int copyTemplate(String template, String target) {
-        return copyTemplate(template, target, ImmutableMap.<String, String>of());
+        return copyTemplate(template, target, false, ImmutableMap.<String, String>of());
     }
 
     /**
      * @param template URI of file to template and copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server. Will be prefixed with the entity's
-     *               {@link #getRunDir() run directory} if relative.
+     * @param target Destination on server.
      * @param extraSubstitutions Extra substitutions for the templater to use, for example
      *               "foo" -> "bar", and in a template ${foo}.
      * @return The exit code of the SSH command run.
      */
-    public int copyTemplate(String template, String target, Map<String, ?> extraSubstitutions) {
-        // prefix with runDir if relative target
-        String dest = target;
-        if (!Os.isAbsolutish(target)) {
-            dest = Os.mergePathsUnix(getRunDir(), target);
-        }
-        
+    public int copyTemplate(String template, String target, boolean createParent, Map<String, ?> extraSubstitutions) {
         String data = processTemplate(template, extraSubstitutions);
-        int result = getMachine().copyTo(new StringReader(data), dest);
-        if (log.isDebugEnabled())
-            log.debug("Copied filtered template for {}: {} to {} - result {}", new Object[] { entity, template, dest, result });
-        return result;
-    }
-
-    /**
-     * Templates all resources in the given map, then copies them to the driver's {@link #getMachine() machine}.
-     * @param templates A mapping of resource URI to server destination.
-     * @see #copyTemplate(String, String)
-     */
-    public void copyTemplates(Map<String, String> templates) {
-        if (templates != null && templates.size() > 0) {
-            log.info("Customising {} with templates: {}", entity, templates);
-
-            for (Map.Entry<String, String> entry : templates.entrySet()) {
-                String source = entry.getValue();
-                String dest = entry.getKey();
-                copyTemplate(source, dest);
-            }
-        }
-    }
-
-    /**
-     * Copies all resources in the given map to the driver's {@link #getMachine() machine}.
-     * @param resources A mapping of resource URI to server destination.
-     * @see #copyResource(String, String)
-     */
-    public void copyResources(Map<String, String> resources) {
-        if (resources != null && resources.size() > 0) {
-            log.info("Customising {} with resources: {}", entity, resources);
-
-            for (Map.Entry<String, String> entry : resources.entrySet()) {
-                String source = entry.getValue();
-                String dest = entry.getKey();
-                copyResource(source, dest);
-            }
-        }
+        return copyResource(MutableMap.<Object,Object>of(), new StringReader(data), target, createParent);
     }
 
     /**
      * @param file File to copy.
-     * @param target Destination on server. Will be prefixed with the entity's
-     *               {@link #getRunDir() run directory} if relative.
+     * @param target Destination on server.
      * @return The exit code the SSH command run.
      */
     public int copyResource(File file, String target) {
@@ -408,8 +446,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     /**
      * @param resource URI of file to copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server. Will be prefixed with the entity's
-     *               {@link #getRunDir() run directory} if relative.
+     * @param target Destination on server.
      * @return The exit code of the SSH command run
      */
     public int copyResource(String resource, String target) {
@@ -430,35 +467,31 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      *                 given flags are used. Otherwise, the given flags are combined with (and take
      *                 precendence over) the flags returned by {@link #getSshFlags()}.
      * @param source URI of file to copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server. Will be prefixed with the entity's
-     *               {@link #getRunDir() run directory} if relative.
+     * @param target Destination on server
      * @param createParentDir Whether to create the parent target directory, if it doesn't already exist
      * @return The exit code of the SSH command run
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public int copyResource(Map sshFlags, String source, String target, boolean createParentDir) {
+    public int copyResource(Map<Object,Object> sshFlags, String source, String target, boolean createParentDir) {
         Map flags = Maps.newLinkedHashMap();
         if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
         }
         flags.putAll(sshFlags);
 
-        // prefix with runDir if relative target
-        String dest = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getRunDir(), target);
-        
         if (createParentDir) {
             // don't use File.separator because it's remote machine's format, rather than local machine's
-            int lastSlashIndex = dest.lastIndexOf("/");
-            String parent = (lastSlashIndex > 0) ? dest.substring(0, lastSlashIndex) : null;
+            int lastSlashIndex = target.lastIndexOf("/");
+            String parent = (lastSlashIndex > 0) ? target.substring(0, lastSlashIndex) : null;
             if (parent != null) {
                 getMachine().execCommands("createParentDir", ImmutableList.of("mkdir -p "+parent));
             }
         }
-        
-        int result = getMachine().installTo(resource, flags, source, dest);
+
+        int result = getMachine().installTo(resource, flags, source, target);
         if (result == 0) {
             if (log.isDebugEnabled()) {
-                log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, source, dest, result });
+                log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, source, target, result });
             }
         }
         return result;
@@ -468,21 +501,21 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * @see #copyResource(Map, InputStream, String)
      */
     public int copyResource(Reader source, String target) {
-        return copyResource(MutableMap.of(), source, target);
+        return copyResource(MutableMap.of(), source, target, false);
+    }
+
+    /**
+     * @see #copyResource(Map, InputStream, String)
+     */
+    public int copyResource(Map<Object,Object> sshFlags, Reader source, String target, boolean createParent) {
+        return copyResource(sshFlags, new ReaderInputStream(source), target, createParent);
     }
 
     /**
      * @see #copyResource(Map, InputStream, String)
      */
     public int copyResource(InputStream source, String target) {
-        return copyResource(MutableMap.of(), source, target);
-    }
-
-    /**
-     * @see #copyResource(Map, InputStream, String)
-     */
-    public int copyResource(Map<?,?> sshFlags, Reader source, String target) {
-        return copyResource(sshFlags, new ReaderInputStream(source), target);
+        return copyResource(MutableMap.of(), source, target, false);
     }
     
     /**
@@ -494,22 +527,28 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * @see #copyResource(Map, String, String) for parameter descriptions.
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public int copyResource(Map<?,?> sshFlags, InputStream source, String target) {
+    public int copyResource(Map<Object,Object> sshFlags, InputStream source, String target, boolean createParentDir) {
         Map flags = Maps.newLinkedHashMap();
         if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
         }
         flags.putAll(sshFlags);
 
-        // prefix with runDir if relative target
-        String dest = Os.isAbsolutish(target) ? target : Urls.mergePaths(getRunDir(), target);
+        if (createParentDir) {
+            // don't use File.separator because it's remote machine's format, rather than local machine's
+            int lastSlashIndex = target.lastIndexOf("/");
+            String parent = (lastSlashIndex > 0) ? target.substring(0, lastSlashIndex) : null;
+            if (parent != null) {
+                getMachine().execCommands("createParentDir", ImmutableList.of("mkdir -p "+parent));
+            }
+        }
 
         // TODO SshMachineLocation.copyTo currently doesn't log warn on non-zero or set blocking details
         // (because delegated to by installTo, for multiple calls). So do it here for now.
         int result;
         String prevBlockingDetails = Tasks.setBlockingDetails("copying resource to server at "+target);
         try {
-            result = getMachine().copyTo(flags, source, dest);
+            result = getMachine().copyTo(flags, source, target);
         } finally {
             Tasks.setBlockingDetails(prevBlockingDetails);
         }

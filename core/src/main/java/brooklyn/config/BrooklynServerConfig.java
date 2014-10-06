@@ -21,7 +21,6 @@ package brooklyn.config;
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
 
 import brooklyn.catalog.CatalogLoadMode;
-import brooklyn.entity.rebind.persister.PersistMode;
 import io.brooklyn.camp.CampPlatform;
 
 import java.io.File;

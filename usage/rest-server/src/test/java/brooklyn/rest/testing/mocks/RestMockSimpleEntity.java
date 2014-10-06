@@ -97,5 +97,8 @@ public class RestMockSimpleEntity extends SoftwareProcessImpl {
         public void install() {}
         public void customize() {}
         public void launch() {}
+        public void setup() { }
+        public void copyInstallResources() { }
+        public void copyRuntimeResources() { }
     }
 }

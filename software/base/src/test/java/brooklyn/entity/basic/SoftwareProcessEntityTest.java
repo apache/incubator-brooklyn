@@ -168,7 +168,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         SimulatedDriver d = (SimulatedDriver) entity.getDriver();
         Assert.assertTrue(d.isRunning());
         entity.stop();
-        Assert.assertEquals(d.events, ImmutableList.of("install", "customize", "launch", "stop"));
+        Assert.assertEquals(d.events, ImmutableList.of("setup", "copyInstallResources", "install", "customize", "copyRuntimeResources", "launch", "stop"));
         Assert.assertFalse(d.isRunning());
     }
     
@@ -345,7 +345,34 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
             launched = true;
             entity.setAttribute(Startable.SERVICE_UP, true);
         }
-        
+
+        @Override
+        public void setup() {
+            events.add("setup");
+        }
+
+        @Override
+        public void copyInstallResources() {
+            events.add("copyInstallResources");
+        }
+
+        @Override
+        public void copyRuntimeResources() {
+            events.add("copyRuntimeResources");
+        }
+
+        @Override
+        public void runPreInstallCommand(String command) { }
+
+        @Override
+        public void runPostInstallCommand(String command) { }
+
+        @Override
+        public void runPreLaunchCommand(String command) { }
+
+        @Override
+        public void runPostLaunchCommand(String command) { }
+
         @Override
         protected String getInstallLabelExtraSalt() {
             return (String)getEntity().getConfigRaw(ConfigKeys.newStringConfigKey("salt"), true).or((String)null);

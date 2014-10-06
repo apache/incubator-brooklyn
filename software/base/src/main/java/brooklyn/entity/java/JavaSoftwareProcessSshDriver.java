@@ -336,8 +336,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     protected int tryJavaInstall(String version, String command) {
+        getLocation().acquireMutex("installing", "installing Java at " + getLocation());
         try {
-            getLocation().acquireMutex("installing", "installing Java at " + getLocation());
             log.debug("Installing Java {} at {}@{}", new Object[]{version, getEntity(), getLocation()});
             ProcessTaskWrapper<Integer> installCommand = Entities.submit(getEntity(),
                     SshTasks.newSshExecTaskFactory(getLocation(), command));
@@ -347,8 +347,6 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
                         new Object[]{version, getEntity(), getLocation(), installCommand.getStderr()});
             }
            return result;
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
         } finally {
             getLocation().releaseMutex("installing");
         }
@@ -452,8 +450,8 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     @Override
-    public void resources() {
-        super.resources();
+    public void copyRuntimeResources() {
+        super.copyRuntimeResources();
 
         if (isJmxEnabled()) {
             DynamicTasks.queue("install jmx", new Runnable() { public void run() {

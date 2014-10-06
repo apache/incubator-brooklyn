@@ -37,12 +37,31 @@ public class EmptySoftwareProcessSshDriver extends AbstractSoftwareProcessSshDri
     }
 
     @Override
-    public void install() {
-    }
+    public void install() { }
 
     @Override
-    public void customize() {
-    }
+    public void customize() { }
+
+    @Override
+    public void setup() { }
+
+    @Override
+    public void copyInstallResources() { }
+
+    @Override
+    public void copyRuntimeResources() { }
+
+    @Override
+    public void runPreInstallCommand(String command) { }
+
+    @Override
+    public void runPostInstallCommand(String command) { }
+
+    @Override
+    public void runPreLaunchCommand(String command) { }
+
+    @Override
+    public void runPostLaunchCommand(String command) { }
 
     @Override
     public void launch() {

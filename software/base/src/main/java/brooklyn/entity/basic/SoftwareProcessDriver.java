@@ -60,13 +60,13 @@ public interface SoftwareProcessDriver extends EntityDriver {
      * @see Startable#restart()
      */
     void restart();
-    
+
     /**
      * Performs software stop (or queues tasks to do this) 
      * @see Startable#stop()
      */
     void stop();
-    
+
     /**
      * Kills the process, ungracefully and immediately where possible (e.g. with `kill -9`).
      */

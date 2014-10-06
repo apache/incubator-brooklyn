@@ -264,16 +264,16 @@ public class ArchiveUtils {
         String destPath = Os.mergePaths(tmpDir, destFile);
 
         // Use the location mutex to prevent package manager locking issues
+        machine.acquireMutex("installing", "installing archive");
         try {
-            machine.acquireMutex("installing", "installing archive");
             int result = install(resolver, props, machine, archiveUrl, destPath, NUM_RETRIES_FOR_COPYING);
             if (result != 0) {
                 throw new IllegalStateException(format("Unable to install archive %s to %s", archiveUrl, machine));
             }
-            
+
             // extract, now using task if available
-            MutableList<String> commands = MutableList.copyOf(installCommands(destFile))
-                .appendAll(extractCommands(destFile, tmpDir, destDir, false, keepArchiveAfterUnpacking));
+            MutableList<String> commands = MutableList.copyOf(installCommands(optionalDestFile))
+                    .appendAll(extractCommands(optionalDestFile, optionalTmpDir, destDir, false, keepArchiveAfterUnpacking));
             if (DynamicTasks.getTaskQueuingContext()!=null) {
                 result = DynamicTasks.queue(SshTasks.newSshExecTaskFactory(machine, commands.toArray(new String[0])).summary("extracting archive").requiringExitCodeZero()).get();
             } else {
@@ -283,8 +283,6 @@ public class ArchiveUtils {
                 throw new IllegalStateException(format("Failed to expand archive %s on %s", archiveUrl, machine));
             }
             return ArchiveType.of(destFile)!=ArchiveType.UNKNOWN;
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
         } finally {
             machine.releaseMutex("installing");
         }

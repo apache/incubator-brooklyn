@@ -19,7 +19,6 @@
 package brooklyn.entity.trait;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
@@ -32,7 +31,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 /**
  * This interface describes an {@link brooklyn.entity.Entity} that can be started and stopped.
