@@ -308,6 +308,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             webConsoleUri = null;
         }
 
+        connectServiceUpIsRunning();
+
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
                     .entity(this)
@@ -327,7 +329,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void disconnectSensors() {
         super.disconnectSensors();
-        
+        disconnectServiceUpIsRunning();
         if (httpFeed != null) httpFeed.stop();
     }
 

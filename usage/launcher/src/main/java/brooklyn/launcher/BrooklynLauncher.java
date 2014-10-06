@@ -671,6 +671,7 @@ public class BrooklynLauncher {
                     BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
                     BrooklynUserWithRandomPasswordSecurityProvider.class.getName());
         }
+        if (bindAddress == null) bindAddress = Networking.ANY_NIC;
 
         LOG.debug("Starting Brooklyn web-console with bindAddress "+bindAddress+" and properties "+brooklynProperties);
         try {
@@ -832,8 +833,12 @@ public class BrooklynLauncher {
 
     protected void startBrooklynNode() {
         final String classpath = System.getenv("INITIAL_CLASSPATH");
-        if (classpath == null || Strings.isBlank(classpath)) {
+        if (Strings.isBlank(classpath)) {
             LOG.warn("Cannot find INITIAL_CLASSPATH environment variable, skipping BrooklynNode entity creation");
+            return;
+        }
+        if (webServer == null || !startWebApps) {
+            LOG.info("Skipping BrooklynNode entity creation, BrooklynWebServer not running");
             return;
         }
         ApplicationBuilder brooklyn = new ApplicationBuilder() {
@@ -848,6 +853,8 @@ public class BrooklynLauncher {
                         .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, bindAddress)
                         .configure(BrooklynNode.WEB_CONSOLE_PUBLIC_ADDRESS, publicAddress)
                         .configure(BrooklynNode.CLASSPATH, Splitter.on(":").splitToList(classpath))
+                        .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, Boolean.TRUE.equals(skipSecurityFilter))
+                        .configure(BrooklynNode.NO_SHUTDOWN_ON_EXIT, stopWhichAppsOnShutdown == StopWhichAppsOnShutdown.NONE)
                         .displayName("Brooklyn Console"));
             }
         };
