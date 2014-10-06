@@ -491,8 +491,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (manualAdditionsCatalog!=null) return;
         CatalogDto manualAdditionsCatalogDto = CatalogDto.newNamedInstance(
                 "Manual Catalog Additions", "User-additions to the catalog while Brooklyn is running, " +
-        		"created "+Time.makeDateString(),
-        		"manual-additions");
+                "created "+Time.makeDateString(),
+                "manual-additions");
         CatalogDo manualAdditionsCatalog = catalog.addCatalog(manualAdditionsCatalogDto);
         if (manualAdditionsCatalog==null) {
             // not hard to support, but slightly messy -- probably have to use ID's to retrieve the loaded instance

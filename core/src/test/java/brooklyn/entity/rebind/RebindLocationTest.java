@@ -105,7 +105,7 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testRestoresFieldsWithSetFromFlag() throws Exception {
-    	MyLocation origLoc = new MyLocation(MutableMap.of("myfield", "myval"));
+        MyLocation origLoc = new MyLocation(MutableMap.of("myfield", "myval"));
         origApp.start(ImmutableList.of(origLoc));
 
         newApp = (TestApplication) rebind();
@@ -202,10 +202,10 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testHandlesFieldReferencingOtherLocations() throws Exception {
-    	MyLocation origOtherLoc = new MyLocation();
-    	MyLocationReffingOthers origLoc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc), "myfield", "myval"));
-    	origOtherLoc.setParent(origLoc);
-    	
+        MyLocation origOtherLoc = new MyLocation();
+        MyLocationReffingOthers origLoc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc), "myfield", "myval"));
+        origOtherLoc.setParent(origLoc);
+        
         origApp.start(ImmutableList.of(origLoc));
 
         newApp = rebind();

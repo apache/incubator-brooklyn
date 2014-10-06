@@ -59,6 +59,6 @@ public interface UsesJava {
 
     public static final ConfigKey<Boolean> CHECK_JAVA_HOSTNAME_BUG = ConfigKeys.newBooleanConfigKey( 
             "java.check.hostname.bug", "Check whether hostname is too long and will likely crash Java" +
-            		"due to bug 7089443", true);
+                    "due to bug 7089443", true);
 
 }

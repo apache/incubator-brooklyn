@@ -62,19 +62,19 @@ import com.google.common.collect.ImmutableMap;
 
 /** tests effector invocation and a variety of sensor accessors and subscribers */
 public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
-	
-	public static final Logger log = LoggerFactory.getLogger(LocalEntitiesTest.class);
-	
+    
+    public static final Logger log = LoggerFactory.getLogger(LocalEntitiesTest.class);
+    
     private SimulatedLocation loc;
     private EntityManager entityManager;
-			
+            
     @BeforeMethod(alwaysRun=true)
-	@Override
-	public void setUp() throws Exception {
-	    super.setUp();
-	    loc = new SimulatedLocation();
-	    entityManager = mgmt.getEntityManager();
-	}
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        loc = new SimulatedLocation();
+        entityManager = mgmt.getEntityManager();
+    }
 
     @Test
     public void testEffectorUpdatesAttributeSensor() {
@@ -191,10 +191,10 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         assertEquals("Carl", app.getAttribute(HelloEntity.FAVOURITE_NAME));
         assertEquals(null, dad.getAttribute(HelloEntity.FAVOURITE_NAME));
     }
-	@Test
-	public void testConfigSetFromAttributeWhenReady() throws Exception {
-		app.setConfig(HelloEntity.MY_NAME, "Bob");
-		
+    @Test
+    public void testConfigSetFromAttributeWhenReady() throws Exception {
+        app.setConfig(HelloEntity.MY_NAME, "Bob");
+        
         final HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         final HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
                 .parent(dad)
@@ -204,29 +204,29 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
                          */ )));
         Entities.manage(son);
         
-		app.start(ImmutableList.of(loc));
-		 
+        app.start(ImmutableList.of(loc));
+         
         final Semaphore s1 = new Semaphore(0);
         final Object[] sonsConfig = new Object[1];
         Thread t = new Thread(new Runnable() {
             public void run() {
-    			log.info("started");
-    			s1.release();
-            	log.info("getting config "+sonsConfig[0]);
-            	sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
-            	log.info("got config {}", sonsConfig[0]);
+                log.info("started");
+                s1.release();
+                log.info("getting config "+sonsConfig[0]);
+                sonsConfig[0] = son.getConfig(HelloEntity.MY_NAME);
+                log.info("got config {}", sonsConfig[0]);
                 s1.release();
             }});
                 
-		log.info("starting");
+        log.info("starting");
         long startTime = System.currentTimeMillis();
-		t.start();
-		log.info("waiting {}", System.identityHashCode(sonsConfig));
+        t.start();
+        log.info("waiting {}", System.identityHashCode(sonsConfig));
         if (!s1.tryAcquire(2, TimeUnit.SECONDS)) fail("race mismatch, missing permits");
         
         //thread should be blocking on call to getConfig
         assertTrue(t.isAlive());
-		assertTrue(System.currentTimeMillis() - startTime < 1500);
+        assertTrue(System.currentTimeMillis() - startTime < 1500);
         synchronized (sonsConfig) {
             assertEquals(null, sonsConfig[0]);
             for (Task tt : ((EntityInternal)dad).getExecutionContext().getTasks()) { log.info("task at dad:  {}, {}", tt, tt.getStatusDetail(false)); }
@@ -234,19 +234,19 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
             ((EntityLocal)dad).setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
             if (!s1.tryAcquire(2, TimeUnit.SECONDS)) fail("race mismatch, missing permits");
         }
-		log.info("dad: "+dad.getAttribute(HelloEntity.FAVOURITE_NAME));
-		log.info("son: "+son.getConfig(HelloEntity.MY_NAME));
-		
+        log.info("dad: "+dad.getAttribute(HelloEntity.FAVOURITE_NAME));
+        log.info("son: "+son.getConfig(HelloEntity.MY_NAME));
+        
         //shouldn't have blocked for very long at all
         assertTrue(System.currentTimeMillis() - startTime < 1500);
         //and sons config should now pick up the dad's attribute
         assertEquals(sonsConfig[0], "Dan");
-	}
-	
-	@Test
-	public void testConfigSetFromAttributeWhenReadyTransformations() {
-		app.setConfig(HelloEntity.MY_NAME, "Bob");
-		
+    }
+    
+    @Test
+    public void testConfigSetFromAttributeWhenReadyTransformations() {
+        app.setConfig(HelloEntity.MY_NAME, "Bob");
+        
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
                 .parent(dad)
@@ -256,11 +256,11 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
                     }})));
         Entities.manage(son);
         
-		app.start(ImmutableList.of(loc));
-		((EntityLocal)dad).setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+        app.start(ImmutableList.of(loc));
+        ((EntityLocal)dad).setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny");
     }
-	
+    
     @Test
     public void testConfigSetFromAttributeWhenReadyNullTransformations() {
         app.setConfig(HelloEntity.MY_NAME, "Bob");

@@ -51,7 +51,7 @@ public interface GeoscalingDnsService extends AbstractGeoDnsService {
     public static final AttributeSensor<String> ROOT_URL = WebAppServiceConstants.ROOT_URL;
     public static final AttributeSensor<String> MANAGED_DOMAIN = new BasicAttributeSensor<String>(
             String.class, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected; " +
-            		"this will be the same as "+ROOT_URL.getName()+" but the latter will only be set when the domain has active targets");
+                    "this will be the same as "+ROOT_URL.getName()+" but the latter will only be set when the domain has active targets");
     
     public void applyConfig();
     

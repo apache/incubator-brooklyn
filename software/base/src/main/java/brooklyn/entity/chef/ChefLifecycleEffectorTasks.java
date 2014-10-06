@@ -103,7 +103,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (getPidFile()==null && getServiceName()==null && getClass().equals(ChefLifecycleEffectorTasks.class)) {
             // warn on incorrect usage
             log.warn("Uses of "+getClass()+" must define a PID file or a service name (or subclass and override {start,stop} methods as per javadoc) " +
-            		"in order for check-running and stop to work");
+                    "in order for check-running and stop to work");
         }
             
         super.attachLifecycleEffectors(entity);

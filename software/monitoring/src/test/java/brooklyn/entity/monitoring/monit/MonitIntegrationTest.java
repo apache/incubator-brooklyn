@@ -177,10 +177,10 @@ public class MonitIntegrationTest {
                 LOG.debug("MonitNode target status: {}", targetStatus);
                 assertEquals(elvis(targetStatus, ""), "Running");
                 try {
-                	initialPid[0] = Files.readFirstLine(new File(mySqlNode.getAttribute(SoftwareProcess.PID_FILE)), Charset.defaultCharset());
-                	LOG.debug("Initial PID: {}", initialPid[0]);
+                    initialPid[0] = Files.readFirstLine(new File(mySqlNode.getAttribute(SoftwareProcess.PID_FILE)), Charset.defaultCharset());
+                    LOG.debug("Initial PID: {}", initialPid[0]);
                 } catch (IOException e) {
-                	Asserts.fail("Could not read PID file: " + e);
+                    Asserts.fail("Could not read PID file: " + e);
                 }
             }
         });
@@ -197,14 +197,14 @@ public class MonitIntegrationTest {
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
-            	try {
-            		String pidFileLocation = mySqlNode.getAttribute(SoftwareProcess.PID_FILE);
-            		String newPid = Files.readFirstLine(new File(pidFileLocation), Charset.defaultCharset());
-            		LOG.debug("Old PID: {}, New PID: {} read from PID file: {}", new String[] {initialPid[0], newPid, pidFileLocation});
-            		assertNotEquals(initialPid[0], newPid, "Process PID has not changed");
-            	} catch (IOException e) {
-            		Asserts.fail("Could not read PID file: " + e);
-            	}
+                try {
+                    String pidFileLocation = mySqlNode.getAttribute(SoftwareProcess.PID_FILE);
+                    String newPid = Files.readFirstLine(new File(pidFileLocation), Charset.defaultCharset());
+                    LOG.debug("Old PID: {}, New PID: {} read from PID file: {}", new String[] {initialPid[0], newPid, pidFileLocation});
+                    assertNotEquals(initialPid[0], newPid, "Process PID has not changed");
+                } catch (IOException e) {
+                    Asserts.fail("Could not read PID file: " + e);
+                }
                 String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
                 LOG.debug("MonitNode target status: {}", targetStatus);
                 assertEquals(elvis(targetStatus, ""), "Running");

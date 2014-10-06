@@ -73,7 +73,7 @@ public class PdpProcessor {
         }
         Map<String, Object> dpRootInterpreted = applyInterpreters(dpRootUninterpreted);
         
-		return DeploymentPlan.of(dpRootInterpreted, yaml);
+        return DeploymentPlan.of(dpRootInterpreted, yaml);
     }
     
     /** create and return an AssemblyTemplate based on the given DP (yaml) */
@@ -161,7 +161,7 @@ public class PdpProcessor {
     // ----------------------------
 
     public void addInterpreter(PlanInterpreter interpreter) {
-    	interpreters.add(interpreter);
+        interpreters.add(interpreter);
     }
     
     /** returns a DeploymentPlan object which is the result of running the interpretation
@@ -169,10 +169,10 @@ public class PdpProcessor {
      * essentially a post-parse processing step before matching */
     @SuppressWarnings("unchecked")
     @VisibleForTesting
-	public Map<String, Object> applyInterpreters(Map<String, Object> originalDeploymentPlan) {
-    	PlanInterpretationNode interpretation = new PlanInterpretationNode(
-    			new PlanInterpretationContext(originalDeploymentPlan, interpreters));
-		return (Map<String, Object>) interpretation.getNewValue();
+    public Map<String, Object> applyInterpreters(Map<String, Object> originalDeploymentPlan) {
+        PlanInterpretationNode interpretation = new PlanInterpretationNode(
+                new PlanInterpretationContext(originalDeploymentPlan, interpreters));
+        return (Map<String, Object>) interpretation.getNewValue();
     }
     
 }

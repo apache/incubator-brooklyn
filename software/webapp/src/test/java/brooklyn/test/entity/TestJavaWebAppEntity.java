@@ -41,7 +41,7 @@ import brooklyn.util.flags.SetFromFlag;
  * Mock web application server entity for testing.
  */
 public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
-	private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
     public static final Effector<Void> START = new EffectorAndBody<Void>(SoftwareProcessImpl.START, new MethodEffector<Void>(TestJavaWebAppEntity.class, "customStart").getBody());
 
     @SetFromFlag public int a;
@@ -51,18 +51,18 @@ public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
     public TestJavaWebAppEntity() {}
     public TestJavaWebAppEntity(@SuppressWarnings("rawtypes") Map flags, Entity parent) { super(flags, parent); }
     
-	public void waitForHttpPort() { }
+    public void waitForHttpPort() { }
 
     
-	public void customStart(Collection<? extends Location> loc) {
-	    ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+    public void customStart(Collection<? extends Location> loc) {
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         LOG.trace("Starting {}", this);
         ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         setAttribute(Attributes.SERVICE_UP, true);
     }
 
     @Override
-	protected void doStop() {
+    protected void doStop() {
         LOG.trace("Stopping {}", this);
     }
 
@@ -71,9 +71,9 @@ public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
         throw new UnsupportedOperationException();
     }
 
-	public synchronized void spoofRequest() {
-		Integer rc = getAttribute(WebAppServiceConstants.REQUEST_COUNT);
-		if (rc==null) rc = 0;
-		setAttribute(WebAppServiceConstants.REQUEST_COUNT, rc+1);
-	}
+    public synchronized void spoofRequest() {
+        Integer rc = getAttribute(WebAppServiceConstants.REQUEST_COUNT);
+        if (rc==null) rc = 0;
+        setAttribute(WebAppServiceConstants.REQUEST_COUNT, rc+1);
+    }
 }

@@ -37,24 +37,24 @@ import com.google.common.base.Stopwatch;
 
 public class Time {
 
-	public static final String DATE_FORMAT_PREFERRED = "yyyy-MM-dd HH:mm:ss.SSS";
-	public static final String DATE_FORMAT_STAMP = "yyyyMMdd-HHmmssSSS";
+    public static final String DATE_FORMAT_PREFERRED = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final String DATE_FORMAT_STAMP = "yyyyMMdd-HHmmssSSS";
 
-	public static final long MILLIS_IN_SECOND = 1000;
-	public static final long MILLIS_IN_MINUTE = 60*MILLIS_IN_SECOND;
-	public static final long MILLIS_IN_HOUR = 60*MILLIS_IN_MINUTE;
-	public static final long MILLIS_IN_DAY = 24*MILLIS_IN_HOUR;
-	public static final long MILLIS_IN_YEAR = 365*MILLIS_IN_DAY;
-	
+    public static final long MILLIS_IN_SECOND = 1000;
+    public static final long MILLIS_IN_MINUTE = 60*MILLIS_IN_SECOND;
+    public static final long MILLIS_IN_HOUR = 60*MILLIS_IN_MINUTE;
+    public static final long MILLIS_IN_DAY = 24*MILLIS_IN_HOUR;
+    public static final long MILLIS_IN_YEAR = 365*MILLIS_IN_DAY;
+    
     /** returns the current time in YYYY-MM-DD HH:MM:SS.mss format */
     public static String makeDateString() {
         return makeDateString(System.currentTimeMillis());
     }
 
-	/** returns the time in YYYY-MM-DD HH:MM:SS.mss format, given a long (e.g. returned by System.currentTimeMillis) */
-	public static String makeDateString(long date) {
-		return new SimpleDateFormat(DATE_FORMAT_PREFERRED).format(new Date(date));
-	}
+    /** returns the time in YYYY-MM-DD HH:MM:SS.mss format, given a long (e.g. returned by System.currentTimeMillis) */
+    public static String makeDateString(long date) {
+        return new SimpleDateFormat(DATE_FORMAT_PREFERRED).format(new Date(date));
+    }
 
     public static Function<Long, String> toDateString() { return dateString; }
     private static Function<Long, String> dateString = new Function<Long, String>() {
@@ -120,47 +120,47 @@ public class Time {
         return makeTimeStringNanoRounded(d.toNanoseconds());
     }
     /** given an elapsed time, makes it readable, eg 44d 6h, or 8s 923ms, optionally rounding */
-	public static String makeTimeString(long t, boolean round) {
-	    return makeTimeStringNano(t*1000000L, round);
-	}
+    public static String makeTimeString(long t, boolean round) {
+        return makeTimeStringNano(t*1000000L, round);
+    }
     /** @see #makeTimeString(long, boolean) */
-	public static String makeTimeStringNanoExact(long tn) {
-	    return makeTimeStringNano(tn, false);
-	}
+    public static String makeTimeStringNanoExact(long tn) {
+        return makeTimeStringNano(tn, false);
+    }
     /** @see #makeTimeString(long, boolean) */
-	public static String makeTimeStringNanoRounded(long tn) {
-	    return makeTimeStringNano(tn, true);
-	}
+    public static String makeTimeStringNanoRounded(long tn) {
+        return makeTimeStringNano(tn, true);
+    }
     /** @see #makeTimeString(long, boolean) */
-	public static String makeTimeStringNano(long tn, boolean round) {
-	    if (tn<0) return "-"+makeTimeStringNano(-tn, round);
-	    if (tn==0) return "0";
-	    
-		long tnm = tn % 1000000;
-		long t = tn/1000000;
-		String result = "";
-		
-		long d = t/MILLIS_IN_DAY;  t %= MILLIS_IN_DAY;
-		long h = t/MILLIS_IN_HOUR;  t %= MILLIS_IN_HOUR;
-		long m = t/MILLIS_IN_MINUTE;  t %= MILLIS_IN_MINUTE;
-		long s = t/MILLIS_IN_SECOND;  t %= MILLIS_IN_SECOND;
-		long ms = t;
-		
-		int segments = 0;
-		if (d>0) { result += d+"d "; segments++; }
-		if (h>0) { result += h+"h "; segments++; }
-		if (round && segments>=2) return Strings.removeAllFromEnd(result, " ");
-		if (m>0) { result += m+"m "; segments++; }
-		if (round && (segments>=2 || d>0)) return Strings.removeAllFromEnd(result, " ");
-		if (s>0) {
-		    if (ms==0 && tnm==0) {
-		        result += s+"s"; segments++;
+    public static String makeTimeStringNano(long tn, boolean round) {
+        if (tn<0) return "-"+makeTimeStringNano(-tn, round);
+        if (tn==0) return "0";
+        
+        long tnm = tn % 1000000;
+        long t = tn/1000000;
+        String result = "";
+        
+        long d = t/MILLIS_IN_DAY;  t %= MILLIS_IN_DAY;
+        long h = t/MILLIS_IN_HOUR;  t %= MILLIS_IN_HOUR;
+        long m = t/MILLIS_IN_MINUTE;  t %= MILLIS_IN_MINUTE;
+        long s = t/MILLIS_IN_SECOND;  t %= MILLIS_IN_SECOND;
+        long ms = t;
+        
+        int segments = 0;
+        if (d>0) { result += d+"d "; segments++; }
+        if (h>0) { result += h+"h "; segments++; }
+        if (round && segments>=2) return Strings.removeAllFromEnd(result, " ");
+        if (m>0) { result += m+"m "; segments++; }
+        if (round && (segments>=2 || d>0)) return Strings.removeAllFromEnd(result, " ");
+        if (s>0) {
+            if (ms==0 && tnm==0) {
+                result += s+"s"; segments++;
                 return result;
-		    }
-		    if (round && segments>0) {
-		        result += s+"s"; segments++;
-		        return result;
-		    }
+            }
+            if (round && segments>0) {
+                result += s+"s"; segments++;
+                return result;
+            }
             if (round && s>10) {
                 result += toDecimal(s, ms/1000.0, 1)+"s"; segments++;
                 return result;
@@ -170,10 +170,10 @@ public class Time {
                 return result;
             }
             result += s+"s ";
-		}
-		if (round && segments>0)
-		    return Strings.removeAllFromEnd(result, " ");
-		if (ms>0) {
+        }
+        if (round && segments>0)
+            return Strings.removeAllFromEnd(result, " ");
+        if (ms>0) {
             if (tnm==0) {
                 result += ms+"ms"; segments++;
                 return result;
@@ -191,16 +191,16 @@ public class Time {
                 return result;
             }
             result += ms+"ms ";
-		}
-		
-		long us = tnm/1000;
-		long ns = tnm % 1000;
+        }
+        
+        long us = tnm/1000;
+        long ns = tnm % 1000;
 
-		if (us>0) {
-		    if (ns==0) {
-		        result += us+"us"; segments++;
-		        return result;
-		    }
+        if (us>0) {
+            if (ns==0) {
+                result += us+"us"; segments++;
+                return result;
+            }
             if (round && us>=100) {
                 result += toDecimal(us, ns/1000.0, 1)+"us"; segments++;
                 return result;
@@ -209,16 +209,16 @@ public class Time {
                 result += toDecimal(us, ns/1000.0, 2)+"us"; segments++;
                 return result;
             }
-		    if (round) {
-		        result += toDecimal(us, ns/1000.0, 3)+"us"; segments++;
-		        return result;
-		    }
-		    result += us+"us ";
-		}
+            if (round) {
+                result += toDecimal(us, ns/1000.0, 3)+"us"; segments++;
+                return result;
+            }
+            result += us+"us ";
+        }
 
-		if (ns>0) result += ns+"ns";
-		return Strings.removeAllFromEnd(result, " ");
-	}
+        if (ns>0) result += ns+"ns";
+        return Strings.removeAllFromEnd(result, " ");
+    }
 
     public static Function<Long, String> toTimeString() { return timeString; }
     private static Function<Long, String> timeString = new Function<Long, String>() {
@@ -240,35 +240,35 @@ public class Time {
             }
         };
 
-	private static String toDecimal(long intPart, double fracPart, int decimalPrecision) {
-		long powTen = 1;
-		for (int i=0; i<decimalPrecision; i++) powTen *= 10;
-		long fpr = Math.round(fracPart * powTen);
-		if (fpr==powTen) {
-			intPart++;
-			fpr = 0;
-		}
-		return intPart + "." + Strings.makePaddedString(""+fpr, decimalPrecision, "0", "");
-	}
+    private static String toDecimal(long intPart, double fracPart, int decimalPrecision) {
+        long powTen = 1;
+        for (int i=0; i<decimalPrecision; i++) powTen *= 10;
+        long fpr = Math.round(fracPart * powTen);
+        if (fpr==powTen) {
+            intPart++;
+            fpr = 0;
+        }
+        return intPart + "." + Strings.makePaddedString(""+fpr, decimalPrecision, "0", "");
+    }
 
-	/** sleep which propagates Interrupted as unchecked */
-	public static void sleep(long millis) {
-		try {
-			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			throw Exceptions.propagate(e);
-		}
-	}
-	
-	/** as {@link #sleep(long)} */
+    /** sleep which propagates Interrupted as unchecked */
+    public static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+    
+    /** as {@link #sleep(long)} */
     public static void sleep(Duration duration) {
         Time.sleep(duration.toMillisecondsRoundingUp());
     }    
 
-	/**
-	 * Calculates the number of milliseconds past midnight for a given UTC time.
-	 */
-	public static long getTimeOfDayFromUtc(long timeUtc) {
+    /**
+     * Calculates the number of milliseconds past midnight for a given UTC time.
+     */
+    public static long getTimeOfDayFromUtc(long timeUtc) {
         GregorianCalendar gregorianCalendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
         gregorianCalendar.setTimeInMillis(timeUtc);
         int hour = gregorianCalendar.get(Calendar.HOUR_OF_DAY);
@@ -276,8 +276,8 @@ public class Time {
         int sec = gregorianCalendar.get(Calendar.SECOND);
         int millis = gregorianCalendar.get(Calendar.MILLISECOND);
         return (((((hour * 60) + min) * 60) + sec) * 1000) + millis;
-	}
-	
+    }
+    
     /**
      * Calculates the number of milliseconds past epoch for a given UTC time.
      */
@@ -315,87 +315,87 @@ public class Time {
         return (result == 0) ? -1 : result;
     }
     
-	/** parses a string eg '5s' or '20m 22.123ms', returning the number of milliseconds it represents (rounded);
-	 * -1 on blank or "never" or "off" or "false";
-	 * number of millis if no units specified.
-	 * 
-	 * @throws NumberFormatException if cannot be parsed (or if null)
-	 */
-	public static long parseTimeString(String timeString) {
-		return (long) parseTimeStringAsDouble(timeString);
-	}
-
-	/** parses a string eg '5s' or '20m 22.123ms', returning the number of milliseconds it represents; -1 on blank or never or off or false;
-	 * number of millis if no units specified.
-	 * 
+    /** parses a string eg '5s' or '20m 22.123ms', returning the number of milliseconds it represents (rounded);
+     * -1 on blank or "never" or "off" or "false";
+     * number of millis if no units specified.
+     * 
      * @throws NumberFormatException if cannot be parsed (or if null)
-	 */
-	public static double parseTimeStringAsDouble(String timeString) {
-		if (timeString==null)
-			throw new NumberFormatException("GeneralHelper.parseTimeString cannot parse a null string");
-		try {
-			double d = Double.parseDouble(timeString);
-			return d;
-		} catch (NumberFormatException e) {
-			//look for a type marker
-			timeString = timeString.trim();
-			String s = Strings.getLastWord(timeString).toLowerCase();
-			timeString = timeString.substring(0, timeString.length()-s.length()).trim();
-			int i=0;
-			while (s.length()>i) {
-				char c = s.charAt(i);
-				if (c=='.' || Character.isDigit(c)) i++;
-				else break;
-			}
-			String num = s.substring(0, i);
-			if (i==0) {
-				num = Strings.getLastWord(timeString).toLowerCase();
-				timeString = timeString.substring(0, timeString.length()-num.length()).trim();
-			} else {
-				s = s.substring(i);
-			}
-			long multiplier = 0;
-			if (num.length()==0) {
-				//must be never or something
-				if (s.equalsIgnoreCase("never") || s.equalsIgnoreCase("off") || s.equalsIgnoreCase("false"))
-					return -1;
-				throw new NumberFormatException("unrecognised word  '"+s+"' in time string");
-			}
-			if (s.equalsIgnoreCase("ms") || s.equalsIgnoreCase("milli") || s.equalsIgnoreCase("millis")
-					|| s.equalsIgnoreCase("millisec") || s.equalsIgnoreCase("millisecs")
-					|| s.equalsIgnoreCase("millisecond") || s.equalsIgnoreCase("milliseconds"))
-				multiplier = 1;
-			else if (s.equalsIgnoreCase("s") || s.equalsIgnoreCase("sec") || s.equalsIgnoreCase("secs")
-					|| s.equalsIgnoreCase("second") || s.equalsIgnoreCase("seconds"))
-				multiplier = 1000;
-			else if (s.equalsIgnoreCase("m") || s.equalsIgnoreCase("min") || s.equalsIgnoreCase("mins")
-					|| s.equalsIgnoreCase("minute") || s.equalsIgnoreCase("minutes"))
-				multiplier = 60*1000;
-			else if (s.equalsIgnoreCase("h") || s.equalsIgnoreCase("hr") || s.equalsIgnoreCase("hrs")
-					|| s.equalsIgnoreCase("hour") || s.equalsIgnoreCase("hours"))
-				multiplier = 60*60*1000;
-			else if (s.equalsIgnoreCase("d") || s.equalsIgnoreCase("day") || s.equalsIgnoreCase("days"))
-				multiplier = 24*60*60*1000;
-			else
-				throw new NumberFormatException("unknown unit '"+s+"' in time string");
-			double d = Double.parseDouble(num);
-			double dd = 0;
-			if (timeString.length()>0) {
-				dd = parseTimeStringAsDouble(timeString);
-				if (dd==-1) {
-					throw new NumberFormatException("cannot combine '"+timeString+"' with '"+num+" "+s+"'");
-				}
-			}
-			return d*multiplier + dd;
-		}
-	}
+     */
+    public static long parseTimeString(String timeString) {
+        return (long) parseTimeStringAsDouble(timeString);
+    }
 
-	/**
-	 * Parses the given date, accepting either a UTC timestamp (i.e. a long), or a formatted date.
-	 * @param dateString
-	 * @param format
-	 * @return
-	 */
+    /** parses a string eg '5s' or '20m 22.123ms', returning the number of milliseconds it represents; -1 on blank or never or off or false;
+     * number of millis if no units specified.
+     * 
+     * @throws NumberFormatException if cannot be parsed (or if null)
+     */
+    public static double parseTimeStringAsDouble(String timeString) {
+        if (timeString==null)
+            throw new NumberFormatException("GeneralHelper.parseTimeString cannot parse a null string");
+        try {
+            double d = Double.parseDouble(timeString);
+            return d;
+        } catch (NumberFormatException e) {
+            //look for a type marker
+            timeString = timeString.trim();
+            String s = Strings.getLastWord(timeString).toLowerCase();
+            timeString = timeString.substring(0, timeString.length()-s.length()).trim();
+            int i=0;
+            while (s.length()>i) {
+                char c = s.charAt(i);
+                if (c=='.' || Character.isDigit(c)) i++;
+                else break;
+            }
+            String num = s.substring(0, i);
+            if (i==0) {
+                num = Strings.getLastWord(timeString).toLowerCase();
+                timeString = timeString.substring(0, timeString.length()-num.length()).trim();
+            } else {
+                s = s.substring(i);
+            }
+            long multiplier = 0;
+            if (num.length()==0) {
+                //must be never or something
+                if (s.equalsIgnoreCase("never") || s.equalsIgnoreCase("off") || s.equalsIgnoreCase("false"))
+                    return -1;
+                throw new NumberFormatException("unrecognised word  '"+s+"' in time string");
+            }
+            if (s.equalsIgnoreCase("ms") || s.equalsIgnoreCase("milli") || s.equalsIgnoreCase("millis")
+                    || s.equalsIgnoreCase("millisec") || s.equalsIgnoreCase("millisecs")
+                    || s.equalsIgnoreCase("millisecond") || s.equalsIgnoreCase("milliseconds"))
+                multiplier = 1;
+            else if (s.equalsIgnoreCase("s") || s.equalsIgnoreCase("sec") || s.equalsIgnoreCase("secs")
+                    || s.equalsIgnoreCase("second") || s.equalsIgnoreCase("seconds"))
+                multiplier = 1000;
+            else if (s.equalsIgnoreCase("m") || s.equalsIgnoreCase("min") || s.equalsIgnoreCase("mins")
+                    || s.equalsIgnoreCase("minute") || s.equalsIgnoreCase("minutes"))
+                multiplier = 60*1000;
+            else if (s.equalsIgnoreCase("h") || s.equalsIgnoreCase("hr") || s.equalsIgnoreCase("hrs")
+                    || s.equalsIgnoreCase("hour") || s.equalsIgnoreCase("hours"))
+                multiplier = 60*60*1000;
+            else if (s.equalsIgnoreCase("d") || s.equalsIgnoreCase("day") || s.equalsIgnoreCase("days"))
+                multiplier = 24*60*60*1000;
+            else
+                throw new NumberFormatException("unknown unit '"+s+"' in time string");
+            double d = Double.parseDouble(num);
+            double dd = 0;
+            if (timeString.length()>0) {
+                dd = parseTimeStringAsDouble(timeString);
+                if (dd==-1) {
+                    throw new NumberFormatException("cannot combine '"+timeString+"' with '"+num+" "+s+"'");
+                }
+            }
+            return d*multiplier + dd;
+        }
+    }
+
+    /**
+     * Parses the given date, accepting either a UTC timestamp (i.e. a long), or a formatted date.
+     * @param dateString
+     * @param format
+     * @return
+     */
     public static Date parseDateString(String dateString, DateFormat format) {
         if (dateString == null) 
             throw new NumberFormatException("GeneralHelper.parseDateString cannot parse a null string");

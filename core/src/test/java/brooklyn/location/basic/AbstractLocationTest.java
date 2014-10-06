@@ -50,8 +50,8 @@ public class AbstractLocationTest {
         String myfield;
 
         public ConcreteLocation() {
-			super();
-		}
+            super();
+        }
 
         public ConcreteLocation(Map<?,?> properties) {
             super(properties);
@@ -165,7 +165,7 @@ public class AbstractLocationTest {
 
     @Test
     public void testFieldSetFromFlag() {
-    	ConcreteLocation loc = createConcrete(MutableMap.of("myfield", "myval"));
+        ConcreteLocation loc = createConcrete(MutableMap.of("myfield", "myval"));
         assertEquals(loc.myfield, "myval");
     }
     

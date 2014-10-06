@@ -59,8 +59,8 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
     @Deprecated
     protected LocationMemento getMementoWithProperties(Map<String,?> props) {
         LocationMemento memento = MementosGenerators.newLocationMementoBuilder(location).customFields(props).build();
-    	if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location: {}", memento.toVerboseString());
-    	return memento;
+        if (LOG.isTraceEnabled()) LOG.trace("Creating memento for location: {}", memento.toVerboseString());
+        return memento;
     }
 
     @Override
@@ -118,9 +118,9 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
         for (String childId : memento.getChildren()) {
             Location child = rebindContext.getLocation(childId);
             if (child != null) {
-            	location.addChild(child);
+                location.addChild(child);
             } else {
-            	LOG.warn("Ignoring child {} of location {}({}), as cannot be found", new Object[] {childId, memento.getType(), memento.getId()});
+                LOG.warn("Ignoring child {} of location {}({}), as cannot be found", new Object[] {childId, memento.getType(), memento.getId()});
             }
         }
     }
@@ -130,7 +130,7 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
         if (parent != null) {
             location.setParent(parent);
         } else if (memento.getParent() != null) {
-        	LOG.warn("Ignoring parent {} of location {}({}), as cannot be found", new Object[] {memento.getParent(), memento.getType(), memento.getId()});
+            LOG.warn("Ignoring parent {} of location {}({}), as cannot be found", new Object[] {memento.getParent(), memento.getType(), memento.getId()});
         }
     }
 }

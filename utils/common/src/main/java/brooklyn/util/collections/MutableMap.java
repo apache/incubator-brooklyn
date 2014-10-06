@@ -216,9 +216,9 @@ public class MutableMap<K,V> extends LinkedHashMap<K,V> {
         }
 
         public Builder<K, V> removeAll(Iterable<? extends K> keys) {
-        	for (K key : keys) {
-        		result.remove(key);
-        	}
+            for (K key : keys) {
+                result.remove(key);
+            }
             return this;
         }
 

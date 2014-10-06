@@ -103,7 +103,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         getRunDir();
     }
 
-    /** returns location (tighten type, since we know it is an ssh machine location here) */	
+    /** returns location (tighten type, since we know it is an ssh machine location here) */    
     public SshMachineLocation getLocation() {
         return (SshMachineLocation) super.getLocation();
     }

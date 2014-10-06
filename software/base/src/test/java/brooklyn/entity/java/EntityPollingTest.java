@@ -140,7 +140,7 @@ public class EntityPollingTest {
         if (jmxService != null) jmxService.shutdown();
     }
 
-	// Tests that the happy path works
+    // Tests that the happy path works
     @Test(groups="Integration")
     public void testSimpleConnection() throws Exception {
         jmxService = new JmxService("localhost", 40123);
@@ -152,10 +152,10 @@ public class EntityPollingTest {
         EntityTestUtils.assertAttributeEqualsEventually(entity, stringAttribute, "myval");
     }
 
-	// Test that connect will keep retrying (e.g. start script returns before the JMX server is up)
+    // Test that connect will keep retrying (e.g. start script returns before the JMX server is up)
     @Test(groups="Integration")
     public void testEntityWithDelayedJmxStartupWillKeepRetrying() {
-		// In 2 seconds time, we'll start the JMX server
+        // In 2 seconds time, we'll start the JMX server
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -192,7 +192,7 @@ public class EntityPollingTest {
         jmxService.shutdown();
         
         // TODO Want a better way of determining that the entity is down; ideally should have 
-		// sensor for entity-down that's wired up to a JMX attribute?
+        // sensor for entity-down that's wired up to a JMX attribute?
         Thread.sleep(5000);
 
         // Restart MBeanServer, and set attribute to different value; expect it to be polled again
