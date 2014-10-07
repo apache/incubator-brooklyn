@@ -384,7 +384,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
-        log.info("Adding bucket: {} to cluster {} primary node: {}", new Object[] { bucketName, CouchbaseClusterImpl.getCluster(getEntity()), getEntity() });
+        log.info("Adding bucket: {} to cluster {} primary node: {}", new Object[] { bucketName, CouchbaseClusterImpl.getClusterOrNode(getEntity()), getEntity() });
         
         newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
             + getCouchbaseHostnameAndCredentials() +

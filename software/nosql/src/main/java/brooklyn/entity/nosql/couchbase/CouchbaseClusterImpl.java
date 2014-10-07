@@ -420,16 +420,16 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
 
     /** try adding in a loop because we are seeing spurious port failures in AWS */
-    protected void addServerSeveralTimes(Entity s, int numAttempts, Duration delayOnFailure) {
+    protected void addServerSeveralTimes(Entity s, int numRetries, Duration delayOnFailure) {
         try {
             addServer(s);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            if (numAttempts<=0) throw Exceptions.propagate(e);
+            if (numRetries<=0) throw Exceptions.propagate(e);
             // retry once after sleep because we are getting some odd primary-change events
-            log.warn("Error adding "+s+" to "+this+", "+numAttempts+" more attempts; will retry after delay ("+e+")");
+            log.warn("Error adding "+s+" to "+this+", "+numRetries+" retries remaining, will retry after delay ("+e+")");
             Time.sleep(delayOnFailure);
-            addServerSeveralTimes(s, numAttempts-1, delayOnFailure);
+            addServerSeveralTimes(s, numRetries-1, delayOnFailure);
         }
     }
 
@@ -459,11 +459,11 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     public static String getClusterName(Entity node) {
         String name = node.getConfig(CLUSTER_NAME);
         if (!Strings.isBlank(name)) return Strings.makeValidFilename(name);
-        return getCluster(node).getId();
+        return getClusterOrNode(node).getId();
     }
     
     /** returns Couchbase cluster in ancestry, defaulting to the given node if none */
-    @Nonnull public static Entity getCluster(Entity node) {
+    @Nonnull public static Entity getClusterOrNode(Entity node) {
         Iterable<CouchbaseCluster> clusterNodes = Iterables.filter(Entities.ancestors(node), CouchbaseCluster.class);
         return Iterables.getFirst(clusterNodes, node);
     }
