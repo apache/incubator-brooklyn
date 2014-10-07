@@ -33,6 +33,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
@@ -57,6 +60,7 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.NaturalOrderComparator;
+import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
@@ -133,7 +137,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 .addAll(Arrays.asList(INSTALL_CURL, 
                     BashCommands.require(BashCommands.alternatives(BashCommands.simpleDownloadUrlAs(urls, saveAs),
                         // Referer link is required for 3.0.0; note mis-spelling is correct, as per http://en.wikipedia.org/wiki/HTTP_referer
-                        "curl -f -L -k "+link
+                        "curl -f -L -k "+BashStringEscapes.wrapBash(link)
                             + " -H 'Referer: http://www.couchbase.com/downloads'"
                             + " -o "+saveAs),
                         "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9)))
@@ -156,7 +160,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public void launch() {
-        String clusterPrefix = "--cluster-"+(isPreV300() ? "init-" : "");
+        String clusterPrefix = "--cluster-"+(isPreV3() ? "init-" : "");
         // in v30, the cluster arguments were changed, and it became mandatory to supply a url + password (if there is none, these are ignored)
         newScript(LAUNCHING)
                 .body.append(
@@ -168,7 +172,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 "    sleep 1\n" +
                 "done\n" +
                 couchbaseCli("cluster-init") +
-                        (isPreV300() ? getCouchbaseHostnameAndPort() : getCouchbaseHostnameAndCredentials()) +
+                        (isPreV3() ? getCouchbaseHostnameAndPort() : getCouchbaseHostnameAndCredentials()) +
                         " "+clusterPrefix+"username=" + getUsername() +
                         " "+clusterPrefix+"password=" + getPassword() +
                         " "+clusterPrefix+"port=" + getWebPort() +
@@ -198,44 +202,93 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public String getOsTag() {
-        return getOsTag(getLocation().getOsDetails(), !isPreV300());
+        return newDownloadLinkSegmentComputer().getOsTag(); 
     }
     
-    public static String getOsTag(OsDetails os, boolean isV30OrLater) {
-        if (os == null) {
-            // Default to 64-bit centos linux
-            if (isV30OrLater)
-                return "centos6.x86_64.rpm";
-            else
-                return "x86_64.rpm";
-            
-        } else {
-            // are there should ways to check for OS name and version
-            String osName = os.getName().toLowerCase();
-            boolean isDebbish = osName.contains("deb") || osName.contains("ubuntu");
-            
+    protected DownloadLinkSegmentComputer newDownloadLinkSegmentComputer() {
+        return new DownloadLinkSegmentComputer(getLocation().getOsDetails(), !isPreV3(), ""+getEntity());
+    }
+    
+    public static class DownloadLinkSegmentComputer {
+
+        // links are:
+        
+        // http://packages.couchbase.com/releases/2.2.0/couchbase-server-community_2.2.0_x86_64.rpm
+        // http://packages.couchbase.com/releases/2.2.0/couchbase-server-community_2.2.0_x86_64.deb
+        // ^^^ preV3 is _ everywhere
+        // http://packages.couchbase.com/releases/3.0.0/couchbase-server-community_3.0.0-ubuntu12.04_amd64.deb
+        // ^^^ most V3 is _${version}-
+        // http://packages.couchbase.com/releases/3.0.0/couchbase-server-community-3.0.0-centos6.x86_64.rpm
+        // ^^^ but RHEL is -${version}-
+        
+        @Nullable private final OsDetails os;
+        @Nonnull private final boolean isV3OrLater;
+        @Nonnull private final String context;
+        @Nonnull private final String osName;
+        @Nonnull private final boolean isRpm;
+        @Nonnull private final boolean is64bit;
+        
+        public DownloadLinkSegmentComputer(@Nullable OsDetails os, boolean isV3OrLater, @Nonnull String context) {
+            this.os = os;
+            this.isV3OrLater = isV3OrLater;
+            this.context = context;
+            if (os==null) {
+                // guess centos as RPM is sensible default
+                log.warn("No details known for OS of "+context+"; assuming 64-bit RPM distribution of Couchbase");
+                osName = "centos";
+                isRpm = true;
+                is64bit = true;
+                return;
+            }
+            osName = os.getName().toLowerCase();
+            isRpm = !(osName.contains("deb") || osName.contains("ubuntu"));
+            is64bit = os.is64bit();
+        }
+        /** separator after the version number used to be _ but is - in 3.0 and later */
+        public String getPreVersionSeparator() {
+            if (!isV3OrLater) return "_";
+            if (isRpm) return "-";
+            return "_";
+        }
+        public String getOsTag() {
             // couchbase only provide certain versions; if on other platforms let's suck-it-and-see
             String family;
             if (osName.contains("debian")) family = "debian7_";
             else if (osName.contains("ubuntu")) family = "ubuntu12.04_";
-            else family = "centos6.";
+            else if (osName.contains("centos") || osName.contains("rhel") || (osName.contains("red") && osName.contains("hat"))) 
+                family = "centos6.";
+            else {
+                log.warn("Unrecognised OS "+os+" of "+context+"; assuming RPM distribution of Couchbase");
+                family = "centos6.";
+            }
 
-            // 32-bit binaries aren't (yet?) available
-            String arch = !os.is64bit() ? "x86" : isDebbish && isV30OrLater ? "amd64" : "x86_64";
-            String fileExtension = isDebbish ? ".deb" : ".rpm";
+            if (!is64bit && !isV3OrLater) {
+                // NB: 32-bit binaries aren't (yet?) available for v30
+                log.warn("32-bit binaries for Couchbase might not be available, when deploying "+context);
+            }
+            String arch = !is64bit ? "x86" : !isRpm && isV3OrLater ? "amd64" : "x86_64";
+            String fileExtension = isRpm ? ".rpm" : ".deb";
             
-            if (isV30OrLater)
+            if (isV3OrLater)
                 return family + arch + fileExtension;
             else
                 return arch + fileExtension;
         }
+        public String getOsTagWithPrefix() {
+            return (!isV3OrLater ? "_" : "-") + getOsTag(); 
+        }
     }
-    /** separator after the version number used to be _ but is - in 3.0 and later */
-    public String getOsTagWithPrefix() {
-        return (isPreV300() ? "_" : "-") + getOsTag(); 
+    
+    @Override
+    public String getDownloadLinkOsTagWithPrefix() {
+        return newDownloadLinkSegmentComputer().getOsTagWithPrefix(); 
+    }
+    @Override
+    public String getDownloadLinkPreVersionSeparator() {
+        return newDownloadLinkSegmentComputer().getPreVersionSeparator();
     }
 
-    private boolean isPreV300() {
+    private boolean isPreV3() {
         return NaturalOrderComparator.INSTANCE.compare(getEntity().getConfig(CouchbaseNode.SUGGESTED_VERSION), "3.0") < 0;
     }
 

@@ -76,9 +76,9 @@ public interface CouchbaseCluster extends DynamicCluster {
 
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> COUCHBASE_CLUSTER_UP_NODE_ADDRESSES = Sensors.newSensor(new TypeToken<List<String>>() {},
-        "couchbase.cluster.node.addresses", "List of host:port of all active nodes in the cluster (http admin port, and public hostname/IP)");
+            "couchbase.cluster.node.addresses", "List of host:port of all active nodes in the cluster (http admin port, and public hostname/IP)");
     AttributeSensor<String> COUCHBASE_CLUSTER_CONNECTION_URL = Sensors.newStringSensor(
-        "couchbase.cluster.connection.url", "Couchbase-style URL to connect to the cluster (e.g. http://127.0.0.1:8091/ or couchbase://10.0.0.1,10.0.0.2/)");
+            "couchbase.cluster.connection.url", "Couchbase-style URL to connect to the cluster (e.g. http://127.0.0.1:8091/ or couchbase://10.0.0.1,10.0.0.2/)");
     
     // Interesting stats
     AttributeSensor<Double> OPS_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.ops", 
@@ -128,6 +128,6 @@ public interface CouchbaseCluster extends DynamicCluster {
     @SuppressWarnings("serial")
     @SetFromFlag("replication")
     ConfigKey<List<Map<String,Object>>> REPLICATION = ConfigKeys.newConfigKey(new TypeToken<List<Map<String,Object>>>() {}, 
-        "couchbase.cluster.replicationConfiguration", "List of replication rules to configure, each rule including target (id of another cluster) and mode (unidirectional or bidirectional)");
+            "couchbase.cluster.replicationConfiguration", "List of replication rules to configure, each rule including target (id of another cluster) and mode (unidirectional or bidirectional)");
 
 }

@@ -163,6 +163,10 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             addAveragingMemberEnricher(nodeSensor, enricherSetup.get(nodeSensor));
         }
         
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(IS_CLUSTER_INITIALIZED).computing(
+                IfFunctions.ifNotEquals(true).value("The cluster is not yet completely initialized")
+                    .defaultValue(null).build()).build() );
     }
     
     private void addAveragingMemberEnricher(AttributeSensor<? extends Number> fromSensor, AttributeSensor<? extends Number> toSensor) {
@@ -187,6 +191,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
     @Override
     protected void doStart() {
+        setAttribute(IS_CLUSTER_INITIALIZED, false);
+        
         super.doStart();
 
         connectSensors();
@@ -254,6 +260,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             }
 
             setAttribute(IS_CLUSTER_INITIALIZED, true);
+            
         } else {
             throw new IllegalStateException("No up nodes available after starting");
         }

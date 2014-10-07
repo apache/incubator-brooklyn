@@ -58,7 +58,8 @@ public interface CouchbaseNode extends SoftwareProcess {
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
-            SoftwareProcess.DOWNLOAD_URL, "http://packages.couchbase.com/releases/${version}/couchbase-server-${driver.communityOrEnterprise}_${version}${driver.osTagWithPrefix}");
+            SoftwareProcess.DOWNLOAD_URL, "http://packages.couchbase.com/releases/${version}/"
+                + "couchbase-server-${driver.communityOrEnterprise}${driver.downloadLinkPreVersionSeparator}${version}${driver.downloadLinkOsTagWithPrefix}");
 
     @SetFromFlag("clusterInitRamSize")
     BasicAttributeSensorAndConfigKey<Integer> COUCHBASE_CLUSTER_INIT_RAM_SIZE = new BasicAttributeSensorAndConfigKey<Integer>(
@@ -132,10 +133,11 @@ public interface CouchbaseNode extends SoftwareProcess {
     MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
     MethodEffector<Void> BUCKET_CREATE = new MethodEffector<Void>(CouchbaseNode.class, "bucketCreate");
     brooklyn.entity.Effector<Void> ADD_REPLICATION_RULE = Effectors.effector(Void.class, "addReplicationRule")
-        .parameter(String.class, "toCluster")
-        .parameter(String.class, "fromBucket")
-        .parameter(String.class, "toBucket")
-//        .parameter(String.class, "replicationType")
+        .description("Adds a replication rule from the indicated bucket on the cluster where this node is located "
+            + "to the indicated cluster and optional destination bucket")
+        .parameter(String.class, "fromBucket", "Bucket to be replicated")
+        .parameter(Object.class, "toCluster", "Entity (or ID) of the cluster to which this should replicate")
+        .parameter(String.class, "toBucket", "Destination bucket for replication in the toCluster, defaulting to the same as the fromBucket")
         .buildAbstract();
 
     @Effector(description = "add a server to a cluster")

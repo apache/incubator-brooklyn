@@ -53,6 +53,7 @@ import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -252,26 +253,20 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     
     /** exposed through {@link CouchbaseNode#ADD_REPLICATION_RULE} */
     protected void addReplicationRule(ConfigBag ruleArgs) {
-        Entity fromCluster = (Entity) ruleArgs.getStringKey("fromCluster");
-        Entity toCluster = (Entity) ruleArgs.getStringKey("toCluster");
-        if (fromCluster==null && toCluster==null)
-            throw new IllegalArgumentException("At least one of 'fromCluster' or 'toCluster' must be supplied");
-        if (fromCluster==null) fromCluster = this;
-        if (toCluster==null) toCluster = this;
+        Object toClusterO = Preconditions.checkNotNull(ruleArgs.getStringKey("toCluster"), "toCluster must not be null");
+        if (toClusterO instanceof String) {
+            toClusterO = getManagementContext().lookup((String)toClusterO);
+        }
+        Entity toCluster = Tasks.resolving(toClusterO, Entity.class).context(getExecutionContext()).get();
         
-        String fromBucket = (String)ruleArgs.getStringKey("fromBucket");
+        String fromBucket = Preconditions.checkNotNull( (String)ruleArgs.getStringKey("fromBucket"), "fromBucket must be specified" );
+        
         String toBucket = (String)ruleArgs.getStringKey("toBucket");
-        if (fromBucket==null && toBucket==null)
-            throw new IllegalArgumentException("At least one of 'fromBucket' or 'toBucket' must be supplied");
-        if (fromBucket==null) fromBucket = toBucket;
         if (toBucket==null) toBucket = fromBucket;
-        
-//        String replType = (String)ruleArgs.getStringKey("replicationType");
         
         if (!ruleArgs.getUnusedConfig().isEmpty()) {
             throw new IllegalArgumentException("Unsupported replication rule data: "+ruleArgs.getUnusedConfig());
         }
-
         
         getDriver().addReplicationRule(toCluster, fromBucket, toBucket);
     }

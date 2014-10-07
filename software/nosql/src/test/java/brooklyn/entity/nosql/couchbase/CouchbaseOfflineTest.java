@@ -51,12 +51,12 @@ public class CouchbaseOfflineTest {
         checkOsTag("Ubuntu 14", OsArchs.X_86_64, "14.04", true, "ubuntu12.04_amd64.deb");
         checkOsTag("Ubuntu 14", OsArchs.X_86_64, "14.04", false, "x86_64.deb");
         checkOsTag("Debian 7up", OsArchs.I386, "7ish", true, "debian7_x86.deb");
-        Assert.assertEquals(CouchbaseNodeSshDriver.getOsTag(null, true), "centos6.x86_64.rpm");
-        Assert.assertEquals(CouchbaseNodeSshDriver.getOsTag(null, false), "x86_64.rpm");
+        Assert.assertEquals(new CouchbaseNodeSshDriver.DownloadLinkSegmentComputer(null, true, "test").getOsTag(), "centos6.x86_64.rpm");
+        Assert.assertEquals(new CouchbaseNodeSshDriver.DownloadLinkSegmentComputer(null, false, "test").getOsTag(), "x86_64.rpm");
     }
 
     protected void checkOsTag(String os, String arch, String version, boolean isV30, String expectedTag) {
-        Assert.assertEquals(CouchbaseNodeSshDriver.getOsTag(new BasicOsDetails(os, arch, version), isV30), expectedTag);
+        Assert.assertEquals(new CouchbaseNodeSshDriver.DownloadLinkSegmentComputer(new BasicOsDetails(os, arch, version), isV30, "test").getOsTag(), expectedTag);
     }
     
 }

@@ -23,7 +23,8 @@ import brooklyn.entity.basic.SoftwareProcessDriver;
 
 public interface CouchbaseNodeDriver extends SoftwareProcessDriver {
     public String getOsTag();
-    public String getOsTagWithPrefix();
+    public String getDownloadLinkPreVersionSeparator();
+    public String getDownloadLinkOsTagWithPrefix();
     
     public String getCommunityOrEnterprise();
 
