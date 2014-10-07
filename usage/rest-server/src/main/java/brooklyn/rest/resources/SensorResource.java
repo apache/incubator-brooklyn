@@ -124,7 +124,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
         AttributeSensor<?> sensor = findSensor(entity, sensorName);
         if (log.isDebugEnabled())
-            log.debug("REST user "+Entitlements.getEntitlementContext().user()+" deleting sensor "+sensorName);
+            log.debug("REST user "+Entitlements.getEntitlementContext()+" deleting sensor "+sensorName);
         ((EntityInternal)entity).removeAttribute(sensor);
     }
     
