@@ -176,7 +176,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
                 if (expiryTime <= nowTime) {
                     currentProblemLoggedAsWarning = true;
                     log.warn("Read of " + getBriefDescription() + " gave " + type + 
-                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+", " +
+                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+
                             (config.hasExceptionHandler() ? "" : ", no exception handler set for sensor")+
                             ")"+
                             ": " + val);
