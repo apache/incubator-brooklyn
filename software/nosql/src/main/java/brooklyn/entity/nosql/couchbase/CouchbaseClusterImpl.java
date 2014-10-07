@@ -210,7 +210,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             Set<Entity> serversToAdd = MutableSet.<Entity>copyOf(getUpNodes());
 
             if (serversToAdd.size() >= getQuorumSize() && serversToAdd.size() > 1) {
-                log.info("number of SERVICE_UP nodes:{} in cluster:{} reached Quorum:{}, adding the servers", new Object[]{serversToAdd.size(), getId(), getQuorumSize()});
+                log.info("Number of SERVICE_UP nodes:{} in cluster:{} reached Quorum:{}, adding the servers", new Object[]{serversToAdd.size(), getId(), getQuorumSize()});
                 addServers(serversToAdd);
 
                 //wait for servers to be added to the couchbase server
@@ -415,14 +415,21 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     protected void addServers(Set<Entity> serversToAdd) {
         Preconditions.checkNotNull(serversToAdd);
         for (Entity s : serversToAdd) {
-            try {
-                addServer(s);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                // retry once after sleep because we are getting some odd primary-change events
-                Time.sleep(Duration.TEN_SECONDS);
-                addServer(s);
-            }
+            addServerSeveralTimes(s, 12, Duration.TEN_SECONDS);
+        }
+    }
+
+    /** try adding in a loop because we are seeing spurious port failures in AWS */
+    protected void addServerSeveralTimes(Entity s, int numAttempts, Duration delayOnFailure) {
+        try {
+            addServer(s);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            if (numAttempts<=0) throw Exceptions.propagate(e);
+            // retry once after sleep because we are getting some odd primary-change events
+            log.warn("Error adding "+s+" to "+this+", "+numAttempts+" more attempts; will retry after delay ("+e+")");
+            Time.sleep(delayOnFailure);
+            addServerSeveralTimes(s, numAttempts-1, delayOnFailure);
         }
     }
 
@@ -438,9 +445,9 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             String password = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
 
             if (isClusterInitialized()) {
-                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD_AND_REBALANCE, webAdmin.toString(), username, password);
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD_AND_REBALANCE, webAdmin.toString(), username, password).getUnchecked();
             } else {
-                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, webAdmin.toString(), username, password);
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, webAdmin.toString(), username, password).getUnchecked();
             }
             //FIXME check feedback of whether the server was added.
             ((EntityInternal) serverToAdd).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
