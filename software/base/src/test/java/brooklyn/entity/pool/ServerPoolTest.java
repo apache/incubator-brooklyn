@@ -119,11 +119,10 @@ public class ServerPoolTest extends AbstractServerPoolTest {
         assertAvailableCountEquals(1);
         assertClaimedCountEquals(getInitialPoolSize() - 1);
 
-        LOG.info("Test attempting to resize to 0 members. Should only drop one machine.");
+        LOG.info("Test attempting to resize to 0 members. Should only drop the one available machine.");
         pool.resize(0);
 
         assertAvailableCountEventuallyEquals(0);
-
         assertEquals(Iterables.size(pool.getMembers()), getInitialPoolSize() - 1);
         assertAvailableCountEquals(0);
         assertClaimedCountEquals(getInitialPoolSize() - 1);

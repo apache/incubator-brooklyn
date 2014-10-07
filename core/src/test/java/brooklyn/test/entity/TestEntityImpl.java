@@ -126,8 +126,8 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         counter.incrementAndGet();
         addLocations(locs);
-        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         setAttribute(SERVICE_UP, true);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
     }
 
     @Override
@@ -136,8 +136,8 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         callHistory.add("stop");
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         counter.decrementAndGet();
-        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         setAttribute(SERVICE_UP, false);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
     }
 
     @Override

@@ -414,12 +414,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public Integer resize(Integer desiredSize) {
         synchronized (mutex) {
-            int currentSize = getCurrentSize();
-            int delta = desiredSize - currentSize;
+            int originalSize = getCurrentSize();
+            int delta = desiredSize - originalSize;
             if (delta != 0) {
-                LOG.info("Resize {} from {} to {}", new Object[] {this, currentSize, desiredSize});
+                LOG.info("Resize {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             } else {
-                if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
+                if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             }
             resizeByDelta(delta);
         }

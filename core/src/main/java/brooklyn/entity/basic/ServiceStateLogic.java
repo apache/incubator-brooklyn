@@ -51,11 +51,14 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
@@ -114,6 +117,21 @@ public class ServiceStateLogic {
     }
     
     public static void setExpectedState(Entity entity, Lifecycle state) {
+        if (state==Lifecycle.RUNNING) {
+            Boolean up = ((EntityInternal)entity).getAttribute(Attributes.SERVICE_UP);
+            if (!Boolean.TRUE.equals(up)) {
+                // pause briefly to allow any recent problem-clearing processing to complete
+                Stopwatch timer = Stopwatch.createStarted();
+                boolean nowUp = Repeater.create().every(Duration.millis(10)).limitTimeTo(Duration.millis(200)).until(entity, 
+                    EntityPredicates.attributeEqualTo(Attributes.SERVICE_UP, true)).run();
+                if (nowUp) {
+                    log.debug("Had to wait "+Duration.of(timer)+" for "+entity+" "+Attributes.SERVICE_UP+" to be true before setting "+state);
+                } else {
+                    log.warn("Service is not up when setting "+state+" on "+entity+"; delayed "+Duration.of(timer)+" "
+                        + "but "+Attributes.SERVICE_UP+" did not recover from "+up+"; not-up-indicators="+entity.getAttribute(Attributes.SERVICE_NOT_UP_INDICATORS));
+                }
+            }
+        }
         ((EntityInternal)entity).setAttribute(Attributes.SERVICE_STATE_EXPECTED, new Lifecycle.Transition(state, new Date()));
         
         Maybe<Enricher> enricher = EntityAdjuncts.tryFindWithUniqueTag(entity.getEnrichers(), ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG);
@@ -234,6 +252,8 @@ public class ServiceStateLogic {
             if (Boolean.TRUE.equals(serviceUp) && (problems==null || problems.isEmpty())) {
                 return Lifecycle.RUNNING;
             } else {
+                log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected running, up="+serviceUp+", "+
+                    (problems==null || problems.isEmpty() ? "not-up-indicators: "+entity.getAttribute(SERVICE_NOT_UP_INDICATORS) : "problems: "+problems));
                 return Lifecycle.ON_FIRE;
             }
         }
@@ -245,10 +265,12 @@ public class ServiceStateLogic {
                 
             } else if (problems!=null && !problems.isEmpty()) {
                 // if there is no expected state, then if service is not up, say stopped, else say on fire (whether service up is true or not present)
-                if (Boolean.FALSE.equals(up))
+                if (Boolean.FALSE.equals(up)) {
                     return Lifecycle.STOPPED;
-                else
+                } else {
+                    log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected "+stateTransition+" / up="+up+": "+problems);
                     return Lifecycle.ON_FIRE;
+                }
             } else {
                 // no expected transition and no problems
                 // if the problems map is non-null, then infer from service up;
@@ -464,10 +486,11 @@ public class ServiceStateLogic {
         protected void updateMapSensor(AttributeSensor<Map<String, Object>> sensor, Object value) {
             if (log.isTraceEnabled()) log.trace("{} updating map sensor {} with {}", new Object[] { this, sensor, value });
 
-            if (value!=null)
+            if (value!=null) {
                 updateMapSensorEntry(entity, sensor, getKeyForMapSensor(), value);
-            else
+            } else {
                 clearMapSensorEntry(entity, sensor, getKeyForMapSensor());
+            }
         }
 
         /** not used; see specific `computeXxx` methods, invoked by overridden onUpdated */
