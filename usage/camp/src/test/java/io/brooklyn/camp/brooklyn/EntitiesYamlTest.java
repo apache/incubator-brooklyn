@@ -60,6 +60,7 @@ import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Functionals;
@@ -736,6 +737,28 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Task<String> saying = entity.invoke(Effectors.effector(String.class, TestSensorAndEffectorInitializer.EFFECTOR_SAY_HELLO).buildAbstract(), 
             MutableMap.of("name", "Bob"));
         Assert.assertEquals(saying.get(Duration.TEN_SECONDS), "Hey Bob");
+    }
+
+    @Test
+    public void testEntityTypeAsImpl() throws Exception {
+        String yaml =
+                "services:"+"\n"+
+                "- type: "+CustomTestEntityImpl.class.getName()+"\n";
+
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.getEntityType().getName(), "CustomTestEntityImpl");
+    }
+    
+    public static class CustomTestEntityImpl extends TestEntityImpl {
+        public CustomTestEntityImpl() {
+            System.out.println("in CustomTestEntityImpl");
+        }
+        @Override
+        protected String getEntityTypeName() {
+            return "CustomTestEntityImpl";
+        }
     }
 
     @Override

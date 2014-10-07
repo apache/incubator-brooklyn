@@ -274,7 +274,7 @@ public class BrooklynComponentTemplateResolver {
         planId = (String)attrs.getStringKey("id");
         if (planId==null)
             planId = (String) attrs.getStringKey(BrooklynCampConstants.PLAN_ID_FLAG);
-        
+
         if (!Strings.isBlank(name))
             spec.displayName(name);
         if (templateId != null)

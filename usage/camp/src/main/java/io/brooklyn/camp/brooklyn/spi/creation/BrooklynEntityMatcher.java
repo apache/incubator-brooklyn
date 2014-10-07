@@ -135,7 +135,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         Object locations = attrs.remove("locations");
         if (locations!=null)
             builder.customAttribute("locations", locations);
-        
+
         MutableMap<Object, Object> brooklynConfig = MutableMap.of();
         Object origBrooklynConfig = attrs.remove("brooklyn.config");
         if (origBrooklynConfig!=null) {
