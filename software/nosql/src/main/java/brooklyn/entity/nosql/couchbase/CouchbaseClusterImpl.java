@@ -65,6 +65,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
@@ -207,10 +208,9 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             setAttribute(COUCHBASE_PRIMARY_NODE, primaryNode);
 
             Set<Entity> serversToAdd = MutableSet.<Entity>copyOf(getUpNodes());
-            serversToAdd.remove(getPrimaryNode());
 
-            if (getUpNodes().size() >= getQuorumSize() && getUpNodes().size() > 1) {
-                log.info("number of SERVICE_UP nodes:{} in cluster:{} reached Quorum:{}, adding the servers", new Object[]{getUpNodes().size(), getId(), getQuorumSize()});
+            if (serversToAdd.size() >= getQuorumSize() && serversToAdd.size() > 1) {
+                log.info("number of SERVICE_UP nodes:{} in cluster:{} reached Quorum:{}, adding the servers", new Object[]{serversToAdd.size(), getId(), getQuorumSize()});
                 addServers(serversToAdd);
 
                 //wait for servers to be added to the couchbase server
@@ -414,15 +414,24 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     
     protected void addServers(Set<Entity> serversToAdd) {
         Preconditions.checkNotNull(serversToAdd);
-        for (Entity e : serversToAdd) {
-            if (!isMemberInCluster(e)) {
-                addServer(e);
+        for (Entity s : serversToAdd) {
+            try {
+                addServer(s);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                // retry once after sleep because we are getting some odd primary-change events
+                Time.sleep(Duration.TEN_SECONDS);
+                addServer(s);
             }
         }
     }
 
     protected void addServer(Entity serverToAdd) {
         Preconditions.checkNotNull(serverToAdd);
+        if (serverToAdd.equals(getPrimaryNode())) {
+            // no need to add; but we pass it in anyway because it makes the calling logic easier
+            return;
+        }
         if (!isMemberInCluster(serverToAdd)) {
             HostAndPort webAdmin = BrooklynAccessUtils.getBrooklynAccessibleAddress(serverToAdd, serverToAdd.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
             String username = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
