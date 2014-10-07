@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -87,6 +88,7 @@ public class SshMachineLocationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        mgmt = new LocalManagementContextForTests();
         host = new SshMachineLocation(MutableMap.of("address", Networking.getLocalHost()));
     }
 
@@ -111,13 +113,20 @@ public class SshMachineLocationTest {
         }
     }
     
+    @Test
+    public void testSupplyingMachineDetails() throws Exception {
+        MachineDetails machineDetails = new BasicMachineDetails(new BasicHardwareDetails(1, 1024), new BasicOsDetails("myname", "myarch", "myversion"));
+        SshMachineLocation host2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure(SshMachineLocation.MACHINE_DETAILS, machineDetails));
+        
+        assertSame(host2.getMachineDetails(), machineDetails);
+    }
+    
     // Wow, this is hard to test (until I accepted creating the entity + effector)! Code smell?
     // Need to call getMachineDetails in a DynamicSequentialTask so that the "innessential" takes effect,
     // to not fail its caller. But to get one of those outside of an effector is non-obvious.
     @Test(groups = "Integration")
     public void testGetMachineIsInessentialOnFailure() throws Exception {
-        ManagementContext mgmt = new LocalManagementContextForTests();
-        
         SshMachineLocation host2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", Networking.getLocalHost())
                 .configure(SshTool.PROP_TOOL_CLASS, FailingSshTool.class.getName()));

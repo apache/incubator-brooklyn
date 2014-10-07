@@ -265,7 +265,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     }
 
     @Override
-    public MachineDetails getMachineDetails() {
+    protected MachineDetails inferMachineDetails() {
         Optional<String> name = Optional.absent();
         Optional<String> version = Optional.absent();
         Optional<String> architecture = Optional.absent();
@@ -311,7 +311,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
                                 "arch={}, ram={}, #cpus={}",
                         new Object[]{this, name, version, architecture, ram, cpus});
             }
-            return super.getMachineDetails();
+            return super.inferMachineDetails();
         }
     }
 

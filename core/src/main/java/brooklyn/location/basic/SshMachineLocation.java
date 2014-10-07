@@ -130,6 +130,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class,
             "sshCacheExpiryDuration", "Expiry time for unused cached ssh connections", Duration.FIVE_MINUTES);
 
+    public static final ConfigKey<MachineDetails> MACHINE_DETAILS = ConfigKeys.newConfigKey(
+            MachineDetails.class,
+            "machineDetails");
+
     @SetFromFlag
     protected String user;
 
@@ -840,22 +844,24 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public MachineDetails getMachineDetails() {
-        MachineDetails details = machineDetails;
-        if (details == null) {
-            // Or could just load and store several times
-            Tasks.setBlockingDetails("Waiting for machine details");
-            try {
-                synchronized (machineDetailsLock) {
-                    details = machineDetails;
-                    if (details == null) {
-                        machineDetails = details = BasicMachineDetails.forSshMachineLocation(this);
-                    }
-                }
-            } finally {
-                Tasks.resetBlockingDetails();
+        synchronized (machineDetailsLock) {
+            if (machineDetails == null) {
+                machineDetails = getConfig(MACHINE_DETAILS);
+            }
+            if (machineDetails == null) {
+                machineDetails = inferMachineDetails();
             }
         }
-        return details;
+        return machineDetails;
+    }
+
+    protected MachineDetails inferMachineDetails() {
+        Tasks.setBlockingDetails("Waiting for machine details");
+        try {
+            return BasicMachineDetails.forSshMachineLocation(this);
+        } finally {
+            Tasks.resetBlockingDetails();
+        }
     }
 
     @Override
