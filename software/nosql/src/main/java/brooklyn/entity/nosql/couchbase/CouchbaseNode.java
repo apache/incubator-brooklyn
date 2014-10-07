@@ -54,7 +54,7 @@ public interface CouchbaseNode extends SoftwareProcess {
 
     @SetFromFlag("enterprise")
     ConfigKey<Boolean> USE_ENTERPRISE = ConfigKeys.newBooleanConfigKey("couchbase.enterprise.enabled",
-        "Whether to use Couchbase Enterprise. Defaults to false for 3.0.0 and later.");
+        "Whether to use Couchbase Enterprise; if false uses the community version. Defaults to true.", true);
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(

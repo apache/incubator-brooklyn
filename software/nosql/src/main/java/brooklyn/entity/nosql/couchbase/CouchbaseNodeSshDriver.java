@@ -242,8 +242,6 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     @Override
     public String getCommunityOrEnterprise() {
         Boolean isEnterprise = getEntity().getConfig(CouchbaseNode.USE_ENTERPRISE);
-        // for 3.0.0 enterprise is behind a reg wall so default to community
-        if (isEnterprise==null) isEnterprise = NaturalOrderComparator.INSTANCE.compare(getEntity().getConfig(CouchbaseNode.SUGGESTED_VERSION), "3.0") >= 0 ? false : true;
         return isEnterprise ? "enterprise" : "community";
     }
 
