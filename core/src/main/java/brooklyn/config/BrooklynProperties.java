@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +46,16 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
+import brooklyn.util.text.StringFunctions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 
 /** utils for accessing command-line and system-env properties;
  * doesn't resolve anything (unless an execution context is supplied)
@@ -226,28 +233,39 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
     }
 
     public BrooklynProperties addEnvironmentVars() {
-        putAll(System.getenv());
+        addFrom(System.getenv());
         return this;
     }
 
     public BrooklynProperties addSystemProperties() {
-        putAll(System.getProperties());
+        addFrom(System.getProperties());
         return this;
     }
 
     public BrooklynProperties addFrom(ConfigBag cfg) {
-        putAll(cfg.getAllConfig());
+        addFrom(cfg.getAllConfig());
+        return this;
+    }
+
+    public BrooklynProperties addFrom(Map map) {
+        putAll(Maps.transformValues(map, StringFunctions.trim()));
         return this;
     }
 
     public BrooklynProperties addFrom(InputStream i) {
+        // Ugly way to load them in order, but Properties is a Hashtable so loses order otherwise.
         @SuppressWarnings({ "serial" })
         Properties p = new Properties() {
             @Override
             public synchronized Object put(Object key, Object value) {
-                // ugly way to load them in order
-                // (Properties is a hashtable so loses order otherwise)
-                return BrooklynProperties.this.put(key, value);
+                // Trim the string values to remove leading and trailing spaces
+                String s = (String) value;
+                if (Strings.isBlank(s)) {
+                    s = Strings.EMPTY;
+                } else {
+                    s = CharMatcher.BREAKING_WHITESPACE.trimFrom(s);
+                }
+                return BrooklynProperties.this.put(key, s);
             }
         };
         try {

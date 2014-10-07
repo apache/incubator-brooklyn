@@ -21,6 +21,7 @@ package brooklyn.util.text;
 import javax.annotation.Nullable;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -80,6 +81,7 @@ public class StringFunctions {
     public static Function<Object[], String> joinerForArray(final String separator) {
         return new Function<Object[], String>() {
             public String apply(@Nullable Object[] input) {
+                if (input == null) return Strings.EMPTY;
                 return Strings.join(input, separator);
             }
         };
@@ -94,8 +96,8 @@ public class StringFunctions {
     public static Function<String,Integer> length() {
         return new Function<String,Integer>() {
             @Override
-            public Integer apply(String input) {
-                if (input==null) return -1;
+            public Integer apply(@Nullable String input) {
+                if (input == null) return -1;
                 return input.length();
             }
         };
@@ -107,8 +109,8 @@ public class StringFunctions {
         Preconditions.checkNotNull(suffix);
         return new Function<String,String>() {
             @Override
-            public String apply(String input) {
-                if (input==null) return null;
+            public String apply(@Nullable String input) {
+                if (input == null) return null;
                 return prefix+input+suffix;
             }
         };
@@ -117,8 +119,10 @@ public class StringFunctions {
     public static Function<String, String> trim() {
         return new Function<String, String>() {
             @Override
-            public String apply(String input) {
-                return input.trim();
+            public String apply(@Nullable String input) {
+                if (input == null) return null;
+                if (Strings.isBlank(input)) return Strings.EMPTY;
+                return CharMatcher.BREAKING_WHITESPACE.trimFrom(input);
             }
         };
     }
