@@ -23,7 +23,11 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.StringFunctions;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
@@ -176,6 +180,7 @@ public enum Lifecycle {
     }
 
     static {
-        TypeCoercions.registerAdapter(String.class, Transition.class, new TransitionCoalesceFunction()); 
+        TypeCoercions.registerAdapter(String.class, Transition.class, new TransitionCoalesceFunction());
+        RendererHints.register(Transition.class, RendererHints.displayValue(StringFunctions.toStringFunction()));
     }
 }

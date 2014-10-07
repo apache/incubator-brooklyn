@@ -77,6 +77,6 @@ public class CouchbaseSyncGatewayImpl extends SoftwareProcessImpl implements Cou
     }
     
     static {
-        RendererHints.register(MANAGEMENT_URL, new RendererHints.NamedActionWithUrl("Open"));
+        RendererHints.register(MANAGEMENT_URL, RendererHints.namedActionWithUrl());
     }
 }

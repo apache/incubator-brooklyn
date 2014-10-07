@@ -23,6 +23,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -67,6 +68,10 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         return (JBoss7Driver) super.getDriver();
     }
     
+    static {
+        RendererHints.register(MANAGEMENT_URL, RendererHints.namedActionWithUrl());
+    }
+
     @Override
     protected void connectSensors() {
         super.connectSensors();
@@ -104,6 +109,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                         .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class)))
                 .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
                         .vars(includeRuntimeUriVars)
+                        // jboss seems to report 0 even if it has received lots of requests; dunno why.
                         .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class)))
                 .poll(new HttpPollConfig<Long>(BYTES_SENT)
                         .vars(includeRuntimeUriVars)

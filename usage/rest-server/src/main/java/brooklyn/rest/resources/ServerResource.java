@@ -23,15 +23,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.Application;
@@ -54,6 +51,8 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
+
+import com.google.common.base.Preconditions;
 
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 

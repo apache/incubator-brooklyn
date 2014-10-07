@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,7 +146,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         String managementPassword = getManagementPassword();
         if (Strings.isBlank(managementPassword)) {
             LOG.debug(this+" has no password specified for "+JBoss7Server.MANAGEMENT_PASSWORD.getName()+"; using a random string");
-            entity.setConfig(JBoss7Server.MANAGEMENT_PASSWORD, UUID.randomUUID().toString());
+            entity.setConfig(JBoss7Server.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
         }
         String hashedPassword = hashPassword(getManagementUsername(), getManagementPassword(), MANAGEMENT_REALM);
 

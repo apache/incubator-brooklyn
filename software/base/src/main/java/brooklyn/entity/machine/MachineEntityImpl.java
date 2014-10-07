@@ -68,6 +68,15 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
         sensorFeed = SshFeed.builder()
                 .entity(this)
                 .period(Duration.THIRTY_SECONDS)
+                .poll(new SshPollConfig<Duration>(UPTIME)
+                        .command("cat /proc/uptime")
+                        .onFailureOrException(Functions.<Duration>constant(null))
+                        .onSuccess(new Function<SshPollValue, Duration>() {
+                            @Override
+                            public Duration apply(SshPollValue input) {
+                                return Duration.seconds( Double.valueOf( Strings.getFirstWord(input.getStdout()) ) );
+                            }
+                        }))
                 .poll(new SshPollConfig<Double>(LOAD_AVERAGE)
                         .command("uptime")
                         .onFailureOrException(Functions.constant(-1d))
@@ -80,7 +89,7 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
                         }))
                 .poll(new SshPollConfig<Double>(CPU_USAGE)
                         .command("cat /proc/stat")
-                        .onFailureOrException(Functions.constant(0d))
+                        .onFailureOrException(Functions.constant(-1d))
                         .onSuccess(new Function<SshPollValue, Double>() {
                             @Override
                             public Double apply(SshPollValue input) {

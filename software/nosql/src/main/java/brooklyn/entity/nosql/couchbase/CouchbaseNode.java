@@ -109,7 +109,7 @@ public interface CouchbaseNode extends SoftwareProcess {
         
         static {
             // ROOT_URL does not need init because it refers to something already initialized
-            RendererHints.register(COUCHBASE_WEB_ADMIN_URL, new RendererHints.NamedActionWithUrl("Open"));
+            RendererHints.register(COUCHBASE_WEB_ADMIN_URL, RendererHints.namedActionWithUrl());
 
             RendererHints.register(COUCH_DOCS_DATA_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
             RendererHints.register(COUCH_DOCS_ACTUAL_DISK_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));

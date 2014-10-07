@@ -75,21 +75,6 @@ public interface EntityLocal extends Entity, Configurable {
      */
     <T> T setAttribute(AttributeSensor<T> sensor, T val);
 
-//    /** sets the value of the given attribute sensor from the config key value herein,
-//     * if the config key resolves to a non-null value as a sensor
-//     * 
-//     * @deprecated since 0.5; use {@link #setAttribute(AttributeSensor, Object)}, such as 
-//     * <pre>
-//     * T val = getConfig(KEY.getConfigKey());
-//     * if (val != null) {
-//     *     setAttribute(KEY, val)
-//     * }
-//     * </pre>
-//     * 
-//     * @return old value
-//     */
-//    <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
-
     /**
      * @deprecated in 0.5; use {@link #getConfig(ConfigKey)}
      */

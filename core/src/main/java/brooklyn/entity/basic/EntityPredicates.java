@@ -34,6 +34,8 @@ import com.google.common.base.Predicate;
 @SuppressWarnings("serial")
 public class EntityPredicates {
 
+    // TODO convert these to named classes. but keep the anonymous ones around for deserialization purposes!
+    
     public static <T> Predicate<Entity> idEqualTo(final T val) {
         return new SerializablePredicate<Entity>() {
             @Override

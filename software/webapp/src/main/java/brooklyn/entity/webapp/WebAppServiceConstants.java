@@ -56,6 +56,6 @@ class RootUrl {
     public static final AttributeSensor<String> ROOT_URL = Sensors.newStringSensor("webapp.url", "URL");
 
     static {
-        RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));
+        RendererHints.register(ROOT_URL, RendererHints.namedActionWithUrl());
     }
 }
