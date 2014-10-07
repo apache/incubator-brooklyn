@@ -250,6 +250,7 @@ public class BrooklynTaskTags extends TaskTags {
 
     /** returns the tag for the indicated stream, or null */
     public static WrappedStream stream(Task<?> task, String streamType) {
+        if (task==null) return null;
         for (Object tag: task.getTags())
             if ((tag instanceof WrappedStream) && ((WrappedStream)tag).streamType.equals(streamType))
                 return (WrappedStream)tag;

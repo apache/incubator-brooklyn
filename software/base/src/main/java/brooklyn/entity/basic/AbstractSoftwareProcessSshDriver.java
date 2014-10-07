@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
+import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
@@ -286,12 +287,14 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             if (environment!=null) {
                 Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
             }
-            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdout));
-            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stderr));
-            flags.put("out", stdout);
-            flags.put("err", stderr);
+            if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDOUT)==null) {
+                ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdout));
+                ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stderr));
+                flags.put("out", stdout);
+                flags.put("err", stderr);
+            }
         }
         if (!flags.containsKey("logPrefix")) flags.put("logPrefix", ""+entity.getId()+"@"+getLocation().getDisplayName());
         return getMachine().execScript(flags, summaryForLogging, script, environment);
