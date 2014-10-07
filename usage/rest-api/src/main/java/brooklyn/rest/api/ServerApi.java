@@ -38,8 +38,6 @@ import com.wordnik.swagger.core.ApiParam;
 @Path("/v1/server")
 @Apidoc("Server")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-
 @Beta
 public interface ServerApi {
 

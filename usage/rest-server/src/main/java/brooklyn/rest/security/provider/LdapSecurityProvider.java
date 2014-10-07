@@ -80,10 +80,8 @@ public class LdapSecurityProvider extends AbstractSecurityProvider implements Se
             new InitialDirContext(env);
             return allow(session, user);
         } catch (NamingException e) {
-            LOG.warn("Failed to authenticate user: " + user);
+            return false;
         }
-
-        return false;
     }
 
     private String getUserDN(String user) {

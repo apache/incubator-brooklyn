@@ -19,7 +19,7 @@
 package brooklyn.rest.security.provider;
 
 import java.lang.reflect.Constructor;
-
+import java.util.concurrent.atomic.AtomicLong;
 import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
@@ -32,67 +32,107 @@ import brooklyn.util.text.Strings;
 
 public class DelegatingSecurityProvider implements SecurityProvider {
 
-    public static final Logger log = LoggerFactory.getLogger(DelegatingSecurityProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(DelegatingSecurityProvider.class);
     protected final ManagementContext mgmt;
 
     public DelegatingSecurityProvider(ManagementContext mgmt) {
         this.mgmt = mgmt;
+        mgmt.addPropertiesReloadListener(new PropertiesListener());
     }
     
-    private SecurityProvider targetProvider;
+    private SecurityProvider delegate;
+    private final AtomicLong modCount = new AtomicLong();
+
+    private class PropertiesListener implements ManagementContext.PropertiesReloadListener {
+        @Override
+        public void reloaded() {
+            log.debug("{} reloading security provider", DelegatingSecurityProvider.this);
+            synchronized (DelegatingSecurityProvider.this) {
+                loadDelegate();
+                invalidateExistingSessions();
+            }
+        }
+    }
+
+    public synchronized SecurityProvider getDelegate() {
+        if (delegate == null) {
+            delegate = loadDelegate();
+        }
+        return delegate;
+    }
 
     @SuppressWarnings("unchecked")
-    public synchronized SecurityProvider getTargetProvider() {
-        if (this.targetProvider!=null) {
-            return targetProvider;
-        }
-
+    private synchronized SecurityProvider loadDelegate() {
         StringConfigMap brooklynProperties = mgmt.getConfig();
 
         String className = brooklynProperties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME);
-        log.info("Web console using security provider "+className);
+        log.info("REST using security provider " + className);
 
         try {
             Class<? extends SecurityProvider> clazz;
             try {
-                clazz = (Class<? extends SecurityProvider>)Class.forName(className);
+                clazz = (Class<? extends SecurityProvider>) Class.forName(className);
             } catch (Exception e) {
-                String OLD_PACKAGE = "brooklyn.web.console.security.";
-                if (className.startsWith(OLD_PACKAGE)) {
-                    className = Strings.removeFromStart(className, OLD_PACKAGE);
-                    className = DelegatingSecurityProvider.class.getPackage().getName()+"."+className;
-                    clazz = (Class<? extends SecurityProvider>)Class.forName(className);
-                    log.warn("Deprecated package "+OLD_PACKAGE+" detected; please update security provider to point to "+className);
+                String oldPackage = "brooklyn.web.console.security.";
+                if (className.startsWith(oldPackage)) {
+                    className = Strings.removeFromStart(className, oldPackage);
+                    className = DelegatingSecurityProvider.class.getPackage().getName() + "." + className;
+                    clazz = (Class<? extends SecurityProvider>) Class.forName(className);
+                    log.warn("Deprecated package " + oldPackage + " detected; please update security provider to point to " + className);
                 } else throw e;
             }
-            
+
             Constructor<? extends SecurityProvider> constructor;
             try {
                 constructor = clazz.getConstructor(ManagementContext.class);
-                targetProvider = constructor.newInstance(mgmt);
+                delegate = constructor.newInstance(mgmt);
             } catch (Exception e) {
                 constructor = clazz.getConstructor();
-                targetProvider = constructor.newInstance();
+                delegate = constructor.newInstance();
             }
         } catch (Exception e) {
-            log.warn("Web console unable to instantiate security provider "+className+"; all logins are being disallowed",e);
-            targetProvider = new BlackholeSecurityProvider();
+            log.warn("REST unable to instantiate security provider " + className + "; all logins are being disallowed", e);
+            delegate = new BlackholeSecurityProvider();
         }
-        return targetProvider;
+        return delegate;
     }
-    
+
+    /**
+     * Causes all existing sessions to be invalidated.
+     */
+    protected void invalidateExistingSessions() {
+        modCount.incrementAndGet();
+    }
+
     @Override
     public boolean isAuthenticated(HttpSession session) {
-        return getTargetProvider().isAuthenticated(session);
+        Object modCountWhenFirstAuthenticated = session.getAttribute(getModificationCountKey());
+        boolean authenticated = getDelegate().isAuthenticated(session) &&
+                modCountWhenFirstAuthenticated != null && ((Long) modCount.get()).equals(modCountWhenFirstAuthenticated);
+        if (authenticated) {
+            session.setAttribute(getModificationCountKey(), modCount.get());
+        }
+        return authenticated;
     }
 
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
-        return getTargetProvider().authenticate(session, user, password);
+        boolean authenticated = getDelegate().authenticate(session, user, password);
+        if (log.isTraceEnabled() && authenticated) {
+            log.trace("User {} authenticated with provider {}", user, getDelegate());
+        } else if (!authenticated && log.isDebugEnabled()) {
+            log.debug("Failed authentication for user {} with provider {}", user, getDelegate());
+        }
+        return authenticated;
     }
 
     @Override
     public boolean logout(HttpSession session) { 
-        return getTargetProvider().logout(session);
+        return getDelegate().logout(session);
     }
+
+    private String getModificationCountKey() {
+        return getClass().getName() + ".ModCount";
+    }
+
 }

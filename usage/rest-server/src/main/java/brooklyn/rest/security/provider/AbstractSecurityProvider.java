@@ -20,16 +20,11 @@ package brooklyn.rest.security.provider;
 
 import javax.servlet.http.HttpSession;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Provides default implementations of {@link #isAuthenticated(HttpSession)} and
  * {@link #logout(HttpSession)}.
  */
 public abstract class AbstractSecurityProvider implements SecurityProvider {
-
-    public static final Logger LOG = LoggerFactory.getLogger(AbstractSecurityProvider.class);
 
     @Override
     public boolean isAuthenticated(HttpSession session) {
@@ -49,7 +44,6 @@ public abstract class AbstractSecurityProvider implements SecurityProvider {
      * Sets an authentication token for the user on the session. Always returns true.
      */
     protected boolean allow(HttpSession session, String user) {
-        LOG.debug("Web console {} authenticated user {}", getClass().getSimpleName(), user);
         session.setAttribute(getAuthenticationKey(), user);
         return true;
     }
@@ -57,5 +51,6 @@ public abstract class AbstractSecurityProvider implements SecurityProvider {
     protected String getAuthenticationKey() {
         return getClass().getName() + ".AUTHENTICATED";
     }
+
 
 }

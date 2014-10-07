@@ -19,6 +19,9 @@
 package brooklyn.rest;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import brooklyn.rest.filter.LoggingFilter;
+import brooklyn.rest.filter.RequestTaggingFilter;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
@@ -27,7 +30,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
-import java.util.Set;
+import java.util.List;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
@@ -47,10 +50,10 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.security.provider.SecurityProvider;
-import brooklyn.rest.util.HaMasterCheckFilter;
+import brooklyn.rest.filter.HaMasterCheckFilter;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
@@ -58,8 +61,8 @@ import brooklyn.util.text.WildcardGlobs;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
@@ -87,13 +90,15 @@ public class BrooklynRestApiLauncher {
         FILTER, SERVLET, WEB_XML
     }
 
-    public static final Set<Class<? extends Filter>> DEFAULT_FILTERS = ImmutableSet.of(
+    public static final List<Class<? extends Filter>> DEFAULT_FILTERS = ImmutableList.of(
+            RequestTaggingFilter.class,
             BrooklynPropertiesSecurityFilter.class,
+            LoggingFilter.class,
             HaMasterCheckFilter.class);
 
     private boolean forceUseOfDefaultCatalogWithJavaClassPath = false;
     private Class<? extends SecurityProvider> securityProvider;
-    private Set<Class<? extends Filter>> filters = DEFAULT_FILTERS;
+    private List<Class<? extends Filter>> filters = DEFAULT_FILTERS;
     private StartMode mode = StartMode.FILTER;
     private ManagementContext mgmt;
     private ContextHandler customContext;
@@ -121,7 +126,7 @@ public class BrooklynRestApiLauncher {
      * Overrides any previously supplied set (or {@link #DEFAULT_FILTERS} which is used by default).
      */
     public BrooklynRestApiLauncher filters(Class<? extends Filter>... filters) {
-        this.filters = Sets.newHashSet(filters);
+        this.filters = Lists.newArrayList(filters);
         return this;
     }
 
@@ -307,7 +312,7 @@ public class BrooklynRestApiLauncher {
         installAsServletFilter(context, DEFAULT_FILTERS);
     }
 
-    private static void installAsServletFilter(ServletContextHandler context, Set<Class<? extends Filter>> filters) {
+    private static void installAsServletFilter(ServletContextHandler context, List<Class<? extends Filter>> filters) {
         installBrooklynFilters(context, filters);
 
         // now set up the REST servlet resources
@@ -325,7 +330,7 @@ public class BrooklynRestApiLauncher {
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
     }
 
-    private static void installBrooklynFilters(ServletContextHandler context, Set<Class<? extends Filter>> filters) {
+    private static void installBrooklynFilters(ServletContextHandler context, List<Class<? extends Filter>> filters) {
         for (Class<? extends Filter> filter : filters) {
             context.addFilter(filter, "/*", EnumSet.allOf(DispatcherType.class));
         }

@@ -47,7 +47,7 @@ import brooklyn.entity.Entity;
  * <li>Grid and multi-machine support) 
  * </ul>
  * <p>
- * For usage instructions see {@link #submit(Map, Task)}, and for examples see the various
+ * For usage instructions see {@link #submit(Map, TaskAdaptable)}, and for examples see the various
  * {@code ExecutionTest} and {@code TaskTest} instances.
  * <p>
  * It has been developed for multi-location provisioning and management to track work being
@@ -79,19 +79,19 @@ public interface ExecutionManager {
 //    /** returns all tasks known to this manager (immutable) */
 //    public Set<Task<?>> getAllTasks();
 
-    /** see {@link #submit(Map, Task)} */
+    /** see {@link #submit(Map, TaskAdaptable)} */
     public Task<?> submit(Runnable r);
 
-    /** see {@link #submit(Map, Task)} */
+    /** see {@link #submit(Map, TaskAdaptable)} */
     public <T> Task<T> submit(Callable<T> c);
 
-    /** see {@link #submit(Map, Task)} */
+    /** see {@link #submit(Map, TaskAdaptable)} */
     public <T> Task<T> submit(TaskAdaptable<T> task);
     
-    /** see {@link #submit(Map, Task)} */
+    /** see {@link #submit(Map, TaskAdaptable)} */
     public Task<?> submit(Map<?, ?> flags, Runnable r);
 
-    /** see {@link #submit(Map, Task)} */
+    /** see {@link #submit(Map, TaskAdaptable)} */
     public <T> Task<T> submit(Map<?, ?> flags, Callable<T> c);
 
     /**
