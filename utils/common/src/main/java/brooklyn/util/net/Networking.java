@@ -100,7 +100,7 @@ public class Networking {
             ss.setReuseAddress(true);
             ds = new DatagramSocket(port);
             ds.setReuseAddress(true);
-            return true;
+            
         } catch (IOException e) {
             return false;
         } finally {
@@ -116,6 +116,14 @@ public class Networking {
                 }
             }
         }
+        
+        
+        if (localAddress==null || ANY_NIC.equals(localAddress)) {
+            // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use; check 127.0.0.1 if 0.0.0.0 was requested
+            return isPortAvailable(LOOPBACK, port);
+        }
+        
+        return true;
     }
     /** returns the first port available on the local machine >= the port supplied */
     public static int nextAvailablePort(int port) {
