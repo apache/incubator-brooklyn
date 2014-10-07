@@ -40,8 +40,46 @@ import brooklyn.util.os.Os;
 
 import com.google.common.net.HostAndPort;
 
+/**
+ * For simulating various aspects of the JBoss 7 app-server entity.
+ *  
+ * The use-case for this is that the desired configuration is not always available for testing. 
+ * For example, there may be insufficient resources to run 100s of JBoss app-servers, or one 
+ * may be experimenting with possible configurations such as use of an external monitoring tool 
+ * that is not yet available.
+ * 
+ * It is then possible to simulate aspects of the behaviour, for performance and load testing purposes. 
+ * 
+ * There is configuration for:
+ * <ul>
+ *   <li>{@code simulateEntity}
+ *     <ul>
+ *       <li>if true, no underlying entity will be started. Instead a sleep 100000 job will be run and monitored.
+ *       <li>if false, the underlying entity (i.e. a JBoss app-server) will be started as normal.
+ *     </ul>
+ *   <li>{@code simulateExternalMonitoring}
+ *     <ul>
+ *       <li>if true, disables the default monitoring mechanism. Instead, a function will periodically execute 
+ *           to set the entity's sensors (as though the values had been obtained from the external monitoring tool).
+ *       <li>if false, then:
+ *         <ul>
+ *           <li>If {@code simulateEntity==true} it will execute comparable commands (e.g. execute a command of the same 
+ *               size over ssh or do a comparable number of http GET requests).
+ *           <li>If {@code simulateEntity==false} then normal monitoring will be done.
+ *         </ul>
+ *     </ul>
+ *   <li>{@code skipSshOnStart}
+ *     <ul>
+ *       <li>If true (and if {@code simulateEntity==true}), then no ssh commands will be executed at deploy-time. 
+ *           This is useful for speeding up load testing, to get to the desired number of entities.
+ *           Should not be set to {@code true} if {@code simulateEntity==false}.
+ *       <li>If false, the ssh commands will be executed (based on the value of {@code simulateEntity}.
+ *     </ul>
+ * </ul>
+ */
 public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
 
+    public static final ConfigKey<Boolean> SIMULATE_ENTITY = SimulatedTheeTierApp.SIMULATE_ENTITY;
     public static final ConfigKey<Boolean> SIMULATE_EXTERNAL_MONITORING = SimulatedTheeTierApp.SIMULATE_EXTERNAL_MONITORING;
     public static final ConfigKey<Boolean> SKIP_SSH_ON_START = SimulatedTheeTierApp.SKIP_SSH_ON_START;
     
@@ -55,8 +93,14 @@ public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
 
     @Override
     protected void connectSensors() {
+        boolean simulateEntity = getConfig(SIMULATE_ENTITY);
         boolean simulateExternalMonitoring = getConfig(SIMULATE_EXTERNAL_MONITORING);
 
+        if (!simulateEntity && !simulateExternalMonitoring) {
+            super.connectSensors();
+            return;
+        }
+        
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this,
                 getAttribute(MANAGEMENT_HTTP_PORT) + getConfig(PORT_INCREMENT));
 
@@ -68,11 +112,13 @@ public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
             // TODO What would set this normally, if not doing connectServiceUpIsRunning?
             setAttribute(SERVICE_PROCESS_IS_RUNNING, true);
         } else {
-            // simulate work of periodic HTTP request; TODO but not parsing JSON response
+            // if simulating entity, then simulate work of periodic HTTP request; TODO but not parsing JSON response
+            String uriToPoll = (simulateEntity) ? "http://localhost:8081" : managementUri;
+            
             httpFeed = HttpFeed.builder()
                     .entity(this)
                     .period(200)
-                    .baseUri("http://localhost:8081")
+                    .baseUri(uriToPoll)
                     .credentials(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                     .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
                             .onSuccess(HttpValueFunctions.responseCode()))
@@ -118,6 +164,15 @@ public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
         }
         
         @Override
+        public boolean isRunning() {
+            if (entity.getConfig(SKIP_SSH_ON_START)) {
+                return true;
+            } else {
+                return super.isRunning();
+            }
+        }
+
+        @Override
         public void install() {
             if (entity.getConfig(SKIP_SSH_ON_START)) {
                 // no-op
@@ -137,6 +192,11 @@ public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
         
         @Override
         public void launch() {
+            if (!entity.getConfig(SIMULATE_ENTITY)) {
+                super.launch();
+                return;
+            }
+            
             // We wait for evidence of JBoss running because, using
             // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
             // we saw the ssh session return before the JBoss process was fully running
