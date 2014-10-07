@@ -44,6 +44,9 @@ import com.google.common.collect.Ordering;
 
 public class Strings {
 
+    /** The empty {@link String}. */
+    public static final String EMPTY = "";
+
     /**
      * Checks if the given string is null or is an empty string.
      * Useful for pre-String.isEmpty.  And useful for StringBuilder etc.
