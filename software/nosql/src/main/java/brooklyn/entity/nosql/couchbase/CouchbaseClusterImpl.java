@@ -220,40 +220,38 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 }
                 
                 ((CouchbaseNode)getPrimaryNode()).rebalance();
-                
-                if (getConfig(CREATE_BUCKETS)!=null) {
-                    try {
-                        Tasks.setBlockingDetails("Creating buckets in Couchbase");
-
-                        createBuckets();
-                        DependentConfiguration.waitInTaskForAttributeReady(this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
-                    
-                    } finally {
-                        Tasks.resetBlockingDetails();
-                    }
-                }
-
-                if (getConfig(REPLICATION)!=null) {
-                    try {
-                        Tasks.setBlockingDetails("Configuring replication rules");
-
-                        List<Map<String, Object>> replRules = getConfig(REPLICATION);
-                        for (Map<String, Object> replRule: replRules) {
-                            DynamicTasks.queue(Effectors.invocation(getPrimaryNode(), CouchbaseNode.ADD_REPLICATION_RULE, replRule));
-                        }
-                        DynamicTasks.waitForLast();
-                    
-                    } finally {
-                        Tasks.resetBlockingDetails();
-                    }
-                }
-
-                setAttribute(IS_CLUSTER_INITIALIZED, true);
-            } else {
-                //TODO: add a repeater to wait for a quorum of servers to be up.
-                //retry waiting for service up?
-                //check Repeater.
+            } else if (getQuorumSize()>1) {
+                log.warn(this+" is not quorate; will likely fail later, but proceeding for now");
             }
+                
+            if (getConfig(CREATE_BUCKETS)!=null) {
+                try {
+                    Tasks.setBlockingDetails("Creating buckets in Couchbase");
+
+                    createBuckets();
+                    DependentConfiguration.waitInTaskForAttributeReady(this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
+
+                } finally {
+                    Tasks.resetBlockingDetails();
+                }
+            }
+
+            if (getConfig(REPLICATION)!=null) {
+                try {
+                    Tasks.setBlockingDetails("Configuring replication rules");
+
+                    List<Map<String, Object>> replRules = getConfig(REPLICATION);
+                    for (Map<String, Object> replRule: replRules) {
+                        DynamicTasks.queue(Effectors.invocation(getPrimaryNode(), CouchbaseNode.ADD_REPLICATION_RULE, replRule));
+                    }
+                    DynamicTasks.waitForLast();
+
+                } finally {
+                    Tasks.resetBlockingDetails();
+                }
+            }
+
+            setAttribute(IS_CLUSTER_INITIALIZED, true);
         } else {
             throw new IllegalStateException("No up nodes available after starting");
         }

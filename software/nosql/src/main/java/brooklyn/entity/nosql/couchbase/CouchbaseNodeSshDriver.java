@@ -27,6 +27,7 @@ import static java.lang.String.format;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +40,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.drivers.downloads.BasicDownloadRequirement;
+import brooklyn.entity.drivers.downloads.DownloadProducerFromUrlAttribute;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -53,6 +56,7 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.NaturalOrderComparator;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
@@ -101,7 +105,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     private List<String> installLinux(List<String> urls, String saveAs) {
 
-        log.info("Installing from package manager couchbase-server version: {}", getVersion());
+        log.info("Installing "+getEntity()+" using couchbase-server-{} {}", getCommunityOrEnterprise(), getVersion());
 
         String apt = chainGroup(
                 "export DEBIAN_FRONTEND=noninteractive",
@@ -123,9 +127,16 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 sudo("[ -f /etc/redhat-release ] && (grep -i \"red hat\" /etc/redhat-release && sudo yum install -y openssl098e) || :"),
                 sudo(format("rpm --install %s", saveAs)));
 
+        String link = new DownloadProducerFromUrlAttribute().apply(new BasicDownloadRequirement(this)).getPrimaryLocations().iterator().next();
         return ImmutableList.<String>builder()
                 .add(INSTALL_CURL)
-                .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
+                .addAll(Arrays.asList(INSTALL_CURL, 
+                    BashCommands.require(BashCommands.alternatives(BashCommands.simpleDownloadUrlAs(urls, saveAs),
+                        // Referer link is required for 3.0.0; note mis-spelling is correct, as per http://en.wikipedia.org/wiki/HTTP_referer
+                        "curl -f -L -k "+link
+                            + " -H 'Referer: http://www.couchbase.com/downloads'"
+                            + " -o "+saveAs),
+                        "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9)))
                 .add(alternatives(apt, yum))
                 .build();
     }
@@ -145,6 +156,8 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public void launch() {
+        String clusterPrefix = "--cluster-"+(isPreV300() ? "init-" : "");
+        // in v30, the cluster arguments were changed, and it became mandatory to supply a url + password (if there is none, these are ignored)
         newScript(LAUNCHING)
                 .body.append(
                 sudo("/etc/init.d/couchbase-server start"),
@@ -155,11 +168,11 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 "    sleep 1\n" +
                 "done\n" +
                 couchbaseCli("cluster-init") +
-                        getCouchbaseHostnameAndPort() +
-                        " --cluster-init-username=" + getUsername() +
-                        " --cluster-init-password=" + getPassword() +
-                        " --cluster-init-port=" + getWebPort() +
-                        " --cluster-init-ramsize=" + getClusterInitRamSize())
+                        (isPreV300() ? getCouchbaseHostnameAndPort() : getCouchbaseHostnameAndCredentials()) +
+                        " "+clusterPrefix+"username=" + getUsername() +
+                        " "+clusterPrefix+"password=" + getPassword() +
+                        " "+clusterPrefix+"port=" + getWebPort() +
+                        " "+clusterPrefix+"ramsize=" + getClusterInitRamSize())
                 .execute();
     }
 
@@ -185,17 +198,53 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public String getOsTag() {
-        OsDetails os = getLocation().getOsDetails();
+        return getOsTag(getLocation().getOsDetails(), !isPreV300());
+    }
+    
+    public static String getOsTag(OsDetails os, boolean isV30OrLater) {
         if (os == null) {
-            // Default to generic linux
-            return "x86_64.rpm";
+            // Default to 64-bit centos linux
+            if (isV30OrLater)
+                return "centos6.x86_64.rpm";
+            else
+                return "x86_64.rpm";
+            
         } else {
-            //FIXME should be a better way to check for OS name and version
+            // are there should ways to check for OS name and version
             String osName = os.getName().toLowerCase();
-            String fileExtension = osName.contains("deb") || osName.contains("ubuntu") ? ".deb" : ".rpm";
-            String arch = os.is64bit() ? "x86_64" : "x86";
-            return arch + fileExtension;
+            boolean isDebbish = osName.contains("deb") || osName.contains("ubuntu");
+            
+            // couchbase only provide certain versions; if on other platforms let's suck-it-and-see
+            String family;
+            if (osName.contains("debian")) family = "debian7_";
+            else if (osName.contains("ubuntu")) family = "ubuntu12.04_";
+            else family = "centos6.";
+
+            // 32-bit binaries aren't (yet?) available
+            String arch = !os.is64bit() ? "x86" : isDebbish && isV30OrLater ? "amd64" : "x86_64";
+            String fileExtension = isDebbish ? ".deb" : ".rpm";
+            
+            if (isV30OrLater)
+                return family + arch + fileExtension;
+            else
+                return arch + fileExtension;
         }
+    }
+    /** separator after the version number used to be _ but is - in 3.0 and later */
+    public String getOsTagWithPrefix() {
+        return (isPreV300() ? "_" : "-") + getOsTag(); 
+    }
+
+    private boolean isPreV300() {
+        return NaturalOrderComparator.INSTANCE.compare(getEntity().getConfig(CouchbaseNode.SUGGESTED_VERSION), "3.0") < 0;
+    }
+
+    @Override
+    public String getCommunityOrEnterprise() {
+        Boolean isEnterprise = getEntity().getConfig(CouchbaseNode.USE_ENTERPRISE);
+        // for 3.0.0 enterprise is behind a reg wall so default to community
+        if (isEnterprise==null) isEnterprise = NaturalOrderComparator.INSTANCE.compare(getEntity().getConfig(CouchbaseNode.SUGGESTED_VERSION), "3.0") >= 0 ? false : true;
+        return isEnterprise ? "enterprise" : "community";
     }
 
     private String getUsername() {
@@ -352,6 +401,8 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     public void addReplicationRule(Entity toCluster, String fromBucket, String toBucket) {
         DynamicTasks.queue(DependentConfiguration.attributeWhenReady(toCluster, Attributes.SERVICE_UP)).getUnchecked();
         
+        log.info("Setting up XDCR for "+fromBucket+" from "+getEntity()+" to "+toCluster);
+        
         String destName = CouchbaseClusterImpl.getClusterName(getEntity());
         Entity destPrimaryNode = toCluster.getAttribute(CouchbaseCluster.COUCHBASE_PRIMARY_NODE);
         String destHostname = destPrimaryNode.getAttribute(Attributes.HOSTNAME);
@@ -374,8 +425,11 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             " --xdcr-password="+destPassword
             ).summary("create xdcr destination "+destName).newTask()));
 
+        // would be nice to auto-create bucket, but we'll need to know the parameters; the port in particular is tedious
+//        ((CouchbaseNode)destPrimaryNode).bucketCreate(toBucket, "couchbase", null, 0, 0);
+        
         DynamicTasks.queue(SshEffectorTasks.ssh(
-            couchbaseCli("xdcr-setup") +
+            couchbaseCli("xdcr-replicate") +
             getCouchbaseHostnameAndCredentials() +
             " --create" +
             " --xdcr-cluster-name="+destName +

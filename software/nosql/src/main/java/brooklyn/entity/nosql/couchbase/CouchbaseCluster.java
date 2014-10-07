@@ -68,6 +68,12 @@ public interface CouchbaseCluster extends DynamicCluster {
     @SetFromFlag("postStartStabilizationDelay")
     ConfigKey<Duration> NODES_STARTED_STABILIZATION_DELAY = ConfigKeys.newConfigKey(Duration.class, "couchbase.cluster.postStartStabilizationDelay", "Delay after nodes have been started before treating it as a cluster", Duration.TEN_SECONDS);
     
+    @SetFromFlag("adminUsername")
+    ConfigKey<String> COUCHBASE_ADMIN_USERNAME = CouchbaseNode.COUCHBASE_ADMIN_USERNAME;
+
+    @SetFromFlag("adminPassword")
+    ConfigKey<String> COUCHBASE_ADMIN_PASSWORD = CouchbaseNode.COUCHBASE_ADMIN_PASSWORD;
+
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> COUCHBASE_CLUSTER_UP_NODE_ADDRESSES = Sensors.newSensor(new TypeToken<List<String>>() {},
         "couchbase.cluster.node.addresses", "List of host:port of all active nodes in the cluster (http admin port, and public hostname/IP)");

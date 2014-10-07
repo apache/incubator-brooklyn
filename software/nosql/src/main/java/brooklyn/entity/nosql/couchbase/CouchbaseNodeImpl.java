@@ -53,6 +53,7 @@ import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -242,6 +243,10 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
 
     @Override
     public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
+        if (Strings.isBlank(bucketType)) bucketType = "couchbase";
+        if (bucketRamSize==null || bucketRamSize<=0) bucketRamSize = 200;
+        if (bucketReplica==null || bucketReplica<0) bucketReplica = 1;
+        
         getDriver().bucketCreate(bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
     }
     
