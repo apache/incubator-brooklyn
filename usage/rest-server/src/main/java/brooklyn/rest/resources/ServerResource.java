@@ -38,6 +38,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
@@ -211,13 +212,25 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         return new VersionSummary(BrooklynVersion.get(), gitSha1, gitBranch);
     }
 
+    @Deprecated
     @Override
     public String getStatus() {
-        return mgmt().getHighAvailabilityManager().getNodeState().toString();
+        return getHighAvailabilityNodeState().toString();
+    }
+
+    @Deprecated
+    @Override
+    public HighAvailabilitySummary getHighAvailability() {
+        return getHighAvailabilityPlaneStates();
     }
 
     @Override
-    public HighAvailabilitySummary getHighAvailability() {
+    public ManagementNodeState getHighAvailabilityNodeState() {
+        return mgmt().getHighAvailabilityManager().getNodeState();
+    }
+    
+    @Override
+    public HighAvailabilitySummary getHighAvailabilityPlaneStates() {
         ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getManagementPlaneSyncState();
         return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
     }
