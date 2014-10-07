@@ -27,6 +27,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nonnull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -441,8 +443,13 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     public static String getClusterName(Entity node) {
         String name = node.getConfig(CLUSTER_NAME);
         if (!Strings.isBlank(name)) return Strings.makeValidFilename(name);
+        return getCluster(node).getId();
+    }
+    
+    /** returns Couchbase cluster in ancestry, defaulting to the given node if none */
+    @Nonnull public static Entity getCluster(Entity node) {
         Iterable<CouchbaseCluster> clusterNodes = Iterables.filter(Entities.ancestors(node), CouchbaseCluster.class);
-        return Iterables.getFirst(clusterNodes, node).getId();
+        return Iterables.getFirst(clusterNodes, node);
     }
     
     public boolean isClusterInitialized() {
@@ -468,7 +475,6 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             Integer bucketRamSize = bucketMap.containsKey("bucket-ramsize") ? (Integer) bucketMap.get("bucket-ramsize") : 200;
             Integer bucketReplica = bucketMap.containsKey("bucket-replica") ? (Integer) bucketMap.get("bucket-replica") : 1;
 
-            log.info("adding bucket: {} to primary node: {}", bucketName, primaryNode.getId());
             createBucket(primaryNode, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
         }
     }

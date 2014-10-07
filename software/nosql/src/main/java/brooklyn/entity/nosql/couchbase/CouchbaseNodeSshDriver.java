@@ -315,7 +315,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 }
             })
             .run();
-        log.info("rebalanced cluster via primary node {}", getEntity());
+        log.info("Rebalanced cluster via primary node {}", getEntity());
     }
 
     private Iterable<String> getNodesHostAndPort() throws URISyntaxException {
@@ -386,6 +386,8 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
+        log.info("Adding bucket: {} to cluster {} primary node: {}", new Object[] { bucketName, CouchbaseClusterImpl.getCluster(getEntity()), getEntity() });
+        
         newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
             + getCouchbaseHostnameAndCredentials() +
             " --bucket=" + bucketName +
@@ -401,9 +403,11 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     public void addReplicationRule(Entity toCluster, String fromBucket, String toBucket) {
         DynamicTasks.queue(DependentConfiguration.attributeWhenReady(toCluster, Attributes.SERVICE_UP)).getUnchecked();
         
-        log.info("Setting up XDCR for "+fromBucket+" from "+getEntity()+" to "+toCluster);
+        String destName = CouchbaseClusterImpl.getClusterName(toCluster);
         
-        String destName = CouchbaseClusterImpl.getClusterName(getEntity());
+        log.info("Setting up XDCR for "+fromBucket+" from "+CouchbaseClusterImpl.getClusterName(getEntity())+" (via "+getEntity()+") "
+            + "to "+destName+" ("+toCluster+")");
+        
         Entity destPrimaryNode = toCluster.getAttribute(CouchbaseCluster.COUCHBASE_PRIMARY_NODE);
         String destHostname = destPrimaryNode.getAttribute(Attributes.HOSTNAME);
         String destUsername = toCluster.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
