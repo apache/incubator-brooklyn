@@ -213,9 +213,28 @@
             <artifactId>apache-rat-plugin</artifactId>
             <configuration>
               <excludes combine.children="append">
-                <exclude>**/couchdb/couch.uri</exclude>
-                <exclude>**/riak/vm.args</exclude>
+                <!--
+                    Configuration artifacts (for installations) that have been downloaded from other projects, 
+                    and then templated. These are files "without any degree of creativity" from the perspective 
+                    of the Brooklyn/Apache contribution.
+                -->
+                <exclude>src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-1.2.yaml</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-2.0.yaml</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-rackdc.properties</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/couchdb/couch.ini</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/mongodb/default-mongodb.conf</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/redis/redis.conf</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/redis/slave.conf</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/riak/app.config</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/riak/vm.args</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/solr/solr.xml</exclude>
+
+                <!-- TODO explain! -->
                 <exclude>**/*.txt</exclude>
+
+                <!-- TODO explain why exclude src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar -->
+
                 <!-- In theory, binary files should be excluded, but for reasons unknown the example.tgz was being picked up as non-binary -->
                 <exclude>**/*.tgz</exclude>
               </excludes>

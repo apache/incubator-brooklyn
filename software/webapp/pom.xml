@@ -34,6 +34,28 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!--
+                                Configuration artifacts (for installations) that have been downloaded from other projects, 
+                                and then templated. These are files "without any degree of creativity" from the perspective 
+                                of the Brooklyn/Apache contribution.
+                            -->
+                            <exclude>src/main/resources/brooklyn/entity/webapp/jboss/jboss7-standalone.xml</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/webapp/jetty/jetty-brooklyn.xml</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+    
     <dependencies>    
         <!-- required for GeoScaling DNS (entity accesses management service via HTTP) -->
         <dependency>

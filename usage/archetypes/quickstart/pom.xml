@@ -201,10 +201,23 @@
             <artifactId>apache-rat-plugin</artifactId>
             <configuration>
               <excludes combine.children="append">
-                <exclude>**/src/main/resources/archetype-resources/README.md</exclude>
-                <exclude>**/src/brooklyn-sample/README.md</exclude>
-                <exclude>**/src/test/resources/projects/integration-test-1/reference/README.md</exclude>
+                <!-- 
+                    The maven archetype are files "without any degree of creativity". They are intended
+                    purely as a template to generate a new project for a user, where upon the user can
+                    write their code within this new project.
+                    The exclusions seem to need to include code that is auto-generated during a test run.
+                -->
+                <exclude>**/src/main/resources/archetype-resources/**/*</exclude>
                 <exclude>**/src/test/resources/projects/integration-test-1/goal.txt</exclude>
+                <exclude>**/src/test/resources/projects/integration-test-1/reference/**/*</exclude>
+                <exclude>**/src/main/java/sample/**/*Sample*.java</exclude>
+                <exclude>**/src/main/resources/logback-custom.xml</exclude>
+                <exclude>**/src/brooklyn-sample/README.md</exclude>
+                <exclude>**/src/brooklyn-sample/pom.xml</exclude>
+                <exclude>**/src/brooklyn-sample/src/main/assembly/files/conf/*</exclude>
+                <exclude>**/src/brooklyn-sample/src/main/java/**/*.java</exclude>
+                <exclude>**/src/brooklyn-sample/src/main/resources/logback-custom.xml</exclude>
+                <exclude>**/src/brooklyn-sample/src/test/java/**/*.java</exclude>
               </excludes>
             </configuration>
           </plugin>
