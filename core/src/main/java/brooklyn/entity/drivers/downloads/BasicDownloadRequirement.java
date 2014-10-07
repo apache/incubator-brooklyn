@@ -60,7 +60,7 @@ public class BasicDownloadRequirement implements DownloadRequirement {
     public BasicDownloadRequirement(EntityDriver entityDriver, String addonName, Map<String, ?> properties) {
         this.entityDriver = checkNotNull(entityDriver, "entityDriver");
         this.addonName = checkNotNull(addonName, "addonName");
-        this.properties = checkNotNull(properties, "addonProperties");
+        this.properties = checkNotNull(properties, "properties");
     }
 
     @Override

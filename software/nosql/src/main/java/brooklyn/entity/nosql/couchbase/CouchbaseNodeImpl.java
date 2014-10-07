@@ -29,8 +29,10 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -51,6 +53,8 @@ import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -90,8 +94,16 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
                 }
             }
         });
+        
+        getMutableEntityType().addEffector(ADD_REPLICATION_RULE, new EffectorBody<Void>() {
+            @Override
+            public Void call(ConfigBag parameters) {
+                addReplicationRule(parameters);
+                return null;
+            }
+        });
     }
-
+    
     protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
         ConfigBag result = ConfigBag.newInstance(super.obtainProvisioningFlags(location));
         result.configure(CloudLocationConfig.OS_64_BIT, true);
@@ -232,6 +244,31 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
 
     @Override
     public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
+        if (Strings.isBlank(bucketType)) bucketType = "couchbase";
+        if (bucketRamSize==null || bucketRamSize<=0) bucketRamSize = 200;
+        if (bucketReplica==null || bucketReplica<0) bucketReplica = 1;
+        
         getDriver().bucketCreate(bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
     }
+    
+    /** exposed through {@link CouchbaseNode#ADD_REPLICATION_RULE} */
+    protected void addReplicationRule(ConfigBag ruleArgs) {
+        Object toClusterO = Preconditions.checkNotNull(ruleArgs.getStringKey("toCluster"), "toCluster must not be null");
+        if (toClusterO instanceof String) {
+            toClusterO = getManagementContext().lookup((String)toClusterO);
+        }
+        Entity toCluster = Tasks.resolving(toClusterO, Entity.class).context(getExecutionContext()).get();
+        
+        String fromBucket = Preconditions.checkNotNull( (String)ruleArgs.getStringKey("fromBucket"), "fromBucket must be specified" );
+        
+        String toBucket = (String)ruleArgs.getStringKey("toBucket");
+        if (toBucket==null) toBucket = fromBucket;
+        
+        if (!ruleArgs.getUnusedConfig().isEmpty()) {
+            throw new IllegalArgumentException("Unsupported replication rule data: "+ruleArgs.getUnusedConfig());
+        }
+        
+        getDriver().addReplicationRule(toCluster, fromBucket, toBucket);
+    }
+
 }

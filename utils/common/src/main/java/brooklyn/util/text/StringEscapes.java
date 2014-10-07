@@ -89,7 +89,8 @@ public class StringEscapes {
     
     
     public static class BashStringEscapes {
-        // single quotes don't permit escapes!  e.g. echo 'hello \' world'    doesn't work
+        // single quotes don't permit escapes!  e.g. echo 'hello \' world' doesn't work;
+        // you must do 'hello '\'' world' (to get "hello ' world")
         
         /** wraps plain text in double quotes escaped for use in bash double-quoting */
         public static String wrapBash(String value) {

@@ -27,6 +27,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nonnull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.QuorumCheck;
 import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -62,6 +65,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
@@ -69,6 +73,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
@@ -158,6 +163,10 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             addAveragingMemberEnricher(nodeSensor, enricherSetup.get(nodeSensor));
         }
         
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(IS_CLUSTER_INITIALIZED).computing(
+                IfFunctions.ifNotEquals(true).value("The cluster is not yet completely initialized")
+                    .defaultValue(null).build()).build() );
     }
     
     private void addAveragingMemberEnricher(AttributeSensor<? extends Number> fromSensor, AttributeSensor<? extends Number> toSensor) {
@@ -182,6 +191,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
     @Override
     protected void doStart() {
+        setAttribute(IS_CLUSTER_INITIALIZED, false);
+        
         super.doStart();
 
         connectSensors();
@@ -203,10 +214,9 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             setAttribute(COUCHBASE_PRIMARY_NODE, primaryNode);
 
             Set<Entity> serversToAdd = MutableSet.<Entity>copyOf(getUpNodes());
-            serversToAdd.remove(getPrimaryNode());
 
-            if (getUpNodes().size() >= getQuorumSize() && getUpNodes().size() > 1) {
-                log.info("number of SERVICE_UP nodes:{} in cluster:{} reached Quorum:{}, adding the servers", new Object[]{getUpNodes().size(), getId(), getQuorumSize()});
+            if (serversToAdd.size() >= getQuorumSize() && serversToAdd.size() > 1) {
+                log.info("Number of SERVICE_UP nodes:{} in cluster:{} reached Quorum:{}, adding the servers", new Object[]{serversToAdd.size(), getId(), getQuorumSize()});
                 addServers(serversToAdd);
 
                 //wait for servers to be added to the couchbase server
@@ -218,25 +228,39 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 }
                 
                 ((CouchbaseNode)getPrimaryNode()).rebalance();
-                
-                if (getConfig(CREATE_BUCKETS)!=null) {
-                    try {
-                        Tasks.setBlockingDetails("Creating buckets in Couchbase");
-
-                        createBuckets();
-                        DependentConfiguration.waitInTaskForAttributeReady(this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
-                    
-                    } finally {
-                        Tasks.resetBlockingDetails();
-                    }
-                }
-
-                setAttribute(IS_CLUSTER_INITIALIZED, true);
-            } else {
-                //TODO: add a repeater to wait for a quorum of servers to be up.
-                //retry waiting for service up?
-                //check Repeater.
+            } else if (getQuorumSize()>1) {
+                log.warn(this+" is not quorate; will likely fail later, but proceeding for now");
             }
+                
+            if (getConfig(CREATE_BUCKETS)!=null) {
+                try {
+                    Tasks.setBlockingDetails("Creating buckets in Couchbase");
+
+                    createBuckets();
+                    DependentConfiguration.waitInTaskForAttributeReady(this, CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, Predicates.equalTo(false));
+
+                } finally {
+                    Tasks.resetBlockingDetails();
+                }
+            }
+
+            if (getConfig(REPLICATION)!=null) {
+                try {
+                    Tasks.setBlockingDetails("Configuring replication rules");
+
+                    List<Map<String, Object>> replRules = getConfig(REPLICATION);
+                    for (Map<String, Object> replRule: replRules) {
+                        DynamicTasks.queue(Effectors.invocation(getPrimaryNode(), CouchbaseNode.ADD_REPLICATION_RULE, replRule));
+                    }
+                    DynamicTasks.waitForLast();
+
+                } finally {
+                    Tasks.resetBlockingDetails();
+                }
+            }
+
+            setAttribute(IS_CLUSTER_INITIALIZED, true);
+            
         } else {
             throw new IllegalStateException("No up nodes available after starting");
         }
@@ -363,8 +387,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         return getAttribute(COUCHBASE_CLUSTER_UP_NODES);
     }
 
-    private Entity getPrimaryNode() {
-        return getAttribute(COUCHBASE_PRIMARY_NODE);
+    private CouchbaseNode getPrimaryNode() {
+        return (CouchbaseNode) getAttribute(COUCHBASE_PRIMARY_NODE);
     }
 
     @Override
@@ -397,30 +421,60 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     
     protected void addServers(Set<Entity> serversToAdd) {
         Preconditions.checkNotNull(serversToAdd);
-        for (Entity e : serversToAdd) {
-            if (!isMemberInCluster(e)) {
-                addServer(e);
-            }
+        for (Entity s : serversToAdd) {
+            addServerSeveralTimes(s, 12, Duration.TEN_SECONDS);
+        }
+    }
+
+    /** try adding in a loop because we are seeing spurious port failures in AWS */
+    protected void addServerSeveralTimes(Entity s, int numRetries, Duration delayOnFailure) {
+        try {
+            addServer(s);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            if (numRetries<=0) throw Exceptions.propagate(e);
+            // retry once after sleep because we are getting some odd primary-change events
+            log.warn("Error adding "+s+" to "+this+", "+numRetries+" retries remaining, will retry after delay ("+e+")");
+            Time.sleep(delayOnFailure);
+            addServerSeveralTimes(s, numRetries-1, delayOnFailure);
         }
     }
 
     protected void addServer(Entity serverToAdd) {
         Preconditions.checkNotNull(serverToAdd);
+        if (serverToAdd.equals(getPrimaryNode())) {
+            // no need to add; but we pass it in anyway because it makes the calling logic easier
+            return;
+        }
         if (!isMemberInCluster(serverToAdd)) {
             HostAndPort webAdmin = BrooklynAccessUtils.getBrooklynAccessibleAddress(serverToAdd, serverToAdd.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
             String username = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
             String password = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
 
             if (isClusterInitialized()) {
-                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD_AND_REBALANCE, webAdmin.toString(), username, password);
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD_AND_REBALANCE, webAdmin.toString(), username, password).getUnchecked();
             } else {
-                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, webAdmin.toString(), username, password);
+                Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, webAdmin.toString(), username, password).getUnchecked();
             }
             //FIXME check feedback of whether the server was added.
             ((EntityInternal) serverToAdd).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
         }
     }
 
+    /** finds the cluster name specified for a node or a cluster, 
+     * using {@link CouchbaseCluster#CLUSTER_NAME} or falling back to the cluster (or node) ID. */
+    public static String getClusterName(Entity node) {
+        String name = node.getConfig(CLUSTER_NAME);
+        if (!Strings.isBlank(name)) return Strings.makeValidFilename(name);
+        return getClusterOrNode(node).getId();
+    }
+    
+    /** returns Couchbase cluster in ancestry, defaulting to the given node if none */
+    @Nonnull public static Entity getClusterOrNode(Entity node) {
+        Iterable<CouchbaseCluster> clusterNodes = Iterables.filter(Entities.ancestors(node), CouchbaseCluster.class);
+        return Iterables.getFirst(clusterNodes, node);
+    }
+    
     public boolean isClusterInitialized() {
         return Optional.fromNullable(getAttribute(IS_CLUSTER_INITIALIZED)).or(false);
     }
@@ -444,7 +498,6 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             Integer bucketRamSize = bucketMap.containsKey("bucket-ramsize") ? (Integer) bucketMap.get("bucket-ramsize") : 200;
             Integer bucketReplica = bucketMap.containsKey("bucket-replica") ? (Integer) bucketMap.get("bucket-replica") : 1;
 
-            log.info("adding bucket: {} to primary node: {}", bucketName, primaryNode.getId());
             createBucket(primaryNode, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
         }
     }
