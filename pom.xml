@@ -951,6 +951,18 @@
                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!--
+                                Excluding sandbox because not part of distribution: not in tgz, and not uploaded to maven-central.
+                            -->
+                            <exclude>sandbox/**</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
 
