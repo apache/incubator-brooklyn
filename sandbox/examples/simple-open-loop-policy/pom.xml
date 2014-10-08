@@ -20,7 +20,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-    <artifactId>brooklyn-example-simple-open-loop-policy</artifactId>
+    <artifactId>brooklyn-sandbox-example-simple-open-loop-policy</artifactId>
+    <groupId>io.brooklyn.sandbox.example</groupId>
     <name>Brooklyn Simple Web Cluster Example</name>
 
     <!-- this is only needed for "mvn deploy"; the group and version can be extracted
@@ -66,6 +67,20 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <exclude>**/localrepo/io/brooklyn/org.marre.smsj/1.0.0-20051126/org.marre.smsj-1.0.0-20051126.pom</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -136,6 +151,7 @@
             </plugin>
 -->
         </plugins>
+
     </build>
         
 </project>
