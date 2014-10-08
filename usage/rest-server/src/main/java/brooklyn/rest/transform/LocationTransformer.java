@@ -36,6 +36,7 @@ import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
@@ -155,8 +156,12 @@ public class LocationTransformer {
         }
         if (specId==null && spec!=null) {
             // fall back to attempting to lookup it
-            Location ll = mgmt.getLocationRegistry().resolveIfPossible(spec);
-            if (ll!=null) specId = ll.getId();
+            try {
+                Location ll = mgmt.getLocationRegistry().resolveForPeeking(new BasicLocationDefinition(null, spec, null));
+                if (ll!=null) specId = ll.getId();
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+            }
         }
         
         Map<String, Object> configOrig = l.getAllConfig(level!=LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
