@@ -237,20 +237,19 @@ if ! ssh ${SSH_OPTS} ${USER}@${HOST} "test -f .brooklyn/brooklyn.properties"; th
     log -n "Configuring Brooklyn properties..."
     ssh ${SSH_OPTS} ${USER}@${HOST} "mkdir -p .brooklyn"
     ssh ${SSH_OPTS} ${USER}@${HOST} "curl -L -s -o .brooklyn/brooklyn.properties http://brooklyncentral.github.io/use/guide/quickstart/brooklyn.properties"
-    ssh ${SSH_OPTS} ${USER}@${HOST} "curl -L -s -o .brooklyn/catalog.xml http://brooklyncentral.github.io/use/guide/quickstart/catalog.xml"
 
     # Generate Brooklyn admin password
     if ${GENERATE_PASSWORD}; then
-        GENERATED=$(dd if=/dev/random bs=1 count=8 2> /dev/null | uuencode -m - | sed -n 2p | tr -dc "A-Za-z0-9")
+        GENERATED=$(dd if=/dev/random bs=1 count=32 2> /dev/null | uuencode -m - | sed -n 2p | tr -dc "A-Za-z0-9")
         SALT=$(echo ${GENERATED} | cut -c1-4)
         PASSWORD=$(echo ${GENERATED} | cut -c5-12)
         which shasum && SHA256="shasum -a 256"
         which sha256sum && SHA256="sha256sum"
-        HASH=$(echo -n ${SALT}${PASSWORD} | ${SHA256} | cut -d\  -f1)
+        HASH=$(printf '${SALT}${PASSWORD}\\00' | ${SHA256} | cut -d\  -f1)
         ssh ${SSH_OPTS} ${USER}@${HOST} "tee -a .brooklyn/brooklyn.properties" > /dev/null 2>&1 <<EOF
-brooklyn.webconsole.security.users=${USER}
-brooklyn.webconsole.security.user.${USER}=${SALT}
-brooklyn.webconsole.security.user.${USER}=${HASH}
+brooklyn.webconsole.security.users = ${USER}
+brooklyn.webconsole.security.user.${USER}.salt = ${SALT}
+brooklyn.webconsole.security.user.${USER}.sha256 = ${HASH}
 EOF
     else
         ssh ${SSH_OPTS} ${USER}@${HOST} "sed -i.bak 's/^# brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/' .brooklyn/brooklyn.properties"
