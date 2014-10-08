@@ -43,6 +43,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.drivers.downloads.BasicDownloadRequirement;
 import brooklyn.entity.drivers.downloads.DownloadProducerFromUrlAttribute;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -324,7 +325,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         
     @Override
     public void rebalance() {
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "explicitly started");
         newScript("rebalance")
                 .body.append(
                 couchbaseCli("rebalance") +
@@ -350,9 +351,12 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             })
             .run();
         
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "waiting for completion");
+        // NB: a sensor feed will also update this
+        
         // then wait until the re-balance is complete
-        Repeater.create()
-            .every(Duration.FIVE_SECONDS)
+        boolean completed = Repeater.create()
+            .backoff(Duration.ONE_SECOND, 1.2, Duration.TEN_SECONDS)
             .limitTimeTo(Duration.FIVE_MINUTES)
             .until(new Callable<Boolean>() {
                 @Override
@@ -366,7 +370,15 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 }
             })
             .run();
-        log.info("Rebalanced cluster via primary node {}", getEntity());
+        if (completed) {
+            entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "completed");
+            ServiceStateLogic.ServiceNotUpLogic.clearNotUpIndicator(getEntity(), "rebalancing");
+            log.info("Rebalanced cluster via primary node {}", getEntity());
+        } else {
+            entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "timed out");
+            ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(getEntity(), "rebalancing", "rebalance did not complete within time limit");
+            log.warn("Timeout rebalancing cluster via primary node {}", getEntity());
+        }
     }
 
     private Iterable<String> getNodesHostAndPort() throws URISyntaxException {
@@ -393,9 +405,9 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     }
     
     private boolean isNodeRebalancing(String nodeHostAndPort) throws URISyntaxException {
-        HttpToolResponse response = getAPIResponse("http://" + nodeHostAndPort + "/pools/nodes/rebalanceProgress");
+        HttpToolResponse response = getAPIResponse("http://" + nodeHostAndPort + "/pools/default/rebalanceProgress");
         if (response.getResponseCode() != 200) {
-            throw new IllegalStateException("failed to rebalance cluster: " + response);
+            throw new IllegalStateException("failed retrieving rebalance status: " + response);
         }
         return !"none".equals(HttpValueFunctions.jsonContents("status", String.class).apply(response));
     }
@@ -432,7 +444,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 " --server-add-password=" + password)
                 .failOnNonZeroResultCode()
                 .execute();
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "triggered as part of server-add");
     }
 
     @Override

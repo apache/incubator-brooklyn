@@ -55,6 +55,7 @@ import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -213,7 +214,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         
         httpFeed = HttpFeed.builder()
             .entity(this)
-            .period(1000)
+            .period(Duration.seconds(3))
             .baseUri(adminUrl + "/pools/nodes/")
             .credentialsIfNotNull(getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME), getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD))
             .poll(getSensorFromNodeStat(CouchbaseNode.OPS, "ops"))
