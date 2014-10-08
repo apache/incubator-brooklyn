@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.WildcardGlobs;
@@ -97,7 +98,6 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         
         List<SshMachineLocation> machines = Lists.newArrayList();
         for (String host : hostAddresses) {
-            SshMachineLocation machine;
             String userHere = user;
             String hostHere = host;
             if (host.contains("@")) {
@@ -109,14 +109,13 @@ public class ByonLocationResolver extends AbstractLocationResolver {
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid host '"+hostHere+"' specified in '"+spec+"': "+e);
             }
+            LocationSpec<SshMachineLocation> locationSpec = LocationSpec.create(SshMachineLocation.class)
+                    .configure("address", hostHere.trim())
+                    .configureIfNotNull(LocalLocationManager.CREATE_UNMANAGED, config.get(LocalLocationManager.CREATE_UNMANAGED));
             if (JavaGroovyEquivalents.groovyTruth(userHere)) {
-                machine = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                        .configure("user", userHere.trim())
-                        .configure("address", hostHere.trim()));    
-            } else {
-                machine = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                        .configure("address", hostHere.trim()));    
+                locationSpec.configure("user", userHere.trim());
             }
+            SshMachineLocation machine = managementContext.getLocationManager().createLocation(locationSpec);
             machines.add(machine);
         }
         
