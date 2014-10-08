@@ -64,7 +64,7 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
         Assert.assertEquals(group.getMembers().size(), 0);
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 0);
         
-        TestEntity e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        final TestEntity e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 0);
 
@@ -74,7 +74,7 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 1);
         Asserts.assertEqualsIgnoringOrder(group.getAttribute(BasicGroup.GROUP_MEMBERS), ImmutableList.of(e1));
         
-        TestEntity e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        final TestEntity e2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 1);
         Assert.assertEquals(group.getMembers().size(), 1);
@@ -87,7 +87,12 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
 
         e2.setAttribute(TestEntity.NAME, "BOB");
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 2);
-        Asserts.assertEqualsIgnoringOrder(group.getAttribute(BasicGroup.GROUP_MEMBERS), ImmutableList.of(e1, e2));
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                // must use "succeedsEventually" because size + members attributes are set sequentially in another thread; 
+                // just waiting for the first does not mean the second will have been set by the time we check in this thread.
+                Asserts.assertEqualsIgnoringOrder(group.getAttribute(BasicGroup.GROUP_MEMBERS), ImmutableList.of(e1, e2));
+            }});
     }
 
 
@@ -98,10 +103,9 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
      */
     public static class FindUpServices extends AbstractPolicy {
 
-        @SuppressWarnings({"rawtypes"})
-        protected final SensorEventListener handler = new SensorEventListener() {
+        protected final SensorEventListener<Object> handler = new SensorEventListener<Object>() {
             @Override
-            public void onEvent(SensorEvent event) {
+            public void onEvent(SensorEvent<Object> event) {
                 updateMembership(event.getSource());
             }
         };
