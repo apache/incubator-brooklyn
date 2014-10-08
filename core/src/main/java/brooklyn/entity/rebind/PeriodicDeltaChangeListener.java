@@ -53,7 +53,9 @@ import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.api.client.util.Lists;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 /**
@@ -368,6 +370,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 persisterDelta.removedFeedIds = prevDeltaCollector.removedFeedIds;
                 persisterDelta.removedCatalogItemIds = prevDeltaCollector.removedCatalogItemIds;
 
+                if (LOG.isDebugEnabled()) dumpDebugInfo(persisterDelta);
                 /*
                  * Need to guarantee "happens before", with any thread that subsequently reads
                  * the mementos.
@@ -393,6 +396,32 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
     
+    private void dumpDebugInfo(PersisterDeltaImpl delta) {
+        //copied from BrooklynMementoPersisterObjectStore - already logged there, but have a unified for all stores for debugging
+        LOG.debug("Periodic delta updated summary {} entities, {} locations, " +
+            "{} policies, {} enrichers and {} catalog items; " +
+            "removing {} entities, {} locations, {} policies, {} enrichers and {} catalog items",
+            new Object[] {
+                    delta.entities().size(), delta.locations().size(), delta.policies().size(), delta.enrichers().size(), delta.catalogItems().size(),
+                    delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size(),
+                    delta.removedEnricherIds().size(), delta.removedCatalogItemIds().size()});
+
+        LOG.debug("Detailed period delta updated {} entities, {} locations, " +
+                "{} policies, {} enrichers and {} catalog items; " +
+                "removing {} entities, {} locations, {} policies, {} enrichers and {} catalog items",
+                new Object[] {
+                        limitCnt(delta.entities()), limitCnt(delta.locations()),
+                        limitCnt(delta.policies()), limitCnt(delta.enrichers()),
+                        limitCnt(delta.catalogItems()), limitCnt(delta.removedEntityIds()),
+                        limitCnt(delta.removedLocationIds()), limitCnt(delta.removedPolicyIds()),
+                        limitCnt(delta.removedEnricherIds()), limitCnt(delta.removedCatalogItemIds())});
+
+    }
+
+    private <T> Collection<T> limitCnt(Collection<T> items) {
+        return Lists.newArrayList(Iterables.limit(items, 50));
+    }
+
     @Override
     public synchronized void onManaged(BrooklynObject instance) {
         if (LOG.isTraceEnabled()) LOG.trace("onManaged: {}", instance);
