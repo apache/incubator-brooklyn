@@ -34,6 +34,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.PersistMode;
@@ -229,6 +230,7 @@ public class LoadTest {
             public T call() {
                 Stopwatch stopwatch = Stopwatch.createStarted();
                 T app = managementContext.getEntityManager().createEntity(entitySpec);
+                Entities.startManagement(app, managementContext);
                 app.start(ImmutableList.of(localhost));
                 Duration duration = Duration.of(stopwatch.elapsed(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
                 LOG.info("Provisioning time: "+duration);

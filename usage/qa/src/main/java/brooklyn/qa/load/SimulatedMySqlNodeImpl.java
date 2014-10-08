@@ -37,8 +37,12 @@ import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
+/**
+ * @see SimulatedJBoss7ServerImpl for description of purpose and configuration options.
+ */
 public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
 
+    public static final ConfigKey<Boolean> SIMULATE_ENTITY = SimulatedTheeTierApp.SIMULATE_ENTITY;
     public static final ConfigKey<Boolean> SIMULATE_EXTERNAL_MONITORING = SimulatedTheeTierApp.SIMULATE_EXTERNAL_MONITORING;
     public static final ConfigKey<Boolean> SKIP_SSH_ON_START = SimulatedTheeTierApp.SKIP_SSH_ON_START;
     
@@ -83,7 +87,11 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
         // simulate metrics, for if using ssh polling
         @Override
         public String getStatusCmd() {
-            return "echo Uptime: 2427  Threads: 1  Questions: 581  Slow queries: 0  Opens: 53  Flush tables: 1  Open tables: 35  Queries per second avg: "+(counter++ % 100);
+            if (entity.getConfig(SIMULATE_ENTITY)) {
+                return "echo Uptime: 2427  Threads: 1  Questions: 581  Slow queries: 0  Opens: 53  Flush tables: 1  Open tables: 35  Queries per second avg: "+(counter++ % 100);
+            } else {
+                return super.getStatusCmd();
+            }
         }
 
         @Override
@@ -99,7 +107,10 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
         // This is a copy of super.customize, but with the mysqladmin-exec disabled
         @Override
         public void customize() {
-            if (entity.getConfig(SKIP_SSH_ON_START)) {
+            if (!entity.getConfig(SIMULATE_ENTITY)) {
+                super.customize();
+                return;
+            } else if (entity.getConfig(SKIP_SSH_ON_START)) {
                 // no-op
             } else {
                 copyDatabaseConfigScript();
@@ -138,6 +149,11 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
 
         @Override
         public void launch() {
+            if (!entity.getConfig(SIMULATE_ENTITY)) {
+                super.launch();
+                return;
+            }
+            
             entity.setAttribute(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
             
             if (entity.getConfig(SKIP_SSH_ON_START)) {

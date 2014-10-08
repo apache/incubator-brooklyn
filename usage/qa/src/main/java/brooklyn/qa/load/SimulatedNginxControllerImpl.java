@@ -42,8 +42,12 @@ import brooklyn.util.net.Networking;
 
 import com.google.common.base.Functions;
 
+/**
+ * @see SimulatedJBoss7ServerImpl for description of purpose and configuration options.
+ */
 public class SimulatedNginxControllerImpl extends NginxControllerImpl {
 
+    public static final ConfigKey<Boolean> SIMULATE_ENTITY = SimulatedTheeTierApp.SIMULATE_ENTITY;
     public static final ConfigKey<Boolean> SIMULATE_EXTERNAL_MONITORING = SimulatedTheeTierApp.SIMULATE_EXTERNAL_MONITORING;
     public static final ConfigKey<Boolean> SKIP_SSH_ON_START = SimulatedTheeTierApp.SKIP_SSH_ON_START;
     
@@ -57,7 +61,13 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
 
     @Override
     public void connectSensors() {
+        boolean simulateEntity = getConfig(SIMULATE_ENTITY);
         boolean simulateExternalMonitoring = getConfig(SIMULATE_EXTERNAL_MONITORING);
+
+        if (!simulateEntity && !simulateExternalMonitoring) {
+            super.connectSensors();
+            return;
+        }
 
         // From AbstractController.connectSensors
         if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
@@ -67,11 +77,13 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
         ConfigToAttributes.apply(this);
 
         if (!simulateExternalMonitoring) {
-            // simulate work of periodic HTTP request
+            // if simulating entity, then simulate work of periodic HTTP request; TODO but not parsing JSON response
+            String uriToPoll = (simulateEntity) ? "http://localhost:8081" : getAttribute(ROOT_URL);
+            
             httpFeed = HttpFeed.builder()
                     .entity(this)
                     .period(getConfig(HTTP_POLL_PERIOD))
-                    .baseUri("http://localhost:8081")
+                    .baseUri(uriToPoll)
                     .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                             .onSuccess(Functions.constant(true))
                             .onFailureOrException(Functions.constant(true)))
@@ -137,6 +149,11 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
         
         @Override
         public void launch() {
+            if (!entity.getConfig(SIMULATE_ENTITY)) {
+                super.launch();
+                return;
+            }
+            
             Networking.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
 
             if (entity.getConfig(SKIP_SSH_ON_START)) {

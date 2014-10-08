@@ -63,9 +63,13 @@ import com.google.common.collect.Lists;
  * rather than the ability to host many running app-servers.
  * 
  * The app is based on WebClusterDatabaseExampleApp
+ * 
+ * @see SimulatedJBoss7ServerImpl for description of purpose and configuration options.
  */
 public class SimulatedTheeTierApp extends AbstractApplication {
 
+    public static final ConfigKey<Boolean> SIMULATE_ENTITY = ConfigKeys.newBooleanConfigKey("simulateEntity", "", true);
+    
     public static final ConfigKey<Boolean> SIMULATE_EXTERNAL_MONITORING = ConfigKeys.newBooleanConfigKey("simulateExternalMonitoring", "", true);
 
     public static final ConfigKey<Boolean> SKIP_SSH_ON_START = ConfigKeys.newBooleanConfigKey("skipSshOnStart", "", false);
