@@ -458,6 +458,11 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             throw new IllegalStateException("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
         }
 
+        // TODO would like a WebTasks API such as this:
+//        DynamicTasks.queue(WebTasks.get(baseUrl).subpath("controller/addNode").credentials(getUsername(), getPassword())
+//            .queryParam("hostname", serverToAdd).queryParam("user", username).queryParam("password", password)
+//            .summary("REST addNode "+serverToAdd)).getUnchecked();
+
         // or, via CLI:
 //        newScript("serverAdd").body.append(couchbaseCli("server-add")
 //                + getCouchbaseHostnameAndCredentials() +
