@@ -98,19 +98,6 @@
                     </executions>
             </plugin>
         </plugins>
-      <pluginManagement>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.rat</groupId>
-            <artifactId>apache-rat-plugin</artifactId>
-            <configuration>
-              <excludes combine.children="append">
-                <exclude>**/log-exclusions.txt</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </pluginManagement>
     </build> 
 </project>
 

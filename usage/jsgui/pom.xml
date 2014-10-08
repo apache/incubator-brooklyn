@@ -233,9 +233,18 @@
                     <artifactId>apache-rat-plugin</artifactId>
                     <configuration>
                         <excludes combine.children="append">
+                            <!--
+                                JavaScript code that is not copyright of Apache Foundation. It is included in NOTICE.
+                            -->
                             <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
                             <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
-                            <exclude>**/src/test/javascript/config.txt</exclude>
+
+                            <!--
+                                Trivial Json controlling the build,  "without any degree of creativity".
+                                Json does not support comments, therefore far easier to just omit the license header!
+                            -->
+                            <exclude>**//src/build/optimize-css.json</exclude>
+                            <exclude>**//src/build/optimize-js.json</exclude>
                         </excludes>
                     </configuration>
                 </plugin>

@@ -114,6 +114,13 @@
                     <artifactId>apache-rat-plugin</artifactId>
                     <configuration>
                         <excludes combine.children="append">
+                            <!--
+                                Java code that is copyright OSGi Alliance. It is included in NOTICE.
+                                As the comment at the top of the Java files says:
+                                "BROOKLYN NOTE: This is a verbatim copy of the original in org.osgi.enterprise-4.2.0, 
+                                 reproduced here to avoid pulling in the rest of that bundle and its chain of dependencies.
+                                 The only difference is this comment and the suppress warnings."
+                            -->
                             <exclude>**/src/main/java/org/osgi/jmx/*</exclude>
                         </excludes>
                     </configuration>
