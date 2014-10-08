@@ -61,7 +61,10 @@ public interface EntityConfigApi {
       @ApiParam(value = "Application ID or name", required = true)
       @PathParam("application") String application,
       @ApiParam(value = "Entity ID or name", required = true)
-      @PathParam("entity") String entityToken) ;
+      @PathParam("entity") String entityToken,
+      @ApiParam(value = "Return raw config data instead of display values", required = false)
+      @QueryParam("raw") @DefaultValue("false") final Boolean raw
+      ) ;
   
   @GET
   @Path("/{config}")
@@ -76,7 +79,9 @@ public interface EntityConfigApi {
       @ApiParam(value = "Entity ID or name", required = true)
       @PathParam("entity") String entityToken,
       @ApiParam(value = "Config key ID", required = true)
-      @PathParam("config") String configKeyName
+      @PathParam("config") String configKeyName,
+      @ApiParam(value = "Return raw config data instead of display values", required = false)
+      @QueryParam("raw") @DefaultValue("false") final Boolean raw
       );
 
   // if user requests plain value we skip some json post-processing
@@ -93,7 +98,9 @@ public interface EntityConfigApi {
       @ApiParam(value = "Entity ID or name", required = true)
       @PathParam("entity") String entityToken,
       @ApiParam(value = "Config key ID", required = true)
-      @PathParam("config") String configKeyName
+      @PathParam("config") String configKeyName,
+      @ApiParam(value = "Return raw config data instead of display values", required = false)
+      @QueryParam("raw") @DefaultValue("false") final Boolean raw
   );
 
   @POST

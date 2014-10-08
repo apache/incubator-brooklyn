@@ -41,9 +41,7 @@ import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -68,45 +66,37 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     // TODO support parameters  ?show=value,summary&name=xxx &format={string,json,xml}
     // (and in sensors class)
     @Override
-    public Map<String, Object> batchConfigRead(String application, String entityToken) {
+    public Map<String, Object> batchConfigRead(String application, String entityToken, Boolean raw) {
         // TODO: add test
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
         Map<ConfigKey<?>, Object> source = ((EntityInternal) entity).getAllConfig();
         Map<String, Object> result = Maps.newLinkedHashMap();
         for (Map.Entry<ConfigKey<?>, Object> ek : source.entrySet()) {
-            Object value = applyDisplayValueHint(ek.getKey(), ek.getValue());
+            Object value = RendererHints.applyDisplayValueHint(ek.getKey(), ek.getValue());
+            if (Boolean.FALSE.equals(raw)) {
+                value = RendererHints.applyDisplayValueHint(ek.getKey(), value);
+            }
             result.put(ek.getKey().getName(), getValueForDisplay(value, true, false));
         }
         return result;
     }
 
-    @SuppressWarnings("rawtypes")
-    public static Object applyDisplayValueHint(ConfigKey<?> configKey, Object value) {
-        Iterable<RendererHints.DisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(configKey), RendererHints.DisplayValue.class);
-        if (Iterables.size(hints) > 1) {
-            LOG.warn("Multiple display value hints set for sensor {}; Only one will be applied, using first", configKey);
-        }
-
-        Optional<RendererHints.DisplayValue> hint = Optional.fromNullable(Iterables.getFirst(hints, null));
-        return hint.isPresent() ? hint.get().getDisplayValue(value) : value;
-    }
-
   @Override
-  public Object get(String application, String entityToken, String configKeyName) {
-      return get(true, application, entityToken, configKeyName);
+  public Object get(String application, String entityToken, String configKeyName, Boolean raw) {
+      return get(true, application, entityToken, configKeyName, raw);
   }
   
   @Override
-  public String getPlain(String application, String entityToken, String configKeyName) {
-      return (String)get(true, application, entityToken, configKeyName);
+  public String getPlain(String application, String entityToken, String configKeyName, Boolean raw) {
+      return (String)get(true, application, entityToken, configKeyName, raw);
   }
 
-    public Object get(boolean preferJson, String application, String entityToken, String configKeyName) {
+    public Object get(boolean preferJson, String application, String entityToken, String configKeyName, Boolean raw) {
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
         ConfigKey<?> ck = findConfig(entity, configKeyName);
         Object value = entity.getConfigRaw(ck, true).orNull();
-        if (value != null) {
-            value = applyDisplayValueHint(ck, value);
+        if (Boolean.FALSE.equals(raw)) {
+            value = RendererHints.applyDisplayValueHint(ck, value);
         }
         return getValueForDisplay(value, preferJson, true);
     }
@@ -127,6 +117,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
       }
 
       ConfigKey ck = findConfig(entity, configName);
+      LOG.debug("REST setting config "+configName+" on "+entity+" to "+newValue);
       ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
       if (Boolean.TRUE.equals(recurse)) {
           for (Entity e2: Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
