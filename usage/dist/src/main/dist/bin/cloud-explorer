@@ -21,11 +21,10 @@
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd -P)
 
-# discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command (brooklyn)
+# discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command
 if [ -z "$BROOKLYN_HOME" ] ; then
     BROOKLYN_HOME=$(cd "$(dirname "$(readlink -f "$0" 2> /dev/null || readlink "$0" 2> /dev/null || echo "$0")")/.." && pwd)
 fi
-
 
 # use default memory settings, if not specified
 if [ -z "${JAVA_OPTS}" ] ; then
@@ -38,10 +37,6 @@ INITIAL_CLASSPATH=${BROOKLYN_HOME}/conf:${BROOKLYN_HOME}/lib/patch/*:${BROOKLYN_
 if [ ! -z "${BROOKLYN_CLASSPATH}" ]; then
     INITIAL_CLASSPATH=${BROOKLYN_CLASSPATH}:${INITIAL_CLASSPATH}
 fi
-
-# force resolution of localhost to be loopback, otherwise we hit problems
-# TODO should be changed in code
-JAVA_OPTS="-Dbrooklyn.location.localhost.address=127.0.0.1 ${JAVA_OPTS}"
 
 # run cloud-explorer
 exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.CloudExplorer "$@"

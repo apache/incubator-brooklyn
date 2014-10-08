@@ -16,18 +16,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-# Brooklyn
-#
 
 #set -x # debug
 
-# discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command
 ROOT=$(cd "$(dirname "$0")/.." && pwd -P)
+
+# discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command
 if [ -z "$BROOKLYN_HOME" ] ; then
     BROOKLYN_HOME=$(cd "$(dirname "$(readlink -f "$0" 2> /dev/null || readlink "$0" 2> /dev/null || echo "$0")")/.." && pwd)
 fi
-export ROOT BROOKLYN_HOME
 
 # use default memory settings, if not specified
 if [ -z "${JAVA_OPTS}" ] ; then
@@ -40,12 +37,6 @@ INITIAL_CLASSPATH=${BROOKLYN_HOME}/conf:${BROOKLYN_HOME}/lib/patch/*:${BROOKLYN_
 if [ ! -z "${BROOKLYN_CLASSPATH}" ]; then
     INITIAL_CLASSPATH=${BROOKLYN_CLASSPATH}:${INITIAL_CLASSPATH}
 fi
-export INITIAL_CLASSPATH
 
-# force resolution of localhost to be loopback, otherwise we hit problems
-# TODO should be changed in code
-JAVA_OPTS="-Dbrooklyn.location.localhost.address=127.0.0.1 ${JAVA_OPTS}"
-
-# start Brooklyn
-echo $$ > "$ROOT/pid_java"
-exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.Main "$@"
+# run item-lister
+exec java ${JAVA_OPTS} -cp "${INITIAL_CLASSPATH}" brooklyn.cli.itemlister.ItemLister "$@"
