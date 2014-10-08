@@ -35,15 +35,17 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.location.Location;
@@ -77,7 +79,7 @@ public class WebClusterDatabaseOpenLoopExample extends ApplicationBuilder {
     public static final String CLICKATELL_APIID = "3411519";
     public static final String SMS_RECEIVER = "441234567890";
 
-    public static final BasicAttributeSensor<Integer> APPSERVERS_COUNT = Sensors.newIntegerSensor( 
+    public static final AttributeSensor<Integer> APPSERVERS_COUNT = Sensors.newIntegerSensor( 
             "appservers.count", "Number of app servers deployed");
 
     public static final BasicNotificationSensor<MaxPoolSizeReachedEvent> MAX_SIZE_REACHED = new BasicNotificationSensor<MaxPoolSizeReachedEvent>(
@@ -140,10 +142,11 @@ public class WebClusterDatabaseOpenLoopExample extends ApplicationBuilder {
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
         String location = CommandLineUtil.getCommandLineOption(args, "--location", "localhost");
 
-        BrooklynServerDetails server = BrooklynLauncher.newLauncher()
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .webconsolePort(port)
-                .launch();
-
+                .start();
+        BrooklynServerDetails server = launcher.getServerDetails();
+        
         Location loc = server.getManagementContext().getLocationRegistry().resolve(location);
 
         StartableApplication app = new WebClusterDatabaseOpenLoopExample()
