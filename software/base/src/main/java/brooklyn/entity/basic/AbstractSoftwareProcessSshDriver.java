@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
@@ -470,7 +469,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      *                 given flags are used. Otherwise, the given flags are combined with (and take
      *                 precendence over) the flags returned by {@link #getSshFlags()}.
      * @param source URI of file to copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server
+     * @param target Destination on server, relative to {@link #getRunDir()} if not absolute path
      * @param createParentDir Whether to create the parent target directory, if it doesn't already exist
      * @return The exit code of the SSH command run
      */
@@ -482,19 +481,21 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
         flags.putAll(sshFlags);
 
+        String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getRunDir(), target);
+
         if (createParentDir) {
             // don't use File.separator because it's remote machine's format, rather than local machine's
-            int lastSlashIndex = target.lastIndexOf("/");
-            String parent = (lastSlashIndex > 0) ? target.substring(0, lastSlashIndex) : null;
+            int lastSlashIndex = destination.lastIndexOf("/");
+            String parent = (lastSlashIndex > 0) ? destination.substring(0, lastSlashIndex) : null;
             if (parent != null) {
                 getMachine().execCommands("createParentDir", ImmutableList.of("mkdir -p "+parent));
             }
         }
 
-        int result = getMachine().installTo(resource, flags, source, target);
+        int result = getMachine().installTo(resource, flags, source, destination);
         if (result == 0) {
             if (log.isDebugEnabled()) {
-                log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, source, target, result });
+                log.debug("Copied file for {}: {} to {} - result {}", new Object[] { entity, source, destination, result });
             }
         }
         return result;
@@ -537,10 +538,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
         flags.putAll(sshFlags);
 
+        String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getRunDir(), target);
+
         if (createParentDir) {
             // don't use File.separator because it's remote machine's format, rather than local machine's
-            int lastSlashIndex = target.lastIndexOf("/");
-            String parent = (lastSlashIndex > 0) ? target.substring(0, lastSlashIndex) : null;
+            int lastSlashIndex = destination.lastIndexOf("/");
+            String parent = (lastSlashIndex > 0) ? destination.substring(0, lastSlashIndex) : null;
             if (parent != null) {
                 getMachine().execCommands("createParentDir", ImmutableList.of("mkdir -p "+parent));
             }
@@ -549,17 +552,17 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         // TODO SshMachineLocation.copyTo currently doesn't log warn on non-zero or set blocking details
         // (because delegated to by installTo, for multiple calls). So do it here for now.
         int result;
-        String prevBlockingDetails = Tasks.setBlockingDetails("copying resource to server at "+target);
+        String prevBlockingDetails = Tasks.setBlockingDetails("copying resource to server at "+destination);
         try {
-            result = getMachine().copyTo(flags, source, target);
+            result = getMachine().copyTo(flags, source, destination);
         } finally {
             Tasks.setBlockingDetails(prevBlockingDetails);
         }
-        
+
         if (result == 0) {
-            log.debug("copying stream complete; {} on {}", new Object[] { target, getMachine() });
+            log.debug("copying stream complete; {} on {}", new Object[] { destination, getMachine() });
         } else {
-            log.warn("copying stream failed; {} on {}: {}", new Object[] { target, getMachine(), result });
+            log.warn("copying stream failed; {} on {}: {}", new Object[] { destination, getMachine(), result });
         }
         return result;
     }
