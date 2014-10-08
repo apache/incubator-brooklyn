@@ -19,8 +19,6 @@
 package brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
 import io.airlift.command.Command;
 import io.airlift.command.Option;
 import io.airlift.command.ParseException;
@@ -53,7 +51,6 @@ import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
@@ -65,13 +62,9 @@ import com.google.common.collect.Lists;
  * so requires less additional credential configuration. It also gives brooklyn-specific information,
  * such as which image will be used by default in a given cloud.
  */
-public class CloudExplorer extends AbstractMain {
+public class CloudExplorer {
 
-    public static void main(String... args) {
-        new CloudExplorer().execCli(args);
-    }
-
-    public static abstract class JcloudsCommand extends BrooklynCommandCollectingArgs {
+    public static abstract class JcloudsCommand extends AbstractMain.BrooklynCommandCollectingArgs {
         @Option(name = { "--all-locations" }, title = "all locations",
                 description = "All locations (i.e. all locations in brooklyn.properties for which there are credentials)")
         public boolean allLocations;
@@ -384,43 +377,5 @@ public class CloudExplorer extends AbstractMain {
                     .add("container", container)
                     .add("blob", blob);
         }
-    }
-
-    /** method intended for overriding when the script filename is different 
-     * @return the name of the script the user has invoked */
-    protected String cliScriptName() {
-        return "cloud-explorer";
-    }
-
-    /** method intended for overriding when a different {@link Cli} is desired,
-     * or when the subclass wishes to change any of the arguments */
-    protected CliBuilder<BrooklynCommand> cliBuilder() {
-        @SuppressWarnings({ "unchecked" })
-        CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
-                .withDescription("Brooklyn Management Service")
-                .withCommands(
-                        HelpCommand.class,
-                        InfoCommand.class);
-
-        builder.withGroup("compute")
-                .withDescription("Access cloud-compute details of a given cloud")
-                .withDefaultCommand(HelpCommand.class)
-                .withCommands(ImmutableList.<Class<? extends BrooklynCommand>>of(
-                        ComputeListImagesCommand.class,
-                        ComputeListHardwareProfilesCommand.class,
-                        ComputeListInstancesCommand.class,
-                        ComputeGetImageCommand.class,
-                        ComputeDefaultTemplateCommand.class,
-                        ComputeTerminateInstancesCommand.class));
-
-        builder.withGroup("blobstore")
-                .withDescription("Access cloud-blobstore details of a given cloud")
-                .withDefaultCommand(HelpCommand.class)
-                .withCommands(ImmutableList.<Class<? extends BrooklynCommand>>of(
-                        BlobstoreListContainersCommand.class, 
-                        BlobstoreListContainerCommand.class,
-                        BlobstoreGetBlobCommand.class));
-
-        return builder;
     }
 }

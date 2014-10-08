@@ -16,10 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli.itemlister;
+package brooklyn.cli;
 
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
 import io.airlift.command.Command;
 import io.airlift.command.Option;
 
@@ -35,7 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.Catalog;
-import brooklyn.cli.AbstractMain;
+import brooklyn.cli.itemlister.ClassFinder;
+import brooklyn.cli.itemlister.ItemDescriptors;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
@@ -45,6 +44,7 @@ import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.os.Os;
+import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -54,40 +54,38 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+
 import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-public class ItemLister extends AbstractMain {
+public class ItemLister {
     
     private static final Logger LOG = LoggerFactory.getLogger(ItemLister.class);
 
-    public static void main(String... args) {
-        new ItemLister().execCli(args);
-    }
+    @Command(name = "list-objects", description = "List Brooklyn objects (Entities, Policies, Enrichers and Locations)")
+    public static class ListAllCommand extends AbstractMain.BrooklynCommandCollectingArgs {
 
-    @Command(name = "all", description = "Lists everything")
-    public static class ListAllCommand extends BrooklynCommandCollectingArgs {
-
-        @Option(name = { "--jars" }, title = "Jars", description = "jars to scan. If a file (not a url) pointing at a directory, will include all files in that directory")
-        public List<String> jars;
+        @Option(name = { "--jars" }, title = "Jars", description = "Jars to scan. If a file (not a url) pointing at a directory, will include all files in that directory")
+        public List<String> jars = Lists.newLinkedList();
 
         @Option(name = { "--type-regex" }, title = "Regex for types to list")
-        public String typeRegex = null;
+        public String typeRegex;
 
         @Option(name = { "--catalog-only" }, title = "Whether to only list items annotated with @Catalog")
         public boolean catalogOnly = true;
 
         @Option(name = { "--ignore-impls" }, title = "Ignore Entity implementations, where there is an Entity interface with @ImplementedBy")
-        public boolean ignoreImpls;
+        public boolean ignoreImpls = false;
 
         @Option(name = { "--headings-only" }, title = "Whether to only show name/type, and not config keys etc")
-        public boolean headingsOnly;
+        public boolean headingsOnly = false;
         
-        @Option(name = { "--output-folder" }, title = "Whether to only show name/type, and not config keys etc")
+        @Option(name = { "--output-folder" }, title = "Folder to save output")
         public String outputFolder;
 
         @SuppressWarnings("unchecked")
@@ -95,7 +93,7 @@ public class ItemLister extends AbstractMain {
         public Void call() throws Exception {
             LOG.info("Retrieving objects");
             List<URL> urls = getUrls();
-            
+
             // TODO Remove duplication from separate ListPolicyCommand etc
             List<Class<? extends Entity>> entityTypes = getTypes(urls, Entity.class);
             List<Class<? extends Policy>> policyTypes = getTypes(urls, Policy.class);
@@ -173,8 +171,22 @@ public class ItemLister extends AbstractMain {
 
         protected List<URL> getUrls() throws MalformedURLException {
             List<URL> urls = Lists.newArrayList();
-            for (String jar : jars) {
-                urls.addAll(ClassFinder.toJarUrls(jar));
+            if (jars.isEmpty()) {
+                String classpath = System.getenv("INITIAL_CLASSPATH");
+                if (Strings.isNonBlank(classpath)) {
+                    List<String> entries = Splitter.on(":").omitEmptyStrings().trimResults().splitToList(classpath);
+                    for (String entry : entries) {
+                        if (entry.endsWith(".jar") || entry.endsWith("/*")) {
+                            urls.addAll(ClassFinder.toJarUrls(entry.replace("/*", "")));
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("No Jars to process");
+                }
+            } else {
+                for (String jar : jars) {
+                    urls.addAll(ClassFinder.toJarUrls(jar));
+                }
             }
             return urls;
         }
@@ -221,27 +233,5 @@ public class ItemLister extends AbstractMain {
             
             return objectMapper.writeValueAsString(obj);
         }
-    }
-
-    /** method intended for overriding when the script filename is different 
-     * @return the name of the script the user has invoked */
-    protected String cliScriptName() {
-        return "item-lister";
-    }
-
-    /** method intended for overriding when a different {@link Cli} is desired,
-     * or when the subclass wishes to change any of the arguments */
-    protected CliBuilder<BrooklynCommand> cliBuilder() {
-        @SuppressWarnings({ "unchecked" })
-        CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
-                .withDescription("Brooklyn Management Service")
-                .withDefaultCommand(ListAllCommand.class)
-                .withCommands(
-                        HelpCommand.class,
-                        InfoCommand.class,
-                        ListAllCommand.class
-                );
-
-        return builder;
     }
 }

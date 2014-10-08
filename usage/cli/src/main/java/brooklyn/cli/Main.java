@@ -37,6 +37,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
+import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
+import brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
+import brooklyn.cli.CloudExplorer.ComputeDefaultTemplateCommand;
+import brooklyn.cli.CloudExplorer.ComputeGetImageCommand;
+import brooklyn.cli.CloudExplorer.ComputeListHardwareProfilesCommand;
+import brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
+import brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
+import brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
+import brooklyn.cli.ItemLister.ListAllCommand;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -809,13 +819,34 @@ public class Main extends AbstractMain {
         @SuppressWarnings({ "unchecked" })
         CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
                 .withDescription("Brooklyn Management Service")
+                .withDefaultCommand(InfoCommand.class)
                 .withCommands(
                         HelpCommand.class,
                         InfoCommand.class,
                         GeneratePasswordCommand.class,
                         CopyStateCommand.class,
+                        ListAllCommand.class,
                         cliLaunchCommand()
                 );
+
+        builder.withGroup("cloud-compute")
+                .withDescription("Access compute details of a given cloud")
+                .withDefaultCommand(HelpCommand.class)
+                .withCommands(
+                        ComputeListImagesCommand.class,
+                        ComputeListHardwareProfilesCommand.class,
+                        ComputeListInstancesCommand.class,
+                        ComputeGetImageCommand.class,
+                        ComputeDefaultTemplateCommand.class,
+                        ComputeTerminateInstancesCommand.class);
+
+        builder.withGroup("cloud-blobstore")
+                .withDescription("Access blobstore details of a given cloud")
+                .withDefaultCommand(HelpCommand.class)
+                .withCommands(
+                        BlobstoreListContainersCommand.class, 
+                        BlobstoreListContainerCommand.class,
+                        BlobstoreGetBlobCommand.class);
 
         return builder;
     }
