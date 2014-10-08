@@ -1,4 +1,3 @@
-package brooklyn.camp.brooklyn.api;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,6 +16,7 @@ package brooklyn.camp.brooklyn.api;
  * specific language governing permissions and limitations
  * under the License.
  */
+package brooklyn.camp.brooklyn.api;
 
 import brooklyn.management.ManagementContext;
 

@@ -49,7 +49,6 @@ public interface Attributes {
     BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = new BasicAttributeSensorAndConfigKey(
             Map.class, "download.addon.urls", "URL patterns for downloading named add-ons (will substitute things like ${version} automatically)");
 
-
     /*
      * Port number attributes.
      */
@@ -122,6 +121,5 @@ public interface Attributes {
     
     AttributeSensor<Integer> PID = Sensors.newIntegerSensor("pid", "Process ID for the previously launched instance");
 
-    AttributeSensor<String> LOG_FILE_LOCATION = new BasicAttributeSensor<String>(
-            String.class, "log.location", "Log file location");
+    AttributeSensor<String> LOG_FILE_LOCATION = Sensors.newStringSensor("log.location", "Log file location");
 }

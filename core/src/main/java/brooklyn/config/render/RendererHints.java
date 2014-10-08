@@ -20,6 +20,7 @@ package brooklyn.config.render;
 
 import groovy.lang.Closure;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.Set;
 
@@ -239,49 +240,44 @@ public class RendererHints {
     }
 
     @Beta
-    public static <T> DisplayValue<T> displayValue(Function<T, String> transform) {
+    public static <T> DisplayValue<T> displayValue(Function<T,String> transform) {
         return new DisplayValue<T>(transform);
     }
 
     @Beta
-    public static <T> NamedActionWithUrl<T> namedActionWithUrl(String actionName, Function<T, String> transform) {
-        return new RendererHints.NamedActionWithUrl<T>(actionName, transform);
+    public static <T> NamedActionWithUrl<T> namedActionWithUrl(String actionName, Function<T,String> transform) {
+        return new NamedActionWithUrl<T>(actionName, transform);
     }
 
     @Beta
     public static <T> NamedActionWithUrl<T> namedActionWithUrl(String actionName) {
-        return new RendererHints.NamedActionWithUrl<T>(actionName);
+        return new NamedActionWithUrl<T>(actionName);
     }
 
     @Beta
-    public static <T> NamedActionWithUrl<T> namedActionWithUrl(Function<T, String> transform) {
-        return namedActionWithUrl("Open", transform);
+    public static <T> NamedActionWithUrl<T> namedActionWithUrl(Function<T,String> transform) {
+        return openWithUrl(transform);
     }
 
     @Beta
     public static <T> NamedActionWithUrl<T> namedActionWithUrl() {
-        return namedActionWithUrl((Function<T,String>)null);
+        return openWithUrl();
     }
 
     @Beta
-    public static <T> NamedActionWithUrl<T> openWithUrl(Function<T, String> transform) {
-        return new RendererHints.NamedActionWithUrl<T>("Open", transform);
+    public static <T> NamedActionWithUrl<T> openWithUrl() {
+        return openWithUrl((Function<T,String>) null);
+    }
+
+    @Beta
+    public static <T> NamedActionWithUrl<T> openWithUrl(Function<T,String> transform) {
+        return new NamedActionWithUrl<T>("Open", transform);
     }
 
     /** use with care as this makes REST access difficult */
     @Beta
     public static <T> DisplayValue<T> censoredValue() {
         return new DisplayValue<T>(Functions.constant("********"));
-    }
-    
-    static {
-        // apply display hints for common utility objects
-        register(Duration.class, displayValue(Time.fromDurationToTimeStringRounded()));
-        register(HostAndPort.class, displayValue(StringFunctions.toStringFunction()));
-        register(UserAndHostAndPort.class, displayValue(StringFunctions.toStringFunction()));
-        
-        register(URL.class, displayValue(StringFunctions.toStringFunction()));
-        register(URL.class, openWithUrl(StringFunctions.toStringFunction()));
     }
     
 }
