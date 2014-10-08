@@ -52,9 +52,11 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.net.Urls;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -65,6 +67,7 @@ import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -150,13 +153,21 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     public void customize() {
         //TODO: add linux tweaks for couchbase
         //http://blog.couchbase.com/often-overlooked-linux-os-tweaks
+        //http://blog.couchbase.com/kirk
 
         //turn off swappiness
+        //vm.swappiness=0
         //sudo echo 0 > /proc/sys/vm/swappiness
 
+        //os page cache = 20%
+        
         //disable THP
         //sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
         //sudo echo never > /sys/kernel/mm/transparent_hugepage/defrag
+        
+        //turn off transparent huge pages
+        //limit page cache disty bytes
+        //control the rate page cache is flused ... vm.dirty_*
     }
 
     @Override
@@ -381,7 +392,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         }
     }
 
-    private Iterable<String> getNodesHostAndPort() throws URISyntaxException {
+    private Iterable<String> getNodesHostAndPort() {
         Function<JsonElement, Iterable<String>> getNodesAsList = new Function<JsonElement, Iterable<String>>() {
             @Override public Iterable<String> apply(JsonElement input) {
                 if (input == null) {
@@ -396,7 +407,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 return names;
             }
         };
-        HttpToolResponse nodesResponse = getAPIResponse(String.format("http://%s:%s/pools/nodes", getHostname(), getWebPort()));
+        HttpToolResponse nodesResponse = getApiResponse(String.format("http://%s:%s/pools/nodes", getHostname(), getWebPort()));
         return Functionals.chain(
             HttpValueFunctions.jsonContents(),
             JsonFunctions.walkN("nodes"),
@@ -404,16 +415,22 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         ).apply(nodesResponse);
     }
     
-    private boolean isNodeRebalancing(String nodeHostAndPort) throws URISyntaxException {
-        HttpToolResponse response = getAPIResponse("http://" + nodeHostAndPort + "/pools/default/rebalanceProgress");
+    private boolean isNodeRebalancing(String nodeHostAndPort) {
+        HttpToolResponse response = getApiResponse("http://" + nodeHostAndPort + "/pools/default/rebalanceProgress");
         if (response.getResponseCode() != 200) {
             throw new IllegalStateException("failed retrieving rebalance status: " + response);
         }
         return !"none".equals(HttpValueFunctions.jsonContents("status", String.class).apply(response));
     }
     
-    private HttpToolResponse getAPIResponse(String uri) throws URISyntaxException {
-        URI apiUri = new URI(uri);
+    private HttpToolResponse getApiResponse(String uri) {
+        URI apiUri;
+        try {
+            apiUri = new URI(uri);
+        } catch (URISyntaxException e) {
+            throw Exceptions.propagate(e);
+        }
+        
         Credentials credentials = new UsernamePasswordCredentials(getUsername(), getPassword());
         return HttpTool.httpGet(HttpTool.httpClientBuilder()
                 // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
@@ -426,13 +443,29 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     
     @Override
     public void serverAdd(String serverToAdd, String username, String password) {
-        newScript("serverAdd").body.append(couchbaseCli("server-add")
-                + getCouchbaseHostnameAndCredentials() +
-                " --server-add=" + serverToAdd +
-                " --server-add-username=" + username +
-                " --server-add-password=" + password)
-                .failOnNonZeroResultCode()
-                .execute();
+//      curl -u Administrator:password\
+//      192.168.60.101:8091/controller/addNode \
+//       -d "hostname=192.168.60.103&user=Administrator&password=password"
+        String baseUrl = Preconditions.checkNotNull(getEntity().getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), "web admin URL not available");
+        HttpToolResponse response = getApiResponse(Urls.mergePaths(baseUrl, "controller/addNode")
+            +"?"+"hostname"+"="+Urls.encode(serverToAdd)
+            +"&"+"user"+"="+Urls.encode(username)
+            +"&"+"password"+"="+Urls.encode(password));
+        if (response.getResponseCode()==200) {
+            log.debug("Completed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getContentAsString());
+        } else {
+            log.warn("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
+            throw new IllegalStateException("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
+        }
+
+        // or, via CLI:
+//        newScript("serverAdd").body.append(couchbaseCli("server-add")
+//                + getCouchbaseHostnameAndCredentials() +
+//                " --server-add=" + serverToAdd +
+//                " --server-add-username=" + username +
+//                " --server-add-password=" + password)
+//                .failOnNonZeroResultCode()
+//                .execute();
     }
 
     @Override

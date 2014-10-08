@@ -36,6 +36,7 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -53,6 +54,7 @@ import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -60,7 +62,6 @@ import brooklyn.util.time.Duration;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.net.HostAndPort;
 import com.google.common.net.MediaType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -90,6 +91,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             public void onEvent(SensorEvent<Boolean> booleanSensorEvent) {
                 if (Boolean.TRUE.equals(booleanSensorEvent.getValue())) {
                     Integer webPort = getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
+                    Preconditions.checkNotNull(webPort, CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT+" not set for %s; is an acceptable port available?", this);
                     String hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(CouchbaseNodeImpl.this, webPort).toString();
                     setAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, format("http://%s", hostAndPort));
                 }
@@ -206,11 +208,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         super.connectSensors();
         connectServiceUpIsRunning();
                 
-        Integer rawPort = getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
-        Preconditions.checkNotNull(rawPort, "HTTP_PORT sensors not set for %s; is an acceptable port available?", this);
-        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, rawPort);
-        
-        String adminUrl = String.format("http://%s", hp.toString());
+        String adminUrl = DynamicTasks.submit(DependentConfiguration.attributeWhenReady(this, CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), this).getUnchecked(Duration.TWO_MINUTES);
         
         httpFeed = HttpFeed.builder()
             .entity(this)
