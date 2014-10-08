@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,8 @@ import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitio
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -66,6 +69,8 @@ public class LocalLocationManager implements LocationManagerInternal {
 
     private final BrooklynStorage storage;
     private Map<String, String> locationTypes;
+
+    private static AtomicLong LOCATION_CNT = new AtomicLong(1);
     
     public LocalLocationManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
@@ -198,6 +203,13 @@ public class LocalLocationManager implements LocationManagerInternal {
         AccessController.Response access = managementContext.getAccessController().canManageLocation(loc);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids management of "+loc+": "+access.getMsg());
+        }
+
+        String msg = "Managing location " + loc + ". initialMode=" + initialMode + ", context: " + Strings.toString(Tasks.current());
+        if (LOCATION_CNT.getAndIncrement() % 100 == 0) {
+            log.debug(msg, new Exception("Stack Trace"));
+        } else {
+            log.debug(msg);
         }
 
         recursively(loc, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
