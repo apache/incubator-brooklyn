@@ -20,6 +20,7 @@ package brooklyn.enricher;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +30,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
@@ -73,11 +73,11 @@ public class HttpLatencyDetector extends AbstractEnricher {
     public static final Duration LATENCY_WINDOW_DEFAULT_PERIOD = Duration.TEN_SECONDS;
 
     @SetFromFlag("url")
-    public static final ConfigKey<String> URL = ConfigKeys.newStringConfigKey("latencyDetector.url");
+    public static final ConfigKey<?> URL = ConfigKeys.newStringConfigKey("latencyDetector.url");
     
     @SuppressWarnings("serial")
     @SetFromFlag("urlSensor")
-    public static final ConfigKey<AttributeSensor<String>> URL_SENSOR = ConfigKeys.newConfigKey(new TypeToken<AttributeSensor<String>>() {}, "latencyDetector.urlSensor");
+    public static final ConfigKey<AttributeSensor<?>> URL_SENSOR = ConfigKeys.newConfigKey(new TypeToken<AttributeSensor<?>>() {}, "latencyDetector.urlSensor");
 
     @SuppressWarnings("serial")
     @SetFromFlag("urlPostProcessing")
@@ -132,9 +132,12 @@ public class HttpLatencyDetector extends AbstractEnricher {
                 "Must set exactly one of url or urlSensor: url=%s; urlSensor=%s", getConfig(URL), getConfig(URL_SENSOR));
         checkState(getConfig(URL_SENSOR) != null || getConfig(URL_POST_PROCESSING) == null, 
                 "Must not set urlPostProcessing without urlSensor");
-        
-        url.set(getConfig(URL));
-        
+
+        Object configValue = getConfig(URL);
+        if (configValue != null) {
+            url.set(configValue.toString());
+        }
+
         httpFeed = HttpFeed.builder()
                 .entity(entity)
                 .period(getConfig(PERIOD))
@@ -144,7 +147,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
                         .setOnException(null))
                 .suspended()
                 .build();
-        
+
         if (getUniqueTag()==null) 
             uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+
                 (getConfig(URL)!=null ? getConfig(URL) : getConfig(URL_SENSOR));
@@ -161,21 +164,21 @@ public class HttpLatencyDetector extends AbstractEnricher {
                     }
                 }
             });
-            
+
             // TODO would be good if subscription gave us the current value, rather than risking a race with code like this.
             Boolean currentVal = entity.getAttribute(Startable.SERVICE_UP);
             if (currentVal != null) {
                 AtomicReferences.setIfDifferent(serviceUp, currentVal);
             }
         }
-        
-        AttributeSensor<String> urlSensor = getConfig(URL_SENSOR);
+
+        AttributeSensor<?> urlSensor = getConfig(URL_SENSOR);
         if (urlSensor!=null) {
-            subscribe(entity, urlSensor, new SensorEventListener<String>() {
+            subscribe(entity, urlSensor, new SensorEventListener<Object>() {
                 @Override
-                public void onEvent(SensorEvent<String> event) {
+                public void onEvent(SensorEvent<Object> event) {
                     Function<String, String> postProcessor = getConfig(URL_POST_PROCESSING);
-                    String val = event.getValue();
+                    String val = event.getValue().toString();
                     String newVal = (postProcessor != null) ? postProcessor.apply(val) : val;
                     if (AtomicReferences.setIfDifferent(url, newVal)) {
                         log.debug(""+this+" updated on "+event+", "+"enabled="+computeEnablement());
@@ -185,10 +188,10 @@ public class HttpLatencyDetector extends AbstractEnricher {
             });
             
             // TODO would be good if subscription gave us the current value, rather than risking a race with code like this.
-            String currentVal = entity.getAttribute(urlSensor);
+            Object currentVal = entity.getAttribute(urlSensor);
             if (currentVal != null) {
                 Function<String, String> postProcessor = getConfig(URL_POST_PROCESSING);
-                String newVal = (postProcessor != null) ? postProcessor.apply(currentVal) : currentVal;
+                String newVal = (postProcessor != null) ? postProcessor.apply(currentVal.toString()) : currentVal.toString();
                 if (AtomicReferences.setIfDifferent(url, newVal)) {
                     log.debug("{} updated url on initial connectionon, to {}", this, newVal);
                 }
@@ -233,7 +236,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
         boolean requireServiceUp = true;
         Duration period = Duration.ONE_SECOND;
         String url;
-        AttributeSensor<String> urlSensor;
+        AttributeSensor<?> urlSensor;
         Function<String, String> urlPostProcessing;
         Duration rollupWindowSize = LATENCY_WINDOW_DEFAULT_PERIOD;
         
@@ -265,14 +268,18 @@ public class HttpLatencyDetector extends AbstractEnricher {
         public Builder url(URL url) {
             return url(url.toString());
         }
+        /** @see #url(String) */
+        public Builder url(URI uri) {
+            return url(uri.toString());
+        }
         /** supplies a sensor which indicates the URL this should parse (e.g. ROOT_URL) */
-        public Builder url(AttributeSensor<String> sensor) {
+        public Builder url(AttributeSensor<?> sensor) {
             this.urlSensor = sensor;
             return this;
         }
         /** supplies a sensor which indicates the URL which this should parse (e.g. ROOT_URL),
          * with post-processing, e.g. {@link StringFunctions#append(String)} */
-        public Builder url(AttributeSensor<String> sensor, Function<String, String> postProcessing) {
+        public Builder url(AttributeSensor<?> sensor, Function<String, String> postProcessing) {
             this.urlSensor = sensor;
             this.urlPostProcessing = postProcessing;
             return this;
