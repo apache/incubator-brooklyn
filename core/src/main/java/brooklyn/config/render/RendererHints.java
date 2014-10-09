@@ -268,6 +268,7 @@ public class RendererHints {
         return new RendererHints.NamedActionWithUrl<T>("Open", transform);
     }
 
+    /** use with care as this makes REST access difficult */
     @Beta
     public static <T> DisplayValue<T> censoredValue() {
         return new DisplayValue<T>(Functions.constant("********"));
