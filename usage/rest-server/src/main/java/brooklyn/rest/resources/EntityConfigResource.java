@@ -72,7 +72,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
         Map<ConfigKey<?>, Object> source = ((EntityInternal) entity).getAllConfig();
         Map<String, Object> result = Maps.newLinkedHashMap();
         for (Map.Entry<ConfigKey<?>, Object> ek : source.entrySet()) {
-            Object value = RendererHints.applyDisplayValueHint(ek.getKey(), ek.getValue());
+            Object value = ek.getValue();
             if (Boolean.FALSE.equals(raw)) {
                 value = RendererHints.applyDisplayValueHint(ek.getKey(), value);
             }
