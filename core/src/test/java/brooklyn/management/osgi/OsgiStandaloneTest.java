@@ -117,7 +117,9 @@ public class OsgiStandaloneTest {
         Assert.assertEquals(Entity.class, bundleCls.getClassLoader().loadClass(Entity.class.getName()));
     }
 
-    @Test
+    // Marked as integration because jenkins configures an unusual local .m2 repository location,
+    // so attempts to look up the local artifact fail.
+    @Test(groups="Integration")
     public void testDuplicateBundle() throws Exception {
         helperDuplicateBundle(MavenRetriever.localUrl(new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
     }
