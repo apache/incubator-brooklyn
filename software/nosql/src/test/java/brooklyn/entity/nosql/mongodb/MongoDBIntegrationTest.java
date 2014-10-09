@@ -43,7 +43,7 @@ public class MongoDBIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-    	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
+        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
     }
 

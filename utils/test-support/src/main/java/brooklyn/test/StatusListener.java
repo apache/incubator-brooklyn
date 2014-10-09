@@ -35,9 +35,9 @@ import org.testng.ITestResult;
  * normally not used, preferring instead LoggingVerboseReporter which prints out config info
  */
 public class StatusListener implements ITestListener {
-	
-	public static final Logger log = LoggerFactory.getLogger(StatusListener.class);
-	
+    
+    public static final Logger log = LoggerFactory.getLogger(StatusListener.class);
+    
     /**
      * Holds test classes actually running in all threads.
      */
@@ -50,7 +50,7 @@ public class StatusListener implements ITestListener {
 
     //TODO instead of system.out.println we should log -- *and* perhaps write to sysout if logger doesn't?
     protected static void log(String msg) {
-    	log.info(msg);
+        log.info(msg);
     }
     
     public void onTestStart(ITestResult res) {

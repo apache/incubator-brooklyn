@@ -59,10 +59,10 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     }
     
     public BasicSubscriptionContext(Map<String, ?> flags, SubscriptionManager manager, Object subscriber) {
-    	this.manager = manager;
+        this.manager = manager;
         this.subscriber = subscriber;
         this.flags = mapOf("subscriber", subscriber);
-    	if (flags!=null) this.flags.putAll(flags);
+        if (flags!=null) this.flags.putAll(flags);
     }
 
     @SuppressWarnings("rawtypes")

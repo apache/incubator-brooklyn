@@ -107,12 +107,12 @@ public class RabbitIntegrationTest {
         Channel producer = null;
         Channel consumer = null;
         try {
-	        producer = getAmqpChannel(rabbit);
-	        consumer = getAmqpChannel(rabbit);
+            producer = getAmqpChannel(rabbit);
+            consumer = getAmqpChannel(rabbit);
 
-	        producer.queueDeclare(queue, true, false, false, ImmutableMap.<String,Object>of());
-	        producer.queueBind(queue, AmqpExchange.DIRECT, queue);
-	        producer.basicPublish(AmqpExchange.DIRECT, queue, null, content);
+            producer.queueDeclare(queue, true, false, false, ImmutableMap.<String,Object>of());
+            producer.queueBind(queue, AmqpExchange.DIRECT, queue);
+            producer.basicPublish(AmqpExchange.DIRECT, queue, null, content);
             
             QueueingConsumer queueConsumer = new QueueingConsumer(consumer);
             consumer.basicConsume(queue, true, queueConsumer);

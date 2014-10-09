@@ -415,7 +415,7 @@ public class Jsonya {
                     // build a source map from the arguments as key-value pairs
                     if ((others.length % 2)==0)
                         throw new IllegalArgumentException("cannot add an odd number of arguments to a map" +
-                        		" ("+o1+" then "+Arrays.toString(others)+" in "+currentFocus+" in "+initialFocus+")");
+                                " ("+o1+" then "+Arrays.toString(others)+" in "+currentFocus+" in "+initialFocus+")");
                     source = MutableMap.of(translateKey(o1), translate(others[0]));
                     for (int i=1; i<others.length; )
                         source.put(translateKey(others[i++]), translate(others[i++]));

@@ -45,16 +45,16 @@ public class StandaloneQpidBrokerExample extends AbstractApplication {
     @Override
     public void initApp() {
         // Configure the Qpid broker entity
-    	QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
-    	        .configure("amqpPort", 5672)
-    	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
-    	        .configure("runtimeFiles", ImmutableMap.builder()
-    	                .put(QpidBroker.CONFIG_XML, CUSTOM_CONFIG_PATH)
-    	                .put(QpidBroker.PASSWD, PASSWD_PATH)
-    	                .put("lib/opt/qpid-bdbstore-0.14.jar", QPID_BDBSTORE_JAR_PATH)
-    	                .put("lib/opt/je-5.0.34.jar", BDBSTORE_JAR_PATH)
-    	                .build())
-    	        .configure("queue", "testQueue"));
+        QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
+                .configure("amqpPort", 5672)
+                .configure("amqpVersion", AmqpServer.AMQP_0_10)
+                .configure("runtimeFiles", ImmutableMap.builder()
+                        .put(QpidBroker.CONFIG_XML, CUSTOM_CONFIG_PATH)
+                        .put(QpidBroker.PASSWD, PASSWD_PATH)
+                        .put("lib/opt/qpid-bdbstore-0.14.jar", QPID_BDBSTORE_JAR_PATH)
+                        .put("lib/opt/je-5.0.34.jar", BDBSTORE_JAR_PATH)
+                        .build())
+                .configure("queue", "testQueue"));
     }
 
     public static void main(String[] argv) {

@@ -61,10 +61,10 @@ public class Jboss7ServerIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-    	String warPath = "hello-world.war";
+        String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
 
-    	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
+        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         keystoreFile = createTemporaryKeyStore("myname", "mypass");
     }

@@ -188,8 +188,8 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         try {
             Iterable<Entity> stoppableChildren = Iterables.filter(getChildren(), Predicates.instanceOf(Startable.class));
             Task<?> invoke = Entities.invokeEffector(this, stoppableChildren, Startable.STOP);
-	        if (invoke != null) invoke.get();
-	        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
+            if (invoke != null) invoke.get();
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
             setAttribute(SERVICE_UP, false);
         } catch (Exception e) {
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);

@@ -123,7 +123,7 @@ public class JmxSupportTest {
             log.info("read "+bytes.length+" bytes from "+url+" for "+JavaClassNames.callerNiceClassAndMethod(1));
         } catch (Exception e) {
             log.warn("Unable to read URL "+url+" for " +JavaClassNames.callerNiceClassAndMethod(1)+
-            		"; this test may require hosted (sonatype/mavencentral) repo to be populated");
+                    "; this test may require hosted (sonatype/mavencentral) repo to be populated");
             Assert.fail("Unable to read URL "+url+"; this test may require hosted (sonatype/mavencentral) repo to be populated");
             throw Exceptions.propagate(e);
         }

@@ -27,22 +27,22 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface HasNetworkAddresses {
 
-	/**
-	 * <h4>note</h4> hostname is something that is set in the operating system.
-	 * This value may or may not be set in DNS.
-	 * 
-	 * @return hostname of the node, or null if unknown
-	 */
-	@Nullable
-	String getHostname();
-	
-	/**
-	 * All public IP addresses, potentially including shared ips.
-	 */
-	Set<String> getPublicAddresses();
+    /**
+     * <h4>note</h4> hostname is something that is set in the operating system.
+     * This value may or may not be set in DNS.
+     * 
+     * @return hostname of the node, or null if unknown
+     */
+    @Nullable
+    String getHostname();
+    
+    /**
+     * All public IP addresses, potentially including shared ips.
+     */
+    Set<String> getPublicAddresses();
 
-	/**
-	 * All private IP addresses.
-	 */
-	Set<String> getPrivateAddresses();
+    /**
+     * All private IP addresses.
+     */
+    Set<String> getPrivateAddresses();
 }

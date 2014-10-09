@@ -76,8 +76,8 @@ public class Infinispan5Server extends SoftwareProcessImpl implements UsesJmx {
 
     @Override
     protected void connectSensors() {
-		super.connectSensors();
-		super.connectServiceUpIsRunning();
+        super.connectSensors();
+        super.connectServiceUpIsRunning();
     }
     
     @Override

@@ -66,7 +66,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
     public String toString() {
         return super.toString()+"["+
                 "config="+getConfig()+"; " +
-        		"sensors="+getSensors()+"; "+
-        		"effectors="+getEffectors()+"]";
+                "sensors="+getSensors()+"; "+
+                "effectors="+getEffectors()+"]";
     }
 }

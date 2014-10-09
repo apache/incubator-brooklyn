@@ -198,9 +198,9 @@ public class WebAppMonitor implements Runnable {
         int attempts = getAttempts();
         if ((failures > (1-fraction) * attempts + 0.0001) || attempts <= 0) {
             Assert.fail(message+" -- webapp access failures! " +
-            		"("+failures+" failed of "+attempts+" monitoring attempts) against "+getUrl()+"; " +
-            		"last was "+getLastStatus()+" taking "+getLastTime()+"ms" +
-            		(getLastFailure() != null ? "; last failure was "+getLastFailure() : ""));
+                    "("+failures+" failed of "+attempts+" monitoring attempts) against "+getUrl()+"; " +
+                    "last was "+getLastStatus()+" taking "+getLastTime()+"ms" +
+                    (getLastFailure() != null ? "; last failure was "+getLastFailure() : ""));
         }
         return this;
     }

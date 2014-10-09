@@ -127,15 +127,15 @@ public class EffectorSayHiTest extends BrooklynAppUnitTestSupport {
     }
 
     public interface CanSayHi {
-    	static MethodEffector<String> SAY_HI_1 = new MethodEffector<String>(CanSayHi.class, "sayHi1");
+        static MethodEffector<String> SAY_HI_1 = new MethodEffector<String>(CanSayHi.class, "sayHi1");
         static MethodEffector<String> DELEGATE_SAY_HI_1 = new MethodEffector<String>(CanSayHi.class, "delegateSayHi1");
     
-    	@brooklyn.entity.annotation.Effector(description="says hello")
-    	public String sayHi1(
-    		@EffectorParam(name="name") String name,
-    		@EffectorParam(name="greeting", defaultValue="hello", description="what to say") String greeting);
-    	
-    	@brooklyn.entity.annotation.Effector(description="delegate says hello")
+        @brooklyn.entity.annotation.Effector(description="says hello")
+        public String sayHi1(
+            @EffectorParam(name="name") String name,
+            @EffectorParam(name="greeting", defaultValue="hello", description="what to say") String greeting);
+        
+        @brooklyn.entity.annotation.Effector(description="delegate says hello")
         public String delegateSayHi1(
             @EffectorParam(name="name") String name,
             @EffectorParam(name="greeting") String greeting);

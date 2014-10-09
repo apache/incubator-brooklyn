@@ -49,39 +49,39 @@ import com.google.common.collect.Iterables;
 
 public class FlagUtilsTest {
 
-	public static final Logger log = LoggerFactory.getLogger(FlagUtilsTest.class);
-	
-	@Test
-	public void testGetAllFields() {
-		log.info("types {}", FlagUtils.getAllAssignableTypes(Baz.class));
-		assertEquals(FlagUtils.getAllAssignableTypes(Baz.class), ImmutableList.of(Baz.class, Foo.class, Bar.class));
-		List<Field> fs = FlagUtils.getAllFields(Baz.class);
-		for (Field f : fs) {
-		    log.info("field {}    {}", f.getName(), f);
-		}
-		List<String> fsn = ImmutableList.copyOf(Iterables.transform(fs, new Function<Field, String>() {
+    public static final Logger log = LoggerFactory.getLogger(FlagUtilsTest.class);
+    
+    @Test
+    public void testGetAllFields() {
+        log.info("types {}", FlagUtils.getAllAssignableTypes(Baz.class));
+        assertEquals(FlagUtils.getAllAssignableTypes(Baz.class), ImmutableList.of(Baz.class, Foo.class, Bar.class));
+        List<Field> fs = FlagUtils.getAllFields(Baz.class);
+        for (Field f : fs) {
+            log.info("field {}    {}", f.getName(), f);
+        }
+        List<String> fsn = ImmutableList.copyOf(Iterables.transform(fs, new Function<Field, String>() {
             @Override public String apply(Field f) {
                 return f.getName();
             }}));
-		assertTrue(fsn.indexOf("A") >= 0);
-		assertTrue(fsn.indexOf("w") > fsn.indexOf("A")); 
-		assertTrue(fsn.indexOf("x") > fsn.indexOf("A") );
-		assertTrue(fsn.indexOf("yNotY") > fsn.indexOf("A")); 
-		assertTrue(fsn.indexOf("Z") > fsn.indexOf("yNotY") );
-	}	
-	
+        assertTrue(fsn.indexOf("A") >= 0);
+        assertTrue(fsn.indexOf("w") > fsn.indexOf("A")); 
+        assertTrue(fsn.indexOf("x") > fsn.indexOf("A") );
+        assertTrue(fsn.indexOf("yNotY") > fsn.indexOf("A")); 
+        assertTrue(fsn.indexOf("Z") > fsn.indexOf("yNotY") );
+    }    
+    
     @Test
     public void testSetFieldsFromFlags() {
         Foo f = new Foo();
-		Map<?,?> m = MutableMap.of("w", 3, "x", 1, "y", 7, "z", 9);
+        Map<?,?> m = MutableMap.of("w", 3, "x", 1, "y", 7, "z", 9);
         Map<?, ?> unused = FlagUtils.setFieldsFromFlags(m, f);
-		assertEquals(f.w, 3);
+        assertEquals(f.w, 3);
         assertEquals(f.x, 1);
         assertEquals(f.yNotY, 7);
         assertEquals(unused, ImmutableMap.of("z", 9));
-		Map<?,?> m2 = FlagUtils.getFieldsWithValues(f);
-		m.remove("z");
-		assertEquals(m2, m);
+        Map<?,?> m2 = FlagUtils.getFieldsWithValues(f);
+        m.remove("z");
+        assertEquals(m2, m);
     }
     
     @Test
@@ -220,22 +220,22 @@ public class FlagUtilsTest {
     }
 
     public static class Foo {
-    	@SetFromFlag
-    	int w;
-    	
-    	@SetFromFlag(immutable=true)
-    	private int x;
-    	
-    	@SetFromFlag("y")
-    	public int yNotY;
+        @SetFromFlag
+        int w;
+        
+        @SetFromFlag(immutable=true)
+        private int x;
+        
+        @SetFromFlag("y")
+        public int yNotY;
     }
     
     public static interface Bar {
-    	static final String Z = "myzval";
+        static final String Z = "myzval";
     }
     
     public static class Baz extends Foo implements Bar {
-    	@SuppressWarnings("unused")  //inspected by reflection
+        @SuppressWarnings("unused")  //inspected by reflection
         private static int A;
     }
     

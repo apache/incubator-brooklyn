@@ -61,7 +61,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     private TestApplication origApp;
     private TestApplication newApp;
     private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
-	private ExecutorService executor;
+    private ExecutorService executor;
     
     private ClassLoader classLoader = getClass().getClassLoader();
     private LocalManagementContext origManagementContext;
@@ -69,7 +69,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     
     @BeforeMethod(groups = "Integration")
     public void setUp() {
-    	String warPath = "hello-world.war";
+        String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
         
         executor = Executors.newCachedThreadPool();
@@ -77,14 +77,14 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         mementoDir = Files.createTempDir();
         origManagementContext = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader);
 
-    	localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-    	origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
+        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
+        origApp = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
     }
 
     @AfterMethod(groups = "Integration", alwaysRun=true)
     public void tearDown() throws Exception {
         for (WebAppMonitor monitor : webAppMonitors) {
-        	monitor.terminate();
+            monitor.terminate();
         }
         if (executor != null) executor.shutdownNow();
         if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
@@ -102,20 +102,20 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     }
 
     private WebAppMonitor newWebAppMonitor(String url) {
-    	WebAppMonitor monitor = new WebAppMonitor(url)
-//    			.delayMillis(0)
-		    	.logFailures(LOG);
-    	webAppMonitors.add(monitor);
-    	executor.execute(monitor);
-    	return monitor;
+        WebAppMonitor monitor = new WebAppMonitor(url)
+//                .delayMillis(0)
+                .logFailures(LOG);
+        webAppMonitors.add(monitor);
+        executor.execute(monitor);
+        return monitor;
     }
     
     @Test(groups = "Integration")
     public void testRebindsToRunningCluster() throws Exception {
         DynamicWebAppCluster origCluster = origApp.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
-				.configure("initialSize", 1));
-    	
+                .configure("initialSize", 1));
+        
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         JBoss7Server origJboss = (JBoss7Server) Iterables.find(origCluster.getChildren(), Predicates.instanceOf(JBoss7Server.class));
         String jbossUrl = origJboss.getAttribute(JBoss7Server.ROOT_URL);
