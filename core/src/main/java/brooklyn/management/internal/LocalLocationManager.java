@@ -37,12 +37,12 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.AccessController;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
@@ -70,7 +70,7 @@ public class LocalLocationManager implements LocationManagerInternal {
     private final BrooklynStorage storage;
     private Map<String, String> locationTypes;
 
-    private static AtomicLong LOCATION_CNT = new AtomicLong(1);
+    private static AtomicLong LOCATION_CNT = new AtomicLong(0);
     
     public LocalLocationManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
@@ -205,11 +205,15 @@ public class LocalLocationManager implements LocationManagerInternal {
             throw new IllegalStateException("Access controller forbids management of "+loc+": "+access.getMsg());
         }
 
-        String msg = "Managing location " + loc + ". initialMode=" + initialMode + ", context: " + Strings.toString(Tasks.current());
-        if (LOCATION_CNT.getAndIncrement() % 100 == 0) {
-            log.debug(msg, new Exception("Stack Trace"));
-        } else {
-            log.debug(msg);
+        if (log.isDebugEnabled()) {
+            String msg = "Managing location " + loc + " ("+initialMode+"), from " + Tasks.current()+" / "+Entitlements.getEntitlementContext();
+            long count = LOCATION_CNT.incrementAndGet();
+            if (count % 100 == 0) {
+                // include trace periodically in case we get leaks or too much location management
+                log.debug(msg, new Exception("Informational stack trace of call to manage location "+loc+" ("+count+" calls; "+getLocations().size()+" currently managed)"));
+            } else {
+                log.debug(msg);
+            }
         }
 
         recursively(loc, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
