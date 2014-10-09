@@ -26,7 +26,6 @@ import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,8 +35,10 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.http.auth.Credentials;
+import org.apache.http.HttpHeaders;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.HttpClient;
+import org.apache.http.entity.ContentType;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
@@ -52,7 +53,6 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
@@ -424,39 +424,55 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     }
     
     private HttpToolResponse getApiResponse(String uri) {
-        URI apiUri;
-        try {
-            apiUri = new URI(uri);
-        } catch (URISyntaxException e) {
-            throw Exceptions.propagate(e);
-        }
-        
-        Credentials credentials = new UsernamePasswordCredentials(getUsername(), getPassword());
         return HttpTool.httpGet(HttpTool.httpClientBuilder()
                 // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
-                .uri(apiUri)
-                .credentials(credentials)
+                .uri(uri)
+                .credentials(new UsernamePasswordCredentials(getUsername(), getPassword()))
                 .build(), 
-            apiUri, 
+            URI.create(uri), 
             ImmutableMap.<String, String>of());
     }
     
     @Override
     public void serverAdd(String serverToAdd, String username, String password) {
-//      curl -u Administrator:password\
-//      192.168.60.101:8091/controller/addNode \
-//       -d "hostname=192.168.60.103&user=Administrator&password=password"
-        String baseUrl = Preconditions.checkNotNull(getEntity().getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), "web admin URL not available");
-        HttpToolResponse response = getApiResponse(Urls.mergePaths(baseUrl, "controller/addNode")
-            +"?"+"hostname"+"="+Urls.encode(serverToAdd)
-            +"&"+"user"+"="+Urls.encode(username)
-            +"&"+"password"+"="+Urls.encode(password));
-        if (response.getResponseCode()==200) {
-            log.debug("Completed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getContentAsString());
-        } else {
-            log.warn("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
-            throw new IllegalStateException("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
-        }
+        // TODO the POST is failing with SocketException: Connection reset
+        // removing any data makes the problem go away; i suspect it is the combo of:
+        // credentials, an explicit port, and content.
+        // but i do not know how to fix it...
+////      curl -u Administrator:password\
+////      192.168.60.101:8091/controller/addNode \
+////       -d "hostname=192.168.60.103&user=Administrator&password=password"
+//        String baseUrl = Preconditions.checkNotNull(getEntity().getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), "web admin URL not available");
+//        String uri = Urls.mergePaths(baseUrl, "controller/addNode");
+//        URI uriU = URI.create(uri);
+//        
+//        HttpClient client = HttpTool.httpClientBuilder()
+//            // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
+//            .uri(uriU.getScheme()+"://"+uriU.getHost())
+//            .credentials(new UsernamePasswordCredentials(getUsername(), getPassword()))
+//            .build();
+//        client.getParams().setParameter("http.socket.timeout", new Integer(0)); 
+//        client.getParams().setParameter("http.connection.stalecheck", new Boolean(true));
+//        
+//        HttpToolResponse response = HttpTool.httpPost(client, 
+//            URI.create(uri), 
+////            ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType()),
+//            // TODO do we need the above?
+//            ImmutableMap.<String,String>of(),
+//            
+//            ("hostname="+Urls.encode(serverToAdd)+
+//                "&user"+Urls.encode(username)+
+//                "&password"+Urls.encode(password)).getBytes()
+//            // the following two work
+////            "".getBytes()
+////            ImmutableMap.<String,String>of()
+//            );
+//        if (response.getResponseCode()==200) {
+//            log.debug("Completed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getContentAsString());
+//        } else {
+//            log.warn("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
+//            throw new IllegalStateException("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
+//        }
 
         // TODO would like a WebTasks API such as this:
 //        DynamicTasks.queue(WebTasks.get(baseUrl).subpath("controller/addNode").credentials(getUsername(), getPassword())
@@ -464,22 +480,22 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 //            .summary("REST addNode "+serverToAdd)).getUnchecked();
 
         // or, via CLI:
-//        newScript("serverAdd").body.append(couchbaseCli("server-add")
-//                + getCouchbaseHostnameAndCredentials() +
-//                " --server-add=" + serverToAdd +
-//                " --server-add-username=" + username +
-//                " --server-add-password=" + password)
-//                .failOnNonZeroResultCode()
-//                .execute();
+        newScript("serverAdd").body.append(couchbaseCli("server-add")
+                + getCouchbaseHostnameAndCredentials() +
+                " --server-add=" + BashStringEscapes.wrapBash(serverToAdd) +
+                " --server-add-username=" + BashStringEscapes.wrapBash(username) +
+                " --server-add-password=" + BashStringEscapes.wrapBash(password))
+                .failOnNonZeroResultCode()
+                .execute();
     }
 
     @Override
     public void serverAddAndRebalance(String serverToAdd, String username, String password) {
         newScript("serverAddAndRebalance").body.append(couchbaseCli("rebalance")
                 + getCouchbaseHostnameAndCredentials() +
-                " --server-add=" + serverToAdd +
-                " --server-add-username=" + username +
-                " --server-add-password=" + password)
+                " --server-add=" + BashStringEscapes.wrapBash(serverToAdd) +
+                " --server-add-username=" + BashStringEscapes.wrapBash(username) +
+                " --server-add-password=" + BashStringEscapes.wrapBash(password))
                 .failOnNonZeroResultCode()
                 .execute();
         entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "triggered as part of server-add");
@@ -491,8 +507,8 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         
         newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
             + getCouchbaseHostnameAndCredentials() +
-            " --bucket=" + bucketName +
-            " --bucket-type=" + bucketType +
+            " --bucket=" + BashStringEscapes.wrapBash(bucketName) +
+            " --bucket-type=" + BashStringEscapes.wrapBash(bucketType) +
             " --bucket-port=" + bucketPort +
             " --bucket-ramsize=" + bucketRamSize +
             " --bucket-replica=" + bucketReplica)
@@ -524,10 +540,10 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             couchbaseCli("xdcr-setup") +
             getCouchbaseHostnameAndCredentials() +
             " --create" +
-            " --xdcr-cluster-name="+destName +
-            " --xdcr-hostname="+destHostname +
-            " --xdcr-username="+destUsername +
-            " --xdcr-password="+destPassword
+            " --xdcr-cluster-name="+BashStringEscapes.wrapBash(destName) +
+            " --xdcr-hostname="+BashStringEscapes.wrapBash(destHostname) +
+            " --xdcr-username="+BashStringEscapes.wrapBash(destUsername) +
+            " --xdcr-password="+BashStringEscapes.wrapBash(destPassword)
             ).summary("create xdcr destination "+destName).newTask()));
 
         // would be nice to auto-create bucket, but we'll need to know the parameters; the port in particular is tedious
@@ -537,9 +553,9 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             couchbaseCli("xdcr-replicate") +
             getCouchbaseHostnameAndCredentials() +
             " --create" +
-            " --xdcr-cluster-name="+destName +
-            " --xdcr-from-bucket="+fromBucket +
-            " --xdcr-to-bucket="+toBucket
+            " --xdcr-cluster-name="+BashStringEscapes.wrapBash(destName) +
+            " --xdcr-from-bucket="+BashStringEscapes.wrapBash(fromBucket) +
+            " --xdcr-to-bucket="+BashStringEscapes.wrapBash(toBucket)
 //            + " --xdcr-replication-mode="+replMode
             ).summary("configure replication for "+fromBucket+" to "+destName+":"+toBucket).newTask());
     }
