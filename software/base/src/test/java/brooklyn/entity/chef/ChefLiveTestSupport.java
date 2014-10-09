@@ -64,10 +64,10 @@ public class ChefLiveTestSupport extends BrooklynAppLiveTestSupport {
      **/
     @SuppressWarnings("unchecked")
     public static MachineProvisioningLocation<? extends SshMachineLocation> createLocation(ManagementContext mgmt) {
-        Location bestLocation = mgmt.getLocationRegistry().resolveIfPossible("named:ChefTests");
+        Location bestLocation = mgmt.getLocationRegistry().resolve("named:ChefTests", true, null).orNull();
         if (bestLocation==null) {
             log.info("using AWS for chef tests because named:ChefTests does not exist");
-            bestLocation = mgmt.getLocationRegistry().resolveIfPossible("jclouds:aws-ec2:us-east-1");
+            bestLocation = mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-east-1");
         }
         if (bestLocation==null) {
             throw new IllegalStateException("Need a location called named:ChefTests or AWS configured for these tests");

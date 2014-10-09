@@ -45,6 +45,9 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.guava.Maybe.Absent;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
@@ -52,6 +55,7 @@ import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
@@ -190,52 +194,58 @@ public class BasicLocationRegistry implements LocationRegistry {
         // defining the format and file etc)
     }
 
-    BasicLocationDefinition localhost(String id) {
+    static BasicLocationDefinition localhost(String id) {
         return new BasicLocationDefinition(id, "localhost", "localhost", null);
     }
     
     /** to catch circular references */
     protected ThreadLocal<Set<String>> specsSeen = new ThreadLocal<Set<String>>();
     
-    @Override
+    @Override @Deprecated
     public boolean canMaybeResolve(String spec) {
         return getSpecResolver(spec) != null;
     }
 
     @Override
     public final Location resolve(String spec) {
-        return resolve(spec, new MutableMap());
+        return resolve(spec, true, null).get();
     }
     
-    @Override
+    @Override @Deprecated
     public final Location resolveIfPossible(String spec) {
         if (!canMaybeResolve(spec)) return null;
-        try {
-            return resolve(spec);
-        } catch (Exception e) {
-            if (log.isTraceEnabled())
-                log.trace("Unable to resolve "+spec+": "+e, e);
-            // can't resolve
-            return null;
-        }
+        return resolve(spec, null, null).orNull();
     }
-
-    @Override
-    public Location resolve(String spec, Map locationFlags) {
+    
+    @Deprecated /** since 0.7.0 not used */
+    public Maybe<Location> resolve(String spec, boolean manage) {
+        return resolve(spec, manage, MutableMap.of());
+    }
+    
+    public Maybe<Location> resolve(String spec, Boolean manage, Map locationFlags) {
         try {
+            if (locationFlags==null) locationFlags = MutableMap.of();
+            if (manage!=null) {
+                locationFlags.put(LocalLocationManager.CREATE_UNMANAGED, !manage);
+            }
+            
             Set<String> seenSoFar = specsSeen.get();
             if (seenSoFar==null) {
                 seenSoFar = new LinkedHashSet<String>();
                 specsSeen.set(seenSoFar);
             }
             if (seenSoFar.contains(spec))
-                throw new IllegalStateException("Circular reference in definition of location '"+spec+"' ("+seenSoFar+")");
+                return Maybe.absent(Suppliers.ofInstance(new IllegalStateException("Circular reference in definition of location '"+spec+"' ("+seenSoFar+")")));
             seenSoFar.add(spec);
             
             LocationResolver resolver = getSpecResolver(spec);
 
             if (resolver != null) {
-                return resolver.newLocationFromString(locationFlags, spec, this);
+                try {
+                    return Maybe.of(resolver.newLocationFromString(locationFlags, spec, this));
+                } catch (RuntimeException e) {
+                    return Maybe.absent(Suppliers.ofInstance(e));
+                }
             }
 
             // problem: but let's ensure that classpath is sane to give better errors in common IDE bogus case;
@@ -263,11 +273,16 @@ public class BasicLocationRegistry implements LocationRegistry {
                         + "either this location is not recognised or there is a problem with location resolver configuration.";
             }
 
-            throw new NoSuchElementException(errmsg);
+            return Maybe.absent(Suppliers.ofInstance(new NoSuchElementException(errmsg)));
 
         } finally {
             specsSeen.remove();
         }
+    }
+
+    @Override
+    public Location resolve(String spec, Map locationFlags) {
+        return resolve(spec, null, locationFlags).get();
     }
 
     protected LocationResolver getSpecResolver(String spec) {
@@ -331,10 +346,10 @@ public class BasicLocationRegistry implements LocationRegistry {
     
     @Override
     public Location resolve(LocationDefinition ld) {
-        return resolve(ld, Collections.emptyMap());
+        return resolve(ld, null, null).get();
     }
 
-    @Override
+    @Override @Deprecated
     public Location resolveForPeeking(LocationDefinition ld) {
         // TODO should clean up how locations are stored, figuring out whether they are shared or not;
         // or maybe better, the API calls to this might just want to get the LocationSpec objects back
@@ -343,22 +358,27 @@ public class BasicLocationRegistry implements LocationRegistry {
         return resolve(ld, ConfigBag.newInstance().configure(LocalLocationManager.CREATE_UNMANAGED, true).getAllConfig());
     }
 
-    @Override
+    @Override @Deprecated
     public Location resolve(LocationDefinition ld, Map<?,?> flags) {
         return resolveLocationDefinition(ld, flags, null);
     }
     
+    /** @deprecated since 0.7.0 not used (and optionalName was ignored anyway) */
+    @Deprecated
     public Location resolveLocationDefinition(LocationDefinition ld, Map locationFlags, String optionalName) {
+        return resolve(ld, null, locationFlags).get();
+    }
+    
+    public Maybe<Location> resolve(LocationDefinition ld, Boolean manage, Map locationFlags) {
         ConfigBag newLocationFlags = ConfigBag.newInstance(ld.getConfig())
             .putAll(locationFlags)
             .putIfAbsentAndNotNull(LocationInternal.NAMED_SPEC_NAME, ld.getName())
             .putIfAbsentAndNotNull(LocationInternal.ORIGINAL_SPEC, ld.getName());
-        try {
-            return resolve(ld.getSpec(), newLocationFlags.getAllConfig());
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot instantiate location '"+
-                (optionalName!=null ? optionalName : ld)+"' pointing at "+ld.getSpec()+": "+e, e);
-        }
+        Maybe<Location> result = resolve(ld.getSpec(), manage, newLocationFlags.getAllConfig());
+        if (result.isPresent()) 
+            return result;
+        throw new IllegalStateException("Cannot instantiate location '"+ld+"' pointing at "+ld.getSpec()+": "+
+            Exceptions.collapseText( ((Absent<?>)result).getException() ));
     }
 
     @Override
@@ -371,7 +391,7 @@ public class BasicLocationRegistry implements LocationRegistry {
         // ensure localhost is added (even on windows)
         LocationDefinition l = mgmt.getLocationRegistry().getDefinedLocationByName("localhost");
         if (l==null) mgmt.getLocationRegistry().updateDefinedLocation(
-                ((BasicLocationRegistry)mgmt.getLocationRegistry()).localhost(Identifiers.makeRandomId(8)));
+                BasicLocationRegistry.localhost(Identifiers.makeRandomId(8)) );
         
         ((BasicLocationRegistry)mgmt.getLocationRegistry()).disablePersistence();
     }

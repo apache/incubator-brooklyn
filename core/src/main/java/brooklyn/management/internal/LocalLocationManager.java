@@ -83,6 +83,7 @@ public class LocalLocationManager implements LocationManagerInternal {
     public InternalLocationFactory getLocationFactory() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
         return locationFactory;
+        
     }
 
     @Override

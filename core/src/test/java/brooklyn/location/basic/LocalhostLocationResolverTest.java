@@ -36,6 +36,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,7 @@ public class LocalhostLocationResolverTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        managementContext = LocalManagementContextForTests.newInstance();
         brooklynProperties = managementContext.getBrooklynProperties();
     }
     
@@ -245,6 +246,9 @@ public class LocalhostLocationResolverTest {
         } catch (NoSuchElementException e) {
             // success
         }
+
+        // and check the long form returns an Absent (not throwing)
+        Assert.assertTrue(managementContext.getLocationRegistry().resolve(val, false, null).isAbsent());
     }
     
     private void assertThrowsIllegalArgument(String val) {
@@ -254,5 +258,8 @@ public class LocalhostLocationResolverTest {
         } catch (IllegalArgumentException e) {
             // success
         }
+        
+        // and check the long form returns an Absent (not throwing)
+        Assert.assertTrue(managementContext.getLocationRegistry().resolve(val, false, null).isAbsent());
     }
 }

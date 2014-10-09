@@ -67,7 +67,7 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
     }
     
     /** Creates an absent whose get throws an {@link RuntimeException} generated on demand from the given supplier */
-    public static <T> Maybe<T> absent(final Supplier<RuntimeException> exceptionSupplier) {
+    public static <T> Maybe<T> absent(final Supplier<? extends RuntimeException> exceptionSupplier) {
         return new Absent<T>(Preconditions.checkNotNull(exceptionSupplier));
     }
     
@@ -196,11 +196,11 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
     
     public static class Absent<T> extends Maybe<T> {
         private static final long serialVersionUID = -757170462010887057L;
-        private final Supplier<RuntimeException> exception;
+        private final Supplier<? extends RuntimeException> exception;
         public Absent() {
             this(IllegalStateExceptionSupplier.EMPTY_EXCEPTION);
         }
-        public Absent(Supplier<RuntimeException> exception) {
+        public Absent(Supplier<? extends RuntimeException> exception) {
             this.exception = exception;
         }
         @Override
