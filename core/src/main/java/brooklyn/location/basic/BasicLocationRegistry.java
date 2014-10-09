@@ -219,7 +219,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     
     @Deprecated /** since 0.7.0 not used */
     public Maybe<Location> resolve(String spec, boolean manage) {
-        return resolve(spec, manage, MutableMap.of());
+        return resolve(spec, manage, null);
     }
     
     public Maybe<Location> resolve(String spec, Boolean manage, Map locationFlags) {
@@ -374,7 +374,7 @@ public class BasicLocationRegistry implements LocationRegistry {
             .putAll(locationFlags)
             .putIfAbsentAndNotNull(LocationInternal.NAMED_SPEC_NAME, ld.getName())
             .putIfAbsentAndNotNull(LocationInternal.ORIGINAL_SPEC, ld.getName());
-        Maybe<Location> result = resolve(ld.getSpec(), manage, newLocationFlags.getAllConfig());
+        Maybe<Location> result = resolve(ld.getSpec(), manage, newLocationFlags.getAllConfigRaw());
         if (result.isPresent()) 
             return result;
         throw new IllegalStateException("Cannot instantiate location '"+ld+"' pointing at "+ld.getSpec()+": "+

@@ -382,13 +382,18 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
 
-        // Force reload of location registry
-        this.locationRegistry = null;
+        clearLocationRegistry();
         
         // Notify listeners that properties have been reloaded
         for (PropertiesReloadListener listener : reloadListeners) {
             listener.reloaded();
         }
+    }
+
+    @VisibleForTesting
+    public void clearLocationRegistry() {
+        // Force reload of location registry
+        this.locationRegistry = null;
     }
 
     @Override

@@ -42,7 +42,7 @@ public class LocationConfigTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContextForTests();
+        managementContext = LocalManagementContextForTests.newInstance();
     }
     
     @AfterMethod(alwaysRun=true)

@@ -20,8 +20,8 @@ package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -36,8 +36,9 @@ import brooklyn.entity.Application;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.Sensors;
-import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntityImpl;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -46,13 +47,12 @@ public class AttributeMapTest {
 
     Application app;
     AttributeMap map;
-    private final AttributeSensor<Integer> exampleSensor = Sensors.newIntegerSensor("attributeMapTest.exampleSensor", "");
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplicationImpl();
+        app = TestApplication.Factory.newManagedInstanceForTests();
         TestEntityImpl e = new TestEntityImpl(app);
-        map = new AttributeMap(e, Collections.synchronizedMap(new LinkedHashMap()));
+        map = new AttributeMap(e, Collections.synchronizedMap(MutableMap.<Collection<String>,Object>of()));
         Entities.startManagement(app);
     }
     
@@ -65,7 +65,7 @@ public class AttributeMapTest {
     @Test
     public void testConcurrentUpdatesDoNotCauseConcurrentModificationException() throws Exception {
         ExecutorService executor = Executors.newCachedThreadPool();
-        List<Future> futures = Lists.newArrayList();
+        List<Future<?>> futures = Lists.newArrayList();
         
         try {
             for (int i = 0; i < 1000; i++) {
@@ -86,7 +86,7 @@ public class AttributeMapTest {
     @Test
     public void testConcurrentUpdatesAndGetsDoNotCauseConcurrentModificationException() throws Exception {
         ExecutorService executor = Executors.newCachedThreadPool();
-        List<Future> futures = Lists.newArrayList();
+        List<Future<?>> futures = Lists.newArrayList();
         
         try {
             for (int i = 0; i < 1000; i++) {

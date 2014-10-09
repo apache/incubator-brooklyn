@@ -27,6 +27,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 public class SingleMachineProvisioningLocationTest {
     
@@ -36,7 +37,7 @@ public class SingleMachineProvisioningLocationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = LocalManagementContextForTests.newInstance();
     }
     
     @AfterMethod(alwaysRun=true)

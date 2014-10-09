@@ -88,7 +88,7 @@ public class SshMachineLocationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mgmt = new LocalManagementContextForTests();
+        mgmt = LocalManagementContextForTests.newInstance();
         host = new SshMachineLocation(MutableMap.of("address", Networking.getLocalHost()));
     }
 

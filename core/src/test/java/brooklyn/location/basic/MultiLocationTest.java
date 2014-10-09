@@ -33,6 +33,7 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
 
@@ -55,7 +56,7 @@ public class MultiLocationTest {
     @SuppressWarnings("unchecked")
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = LocalManagementContextForTests.newInstance();
         mac1a = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .displayName("mac1a")
                 .configure("address", Networking.getInetAddressWithFixedName("1.1.1.1")));

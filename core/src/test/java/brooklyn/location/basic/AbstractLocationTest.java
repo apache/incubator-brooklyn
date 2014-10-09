@@ -62,7 +62,7 @@ public class AbstractLocationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mgmt = new LocalManagementContextForTests();
+        mgmt = LocalManagementContextForTests.newInstance();
     }
     
     @AfterMethod(alwaysRun = true)
