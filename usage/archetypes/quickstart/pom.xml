@@ -149,7 +149,8 @@
                 <exclude>.*</exclude> 
                 <exclude>**/*.png</exclude> 
                 <exclude>.*/**</exclude> 
-                <exclude>*.log</exclude> 
+                <exclude>*.log</exclude>
+                <exclude>**/*.sh</exclude>
               </excludes>
               <replacements>
                 <!-- special chars in velocity have to be escaped.
@@ -178,7 +179,10 @@
               <basedir>${basedir}/src/brooklyn-sample/</basedir>
               <outputBasedir>${basedir}</outputBasedir>
               <outputDir>src/main/resources/archetype-resources/</outputDir>
-              <includes> <include>**/*.png</include> </includes>
+              <includes>
+                <include>**/*.png</include>
+                <include>**/*.sh</include>
+              </includes>
               <excludes> 
                 <exclude>target/**</exclude> 
                 <exclude>test-output/**</exclude> 

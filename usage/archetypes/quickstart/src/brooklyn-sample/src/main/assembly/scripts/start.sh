@@ -29,12 +29,12 @@ if [ ! -x "$JAVA" ] ; then
   exit 1
 fi
 
-if [[ ! `ls brooklyn-sample-*.jar 2> /dev/null` ]] ; then
+if [[ ! `ls ${project.artifactId}-*.jar 2> /dev/null` ]] ; then
   echo Command must be run from the directory where the JAR is installed.
   exit 4
 fi
 
 $JAVA -Xms256m -Xmx1024m -XX:MaxPermSize=1024m \
     -classpath "conf/:patch/*:*:lib/*" \
-    com.acme.sample.brooklyn.SampleMain \
+    ${project.entry} \
     "$@"

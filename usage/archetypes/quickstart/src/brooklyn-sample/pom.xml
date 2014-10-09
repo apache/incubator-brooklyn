@@ -58,6 +58,8 @@
   -->
 
   <properties>
+    <project.entry>com.acme.sample.SampleMain</project.entry>
+
     <!-- Compilation -->
     <java.version>1.6</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
