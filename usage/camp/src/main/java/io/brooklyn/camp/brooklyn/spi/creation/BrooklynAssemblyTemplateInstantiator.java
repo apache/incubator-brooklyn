@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
@@ -108,6 +109,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             // if promoted, apply the transformations done to the app
             // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
             EntityManagementUtils.collapseSpec(oldApp, app);
+        } else {
+            app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
         }
         
         return app;
@@ -238,7 +241,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         
         String yaml = item.getPlanYaml();
         Reader input = new StringReader(yaml);
-        BrooklynClassLoadingContext itemLoader = item.newClassLoadingContext(mgmt);
+        BrooklynClassLoadingContext itemLoader = CatalogUtils.newClassLoadingContext(mgmt, item);
         
         return resolveYamlSpec(mgmt, encounteredCatalogTypes, input, itemLoader);
     }

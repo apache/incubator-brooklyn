@@ -24,8 +24,6 @@ import javax.annotation.Nullable;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
 
 import com.google.common.base.Preconditions;
 
@@ -115,18 +113,10 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
         return javaClass;
     }
     
-    @Override
-    public BrooklynClassLoadingContext newClassLoadingContext(final ManagementContext mgmt) {
-        BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
-        result.add(itemDto.newClassLoadingContext(mgmt));
-        result.addSecondary(catalog.newClassLoadingContext());
-        return result;
-    }
-    
     @SuppressWarnings("unchecked")
     Class<? extends T> loadJavaClass(final ManagementContext mgmt) {
         if (javaClass!=null) return javaClass;
-        javaClass = (Class<T>)newClassLoadingContext(mgmt).loadClass(getJavaType());
+        javaClass = (Class<T>)CatalogUtils.newClassLoadingContext(mgmt, getLibraries(), catalog.getRootClassLoader()).loadClass(getJavaType());
         return javaClass;
     }
 

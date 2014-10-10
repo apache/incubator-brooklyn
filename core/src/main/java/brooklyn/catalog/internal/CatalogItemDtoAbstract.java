@@ -20,26 +20,21 @@ package brooklyn.catalog.internal;
 
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import brooklyn.basic.AbstractBrooklynObject;
+import brooklyn.catalog.CatalogItem;
+import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;
+import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.mementos.CatalogItemMemento;
+import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
-import brooklyn.basic.AbstractBrooklynObject;
-import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
-import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
-import brooklyn.management.classloading.OsgiBrooklynClassLoadingContext;
-import brooklyn.mementos.CatalogItemMemento;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.SetFromFlag;
 
 public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynObject implements CatalogItem<T, SpecT> {
 
@@ -142,22 +137,6 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         if (serializer == null) {
             serializer = new CatalogXmlSerializer();
         }
-    }
-
-    @Override
-    public BrooklynClassLoadingContext newClassLoadingContext(final ManagementContext mgmt) {
-        BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
-
-        if (getLibraries()!=null && getLibraries().getBundles()!=null && !getLibraries().getBundles().isEmpty())
-            // TODO getLibraries() should never be null but sometimes it is still
-            // e.g. run CatalogResourceTest without the above check
-            result.add(new OsgiBrooklynClassLoadingContext(mgmt, getLibraries().getBundles()));
-
-        BrooklynClassLoadingContext next = BrooklynLoaderTracker.getLoader();
-        if (next==null) next = JavaBrooklynClassLoadingContext.newDefault(mgmt);
-        result.add(next);
-
-        return result;
     }
 
     @Override

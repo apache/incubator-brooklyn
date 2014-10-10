@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -218,7 +219,7 @@ public class BrooklynComponentTemplateResolver {
         
         if (item!=null) {
             // add additional bundles
-            loader = new BrooklynClassLoadingContextSequential(mgmt, item.newClassLoadingContext(mgmt), loader);
+            loader = new BrooklynClassLoadingContextSequential(mgmt, CatalogUtils.newClassLoadingContext(mgmt, item), loader);
             
             if (item.getJavaType() != null) {
                 typeName = item.getJavaType();

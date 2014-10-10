@@ -20,6 +20,7 @@ package io.brooklyn.camp.brooklyn;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import io.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
 import io.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
@@ -43,6 +44,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -58,6 +60,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
@@ -759,6 +762,40 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         protected String getEntityTypeName() {
             return "CustomTestEntityImpl";
         }
+    }
+
+    @Test
+    public void testWrapperAppMarkerExists() throws Exception {
+        Entity entity = createAndStartApplication(
+                "services:",
+                "- type: " + BasicEntity.class.getName());
+        assertTrue(entity.getConfig(EntityManagementUtils.WRAPPER_APP_MARKER));
+    }
+
+    @Test
+    public void testWrapperAppMarkerDoesntExist() throws Exception {
+        Entity entity = createAndStartApplication(
+                "services:",
+                "- type: " + BasicApplication.class.getName());
+        assertNull(entity.getConfig(EntityManagementUtils.WRAPPER_APP_MARKER));
+    }
+
+    @Test
+    public void testWrapperAppMarkerForced() throws Exception {
+        Entity entity = createAndStartApplication(
+                "wrappedApp: true",
+                "services:",
+                "- type: " + BasicApplication.class.getName());
+        assertTrue(entity.getConfig(EntityManagementUtils.WRAPPER_APP_MARKER));
+    }
+
+    @Test
+    public void testWrapperAppMarkerUnforced() throws Exception {
+        Entity entity = createAndStartApplication(
+                "wrappedApp: false",
+                "services:",
+                "- type: " + BasicApplication.class.getName());
+        assertNull(entity.getConfig(EntityManagementUtils.WRAPPER_APP_MARKER));
     }
 
     @Override

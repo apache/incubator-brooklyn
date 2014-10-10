@@ -20,7 +20,6 @@ package brooklyn.camp.lite;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.pdp.PdpYamlTest;
@@ -44,6 +43,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.ConfigKeys;
@@ -81,6 +81,7 @@ public class CampYamlLiteTest {
     public void setUp() {
         mgmt = LocalManagementContextForTests.newInstanceWithOsgi();
         platform = new CampPlatformWithJustBrooklynMgmt(mgmt);
+        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
     }
     
     @AfterMethod(alwaysRun=true)
@@ -92,8 +93,6 @@ public class CampYamlLiteTest {
      * then creating a {@link TestAppAssembly} */
     @Test
     public void testYamlServiceMatchAndBrooklynInstantiate() throws Exception {
-        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
-        
         Reader input = new InputStreamReader(getClass().getResourceAsStream("test-app-service-blueprint.yaml"));
         AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
         log.info("AT is:\n"+at.toString());
@@ -122,9 +121,6 @@ public class CampYamlLiteTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testAddChildrenEffector() throws Exception {
-        // NB: as above, with this mock instantiator, not everything will be set nicely
-        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
-        
         String childYaml = Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml"));
         AddChildrenEffector newEff = new AddChildrenEffector(ConfigBag.newInstance()
             .configure(AddChildrenEffector.EFFECTOR_NAME, "add_tomcat")
@@ -156,8 +152,6 @@ public class CampYamlLiteTest {
 
     @Test
     public void testYamlServiceForCatalog() {
-        MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
-        
         CatalogItem<?, ?> realItem = mgmt.getCatalog().addItem(Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml")));
         Iterable<CatalogItem<Object, Object>> retrievedItems = mgmt.getCatalog()
                 .getCatalogItems(CatalogPredicates.registeredType(Predicates.equalTo("catalog-name")));
@@ -220,7 +214,7 @@ public class CampYamlLiteTest {
                 "  - url: " + bundleUrl + "\n" +
                 "\n" +
                 "services:\n" +
-                "- type: brooklyn.test.entity.TestEntity\n";
+                "- type: io.camp.mock:AppServer\n";
     }
 
     private void assertMgmtHasSampleMyCatalogApp(String registeredTypeName, String bundleUrl) {
@@ -232,7 +226,7 @@ public class CampYamlLiteTest {
         // stored as yaml, not java
 //      assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
         assertNotNull(item.getPlanYaml());
-        Assert.assertTrue(item.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
+        Assert.assertTrue(item.getPlanYaml().contains("io.camp.mock:AppServer"));
 
         assertEquals(item.getId(), registeredTypeName);
 
@@ -241,12 +235,12 @@ public class CampYamlLiteTest {
         assertEquals(libs, MutableList.of(bundleUrl));
 
         // now let's check other things on the item
-        assertEquals(item.getName(), "My Catalog App");
+        assertEquals(item.getDisplayName(), "My Catalog App");
         assertEquals(item.getDescription(), "My description");
         assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
 
         // and confirm we can resolve ICON
-        byte[] iconData = Streams.readFully(ResourceUtils.create(item.newClassLoadingContext(mgmt)).getResourceFromUrl(item.getIconUrl()));
+        byte[] iconData = Streams.readFully(ResourceUtils.create(CatalogUtils.newClassLoadingContext(mgmt, item)).getResourceFromUrl(item.getIconUrl()));
         assertEquals(iconData.length, 43);
     }
 

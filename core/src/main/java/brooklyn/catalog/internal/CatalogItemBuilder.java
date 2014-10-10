@@ -28,8 +28,9 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
                 .registeredTypeName(registeredTypeName);
     }
 
-    public static CatalogItemBuilder<CatalogTemplateItemDto> newTemplate() {
-        return new CatalogItemBuilder<CatalogTemplateItemDto>(new CatalogTemplateItemDto());
+    public static CatalogItemBuilder<CatalogTemplateItemDto> newTemplate(String registeredTypeName) {
+        return new CatalogItemBuilder<CatalogTemplateItemDto>(new CatalogTemplateItemDto())
+                .registeredTypeName(registeredTypeName);
     }
 
     public static CatalogItemBuilder<CatalogPolicyItemDto> newPolicy(String registeredTypeName) {

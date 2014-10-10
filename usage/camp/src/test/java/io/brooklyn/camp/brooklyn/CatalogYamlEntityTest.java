@@ -121,68 +121,14 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testLaunchApplicationLoopCatalogIdFails() throws Exception {
-        String registeredTypeName = "self.referencing.type";
-        registerAndLaunchFailsWithRecursionError(registeredTypeName, registeredTypeName);
-    }
-    
-    @Test
     public void testLaunchApplicationChildLoopCatalogIdFails() throws Exception {
         String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
-        addCatalogChildOSGiEntity(referrerRegisteredTypeName, referrerRegisteredTypeName);
-
         try {
-            createAndStartApplication(
-                "name: simple-app-yaml",
-                "location: localhost",
-                "services:",
-                "- serviceType: "+BasicEntity.class.getName(),
-                "  brooklyn.children:",
-                "  - type: " + referrerRegisteredTypeName);
-
-                fail("Expected to throw IllegalStateException");
+            addCatalogChildOSGiEntity(referrerRegisteredTypeName, referrerRegisteredTypeName);
+            fail("Expected to throw IllegalStateException");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("Recursive reference to "+referrerRegisteredTypeName));
+            assertTrue(e.getMessage().contains("Could not find "+referrerRegisteredTypeName));
         }
-
-        deleteCatalogEntity(referrerRegisteredTypeName);
-    }
-
-    /**
-     * Tests that a catalog item referenced by another
-     * catalog item won't have access to the parent's bundles.
-     */
-    @Test
-    public void testParentCatalogDoesNotLeakBundlesToChildCatalogItems() throws Exception {
-        String childCatalogId = "my.catalog.app.id.no_bundles";
-        String parentCatalogId = "my.catalog.app.id.parent";
-        addCatalogItem(
-                "brooklyn.catalog:",
-                "  id: " + childCatalogId,
-                "",
-                "services:",
-                "- type: " + SIMPLE_ENTITY_TYPE);
-
-        addCatalogItem(
-                "brooklyn.catalog:",
-                "  id: " + parentCatalogId,
-                "  libraries:",
-                "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
-                "",
-                "services:",
-                "- type: " + childCatalogId);
-
-        try {
-            createAndStartApplication(
-                    "services:",
-                    "- type: " + parentCatalogId);
-        } catch (UnsupportedOperationException e) {
-            assertTrue(e.getMessage().endsWith("cannot be matched"));
-            assertTrue(e.getMessage().contains(SIMPLE_ENTITY_TYPE));
-        }
-
-        deleteCatalogEntity(parentCatalogId);
-        deleteCatalogEntity(childCatalogId);
     }
 
     private void registerAndLaunchAndAssertSimpleEntity(String registeredTypeName, String serviceType) throws Exception {
@@ -195,22 +141,6 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
         assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
-
-        deleteCatalogEntity(registeredTypeName);
-    }
-
-    private void registerAndLaunchFailsWithRecursionError(String registeredTypeName, String serviceType) throws Exception {
-        addCatalogOSGiEntity(registeredTypeName, serviceType);
-        String yaml = "name: simple-app-yaml\n" +
-                      "location: localhost\n" +
-                      "services: \n" +
-                      "  - serviceType: "+registeredTypeName;
-        try {
-            createAndStartApplication(yaml);
-            fail("Expected to throw IllegalStateException");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("Recursive reference to "+registeredTypeName));
-        }
 
         deleteCatalogEntity(registeredTypeName);
     }

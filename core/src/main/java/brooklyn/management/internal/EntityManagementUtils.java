@@ -25,6 +25,7 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.StringReader;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -35,9 +36,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityLocal;
@@ -66,6 +69,12 @@ import com.google.common.collect.Iterables;
 public class EntityManagementUtils {
 
     private static final Logger log = LoggerFactory.getLogger(EntityManagementUtils.class);
+
+    /**
+     * A marker config value which indicates that an application was created automatically
+     * to allow the management of a non-app entity.
+     */
+    public static final ConfigKey<Boolean> WRAPPER_APP_MARKER = ConfigKeys.newBooleanConfigKey("brooklyn.wrapper_app");
 
     /** creates an application from the given app spec, managed by the given management context */
     public static <T extends Application> T createUnstarted(ManagementContext mgmt, EntitySpec<T> spec) {

@@ -19,9 +19,6 @@
 package brooklyn.catalog.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.util.flags.FlagUtils;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
@@ -39,17 +36,22 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.internal.EntityManagementUtils;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
@@ -243,12 +245,15 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         if (yaml!=null) {
             DeploymentPlan plan = makePlanFromYaml(yaml);
+            BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
             switch (item.getCatalogItemType()) {
-                case ENTITY:return createEntitySpec(loadedItem, plan);
-                case POLICY:return createPolicySpec(loadedItem, plan);
+                case TEMPLATE:
+                case ENTITY:
+                    return createEntitySpec(plan, loader);
+                case POLICY:
+                    return createPolicySpec(plan, loader);
                 default: throw new RuntimeException("Only entity & policy catalog items are supported. Unsupported catalog item type " + item.getCatalogItemType());
             }
-
         }
 
         // revert to legacy mechanism
@@ -269,13 +274,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @SuppressWarnings("unchecked")
-    private <T, SpecT> SpecT createEntitySpec(
-            CatalogItemDo<T, SpecT> loadedItem, DeploymentPlan plan) {
+    private <T, SpecT> SpecT createEntitySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
 
         // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
         AssemblyTemplate at;
-        BrooklynClassLoadingContext loader = loadedItem.newClassLoadingContext(mgmt);
         BrooklynLoaderTracker.setLoader(loader);
         try {
             at = camp.pdp().registerDeploymentPlan(plan);
@@ -296,7 +299,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
 
     @SuppressWarnings("unchecked")
-    private <T, SpecT> SpecT createPolicySpec(CatalogItemDo<T, SpecT> loadedItem, DeploymentPlan plan) {
+    private <T, SpecT> SpecT createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         //Would ideally re-use io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver.PolicySpecResolver
         //but it is CAMP specific and there is no easy way to get hold of it.
         Object policies = checkNotNull(plan.getCustomAttributes().get(POLICIES_KEY), "policy config");
@@ -317,7 +320,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         String policyType = (String) checkNotNull(Yamls.getMultinameAttribute(policyConfig, "policy_type", "policyType", "type"), "policy type");
         Map<String, Object> brooklynConfig = (Map<String, Object>) policyConfig.get("brooklyn.config");
-        BrooklynClassLoadingContext loader = loadedItem.newClassLoadingContext(mgmt);
         PolicySpec<? extends Policy> spec = PolicySpec.create(loader.loadClass(policyType, Policy.class));
         if (brooklynConfig != null) {
             spec.configure(brooklynConfig);
@@ -397,9 +399,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             }
         }
 
-        // TODO long-term:  support applications / templates
+        CatalogUtils.installLibraries(mgmt, libraries);
 
-        CatalogItemBuilder<?> builder = createItemBuilder(plan, registeredTypeName)
+        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, CatalogUtils.newClassLoadingContext(mgmt, libraries));
+
+        CatalogItemBuilder<?> builder = createItemBuilder(spec, registeredTypeName)
             .libraries(libraries)
             .displayName(plan.getName())
             .description(plan.getDescription())
@@ -430,13 +434,34 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return dto;
     }
 
-    private CatalogItemBuilder<?> createItemBuilder(DeploymentPlan plan, String registeredTypeName) {
-        boolean isPolicy = plan.getCustomAttributes().containsKey(POLICIES_KEY);
-        if (isPolicy) {
-            return CatalogItemBuilder.newPolicy(registeredTypeName);
+    private AbstractBrooklynObjectSpec<?,?> createSpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+        if (isPolicyPlan(plan)) {
+            return createPolicySpec(plan, loader);
         } else {
-            return CatalogItemBuilder.newEntity(registeredTypeName);
+            return createEntitySpec(plan, loader);
         }
+    }
+
+    private CatalogItemBuilder<?> createItemBuilder(AbstractBrooklynObjectSpec<?, ?> spec, String itemId) {
+        if (spec instanceof EntitySpec) {
+            if (isApplicationSpec((EntitySpec<?>)spec)) {
+                return CatalogItemBuilder.newTemplate(itemId);
+            } else {
+                return CatalogItemBuilder.newEntity(itemId);
+            }
+        } else if (spec instanceof PolicySpec) {
+            return CatalogItemBuilder.newPolicy(itemId);
+        } else {
+            throw new IllegalStateException("Unknown spec type " + spec.getClass().getName() + " (" + spec + ")");
+        }
+    }
+
+    private boolean isApplicationSpec(EntitySpec<?> spec) {
+        return !Boolean.TRUE.equals(spec.getConfig().get(EntityManagementUtils.WRAPPER_APP_MARKER));
+    }
+
+    private boolean isPolicyPlan(DeploymentPlan plan) {
+        return plan.getCustomAttributes().containsKey(POLICIES_KEY);
     }
 
     private DeploymentPlan makePlanFromYaml(String yaml) {
@@ -451,12 +476,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
         manualAdditionsCatalog.addEntry(itemDto);
-        
-        // Load the libraries now.
-        // Otherwise, when CAMP looks up BrooklynEntityMatcher.accepts then it
-        // won't know about this bundle:class (via the catalog item's
-        // BrooklynClassLoadingContext) so will reject it as not-for-brooklyn.
-        new CatalogLibrariesDo(itemDto.getLibrariesDto()).load(mgmt);
 
         // Ensure the cache is populated and it is persisted by the management context
         getCatalog().addEntry(itemDto);
