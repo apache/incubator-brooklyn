@@ -22,16 +22,15 @@ import static org.testng.Assert.assertEquals;
 
 import org.testng.annotations.Test;
 
-import brooklyn.entity.rebind.transformer.impl.XsltTransformer;
-import brooklyn.entity.rebind.transformer.impl.XsltTransformerTest;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
 
 public class XsltTransformerTest {
 
-    private static String NEWLINE = System.getProperty("line.separator");
+    private static String NEWLINE = Os.LINE_SEPARATOR;
     
     @Test
     public void testRenameType() throws Exception {
