@@ -63,7 +63,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
 
     private AtomicLong serial = new AtomicLong(System.currentTimeMillis());
-    private Object[] mutex = new Object[0];
+    private final Object[] mutex = new Object[0];
     private DynamicGroup entities;
     private MemberTrackingPolicy policy;
     private Multimap<Location, Entity> entityLocations = HashMultimap.create();
@@ -172,7 +172,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         protected void onEntityRemoved(Entity member) {
             ((BindDnsServerImpl)entity).removed(member);
         }
-    };
+    }
 
     @Override
     public void postStart() {

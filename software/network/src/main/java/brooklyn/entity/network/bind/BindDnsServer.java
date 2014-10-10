@@ -89,7 +89,8 @@ public interface BindDnsServer extends SoftwareProcess {
     /* Reverse lookup attributes. */
 
     AttributeSensor<Cidr> REVERSE_LOOKUP_CIDR = new BasicAttributeSensor<Cidr>(Cidr.class,
-            "bind.reverse-lookup.cidr", "The network CIDR that hosts must have for reverse lookup entriers to be added (default uses server address /24)");
+            "bind.reverse-lookup.cidr", "The network CIDR that hosts must have for reverse lookup entries " +
+            "to be added (default uses server address /24)");
 
     AttributeSensor<String> REVERSE_LOOKUP_DOMAIN = new BasicAttributeSensor<String>(String.class,
             "bind.reverse-lookup.domain", "The in-addr.arpa reverse lookup domain name");
