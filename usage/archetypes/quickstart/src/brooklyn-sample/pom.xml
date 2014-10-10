@@ -60,14 +60,14 @@
     <dependency>
       <!-- this pulls in all brooklyn entities and clouds; 
            you can cherry pick selected ones instead (for a smaller build) -->
-      <groupId>io.brooklyn</groupId>
+      <groupId>org.apache.brooklyn</groupId>
       <artifactId>brooklyn-all</artifactId>
       <version>${brooklyn.version}</version>
     </dependency>
 
     <dependency>
       <!-- includes testng and useful logging for tests -->
-      <groupId>io.brooklyn</groupId>
+      <groupId>org.apache.brooklyn</groupId>
       <artifactId>brooklyn-test-support</artifactId>
       <version>${brooklyn.version}</version>
       <scope>test</scope>
@@ -75,7 +75,7 @@
 
     <dependency>
       <!-- this gives us flexible and easy-to-use logging; just edit logback-custom.xml! -->
-      <groupId>io.brooklyn</groupId>
+      <groupId>org.apache.brooklyn</groupId>
       <artifactId>brooklyn-logback-xml</artifactId>
       <version>${brooklyn.version}</version>
       <!-- optional so that this project has logging; dependencies may redeclare or supply their own; 
