@@ -93,8 +93,8 @@ public class RendererHints {
     public static Set<Hint<?>> getHintsFor(Object element) { return getHintsFor(element, null); }
 
     @Deprecated /** @deprecated since 0.7.0 only supported for certain types */
-    @SuppressWarnings("rawtypes")
-    public static Set<Hint<?>> getHintsFor(Object element, Class<? extends Hint> optionalHintSuperClass) { return getHintsFor(element, optionalHintSuperClass); }
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static Set<Hint<?>> getHintsFor(Object element, Class<? extends Hint> optionalHintSuperClass) { return (Set<Hint<?>>) _getHintsFor(element, optionalHintSuperClass); }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static <T extends Hint> Set<T> _getHintsFor(Object element, Class<T> optionalHintSuperClass) {
