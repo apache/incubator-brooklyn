@@ -19,6 +19,8 @@
 package brooklyn.entity.basic.lifecycle;
 
 import static java.lang.String.format;
+
+import brooklyn.util.internal.ssh.ShellTool;
 import groovy.lang.Closure;
 
 import java.io.ByteArrayOutputStream;
@@ -75,6 +77,7 @@ public class ScriptHelper {
     protected boolean isInessential = false;
     protected boolean closeSshConnection = false;
     protected boolean gatherOutput = false;
+    protected boolean noExtraOutput = false;
     protected ByteArrayOutputStream stdout, stderr;
     protected Task<Integer> task;
 
@@ -230,7 +233,26 @@ public class ScriptHelper {
         gatherOutput = gather;
         return this;
     }
-    
+
+    /**
+     * Indicate that no extra output should be appended to stdout.
+     * <p>
+     * By default Brooklyn appends a message like
+     * "<tt>Executed /tmp/brooklyn-20141010-164855950...sh, result 0</tt>"
+     * to script output.
+     */
+    public ScriptHelper noExtraOutput() {
+        return noExtraOutput(true);
+    }
+
+    /**
+     * @see #noExtraOutput()
+     */
+    private ScriptHelper noExtraOutput(boolean output) {
+        this.noExtraOutput = output;
+        return this;
+    }
+
     /** The connection should be closed and disconnected once the commands have executed. */
     public ScriptHelper closeSshConnection() {
         closeSshConnection = true;
@@ -337,6 +359,7 @@ public class ScriptHelper {
                 flags.put("out", stdout);
                 flags.put("err", stderr);
             }
+            flags.put(ShellTool.PROP_NO_EXTRA_OUTPUT.getName(), noExtraOutput);
             result = runner.execute(flags, lines, summary);
         } catch (RuntimeInterruptedException e) {
             throw logWithDetailsAndThrow(format("Execution failed, invocation error for %s: %s", summary, e.getMessage()), e);
