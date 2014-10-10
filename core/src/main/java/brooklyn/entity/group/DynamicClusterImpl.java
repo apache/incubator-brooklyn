@@ -741,14 +741,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         ((EntityLocal) entity).setAttribute(CLUSTER_MEMBER, true);
         ((EntityLocal) entity).setAttribute(CLUSTER, this);
-        synchronized (this) {
-            if (getAttribute(FIRST) == null) {
-                setAttribute(FIRST, entity);
-                ((EntityLocal) entity).setAttribute(FIRST_MEMBER, true);
-            } else {
-                ((EntityLocal) entity).setAttribute(FIRST_MEMBER, false);
-            }
-        }
 
         Entities.manage(entity);
         addMember(entity);

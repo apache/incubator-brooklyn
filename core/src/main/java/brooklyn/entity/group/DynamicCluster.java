@@ -169,12 +169,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     AttributeSensor<Boolean> CLUSTER_MEMBER = Sensors.newBooleanSensor(
             "cluster.member", "Set on an entity if it is a member of a cluster");
 
-    AttributeSensor<Boolean> FIRST_MEMBER = Sensors.newBooleanSensor(
-            "cluster.first", "Set on an entity if it is the first member of a cluster");
-
-    AttributeSensor<Entity> FIRST = Sensors.newSensor(Entity.class,
-            "cluster.first.entity", "The first member of the cluster");
-
     AttributeSensor<Entity> CLUSTER = Sensors.newSensor(Entity.class,
             "cluster.entity", "The cluster an entity is a member of");
 
