@@ -31,11 +31,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.StringPredicates;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Durations;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class LocalhostExternalIpLoader {
@@ -78,10 +82,11 @@ public class LocalhostExternalIpLoader {
     static List<String> getIpAddressWebsites() {
         String file = new ResourceUtils(LocalhostExternalIpLoader.class)
                 .getResourceAsString("classpath://brooklyn/location/geo/external-ip-address-resolvers.txt");
-        List<String> urls = Lists.newArrayList(Splitter.on('\n')
+        Iterable<String> lines = Splitter.on('\n')
                 .omitEmptyStrings()
                 .trimResults()
-                .split(file));
+                .split(file);
+        List<String> urls = Lists.newArrayList(Iterables.filter(lines, Predicates.not(StringPredicates.startsWith("#"))));
         Collections.shuffle(urls);
         return urls;
     }

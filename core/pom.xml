@@ -221,22 +221,4 @@
         </dependency>
     </dependencies>
 
-  <!-- add maxmind geo-ip library; exact copy of source included as required by LGPL2 -->
-  <build>
-      <pluginManagement>
-          <plugins>
-              <plugin>
-                  <groupId>org.apache.rat</groupId>
-                  <artifactId>apache-rat-plugin</artifactId>
-                  <configuration>
-                      <excludes combine.children="append">
-                          <exclude>**/src/main/resources/**/*.txt</exclude>
-                          <exclude>**/src/test/resources/**/*.txt</exclude>
-                      </excludes>
-                  </configuration>
-              </plugin>
-          </plugins>
-      </pluginManagement>
-  </build>
-
 </project>

@@ -18,11 +18,14 @@
  */
 package brooklyn.entity.basic;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +43,8 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.KnownSizeInputStream;
@@ -183,6 +186,18 @@ public class SoftwareProcessSshDriverIntegrationTest {
 
     @Test(groups="Integration")
     public void testCopyResourceCreatingParentDir() throws Exception {
+        /*
+         * TODO copyResource will now always create the parent dir, irrespective of the createParentDir value!
+         * In SshMachineLocation on 2014-05-29, Alex added: mkdir -p `dirname '$DEST'`
+         * 
+         * Changing this test to assert that parent dir always created; should we delete boolean createParentDir
+         * from the copyResource method?
+         * 
+         * TODO Have also deleted test that if relative path is given it will write that relative to $RUN_DIR.
+         * That is not the case: it is relative to $HOME, which seems fine. For example, if copyResource
+         * is used during install phase then $RUN_DIR would be the wrong default. 
+         * Is there any code that relies on this behaviour?
+         */
         File tempDataDirSub = new File(tempDataDir, "subdir");
         File tempDest = new File(tempDataDirSub, "tempDest.txt");
         String tempLocalContent = "abc";
@@ -194,35 +209,20 @@ public class SoftwareProcessSshDriverIntegrationTest {
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
         app.start(ImmutableList.of(localhost));
 
-        // First confirm would get exception in createeParentDir==false
+        // First confirm that even if createParentDir==false that it still gets created!
         try {
             entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDest.getAbsolutePath(), false);
             assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
-            fail("Should have failed to create "+tempDest);
-        } catch (SshException e) {
-            // success
         } finally {
             Os.deleteRecursively(tempDataDirSub);
         }
-        
+
         // Copy to absolute path
         try {
             entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDest.getAbsolutePath(), true);
             assertEquals(Files.readLines(tempDest, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
         } finally {
             Os.deleteRecursively(tempDataDirSub);
-        }
-        
-        // Copy to absolute path
-        String runDir = entity.getDriver().getRunDir();
-        String tempDataDirRelativeToRunDir = "subdir";
-        String tempDestRelativeToRunDir = Os.mergePaths(tempDataDirRelativeToRunDir, "tempDest.txt");
-        File tempDestInRunDir = new File(Os.mergePaths(runDir, tempDestRelativeToRunDir));
-        try {
-            entity.getDriver().copyResource(tempLocal.toURI().toString(), tempDestRelativeToRunDir, true);
-            assertEquals(Files.readLines(tempDestInRunDir, Charsets.UTF_8), ImmutableList.of(tempLocalContent));
-        } finally {
-            Os.deleteRecursively(new File(runDir, tempDataDirRelativeToRunDir));
         }
     }
 
@@ -266,10 +266,13 @@ public class SoftwareProcessSshDriverIntegrationTest {
         }
 
         try {
+            String expectedHostname = BrooklynNetworkUtils.getLocalhostInetAddress().getHostName();
+            String expectedIp = BrooklynNetworkUtils.getLocalhostInetAddress().getHostAddress();
+            
             Map<?,?> data = (Map) Iterables.getOnlyElement(Yamls.parseAll(Files.toString(template, Charsets.UTF_8)));
             Assert.assertEquals(data.size(), 3);
-            Assert.assertEquals(data.get("entity.hostname"), Networking.getLocalHost().getHostName());
-            Assert.assertEquals(data.get("entity.address"), "127.0.0.1");
+            Assert.assertEquals(data.get("entity.hostname"), expectedHostname);
+            Assert.assertEquals(data.get("entity.address"), expectedIp);
             Assert.assertEquals(data.get("frogs"), Integer.valueOf(12));
         } finally {
             template.delete();
@@ -297,10 +300,13 @@ public class SoftwareProcessSshDriverIntegrationTest {
         }
 
         try {
+            String expectedHostname = BrooklynNetworkUtils.getLocalhostInetAddress().getHostName();
+            String expectedIp = BrooklynNetworkUtils.getLocalhostInetAddress().getHostAddress();
+            
             Map<?,?> data = (Map) Iterables.getOnlyElement(Yamls.parseAll(Files.toString(template, Charsets.UTF_8)));
             Assert.assertEquals(data.size(), 3);
-            Assert.assertEquals(data.get("entity.hostname"), Networking.getLocalHost().getHostName());
-            Assert.assertEquals(data.get("entity.address"), "127.0.0.1");
+            Assert.assertEquals(data.get("entity.hostname"), expectedHostname);
+            Assert.assertEquals(data.get("entity.address"), expectedIp);
             Assert.assertEquals(data.get("frogs"), Integer.valueOf(12));
         } finally {
             template.delete();
