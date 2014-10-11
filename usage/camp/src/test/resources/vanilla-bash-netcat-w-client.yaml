@@ -32,12 +32,12 @@ services:
     echo hello | nc -l 4321 >> server-input &
     echo $! > $PID_FILE
 
-  brooklyn.policies:
-  # restarter and 
-  - policyType: brooklyn.policy.ha.ServiceFailureDetector
+  brooklyn.enrichers:
+  - type: brooklyn.policy.ha.ServiceFailureDetector
     brooklyn.config:
       # wait 15s after service fails before propagating failure
       serviceFailedStabilizationDelay: 15s
+  brooklyn.policies:
   - policyType: brooklyn.policy.ha.ServiceRestarter
     brooklyn.config:
       # repeated failures in a time window can cause the restarter to abort,
