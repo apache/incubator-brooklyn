@@ -18,7 +18,9 @@
  */
 package brooklyn.rest.client;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.Collection;
 
@@ -47,6 +49,8 @@ import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.SensorSummary;
+import brooklyn.test.Asserts;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -112,10 +116,12 @@ public class ApplicationResourceIntegrationTest {
         Response response = api.getApplicationApi().createPoly(redisSpec.getBytes());
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
-        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
-        while (!api.getSensorApi().get("redis-app", entityId, "service.state", false).equals(Lifecycle.RUNNING.toString())) {
-            Thread.sleep(100);
-        }
+        final String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(10)), new Runnable() {
+            public void run() {
+                Object status = api.getSensorApi().get("redis-app", entityId, "service.state", false);
+                assertEquals(status, Lifecycle.RUNNING.toString());
+            }});
     }
     
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
@@ -124,9 +130,11 @@ public class ApplicationResourceIntegrationTest {
         Response response = api.getApplicationApi().create(legacyRedisSpec);
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 2);
-        while (!api.getSensorApi().get("redis-legacy-app", "redis-ent", "service.state", false).equals(Lifecycle.RUNNING.toString())) {
-            Thread.sleep(100);
-        }
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(10)), new Runnable() {
+            public void run() {
+                Object status = api.getSensorApi().get("redis-legacy-app", "redis-ent", "service.state", false);
+                assertEquals(status, Lifecycle.RUNNING.toString());
+            }});
         // Tear the app down so it doesn't interfere with other tests 
         Response deleteResponse = api.getApplicationApi().delete("redis-legacy-app");
         assertEquals(deleteResponse.getStatus(), 202);
@@ -155,14 +163,16 @@ public class ApplicationResourceIntegrationTest {
 
     @Test(groups = "Integration", dependsOnMethods = {"testListSensorsRedis", "testListEntities"})
     public void testTriggerRedisStopEffector() throws Exception {
-        String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
+        final String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
         Response response = api.getEffectorApi().invoke("redis-app", entityId, "stop", "5000", ImmutableMap.<String, Object>of());
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
-        while (!api.getSensorApi().get("redis-app", entityId, "service.state", false).equals(Lifecycle.STOPPED.toString())) {
-            Thread.sleep(5000);
-        }
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(10)), new Runnable() {
+            public void run() {
+                Object status = api.getSensorApi().get("redis-app", entityId, "service.state", false);
+                assertEquals(status, Lifecycle.STOPPED.toString());
+            }});
     }
 
     @Test(groups = "Integration", dependsOnMethods = "testTriggerRedisStopEffector")
@@ -170,20 +180,24 @@ public class ApplicationResourceIntegrationTest {
         int size = getManagementContext().getApplications().size();
         Response response = api.getApplicationApi().delete("redis-app");
         Assert.assertNotNull(response);
-        ApplicationSummary summary = null;
         try {
-            for (int i = 0; i < 100 && summary == null; i++) {
-                summary = api.getApplicationApi().get("redis-app");
-                Thread.sleep(500);
-            }
-            fail("Redis app failed to disappear!");
+            Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(1)), new Runnable() {
+                public void run() {
+                    try {
+                        ApplicationSummary summary = api.getApplicationApi().get("redis-app");
+                        fail("Redis app failed to disappear: summary="+summary);
+                    } catch (Exception failure) {
+                        // expected -- it will be a ClientResponseFailure but that class is deprecated so catching all
+                        // and asserting contains the word 404
+                        Assert.assertTrue(failure.toString().indexOf("404") >= 0);
+                    }
+                }});
         } catch (Exception failure) {
             // expected -- it will be a ClientResponseFailure but that class is deprecated so catching all
             // and asserting contains the word 404
             Assert.assertTrue(failure.toString().indexOf("404") >= 0);
         }
 
-        assertNull(summary);
         assertEquals(getManagementContext().getApplications().size(), size - 1);
     }
 
