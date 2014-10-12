@@ -18,6 +18,7 @@
  */
 package brooklyn.basic;
 
+import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.entity.trait.Identifiable;
@@ -37,7 +38,7 @@ import brooklyn.util.text.Identifiers;
  * deferred operations are assumed to have occurred prior to calling {@link #setConfig(ConfigKey, Object)} i.e. at
  * object construction.
  */
-public class BasicConfigurableObject implements Configurable, Identifiable, ManagementContextInjectable {
+public class BasicConfigurableObject implements Configurable, Identifiable, ManagementContextInjectable, HasBrooklynManagementContext {
 
     @SetFromFlag("id")
     private String id = Identifiers.makeRandomId(8);
@@ -54,7 +55,7 @@ public class BasicConfigurableObject implements Configurable, Identifiable, Mana
         this.managementContext = managementContext;
     }
 
-    public ManagementContext getManagementContext() {
+    public ManagementContext getBrooklynManagementContext() {
         return managementContext;
     }
 

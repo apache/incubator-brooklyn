@@ -116,6 +116,17 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 log.debug("Group {} ignoring new member {}, because it is no longer managed", this, member);
                 return false;
             }
+
+            Entity first = getAttribute(FIRST);
+            if (first == null) {
+                ((EntityLocal) member).setAttribute(FIRST_MEMBER, true);
+                ((EntityLocal) member).setAttribute(FIRST, member);
+                setAttribute(FIRST, member);
+            } else {
+                ((EntityLocal) member).setAttribute(FIRST_MEMBER, false);
+                ((EntityLocal) member).setAttribute(FIRST, first);
+            }
+
             member.addGroup((Group)getProxyIfAvailable());
             boolean changed = members.add(member);
             if (changed) {

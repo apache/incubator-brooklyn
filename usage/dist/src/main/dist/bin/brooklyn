@@ -22,7 +22,7 @@
 
 #set -x # debug
 
-# discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command (brooklyn)
+# discover BROOKLYN_HOME if not set, by attempting to resolve absolute path of this command
 ROOT=$(cd "$(dirname "$0")/.." && pwd -P)
 if [ -z "$BROOKLYN_HOME" ] ; then
     BROOKLYN_HOME=$(cd "$(dirname "$(readlink -f "$0" 2> /dev/null || readlink "$0" 2> /dev/null || echo "$0")")/.." && pwd)

@@ -18,8 +18,21 @@
  */
 package brooklyn.event.basic;
 
-import brooklyn.event.AttributeSensor;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URL;
 
+import javax.annotation.Nullable;
+
+import brooklyn.config.render.RendererHints;
+import brooklyn.event.AttributeSensor;
+import brooklyn.util.net.UserAndHostAndPort;
+import brooklyn.util.text.StringFunctions;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
+
+import com.google.common.base.Function;
+import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 
 public class Sensors {
@@ -76,14 +89,33 @@ public class Sensors {
         return newSensor(Boolean.class, name, description);
     }
 
-    // ---- extensions to sensors
-    
+    // Extensions to sensors
+
     public static <T> AttributeSensor<T> newSensorRenamed(String newName, AttributeSensor<T> sensor) {
         return new BasicAttributeSensor<T>(sensor.getTypeToken(), newName, sensor.getDescription());
     }
 
     public static <T> AttributeSensor<T> newSensorWithPrefix(String prefix, AttributeSensor<T> sensor) {
         return newSensorRenamed(prefix+sensor.getName(), sensor);
+    }
+
+    // Display hints for common utility objects
+
+    static {
+        RendererHints.register(Duration.class, RendererHints.displayValue(Time.fromDurationToTimeStringRounded()));
+        RendererHints.register(HostAndPort.class, RendererHints.displayValue(StringFunctions.toStringFunction()));
+        RendererHints.register(UserAndHostAndPort.class, RendererHints.displayValue(StringFunctions.toStringFunction()));
+        RendererHints.register(InetAddress.class, RendererHints.displayValue(new Function<InetAddress,String>() {
+            @Override
+            public String apply(@Nullable InetAddress input) {
+                return input == null ? null : input.getHostAddress();
+            }
+        }));
+
+        RendererHints.register(URL.class, RendererHints.displayValue(StringFunctions.toStringFunction()));
+        RendererHints.register(URL.class, RendererHints.openWithUrl(StringFunctions.toStringFunction()));
+        RendererHints.register(URI.class, RendererHints.displayValue(StringFunctions.toStringFunction()));
+        RendererHints.register(URI.class, RendererHints.openWithUrl(StringFunctions.toStringFunction()));
     }
 
 }

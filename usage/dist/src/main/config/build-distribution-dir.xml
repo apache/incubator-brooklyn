@@ -18,8 +18,8 @@
     under the License.
 -->
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
-	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
     <id>dist</id>
     <includeBaseDirectory>false</includeBaseDirectory>
     <formats>
@@ -29,6 +29,8 @@
         <fileSet>
             <directory>${project.basedir}/../..</directory>
             <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
             <includes>
                 <include>README*</include>
                 <include>LICENSE*</include>
@@ -43,17 +45,9 @@
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/src/main/dist/lib</directory>
-            <outputDirectory>/lib</outputDirectory>
-            <includes>
-                <include>README*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
             <!-- Add an empty dropins folder (so need to reference an existing dir, and exclude everything) -->
-            <directory>${project.basedir}/src/main/dist/lib</directory>
+            <directory>${project.basedir}/src/main/dist</directory>
             <outputDirectory>/lib/dropins</outputDirectory>
-            <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
             <excludes>
                 <exclude>**/*</exclude>
@@ -61,9 +55,8 @@
         </fileSet>
         <fileSet>
             <!-- Add an empty patch folder (so need to reference an existing dir, and exclude everything) -->
-            <directory>${project.basedir}/src/main/dist/lib</directory>
+            <directory>${project.basedir}/src/main/dist</directory>
             <outputDirectory>/lib/patch</outputDirectory>
-            <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
             <excludes>
                 <exclude>**/*</exclude>
@@ -72,17 +65,20 @@
         <fileSet>
             <directory>${project.basedir}/src/main/dist</directory>
             <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
             <excludes>
                 <exclude>bin/*</exclude>
             </excludes>
         </fileSet>
-        
     </fileSets>
     <!-- TODO include documentation -->
     <!-- TODO include examples -->
     <dependencySets>
         <dependencySet>
             <outputDirectory>/lib/brooklyn</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
         </dependencySet>
     </dependencySets>
 </assembly>

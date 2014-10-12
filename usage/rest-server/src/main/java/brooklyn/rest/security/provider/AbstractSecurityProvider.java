@@ -20,6 +20,8 @@ package brooklyn.rest.security.provider;
 
 import javax.servlet.http.HttpSession;
 
+import brooklyn.util.text.Strings;
+
 /**
  * Provides default implementations of {@link #isAuthenticated(HttpSession)} and
  * {@link #logout(HttpSession)}.
@@ -30,7 +32,7 @@ public abstract class AbstractSecurityProvider implements SecurityProvider {
     public boolean isAuthenticated(HttpSession session) {
         if (session == null) return false;
         Object value = session.getAttribute(getAuthenticationKey());
-        return value != null && Boolean.TRUE.equals(value);
+        return Strings.isNonBlank(Strings.toString(value));
     }
 
     @Override
