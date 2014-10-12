@@ -28,10 +28,10 @@
       <description>Deploys a demonstration web application to JBoss clusters around the world</description>
       <iconUrl>http://releng3.cloudsoftcorp.com/downloads/brooklyn/img/JBoss_by_Red_Hat.png</iconUrl>
     </template>
-    
+
     <classpath>
-      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=io.brooklyn.example&amp;a=brooklyn-example-simple-web-cluster&amp;v=0.7.0-SNAPSHOT&amp;e=jar</entry> <!-- BROOKLYN_VERSION -->
-      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=io.brooklyn.example&amp;a=brooklyn-example-global-web-fabric&amp;v=0.7.0-SNAPSHOT&amp;e=jar</entry> <!-- BROOKLYN_VERSION -->
+      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=org.apache.brooklyn.example&amp;a=brooklyn-example-simple-web-cluster&amp;v=0.7.0-SNAPSHOT&amp;e=jar</entry> <!-- BROOKLYN_VERSION -->
+      <entry>https://oss.sonatype.org/service/local/artifact/maven/redirect?r=releases&amp;g=org.apache.brooklyn.example&amp;a=brooklyn-example-global-web-fabric&amp;v=0.7.0-SNAPSHOT&amp;e=jar</entry> <!-- BROOKLYN_VERSION -->
     </classpath>
 </catalog>
 

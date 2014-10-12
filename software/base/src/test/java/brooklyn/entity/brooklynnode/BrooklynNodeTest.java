@@ -58,8 +58,8 @@ public class BrooklynNodeTest {
     
     @Test
     public void testGeneratesCorrectSnapshotDownload() throws Exception {
-        String version = "0.6.0-SNAPSHOT";
-        String expectedUrl = "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v="+version+"&a=brooklyn-dist&c=dist&e=tar.gz";
+        String version = "0.7.0-SNAPSHOT"; // BROOKLYN_VERSION
+        String expectedUrl = "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.apache.brooklyn&v="+version+"&a=brooklyn-dist&c=dist&e=tar.gz";
         runTestGeneratesCorrectDownloadUrl(version, expectedUrl);
     }
     
