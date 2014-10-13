@@ -30,6 +30,14 @@ import brooklyn.test.entity.TestApplication;
 
 public class JettyWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
 
+    // FIXME Fails with this is in the jetty log:
+    //     Caused by: java.lang.ClassNotFoundException: mx4j.tools.adaptor.http.HttpAdaptor
+
+    @Test(groups = "Integration", dataProvider = "basicEntities")
+    public void canStartAndStop(final SoftwareProcess entity) {
+        super.canStartAndStop(entity);
+    }
+    
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
         TestApplication jettyApp = newTestApplication();

@@ -40,6 +40,12 @@ import com.google.common.collect.ImmutableList;
  */
 public class Jboss6ServerIntegrationTest extends BrooklynAppLiveTestSupport {
     
+    // FIXME Fails deploying hello-world.war
+    //     07:27:30,958 ERROR [AbstractKernelController] Error installing to Parse: name=vfs:///tmp/brooklyn-aled/apps/FJMcnSjO/entities/JBoss6Server_UZ2gA9HR/server/standard/deploy/ROOT.war state=PreParse mode=Manual requiredState=Parse: org.jboss.deployers.spi.DeploymentException: Error creating managed object for vfs:///tmp/brooklyn-aled/apps/FJMcnSjO/entities/JBoss6Server_UZ2gA9HR/server/standard/deploy/ROOT.war
+    //     ...
+    //     Caused by: org.xml.sax.SAXException: cvc-complex-type.2.4.d: Invalid content was found starting with element 'url-pattern'. No child element is expected at this point. @ vfs:///tmp/brooklyn-aled/apps/FJMcnSjO/entities/JBoss6Server_UZ2gA9HR/server/standard/deploy/ROOT.war/WEB-INF/web.xml[21,22]
+    //         at org.jboss.xb.binding.parser.sax.SaxJBossXBParser.error(SaxJBossXBParser.java:416) [jbossxb.jar:2.0.3.GA]
+    
     // Port increment for JBoss 6.
     public static final int PORT_INCREMENT = 400;
 
