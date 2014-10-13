@@ -25,45 +25,36 @@ import java.net.URISyntaxException;
 
 import org.apache.http.client.methods.HttpGet;
 import org.bouncycastle.util.Strings;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class ElasticSearchClusterIntegrationTest {
+public class ElasticSearchClusterIntegrationTest extends BrooklynAppLiveTestSupport {
 
-    protected TestApplication app;
+    // FIXME Exception in thread "main" java.lang.UnsupportedClassVersionError: org/elasticsearch/bootstrap/Elasticsearch : Unsupported major.minor version 51.0
+
     protected Location testLocation;
     protected ElasticSearchCluster elasticSearchCluster;
 
     @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = new LocalhostMachineProvisioningLocation();
+        testLocation = app.newLocalhostProvisioningLocation();
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void shutdown() {
-        Entities.destroyAll(app.getManagementContext());
-    }
-    
     @Test(groups = {"Integration"})
     public void testStartupAndShutdown() {
         elasticSearchCluster = app.createAndManageChild(EntitySpec.create(ElasticSearchCluster.class)

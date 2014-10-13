@@ -23,45 +23,36 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 
 /**
  * TODO re-write this like WebAppIntegrationTest, rather than being jboss6 specific.
  */
-public class Jboss6ServerIntegrationTest {
+public class Jboss6ServerIntegrationTest extends BrooklynAppLiveTestSupport {
     
     // Port increment for JBoss 6.
     public static final int PORT_INCREMENT = 400;
 
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
-    private TestApplication app;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        super.setUp();
         String warPath = "hello-world.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
 
-        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        localhostProvisioningLocation = app.newLocalhostProvisioningLocation();
     }
 
     @Test(groups = "Integration")
