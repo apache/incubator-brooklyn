@@ -604,7 +604,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         assertEquals(child.getConfig(TestEntity.CONF_NAME), "inchildspec");
     }
 
-    @Test(groups = {"WIP"})
+    @Test
     public void testEntitySpecWithChildren() throws Exception {
         String yaml =
                 "services:\n"+
@@ -613,18 +613,30 @@ public class EntitiesYamlTest extends AbstractYamlTest {
                 "   test.childSpec:\n"+
                 "     $brooklyn:entitySpec:\n"+
                 "       type: brooklyn.test.entity.TestEntity\n"+
+                "       brooklyn.config:\n"+
+                "         test.confName: child\n"+
                 "       brooklyn.children:\n"+
-                "       - type: brooklyn.test.entity.TestEntity3\n" +
-                "         brooklyn.confName: grandchild\n";
+                "       - type: brooklyn.test.entity.TestEntity\n" +
+                "         brooklyn.config:\n" +
+                "           test.confName: grandchild\n" +
+                "         brooklyn.children:\n"+
+                "         - type: brooklyn.test.entity.TestEntity\n" +
+                "           brooklyn.config:\n" +
+                "             test.confName: greatgrandchild\n";
         
         Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
         TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
         
         TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
+        assertEquals(child.getConfig(TestEntity.CONF_NAME), "child");
+        assertEquals(child.getChildren().size(), 1, "Child entity should have exactly one child of its own");
 
-        assertEquals(child.getChildren().size(), 1, "Child entity should have one child of its own");
         TestEntity grandchild = (TestEntity) Iterables.getOnlyElement(child.getChildren());
         assertEquals(grandchild.getConfig(TestEntity.CONF_NAME), "grandchild");
+        assertEquals(grandchild.getChildren().size(), 1, "Grandchild entity should have exactly one child of its own");
+
+        TestEntity greatgrandchild = (TestEntity) Iterables.getOnlyElement(grandchild.getChildren());
+        assertEquals(greatgrandchild.getConfig(TestEntity.CONF_NAME), "greatgrandchild");
     }
     
     @Test
