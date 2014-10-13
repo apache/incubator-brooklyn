@@ -22,8 +22,17 @@ import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.ApplicationBuilder;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -31,66 +40,60 @@ import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
+import brooklyn.test.EntityTestUtils;
+
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Map;
 
-public class MonitIntegrationTest {
+public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
+    
+    /*
+     * FIXME Has the monit node output changed? Now it is listing 'cron' as well as system.
+     * It keeps reporting "Does" rather than "Running" as the status.
+     * Should we be getting the rest of the line after "status" (and trimming), rather than
+     * just the first word?
+
+    input=The Monit daemon 5.9 uptime: 0m
+            Process 'cron'
+              status                            Does not exist
+              monitoring status                 Monitored
+              data collected                    Mon, 13 Oct 2014 21:27:01
+            System 'aleds-macbook-pro.local'
+              status                            Running
+              monitoring status                 Monitored
+              load average                      [5.16] [4.73] [4.45]
+              cpu                               7.1%us 5.7%sy
+              memory usage                      11.6 GB [72.3%]
+              swap usage                        3.0 GB [74.7%]
+              data collected                    Mon, 13 Oct 2014 21:27:01
+
+     */
     
     private static final Logger LOG = LoggerFactory.getLogger(MonitIntegrationTest.class);
     
-    protected BrooklynProperties brooklynProperties;
-    protected ManagementContext managementContext;
-    protected TestApplication app;
-
-    @BeforeMethod(alwaysRun = true)
-    public void setUp() {
-        brooklynProperties = BrooklynProperties.Factory.newDefault();
-        managementContext = new LocalManagementContext(brooklynProperties);
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
-    }
+    LocalhostMachineProvisioningLocation loc;
     
-    @AfterMethod(alwaysRun = true)
-    public void ensureShutDown() {
-        if (app != null) {
-            Entities.destroyAll(managementContext);
-            app = null;
-        }
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        super.setUp();
+        loc = app.newLocalhostProvisioningLocation();
     }
     
     @Test(groups = "Integration")
     public void test_localhost() throws InterruptedException {
         final MonitNode monitNode = app.createAndManageChild(EntitySpec.create(MonitNode.class)
             .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monit.monitrc"));
-        LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
-        app.start(ImmutableSet.of(location));
+        app.start(ImmutableSet.of(loc));
         LOG.info("Monit started");
-        Asserts.succeedsEventually(new Runnable() {
-            @Override
-            public void run() {
-                assertEquals(monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS), "Running");
-            }
-        });
+        EntityTestUtils.assertAttributeEqualsEventually(monitNode,  MonitNode.MONIT_TARGET_PROCESS_STATUS, "Running");
     }
     
     @Test(groups = "Integration")
     public void test_monitorMySql() throws InterruptedException {
         SameServerEntity sameServerEntity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
-        LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class));
         Entities.manage(mySqlNode);
         Function<String, Map<String, Object>> controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
@@ -104,16 +107,9 @@ public class MonitIntegrationTest {
                         SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
         final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
         Entities.manage(monitNode);
-        app.start(ImmutableSet.of(location));
+        app.start(ImmutableSet.of(loc));
         LOG.info("Monit and MySQL started");
-        Asserts.succeedsEventually(new Runnable() {
-            @Override
-            public void run() {
-                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
-                LOG.debug("MonitNode target status: {}", targetStatus);
-                assertEquals(elvis(targetStatus, ""), "Running");
-            }
-        });
+        EntityTestUtils.assertAttributeEqualsEventually(monitNode,  MonitNode.MONIT_TARGET_PROCESS_STATUS, "Running");
         mySqlNode.stop();
         Asserts.succeedsEventually(new Runnable() {
             @Override
@@ -124,14 +120,7 @@ public class MonitIntegrationTest {
             }
         });
         mySqlNode.restart();
-        Asserts.succeedsEventually(new Runnable() {
-            @Override
-            public void run() {
-                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
-                LOG.debug("MonitNode target status: {}", targetStatus);
-                assertEquals(elvis(targetStatus, ""), "Running");
-            }
-        });
+        EntityTestUtils.assertAttributeEqualsEventually(monitNode,  MonitNode.MONIT_TARGET_PROCESS_STATUS, "Running");
     }
     
     @Test(groups = "Integration")
@@ -145,7 +134,6 @@ public class MonitIntegrationTest {
         final String mySqlVersion = MySqlNode.SUGGESTED_VERSION.getDefaultValue();
         
         SameServerEntity sameServerEntity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
-        LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
         final MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class)
             .configure(MySqlNode.INSTALL_DIR, mySqlInstallDir)
             .configure(MySqlNode.RUN_DIR, mySqlRunDir)
@@ -167,7 +155,7 @@ public class MonitIntegrationTest {
                         SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
         final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
         Entities.manage(monitNode);
-        app.start(ImmutableSet.of(location));
+        app.start(ImmutableSet.of(loc));
         LOG.info("Monit and MySQL started");
         final String[] initialPid = {""};
         Asserts.succeedsEventually(new Runnable() {
@@ -185,14 +173,8 @@ public class MonitIntegrationTest {
             }
         });
         mySqlNode.stop();
-        Asserts.succeedsEventually(new Runnable() {
-            @Override
-            public void run() {
-                String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
-                LOG.debug("MonitNode target status: {}", targetStatus);
-                assertNotEquals(elvis(targetStatus, ""), "Running");
-            }
-        });
+        EntityTestUtils.assertAttributeEqualsEventually(monitNode,  MonitNode.MONIT_TARGET_PROCESS_STATUS, "Running");
+
         // NOTE: Do not manually restart the mySqlNode, it should be restarted by monit
         Asserts.succeedsEventually(new Runnable() {
             @Override
