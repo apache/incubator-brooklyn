@@ -327,13 +327,16 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("maxSizeReachedSensor")
     public static final ConfigKey<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>> MAX_SIZE_REACHED_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>>() {})
             .name("autoscaler.maxSizeReachedSensor")
-            .description("Sensor for which a notification will be emitted (on the associated entity) when we consistently wanted to resize the pool above the max allowed size, for maxReachedNotificationDelay milliseconds")
+            .description("Sensor for which a notification will be emitted (on the associated entity) when " +
+                    "we consistently wanted to resize the pool above the max allowed size, for " +
+                    "maxReachedNotificationDelay milliseconds")
             .build();
     
     @SetFromFlag("maxReachedNotificationDelay")
     public static final ConfigKey<Duration> MAX_REACHED_NOTIFICATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("autoscaler.maxReachedNotificationDelay")
-            .description("Time that we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted")
+            .description("Time that we consistently wanted to go above the maxPoolSize for, after which the " +
+                    "maxSizeReachedSensor (if any) will be emitted")
             .defaultValue(Duration.ZERO)
             .build();
     

@@ -25,7 +25,6 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.ssh.BashCommands;

@@ -279,5 +279,5 @@ public abstract class HighAvailabilityManagerTestFixture {
                     assertCalled();
                 }});
         }
-    };
+    }
 }
