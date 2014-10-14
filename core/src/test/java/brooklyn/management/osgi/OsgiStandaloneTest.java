@@ -45,11 +45,11 @@ import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 import brooklyn.util.osgi.Osgis.ManifestHelper;
@@ -76,13 +76,13 @@ public class OsgiStandaloneTest {
     protected Framework framework = null;
     private File storageTempDir;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         storageTempDir = Os.newTempDir("osgi-standalone");
         framework = Osgis.newFrameworkStarted(storageTempDir.getAbsolutePath(), true, null);
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws BundleException, IOException, InterruptedException {
         if (framework!=null) {
             framework.stop();
@@ -117,11 +117,15 @@ public class OsgiStandaloneTest {
         Assert.assertEquals(Entity.class, bundleCls.getClassLoader().loadClass(Entity.class.getName()));
     }
 
-    // Marked as integration because jenkins configures an unusual local .m2 repository location,
-    // so attempts to look up the local artifact fail.
-    @Test(groups="Integration")
+    @Test
     public void testDuplicateBundle() throws Exception {
-        helperDuplicateBundle(MavenRetriever.localUrl(new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
+        MavenArtifact artifact = new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT");
+        String localUrl = MavenRetriever.localUrl(artifact);
+        if ("file".equals(Urls.getProtocol(localUrl))) {
+            helperDuplicateBundle(localUrl);
+        } else {
+            log.warn("Skipping test OsgiStandaloneTest.testDuplicateBundle due to " + artifact + " not available in local repo.");
+        }
     }
 
     @Test(groups="Integration")
@@ -157,7 +161,6 @@ public class OsgiStandaloneTest {
         @SuppressWarnings("unchecked")
         Class<? extends Entity> bundleInterface = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntity");
 
-        TestApplicationImpl app = new TestApplicationImpl();
         @SuppressWarnings("unchecked")
         EntitySpec<Entity> spec = (EntitySpec<Entity>) (((EntitySpec<Entity>)EntitySpec.create(bundleInterface))).impl(bundleCls);
         Entity entity = bundleCls.newInstance();
