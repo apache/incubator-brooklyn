@@ -68,14 +68,16 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("distroUploadUrl")
     public static final ConfigKey<String> DISTRO_UPLOAD_URL = ConfigKeys.newStringConfigKey(
             "brooklynnode.distro.uploadurl", "URL for uploading the brooklyn distro (retrieved locally and pushed to remote install location)", null);
-    
+
+    // Note that download URL only supports versions in org.apache.brooklyn, so not 0.6.0 and earlier 
+    // (which used maven group io.brooklyn). Aled thinks we can live with that.
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
             SoftwareProcess.DOWNLOAD_URL,
             "<#if version?contains(\"SNAPSHOT\")>"+
-                "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v=${version}&a=brooklyn-dist&c=dist&e=tar.gz" +
+                "https://repository.apache.org/service/local/artifact/maven/redirect?r=snapshots&g=org.apache.brooklyn&v=${version}&a=brooklyn-dist&c=dist&e=tar.gz" +
             "<#else>"+
-                "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
+                "http://search.maven.org/remotecontent?filepath=org/apache/brooklyn/brooklyn-dist/${version}/brooklyn-dist-${version}-dist.tar.gz"+
             "</#if>");
 
     @SetFromFlag("subpathInArchive")
