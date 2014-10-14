@@ -93,7 +93,7 @@ import com.google.common.io.Files;
  * The following commands may be useful:
  * <p>
  * <code>
- * cp ~/.m2/repository/io/brooklyn/brooklyn-dist/0.7.0-SNAPSHOT/brooklyn-dist-0.7.0-SNAPSHOT-dist.tar.gz ~/.brooklyn/repository/BrooklynNode/0.7.0-SNAPSHOT/BrooklynNode-0.7.0-SNAPSHOT.tar.gz
+ * cp ~/.m2/repository/org/apache/brooklyn/brooklyn-dist/0.7.0-SNAPSHOT/brooklyn-dist-0.7.0-SNAPSHOT-dist.tar.gz ~/.brooklyn/repository/BrooklynNode/0.7.0-SNAPSHOT/BrooklynNode-0.7.0-SNAPSHOT.tar.gz
  * rm -rf /tmp/brooklyn-`whoami`/installs/BrooklynNode*
  * </code>
  */

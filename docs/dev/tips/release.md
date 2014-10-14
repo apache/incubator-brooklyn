@@ -33,9 +33,11 @@ Brooklyn is published to two locations:
 
 Brooklyn artifacts are generally downloaded from:
 
-1. [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.brooklyn%22),
-2. [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~io.brooklyn),
-3. [GitHub](https://github.com/brooklyncentral/brooklyn).
+1. [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.brooklyn%22), 
+   and (http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.brooklyn%22) for pre 0.7.0 versions
+2. [Apache](https://repository.apache.org/index.html#nexus-search;quick~org.apache.brooklyn),
+2. [Sonatype](https://oss.sonatype.org/index.html#nexus-search;quick~io.brooklyn) for pre 0.7.0 versions
+3. [GitHub](https://github.com/apache/incubator-brooklyn).
 
 
 To publish:

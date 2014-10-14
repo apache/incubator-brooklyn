@@ -58,19 +58,21 @@ public class BrooklynNodeTest {
     
     @Test
     public void testGeneratesCorrectSnapshotDownload() throws Exception {
-        String version = "0.6.0-SNAPSHOT";
-        String expectedUrl = "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v="+version+"&a=brooklyn-dist&c=dist&e=tar.gz";
+        String version = "0.7.0-SNAPSHOT"; // BROOKLYN_VERSION
+        String expectedUrl = "https://repository.apache.org/service/local/artifact/maven/redirect?r=snapshots&g=org.apache.brooklyn&v="+version+"&a=brooklyn-dist&c=dist&e=tar.gz";
         runTestGeneratesCorrectDownloadUrl(version, expectedUrl);
     }
     
     @Test
     public void testGeneratesCorrectReleaseDownload() throws Exception {
-        String version = "0.5.0";
-        String expectedUrl = "http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/"+version+"/brooklyn-dist-"+version+"-dist.tar.gz";
+        String version = "0.7.0";
+        String expectedUrl = "http://search.maven.org/remotecontent?filepath=org/apache/brooklyn/brooklyn-dist/"+version+"/brooklyn-dist-"+version+"-dist.tar.gz";
         runTestGeneratesCorrectDownloadUrl(version, expectedUrl);
     }
     
     private void runTestGeneratesCorrectDownloadUrl(String version, String expectedUrl) throws Exception {
+        // TODO Using BrooklynNodeImpl directly, because want to instantiate a BroolynNodeSshDriver.
+        //      Really want to make that easier to test, without going through "wrong" code path for creating entity.
         BrooklynNodeImpl entity = new BrooklynNodeImpl();
         entity.configure(MutableMap.of("version", version));
         entity.setParent(app);

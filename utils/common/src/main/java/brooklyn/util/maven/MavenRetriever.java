@@ -29,17 +29,35 @@ import com.google.common.base.Function;
  * with some methods checking local file system, and allowing the generators for each to be specified */
 public class MavenRetriever {
 
-    public static final Function<MavenArtifact,String> SONATYPE_SNAPSHOT_URL_GENERATOR = new Function<MavenArtifact, String>() {
+    public static final Function<MavenArtifact,String> CONDITIONAL_SNAPSHOT_URL_GENERATOR = new Function<MavenArtifact, String>() {
         public String apply(MavenArtifact artifact) {
-            return "https://oss.sonatype.org/service/local/artifact/maven/redirect?" +
-                    "r=snapshots&" +
-                    "v="+Urls.encode(artifact.version)+"&" +
-                    "g="+Urls.encode(artifact.groupId)+"&" +
-                    "a="+Urls.encode(artifact.artifactId)+"&" +
-                    (artifact.classifier!=null ? "c="+Urls.encode(artifact.classifier)+"&" : "")+
-                    "e="+Urls.encode(artifact.packaging);
+            if (artifact.groupId.startsWith("org.apache")) {
+                return APACHE_SNAPSHOT_URL_GENERATOR.apply(artifact);
+            } else {
+                return SONATYPE_SNAPSHOT_URL_GENERATOR.apply(artifact);
+            }
         }
     };
+
+    public static final Function<MavenArtifact,String> SONATYPE_SNAPSHOT_URL_GENERATOR = 
+            nexusSnapshotUrlGenerator("https://oss.sonatype.org");
+
+    public static final Function<MavenArtifact,String> APACHE_SNAPSHOT_URL_GENERATOR = 
+            nexusSnapshotUrlGenerator("https://repository.apache.org");
+
+    public static Function<MavenArtifact,String> nexusSnapshotUrlGenerator(final String baseUrl) {
+        return new Function<MavenArtifact, String>() {
+            public String apply(MavenArtifact artifact) {
+                return baseUrl+"/service/local/artifact/maven/redirect?" +
+                        "r=snapshots&" +
+                        "v="+Urls.encode(artifact.version)+"&" +
+                        "g="+Urls.encode(artifact.groupId)+"&" +
+                        "a="+Urls.encode(artifact.artifactId)+"&" +
+                        (artifact.classifier!=null ? "c="+Urls.encode(artifact.classifier)+"&" : "")+
+                        "e="+Urls.encode(artifact.packaging);
+            }
+        };
+    }
 
     public static final Function<MavenArtifact,String> MAVEN_CENTRAL_URL_GENERATOR = new Function<MavenArtifact, String>() {
         public String apply(MavenArtifact artifact) {
@@ -59,7 +77,7 @@ public class MavenRetriever {
         }
     };
 
-    protected Function<MavenArtifact,String> snapshotUrlGenerator = SONATYPE_SNAPSHOT_URL_GENERATOR;
+    protected Function<MavenArtifact,String> snapshotUrlGenerator = CONDITIONAL_SNAPSHOT_URL_GENERATOR;
     protected Function<MavenArtifact,String> releaseUrlGenerator = MAVEN_CENTRAL_URL_GENERATOR;
     
     public void setSnapshotUrlGenerator(Function<MavenArtifact, String> snapshotUrlGenerator) {
