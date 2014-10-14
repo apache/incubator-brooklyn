@@ -73,8 +73,6 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         String uri = httpRequest.getRequestURI();
-        String uid = RequestTaggingFilter.getTag();
-        String user = Strings.toString(httpRequest.getSession().getAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE));
 
         if (provider == null) {
             log.warn("No security provider available: disallowing web access to brooklyn");
@@ -113,6 +111,10 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
             return;
         }
 
+        // Note that the attribute AUTHENTICATED_USER_SESSION_ATTRIBUTE is only set in the call to authenticate(httpRequest),
+        // so must not try to get the user until that is done.
+        String uid = RequestTaggingFilter.getTag();
+        String user = Strings.toString(httpRequest.getSession().getAttribute(AUTHENTICATED_USER_SESSION_ATTRIBUTE));
         try {
             WebEntitlementContext entitlementContext = new WebEntitlementContext(user, httpRequest.getRemoteAddr(), uri, uid);
             Entitlements.setEntitlementContext(entitlementContext);
