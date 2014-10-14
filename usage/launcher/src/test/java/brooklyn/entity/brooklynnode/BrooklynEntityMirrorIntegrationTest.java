@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import static org.testng.Assert.assertFalse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -27,14 +29,13 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynWebServer;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -120,10 +121,9 @@ public class BrooklynEntityMirrorIntegrationTest {
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "bermuda");
 
         serverApp.stop();
-        EntityTestUtils.assertAttributeEqualsEventually(mirror, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        assertUnmanagedEventually(mirror);
     }
 
-    
     @Test(groups="Integration")
     public void testServiceMirroringHttps() throws Exception {
         LocalManagementContextForTests mgmtHttps = new LocalManagementContextForTests();
@@ -155,7 +155,13 @@ public class BrooklynEntityMirrorIntegrationTest {
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "bermuda");
 
         serverApp.stop();
-        EntityTestUtils.assertAttributeEqualsEventually(mirror, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        assertUnmanagedEventually(mirror);
     }
 
+    private static void assertUnmanagedEventually(final Entity entity) {
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertFalse(Entities.isManaged(entity));
+            }});
+    }
 }
