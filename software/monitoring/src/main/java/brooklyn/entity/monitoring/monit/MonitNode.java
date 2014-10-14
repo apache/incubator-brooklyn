@@ -45,7 +45,7 @@ public interface MonitNode extends SoftwareProcess, HasShortName {
             Attributes.DOWNLOAD_URL, "https://mmonit.com/monit/dist/binary/${version}/monit-${version}-${driver.osTag}.tar.gz");
     
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.6");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.9");
     
     @SetFromFlag("controlFileUrl")
     public static final ConfigKey<String> CONTROL_FILE_URL = ConfigKeys.newStringConfigKey("monit.control.url", "URL where monit control (.monitrc) file can be found", "");

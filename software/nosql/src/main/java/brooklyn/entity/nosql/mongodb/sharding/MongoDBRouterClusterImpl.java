@@ -56,13 +56,13 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     
     public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
         @Override protected void onEntityEvent(EventType type, Entity entity) {
-            ((MongoDBRouterClusterImpl)entity).setAnyRouter();
+            ((MongoDBRouterClusterImpl)super.entity).setAnyRouter();
         }
         @Override protected void onEntityRemoved(Entity member) {
-            ((MongoDBRouterClusterImpl)entity).setAnyRouter();
+            ((MongoDBRouterClusterImpl)super.entity).setAnyRouter();
         }
         @Override protected void onEntityChange(Entity member) {
-            ((MongoDBRouterClusterImpl)entity).setAnyRouter();
+            ((MongoDBRouterClusterImpl)super.entity).setAnyRouter();
         }
     }
     

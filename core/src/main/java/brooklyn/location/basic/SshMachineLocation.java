@@ -617,6 +617,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }.logger(logSsh);
     }
 
+    /**
+     * @deprecated since 0.7.0; use {@link #execCommands(Map, String, List, Map), and rely on that calling the execWithLogging
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Deprecated
     protected int execWithLogging(Map<String,?> props, String summaryForLogging, List<String> commands, Map env, final Closure<Integer> execCommand) {
         return newExecWithLoggingHelpers().execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
                 @Override public int exec(ShellTool ssh, Map<String, ?> flags, List<String> cmds, Map<String, ?> env) {

@@ -31,6 +31,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.internal.ssh.ShellAbstractTool;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.stream.Streams;
@@ -71,10 +73,25 @@ public abstract class ExecWithLoggingHelpers {
     }
     
     public int execScript(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
-        return execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
+        // TODO scriptHeader are the extra commands we expect the SshTool/ShellTool to add.
+        // Would be better if could get this from the ssh-tool, rather than assuming it will behave as
+        // we expect.
+        String scriptHeader = ShellAbstractTool.getOptionalVal(props, ShellTool.PROP_SCRIPT_HEADER);
+        
+        return execWithLogging(props, summaryForLogging, commands, env, scriptHeader, new ExecRunner() {
                 @Override public int exec(ShellTool ssh, Map<String, ?> flags, List<String> cmds, Map<String, ?> env) {
                     return ssh.execScript(flags, cmds, env);
                 }});
+    }
+
+    protected static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC) {
+        if (keyC==null) return null;
+        String key = keyC.getName();
+        if (map!=null && map.containsKey(key)) {
+            return TypeCoercions.coerce(map.get(key), keyC.getTypeToken());
+        } else {
+            return keyC.getDefaultValue();
+        }
     }
 
     public int execCommands(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
@@ -84,13 +101,19 @@ public abstract class ExecWithLoggingHelpers {
                 }});
     }
 
-    @SuppressWarnings("resource")
     public int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands,
             final Map<String,?> env, final ExecRunner execCommand) {
+        return execWithLogging(props, summaryForLogging, commands, env, null, execCommand);
+    }
+    
+    @SuppressWarnings("resource")
+    public int execWithLogging(Map<String,?> props, final String summaryForLogging, final List<String> commands,
+            final Map<String,?> env, String expectedCommandHeaders, final ExecRunner execCommand) {
         if (commandLogger!=null && commandLogger.isDebugEnabled()) {
+            String allcmds = (Strings.isBlank(expectedCommandHeaders) ? "" : expectedCommandHeaders + " ; ") + Strings.join(commands, " ; ");
             commandLogger.debug("{}, initiating "+shortName.toLowerCase()+" on machine {}{}: {}",
                     new Object[] {summaryForLogging, getTargetName(),
-                    env!=null && !env.isEmpty() ? " (env "+env+")": "", Strings.join(commands, " ; ")});
+                    env!=null && !env.isEmpty() ? " (env "+env+")": "", allcmds});
         }
 
         if (commands.isEmpty()) {

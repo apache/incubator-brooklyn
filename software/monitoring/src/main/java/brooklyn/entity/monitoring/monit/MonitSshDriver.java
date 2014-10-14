@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 
 public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements MonitDriver {
     
-    private String expandedInstallDir;
     private String remoteControlFilePath;
     
     public MonitSshDriver(MonitNodeImpl entity, SshMachineLocation machine) {
@@ -88,7 +87,7 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // NOTE: executing monit in daemon mode will spawn a separate process for the monit daemon so the value of $! cannot be used
         // instead we use the -p argument
         String command = format("touch %s && nohup %s/bin/monit -c %s -p %s > out.log 2> err.log < /dev/null &", getMonitPidFile(),
-            expandedInstallDir, remoteControlFilePath, getMonitPidFile());
+            getExpandedInstallDir(), remoteControlFilePath, getMonitPidFile());
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(command)
@@ -132,11 +131,6 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public String getStatusCmd() {
-        return format("%s/bin/monit -c %s status", expandedInstallDir, remoteControlFilePath);
-    }
-    
-    @Override
-    public String getExpandedInstallDir() {
-        return expandedInstallDir;
+        return format("%s/bin/monit -c %s status", getExpandedInstallDir(), remoteControlFilePath);
     }
 }

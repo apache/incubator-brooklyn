@@ -18,8 +18,6 @@
  */
 package brooklyn.entity.software.http;
 
-import static org.testng.Assert.assertEquals;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -48,7 +46,8 @@ public class HttpRequestSensorTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = TestApplication.Factory.newManagedInstanceForTests();
-        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).location(app.newLocalhostProvisioningLocation().obtain()));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .location(app.newLocalhostProvisioningLocation().obtain()));
         app.start(ImmutableList.<Location>of());
     }
 
@@ -67,8 +66,6 @@ public class HttpRequestSensorTest {
             sensor.apply(entity);
         entity.setAttribute(Attributes.SERVICE_UP, true);
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_STRING, SENSOR_STRING.getName());
-        String val = entity.getConfig(HttpRequestSensor.SENSOR_NAME);
-        assertEquals(val, "myValue", "val=" + val);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_STRING, "myValue");
     }
 }

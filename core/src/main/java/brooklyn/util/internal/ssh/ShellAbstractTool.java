@@ -99,7 +99,7 @@ public abstract class ShellAbstractTool implements ShellTool {
         return TypeCoercions.coerce(map.get(key), keyC.getTypeToken());
     }
     
-    protected static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC) {
+    public static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC) {
         if (keyC==null) return null;
         String key = keyC.getName();
         if (map!=null && map.containsKey(key)) {

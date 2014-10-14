@@ -121,7 +121,7 @@ public class BrooklynNodeIntegrationTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementSupport().getManagementContext());
+        if (app != null) Entities.destroyAll(app.getManagementContext());
         if (pseudoBrooklynPropertiesFile != null) pseudoBrooklynPropertiesFile.delete();
         if (pseudoBrooklynCatalogFile != null) pseudoBrooklynCatalogFile.delete();
     }

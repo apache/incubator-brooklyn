@@ -28,10 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.api.client.util.Sets;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Iterables;
-
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.basic.Entities;
@@ -45,9 +41,12 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoManifest;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
+
+import com.google.api.client.util.Sets;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 
 public abstract class RebindTestFixture<T extends StartableApplication> {
 
@@ -120,10 +119,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
 
     /** rebinds, and sets newApp */
     protected T rebind() throws Exception {
-        if (newApp!=null || newManagementContext!=null) throw new IllegalStateException("already rebinded");
-        newApp = rebind(true);
-        newManagementContext = newApp.getManagementContext();
-        return newApp;
+        return rebind(true);
     }
 
     protected T rebind(boolean checkSerializable) throws Exception {
@@ -133,6 +129,8 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     
     @SuppressWarnings("unchecked")
     protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
+        if (newApp!=null || newManagementContext!=null) throw new IllegalStateException("already rebinded");
+        
         RebindTestUtils.waitForPersisted(origApp);
         if (checkSerializable) {
             RebindTestUtils.checkCurrentMementoSerializable(origApp);
@@ -140,9 +138,10 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         if (terminateOrigManagementContext) {
             origManagementContext.terminate();
         }
-        LocalManagementContext newManagementContext = createNewManagementContext();
-
-        return (T) RebindTestUtils.rebind(newManagementContext, classLoader);
+        
+        newManagementContext = createNewManagementContext();
+        newApp = (T) RebindTestUtils.rebind((LocalManagementContext)newManagementContext, classLoader);
+        return newApp;
     }
 
     @SuppressWarnings("unchecked")
