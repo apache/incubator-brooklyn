@@ -765,11 +765,7 @@ public class Main extends AbstractMain {
             }
             
             try {
-                BrooklynMementoRawData memento = launcher.retrieveState();
-                CompoundTransformer transformer = loadTransformer(transformations);
-                BrooklynMementoRawData newMemento = transformer.transform(memento);
-                launcher.persistState(newMemento, destinationDir, destinationLocation);
-
+                launcher.copyPersistedState(destinationDir, destinationLocation, loadTransformer(transformations));
             } catch (FatalRuntimeException e) {
                 // rely on caller logging this propagated exception
                 throw e;

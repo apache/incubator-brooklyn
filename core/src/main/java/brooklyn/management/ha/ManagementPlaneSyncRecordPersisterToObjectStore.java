@@ -291,6 +291,17 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         masterWriter.waitForCurrentWrites(timeout);
     }
 
+    public void checkpoint(ManagementPlaneSyncRecord record) {
+        init();
+        for (ManagementNodeSyncRecord node : record.getManagementNodes().values()) {
+            // Check included in case the node in the memento is the one being initialised by
+            // BrooklynLauncher in the copy state command.
+            if (!ManagementNodeState.INITIALIZING.equals(node.getStatus()) && node.getNodeId() != null) {
+                persist(node);
+            }
+        }
+    }
+
     private void persist(ManagementNodeSyncRecord node) {
         StoreObjectAccessorWithLock writer = getOrCreateNodeWriter(node.getNodeId());
         boolean fileExists = writer.exists();
