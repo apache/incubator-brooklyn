@@ -227,12 +227,16 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     @Override
     public synchronized SubscriptionContext getSubscriptionContext(Entity entity) {
         if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
+        if (mode==NonDeploymentManagementContextMode.MANAGEMENT_STOPPED)
+            throw new IllegalStateException("Entity "+entity+" is no longer managed; subscription context not available");
         return subscriptionContext;
     }
 
     @Override
     public ExecutionContext getExecutionContext(Entity entity) {
         if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
+        if (mode==NonDeploymentManagementContextMode.MANAGEMENT_STOPPED)
+            throw new IllegalStateException("Entity "+entity+" is no longer managed; execution context not available");
         checkInitialManagementContextReal();
         return initialManagementContext.getExecutionContext(entity);
     }

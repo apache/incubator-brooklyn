@@ -42,6 +42,7 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
@@ -210,8 +211,12 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     @Override
     public ExecutionContext getExecutionContext(Entity e) {
-        // BEC is a thin wrapper around EM so fine to create a new one here
-        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
+        // BEC is a thin wrapper around EM so fine to create a new one here; but make sure it gets the real entity
+        if (e instanceof AbstractEntity) {
+            return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
+        } else {
+            return ((EntityInternal)e).getManagementSupport().getExecutionContext();
+        }
     }
 
     @Override

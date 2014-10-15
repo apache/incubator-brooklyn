@@ -80,8 +80,9 @@ public class BasicExecutionContext extends AbstractExecutionContext {
         // which may require access to internal methods
         for (Object tag: tags) {
             if (tag instanceof BrooklynTaskTags.WrappedEntity) {
-                if (Proxy.isProxyClass(((WrappedEntity)tag).entity.getClass()))
+                if (Proxy.isProxyClass(((WrappedEntity)tag).entity.getClass())) {
                     log.warn(""+this+" has entity proxy in "+tag);
+                }
             }
         }
     }

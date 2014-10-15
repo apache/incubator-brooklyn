@@ -974,7 +974,7 @@ public class Entities {
     }
 
     /**
-     * Ssubmits a task to run at the entity.
+     * Submits a task to run at the entity.
      * 
      * @return the task passed in, for fluency
      */

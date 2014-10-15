@@ -22,8 +22,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,12 +52,15 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.ExecutionListener;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
+import com.google.api.client.repackaged.com.google.common.base.Objects;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 
@@ -140,8 +146,9 @@ public class BrooklynGarbageCollector {
     private final BrooklynProperties brooklynProperties;
     private final ScheduledExecutorService executor;
     private ScheduledFuture<?> activeCollector;
+    private Map<Entity,Task<?>> unmanagedEntitiesNeedingGc = new LinkedHashMap<Entity, Task<?>>();
     
-    private final Duration gcPeriod;
+    private Duration gcPeriod;
     private final boolean doSystemGc;
     private volatile boolean running = true;
     
@@ -150,7 +157,6 @@ public class BrooklynGarbageCollector {
         this.storage = storage;
         this.brooklynProperties = brooklynProperties;
 
-        gcPeriod = brooklynProperties.getConfig(GC_PERIOD);
         doSystemGc = brooklynProperties.getConfig(DO_SYSTEM_GC);
         
         executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
@@ -169,15 +175,18 @@ public class BrooklynGarbageCollector {
     protected synchronized void scheduleCollector(boolean canInterruptCurrent) {
         if (activeCollector != null) activeCollector.cancel(canInterruptCurrent);
         
-        activeCollector = executor.scheduleWithFixedDelay(
-            new Runnable() {
-                @Override public void run() {
-                    gcIteration();
-                }
-            }, 
-            gcPeriod.toMillisecondsRoundingUp(), 
-            gcPeriod.toMillisecondsRoundingUp(), 
-            TimeUnit.MILLISECONDS);
+        gcPeriod = brooklynProperties.getConfig(GC_PERIOD);
+        if (gcPeriod!=null) {
+            activeCollector = executor.scheduleWithFixedDelay(
+                new Runnable() {
+                    @Override public void run() {
+                        gcIteration();
+                    }
+                }, 
+                gcPeriod.toMillisecondsRoundingUp(), 
+                gcPeriod.toMillisecondsRoundingUp(), 
+                TimeUnit.MILLISECONDS);
+        }
     }
 
     /** force a round of Brooklyn garbage collection */
@@ -226,6 +235,12 @@ public class BrooklynGarbageCollector {
     }
     
     public void onUnmanaged(Entity entity) {
+        synchronized (unmanagedEntitiesNeedingGc) {
+            unmanagedEntitiesNeedingGc.put(entity, Tasks.current());
+        }
+    }
+    
+    public void deleteTasksForEntity(Entity entity) {
         // remove all references to this entity from tasks
         executionManager.deleteTag(entity);
         executionManager.deleteTag(BrooklynTaskTags.tagForContextEntity(entity));
@@ -303,12 +318,14 @@ public class BrooklynGarbageCollector {
         if (!running) return 0;
         
         Duration newPeriod = brooklynProperties.getConfig(GC_PERIOD);
-        if (!gcPeriod.equals(newPeriod)) {
+        if (!Objects.equal(gcPeriod, newPeriod)) {
             // caller has changed period, reschedule on next run
             scheduleCollector(false);
         }
-        
+    
+        expireUnmanagedEntityTasks();
         expireAgedTasks();
+        expireTransientTasks();
         
         // now look at overcapacity tags, non-entity tags first
         
@@ -371,6 +388,19 @@ public class BrooklynGarbageCollector {
         return false;
     }
     
+    protected void expireUnmanagedEntityTasks() {
+        Iterator<Entry<Entity, Task<?>>> ei;
+        synchronized (unmanagedEntitiesNeedingGc) {
+            ei = MutableSet.copyOf(unmanagedEntitiesNeedingGc.entrySet()).iterator();
+        }
+        while (ei.hasNext()) {
+            Entry<Entity, Task<?>> ee = ei.next();
+            if (Entities.isManaged(ee.getKey())) continue;
+            if (ee.getValue()!=null && !ee.getValue().isDone()) continue;
+            deleteTasksForEntity(ee.getKey());
+        }
+    }
+    
     protected void expireAgedTasks() {
         Duration maxTaskAge = brooklynProperties.getConfig(MAX_TASK_AGE);
         
@@ -393,6 +423,14 @@ public class BrooklynGarbageCollector {
         
         for (Task<?> task: tasksToDelete) {
             executionManager.deleteTask(task);
+        }
+    }
+    
+    protected void expireTransientTasks() {
+        Set<Task<?>> transientTasks = executionManager.getTasksWithTag(BrooklynTaskTags.TRANSIENT_TASK_TAG);
+        for (Task<?> t: transientTasks) {
+            if (!t.isDone()) continue;
+            executionManager.deleteTask(t);
         }
     }
     

@@ -1257,7 +1257,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                 }
                 
                 feeds.add(feed);
-                ((AbstractFeed)feed).setEntity(AbstractEntity.this);
+                if (!AbstractEntity.this.equals(((AbstractFeed)feed).getEntity()))
+                    ((AbstractFeed)feed).setEntity(AbstractEntity.this);
 
                 getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
                 getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
@@ -1268,7 +1269,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
             @Override
             public boolean removeFeed(Feed feed) {
-                feed.stop();destroy();
+                feed.stop();
                 boolean changed = feeds.remove(feed);
                 
                 if (changed) {

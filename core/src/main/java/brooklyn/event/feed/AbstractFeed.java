@@ -26,9 +26,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.BasicFeedRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.mementos.FeedMemento;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 
@@ -73,6 +75,9 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
+        if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_FEED_REGISTRATION_PROPERTY)) {
+            ((EntityInternal)entity).getFeedSupport().addFeed(this);
+        }
     }
     
     @Override
@@ -95,7 +100,7 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
         // feed will log.warn - so if polling for 10 sensors/attributes will get 10 log messages).
         // Would be nice if reduced this logging duplication.
         // (You can reduce it by providing a better 'isConnected' implementation of course.)
-        return isActivated();
+        return isActivated() && entity!=null && !((EntityInternal)entity).getManagementSupport().isNoLongerManaged();
     }
 
     @Override

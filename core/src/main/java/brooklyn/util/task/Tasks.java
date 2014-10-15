@@ -401,7 +401,10 @@ public class Tasks {
                 return true;
             } else {
                 if (tt==null || !tt.isAlive()) {
-                    log.warn("Internal task thread is dead or null ("+tt+") but task not ended: "+t.getEndTimeUtc()+" ("+t+")");
+                    if (!t.isCancelled()) {
+                        // may happen for a cancelled task, interrupted after submit but before start
+                        log.warn("Internal task thread is dead or null ("+tt+") but task not ended: "+t.getEndTimeUtc()+" ("+t+")");
+                    }
                     return true;
                 }
             }
@@ -409,6 +412,14 @@ public class Tasks {
                 return false;
             Time.sleep(Duration.millis(10));
         }
+    }
+    
+    /** returns true if either the current thread or the current task is interrupted/cancelled */
+    public static boolean isInterrupted() {
+        if (Thread.currentThread().isInterrupted()) return true;
+        Task<?> t = current();
+        if (t==null) return false;
+        return t.isCancelled();
     }
     
 }

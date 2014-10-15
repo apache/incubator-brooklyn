@@ -47,6 +47,9 @@ public class BrooklynFeatureEnablement {
     public static final String FEATURE_ENRICHER_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.enricherPersistence";
 
     public static final String FEATURE_FEED_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.feedPersistence";
+    
+    /** whether feeds are automatically registered when set on entities, so that they are persisted */
+    public static final String FEATURE_FEED_REGISTRATION_PROPERTY = "brooklyn.experimental.feature.feedRegistration";
 
     public static final String FEATURE_CATALOG_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.catalogPersistence";
     
@@ -82,6 +85,7 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_POLICY_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_FEED_PERSISTENCE_PROPERTY, true);
+        setDefault(FEATURE_FEED_REGISTRATION_PROPERTY, false);
         setDefault(FEATURE_CATALOG_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY, false);
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);

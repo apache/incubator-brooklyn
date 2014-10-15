@@ -81,15 +81,15 @@ public class DelegatingPollHandler<V> implements PollHandler<V> {
         sb.append("[");
         int count = 0;
         for (AttributePollHandler<? super V> delegate : delegates) {
-            if (count>0) sb.append(";");
-            sb.append(" ");
+            if (count>0) sb.append("; ");
             sb.append(delegate.getDescription());
             if (count>2) {
                 sb.append("; ...");
                 break;
             }
+            count++;
         }
-        sb.append(" ]");
+        sb.append("]");
         return sb.toString();
     }
     

@@ -145,7 +145,7 @@ public class EntityExecutionManagerTest {
                 Assert.assertEquals(tasks.size(), expectedCount, "Tasks were "+tasks);
                 return true;
             }
-        }).run();
+        }).runRequiringTrue();
     }
 
     @Test

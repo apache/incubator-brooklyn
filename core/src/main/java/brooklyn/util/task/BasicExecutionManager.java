@@ -45,7 +45,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +110,7 @@ public class BasicExecutionManager implements ExecutionManager {
     private final AtomicLong totalTaskCount = new AtomicLong();
     
     /** tasks submitted but not yet done (or in cases of interruption/cancelled not yet GC'd) */
-    private Set<String> incompleteTaskIds = new ConcurrentHashSet<String>();
+    private Map<String,String> incompleteTaskIds = new ConcurrentHashMap<String,String>();
     
     /** tasks started but not yet finished */
     private final AtomicInteger activeTaskCount = new AtomicInteger();
@@ -410,7 +409,11 @@ public class BasicExecutionManager implements ExecutionManager {
                         try {
                             result = oldJob.call();
                         } catch (Exception e) {
-                            log.warn("Error executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution", e);
+                            if (!Tasks.isInterrupted()) {
+                                log.warn("Error executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution", e);
+                            } else {
+                                log.debug("Interrupted executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution: "+e);
+                            }
                             throw Exceptions.propagate(e);
                         }
                         task.runCount++;
@@ -595,7 +598,7 @@ public class BasicExecutionManager implements ExecutionManager {
     }
     /** invoked when a task is submitted */
     protected void beforeSubmit(Map<?,?> flags, Task<?> task) {
-        incompleteTaskIds.add(task.getId());
+        incompleteTaskIds.put(task.getId(), task.getId());
         
         Task<?> currentTask = Tasks.current();
         if (currentTask!=null) ((TaskInternal<?>)task).setSubmittedByTask(currentTask);

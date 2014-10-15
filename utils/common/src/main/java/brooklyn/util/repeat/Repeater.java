@@ -39,6 +39,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Callables;
 
 /**
@@ -302,6 +303,14 @@ public class Repeater {
      */
     public boolean run() {
         return runKeepingError().getWithoutError();
+    }
+    
+    public void runRequiringTrue() {
+        Stopwatch timer = Stopwatch.createStarted();
+        ReferenceWithError<Boolean> result = runKeepingError();
+        result.checkNoError();
+        if (!result.get()) 
+            throw new IllegalStateException(description+" unsatisfied after "+Duration.of(timer));
     }
     
     public ReferenceWithError<Boolean> runKeepingError() {

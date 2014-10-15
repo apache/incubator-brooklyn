@@ -328,7 +328,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state != null && state == Lifecycle.RUNNING) {
             isActive = true;
-            update();
+            updateNeeded();
         }
     }
 

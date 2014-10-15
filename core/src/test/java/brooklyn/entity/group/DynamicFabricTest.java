@@ -226,7 +226,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
                         @Override public Boolean call() {
                             return latches.size() == locs.size();
                         }})
-                .run();
+                .runRequiringTrue();
 
         assertFalse(task.isDone());
 

@@ -20,6 +20,7 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Closeable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,6 +43,7 @@ import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitio
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
@@ -49,6 +51,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
 
 public class LocalLocationManager implements LocationManagerInternal {
 
@@ -302,6 +305,10 @@ public class LocalLocationManager implements LocationManagerInternal {
             
         } else {
             log.warn("Invalid mode for unmanage: "+mode+" on "+loc+" (ignoring)");
+        }
+        
+        if (loc instanceof Closeable) {
+            Streams.closeQuietly( (Closeable)loc );
         }
         
         locationsById.remove(loc.getId());

@@ -341,7 +341,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
         Callable<Task<?>> cleanupTaskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
-                return new BasicTask<Void>(new Callable<Void>() {
+                return Tasks.<Void>builder().dynamic(false).name("ssh-location cache cleaner").body(new Callable<Void>() {
                     @Override public Void call() {
                         try {
                             if (sshPoolCache != null) sshPoolCache.cleanUp();
@@ -355,14 +355,17 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                             LOG.warn("Problem cleaning up ssh-pool-cache (rethrowing)", t);
                             throw Exceptions.propagate(t);
                         }
-                    }});
+                    }}).build();
             }
         };
         
         Duration expiryDuration = getConfig(SSH_CACHE_EXPIRY_DURATION);
-        cleanupTask = getManagementContext().getExecutionManager().submit(new ScheduledTask(cleanupTaskFactory).period(expiryDuration));
+        cleanupTask = getManagementContext().getExecutionManager().submit(new ScheduledTask(
+            MutableMap.of("displayName", "scheduled[ssh-location cache cleaner]"), cleanupTaskFactory).period(expiryDuration));
     }
     
+    // TODO close has been used for a long time to perform clean-up wanted on unmanagement, but that's not clear; 
+    // we should probably expose a mechanism such as that in Entity (or re-use Entity for locations!)
     @Override
     public void close() throws IOException {
         if (sshPoolCache != null) {

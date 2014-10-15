@@ -23,10 +23,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
 /**
@@ -190,6 +192,11 @@ public class AttributePollHandler<V> implements PollHandler<V> {
 
     @SuppressWarnings("unchecked")
     protected void setSensor(Object v) {
+        if (!Entities.isManaged(entity)) {
+            if (Tasks.isInterrupted()) return;
+            log.warn(""+entity+" is not managed; feed "+this+" setting "+sensor+" to "+v+" at this time is not supported ("+Tasks.current()+")");
+        }
+        
         if (v == FeedConfig.UNCHANGED) {
             // nothing
         } else if (v == FeedConfig.REMOVE) {

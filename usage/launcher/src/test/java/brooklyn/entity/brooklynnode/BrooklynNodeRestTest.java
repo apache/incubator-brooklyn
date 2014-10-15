@@ -128,7 +128,7 @@ public class BrooklynNodeRestTest {
                 public Boolean call() throws Exception {
                     return l.getManagementContext().getApplications().size() == 3;
                 }
-            }).limitTimeTo(Duration.TEN_SECONDS);
+            }).limitTimeTo(Duration.TEN_SECONDS).runRequiringTrue();
             
             apps = MutableSet.copyOf( l.getManagementContext().getApplications() );
             apps.removeAll( MutableSet.of(app, newApp) );

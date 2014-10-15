@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +36,7 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
@@ -52,10 +52,9 @@ import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -155,9 +154,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     public HighAvailabilityManagerImpl setPollPeriod(Duration val) {
         this.pollPeriod = checkNotNull(val, "pollPeriod");
         if (running) {
-            if (pollingTask!=null) {
-                pollingTask.cancel(true);
-            }
             registerPollTask();
         }
         return this;
@@ -204,10 +200,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     @Override
     public void disabled() {
         disabled = true;
-        running = false;
         ownNodeId = managementContext.getManagementNodeId();
         // this is notionally the master, just not running; see javadoc for more info
-        nodeState = ManagementNodeState.MASTER;
+        stop(ManagementNodeState.MASTER);
+        
     }
 
     @Override
@@ -216,6 +212,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         // always start in standby; it may get promoted to master or hot_standby in this method
         // (depending on startMode; but for startMode STANDBY or HOT_STANDBY it will not promote until the next election)
         nodeState = ManagementNodeState.STANDBY;
+        disabled = false;
         running = true;
         changeMode(startMode, true, true);
     }
@@ -328,6 +325,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         case DISABLED:
             // safe just to run even if we weren't master
             demoteToFailed();
+            if (pollingTask!=null) pollingTask.cancel(true);
             break;
         default:
             throw new IllegalStateException("Unexpected high availability mode "+startMode+" requested for "+this);
@@ -364,7 +362,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         } else {
             nodeStateTransitionComplete = true;
         }
-        registerPollTask();
+        if (startMode!=HighAvailabilityMode.DISABLED)
+            registerPollTask();
     }
 
     @Override
@@ -381,10 +380,14 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     @Override
     public void stop() {
         LOG.debug("Stopping "+this);
-        boolean wasRunning = running; // ensure idempotent
+        stop(ManagementNodeState.TERMINATED);
+    }
+    
+    private void stop(ManagementNodeState newState) {
+        boolean wasRunning = running;
         
         running = false;
-        nodeState = ManagementNodeState.TERMINATED;
+        nodeState = newState;
         if (pollingTask != null) pollingTask.cancel(true);
         
         if (wasRunning) {
@@ -442,7 +445,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         };
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
             @Override public Task<?> call() {
-                return new BasicTask<Void>(job);
+                return Tasks.builder().dynamic(false).body(job).name("HA poller task").tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
+                    .description("polls HA status to see whether this node should promote").build();
             }
         };
         
@@ -453,7 +457,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             // which affects tests that want to know exactly when publishing happens;
             // TODO would be nice if scheduled task had a "no initial submission" flag )
         } else {
-            ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollPeriod), taskFactory);
+            if (pollingTask!=null) pollingTask.cancel(true);
+            
+            ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollPeriod, "displayName", "scheduled:[HA poller task]"), taskFactory);
             pollingTask = managementContext.getExecutionManager().submit(task);
         }
     }
@@ -707,34 +713,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         managementContext.getRebindManager().stopPersistence();
         clearManagedItems(mode);
         
-        // try forcibly interrupting tasks on managed entities
-        Collection<Exception> exceptions = MutableSet.of();
-        int tasks = 0;
-        LOG.debug("Cancelling tasks on demotion");
-        try {
-            for (Entity entity: managementContext.getEntityManager().getEntities()) {
-                for (Task<?> t: managementContext.getExecutionContext(entity).getTasks()) {
-                    if (!t.isDone()) {
-                        tasks++;
-                        try {
-                            LOG.debug("Cancelling "+t+" on "+entity);
-                            t.cancel(true);
-                        } catch (Exception e) {
-                            Exceptions.propagateIfFatal(e);
-                            LOG.debug("Error cancelling "+t+" on "+entity+" (will warn when all tasks are cancelled): "+e, e);
-                            exceptions.add(e);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            LOG.warn("Error inspecting tasks to cancel on demotion: "+e, e);
-        }
-        if (!exceptions.isEmpty())
-            LOG.warn("Error when cancelling tasks on demotion: "+Exceptions.create(exceptions));
-        if (tasks>0)
-            LOG.info("Cancelled "+tasks+" tasks on demotion");
+        // tasks are cleared as part of unmanaging entities above
     }
 
     /** clears all managed items from the management context; same items destroyed as in the course of a rebind cycle */
