@@ -55,7 +55,7 @@ public class Jboss6ServerIntegrationTest extends BrooklynAppLiveTestSupport {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        String warPath = "hello-world.war";
+        String warPath = "hello-world-no-mapping.war";
         warUrl = getClass().getClassLoader().getResource(warPath);
 
         localhostProvisioningLocation = app.newLocalhostProvisioningLocation();

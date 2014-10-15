@@ -109,7 +109,7 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.ROOT_WAR, war.getPath()));
+                .configure(JavaWebAppService.ROOT_WAR, war.toString()));
         
         loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure("serverPool", serverPool)
