@@ -21,17 +21,33 @@ package brooklyn.util.text;
 import static org.testng.Assert.assertEquals;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.test.FixedLocaleTest;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableMap;
 
 public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
+    private FixedLocaleTest localeFix = new FixedLocaleTest();
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        super.setUp();
+        localeFix.setUp();
+    }
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        super.tearDown();
+        localeFix.tearDown();
+    }
 
     @Test
     public void testAdditionalArgs() {
