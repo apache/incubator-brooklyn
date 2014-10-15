@@ -164,7 +164,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return result;
     }
 
-    private EntitySpec<?> resolveSpec(
+    protected EntitySpec<?> resolveSpec(
             BrooklynComponentTemplateResolver entityResolver, 
             Set<String> encounteredCatalogTypes) {
         ManagementContext mgmt = entityResolver.loader.getManagementContext();
@@ -206,8 +206,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             }
         }
 
-        BrooklynClassLoadingContext newLoader = entityResolver.loader;
-        buildChildrenEntitySpecs(newLoader, spec, entityResolver.getChildren(entityResolver.attrs.getAllConfig()), encounteredCatalogTypes);
         return spec;
     }
 
@@ -277,13 +275,4 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
     }
 
-    protected void buildChildrenEntitySpecs(BrooklynClassLoadingContext loader, EntitySpec<?> parent, List<Map<String, Object>> childConfig, Set<String> encounteredCatalogTypes) {
-        if (childConfig != null) {
-            for (Map<String, Object> childAttrs : childConfig) {
-                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                EntitySpec<? extends Entity> spec = resolveSpec(entityResolver, encounteredCatalogTypes);
-                parent.child(spec);
-            }
-        }
-    }
 }

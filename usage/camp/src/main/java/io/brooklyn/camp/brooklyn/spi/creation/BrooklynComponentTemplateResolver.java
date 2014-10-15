@@ -104,7 +104,7 @@ public class BrooklynComponentTemplateResolver {
             return null;
         }
 
-        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, Map<String, Object> childAttrs) {
+        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, Map<String, ?> childAttrs) {
             return newInstance(loader, ConfigBag.newInstance(childAttrs), null);
         }
 
@@ -276,6 +276,20 @@ public class BrooklynComponentTemplateResolver {
         if (planId==null)
             planId = (String) attrs.getStringKey(BrooklynCampConstants.PLAN_ID_FLAG);
 
+        Object children = attrs.getStringKey("brooklyn.children");
+        if (children != null) {
+            Set<String> encounteredCatalogTypes = MutableSet.of();
+            for (Map<String,?> childAttrs : (Iterable<Map<String,?>>)children) {
+                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
+                BrooklynAssemblyTemplateInstantiator instantiator = new BrooklynAssemblyTemplateInstantiator();
+                // TODO: Creating a new set of encounteredCatalogTypes prevents the recursive definition check in
+                // BrooklynAssemblyTemplateInstantiator.resolveSpec from correctly determining if a YAML entity is
+                // defined recursively. However, the number of overrides of newInstance, and the number of places
+                // calling populateSpec make it difficult to pass encounteredCatalogTypes in as a parameter
+                EntitySpec<? extends Entity> childSpec = instantiator.resolveSpec(entityResolver, encounteredCatalogTypes);
+                spec.child(childSpec);
+            }
+        }
         if (!Strings.isBlank(name))
             spec.displayName(name);
         if (templateId != null)
