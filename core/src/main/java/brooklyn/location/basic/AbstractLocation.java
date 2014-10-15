@@ -312,6 +312,10 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     @Override
     public void setParent(Location newParent) {
+        setParent(newParent, true);
+    }
+    
+    public void setParent(Location newParent, boolean updateChildListInOldParent) {
         if (newParent == this) {
             throw new IllegalArgumentException("Location cannot be its own parent: "+this);
         }
@@ -323,11 +327,13 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         if (parent.get() != null) {
             Location oldParent = parent.get();
             parent.set(null);
-            ((AbstractLocation)oldParent).removeChild(this); // FIXME Nasty cast
+            if (updateChildListInOldParent)
+                ((AbstractLocation)oldParent).removeChild(this);
         }
         if (newParent != null) {
             parent.set(newParent);
-            ((AbstractLocation)parent.get()).addChild(this); // FIXME Nasty cast
+            if (updateChildListInOldParent)
+                ((AbstractLocation)parent.get()).addChild(this);
         }
         
         onChanged();
