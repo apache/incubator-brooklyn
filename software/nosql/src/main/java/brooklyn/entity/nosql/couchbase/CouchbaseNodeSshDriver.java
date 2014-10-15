@@ -26,7 +26,6 @@ import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,13 +35,16 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.http.auth.Credentials;
+import org.apache.http.HttpHeaders;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.HttpClient;
+import org.apache.http.entity.ContentType;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.drivers.downloads.BasicDownloadRequirement;
 import brooklyn.entity.drivers.downloads.DownloadProducerFromUrlAttribute;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -54,6 +56,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.net.Urls;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -64,6 +67,7 @@ import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -149,13 +153,21 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     public void customize() {
         //TODO: add linux tweaks for couchbase
         //http://blog.couchbase.com/often-overlooked-linux-os-tweaks
+        //http://blog.couchbase.com/kirk
 
         //turn off swappiness
+        //vm.swappiness=0
         //sudo echo 0 > /proc/sys/vm/swappiness
 
+        //os page cache = 20%
+        
         //disable THP
         //sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
         //sudo echo never > /sys/kernel/mm/transparent_hugepage/defrag
+        
+        //turn off transparent huge pages
+        //limit page cache disty bytes
+        //control the rate page cache is flused ... vm.dirty_*
     }
 
     @Override
@@ -324,7 +336,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         
     @Override
     public void rebalance() {
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "explicitly started");
         newScript("rebalance")
                 .body.append(
                 couchbaseCli("rebalance") +
@@ -350,9 +362,12 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             })
             .run();
         
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "waiting for completion");
+        // NB: a sensor feed will also update this
+        
         // then wait until the re-balance is complete
-        Repeater.create()
-            .every(Duration.FIVE_SECONDS)
+        boolean completed = Repeater.create()
+            .backoff(Duration.ONE_SECOND, 1.2, Duration.TEN_SECONDS)
             .limitTimeTo(Duration.FIVE_MINUTES)
             .until(new Callable<Boolean>() {
                 @Override
@@ -366,10 +381,18 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 }
             })
             .run();
-        log.info("Rebalanced cluster via primary node {}", getEntity());
+        if (completed) {
+            entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "completed");
+            ServiceStateLogic.ServiceNotUpLogic.clearNotUpIndicator(getEntity(), "rebalancing");
+            log.info("Rebalanced cluster via primary node {}", getEntity());
+        } else {
+            entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "timed out");
+            ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(getEntity(), "rebalancing", "rebalance did not complete within time limit");
+            log.warn("Timeout rebalancing cluster via primary node {}", getEntity());
+        }
     }
 
-    private Iterable<String> getNodesHostAndPort() throws URISyntaxException {
+    private Iterable<String> getNodesHostAndPort() {
         Function<JsonElement, Iterable<String>> getNodesAsList = new Function<JsonElement, Iterable<String>>() {
             @Override public Iterable<String> apply(JsonElement input) {
                 if (input == null) {
@@ -384,7 +407,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 return names;
             }
         };
-        HttpToolResponse nodesResponse = getAPIResponse(String.format("http://%s:%s/pools/nodes", getHostname(), getWebPort()));
+        HttpToolResponse nodesResponse = getApiResponse(String.format("http://%s:%s/pools/nodes", getHostname(), getWebPort()));
         return Functionals.chain(
             HttpValueFunctions.jsonContents(),
             JsonFunctions.walkN("nodes"),
@@ -392,33 +415,76 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         ).apply(nodesResponse);
     }
     
-    private boolean isNodeRebalancing(String nodeHostAndPort) throws URISyntaxException {
-        HttpToolResponse response = getAPIResponse("http://" + nodeHostAndPort + "/pools/nodes/rebalanceProgress");
+    private boolean isNodeRebalancing(String nodeHostAndPort) {
+        HttpToolResponse response = getApiResponse("http://" + nodeHostAndPort + "/pools/default/rebalanceProgress");
         if (response.getResponseCode() != 200) {
-            throw new IllegalStateException("failed to rebalance cluster: " + response);
+            throw new IllegalStateException("failed retrieving rebalance status: " + response);
         }
         return !"none".equals(HttpValueFunctions.jsonContents("status", String.class).apply(response));
     }
     
-    private HttpToolResponse getAPIResponse(String uri) throws URISyntaxException {
-        URI apiUri = new URI(uri);
-        Credentials credentials = new UsernamePasswordCredentials(getUsername(), getPassword());
+    private HttpToolResponse getApiResponse(String uri) {
         return HttpTool.httpGet(HttpTool.httpClientBuilder()
                 // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
-                .uri(apiUri)
-                .credentials(credentials)
+                .uri(uri)
+                .credentials(new UsernamePasswordCredentials(getUsername(), getPassword()))
                 .build(), 
-            apiUri, 
+            URI.create(uri), 
             ImmutableMap.<String, String>of());
     }
     
     @Override
     public void serverAdd(String serverToAdd, String username, String password) {
+        // TODO the POST is failing with SocketException: Connection reset
+        // removing any data makes the problem go away; i suspect it is the combo of:
+        // credentials, an explicit port, and content.
+        // but i do not know how to fix it...
+////      curl -u Administrator:password\
+////      192.168.60.101:8091/controller/addNode \
+////       -d "hostname=192.168.60.103&user=Administrator&password=password"
+//        String baseUrl = Preconditions.checkNotNull(getEntity().getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), "web admin URL not available");
+//        String uri = Urls.mergePaths(baseUrl, "controller/addNode");
+//        URI uriU = URI.create(uri);
+//        
+//        HttpClient client = HttpTool.httpClientBuilder()
+//            // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
+//            .uri(uriU.getScheme()+"://"+uriU.getHost())
+//            .credentials(new UsernamePasswordCredentials(getUsername(), getPassword()))
+//            .build();
+//        client.getParams().setParameter("http.socket.timeout", new Integer(0)); 
+//        client.getParams().setParameter("http.connection.stalecheck", new Boolean(true));
+//        
+//        HttpToolResponse response = HttpTool.httpPost(client, 
+//            URI.create(uri), 
+////            ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType()),
+//            // TODO do we need the above?
+//            ImmutableMap.<String,String>of(),
+//            
+//            ("hostname="+Urls.encode(serverToAdd)+
+//                "&user"+Urls.encode(username)+
+//                "&password"+Urls.encode(password)).getBytes()
+//            // the following two work
+////            "".getBytes()
+////            ImmutableMap.<String,String>of()
+//            );
+//        if (response.getResponseCode()==200) {
+//            log.debug("Completed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getContentAsString());
+//        } else {
+//            log.warn("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
+//            throw new IllegalStateException("Failed addNode call for "+serverToAdd+" via REST to "+getEntity()+": "+response.getResponseCode()+" / "+response.getContentAsString());
+//        }
+
+        // TODO would like a WebTasks API such as this:
+//        DynamicTasks.queue(WebTasks.get(baseUrl).subpath("controller/addNode").credentials(getUsername(), getPassword())
+//            .queryParam("hostname", serverToAdd).queryParam("user", username).queryParam("password", password)
+//            .summary("REST addNode "+serverToAdd)).getUnchecked();
+
+        // or, via CLI:
         newScript("serverAdd").body.append(couchbaseCli("server-add")
                 + getCouchbaseHostnameAndCredentials() +
-                " --server-add=" + serverToAdd +
-                " --server-add-username=" + username +
-                " --server-add-password=" + password)
+                " --server-add=" + BashStringEscapes.wrapBash(serverToAdd) +
+                " --server-add-username=" + BashStringEscapes.wrapBash(username) +
+                " --server-add-password=" + BashStringEscapes.wrapBash(password))
                 .failOnNonZeroResultCode()
                 .execute();
     }
@@ -427,12 +493,12 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     public void serverAddAndRebalance(String serverToAdd, String username, String password) {
         newScript("serverAddAndRebalance").body.append(couchbaseCli("rebalance")
                 + getCouchbaseHostnameAndCredentials() +
-                " --server-add=" + serverToAdd +
-                " --server-add-username=" + username +
-                " --server-add-password=" + password)
+                " --server-add=" + BashStringEscapes.wrapBash(serverToAdd) +
+                " --server-add-username=" + BashStringEscapes.wrapBash(username) +
+                " --server-add-password=" + BashStringEscapes.wrapBash(password))
                 .failOnNonZeroResultCode()
                 .execute();
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "Rebalance Started");
+        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "triggered as part of server-add");
     }
 
     @Override
@@ -441,8 +507,8 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         
         newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
             + getCouchbaseHostnameAndCredentials() +
-            " --bucket=" + bucketName +
-            " --bucket-type=" + bucketType +
+            " --bucket=" + BashStringEscapes.wrapBash(bucketName) +
+            " --bucket-type=" + BashStringEscapes.wrapBash(bucketType) +
             " --bucket-port=" + bucketPort +
             " --bucket-ramsize=" + bucketRamSize +
             " --bucket-replica=" + bucketReplica)
@@ -474,10 +540,10 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             couchbaseCli("xdcr-setup") +
             getCouchbaseHostnameAndCredentials() +
             " --create" +
-            " --xdcr-cluster-name="+destName +
-            " --xdcr-hostname="+destHostname +
-            " --xdcr-username="+destUsername +
-            " --xdcr-password="+destPassword
+            " --xdcr-cluster-name="+BashStringEscapes.wrapBash(destName) +
+            " --xdcr-hostname="+BashStringEscapes.wrapBash(destHostname) +
+            " --xdcr-username="+BashStringEscapes.wrapBash(destUsername) +
+            " --xdcr-password="+BashStringEscapes.wrapBash(destPassword)
             ).summary("create xdcr destination "+destName).newTask()));
 
         // would be nice to auto-create bucket, but we'll need to know the parameters; the port in particular is tedious
@@ -487,9 +553,9 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             couchbaseCli("xdcr-replicate") +
             getCouchbaseHostnameAndCredentials() +
             " --create" +
-            " --xdcr-cluster-name="+destName +
-            " --xdcr-from-bucket="+fromBucket +
-            " --xdcr-to-bucket="+toBucket
+            " --xdcr-cluster-name="+BashStringEscapes.wrapBash(destName) +
+            " --xdcr-from-bucket="+BashStringEscapes.wrapBash(fromBucket) +
+            " --xdcr-to-bucket="+BashStringEscapes.wrapBash(toBucket)
 //            + " --xdcr-replication-mode="+replMode
             ).summary("configure replication for "+fromBucket+" to "+destName+":"+toBucket).newTask());
     }
