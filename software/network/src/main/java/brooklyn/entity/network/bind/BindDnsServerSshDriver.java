@@ -22,18 +22,21 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.net.Protocol;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
-import brooklyn.util.ssh.IptablesCommands.Protocol;
 
 import com.google.common.collect.ImmutableList;
 
 public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver implements BindDnsServerDriver {
+
+    private String serviceName = "named";
 
     public BindDnsServerSshDriver(BindDnsServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -47,14 +50,21 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
     @Override
     public void install() {
         List<String> commands = ImmutableList.<String>builder()
-                .add(BashCommands.installPackage(MutableMap.of("yum", "bind"), "bind"))
+                .add(BashCommands.installPackage(MutableMap.of(
+                        "yum", "bind", "apt", "bind9"), "bind"))
                 .add(BashCommands.ok("which setenforce && " + BashCommands.sudo("setenforce 0")))
                 .build();
-
         newScript(INSTALLING)
                 .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
+
+        ScriptHelper s = newScript("Test to determine service named")
+                .gatherOutput()
+                .noExtraOutput()
+                .body.append("if service --status-all 2>&1 | grep -q bind9; then echo bind9; else echo named; fi");
+        s.execute();
+        serviceName = s.getResultStdout().trim();
     }
 
     @Override
@@ -74,20 +84,23 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public void launch() {
-        newScript(MutableMap.of("usePidFile", false), LAUNCHING).
-        body.append(BashCommands.sudo("service named start")).execute();
+        newScript(MutableMap.of("usePidFile", false), LAUNCHING)
+                .body.append(BashCommands.sudo("service "+serviceName+" start"))
+                .execute();
     }
 
     @Override
     public boolean isRunning() {
         return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
-                    .body.append(BashCommands.sudo("service named status")).execute() == 0;
+                .body.append(BashCommands.sudo("service "+serviceName+" status"))
+                .execute() == 0;
     }
 
     @Override
     public void stop() {
         newScript(MutableMap.of("usePidFile", false), STOPPING)
-                .body.append(BashCommands.sudo("service named stop")).execute();
+                .body.append(BashCommands.sudo("service "+serviceName+" stop"))
+                .execute();
     }
 
 }

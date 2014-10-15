@@ -66,9 +66,7 @@ abstract public class ApidocResource {
     }
     
     protected boolean isSupportedMediaType(String type) {
-        if ("application/json".equals(type)) return true;
-        if ("application/xml".equals(type)) return true;
-        return false;
+        return "application/json".equals(type) || "application/xml".equals(type);
     }
     
     protected boolean isIncludedForDocumentation(Class<?> resource) {

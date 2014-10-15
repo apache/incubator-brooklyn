@@ -27,6 +27,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -35,8 +37,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
-
-import com.google.common.collect.ImmutableList;
 
 public class BindDnsServerLiveTest {
 
@@ -59,8 +59,11 @@ public class BindDnsServerLiveTest {
 
     @DataProvider(name = "virtualMachineData")
     public Object[][] provideVirtualMachineData() {
-        return new Object[][] { // CentOS 6.3
-            new Object[] { "us-east-1/ami-7d7bfc14", "aws-ec2:us-east-1" },
+        return new Object[][]{
+                // CentOS 6.3
+                new Object[]{"us-east-1/ami-7d7bfc14", "aws-ec2:us-east-1"},
+                // Ubuntu 14.04
+                new Object[]{"us-east-1/ami-c89e2ea0", "aws-ec2:us-east-1"},
         };
     }
 

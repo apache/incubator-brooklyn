@@ -21,6 +21,8 @@ package brooklyn.entity.pool;
 import java.util.Collection;
 import java.util.Map;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -65,6 +67,7 @@ import brooklyn.location.dynamic.LocationOwner;
  */
 @Catalog(name="Server Pool", description="Creates a pre-allocated server pool, which other applications can deploy to")
 @ImplementedBy(ServerPoolImpl.class)
+@Beta
 public interface ServerPool extends DynamicCluster, LocationOwner<ServerPoolLocation, ServerPool> {
 
     ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(DynamicCluster.INITIAL_SIZE, 2);

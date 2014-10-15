@@ -145,6 +145,6 @@ public class WarmStandbyTest {
     
     // TODO support forcible demotion, and check that a master forcibly demoted 
     // to warm standby clears its apps, policies, and locations  
-    
+
 
 }

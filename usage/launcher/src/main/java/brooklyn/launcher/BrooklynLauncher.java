@@ -473,7 +473,7 @@ public class BrooklynLauncher {
         LOG.info("Persisting state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
 
         initManagementContext();
-        
+
         try {
             destinationDir = BrooklynServerConfig.resolvePersistencePath(destinationDir, brooklynProperties, destinationLocation);
             PersistenceObjectStore destinationObjectStore;
