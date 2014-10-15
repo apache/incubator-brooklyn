@@ -19,6 +19,8 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import brooklyn.management.ha.OsgiManager;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
@@ -460,12 +462,12 @@ public class BrooklynLauncher {
 
         try {
             return managementContext.getRebindManager().retrieveMementoRawData();
-            
+
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            LOG.debug("Error rebinding to persisted state (rethrowing): "+e, e);
-            throw new FatalRuntimeException("Error rebinding to persisted state: "+
-                Exceptions.collapseText(e), e);
+            LOG.debug("Error rebinding to persisted state (rethrowing): " + e, e);
+            throw new FatalRuntimeException("Error rebinding to persisted state: " +
+                    Exceptions.collapseText(e), e);
         }
     }
 
@@ -473,7 +475,6 @@ public class BrooklynLauncher {
         LOG.info("Persisting state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
 
         initManagementContext();
-
         try {
             destinationDir = BrooklynServerConfig.resolvePersistencePath(destinationDir, brooklynProperties, destinationLocation);
             PersistenceObjectStore destinationObjectStore;
@@ -494,6 +495,7 @@ public class BrooklynLauncher {
                     managementContext.getCatalog().getRootClassLoader());
 
             PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
+            persister.enableWriteAccess();
             persister.checkpoint(memento, exceptionHandler);
             
         } catch (Exception e) {

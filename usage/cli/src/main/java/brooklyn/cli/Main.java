@@ -19,6 +19,8 @@
 package brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import brooklyn.management.ha.OsgiManager;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 import io.airlift.command.Cli;
@@ -750,6 +752,7 @@ public class Main extends AbstractMain {
                 
                 launcher = BrooklynLauncher.newInstance()
                         .localBrooklynPropertiesFile(localBrooklynProperties)
+                        .brooklynProperties(OsgiManager.USE_OSGI, false)
                         .persistMode(persistMode)
                         .persistenceDir(persistenceDir)
                         .persistenceLocation(persistenceLocation)
@@ -766,7 +769,7 @@ public class Main extends AbstractMain {
                 CompoundTransformer transformer = loadTransformer(transformations);
                 BrooklynMementoRawData newMemento = transformer.transform(memento);
                 launcher.persistState(newMemento, destinationDir, destinationLocation);
-                
+
             } catch (FatalRuntimeException e) {
                 // rely on caller logging this propagated exception
                 throw e;

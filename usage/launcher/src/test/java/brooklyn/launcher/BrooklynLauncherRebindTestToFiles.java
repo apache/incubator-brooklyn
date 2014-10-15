@@ -127,7 +127,7 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
             
             assertEquals(memento.getEntities().size(), 1, "entityMementos="+memento.getEntities().keySet());
             
-            // Should now have a usable copy in the destionationDir
+            // Should now have a usable copy in the destinationDir
             // Auto will rebind if the dir exists
             newLauncherDefault(PersistMode.AUTO)
                     .webconsole(false)
