@@ -19,6 +19,8 @@
 package brooklyn.management.ha;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 import java.util.Collections;
 import java.util.Date;
@@ -43,8 +45,10 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
+import brooklyn.management.ha.TestEntityFailingRebind.RebindException;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
@@ -179,6 +183,89 @@ public class HighAvailabilityManagerSplitBrainTest {
 
     protected PersistenceObjectStore newPersistenceObjectStore() {
         return new InMemoryObjectStore(sharedBackingStore, sharedBackingStoreDates);
+    }
+    
+    @Test
+    public void testDoubleRebindFails() throws Exception {
+        useSharedTime();
+        HaMgmtNode n1 = newNode();
+        HaMgmtNode n2 = newNode();
+
+        // first auto should become master
+        n1.ha.start(HighAvailabilityMode.AUTO);
+        n2.ha.start(HighAvailabilityMode.AUTO);
+
+        TestApplication app = ApplicationBuilder.newManagedApp(
+                EntitySpec.create(TestApplication.class).impl(TestEntityFailingRebind.class), n1.mgmt);
+        app.start(ImmutableList.<Location>of());
+
+        n1.mgmt.getRebindManager().forcePersistNow();
+
+        //don't publish state for a while (i.e. long store delays, failures)
+        sharedTickerAdvance(Duration.ONE_MINUTE);
+
+        try {
+            n2.ha.publishAndCheck(false);
+            fail("n2 rebind failure expected");
+        } catch (Exception e) {
+            assertNestedRebindException(e);
+        }
+
+        try {
+            n1.ha.publishAndCheck(false);
+            fail("n1 rebind failure expected");
+        } catch (Exception e) {
+            assertNestedRebindException(e);
+        }
+
+        ManagementPlaneSyncRecord memento = n1.ha.getManagementPlaneSyncState();
+        assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.FAILED);
+        assertEquals(memento.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.FAILED);
+    }
+    
+    @Test
+    public void testStandbyRebind() throws Exception {
+        useSharedTime();
+        HaMgmtNode n1 = newNode();
+        HaMgmtNode n2 = newNode();
+
+        // first auto should become master
+        n1.ha.start(HighAvailabilityMode.AUTO);
+        n2.ha.start(HighAvailabilityMode.AUTO);
+
+        TestApplication app = ApplicationBuilder.newManagedApp(
+                EntitySpec.create(TestApplication.class).impl(TestEntityFailingRebind.class), n1.mgmt);
+        app.start(ImmutableList.<Location>of());
+
+        n1.mgmt.getRebindManager().forcePersistNow();
+
+        //don't publish state for a while (i.e. long store delays, failures)
+        sharedTickerAdvance(Duration.ONE_MINUTE);
+
+        try {
+            n2.ha.publishAndCheck(false);
+            fail("n2 rebind failure expected");
+        } catch (Exception e) {
+            assertNestedRebindException(e);
+        }
+
+        TestEntityFailingRebind.setThrowOnRebind(false);
+        n1.ha.publishAndCheck(false);
+
+        ManagementPlaneSyncRecord memento = n1.ha.getManagementPlaneSyncState();
+        assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
+        assertEquals(memento.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.FAILED);
+    }
+    
+    private void assertNestedRebindException(Throwable t) {
+        Throwable ptr = t;
+        while (ptr != null) {
+            if (ptr instanceof RebindException) {
+                return;
+            }
+            ptr = ptr.getCause();
+        }
+        Exceptions.propagate(t);
     }
     
     @Test
