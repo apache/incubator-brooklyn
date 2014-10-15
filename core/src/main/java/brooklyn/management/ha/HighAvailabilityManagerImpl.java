@@ -33,18 +33,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
 import brooklyn.internal.BrooklynFeatureEnablement;
+import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
+import brooklyn.management.internal.LocalEntityManager;
+import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
@@ -222,8 +228,17 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     @VisibleForTesting
     @Beta
     public void changeMode(HighAvailabilityMode startMode, boolean preventElectionOnExplicitStandbyMode, boolean failOnExplicitStandbyModeIfNoMaster) {
-        if (!running)
-            throw new IllegalStateException("Can only change mode when already running; invoke 'start' first");
+        if (!running) {
+            // if was not running then start as disabled mode, then proceed as normal
+            LOG.info("HA changing mode to "+startMode+" from "+nodeState+" when not running, forcing an intermediate start as DISABLED then will convert to "+startMode);
+            start(HighAvailabilityMode.DISABLED);
+        }
+        if (getNodeState()==ManagementNodeState.FAILED || getNodeState()==ManagementNodeState.INITIALIZING) {
+            if (startMode!=HighAvailabilityMode.DISABLED) {
+                // if coming from FAILED (or INITIALIZING because we skipped start call) then treat as cold standby
+                nodeState = ManagementNodeState.STANDBY; 
+            }
+        }
         
         ownNodeId = managementContext.getManagementNodeId();
         // TODO Small race in that we first check, and then we'll do checkMaster() on first poll,
@@ -240,11 +255,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             switch (startMode) {
             case MASTER:
             case AUTO:
-                // no action needed
+            case DISABLED:
+                // no action needed, will do anything necessary below
                 break;
             case HOT_STANDBY: demoteToStandby(true); break;
             case STANDBY: demoteToStandby(false); break;
-            case DISABLED: demoteToFailed(); break;
             default:
                 throw new IllegalStateException("Unexpected high availability mode "+startMode+" requested for "+this);
             }
@@ -294,7 +309,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             if (getNodeState().toString().equals(startMode.toString()))
                 message += "explicitly requested";
             else if (startMode==HighAvailabilityMode.HOT_STANDBY && getNodeState()==ManagementNodeState.STANDBY)
-                message += "caller requested "+startMode+", will attempt rebind directly";
+                message += "caller requested "+startMode+", will attempt rebind for HOT_STANDBY next";
             else
                 message += "caller requested "+startMode;
             
@@ -309,6 +324,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 }
             }
             LOG.info(message);
+            break;
+        case DISABLED:
+            // safe just to run even if we weren't master
+            demoteToFailed();
             break;
         default:
             throw new IllegalStateException("Unexpected high availability mode "+startMode+" requested for "+this);
@@ -641,6 +660,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 // could just promote the standby items; but for now we stop the old read-only and re-load them, to make sure nothing has been missed
                 // TODO ideally there'd be an incremental rebind as well as an incremental persist
                 managementContext.getRebindManager().stopReadOnly();
+                clearManagedItems(ManagementTransitionMode.REBINDING_DESTROYED);
             }
             managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader(), null, nodeState);
         } catch (Exception e) {
@@ -652,8 +672,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     protected void demoteToFailed() {
+        ManagementTransitionMode mode = (nodeState == ManagementNodeState.MASTER ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
         nodeState = ManagementNodeState.FAILED;
-        onDemotionStopTasks();
+        onDemotionStopItems(mode);
         nodeStateTransitionComplete = true;
         publishDemotionFromMaster();
     }
@@ -663,10 +684,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             LOG.warn("Ignoring demote-from-master request, as HighAvailabilityManager is no longer running");
             return;
         }
+        ManagementTransitionMode mode = (nodeState == ManagementNodeState.MASTER ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
 
         nodeStateTransitionComplete = false;
         nodeState = ManagementNodeState.STANDBY;
-        onDemotionStopTasks();
+        onDemotionStopItems(mode);
         nodeStateTransitionComplete = true;
         publishDemotionFromMaster();
         
@@ -678,11 +700,12 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
     
-    protected void onDemotionStopTasks() {
+    protected void onDemotionStopItems(ManagementTransitionMode mode) {
+        // stop persistence and remove all apps etc
         managementContext.getRebindManager().stopPersistence();
-        for (Application app: managementContext.getApplications())
-            Entities.unmanage(app);
-        // let's try forcibly interrupting tasks on managed entities
+        clearManagedItems(mode);
+        
+        // try forcibly interrupting tasks on managed entities
         Collection<Exception> exceptions = MutableSet.of();
         int tasks = 0;
         LOG.debug("Cancelling tasks on demotion");
@@ -712,6 +735,30 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             LOG.info("Cancelled "+tasks+" tasks on demotion");
     }
 
+    /** clears all managed items from the management context; same items destroyed as in the course of a rebind cycle */
+    protected void clearManagedItems(ManagementTransitionMode mode) {
+        for (Application app: managementContext.getApplications()) {
+            if (((EntityInternal)app).getManagementSupport().isDeployed()) {
+                ((EntityInternal)app).getManagementContext().getEntityManager().unmanage(app);
+            }
+        }
+        // for normal management, call above will remove; for read-only, etc, let's do what's below:
+        for (Entity entity: managementContext.getEntityManager().getEntities()) {
+            ((LocalEntityManager)managementContext.getEntityManager()).unmanage(entity, mode);
+        }
+    
+        // again, for locations, call unmanage on parents first
+        for (Location loc: managementContext.getLocationManager().getLocations()) {
+            if (loc.getParent()==null)
+                ((LocationManagerInternal)managementContext.getLocationManager()).unmanage(loc, mode);
+        }
+        for (Location loc: managementContext.getLocationManager().getLocations()) {
+            ((LocationManagerInternal)managementContext.getLocationManager()).unmanage(loc, mode);
+        }
+        
+        ((BasicBrooklynCatalog)managementContext.getCatalog()).reset(CatalogDto.newEmptyInstance("<reset-by-ha-status-change>"));
+    }
+    
     /** starts hot standby, in foreground; the caller is responsible for publishing health afterwards.
      * @return whether hot standby was possible (if not, errors should be stored elsewhere) */
     protected boolean attemptHotStandby() {
