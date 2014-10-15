@@ -320,7 +320,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                         reqsSent.addAndGet(desiredMsgsPerSec);
                     }
     
-                    Asserts.succeedsEventually(MutableMap.of("timeout", 1000), new Runnable() {
+                    Asserts.succeedsEventually(MutableMap.of("timeout", 4000), new Runnable() {
                         public void run() {
                             Double avgReqs = entity.getAttribute(WebAppService.REQUESTS_PER_SECOND_IN_WINDOW);
                             Integer requestCount = entity.getAttribute(WebAppService.REQUEST_COUNT);
@@ -357,7 +357,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         this.entity = entity;
         log.info("test=publishesZeroRequestsPerSecondMetricRepeatedly; entity="+entity+"; app="+entity.getApplication());
         
-        final int MAX_INTERVAL_BETWEEN_EVENTS = 1000; // events should publish every 500ms so this should be enough overhead
+        final int MAX_INTERVAL_BETWEEN_EVENTS = 4000; // TomcatServerImpl publishes events every 3000ms so this should be enough overhead
         final int NUM_CONSECUTIVE_EVENTS = 3;
 
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
@@ -429,7 +429,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.ROOT_WAR, resource.getPath());
+        ((EntityLocal)entity).setConfig(JavaWebAppService.ROOT_WAR, resource.toString());
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         //tomcat may need a while to unpack everything
@@ -451,7 +451,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.getPath()));
+        ((EntityLocal)entity).setConfig(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.toString()));
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
 
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
@@ -473,7 +473,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         // Test deploying
-        entity.deploy(resource.getPath(), "myartifactname.war");
+        entity.deploy(resource.toString(), "myartifactname.war");
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
