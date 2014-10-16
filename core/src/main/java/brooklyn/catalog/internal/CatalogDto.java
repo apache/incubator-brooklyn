@@ -26,16 +26,16 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.Beta;
-import com.google.common.base.Objects;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-
 import brooklyn.catalog.CatalogItem;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.stream.Streams;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
 
 @Beta
 public class CatalogDto {
@@ -103,6 +103,13 @@ public class CatalogDto {
         return result;
     }
 
+    /** Used when caller wishes to create an explicitly empty catalog */
+    public static CatalogDto newEmptyInstance(String optionalContentsDescription) {
+        CatalogDto result = new CatalogDto();
+        if (optionalContentsDescription!=null) result.contentsDescription = optionalContentsDescription;
+        return result;
+    }
+
     public static CatalogDto newLinkedInstance(String url) {
         CatalogDto result = new CatalogDto();
         result.contentsDescription = url;
@@ -110,7 +117,7 @@ public class CatalogDto {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static CatalogDto newDtoFromCatalogItems(Collection<CatalogItem<?, ?>> entries) {
         CatalogDto result = new CatalogDto();
         // Weird casts because compiler does not seem to like

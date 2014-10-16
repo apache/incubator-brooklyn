@@ -384,6 +384,12 @@ public class LocalEntityManager implements EntityManagerInternal {
         } else {
             log.warn("Invalid mode for unmanage: "+mode+" on "+e+" (ignoring)");
         }
+        
+        preRegisteredEntitiesById.remove(e.getId());
+        preManagedEntitiesById.remove(e.getId());
+        entityProxiesById.remove(e.getId());
+        entitiesById.remove(e.getId());
+        entityModesById.remove(e.getId());
     }
     
     /**

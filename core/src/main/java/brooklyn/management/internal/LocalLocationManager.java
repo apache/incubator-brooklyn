@@ -266,8 +266,8 @@ public class LocalLocationManager implements LocationManagerInternal {
                     log.warn("Should not be unmanaging "+loc+" in mode "+mode+"; ignoring");
             }
 
-        } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED) {
-            // we are unmanaging an instance (secondary) for which the primary has been destroyed elsewhere
+        } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED || mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
+            // we are unmanaging an instance whose primary management is elsewhere (either we were secondary, or we are being demoted)
             unmanageNonRecursive(loc);
             managementContext.getRebindManager().getChangeListener().onUnmanaged(loc);
             if (managementContext.gc != null) managementContext.gc.onUnmanaged(loc);
@@ -299,6 +299,10 @@ public class LocalLocationManager implements LocationManagerInternal {
             log.warn("Invalid mode for unmanage: "+mode+" on "+loc+" (ignoring)");
         }
         
+        locationsById.remove(loc.getId());
+        preRegisteredLocationsById.remove(loc.getId());
+        locationModesById.remove(loc.getId());
+        locationTypes.remove(loc.getId());
     }
     
     /**
@@ -358,7 +362,7 @@ public class LocalLocationManager implements LocationManagerInternal {
      * Returns true if the location has been removed from management; if it was not previously managed (anything else throws exception) 
      */
     private synchronized boolean unmanageNonRecursive(Location loc) {
-        loc.setParent(null);
+        ((AbstractLocation)loc).setParent(null, false);
         Object old = locationsById.remove(loc.getId());
         locationTypes.remove(loc.getId());
         locationModesById.remove(loc.getId());
