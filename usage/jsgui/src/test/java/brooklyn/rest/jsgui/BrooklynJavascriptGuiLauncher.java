@@ -47,6 +47,12 @@ public class BrooklynJavascriptGuiLauncher {
     private static final Logger log = LoggerFactory.getLogger(BrooklynJavascriptGuiLauncher.class);
     
     public static void main(String[] args) throws Exception {
+        // NOTE: When running Brooklyn from an IDE (i.e. by launching BrooklynJavascriptGuiLauncher.main())
+        // you will need to ensure that the working directory is set to the jsgui folder. For IntelliJ,
+        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR/../jsgui.
+        // For Eclipse, use the default option of ${workspace_loc:brooklyn-jsgui}.
+        // If the working directory is not set correctly, Brooklyn will be unable to find the jsgui .war
+        // file and the 'gui not available' message will be shown.
         startJavascriptAndRest();
         
         log.info("Press Ctrl-C to quit.");
