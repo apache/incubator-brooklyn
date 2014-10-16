@@ -524,7 +524,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}: "
                 + "updated {} entities, {} locations, {} policies, {} enrichers, {} catalog items; "
-                + "removed {} entities, {} locations, {} policies, {} enrichers {} catalog items",
+                + "removed {} entities, {} locations, {} policies, {} enrichers, {} catalog items",
                     new Object[] {Time.makeTimeStringRounded(stopwatch),
                         delta.entities().size(), delta.locations().size(), delta.policies().size(), delta.enrichers().size(), delta.catalogItems().size(),
                         delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size(), delta.removedEnricherIds().size(), delta.removedCatalogItemIds().size()});

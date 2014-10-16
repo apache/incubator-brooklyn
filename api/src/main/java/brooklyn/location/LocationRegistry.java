@@ -52,7 +52,11 @@ public interface LocationRegistry {
     public void removeDefinedLocation(String id);
 
     /** Returns a fully populated (config etc) location from the given definition, with optional add'l flags.
-     * the location will be managed by default, unless the manage parameter is false or the CREATE_UNMANAGED flag is set.
+     * the location will be managed by default, unless the manage parameter is false, 
+     * or the manage parameter is null and the CREATE_UNMANAGED flag is set.
+     * <p>
+     * The manage parameter is {@link Boolean} so that null can be used to say rely on anything in the flags.
+     * 
      * @since 0.7.0, but beta and likely to change as the semantics of this class are tuned */
     @Beta
     public Maybe<Location> resolve(LocationDefinition ld, Boolean manage, Map locationFlags);

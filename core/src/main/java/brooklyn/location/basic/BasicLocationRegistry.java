@@ -187,6 +187,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
     
     // TODO save / serialize
+    // (we persist live locations, ie those in the LocationManager, but not "catalog" locations, ie those in this Registry)
     
     @VisibleForTesting
     void disablePersistence() {
@@ -194,7 +195,7 @@ public class BasicLocationRegistry implements LocationRegistry {
         // defining the format and file etc)
     }
 
-    static BasicLocationDefinition localhost(String id) {
+    protected static BasicLocationDefinition localhost(String id) {
         return new BasicLocationDefinition(id, "localhost", "localhost", null);
     }
     
@@ -218,13 +219,13 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
     
     @Deprecated /** since 0.7.0 not used */
-    public Maybe<Location> resolve(String spec, boolean manage) {
+    public final Maybe<Location> resolve(String spec, boolean manage) {
         return resolve(spec, manage, null);
     }
     
     public Maybe<Location> resolve(String spec, Boolean manage, Map locationFlags) {
         try {
-            if (locationFlags==null) locationFlags = MutableMap.of();
+            locationFlags = MutableMap.copyOf(locationFlags);
             if (manage!=null) {
                 locationFlags.put(LocalLocationManager.CREATE_UNMANAGED, !manage);
             }
@@ -281,7 +282,7 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
 
     @Override
-    public Location resolve(String spec, Map locationFlags) {
+    public final Location resolve(String spec, Map locationFlags) {
         return resolve(spec, null, locationFlags).get();
     }
 

@@ -206,9 +206,9 @@ public class LocalLocationManager implements LocationManagerInternal {
             throw new IllegalStateException("Access controller forbids management of "+loc+": "+access.getMsg());
         }
 
+        long count = LOCATION_CNT.incrementAndGet();
         if (log.isDebugEnabled()) {
             String msg = "Managing location " + loc + " ("+initialMode+"), from " + Tasks.current()+" / "+Entitlements.getEntitlementContext();
-            long count = LOCATION_CNT.incrementAndGet();
             if (count % 100 == 0) {
                 // include trace periodically in case we get leaks or too much location management
                 log.debug(msg, new Exception("Informational stack trace of call to manage location "+loc+" ("+count+" calls; "+getLocations().size()+" currently managed)"));
