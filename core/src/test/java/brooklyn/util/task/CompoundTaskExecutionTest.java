@@ -37,7 +37,6 @@ import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
 import brooklyn.management.Task;
-import brooklyn.test.Asserts;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -156,14 +155,6 @@ public class CompoundTaskExecutionTest {
         assertFalse(t3.isError());
     }
 
-    private void assertDoneEventually(final Task<?> task) {
-        Asserts.succeedsEventually(new Runnable() {
-            @Override
-            public void run() {
-                task.isDone();
-            }});
-    }
-    
     @Test
     public void runParallelTask() throws Exception {
         BasicTask<String> t1 = taskReturning("a");
