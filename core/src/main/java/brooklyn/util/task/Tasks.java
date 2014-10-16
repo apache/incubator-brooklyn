@@ -392,22 +392,18 @@ public class Tasks {
 
         t.blockUntilEnded(timer.getDurationRemaining());
         
-        // TODO when the below is confirmed, delete the code below
-//        Future<?> f = ((BasicTask<?>)t).getInternalFuture();
-//        if (f==null) return;
-//        try {
-//            f.isDone();
-//        } catch (Exception e) {
-//            Exceptions.propagateIfFatal(e);
-//            // ignore
-//        }
         while (true) {
             if (t.getEndTimeUtc()>=0) return true;
             // above should be sufficient; but just in case, trying the below
             Thread tt = t.getThread();
-            if (tt==null || !tt.isAlive()) {
-                log.warn("Internal task thread is dead or null ("+tt+") but task not ended: "+t.getEndTimeUtc()+" ("+t+")");
+            if (t instanceof ScheduledTask) {
+                ((ScheduledTask)t).blockUntilNextRunFinished(timer.getDurationRemaining());
                 return true;
+            } else {
+                if (tt==null || !tt.isAlive()) {
+                    log.warn("Internal task thread is dead or null ("+tt+") but task not ended: "+t.getEndTimeUtc()+" ("+t+")");
+                    return true;
+                }
             }
             if (timer.isExpired())
                 return false;
