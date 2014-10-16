@@ -26,7 +26,10 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.guava.Maybe.Absent;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Iterables;
@@ -103,28 +106,13 @@ public class BrooklynYamlLocationResolver {
     /** resolves the location from the given spec string, either "Named Location", or "named:Named Location" format;
      * returns null if input is blank (or null); otherwise guaranteed to resolve or throw error */
     public Location resolveLocationFromString(String location) {
-        if (Strings.isBlank(location))
-            return null;
-        
-        LocationDefinition ldef = mgmt.getLocationRegistry().getDefinedLocationByName((String)location);
-        if (ldef!=null)
-            // found it as a named location
-            return mgmt.getLocationRegistry().resolve(ldef);
-        
-        if (mgmt.getLocationRegistry().canMaybeResolve((String)location)) {
-            try {
-                return mgmt.getLocationRegistry().resolve((String)location);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                throw new IllegalStateException("Illegal parameter for 'location' ("+location+"); not resolvable: "+e, e);
-            }
-        }
-        throw new IllegalStateException("Illegal parameter for 'location' ("+location+"); not resolvable");
+        if (Strings.isBlank(location)) return null;
+        return resolveLocation(location, MutableMap.of());
     }
 
     public Location resolveLocationFromMap(Map<?,?> location) {
         if (location.size() > 1) {
-            throw new IllegalStateException("Illegal parameter for 'location'; not resolvable ("+location+")");
+            throw new IllegalStateException("Illegal parameter for 'location'; expected a single entry in map ("+location+")");
         }
         Object key = Iterables.getOnlyElement(location.keySet());
         Object value = location.get(key);
@@ -135,22 +123,18 @@ public class BrooklynYamlLocationResolver {
         if (!(value instanceof Map)) {
             throw new IllegalStateException("Illegal parameter for 'location'; expected config map ("+location+")");
         }
-        String spec = (String) key;
-        Map<?,?> flags = (Map<?, ?>) value;
-        
+        return resolveLocation((String)key, (Map<?,?>)value);
+    }
+    
+    protected Location resolveLocation(String spec, Map<?,?> flags) {
         LocationDefinition ldef = mgmt.getLocationRegistry().getDefinedLocationByName((String)spec);
         if (ldef!=null)
             // found it as a named location
-            return mgmt.getLocationRegistry().resolve(ldef, flags);
+            return mgmt.getLocationRegistry().resolve(ldef, null, flags).get();
         
-        if (mgmt.getLocationRegistry().canMaybeResolve(spec)) {
-            try {
-                return mgmt.getLocationRegistry().resolve(spec, flags);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                throw new IllegalStateException("Illegal parameter for 'location'; not resolvable ("+location+"): "+e, e);
-            }
-        }
-        throw new IllegalStateException("Illegal parameter for 'location'; not resolvable ("+location+")");
+        Maybe<Location> l = mgmt.getLocationRegistry().resolve(spec, null, flags);
+        if (l.isPresent()) return l.get();
+        throw new IllegalStateException("Illegal parameter for 'location' ("+spec+"); not resolvable: "+
+            Exceptions.collapseText( ((Absent<?>)l).getException() ));
     }
 }

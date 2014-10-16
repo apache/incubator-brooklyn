@@ -25,6 +25,9 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocationResolver.SpecParser.ParsedSpec;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.guava.Maybe.Absent;
 import brooklyn.util.text.KeyValueParser;
 
 import com.google.common.collect.ImmutableMap;
@@ -58,8 +61,10 @@ public class HostLocationResolver extends AbstractLocationResolver {
 
         // Generate target spec
         String target = "byon("+KeyValueParser.toLine(argsMap)+")";
-        if (!managementContext.getLocationRegistry().canMaybeResolve(target)) {
-            throw new IllegalArgumentException("Invalid target location '" + target + "'; must be resolvable location");
+        Maybe<Location> testResolve = managementContext.getLocationRegistry().resolve(target, false, null);
+        if (!testResolve.isPresent()) {
+            throw new IllegalArgumentException("Invalid target location '" + target + "' for location '"+HOST+"': "+
+                Exceptions.collapseText( ((Absent<?>)testResolve).getException() ));
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SingleMachineProvisioningLocation.class)

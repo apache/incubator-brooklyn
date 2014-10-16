@@ -50,7 +50,7 @@ public class BrooklynAppUnitTestSupport {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         if (mgmt == null) {
-            mgmt = new LocalManagementContextForTests();
+            mgmt = LocalManagementContextForTests.newInstance();
         }
         setUpApp();
     }

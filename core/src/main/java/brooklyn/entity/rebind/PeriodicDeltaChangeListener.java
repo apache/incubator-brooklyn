@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
@@ -307,6 +308,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         try {
             persistingMutex.acquire();
             if (!isActive()) return;
+            
             // Atomically switch the delta, so subsequent modifications will be done in the
             // next scheduled persist
             DeltaCollector prevDeltaCollector;
@@ -314,8 +316,23 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 prevDeltaCollector = deltaCollector;
                 deltaCollector = new DeltaCollector();
             }
-            addReferencedObjects(prevDeltaCollector);
             
+            if (LOG.isDebugEnabled()) LOG.debug("Persister delta as reported: "
+                    + "updating entities={}, locations={}, policies={}, enrichers={}, catalog items={}; "
+                    + "removing entities={}, locations={}, policies={}, enrichers={}, catalog items={}",
+                    new Object[] {
+                        limitedCountString(prevDeltaCollector.entities), limitedCountString(prevDeltaCollector.locations), limitedCountString(prevDeltaCollector.policies), limitedCountString(prevDeltaCollector.enrichers), limitedCountString(prevDeltaCollector.catalogItems), 
+                        limitedCountString(prevDeltaCollector.removedEntityIds), limitedCountString(prevDeltaCollector.removedLocationIds), limitedCountString(prevDeltaCollector.removedPolicyIds), limitedCountString(prevDeltaCollector.removedEnricherIds), limitedCountString(prevDeltaCollector.removedCatalogItemIds)});
+
+            addReferencedObjects(prevDeltaCollector);
+
+            if (LOG.isDebugEnabled()) LOG.debug("Persister delta with references: "
+                    + "updating {} entities, {} locations, {} policies, {} enrichers, {} catalog items; "
+                    + "removing {} entities, {} locations, {} policies, {} enrichers, {} catalog items",
+                    new Object[] {
+                        prevDeltaCollector.entities.size(), prevDeltaCollector.locations.size(), prevDeltaCollector.policies.size(), prevDeltaCollector.enrichers.size(), prevDeltaCollector.catalogItems.size(),
+                        prevDeltaCollector.removedEntityIds.size(), prevDeltaCollector.removedLocationIds.size(), prevDeltaCollector.removedPolicyIds.size(), prevDeltaCollector.removedEnricherIds.size(), prevDeltaCollector.removedCatalogItemIds.size()});
+
             // Generate mementos for everything that has changed in this time period
             if (prevDeltaCollector.isEmpty()) {
                 if (LOG.isTraceEnabled()) LOG.trace("No changes to persist since last delta");
@@ -370,7 +387,6 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 persisterDelta.removedFeedIds = prevDeltaCollector.removedFeedIds;
                 persisterDelta.removedCatalogItemIds = prevDeltaCollector.removedCatalogItemIds;
 
-                if (LOG.isDebugEnabled()) dumpDebugInfo(persisterDelta);
                 /*
                  * Need to guarantee "happens before", with any thread that subsequently reads
                  * the mementos.
@@ -396,30 +412,17 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
     
-    private void dumpDebugInfo(PersisterDeltaImpl delta) {
-        //copied from BrooklynMementoPersisterObjectStore - already logged there, but have a unified for all stores for debugging
-        LOG.debug("Periodic delta updated summary {} entities, {} locations, " +
-            "{} policies, {} enrichers and {} catalog items; " +
-            "removing {} entities, {} locations, {} policies, {} enrichers and {} catalog items",
-            new Object[] {
-                    delta.entities().size(), delta.locations().size(), delta.policies().size(), delta.enrichers().size(), delta.catalogItems().size(),
-                    delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size(),
-                    delta.removedEnricherIds().size(), delta.removedCatalogItemIds().size()});
-
-        LOG.debug("Detailed period delta updated {} entities, {} locations, " +
-                "{} policies, {} enrichers and {} catalog items; " +
-                "removing {} entities, {} locations, {} policies, {} enrichers and {} catalog items",
-                new Object[] {
-                        limitCnt(delta.entities()), limitCnt(delta.locations()),
-                        limitCnt(delta.policies()), limitCnt(delta.enrichers()),
-                        limitCnt(delta.catalogItems()), limitCnt(delta.removedEntityIds()),
-                        limitCnt(delta.removedLocationIds()), limitCnt(delta.removedPolicyIds()),
-                        limitCnt(delta.removedEnricherIds()), limitCnt(delta.removedCatalogItemIds())});
-
-    }
-
-    private <T> Collection<T> limitCnt(Collection<T> items) {
-        return Lists.newArrayList(Iterables.limit(items, 50));
+    private static String limitedCountString(Collection<?> items) {
+        if (items==null) return null;
+        int size = items.size();
+        if (size==0) return "[]";
+        
+        int MAX = 12;
+        
+        if (size<=MAX) return items.toString();
+        List<Object> itemsTruncated = Lists.newArrayList(Iterables.limit(items, MAX));
+        if (items.size()>itemsTruncated.size()) itemsTruncated.add("... ("+(size-MAX)+" more)");
+        return itemsTruncated.toString();
     }
 
     @Override

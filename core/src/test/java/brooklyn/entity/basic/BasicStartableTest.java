@@ -57,7 +57,7 @@ public class BasicStartableTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContextForTests();
+        managementContext = LocalManagementContextForTests.newInstance();
         loc1 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         loc2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);

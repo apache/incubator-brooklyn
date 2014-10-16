@@ -30,7 +30,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 
 /**
  * There is a bug where:
@@ -45,7 +44,7 @@ public class ConfigEntityInheritanceTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplicationImpl();
+        app = TestApplication.Factory.newManagedInstanceForTests();
         Entities.startManagement(app);
     }
 

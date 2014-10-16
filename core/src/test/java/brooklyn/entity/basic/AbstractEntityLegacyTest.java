@@ -114,7 +114,7 @@ public class AbstractEntityLegacyTest {
 
         assertTrue(entity.getDisplayName().startsWith("MyEntityImpl:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
         
-        Entities.startManagement(app);
+        Entities.startManagement(app, LocalManagementContextForTests.newInstance());
         assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
     }
     

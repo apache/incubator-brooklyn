@@ -20,7 +20,6 @@ package brooklyn.entity.basic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
@@ -36,7 +35,6 @@ import brooklyn.policy.Enricher;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;

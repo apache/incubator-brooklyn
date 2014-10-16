@@ -522,13 +522,12 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
         Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}; updated {} entities, {} locations, " +
-                        "{} policies, {} enrichers and {} catalog items; " +
-                        "removing {} entities, {} locations, {} policies, {} enrichers and {} catalog items",
-                new Object[] {Time.makeTimeStringRounded(stopwatch),
+        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}: "
+                + "updated {} entities, {} locations, {} policies, {} enrichers, {} catalog items; "
+                + "removed {} entities, {} locations, {} policies, {} enrichers, {} catalog items",
+                    new Object[] {Time.makeTimeStringRounded(stopwatch),
                         delta.entities().size(), delta.locations().size(), delta.policies().size(), delta.enrichers().size(), delta.catalogItems().size(),
-                        delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size(),
-                        delta.removedEnricherIds().size(), delta.removedCatalogItemIds().size()});
+                        delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size(), delta.removedEnricherIds().size(), delta.removedCatalogItemIds().size()});
     }
     
     /**

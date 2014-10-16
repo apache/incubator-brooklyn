@@ -29,6 +29,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestEntity;
 
 public class LocationPredicatesTest {
@@ -40,7 +41,7 @@ public class LocationPredicatesTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = LocalManagementContextForTests.newInstance();
         loc = (LocalhostMachineProvisioningLocation) managementContext.getLocationRegistry().resolve("localhost:(name=mydisplayname)");
         childLoc = loc.obtain();
         grandchildLoc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class).parent(childLoc));

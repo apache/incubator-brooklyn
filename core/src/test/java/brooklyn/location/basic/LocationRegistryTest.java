@@ -29,6 +29,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 public class LocationRegistryTest {
     
@@ -47,7 +48,7 @@ public class LocationRegistryTest {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
         properties.put("brooklyn.location.named.foo.privateKeyFile", "~/.ssh/foo.id_rsa");
-        mgmt = new LocalManagementContext(properties);
+        mgmt = LocalManagementContextForTests.newInstance(properties);
         log.info("foo properties gave defined locations: "+mgmt.getLocationRegistry().getDefinedLocations());
         locdef = mgmt.getLocationRegistry().getDefinedLocationByName("foo");
         Assert.assertNotNull(locdef, "Expected 'foo' location; but had "+mgmt.getLocationRegistry().getDefinedLocations());
@@ -59,7 +60,7 @@ public class LocationRegistryTest {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
         properties.put("brooklyn.location.named.foo.privateKeyFile", "~/.ssh/foo.id_rsa");
-        mgmt = new LocalManagementContext(properties);
+        mgmt = LocalManagementContextForTests.newInstance(properties);
 
         locdef = mgmt.getLocationRegistry().getDefinedLocationByName("foo");
         log.info("testResovlesBy has defined locations: "+mgmt.getLocationRegistry().getDefinedLocations());
@@ -86,7 +87,7 @@ public class LocationRegistryTest {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
         properties.put("brooklyn.location.named.foo.displayName", "My Foo");
-        mgmt = new LocalManagementContext(properties);
+        mgmt = LocalManagementContextForTests.newInstance(properties);
         Location l = mgmt.getLocationRegistry().resolve("foo");
         Assert.assertEquals(l.getDisplayName(), "My Foo");
     }
@@ -95,7 +96,7 @@ public class LocationRegistryTest {
     public void testLocationGetsDefaultDisplayName() {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.named.foo", "byon:(hosts=\"root@192.168.1.{1,2,3,4}\")");
-        mgmt = new LocalManagementContext(properties);
+        mgmt = LocalManagementContextForTests.newInstance(properties);
         Location l = mgmt.getLocationRegistry().resolve("foo");
         Assert.assertNotNull(l.getDisplayName());
         Assert.assertTrue(l.getDisplayName().startsWith(FixedListMachineProvisioningLocation.class.getSimpleName()), "name="+l.getDisplayName());
@@ -106,7 +107,7 @@ public class LocationRegistryTest {
     
     @Test
     public void testSetupForTesting() {
-        mgmt = new LocalManagementContext();
+        mgmt = LocalManagementContextForTests.newInstance();
         BasicLocationRegistry.setupLocationRegistryForTesting(mgmt);
         Assert.assertNotNull(mgmt.getLocationRegistry().getDefinedLocationByName("localhost"));
     }
@@ -115,7 +116,7 @@ public class LocationRegistryTest {
     public void testCircularReference() {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.named.bar", "named:bar");
-        mgmt = new LocalManagementContext(properties);
+        mgmt = LocalManagementContextForTests.newInstance(properties);
         log.info("bar properties gave defined locations: "+mgmt.getLocationRegistry().getDefinedLocations());
         boolean resolved = false;
         try {
@@ -141,7 +142,7 @@ public class LocationRegistryTest {
     public void testLocalhostEnabled() {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.localhost.enabled", true);
-        mgmt = new LocalManagementContext(properties);
+        mgmt = LocalManagementContextForTests.newInstance(properties);
         Assert.assertTrue( findLocationMatching("localhost") );
     }
 
@@ -149,7 +150,7 @@ public class LocationRegistryTest {
     public void testLocalhostDisabled() {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("brooklyn.location.localhost.enabled", false);
-        mgmt = new LocalManagementContext(properties);
+        mgmt = LocalManagementContextForTests.newInstance(properties);
         log.info("RESOLVERS: "+mgmt.getLocationRegistry().getDefinedLocations());
         log.info("DEFINED LOCATIONS: "+mgmt.getLocationRegistry().getDefinedLocations());
         Assert.assertFalse( findLocationMatching("localhost") );
