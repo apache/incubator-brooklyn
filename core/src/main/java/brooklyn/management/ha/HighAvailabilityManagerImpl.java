@@ -581,6 +581,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             LOG.debug("Master-change for this node only, demoting "+ownNodeRecord.toVerboseString()+" in favour of official master "+newMasterNodeRecord.toVerboseString());
             demoteToStandby(BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY));
             return;
+        } else {
+            LOG.debug("Detected master heartbeat timeout. Initiating a new master election. Master was " + currMasterNodeRecord);
         }
         
         // Need to choose a new master

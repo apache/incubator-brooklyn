@@ -916,8 +916,10 @@ public class RebindManagerImpl implements RebindManager {
                 return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
             else if (isNowReadOnly)
                 return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
-            else
-                throw new IllegalStateException("Rebinding master not supported: "+item);
+            else {
+                LOG.warn("Transitioning to master, though never stopped being a master - " + item);
+                return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
+            }
         }
     }
 
