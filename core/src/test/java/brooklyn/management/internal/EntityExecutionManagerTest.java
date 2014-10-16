@@ -267,6 +267,7 @@ public class EntityExecutionManagerTest {
         assertTrue(tags.contains(BrooklynTaskTags.tagForContextEntity(e)), "tags="+tags);
         
         Entities.destroy(e);
+        forceGc();
         
         Set<Object> tags2 = app.getManagementContext().getExecutionManager().getTaskTags();
         for (Object tag : tags2) {
@@ -336,8 +337,8 @@ public class EntityExecutionManagerTest {
         
         BasicAttributeSensor<Object> byteArrayAttrib = new BasicAttributeSensor<Object>(Object.class, "test.byteArray", "");
 
-        for (int i = 0; i < 1000; i++) {
-            if (i%100==0) LOG.info(JavaClassNames.niceClassAndMethod()+": iteration "+i);
+        for (int i = 0; i < 200; i++) {
+            if (i<10 || i%10==0) LOG.info(JavaClassNames.niceClassAndMethod()+": iteration "+i);
             try {
                 LOG.debug(JavaClassNames.niceClassAndMethod()+": iteration="+i);
                 TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));

@@ -398,6 +398,9 @@ public class BrooklynGarbageCollector {
             if (Entities.isManaged(ee.getKey())) continue;
             if (ee.getValue()!=null && !ee.getValue().isDone()) continue;
             deleteTasksForEntity(ee.getKey());
+            synchronized (unmanagedEntitiesNeedingGc) {
+                unmanagedEntitiesNeedingGc.remove(ee.getKey());
+            }
         }
     }
     

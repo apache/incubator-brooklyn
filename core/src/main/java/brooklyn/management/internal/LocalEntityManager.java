@@ -422,7 +422,6 @@ public class LocalEntityManager implements EntityManagerInternal {
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            e.printStackTrace();
             log.warn("Error inspecting tasks to cancel on unmanagement: "+e, e);
         }
         if (!exceptions.isEmpty())

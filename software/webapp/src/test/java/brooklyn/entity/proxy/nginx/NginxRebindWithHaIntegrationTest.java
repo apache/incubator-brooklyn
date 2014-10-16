@@ -42,7 +42,7 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -119,7 +119,7 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
     @Test(groups = "Integration")
     public void testChangeModeFailureStopsTasksButHappyUponResumption() throws Exception {
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class).configure("war", warUrl.toString()))
                 .configure("initialSize", 1));
         
         NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
