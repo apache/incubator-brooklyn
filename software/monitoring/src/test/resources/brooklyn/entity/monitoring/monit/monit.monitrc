@@ -24,7 +24,7 @@ set daemon 5
 set pidfile ${driver.runDir}/pid.txt
 set logfile ${driver.runDir}/monit.log
 
-check process cron
-	matching "cron"
+check process vi
+	matching "vi monittest"
 	group test
 	

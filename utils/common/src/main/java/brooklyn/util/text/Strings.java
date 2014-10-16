@@ -537,6 +537,22 @@ public class Strings {
         return getFirstWord(context.substring(index + phrase.length()));
     }
 
+   /**
+    * searches in context for the given phrase, and returns the <b>untrimmed</b> remainder of the first line
+    * on which the phrase is found
+    */
+    public static String getRemainderOfLineAfter(String context, String phrase) {
+        if (context == null || phrase == null) return null;
+        int index = context.indexOf(phrase);
+        if (index < 0) return null;
+        int lineEndIndex = context.indexOf("\n", index);
+        if (lineEndIndex <= 0) {
+            return context.substring(index + phrase.length());
+        } else {
+            return context.substring(index + phrase.length(), lineEndIndex);
+        }
+    }
+
     /** @deprecated use {@link Time#makeTimeStringRounded(long)} */
     @Deprecated
     public static String makeTimeString(long utcMillis) {
