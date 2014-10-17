@@ -41,6 +41,7 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
@@ -225,11 +226,11 @@ public abstract class BrooklynLauncherRebindTestFixture {
 
     protected void populatePersistenceDir(String dir, EntitySpec<? extends StartableApplication> appSpec) throws Exception {
         BrooklynLauncher launcher = newLauncherDefault(PersistMode.CLEAN)
+                .highAvailabilityMode(HighAvailabilityMode.MASTER)
                 .persistenceDir(dir)
                 .application(appSpec)
                 .start();
         launcher.terminate();
-        launcher = null;
         assertMementoContainerNonEmptyForTypeEventually("entities");
     }
     

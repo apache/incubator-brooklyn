@@ -20,13 +20,15 @@ package brooklyn.rest.util.json;
 
 import java.io.IOException;
 import java.io.NotSerializableException;
+import java.net.URI;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonGenerationException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.utils.URIBuilder;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.eclipse.jetty.server.Server;
@@ -41,13 +43,13 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncher;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
@@ -77,7 +79,7 @@ public class BrooklynJacksonSerializerTest {
     }
 
     @Test
-    public void testCustomSerializerWithSerializableSillyManagementExample() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testCustomSerializerWithSerializableSillyManagementExample() throws Exception {
         ManagementContext mgmt = LocalManagementContextForTests.newInstance();
         try {
 
@@ -110,17 +112,17 @@ public class BrooklynJacksonSerializerTest {
         checkNonSerializableWhenStrict(new SelfRefNonSerializableClass());
     }
     @Test
-    public void testSelfReferenceGeneratesErrorMapObject() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testSelfReferenceGeneratesErrorMapObject() throws Exception {
         checkSerializesAsMapWithErrorAndToString(new SelfRefNonSerializableClass());
     }
     @Test
-    public void testNonSerializableInListIsShownInList() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testNonSerializableInListIsShownInList() throws Exception {
         List<?> result = checkSerializesAs(MutableList.of(1, new SelfRefNonSerializableClass()), List.class);
         Assert.assertEquals( result.get(0), 1 );
         Assert.assertEquals( ((Map<?,?>)result.get(1)).get("errorType"), NotSerializableException.class.getName() );
     }
     @Test
-    public void testNonSerializableInMapIsShownInMap() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testNonSerializableInMapIsShownInMap() throws Exception {
         Map<?,?> result = checkSerializesAs(MutableMap.of("x", new SelfRefNonSerializableClass()), Map.class);
         Assert.assertEquals( ((Map<?,?>)result.get("x")).get("errorType"), NotSerializableException.class.getName() );
     }
@@ -129,7 +131,7 @@ public class BrooklynJacksonSerializerTest {
         SelfRefNonSerializableClass bad = new SelfRefNonSerializableClass();
     }
     @Test
-    public void testNonSerializableInObjectIsShownInMap() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testNonSerializableInObjectIsShownInMap() throws Exception {
         String resultS = checkSerializesAs(new TupleWithNonSerializable(), null);
         log.info("nested non-serializable json is "+resultS);
         Assert.assertTrue(resultS.startsWith("{\"good\":\"bon\",\"bad\":{"), "expected a nested map for the error field, not "+resultS);
@@ -144,7 +146,7 @@ public class BrooklynJacksonSerializerTest {
     }
 
     @Test
-    public void testEmptySerializesAsEmpty() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testEmptySerializesAsEmpty() throws Exception {
         // deliberately, a class with no fields and no annotations serializes as an error,
         // because the alternative, {}, is useless.  however if it *is* annotated, as below, then it will serialize fine.
         checkSerializesAsMapWithErrorAndToString(new SelfRefNonSerializableClass());
@@ -159,7 +161,7 @@ public class BrooklynJacksonSerializerTest {
     }
 
     @Test
-    public void testEmptyAnnotatedSerializesAsEmptyEvenWhenStrict() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testEmptyAnnotatedSerializesAsEmptyEvenWhenStrict() throws Exception {
         try {
             BidiSerialization.setStrictSerialization(true);
             testEmptyAnnotatedSerializesAsEmpty();
@@ -169,7 +171,7 @@ public class BrooklynJacksonSerializerTest {
     }
     
     @Test
-    public void testEmptyAnnotatedSerializesAsEmpty() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testEmptyAnnotatedSerializesAsEmpty() throws Exception {
         Map<?, ?> map = checkSerializesAs( new EmptyClassWithSerialize(), Map.class );
         Assert.assertTrue(map.isEmpty(), "Expected an empty map; instead got: "+map);
 
@@ -183,14 +185,14 @@ public class BrooklynJacksonSerializerTest {
         checkNonSerializableWhenStrict(MutableList.of(Attributes.HTTP_PORT));
     }
     @Test
-    public void testSensorSensible() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testSensorSensible() throws Exception {
         Map<?,?> result = checkSerializesAs(Attributes.HTTP_PORT, Map.class);
         log.info("SENSOR json is: "+result);
         Assert.assertFalse(result.toString().contains("error"), "Shouldn't have had an error, instead got: "+result);
     }
 
     @Test
-    public void testLinkedListSerialization() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testLinkedListSerialization() throws Exception {
         LinkedList<Object> ll = new LinkedList<Object>();
         ll.add(1); ll.add("two");
         String result = checkSerializesAs(ll, null);
@@ -200,14 +202,14 @@ public class BrooklynJacksonSerializerTest {
     }
 
     @Test
-    public void testSupplierSerialization() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testSupplierSerialization() throws Exception {
         String result = checkSerializesAs(Strings.toStringSupplier(Streams.byteArrayOfString("x")), null);
         log.info("SUPPLIER json is: "+result);
         Assert.assertFalse(result.contains("error"), "Shouldn't have had an error, instead got: "+result);
     }
 
     @Test
-    public void testWrappedStreamSerialization() throws JsonGenerationException, JsonMappingException, IOException {
+    public void testWrappedStreamSerialization() throws Exception {
         String result = checkSerializesAs(BrooklynTaskTags.tagForStream("TEST", Streams.byteArrayOfString("x")), null);
         log.info("WRAPPED STREAM json is: "+result);
         Assert.assertFalse(result.contains("error"), "Shouldn't have had an error, instead got: "+result);
@@ -260,21 +262,25 @@ public class BrooklynJacksonSerializerTest {
     }
     
     @Test(groups="Integration") //because of time
-    public void testWithLauncherSerializingListsContainingEntitiesAndOtherComplexStuff() {
+    public void testWithLauncherSerializingListsContainingEntitiesAndOtherComplexStuff() throws Exception {
         ManagementContext mgmt = LocalManagementContextForTests.newInstance();
         Server server = null;
         try {
             server = BrooklynRestApiLauncher.launcher().managementContext(mgmt).start();
-            
+            HttpClient client = HttpTool.httpClientBuilder().build();
+
             TestApplication app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
 
-            String appUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort()+"/v1/applications/"+app.getId();
-            String entityUrl = appUrl + "/entities/"+app.getId();
-
-            app.setConfig(TestEntity.CONF_OBJECT, mgmt);
-            String content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
+            String serverAddress = "http://localhost:"+server.getConnectors()[0].getLocalPort();
+            String appUrl = serverAddress + "/v1/applications/" + app.getId();
+            String entityUrl = appUrl + "/entities/" + app.getId();
+            URI configUri = new URIBuilder(entityUrl + "/config/" + TestEntity.CONF_OBJECT.getName())
+                    .addParameter("raw", "true")
+                    .build();
 
             // assert config here is just mgmt
+            app.setConfig(TestEntity.CONF_OBJECT, mgmt);
+            String content = get(client, configUri);
             log.info("CONFIG MGMT is:\n"+content);
             @SuppressWarnings("rawtypes")
             Map values = new Gson().fromJson(content, Map.class);
@@ -282,7 +288,7 @@ public class BrooklynJacksonSerializerTest {
             Assert.assertEquals(values.get("type"), LocalManagementContextForTests.class.getCanonicalName());
             
             // assert normal API returns the same, containing links
-            content = HttpTestUtils.getContent(entityUrl);
+            content = get(client, entityUrl);
             log.info("ENTITY is: \n"+content);
             values = new Gson().fromJson(content, Map.class);
             Assert.assertTrue(values.size()>=3, "Map is too small: "+values);
@@ -292,7 +298,8 @@ public class BrooklynJacksonSerializerTest {
 
             // but config etc returns our nicely json serialized
             app.setConfig(TestEntity.CONF_OBJECT, app);
-            content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
+            content = get(client, configUri);
+
             log.info("CONFIG ENTITY is:\n"+content);
             values = new Gson().fromJson(content, Map.class);
             Assert.assertEquals(values.size(), 2, "Map is wrong size: "+values);
@@ -302,13 +309,13 @@ public class BrooklynJacksonSerializerTest {
             // and self-ref gives error + toString
             SelfRefNonSerializableClass angry = new SelfRefNonSerializableClass();
             app.setConfig(TestEntity.CONF_OBJECT, angry);
-            content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
+            content = get(client, configUri);
             log.info("CONFIG ANGRY is:\n"+content);
             assertErrorObjectMatchingToString(content, angry);
             
             // as does Server
             app.setConfig(TestEntity.CONF_OBJECT, server);
-            content = HttpTestUtils.getContent(entityUrl+"/config/"+TestEntity.CONF_OBJECT.getName());
+            content = get(client, configUri);
             // NOTE, if using the default visibility / object mapper, the getters of the object are invoked
             // resulting in an object which is huge, 7+MB -- and it wreaks havoc w eclipse console regex parsing!
             // (but with our custom VisibilityChecker server just gives us the nicer error!)
@@ -319,7 +326,7 @@ public class BrooklynJacksonSerializerTest {
             
         } finally {
             try {
-                server.stop();
+                if (server != null) server.stop();
             } catch (Exception e) {
                 log.warn("failed to stop server: "+e);
             }
@@ -332,5 +339,14 @@ public class BrooklynJacksonSerializerTest {
         Assert.assertTrue(value instanceof Map, "Expected map, got: "+value);
         Assert.assertEquals(((Map<?,?>)value).get("toString"), expected.toString());
     }
-        
+
+    private String get(HttpClient client, String uri) {
+        return get(client, URI.create(uri));
+    }
+
+    private String get(HttpClient client, URI uri) {
+        return HttpTool.httpGet(client, uri, Collections.<String, String>emptyMap())
+                .getContentAsString();
+    }
+
 }
