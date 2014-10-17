@@ -34,6 +34,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
@@ -45,6 +46,7 @@ import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
 
@@ -328,7 +330,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state != null && state == Lifecycle.RUNNING) {
             isActive = true;
-            update();
+            updateNeeded();
         }
     }
 
@@ -359,8 +361,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     @Override
     public void update() {
-        Task<?> task = updateAsync();
-        if (task != null) task.getUnchecked();
+        try {
+            Task<?> task = updateAsync();
+            if (task != null) task.getUnchecked();
+            ServiceStateLogic.ServiceProblemsLogic.clearProblemsIndicator(this, "update");
+        } catch (Exception e) {
+            ServiceStateLogic.ServiceProblemsLogic.updateProblemsIndicator(this, "update", "update failed with: "+Exceptions.collapseText(e));
+            throw Exceptions.propagate(e);
+        }
     }
     
     public synchronized Task<?> updateAsync() {

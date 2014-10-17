@@ -47,6 +47,9 @@ public class BrooklynFeatureEnablement {
     public static final String FEATURE_ENRICHER_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.enricherPersistence";
 
     public static final String FEATURE_FEED_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.feedPersistence";
+    
+    /** whether feeds are automatically registered when set on entities, so that they are persisted */
+    public static final String FEATURE_FEED_REGISTRATION_PROPERTY = "brooklyn.experimental.feature.feedRegistration";
 
     public static final String FEATURE_CATALOG_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.catalogPersistence";
     
@@ -61,6 +64,15 @@ public class BrooklynFeatureEnablement {
      * the data-grid backing  */
     public static final String FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE = "brooklyn.experimental.feature.useBrooklynLiveObjectsDatagridStorage";
 
+    /**
+     * Renaming threads can really helps with debugging etc; however it's a massive performance hit (2x)
+     * <p>
+     * We get 55000 tasks per sec with this off, 28k/s with this on.
+     * <p>
+     * Defaults to false if system property is not set.
+     */
+    public static final String FEATURE_RENAME_THREADS = "brooklyn.executionManager.renameThreads";
+    
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
     private static final Object MUTEX = new Object();
@@ -73,9 +85,11 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_POLICY_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_ENRICHER_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_FEED_PERSISTENCE_PROPERTY, true);
+        setDefault(FEATURE_FEED_REGISTRATION_PROPERTY, false);
         setDefault(FEATURE_CATALOG_PERSISTENCE_PROPERTY, true);
         setDefault(FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY, false);
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
+        setDefault(FEATURE_RENAME_THREADS, false);
     }
     
     static {

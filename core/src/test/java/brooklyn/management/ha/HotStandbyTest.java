@@ -45,6 +45,8 @@ import brooklyn.entity.rebind.persister.ListeningObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.EntityTestUtils;
@@ -559,6 +561,37 @@ public class HotStandbyTest {
     @Test(groups="Integration", invocationCount=20)
     public void testChangeModeManyTimes() throws Exception {
         testChangeMode();
+    }
+
+    @Test
+    public void testChangeModeToDisabledAndBack() throws Exception {
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
+        n1.mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachine.class));
+        @SuppressWarnings("unused")
+        TestApplication app = createFirstAppAndPersist(n1);
+        
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
+        
+        // disabled n1 allows n2 to become master when next we tell it to check
+        n1.ha.changeMode(HighAvailabilityMode.DISABLED);
+        n2.ha.changeMode(HighAvailabilityMode.AUTO);
+        assertMaster(n2);
+        assertEquals(n1.ha.getNodeState(), ManagementNodeState.FAILED);
+        Assert.assertTrue(n1.mgmt.getApplications().isEmpty(), "n1 should have had no apps; instead had: "+n1.mgmt.getApplications());
+        Assert.assertTrue(n1.mgmt.getEntityManager().getEntities().isEmpty(), "n1 should have had no entities; instead had: "+n1.mgmt.getEntityManager().getEntities());
+        Assert.assertTrue(n1.mgmt.getLocationManager().getLocations().isEmpty(), "n1 should have had no locations; instead had: "+n1.mgmt.getLocationManager().getLocations());
+        
+        // we can now change n1 back to hot_standby
+        n1.ha.changeMode(HighAvailabilityMode.HOT_STANDBY);
+        assertHotStandby(n1);
+        // and it sees apps
+        Assert.assertFalse(n1.mgmt.getApplications().isEmpty(), "n1 should have had apps now");
+        Assert.assertFalse(n1.mgmt.getLocationManager().getLocations().isEmpty(), "n1 should have had locations now");
+        // and if n2 is disabled, n1 promotes
+        n2.ha.changeMode(HighAvailabilityMode.DISABLED);
+        n1.ha.changeMode(HighAvailabilityMode.AUTO);
+        assertMaster(n1);
+        assertEquals(n2.ha.getNodeState(), ManagementNodeState.FAILED);
     }
     
 }

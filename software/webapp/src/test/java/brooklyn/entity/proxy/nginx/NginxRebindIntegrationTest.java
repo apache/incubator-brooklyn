@@ -78,7 +78,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         return true;
     }
     
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
         warUrl = getClass().getClassLoader().getResource("hello-world.war");
@@ -86,11 +86,12 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         executor = Executors.newCachedThreadPool();
     }
 
-    @AfterMethod(groups = "Integration", alwaysRun=true)
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         for (WebAppMonitor monitor : webAppMonitors) {
             monitor.terminate();
         }
+        webAppMonitors.clear();
         if (executor != null) executor.shutdownNow();
         super.tearDown();
     }

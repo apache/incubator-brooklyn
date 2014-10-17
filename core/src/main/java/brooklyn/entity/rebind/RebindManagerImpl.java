@@ -870,6 +870,7 @@ public class RebindManagerImpl implements RebindManager {
                         LOG.debug(message, catalogLoadMode);
                     }
                 }
+                // TODO destroy old (as above)
             } else {
                 LOG.debug("RebindManager not resetting catalog because catalog persistence is disabled");
             }

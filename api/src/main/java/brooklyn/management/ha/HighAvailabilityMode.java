@@ -20,7 +20,17 @@ package brooklyn.management.ha;
 
 /** Specifies the HA mode that a mgmt node should run in */
 public enum HighAvailabilityMode {
-    /** Means HA mode should not be operational. */
+    /** 
+     * Means HA mode should not be operational.
+     * <p>
+     * When specified for the initial HA mode, this simply turns off HA.
+     * <p>
+     * However if being used to {@link HighAvailabilityManager#changeMode(HighAvailabilityMode)},
+     * this will cause the node to transition to a {@link ManagementNodeState#FAILED} state.
+     * Switching to a "master-but-not-part-of-HA" state is not currently supported, as this would be
+     * problematic if another node (which was part of HA) then tries to become master,
+     * and the more common use of this at runtime is to disable a node from being part of the HA plane. 
+     */
     DISABLED,
     
     /**

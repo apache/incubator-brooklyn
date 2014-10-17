@@ -34,6 +34,7 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -44,10 +45,11 @@ import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -123,6 +125,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     private final boolean persistFeedsEnabled;
     
     private final Semaphore persistingMutex = new Semaphore(1);
+    private final Object startMutex = new Object();
     
     /** @deprecated since 0.7.0 pass in an {@link ExecutionContext} and a {@link Duration} */
     @Deprecated
@@ -143,37 +146,40 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @SuppressWarnings("unchecked")
     public void start() {
-        if (running || (scheduledTask!=null && !scheduledTask.isDone())) {
-            LOG.warn("Request to start "+this+" when already running - "+scheduledTask+"; ignoring");
-            return;
-        }
-        stopped = false;
-        running = true;
-        
-        Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
-            @Override public Task<Void> call() {
-                return new BasicTask<Void>(new Callable<Void>() {
-                    public Void call() {
-                        try {
-                            persistNow();
-                            return null;
-                        } catch (RuntimeInterruptedException e) {
-                            LOG.debug("Interrupted persisting change-delta (rethrowing)", e);
-                            Thread.currentThread().interrupt();
-                            return null;
-                        } catch (Exception e) {
-                            // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
-                            // if we throw an exception, then our task will never get executed again
-                            LOG.warn("Problem persisting change-delta", e);
-                            return null;
-                        } catch (Throwable t) {
-                            LOG.warn("Problem persisting change-delta (rethrowing)", t);
-                            throw Exceptions.propagate(t);
-                        }
-                    }});
+        synchronized (startMutex) {
+            if (running || (scheduledTask!=null && !scheduledTask.isDone())) {
+                LOG.warn("Request to start "+this+" when already running - "+scheduledTask+"; ignoring");
+                return;
             }
-        };
-        scheduledTask = (ScheduledTask) executionContext.submit(new ScheduledTask(taskFactory).period(period));
+            stopped = false;
+            running = true;
+
+            Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
+                @Override public Task<Void> call() {
+                    return Tasks.<Void>builder().dynamic(false).name("periodic-persister").body(new Callable<Void>() {
+                        public Void call() {
+                            try {
+                                persistNow();
+                                return null;
+                            } catch (RuntimeInterruptedException e) {
+                                LOG.debug("Interrupted persisting change-delta (rethrowing)", e);
+                                Thread.currentThread().interrupt();
+                                return null;
+                            } catch (Exception e) {
+                                // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
+                                // if we throw an exception, then our task will never get executed again
+                                LOG.warn("Problem persisting change-delta", e);
+                                return null;
+                            } catch (Throwable t) {
+                                LOG.warn("Problem persisting change-delta (rethrowing)", t);
+                                throw Exceptions.propagate(t);
+                            }
+                        }}).build();
+                }
+            };
+            scheduledTask = (ScheduledTask) executionContext.submit(new ScheduledTask(MutableMap.of("displayName", "scheduled[periodic-persister]",
+                "tags", MutableSet.of(BrooklynTaskTags.TRANSIENT_TASK_TAG)), taskFactory).period(period));
+        }
     }
 
     /** stops persistence, waiting for it to complete */

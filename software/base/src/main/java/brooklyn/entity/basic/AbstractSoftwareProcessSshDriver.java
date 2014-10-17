@@ -644,6 +644,9 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * @see #DEBUG
      */
     protected ScriptHelper newScript(Map<String, ?> flags, String phase) {
+        if (!Entities.isManaged(getEntity()))
+            throw new IllegalStateException(getEntity()+" is no longer managed; cannot create script to run here ("+phase+")");
+        
         if (!Iterables.all(flags.keySet(), StringPredicates.equalToAny(VALID_FLAGS))) {
             throw new IllegalArgumentException("Invalid flags passed: " + flags);
         }

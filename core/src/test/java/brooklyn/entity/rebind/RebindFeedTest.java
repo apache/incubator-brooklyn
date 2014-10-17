@@ -22,7 +22,11 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -30,6 +34,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
@@ -44,10 +49,15 @@ import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.Task;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl;
+import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import brooklyn.util.http.BetterMockWebServer;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.task.BasicExecutionManager;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -56,11 +66,16 @@ import com.google.mockwebserver.MockResponse;
 
 public class RebindFeedTest extends RebindTestFixtureWithApp {
 
+    private static final Logger log = LoggerFactory.getLogger(RebindFeedTest.class);
+    
     final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
     final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor( "aLong", "");
 
     private BetterMockWebServer server;
     private URL baseUrl;
+    
+    final static Duration POLL_PERIOD = Duration.millis(20);
+    final static Duration POLL_PERIOD_SSH = Duration.millis(500);
     
     @BeforeMethod(alwaysRun=true)
     @Override
@@ -77,18 +92,23 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
     @AfterMethod(alwaysRun=true)
     @Override
     public void tearDown() throws Exception {
-        if (server != null) server.shutdown();
         super.tearDown();
+        if (server != null) server.shutdown();
     }
     
     @Test
-    public void testHttpFeedRegisteredInInitIsPersisted() throws Exception {
+    public void testHttpFeedRegisteredInInitIsPersistedAndFeedsStop() throws Exception {
         TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithHttpFeedImpl.class)
                 .configure(MyEntityWithHttpFeedImpl.BASE_URL, baseUrl));
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)200);
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_STRING, "{\"foo\":\"myfoo\"}");
         assertEquals(origEntity.getFeedSupport().getFeeds().size(), 1);
 
+        final long taskCountBefore = ((BasicExecutionManager)origManagementContext.getExecutionManager()).getNumIncompleteTasks();
+        
+        log.info("Tasks before rebind: "+
+            ((BasicExecutionManager)origManagementContext.getExecutionManager()).getAllTasks());
+        
         newApp = rebind(false);
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
@@ -100,8 +120,33 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         newEntity.setAttribute(SENSOR_STRING, null);
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_INT, (Integer)200);
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_STRING, "{\"foo\":\"myfoo\"}");
+        
+        // Now test that everything in the origApp stops, including feeds
+        Entities.unmanage(origApp);
+        origApp = null;
+        origManagementContext.getRebindManager().stop();
+        Repeater.create().every(Duration.millis(20)).limitTimeTo(Duration.TEN_SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                origManagementContext.getGarbageCollector().gcIteration();
+                long taskCountAfterAtOld = ((BasicExecutionManager)origManagementContext.getExecutionManager()).getNumIncompleteTasks();
+                List<Task<?>> tasks = ((BasicExecutionManager)origManagementContext.getExecutionManager()).getAllTasks();
+                int unendedTasks = 0;
+                for (Task<?> t: tasks) {
+                    if (!t.isDone()) unendedTasks++;
+                }
+                log.info("Incomplete task count from "+taskCountBefore+" to "+taskCountAfterAtOld+", "+unendedTasks+" unended; tasks remembered are: "+
+                    tasks);
+                return taskCountAfterAtOld==0;
+            }
+        }).runRequiringTrue();
     }
 
+    @Test(groups="Integration", invocationCount=50)
+    public void testHttpFeedRegisteredInInitIsPersistedAndFeedsStopManyTimes() throws Exception {
+        testHttpFeedRegisteredInInitIsPersistedAndFeedsStop();
+    }
+    
     @Test
     public void testFunctionFeedRegisteredInInitIsPersisted() throws Exception {
         TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithFunctionFeedImpl.class));
@@ -143,7 +188,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_INT, (Integer)0);
     }
 
-    public static class MyEntityWithHttpFeedImpl extends TestEntityImpl {
+    public static class MyEntityWithHttpFeedImpl extends TestEntityWithoutEnrichers {
         public static final ConfigKey<URL> BASE_URL = ConfigKeys.newConfigKey(URL.class, "rebindFeedTest.baseUrl");
         
         @Override
@@ -153,29 +198,29 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
                     .entity(this)
                     .baseUrl(getConfig(BASE_URL))
                     .poll(HttpPollConfig.forSensor(SENSOR_INT)
-                            .period(100)
+                            .period(POLL_PERIOD)
                             .onSuccess(HttpValueFunctions.responseCode()))
                     .poll(HttpPollConfig.forSensor(SENSOR_STRING)
-                            .period(100)
+                            .period(POLL_PERIOD)
                             .onSuccess(HttpValueFunctions.stringContentsFunction()))
                     .build());
         }
     }
     
-    public static class MyEntityWithFunctionFeedImpl extends TestEntityImpl {
+    public static class MyEntityWithFunctionFeedImpl extends TestEntityWithoutEnrichers {
         @Override
         public void init() {
             super.init();
             addFeed(FunctionFeed.builder()
                     .entity(this)
                     .poll(FunctionPollConfig.forSensor(SENSOR_INT)
-                            .period(100)
+                            .period(POLL_PERIOD)
                             .callable(Callables.returning(1)))
                     .build());
         }
     }
     
-    public static class MyEntityWithSshFeedImpl extends TestEntityImpl {
+    public static class MyEntityWithSshFeedImpl extends TestEntityWithoutEnrichers {
         @Override
         public void start(Collection<? extends Location> locs) {
             super.start(locs);
@@ -183,6 +228,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
                     .entity(this)
                     .poll(new SshPollConfig<Integer>(SENSOR_INT)
                         .command("true")
+                        .period(POLL_PERIOD_SSH)
                         .onSuccess(SshValueFunctions.exitStatus()))
                     .build());
         }

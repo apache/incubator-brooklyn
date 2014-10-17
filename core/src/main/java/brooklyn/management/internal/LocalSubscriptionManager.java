@@ -179,7 +179,17 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
                 if (s.eventFilter!=null && !s.eventFilter.apply(event))
                     continue;
                 final Subscription sAtClosureCreation = s;
-                em.submit(mapOf("tag", s.subscriberExecutionManagerTag), new Runnable() {
+                
+//                Set<Object> tags = MutableSet.of();
+//                if (s.subscriberExecutionManagerTag!=null) tags.add(s.subscriberExecutionManagerTag);
+//                if (event.getSource()!=null) tags.add(BrooklynTaskTags.tagForContextEntity(event.getSource()));
+//                Map<String, Object> tagsMap = mapOf("tags", (Object)tags);
+                // use code above, instead of line below, if we want subscription deliveries associated with the entity;
+                // that will cause them to be cancelled when the entity is unmanaged
+                // (not sure that is useful, and likely NOT worth the expense, but it might be...) -Alex Oct 2014
+                Map<String, Object> tagsMap = mapOf("tag", s.subscriberExecutionManagerTag);
+                
+                em.submit(tagsMap, new Runnable() {
                     @Override
                     public String toString() {
                         return "LSM.publish("+event+")";

@@ -46,6 +46,7 @@ import brooklyn.util.time.Time;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
+@SuppressWarnings({"unchecked","rawtypes"})
 public class ScheduledExecutionTest {
 
     public static final Logger log = LoggerFactory.getLogger(ScheduledExecutionTest.class);

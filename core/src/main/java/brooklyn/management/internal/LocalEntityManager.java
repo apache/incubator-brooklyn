@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,15 +50,21 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.trait.Startable;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.AccessController;
+import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.CountdownTimer;
+import brooklyn.util.time.Duration;
 
 import com.google.api.client.repackaged.com.google.common.base.Preconditions;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -337,27 +345,30 @@ public class LocalEntityManager implements EntityManagerInternal {
         
         if (hasBeenReplaced) {
             // we are unmanaging an old instance after having replaced it
+            // (called from manage(...)
             
             if (mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
                 // when migrating away, these all need to be called
                 ((EntityInternal)e).getManagementSupport().onManagementStopping(info);
+                stopTasks(e);
                 ((EntityInternal)e).getManagementSupport().onManagementStopped(info);
-                managementContext.getRebindManager().getChangeListener().onUnmanaged(e);
-                if (managementContext.gc != null) managementContext.gc.onUnmanaged(e);
             } else {
                 // should be coming *from* read only; nothing needed
                 if (!mode.wasReadOnly()) {
                     log.warn("Should not be unmanaging "+e+" in mode "+mode+"; ignoring");
                 }
             }
+            // do not remove from maps below, bail out now
+            return;
             
         } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED) {
             // we are unmanaging an instance (secondary) for which the primary has been destroyed elsewhere
             ((EntityInternal)e).getManagementSupport().onManagementStopping(info);
-            ((EntityInternal)e).getManagementSupport().onManagementStopped(info);
             unmanageNonRecursive(e);
+            stopTasks(e);
+            ((EntityInternal)e).getManagementSupport().onManagementStopped(info);
             managementContext.getRebindManager().getChangeListener().onUnmanaged(e);
-            if (managementContext.gc != null) managementContext.gc.onUnmanaged(e);
+            if (managementContext.getGarbageCollector() != null) managementContext.getGarbageCollector().onUnmanaged(e);
             
         } else if (mode==ManagementTransitionMode.DESTROYING) {
             // we are unmanaging an instance either because it is being destroyed (primary), 
@@ -376,16 +387,89 @@ public class LocalEntityManager implements EntityManagerInternal {
             for (EntityInternal it : allEntities) {
                 if (shouldSkipUnmanagement(it)) continue;
                 unmanageNonRecursive(it);
+                stopTasks(it);
+            }
+            for (EntityInternal it : allEntities) {
                 it.getManagementSupport().onManagementStopped(info);
-                managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
-                if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
+                managementContext.getRebindManager().getChangeListener().onUnmanaged(e);
+                if (managementContext.getGarbageCollector() != null) managementContext.getGarbageCollector().onUnmanaged(e);
             }
             
         } else {
             log.warn("Invalid mode for unmanage: "+mode+" on "+e+" (ignoring)");
         }
+        
+        preRegisteredEntitiesById.remove(e.getId());
+        preManagedEntitiesById.remove(e.getId());
+        entityProxiesById.remove(e.getId());
+        entitiesById.remove(e.getId());
+        entityModesById.remove(e.getId());
     }
     
+    private void stopTasks(Entity entity) {
+        stopTasks(entity, null);
+    }
+    
+    /** stops all tasks (apart from any current one or its descendants) on this entity,
+     * optionally -- if a timeout is given -- waiting for completion and warning on incomplete tasks */
+    @Beta
+    public void stopTasks(Entity entity, @Nullable Duration timeout) {
+        CountdownTimer timeleft = timeout==null ? null : timeout.countdownTimer();
+        // try forcibly interrupting tasks on managed entities
+        Collection<Exception> exceptions = MutableSet.of();
+        try {
+            Set<Task<?>> tasksCancelled = MutableSet.of();
+            for (Task<?> t: managementContext.getExecutionContext(entity).getTasks()) {
+                if (hasTaskAsAncestor(t, Tasks.current()))
+                    continue;
+                
+                if (!t.isDone()) {
+                    try {
+                        log.debug("Cancelling "+t+" on "+entity);
+                        tasksCancelled.add(t);
+                        t.cancel(true);
+                    } catch (Exception e) {
+                        Exceptions.propagateIfFatal(e);
+                        log.debug("Error cancelling "+t+" on "+entity+" (will warn when all tasks are cancelled): "+e, e);
+                        exceptions.add(e);
+                    }
+                }
+            }
+            
+            if (timeleft!=null) {
+                Set<Task<?>> tasksIncomplete = MutableSet.of();
+                // go through all tasks, not just cancelled ones, in case there are previously cancelled ones which are not complete
+                for (Task<?> t: managementContext.getExecutionContext(entity).getTasks()) {
+                    if (hasTaskAsAncestor(t, Tasks.current()))
+                        continue;
+                    if (!Tasks.blockUntilInternalTasksEnded(t, timeleft.getDurationRemaining())) {
+                        tasksIncomplete.add(t);
+                    }
+                }
+                if (!tasksIncomplete.isEmpty()) {
+                    log.warn("Incomplete tasks when stopping "+entity+": "+tasksIncomplete);
+                }
+                if (log.isTraceEnabled())
+                    log.trace("Cancelled "+tasksCancelled+" tasks for "+entity+", with "+
+                            timeleft.getDurationRemaining()+" remaining (of "+timeout+"): "+tasksCancelled);
+            } else {
+                if (log.isTraceEnabled())
+                    log.trace("Cancelled "+tasksCancelled+" tasks for "+entity+": "+tasksCancelled);
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Error inspecting tasks to cancel on unmanagement: "+e, e);
+        }
+        if (!exceptions.isEmpty())
+            log.warn("Error when cancelling tasks for "+entity+" on unmanagement: "+Exceptions.create(exceptions));
+    }
+
+    private boolean hasTaskAsAncestor(Task<?> t, Task<?> potentialAncestor) {
+        if (t==null || potentialAncestor==null) return false;
+        if (t.equals(potentialAncestor)) return true;
+        return hasTaskAsAncestor(t.getSubmittedByTask(), potentialAncestor);
+    }
+
     /**
      * activates management when effector invoked, warning unless context is acceptable
      * (currently only acceptable context is "start")

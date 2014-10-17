@@ -70,6 +70,7 @@ import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.SubscriptionTracker;
+import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
@@ -87,6 +88,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DeferredSupplier;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -1257,7 +1259,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                 }
                 
                 feeds.add(feed);
-                ((AbstractFeed)feed).setEntity(AbstractEntity.this);
+                if (!AbstractEntity.this.equals(((AbstractFeed)feed).getEntity()))
+                    ((AbstractFeed)feed).setEntity(AbstractEntity.this);
 
                 getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
                 getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
@@ -1268,7 +1271,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
             @Override
             public boolean removeFeed(Feed feed) {
-                feed.stop();destroy();
+                feed.stop();
                 boolean changed = feeds.remove(feed);
                 
                 if (changed) {
@@ -1306,6 +1309,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
     
     public <T> void emitInternal(Sensor<T> sensor, T val) {
+        if (getManagementSupport().isNoLongerManaged())
+            throw new IllegalStateException("Entity "+this+" is no longer managed, when trying to publish "+sensor+" "+val);
+
         SubscriptionContext subsContext = getSubscriptionContext();
         if (subsContext != null) subsContext.publish(sensor.newEvent(getProxyIfAvailable(), val));
     }

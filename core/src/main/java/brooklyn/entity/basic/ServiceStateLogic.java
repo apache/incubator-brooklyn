@@ -285,6 +285,11 @@ public class ServiceStateLogic {
 
         protected void setActualState(@Nullable Lifecycle state) {
             if (log.isTraceEnabled()) log.trace("{} setting actual state {}", this, state);
+            if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) {
+                // won't catch everything, but catches some
+                log.debug(entity+" is no longer managed when told to set actual state to "+state+"; suppressing");
+                return;
+            }
             emit(SERVICE_STATE_ACTUAL, (state==null ? Entities.REMOVE : state));
         }
 

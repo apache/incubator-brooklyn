@@ -177,4 +177,10 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public List<String> getCallHistory() {
         return callHistory;
     }
+    
+    public static class TestEntityWithoutEnrichers extends TestEntityImpl {
+        @Override
+        protected void initEnrichers() {}
+    }
+    
 }
