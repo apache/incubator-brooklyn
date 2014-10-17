@@ -331,7 +331,7 @@ public class HttpTestUtils {
             throw Throwables.propagate(e);
         }
     }
-    
+
     /**
      * Schedules (with the given executor) a poller that repeatedly accesses the given url, to confirm it always gives
      * back the expected status code.
