@@ -159,21 +159,43 @@ define([
         template: _.template(ServerNotMasterHtml),
         scheduledRedirect: false,
         initialize: function() {
+            this.carryOnRegardless = false;
             this.listenTo(ha, "change", this.render);
         },
         render: function() {
-            if (!ha.isMaster()) {
+            var that = this;
+            
+            if (!ha.isMaster() && !this.carryOnRegardless) {
                 var masterUri = ha.getMasterUri();
                 this.$el.html(this.template({"masterUri": masterUri}));
-                if (masterUri && !this.scheduledRedirect) {
+                
+                log("render, redirect = "+this.redirectPending);
+                
+                $("#dismiss-standby-warning", this.$el).click(function() {
+                    that.carryOnRegardless = true;
+                    if (that.redirectPending) {
+                        console.log("Cancelling redirect, using this non-master instance");
+                        clearTimeout(that.redirectPending);
+                        that.redirectPending = null;
+                    }       
+                    that.render();
+                });
+                
+                if (masterUri && !this.scheduledRedirect && !this.redirectPending) {
                     var destination = masterUri + "#" + Backbone.history.fragment;
-                    var time = 5;
+                    var time = 10;
                     this.scheduledRedirect = true;
                     console.log("Redirecting to " + destination + " in " + time + " seconds");
-                    setTimeout(function () {
+                    this.redirectPending = setTimeout(function () {
                         // re-check, in case the server's status changed in the wait
                         if (!ha.isMaster()) {
-                            window.location.href = destination;
+                            if (that.redirectPending) {
+                                window.location.href = destination;
+                            } else {
+                                console.log("Cancelled redirect, using this non-master instance");
+                            }
+                        } else {
+                            console.log("Cancelled redirect, this instance is now master");
                         }
                     }, time * 1000);
                 }
