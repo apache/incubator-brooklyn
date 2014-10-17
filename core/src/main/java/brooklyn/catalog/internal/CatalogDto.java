@@ -134,7 +134,7 @@ public class CatalogDto {
                 contents = ResourceUtils.create().getResourceAsString(url);
                 contentsDescription = url;
             } else if (contentsDescription==null) {
-                LOG.warn("Catalog DTO has no contents and no description; ignoring call to populate it. Description should be set to suppress this warning.");
+                LOG.debug("Catalog DTO has no contents and no description; ignoring call to populate it. Description should be set to suppress this message.");
                 return;
             } else {
                 LOG.debug("Nothing needs doing (no contents or URL) for catalog with contents described as "+contentsDescription+".");
