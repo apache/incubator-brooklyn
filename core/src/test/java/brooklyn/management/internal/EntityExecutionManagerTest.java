@@ -337,16 +337,27 @@ public class EntityExecutionManagerTest {
         
         BasicAttributeSensor<Object> byteArrayAttrib = new BasicAttributeSensor<Object>(Object.class, "test.byteArray", "");
 
-        for (int i = 0; i < 200; i++) {
-            if (i<10 || i%10==0) LOG.info(JavaClassNames.niceClassAndMethod()+": iteration "+i);
+        for (int i = 0; i < 1000; i++) {
+            if (i<100 && i%10==0 || i%100==0) LOG.info(JavaClassNames.niceClassAndMethod()+": iteration "+i);
             try {
                 LOG.debug(JavaClassNames.niceClassAndMethod()+": iteration="+i);
                 TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
                 entity.setAttribute(byteArrayAttrib, new BigObject(10*1000*1000));
                 entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
-                Entities.destroy(entity);
+                
+                // we get exceptions because tasks are still trying to publish after deployment;
+                // this should prevent them
+//                ((LocalEntityManager)app.getManagementContext().getEntityManager()).stopTasks(entity, Duration.ONE_SECOND);
+//                Entities.destroy(entity);
+                
+                // alternatively if we 'unmanage' instead of destroy, there are usually not errors
+                // (the errors come from the node transitioning to a 'stopping' state on destroy, 
+                // and publishing lots of info then)
+                Entities.unmanage(entity);
+                
                 forceGc();
-                System.gc(); System.gc();
+                // previously we did an extra GC but it was crazy slow, shouldn't be needed
+//                System.gc(); System.gc();
             } catch (OutOfMemoryError e) {
                 LOG.warn(JavaClassNames.niceClassAndMethod()+": OOME at iteration="+i);
                 ExecutionManager em = app.getManagementContext().getExecutionManager();

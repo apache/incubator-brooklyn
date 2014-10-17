@@ -586,7 +586,7 @@ public class HotStandbyTest {
         assertHotStandby(n1);
         // and it sees apps
         Assert.assertFalse(n1.mgmt.getApplications().isEmpty(), "n1 should have had apps now");
-        Assert.assertFalse(n1.mgmt.getApplications().isEmpty(), "n1 should have had locations now");
+        Assert.assertFalse(n1.mgmt.getLocationManager().getLocations().isEmpty(), "n1 should have had locations now");
         // and if n2 is disabled, n1 promotes
         n2.ha.changeMode(HighAvailabilityMode.DISABLED);
         n1.ha.changeMode(HighAvailabilityMode.AUTO);

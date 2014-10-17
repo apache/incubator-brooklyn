@@ -191,7 +191,7 @@ public class Asserts {
     }
     
     /**
-     * Asserts given callable succeeds in default duration.
+     * Asserts given callable succeeds (runs without failure) in default duration.
      * @see #DEFAULT_TIMEOUT
      */
     public static <T> T succeedsEventually(Callable<T> c) {

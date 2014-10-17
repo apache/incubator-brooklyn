@@ -223,8 +223,8 @@ public class BrooklynGarbageCollector {
             "storage: " + storage.getStorageMetrics() + "; " +
             "tasks: " +
             executionManager.getNumActiveTasks()+" active, "+
-            executionManager.getNumInMemoryTasks()+" in memory "+
-            "("+executionManager.getNumIncompleteTasks()+" incomplete and "+
+            executionManager.getNumIncompleteTasks()+" unfinished; "+
+            executionManager.getNumInMemoryTasks()+" remembered, "+
             executionManager.getTotalTasksSubmitted()+" total submitted)";
     }
     
@@ -235,6 +235,8 @@ public class BrooklynGarbageCollector {
     }
     
     public void onUnmanaged(Entity entity) {
+        // defer task deletions until the entity is completely unmanaged
+        // (this is usually invoked during the stop sequence)
         synchronized (unmanagedEntitiesNeedingGc) {
             unmanagedEntitiesNeedingGc.put(entity, Tasks.current());
         }

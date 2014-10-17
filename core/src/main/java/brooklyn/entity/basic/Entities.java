@@ -665,8 +665,14 @@ public class Entities {
                 log.debug("destroyed and unmanaged read-only copy of "+e);
             } else {
                 if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
+                
+                // TODO if destroying gracefully we might also want to do this:
+//                ((LocalEntityManager)e.getApplication().getManagementContext().getEntityManager()).stopTasks(e, null);
+                
                 if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
+                
                 unmanage(e);
+                
                 log.debug("destroyed and unmanaged "+e+"; mgmt now "+
                     (e.getApplicationId()==null ? "(no app)" : e.getApplication().getManagementContext())+" - managed? "+isManaged(e));
             }

@@ -84,7 +84,7 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
         return true;
     }
     
-    @BeforeMethod(groups = "Integration")
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
         warUrl = getClass().getClassLoader().getResource("hello-world.war");
@@ -97,17 +97,21 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
         BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_FEED_REGISTRATION_PROPERTY, true);
     }
 
-    @AfterMethod(groups = "Integration", alwaysRun=true)
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (feedRegistration!=null)
-            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_FEED_REGISTRATION_PROPERTY, feedRegistration);
-        
-        for (WebAppMonitor monitor : webAppMonitors) {
-            monitor.terminate();
+        try {
+            if (feedRegistration!=null)
+                BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_FEED_REGISTRATION_PROPERTY, feedRegistration);
+
+            for (WebAppMonitor monitor : webAppMonitors) {
+                monitor.terminate();
+            }
+            webAppMonitors.clear();
+            if (executor != null) executor.shutdownNow();
+            super.tearDown();
+        } finally {
+            RecordingSshjTool.reset();
         }
-        if (executor != null) executor.shutdownNow();
-        super.tearDown();
-        RecordingSshjTool.reset();
     }
     
     @Override

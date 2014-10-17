@@ -258,7 +258,7 @@ public class LocalLocationManager implements LocationManagerInternal {
         unmanage(loc, mode, false);
     }
     
-    private void unmanage(final Location loc, ManagementTransitionMode mode, boolean hasBeenReplaced) {
+    private void unmanage(final Location loc, final ManagementTransitionMode mode, boolean hasBeenReplaced) {
         if (shouldSkipUnmanagement(loc)) return;
 
         if (hasBeenReplaced) {
@@ -276,7 +276,7 @@ public class LocalLocationManager implements LocationManagerInternal {
 
         } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED || mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
             // we are unmanaging an instance whose primary management is elsewhere (either we were secondary, or we are being demoted)
-            unmanageNonRecursive(loc);
+            unmanageNonRecursive(loc, mode);
             managementContext.getRebindManager().getChangeListener().onUnmanaged(loc);
             if (managementContext.gc != null) managementContext.gc.onUnmanaged(loc);
             
@@ -288,7 +288,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             // Need to store all child entities as onManagementStopping removes a child from the parent entity
             recursively(loc, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
                 if (shouldSkipUnmanagement(it)) return false;
-                boolean result = unmanageNonRecursive(it);
+                boolean result = unmanageNonRecursive(it, mode);
                 if (result) {
                     ManagementTransitionMode mode = getLastManagementTransitionMode(it.getId());
                     if (mode==null) {
@@ -373,8 +373,14 @@ public class LocalLocationManager implements LocationManagerInternal {
      * Should ensure that the location is no longer managed anywhere, remove from all lists.
      * Returns true if the location has been removed from management; if it was not previously managed (anything else throws exception) 
      */
-    private synchronized boolean unmanageNonRecursive(Location loc) {
-        ((AbstractLocation)loc).setParent(null, false);
+    private synchronized boolean unmanageNonRecursive(Location loc, ManagementTransitionMode mode) {
+        if (mode==ManagementTransitionMode.DESTROYING) {
+            ((AbstractLocation)loc).setParent(null, true);
+        } else {
+            // if not destroying, don't change the parent's children list
+            ((AbstractLocation)loc).setParent(null, false);
+        }
+        
         Object old = locationsById.remove(loc.getId());
         locationTypes.remove(loc.getId());
         locationModesById.remove(loc.getId());

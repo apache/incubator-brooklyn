@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,8 +60,11 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.time.CountdownTimer;
+import brooklyn.util.time.Duration;
 
 import com.google.api.client.repackaged.com.google.common.base.Preconditions;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -402,9 +407,18 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
     
     private void stopTasks(Entity entity) {
+        stopTasks(entity, null);
+    }
+    
+    /** stops all tasks (apart from any current one or its descendants) on this entity,
+     * optionally -- if a timeout is given -- waiting for completion and warning on incomplete tasks */
+    @Beta
+    public void stopTasks(Entity entity, @Nullable Duration timeout) {
+        CountdownTimer timeleft = timeout==null ? null : timeout.countdownTimer();
         // try forcibly interrupting tasks on managed entities
         Collection<Exception> exceptions = MutableSet.of();
         try {
+            Set<Task<?>> tasksCancelled = MutableSet.of();
             for (Task<?> t: managementContext.getExecutionContext(entity).getTasks()) {
                 if (hasTaskAsAncestor(t, Tasks.current()))
                     continue;
@@ -412,6 +426,7 @@ public class LocalEntityManager implements EntityManagerInternal {
                 if (!t.isDone()) {
                     try {
                         log.debug("Cancelling "+t+" on "+entity);
+                        tasksCancelled.add(t);
                         t.cancel(true);
                     } catch (Exception e) {
                         Exceptions.propagateIfFatal(e);
@@ -419,6 +434,27 @@ public class LocalEntityManager implements EntityManagerInternal {
                         exceptions.add(e);
                     }
                 }
+            }
+            
+            if (timeleft!=null) {
+                Set<Task<?>> tasksIncomplete = MutableSet.of();
+                // go through all tasks, not just cancelled ones, in case there are previously cancelled ones which are not complete
+                for (Task<?> t: managementContext.getExecutionContext(entity).getTasks()) {
+                    if (hasTaskAsAncestor(t, Tasks.current()))
+                        continue;
+                    if (!Tasks.blockUntilInternalTasksEnded(t, timeleft.getDurationRemaining())) {
+                        tasksIncomplete.add(t);
+                    }
+                }
+                if (!tasksIncomplete.isEmpty()) {
+                    log.warn("Incomplete tasks when stopping "+entity+": "+tasksIncomplete);
+                }
+                if (log.isTraceEnabled())
+                    log.trace("Cancelled "+tasksCancelled+" tasks for "+entity+", with "+
+                            timeleft.getDurationRemaining()+" remaining (of "+timeout+"): "+tasksCancelled);
+            } else {
+                if (log.isTraceEnabled())
+                    log.trace("Cancelled "+tasksCancelled+" tasks for "+entity+": "+tasksCancelled);
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
