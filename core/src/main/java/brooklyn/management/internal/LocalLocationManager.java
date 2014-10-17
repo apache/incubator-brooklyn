@@ -235,7 +235,7 @@ public class LocalLocationManager implements LocationManagerInternal {
                 }
             }
             
-            boolean result = manageNonRecursive(it, null);
+            boolean result = manageNonRecursive(it, mode);
             if (result) {
                 it.setManagementContext(managementContext);
                 if (!mode.isReadOnly()) {
