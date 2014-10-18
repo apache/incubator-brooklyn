@@ -51,7 +51,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 
 public class LocalLocationManager implements LocationManagerInternal {
 
@@ -263,6 +262,7 @@ public class LocalLocationManager implements LocationManagerInternal {
 
         if (hasBeenReplaced) {
             // we are unmanaging an old instance after having replaced it
+            unmanageNonRecursiveOnlyClearItsFields(loc, mode);
             
             if (mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
                 // when migrating away, these all need to be called
@@ -368,18 +368,24 @@ public class LocalLocationManager implements LocationManagerInternal {
         
         return true;
     }
-    
-    /**
-     * Should ensure that the location is no longer managed anywhere, remove from all lists.
-     * Returns true if the location has been removed from management; if it was not previously managed (anything else throws exception) 
-     */
-    private synchronized boolean unmanageNonRecursive(Location loc, ManagementTransitionMode mode) {
+
+    private synchronized void unmanageNonRecursiveOnlyClearItsFields(Location loc, ManagementTransitionMode mode) {
         if (mode==ManagementTransitionMode.DESTROYING) {
             ((AbstractLocation)loc).setParent(null, true);
         } else {
             // if not destroying, don't change the parent's children list
             ((AbstractLocation)loc).setParent(null, false);
         }
+        // clear config to help with GC
+        ((AbstractLocation)loc).getLocalConfigBag().clear();
+    }
+    
+    /**
+     * Should ensure that the location is no longer managed anywhere, remove from all lists.
+     * Returns true if the location has been removed from management; if it was not previously managed (anything else throws exception) 
+     */
+    private synchronized boolean unmanageNonRecursive(Location loc, ManagementTransitionMode mode) {
+        unmanageNonRecursiveOnlyClearItsFields(loc, mode);
         
         Object old = locationsById.remove(loc.getId());
         locationTypes.remove(loc.getId());

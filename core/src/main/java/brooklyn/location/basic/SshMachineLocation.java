@@ -362,6 +362,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                         try {
                             if (sshPoolCacheOrNull != null) sshPoolCacheOrNull.cleanUp();
                             if (!SshMachineLocation.this.isManaged()) {
+                                if (sshPoolCacheOrNull != null) sshPoolCacheOrNull.invalidateAll();
                                 cleanupTask.cancel(false);
                                 sshPoolCacheOrNull = null;
                             }
@@ -401,14 +402,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            close();
-        } finally {
-            super.finalize();
-        }
-    }
+    // should not be necessary, and causes objects to be kept around a lot longer than desired
+//    @Override
+//    protected void finalize() throws Throwable {
+//        try {
+//            close();
+//        } finally {
+//            super.finalize();
+//        }
+//    }
 
     @Override
     public InetAddress getAddress() {

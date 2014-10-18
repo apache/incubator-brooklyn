@@ -1450,13 +1450,4 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public boolean containsTag(Object tag) {
         return getTagSupport().containsTag(tag);
     }    
-
-    // this is not recommended because -- especially in rebind-read-only mode, we create a lot of large such entities
-    // and the phantom references that finalize uses are not GC'd very quickly, so it *looks* like a memory leak
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        if (!getManagementSupport().wasDeployed() && !Boolean.TRUE.equals(getManagementSupport().isReadOnly()))
-            LOG.warn("Entity "+this+" ("+Integer.toHexString(System.identityHashCode(this))+") was never deployed -- explicit call to manage(Entity) required.");
-    }
 }
