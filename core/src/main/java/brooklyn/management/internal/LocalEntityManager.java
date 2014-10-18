@@ -392,7 +392,7 @@ public class LocalEntityManager implements EntityManagerInternal {
             }
             for (EntityInternal it : allEntities) {
                 it.getManagementSupport().onManagementStopped(info);
-                managementContext.getRebindManager().getChangeListener().onUnmanaged(e);
+                managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
                 if (managementContext.getGarbageCollector() != null) managementContext.getGarbageCollector().onUnmanaged(e);
             }
             
