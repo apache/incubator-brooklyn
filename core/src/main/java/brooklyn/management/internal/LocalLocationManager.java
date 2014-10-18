@@ -262,7 +262,7 @@ public class LocalLocationManager implements LocationManagerInternal {
 
         if (hasBeenReplaced) {
             // we are unmanaging an old instance after having replaced it
-            unmanageNonRecursiveOnlyClearItsFields(loc, mode);
+            unmanageNonRecursiveClearItsFields(loc, mode);
             
             if (mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
                 // when migrating away, these all need to be called
@@ -276,9 +276,10 @@ public class LocalLocationManager implements LocationManagerInternal {
 
         } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED || mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
             // we are unmanaging an instance whose primary management is elsewhere (either we were secondary, or we are being demoted)
-            unmanageNonRecursive(loc, mode);
+            unmanageNonRecursiveRemoveFromRecords(loc, mode);
             managementContext.getRebindManager().getChangeListener().onUnmanaged(loc);
             if (managementContext.gc != null) managementContext.gc.onUnmanaged(loc);
+            unmanageNonRecursiveClearItsFields(loc, mode);
             
         } else if (mode==ManagementTransitionMode.DESTROYING) {
             // we are unmanaging an instance either because it is being destroyed (primary), 
@@ -288,7 +289,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             // Need to store all child entities as onManagementStopping removes a child from the parent entity
             recursively(loc, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
                 if (shouldSkipUnmanagement(it)) return false;
-                boolean result = unmanageNonRecursive(it, mode);
+                boolean result = unmanageNonRecursiveRemoveFromRecords(it, mode);
                 if (result) {
                     ManagementTransitionMode mode = getLastManagementTransitionMode(it.getId());
                     if (mode==null) {
@@ -300,6 +301,7 @@ public class LocalLocationManager implements LocationManagerInternal {
                     if (!mode.isReadOnly()) recordLocationEvent(it, Lifecycle.DESTROYED);
                     if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
                 }
+                unmanageNonRecursiveClearItsFields(loc, mode);
                 return result;
             } });
             
@@ -369,7 +371,7 @@ public class LocalLocationManager implements LocationManagerInternal {
         return true;
     }
 
-    private synchronized void unmanageNonRecursiveOnlyClearItsFields(Location loc, ManagementTransitionMode mode) {
+    private synchronized void unmanageNonRecursiveClearItsFields(Location loc, ManagementTransitionMode mode) {
         if (mode==ManagementTransitionMode.DESTROYING) {
             ((AbstractLocation)loc).setParent(null, true);
         } else {
@@ -384,9 +386,7 @@ public class LocalLocationManager implements LocationManagerInternal {
      * Should ensure that the location is no longer managed anywhere, remove from all lists.
      * Returns true if the location has been removed from management; if it was not previously managed (anything else throws exception) 
      */
-    private synchronized boolean unmanageNonRecursive(Location loc, ManagementTransitionMode mode) {
-        unmanageNonRecursiveOnlyClearItsFields(loc, mode);
-        
+    private synchronized boolean unmanageNonRecursiveRemoveFromRecords(Location loc, ManagementTransitionMode mode) {
         Object old = locationsById.remove(loc.getId());
         locationTypes.remove(loc.getId());
         locationModesById.remove(loc.getId());

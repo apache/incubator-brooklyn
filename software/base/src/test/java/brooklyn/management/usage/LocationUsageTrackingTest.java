@@ -37,6 +37,8 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.usage.LocationUsage.LocationEvent;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -86,7 +88,7 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
         long preStop = System.currentTimeMillis();
         app.stop();
         long postStop = System.currentTimeMillis();
-
+        
         Set<LocationUsage> usages2 = mgmt.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         LocationUsage usage2 = Iterables.getOnlyElement(usages2);
         List<LocationEvent> events2 = usage2.getEvents();
@@ -102,6 +104,8 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
     }
     
     public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
+        private static final long serialVersionUID = 4822009936654077946L;
+
         @Override
         public SshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
             System.out.println("called DynamicLocalhostMachineProvisioningLocation.obtain");

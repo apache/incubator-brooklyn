@@ -161,7 +161,8 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
                 }
                 
                 try {
-                    // XXX
+                    // TODO don't start feeds here necessarily, if we're in RO mode for instance
+                    // (should refactor enrichers and policies and apply to them)
                     feed.start();
                 } catch (Exception e) {
                     rebindContext.getExceptionHandler().onRebindFailed(BrooklynObjectType.ENTITY, entity, e);

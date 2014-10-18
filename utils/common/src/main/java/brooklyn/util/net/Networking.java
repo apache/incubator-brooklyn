@@ -65,17 +65,8 @@ public class Networking {
     public static InetAddress ANY_NIC = getInetAddressWithFixedName(0, 0, 0, 0);
     public static InetAddress LOOPBACK = getInetAddressWithFixedName(127, 0, 0, 1);
         
-    private static boolean loggedLocalhostNotAvailable = false;
     public static boolean isPortAvailable(int port) {
-        try {
-            return isPortAvailable(InetAddress.getByName("localhost"), port);
-        } catch (UnknownHostException e) {
-            if (!loggedLocalhostNotAvailable) {
-                loggedLocalhostNotAvailable = true;
-                log.warn("localhost unavailable during port availability check for "+port+": "+e+"; ignoring, but this may be a sign of network misconfiguration");
-            }
-            return isPortAvailable(null, port);
-        }
+        return isPortAvailable(ANY_NIC, port);
     }
     public static boolean isPortAvailable(InetAddress localAddress, int port) {
         if (port < MIN_PORT_NUMBER || port > MAX_PORT_NUMBER) {
@@ -120,7 +111,21 @@ public class Networking {
         
         if (localAddress==null || ANY_NIC.equals(localAddress)) {
             // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use; check 127.0.0.1 if 0.0.0.0 was requested
-            return isPortAvailable(LOOPBACK, port);
+            Enumeration<NetworkInterface> nis = null;
+            try {
+                nis = NetworkInterface.getNetworkInterfaces();
+            } catch (SocketException e) {
+                throw Exceptions.propagate(e);
+            }
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                Enumeration<InetAddress> as = ni.getInetAddresses();
+                while (as.hasMoreElements()) {
+                    InetAddress a = as.nextElement();
+                    if (!isPortAvailable(a, port))
+                        return false;
+                }
+            }
         }
         
         return true;

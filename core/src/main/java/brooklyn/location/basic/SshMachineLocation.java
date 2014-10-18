@@ -222,11 +222,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
     }
 
-    @Override
-    public void init() {
-        super.init();
-    }
-
     private final transient Object poolCacheMutex = new Object();
     private LoadingCache<Map<String, ?>, Pool<SshTool>> getSshPoolCache() {
         synchronized (poolCacheMutex) {
