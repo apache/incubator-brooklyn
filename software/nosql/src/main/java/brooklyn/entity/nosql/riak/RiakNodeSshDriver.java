@@ -122,6 +122,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 sudo(String.format("dpkg -i riak_%s-1_amd64.deb", fullVersion)));
         String yum = chainGroup(
                 "which yum",
+                ok(sudo("yum -y install openssl")),
                 String.format("wget http://s3.amazonaws.com/downloads.basho.com/riak/%s/%s/rhel/%s/riak-%s-1.el6.x86_64.rpm", majorVersion, fullVersion, osMajorVersion, fullVersion),
                 sudo(String.format("rpm -Uvh riak-%s-1.el6.x86_64.rpm", fullVersion)));
         return ImmutableList.<String>builder()
