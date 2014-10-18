@@ -255,11 +255,11 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public void stopPersistence() {
-        LOG.debug("Stopping persistence, mgmt "+managementContext.getManagementNodeId());
+        LOG.debug("Stopping rebind (persistence), mgmt "+managementContext.getManagementNodeId());
         persistenceRunning = false;
         if (persistenceRealChangeListener != null) persistenceRealChangeListener.stop();
         if (persistenceStoreAccess != null) persistenceStoreAccess.disableWriteAccess(true);
-        LOG.debug("Stopped persistence, mgmt "+managementContext.getManagementNodeId());
+        LOG.debug("Stopped rebind (persistence), mgmt "+managementContext.getManagementNodeId());
     }
     
     @SuppressWarnings("unchecked")
@@ -321,9 +321,9 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     public void stopReadOnly() {
-        LOG.debug("Stopping read-only rebinding, mgmt "+managementContext.getManagementNodeId());
         readOnlyRunning = false;
         if (readOnlyTask!=null) {
+            LOG.debug("Stopping read-only rebinding, mgmt "+managementContext.getManagementNodeId());
             readOnlyTask.cancel(true);
             readOnlyTask.blockUntilEnded();
             boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(readOnlyTask, Duration.TEN_SECONDS);
@@ -331,8 +331,8 @@ public class RebindManagerImpl implements RebindManager {
                 LOG.warn("Rebind (read-only) tasks took too long to die after interrupt (ignoring): "+readOnlyTask);
             }
             readOnlyTask = null;
+            LOG.debug("Stopped read-only rebinding, mgmt "+managementContext.getManagementNodeId());
         }
-        LOG.debug("Stopped read-only rebinding, mgmt "+managementContext.getManagementNodeId());
     }
     
     @Override
@@ -773,6 +773,8 @@ public class RebindManagerImpl implements RebindManager {
                 } else {
                     try {
                         entityMemento.injectTypeClass(entity.getClass());
+                        // TODO these call to the entity which in turn sets the entity on the underlying feeds and enrichers;
+                        // that is taken as the cue to start, but it should not be. start should be a separate call.
                         ((EntityInternal)entity).getRebindSupport().addPolicies(rebindContext, entityMemento);
                         ((EntityInternal)entity).getRebindSupport().addEnrichers(rebindContext, entityMemento);
                         ((EntityInternal)entity).getRebindSupport().addFeeds(rebindContext, entityMemento);

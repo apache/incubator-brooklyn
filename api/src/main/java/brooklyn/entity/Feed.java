@@ -18,10 +18,8 @@
  */
 package brooklyn.entity;
 
-import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
-import brooklyn.entity.trait.Configurable;
 import brooklyn.mementos.FeedMemento;
 import brooklyn.policy.EntityAdjunct;
 

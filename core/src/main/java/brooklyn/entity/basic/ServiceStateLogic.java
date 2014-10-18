@@ -158,6 +158,7 @@ public class ServiceStateLogic {
         public static final EnricherSpec<?> newEnricherForServiceUpIfNotUpIndicatorsEmpty() {
             return Enrichers.builder()
                 .transforming(SERVICE_NOT_UP_INDICATORS).publishing(Attributes.SERVICE_UP)
+                .suppressDuplicates(true)
                 .computing( /* cast hacks to support removing */ (Function)
                     Functionals.<Map<String,?>>
                         ifNotEquals(null).<Object>apply(Functions.forPredicate(CollectionFunctionals.<String>mapSizeEquals(0)))
@@ -224,7 +225,7 @@ public class ServiceStateLogic {
             super.setEntity(entity);
             if (suppressDuplicates==null) {
                 // only publish on changes, unless it is configured otherwise
-                suppressDuplicates = Boolean.TRUE;
+                suppressDuplicates = true;
             }
             
             subscribe(entity, SERVICE_PROBLEMS, this);
@@ -381,7 +382,7 @@ public class ServiceStateLogic {
             super.setEntity(entity);
             if (suppressDuplicates==null) {
                 // only publish on changes, unless it is configured otherwise
-                suppressDuplicates = Boolean.TRUE;
+                suppressDuplicates = true;
             }
         }
 

@@ -588,7 +588,8 @@ public class LocalEntityManager implements EntityManagerInternal {
             applications.add((Application)proxyE);
             applicationIds.add(e.getId());
         }
-        entities.add(proxyE);
+        if (!entities.contains(proxyE)) 
+            entities.add(proxyE);
         
         if (old!=null && old!=e) {
             // passing the transition info will ensure the right shutdown steps invoked for old instance

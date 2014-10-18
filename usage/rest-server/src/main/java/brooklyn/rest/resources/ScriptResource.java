@@ -65,8 +65,8 @@ public class ScriptResource extends AbstractBrooklynRestResource implements Scri
         
         GroovyShell shell = new GroovyShell(binding);
 
-        OutputCapturingContext stdout = ThreadLocalPrintStream.stdout().capture();
-        OutputCapturingContext stderr = ThreadLocalPrintStream.stderr().capture();
+        OutputCapturingContext stdout = ThreadLocalPrintStream.stdout().captureTee();
+        OutputCapturingContext stderr = ThreadLocalPrintStream.stderr().captureTee();
 
         Object value = null;
         Throwable problem = null;
