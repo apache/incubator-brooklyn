@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -211,6 +212,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }));
 
     private Task<?> cleanupTask;
+    /** callers should use {@link #getSshPoolCache()} */
+    @Nullable 
     private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCacheOrNull;
 
     public SshMachineLocation() {
@@ -223,6 +226,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     private final transient Object poolCacheMutex = new Object();
+    @Nonnull
     private LoadingCache<Map<String, ?>, Pool<SshTool>> getSshPoolCache() {
         synchronized (poolCacheMutex) {
             if (sshPoolCacheOrNull==null) {
@@ -232,7 +236,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
         return sshPoolCacheOrNull;
     }
-    
+
     private LoadingCache<Map<String, ?>, Pool<SshTool>> buildSshToolPoolCacheLoader() {
         // TODO: Appropriate numbers for maximum size and expire after access
         // At the moment every SshMachineLocation instance creates its own pool.
@@ -275,7 +279,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                             LOG.debug("{} building ssh pool for {} with properties: {}",
                                     new Object[] {this, getSshHostAndPort(), properties});
                         }
-                        return _buildPool(properties);
+                        return buildPool(properties);
                     }
                 });
 
@@ -298,7 +302,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 });
     }
 
-    private BasicPool<SshTool> _buildPool(final Map<String, ?> properties) {
+    private BasicPool<SshTool> buildPool(final Map<String, ?> properties) {
         return BasicPool.<SshTool>builder()
                 .name(getDisplayName()+"@"+address+
                         (hasConfig(SSH_HOST, true) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
@@ -356,6 +360,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     protected void addSshPoolCacheCleanupTask() {
         if (cleanupTask!=null && !cleanupTask.isDone()) {
+            return;
+        }
+        if (getManagementContext()==null || getManagementContext().getExecutionManager()==null) {
+            LOG.debug("No management context for "+this+"; ssh-pool cache will only be closed when machine is closed");
             return;
         }
         

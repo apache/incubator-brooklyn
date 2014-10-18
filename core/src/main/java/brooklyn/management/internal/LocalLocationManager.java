@@ -293,7 +293,8 @@ public class LocalLocationManager implements LocationManagerInternal {
                 if (result) {
                     ManagementTransitionMode mode = getLastManagementTransitionMode(it.getId());
                     if (mode==null) {
-                        log.warn("Missing transition mode for "+it+" when unmanaging; assuming primary");
+                        // ad hoc creation e.g. tests
+                        log.debug("Missing transition mode for "+it+" when unmanaging; assuming primary/destroying");
                         mode = ManagementTransitionMode.DESTROYING;
                     }
                     if (!mode.isReadOnly()) it.onManagementStopped();

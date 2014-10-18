@@ -38,8 +38,8 @@ import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.AbstractManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
@@ -56,7 +56,7 @@ public abstract class EntityCleanupLongevityTestFixture {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityCleanupLongevityTestFixture.class);
 
-    protected ManagementContext managementContext;
+    protected LocalManagementContext managementContext;
     protected SimulatedLocation loc;
     protected TestApplication app;
 
@@ -157,6 +157,7 @@ public abstract class EntityCleanupLongevityTestFixture {
                 else
                     Entities.unmanage(app);
                 managementContext.getLocationManager().unmanage(loc);
+                managementContext.getGarbageCollector().gcIteration();
             }
         });
     }
