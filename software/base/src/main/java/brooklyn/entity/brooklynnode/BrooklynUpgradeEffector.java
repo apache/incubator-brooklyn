@@ -19,29 +19,48 @@
 package brooklyn.entity.brooklynnode;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.MapConfigKey;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.ReferenceWithError;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.net.Urls;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.time.Duration;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
+/** Upgrades a brooklyn node in-place on the box, by creating a child brooklyn node and ensuring it can rebind in HOT_STANDBY;
+ * requires the target node to have persistence enabled 
+ */
 public class BrooklynUpgradeEffector {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynUpgradeEffector.class);
@@ -70,23 +89,32 @@ public class BrooklynUpgradeEffector {
                 parameters.putAll(extra);
             }
             log.debug(this+" upgrading, using "+parameters);
-            entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
+            
+            // TODO require entity() node state master or hot standby AND require persistence enabled, or a new 'force_attempt_upgrade' parameter to be applied
+            // TODO could have a 'skip_dry_run_upgrade' parameter
+            // TODO could support 'dry_run_only' parameter, with optional resumption tasks (eg new dynamic effector)
 
             // 1 add new brooklyn version entity as child (so uses same machine), with same config apart from things in parameters
             final BrooklynNode dryRunChild = entity().addChild(EntitySpec.create(BrooklynNode.class).configure(parameters.getAllConfig())
                 .displayName("Upgraded Version Dry-Run Node")
-                // TODO enforce hot-standby
+                // force dir and label back to their defaults (do not piggy back on what may have already been installed)
                 .configure(BrooklynNode.INSTALL_DIR, BrooklynNode.INSTALL_DIR.getConfigKey().getDefaultValue())
-                .configure(BrooklynNode.INSTALL_UNIQUE_LABEL, BrooklynNode.INSTALL_UNIQUE_LABEL.getDefaultValue()));
+                .configure(BrooklynNode.INSTALL_UNIQUE_LABEL, "upgrade-tmp-"+Identifiers.makeRandomId(8))
+                .configure(parameters.getAllConfig()));
+            
+            //force this to start as hot-standby
+            String launchCommand = dryRunChild.getConfig(BrooklynNode.LAUNCH_COMMAND);
+            ((EntityInternal)dryRunChild).setConfig(BrooklynNode.LAUNCH_COMMAND, launchCommand + " --highAvailability "+HighAvailabilityMode.HOT_STANDBY);
+            
             Entities.manage(dryRunChild);
-            final String versionUid = dryRunChild.getId();
-            ((EntityInternal)dryRunChild).setDisplayName("Upgraded Version Dry-Run Node ("+versionUid+")");
+            final String dryRunNodeUid = dryRunChild.getId();
+            ((EntityInternal)dryRunChild).setDisplayName("Dry-Run Upgraded Brooklyn Node ("+dryRunNodeUid+")");
 
             DynamicTasks.queue(Effectors.invocation(dryRunChild, BrooklynNode.START, ConfigBag.EMPTY));
             
             // 2 confirm hot standby status
-            // TODO poll, wait for HOT_STANDBY; error if anything else (other than STARTING)
-//            status = dryRun.getAttribute(BrooklynNode.STATUS);
+            DynamicTasks.queue(newWaitForAttributeTask(dryRunChild, BrooklynNode.MANAGEMENT_NODE_STATE, 
+                Predicates.equalTo(ManagementNodeState.HOT_STANDBY), Duration.TWO_MINUTES));
 
             // 3 stop new version
             // 4 stop old version
@@ -100,7 +128,7 @@ public class BrooklynUpgradeEffector {
                 @Override
                 public void run() {
                     String runDir = entity().getAttribute(SoftwareProcess.RUN_DIR);
-                    String bkDir = Urls.mergePaths(runDir, "..", Urls.getBasename(runDir)+"-backups", versionUid);
+                    String bkDir = Urls.mergePaths(runDir, "..", Urls.getBasename(runDir)+"-backups", dryRunNodeUid);
                     String dryRunDir = Preconditions.checkNotNull(dryRunChild.getAttribute(SoftwareProcess.RUN_DIR));
                     log.debug(this+" storing backup of previous version in "+bkDir);
                     DynamicTasks.queue(SshEffectorTasks.ssh(
@@ -113,6 +141,8 @@ public class BrooklynUpgradeEffector {
                 }
             }).build());
 
+            entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
+            
             // 6 start this entity, running the new version
             DynamicTasks.queue(Effectors.invocation(entity(), BrooklynNode.START, ConfigBag.EMPTY));
             
@@ -121,6 +151,41 @@ public class BrooklynUpgradeEffector {
             
             return null;
         }
+
     }
-    
+
+    private static class WaitForRepeaterCallable implements Callable<Boolean> {
+        protected Repeater repeater;
+        protected boolean requireTrue;
+
+        public WaitForRepeaterCallable(Repeater repeater, boolean requireTrue) {
+            this.repeater = repeater;
+            this.requireTrue = requireTrue;
+        }
+
+        @Override
+        public Boolean call() {
+            ReferenceWithError<Boolean> result = repeater.runKeepingError();
+            if (Boolean.TRUE.equals(result.getWithoutError()))
+                return true;
+            if (result.hasError()) 
+                throw Exceptions.propagate(result.getError());
+            if (requireTrue)
+                throw new IllegalStateException("timeout - "+repeater.getDescription());
+            return false;
+        }
+    }
+
+    private static <T> TaskAdaptable<Boolean> newWaitForAttributeTask(Entity node, AttributeSensor<T> sensor, Predicate<T> condition, Duration timeout) {
+        return awaiting( Repeater.create("waiting on "+node+" "+sensor.getName()+" "+condition)
+                    .backoff(Duration.millis(10), 1.5, Duration.millis(200))
+                    .limitTimeTo(timeout==null ? Duration.PRACTICALLY_FOREVER : timeout)
+                    .until(Functionals.callable(Functions.forPredicate(EntityPredicates.attributeSatisfies(sensor, condition)), node)),
+                    true);
+    }
+
+    private static TaskAdaptable<Boolean> awaiting(Repeater repeater, boolean requireTrue) {
+        return Tasks.<Boolean>builder().name(repeater.getDescription()).body(new WaitForRepeaterCallable(repeater, requireTrue)).build();
+    }
+
 }

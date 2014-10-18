@@ -382,4 +382,9 @@ public class Repeater {
             Time.sleep(delayThisIteration);
         }
     }
+    
+    public String getDescription() {
+        return description;
+    }
+    
 }

@@ -97,7 +97,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     @SetFromFlag("managementPassword")
     ConfigKey<String> MANAGEMENT_PASSWORD =
-            ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER", "password");
+            ConfigKeys.newStringConfigKey("brooklynnode.managementPassword", "Password for MANAGEMENT_USER", null);
 
     /** useful e.g. with {@link BashCommands#generateKeyInDotSshIdRsaIfNotThere() } */
     @SetFromFlag("extraCustomizationScript")
@@ -159,11 +159,11 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     
     @SetFromFlag("brooklynLocalPropertiesUri")
     public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_URI = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.local.uri", "URI for the launch-specific brooklyn properties file (uploaded to ~/.brooklyn/brooklyn.properties)", null);
+            "brooklynnode.brooklynproperties.local.uri", "URI for the launch-specific brooklyn properties file", null);
 
     @SetFromFlag("brooklynLocalPropertiesContents")
     public static final ConfigKey<String> BROOKLYN_LOCAL_PROPERTIES_CONTENTS = ConfigKeys.newStringConfigKey(
-            "brooklynnode.brooklynproperties.local.contents", "Contents for the launch-specific brooklyn properties file (uploaded to ~/.brooklyn/brooklyn.properties)", null);
+            "brooklynnode.brooklynproperties.local.contents", "Contents for the launch-specific brooklyn properties file", null);
     
     // For use in testing primarily
     @SetFromFlag("brooklynCatalogRemotePath")
