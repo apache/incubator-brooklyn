@@ -563,7 +563,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         if (parent.isNull()) return;
         Entity oldParent = parent.get();
         parent.clear();
-        if (oldParent != null) oldParent.removeChild(getProxyIfAvailable());
+        if (oldParent != null) {
+            if (!Entities.isNoLongerManaged(oldParent)) 
+                oldParent.removeChild(getProxyIfAvailable());
+        }
     }
     
     /**

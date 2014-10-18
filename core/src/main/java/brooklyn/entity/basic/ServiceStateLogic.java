@@ -111,8 +111,10 @@ public class ServiceStateLogic {
                 map.put(key, (TVal)v);
         }
         if (changed || created) {
-            // TODO synchronize; then emit a copy to prevent CME's e.g. UrlMappingTest
-            entity.setAttribute(sensor, map);
+            if (!Entities.isNoLongerManaged(entity)) { 
+                // TODO synchronize; then emit a copy to prevent CME's e.g. UrlMappingTest
+                entity.setAttribute(sensor, map);
+            }
         }
     }
     

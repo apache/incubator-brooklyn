@@ -274,7 +274,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public void rebind() {
         Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state == null || state != Lifecycle.RUNNING) {
-            log.warn("On rebind of {}, not rebinding because state is {}", this, state);
+            log.warn("On rebind of {}, not calling software process rebind hooks because state is {}", this, state);
             return;
         }
 

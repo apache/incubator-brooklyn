@@ -38,6 +38,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.BasicEntityTypeRegistry;
@@ -622,15 +623,15 @@ public class LocalEntityManager implements EntityManagerInternal {
          */
         
         if (!getLastManagementTransitionMode(e.getId()).isReadOnly()) {
-            Collection<Group> groups = e.getGroups();
             e.clearParent();
+            Collection<Group> groups = e.getGroups();
             for (Group group : groups) {
-                group.removeMember(e);
+                if (!Entities.isNoLongerManaged(group)) group.removeMember(e);
             }
             if (e instanceof Group) {
                 Collection<Entity> members = ((Group)e).getMembers();
                 for (Entity member : members) {
-                    member.removeGroup((Group)e);
+                    if (!Entities.isNoLongerManaged(member)) member.removeGroup((Group)e);
                 }
             }
         } else {
