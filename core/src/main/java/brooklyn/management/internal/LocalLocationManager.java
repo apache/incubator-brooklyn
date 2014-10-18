@@ -376,7 +376,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             // if not destroying, don't change the parent's children list
             ((AbstractLocation)loc).setParent(null, false);
         }
-        // clear config to help with GC
+        // clear config to help with GC; i know you're not supposed to, but this seems to help, else config bag is littered with refs to entities etc
         ((AbstractLocation)loc).getLocalConfigBag().clear();
     }
     

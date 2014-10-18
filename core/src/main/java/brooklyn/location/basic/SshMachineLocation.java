@@ -140,8 +140,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag(nullable = false)
     protected InetAddress address;
 
+    // TODO should not allow this to be set from flag; it is not persisted so that will be lost
+    // (mainly used for localhost currently so not a big problem)
+    @Nullable  // lazily initialized; use getMutexSupport()
     @SetFromFlag
-    protected transient WithMutexes mutexSupport;
+    private transient WithMutexes mutexSupport;
 
     @SetFromFlag
     private Set<Integer> usedPorts;
@@ -336,10 +339,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
         // Yikes, dangerous code for accessing fields of sub-class in super-class' constructor! But getting away with it so far!
 
-        if (mutexSupport == null) {
-            mutexSupport = new MutexSupport();
-        }
-
         boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
         if (!deferConstructionChecks) {
             if (getDisplayName() == null) {
@@ -347,6 +346,17 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
         }
         return this;
+    }
+    
+    private transient final Object mutexSupportCreationLock = new Object();
+    protected WithMutexes getMutexSupport() {
+        synchronized (mutexSupportCreationLock) {
+            // create on demand so that it is not null after serialization
+            if (mutexSupport == null) {
+                mutexSupport = new MutexSupport();
+            }
+            return mutexSupport;
+        }
     }
     
     protected void addSshPoolCacheCleanupTask() {
@@ -895,7 +905,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Override
     public void acquireMutex(String mutexId, String description) throws RuntimeInterruptedException {
         try {
-            mutexSupport.acquireMutex(mutexId, description);
+            getMutexSupport().acquireMutex(mutexId, description);
         } catch (InterruptedException ie) {
             throw new RuntimeInterruptedException("Interrupted waiting for mutex: " + mutexId, ie);
         }
@@ -903,17 +913,17 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public boolean tryAcquireMutex(String mutexId, String description) {
-        return mutexSupport.tryAcquireMutex(mutexId, description);
+        return getMutexSupport().tryAcquireMutex(mutexId, description);
     }
 
     @Override
     public void releaseMutex(String mutexId) {
-        mutexSupport.releaseMutex(mutexId);
+        getMutexSupport().releaseMutex(mutexId);
     }
 
     @Override
     public boolean hasMutex(String mutexId) {
-        return mutexSupport.hasMutex(mutexId);
+        return getMutexSupport().hasMutex(mutexId);
     }
 
     //We want the SshMachineLocation to be serializable and therefore the pool needs to be dealt with correctly.

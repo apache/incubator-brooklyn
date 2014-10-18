@@ -37,6 +37,7 @@ import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
+import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.mementos.EntityMemento;
@@ -102,5 +103,7 @@ public interface EntityTransientCopyInternal {
     Effector<?> getEffector(String effectorName);
     FeedSupport getFeedSupport();
     RebindSupport<EntityMemento> getRebindSupport();
+    // for REST calls on read-only entities which want to resolve values
+    ExecutionContext getExecutionContext();
     
 }
