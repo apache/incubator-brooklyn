@@ -49,6 +49,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
@@ -750,6 +751,8 @@ public class BrooklynLauncher {
             brooklynProperties.put(
                     BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
                     BrooklynUserWithRandomPasswordSecurityProvider.class.getName());
+        } else {
+            LOG.debug("Starting Brooklyn using security properties: "+brooklynProperties.submap(ConfigPredicates.startingWith(BrooklynWebConfig.BASE_NAME_SECURITY)).asMapWithStringKeys());
         }
         if (bindAddress == null) bindAddress = Networking.ANY_NIC;
 

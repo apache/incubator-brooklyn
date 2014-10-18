@@ -33,7 +33,9 @@ import com.google.common.collect.Iterables;
 
 public class Enums {
     
-    /** returns a function which given an enum, returns its <code>name()</code> function */
+    /** returns a function which given an enum, returns its <code>name()</code> function 
+     * @deprecated since 0.7.0 use {@link #nameFunction()} to avoid inner class */
+    @Deprecated
     public static Function<Enum<?>,String> enumValueNameFunction() {
         return new Function<Enum<?>,String>() {
             @Override
@@ -41,6 +43,32 @@ public class Enums {
                 return input.name();
             }
         };
+    }
+
+    private static final class EnumToNameFunction implements Function<Enum<?>, String> {
+        @Override
+        public String apply(Enum<?> input) {
+            return input.name();
+        }
+    }
+
+    /** returns a function which given an enum, returns its <code>name()</code> function */
+    public static Function<Enum<?>,String> nameFunction() {
+        return new EnumToNameFunction();
+    }
+
+    private static final class EnumFromStringFunction<T extends Enum<?>> implements Function<String,T> {
+        private final Class<T> type;
+        public EnumFromStringFunction(Class<T> type) { this.type = type; }
+        @Override
+        public T apply(String input) {
+            return valueOfIgnoreCase(type, input).orNull();
+        }
+    }
+
+    /** returns a function which given a string, produces an enum of the given type or null */
+    public static <T extends Enum<?>> Function<String,T> fromStringFunction(Class<T> type) {
+        return new EnumFromStringFunction<T>(type);
     }
 
     @SuppressWarnings("unchecked")

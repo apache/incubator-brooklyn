@@ -252,8 +252,10 @@ public class ServiceStateLogic {
             if (Boolean.TRUE.equals(serviceUp) && (problems==null || problems.isEmpty())) {
                 return Lifecycle.RUNNING;
             } else {
-                log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected running, up="+serviceUp+", "+
-                    (problems==null || problems.isEmpty() ? "not-up-indicators: "+entity.getAttribute(SERVICE_NOT_UP_INDICATORS) : "problems: "+problems));
+                if (!Lifecycle.ON_FIRE.equals(entity.getAttribute(SERVICE_STATE_ACTUAL))) {
+                    log.warn("Setting "+entity+" "+Lifecycle.ON_FIRE+" due to problems when expected running, up="+serviceUp+", "+
+                        (problems==null || problems.isEmpty() ? "not-up-indicators: "+entity.getAttribute(SERVICE_NOT_UP_INDICATORS) : "problems: "+problems));
+                }
                 return Lifecycle.ON_FIRE;
             }
         }
