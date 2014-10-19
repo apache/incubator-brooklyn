@@ -107,6 +107,7 @@ public class HttpFeed extends AbstractFeed {
 
     public static final Logger log = LoggerFactory.getLogger(HttpFeed.class);
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<SetMultimap<HttpPollIdentifier, HttpPollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
             new TypeToken<SetMultimap<HttpPollIdentifier, HttpPollConfig<?>>>() {},
             "polls");
@@ -197,7 +198,7 @@ public class HttpFeed extends AbstractFeed {
             return this;
         }
         public Builder credentialsIfNotNull(String username, String password) {
-            if (username != null) {
+            if (username != null && password != null) {
                 this.credentials = new UsernamePasswordCredentials(username, password);
             }
             return this;

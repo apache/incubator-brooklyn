@@ -70,7 +70,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                     .pollAttribute(new JmxAttributePollConfig<String>(CONNECTOR_STATUS)
                             .objectName(connectorMbeanName)
                             .attributeName("stateName"))
-                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_PROCESS_IS_RUNNING)
                             .objectName(connectorMbeanName)
                             .attributeName("stateName")
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo("STARTED")))

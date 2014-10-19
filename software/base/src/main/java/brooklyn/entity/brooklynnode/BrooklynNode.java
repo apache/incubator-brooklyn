@@ -36,6 +36,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -199,6 +200,9 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("publicAddress")
     public static final BasicAttributeSensorAndConfigKey<InetAddress> WEB_CONSOLE_PUBLIC_ADDRESS = new BasicAttributeSensorAndConfigKey<InetAddress>(
             InetAddress.class, "brooklynnode.webconsole.address.public", "Specifies the public IP address or hostname for the Brooklyn Management Console");
+
+    public static final AttributeSensor<Boolean> WEB_CONSOLE_ACCESSIBLE = Sensors.newBooleanSensor(
+        "brooklynnode.webconsole.up", "Whether the web console is responding normally");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @SetFromFlag("classpath")

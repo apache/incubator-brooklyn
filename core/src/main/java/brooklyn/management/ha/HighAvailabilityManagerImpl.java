@@ -324,6 +324,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             break;
         case DISABLED:
             // safe just to run even if we weren't master
+            LOG.info("Management node "+ownNodeId+" HA DISABLED (was "+nodeState+")");
             demoteToFailed();
             if (pollingTask!=null) pollingTask.cancel(true);
             break;
@@ -483,7 +484,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         if (LOG.isTraceEnabled()) LOG.trace("Published management-node health: {}", memento);
     }
     
-    protected synchronized void publishDemotionFromMaster() {
+    protected synchronized void publishDemotion(boolean demotingFromMaster) {
         checkState(getNodeState() != ManagementNodeState.MASTER, "node status must not be master when demoting", getNodeState());
         
         if (persister == null) {
@@ -494,7 +495,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         ManagementNodeSyncRecord memento = createManagementNodeSyncRecord(false);
         ManagementPlaneSyncRecordDeltaImpl.Builder deltaBuilder = ManagementPlaneSyncRecordDeltaImpl.builder()
                 .node(memento);
-        deltaBuilder.clearMaster(ownNodeId);
+        if (demotingFromMaster) {
+            deltaBuilder.clearMaster(ownNodeId);
+        }
         
         Delta delta = deltaBuilder.build();
         persister.delta(delta);
@@ -680,11 +683,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     protected void demoteToFailed() {
-        ManagementTransitionMode mode = (nodeState == ManagementNodeState.MASTER ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
+        // TODO merge this method with the one below
+        boolean wasMaster = nodeState == ManagementNodeState.MASTER;
+        ManagementTransitionMode mode = (wasMaster ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
         nodeState = ManagementNodeState.FAILED;
         onDemotionStopItems(mode);
         nodeStateTransitionComplete = true;
-        publishDemotionFromMaster();
+        publishDemotion(wasMaster);
     }
 
     protected void demoteToStandby(boolean hot) {
@@ -692,13 +697,14 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             LOG.warn("Ignoring demote-from-master request, as HighAvailabilityManager is no longer running");
             return;
         }
-        ManagementTransitionMode mode = (nodeState == ManagementNodeState.MASTER ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
+        boolean wasMaster = nodeState == ManagementNodeState.MASTER;
+        ManagementTransitionMode mode = (wasMaster ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
 
         nodeStateTransitionComplete = false;
         nodeState = ManagementNodeState.STANDBY;
         onDemotionStopItems(mode);
         nodeStateTransitionComplete = true;
-        publishDemotionFromMaster();
+        publishDemotion(wasMaster);
         
         if (hot) {
             nodeStateTransitionComplete = false;
@@ -711,6 +717,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     protected void onDemotionStopItems(ManagementTransitionMode mode) {
         // stop persistence and remove all apps etc
         managementContext.getRebindManager().stopPersistence();
+        managementContext.getRebindManager().stopReadOnly();
         clearManagedItems(mode);
         
         // tasks are cleared as part of unmanaging entities above

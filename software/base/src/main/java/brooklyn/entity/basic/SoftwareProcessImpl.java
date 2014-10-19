@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.event.feed.function.FunctionFeed;
@@ -119,6 +120,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     @Override
     protected void initEnrichers() {
         super.initEnrichers();
+        ServiceNotUpLogic.updateNotUpIndicator(this, SERVICE_PROCESS_IS_RUNNING, "No information yet about whether this service is running");
+        // add an indicator above so that if is_running comes through it clears the map and guarantees an update
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(SERVICE_PROCESS_IS_RUNNING)
             .computing(Functionals.ifNotEquals(true).value("The software process for this entity does not appear to be running"))
@@ -271,7 +274,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public void rebind() {
         Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state == null || state != Lifecycle.RUNNING) {
-            log.warn("On rebind of {}, not rebinding because state is {}", this, state);
+            log.warn("On rebind of {}, not calling software process rebind hooks because state is {}", this, state);
             return;
         }
 

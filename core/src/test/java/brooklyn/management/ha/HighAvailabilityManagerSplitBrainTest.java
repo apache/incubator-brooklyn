@@ -19,7 +19,6 @@
 package brooklyn.management.ha;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
 
 import java.util.Collections;
@@ -48,7 +47,6 @@ import brooklyn.location.Location;
 import brooklyn.management.ha.TestEntityFailingRebind.RebindException;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;

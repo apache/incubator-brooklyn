@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
@@ -144,8 +145,12 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         if (!entity.getChildren().isEmpty())
             aRoot.put("children", entitiesIdAndNameAsArray(entity.getChildren()));
 
-        if ((entity instanceof Group) && !((Group) entity).getMembers().isEmpty())
-            aRoot.put("members", entitiesIdAndNameAsArray(((Group) entity).getMembers()));
+        if (entity instanceof Group) {
+            // use attribute instead of method in case it is read-only
+            Collection<Entity> members = entity.getAttribute(AbstractGroup.GROUP_MEMBERS);
+            if (members!=null && !members.isEmpty())
+                aRoot.put("members", entitiesIdAndNameAsArray(members));
+        }
 
         return aRoot;
     }

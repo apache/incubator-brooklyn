@@ -87,10 +87,9 @@ public class UpdatingMap<S,TKey,TVal> extends AbstractEnricher implements Sensor
 
     public UpdatingMap(Map<Object, Object> flags) {
         super(flags);
-        if (suppressDuplicates==null) {
-            // this defaults to suppressing duplicates
-            suppressDuplicates = true;
-        }
+        // this always suppresses duplicates, but it updates the same map *in place* so the usual suppress duplicates logic should not be applied
+        // TODO clean up so that we have synchronization guarantees and can inspect the item to see whether it has changed
+        suppressDuplicates = false;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

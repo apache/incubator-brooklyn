@@ -315,7 +315,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         setParent(newParent, true);
     }
     
-    public void setParent(Location newParent, boolean updateChildListInOldParent) {
+    public void setParent(Location newParent, boolean updateChildListParents) {
         if (newParent == this) {
             throw new IllegalArgumentException("Location cannot be its own parent: "+this);
         }
@@ -323,17 +323,19 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
             return; // no-op; already have desired parent
         }
         
-        // TODO Should we support a location changing parent? The resulting unmanage/manage might cause problems.
         if (parent.get() != null) {
             Location oldParent = parent.get();
             parent.set(null);
-            if (updateChildListInOldParent)
+            if (updateChildListParents)
                 ((AbstractLocation)oldParent).removeChild(this);
         }
+        // TODO Should we support a location changing parent? The resulting unmanage/manage might cause problems.
+        // The code above suggests we do, but maybe we should warn or throw error, or at least test it!
+        
+        parent.set(newParent);
         if (newParent != null) {
-            parent.set(newParent);
-            if (updateChildListInOldParent)
-                ((AbstractLocation)parent.get()).addChild(this);
+            if (updateChildListParents)
+                ((AbstractLocation)newParent).addChild(this);
         }
         
         onChanged();

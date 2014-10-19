@@ -117,18 +117,23 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 return false;
             }
 
+            // FIXME do not set sensors on members; possibly we don't need FIRST at all, just look at the first in MEMBERS, and take care to guarantee order there
             Entity first = getAttribute(FIRST);
             if (first == null) {
                 ((EntityLocal) member).setAttribute(FIRST_MEMBER, true);
                 ((EntityLocal) member).setAttribute(FIRST, member);
                 setAttribute(FIRST, member);
             } else {
-                ((EntityLocal) member).setAttribute(FIRST_MEMBER, false);
-                ((EntityLocal) member).setAttribute(FIRST, first);
+                if (first.equals(member) || first.equals(member.getAttribute(FIRST))) {
+                    // do nothing (rebinding)
+                } else {
+                    ((EntityLocal) member).setAttribute(FIRST_MEMBER, false);
+                    ((EntityLocal) member).setAttribute(FIRST, first);
+                }
             }
 
             member.addGroup((Group)getProxyIfAvailable());
-            boolean changed = members.add(member);
+            boolean changed = addMemberInternal(member);
             if (changed) {
                 log.debug("Group {} got new member {}", this, member);
                 setAttribute(GROUP_SIZE, getCurrentSize());
@@ -153,6 +158,13 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         }
     }
 
+    // visible for rebind
+    public boolean addMemberInternal(Entity member) {
+        synchronized (members) {
+            return members.add(member);
+        }
+    }
+
     /**
      * Returns {@code true} if the group was changed as a result of the call.
      */
@@ -163,9 +175,13 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             boolean changed = (member != null && members.remove(member));
             if (changed) {
                 log.debug("Group {} lost member {}", this, member);
-                // TODO ideally the following 3 are synched
+                // TODO ideally the following are all synched
                 setAttribute(GROUP_SIZE, getCurrentSize());
                 setAttribute(GROUP_MEMBERS, getMembers());
+                if (member.equals(getAttribute(FIRST))) {
+                    // TODO should we elect a new FIRST ?  as is the *next* will become first.  could we do away with FIRST altogether?
+                    setAttribute(FIRST, null);
+                }
                 // emit after the above so listeners can use getMembers() and getCurrentSize()
                 emit(MEMBER_REMOVED, member);
 

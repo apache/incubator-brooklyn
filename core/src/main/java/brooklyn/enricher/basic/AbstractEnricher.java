@@ -78,7 +78,9 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     @Override
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
-        this.suppressDuplicates = getConfig(SUPPRESS_DUPLICATES);
+        Boolean suppressDuplicates = getConfig(SUPPRESS_DUPLICATES);
+        if (suppressDuplicates!=null) 
+            this.suppressDuplicates = suppressDuplicates;
     }
     
     @Override

@@ -133,6 +133,25 @@ public class BrooklynNodeIntegrationTest {
         return EntitySpec.create(BrooklynNode.class)
                 .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, Networking.LOOPBACK)
                 .configure(BrooklynNode.ON_EXISTING_PROPERTIES_FILE, ExistingFileBehaviour.DO_NOT_USE);
+        
+        /* yaml equivalent, for testing:
+
+location: localhost
+services:
+- type: brooklyn.entity.brooklynnode.BrooklynNode
+  bindAddress: 127.0.0.1
+  onExistingProperties: do_not_use
+
+# some other options
+  enabledHttpProtocols: [ https ]
+  managementPassword: s3cr3t
+  brooklynLocalPropertiesContents: |
+    brooklyn.webconsole.security.https.required=true
+    brooklyn.webconsole.security.users=admin
+    brooklyn.webconsole.security.user.admin.password=s3cr3t
+    brooklyn.location.localhost.enabled=false
+
+         */
     }
 
     @Test(groups="Integration")

@@ -32,6 +32,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxy.AbstractControllerImpl;
 import brooklyn.entity.proxy.ProxySslConfig;
@@ -108,6 +109,11 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                         .setOnException(false))
                 .build();
         
+        if (!Lifecycle.RUNNING.equals(getAttribute(SERVICE_STATE_ACTUAL))) {
+            // TODO when updating the map, if it would change from empty to empty on a successful run
+            // gate with the above check to prevent flashing on ON_FIRE during rebind (this is invoked on rebind as well as during start)
+            ServiceNotUpLogic.updateNotUpIndicator(this, NGINX_URL_ANSWERS_NICELY, "No response from nginx yet");
+        }
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(NGINX_URL_ANSWERS_NICELY)
             .computing(Functionals.ifNotEquals(true).value("URL where nginx listens is not answering correctly (with expected header)") )

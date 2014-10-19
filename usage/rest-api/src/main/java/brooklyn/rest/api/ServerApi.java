@@ -27,6 +27,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
@@ -69,6 +70,7 @@ public interface ServerApi {
     @ApiOperation(value = "Return version identifier information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
     public VersionSummary getVersion();
 
+    @Deprecated /** @deprecated since 0.7.0 use /ha/node (which returns correct JSON) */
     @GET
     @Path("/status")
     @ApiOperation(value = "Returns the status of this Brooklyn instance",
@@ -76,11 +78,23 @@ public interface ServerApi {
         multiValueResponse = false)
     public String getStatus();
 
+    @Deprecated /** @deprecated since 0.7.0 use /ha/states */
     @GET
     @Path("/highAvailability")
-    @ApiOperation(value = "Fetches the status of all Brooklyn instances in the management plane",
+    @ApiOperation(value = "Returns the status of all Brooklyn instances in the management plane",
         responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
     public HighAvailabilitySummary getHighAvailability();
+    
+    @GET
+    @Path("/ha/state")
+    @ApiOperation(value = "Returns the HA state of this management node")
+    public ManagementNodeState getHighAvailabilityNodeState();
+    
+    @GET
+    @Path("/ha/states")
+    @ApiOperation(value = "Returns the HA states and detail for all nodes in this management plane",
+        responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
+    public HighAvailabilitySummary getHighAvailabilityPlaneStates();
     
     @GET
     @Path("/user")

@@ -256,6 +256,11 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             super(MutableMap.builder().putAll(properties).put("mutexSupport", mutexSupport).build());
         }
         
+        @Override
+        protected WithMutexes getMutexSupport() {
+            return mutexSupport;
+        }
+        
         public boolean obtainSpecificPort(int portNumber) {
             if (!isSudoAllowed() && portNumber <= 1024)
                 return false;

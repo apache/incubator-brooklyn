@@ -163,7 +163,11 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             if (!lastWasProblem) {
                 if (expiryTime <= nowTime) {
                     currentProblemLoggedAsWarning = true;
-                    log.warn("Read of " + getBriefDescription() + " gave " + type + ": " + val);
+                    if (entity==null || !Entities.isNoLongerManaged(entity)) {
+                        log.warn("Read of " + getBriefDescription() + " gave " + type + ": " + val);
+                    } else {
+                        log.debug("Read of " + getBriefDescription() + " gave " + type + ": " + val);
+                    }
                     if (log.isDebugEnabled() && val instanceof Throwable)
                         log.debug("Trace for "+type+" reading "+getBriefDescription()+": "+val, (Throwable)val);
                 } else {
@@ -176,7 +180,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
                 if (expiryTime <= nowTime) {
                     currentProblemLoggedAsWarning = true;
                     log.warn("Read of " + getBriefDescription() + " gave " + type + 
-                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+", " +
+                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+
                             (config.hasExceptionHandler() ? "" : ", no exception handler set for sensor")+
                             ")"+
                             ": " + val);

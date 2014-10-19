@@ -21,6 +21,7 @@ package brooklyn.util.guava;
 import java.util.concurrent.Callable;
 
 import brooklyn.util.guava.IfFunctions.IfFunctionBuilderApplyingFirst;
+import brooklyn.util.javalang.Enums;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

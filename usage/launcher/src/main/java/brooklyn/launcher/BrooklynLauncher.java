@@ -49,6 +49,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
@@ -732,15 +733,26 @@ public class BrooklynLauncher {
 
     protected void startWebApps() {
         // No security options in properties and no command line options overriding.
-        if (Boolean.TRUE.equals(skipSecurityFilter) && isTrivialBindAddress(bindAddress)) {
-            LOG.info("Starting Brooklyn web-console on loopback because security is explicitly disabled and not binding to public address");
+        if (Boolean.TRUE.equals(skipSecurityFilter) && bindAddress==null) {
+            LOG.info("Starting Brooklyn web-console on loopback because security is explicitly disabled and no bind address specified");
             bindAddress = Networking.LOOPBACK;
-        } else if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties) && isTrivialBindAddress(bindAddress)) {
-            LOG.info("Starting Brooklyn web-console with passwordless access on localhost and protected access from any other interfaces");
-            bindAddress = Networking.ANY_NIC;
+        } else if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties)) {
+            if (bindAddress==null) {
+                LOG.info("Starting Brooklyn web-console with passwordless access on localhost and protected access from any other interfaces (no bind address specified)");
+            } else {
+                if (Arrays.equals(new byte[] { 127, 0, 0, 1 }, bindAddress.getAddress())) { 
+                    LOG.info("Starting Brooklyn web-console with passwordless access on localhost");
+                } else if (Arrays.equals(new byte[] { 0, 0, 0, 0 }, bindAddress.getAddress())) { 
+                    LOG.info("Starting Brooklyn web-console with passwordless access on localhost and random password (logged) required from any other interfaces");
+                } else { 
+                    LOG.info("Starting Brooklyn web-console with passwordless access on localhost (if permitted) and random password (logged) required from any other interfaces");
+                }
+            }
             brooklynProperties.put(
                     BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
                     BrooklynUserWithRandomPasswordSecurityProvider.class.getName());
+        } else {
+            LOG.debug("Starting Brooklyn using security properties: "+brooklynProperties.submap(ConfigPredicates.startingWith(BrooklynWebConfig.BASE_NAME_SECURITY)).asMapWithStringKeys());
         }
         if (bindAddress == null) bindAddress = Networking.ANY_NIC;
 
@@ -763,12 +775,6 @@ public class BrooklynLauncher {
             LOG.warn("Failed to start Brooklyn web-console (rethrowing): " + Exceptions.collapseText(e));
             throw new FatalRuntimeException("Failed to start Brooklyn web-console: " + Exceptions.collapseText(e), e);
         }
-    }
-
-    protected boolean isTrivialBindAddress(InetAddress bindAddress) {
-        if (bindAddress==null) return true;
-        if (Arrays.equals(new byte[] { 127, 0, 0, 1 }, bindAddress.getAddress())) return true;
-        return false;
     }
 
     protected void initPersistence() {

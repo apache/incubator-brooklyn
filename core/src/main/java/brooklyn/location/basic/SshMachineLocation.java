@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.BrooklynConfigKeys;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
@@ -84,7 +86,6 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
 import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
@@ -140,8 +141,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @SetFromFlag(nullable = false)
     protected InetAddress address;
 
+    // TODO should not allow this to be set from flag; it is not persisted so that will be lost
+    // (mainly used for localhost currently so not a big problem)
+    @Nullable  // lazily initialized; use getMutexSupport()
     @SetFromFlag
-    protected transient WithMutexes mutexSupport;
+    private transient WithMutexes mutexSupport;
 
     @SetFromFlag
     private Set<Integer> usedPorts;
@@ -208,7 +212,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }));
 
     private Task<?> cleanupTask;
-    private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache;
+    /** callers should use {@link #getSshPoolCache()} */
+    @Nullable 
+    private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCacheOrNull;
 
     public SshMachineLocation() {
         this(MutableMap.of());
@@ -217,6 +223,18 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public SshMachineLocation(Map properties) {
         super(properties);
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
+    }
+
+    private final transient Object poolCacheMutex = new Object();
+    @Nonnull
+    private LoadingCache<Map<String, ?>, Pool<SshTool>> getSshPoolCache() {
+        synchronized (poolCacheMutex) {
+            if (sshPoolCacheOrNull==null) {
+                sshPoolCacheOrNull = buildSshToolPoolCacheLoader();
+                addSshPoolCacheCleanupTask();
+            }
+        }
+        return sshPoolCacheOrNull;
     }
 
     private LoadingCache<Map<String, ?>, Pool<SshTool>> buildSshToolPoolCacheLoader() {
@@ -320,10 +338,6 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
         // Yikes, dangerous code for accessing fields of sub-class in super-class' constructor! But getting away with it so far!
 
-        if (mutexSupport == null) {
-            mutexSupport = new MutexSupport();
-        }
-
         boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
         if (!deferConstructionChecks) {
             if (getDisplayName() == null) {
@@ -332,19 +346,39 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
         return this;
     }
-
-    @Override
-    public void init() {
-        super.init();
+    
+    private transient final Object mutexSupportCreationLock = new Object();
+    protected WithMutexes getMutexSupport() {
+        synchronized (mutexSupportCreationLock) {
+            // create on demand so that it is not null after serialization
+            if (mutexSupport == null) {
+                mutexSupport = new MutexSupport();
+            }
+            return mutexSupport;
+        }
+    }
+    
+    protected void addSshPoolCacheCleanupTask() {
+        if (cleanupTask!=null && !cleanupTask.isDone()) {
+            return;
+        }
+        if (getManagementContext()==null || getManagementContext().getExecutionManager()==null) {
+            LOG.debug("No management context for "+this+"; ssh-pool cache will only be closed when machine is closed");
+            return;
+        }
         
-        sshPoolCache = buildSshToolPoolCacheLoader();
-
         Callable<Task<?>> cleanupTaskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
-                return Tasks.<Void>builder().dynamic(false).name("ssh-location cache cleaner").body(new Callable<Void>() {
+                return Tasks.<Void>builder().dynamic(false).tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
+                    .name("ssh-location cache cleaner").body(new Callable<Void>() {
                     @Override public Void call() {
                         try {
-                            if (sshPoolCache != null) sshPoolCache.cleanUp();
+                            if (sshPoolCacheOrNull != null) sshPoolCacheOrNull.cleanUp();
+                            if (!SshMachineLocation.this.isManaged()) {
+                                if (sshPoolCacheOrNull != null) sshPoolCacheOrNull.invalidateAll();
+                                cleanupTask.cancel(false);
+                                sshPoolCacheOrNull = null;
+                            }
                             return null;
                         } catch (Exception e) {
                             // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
@@ -368,26 +402,28 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     // we should probably expose a mechanism such as that in Entity (or re-use Entity for locations!)
     @Override
     public void close() throws IOException {
-        if (sshPoolCache != null) {
+        if (sshPoolCacheOrNull != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCache.stats());
+                LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCacheOrNull.stats());
             }
-            sshPoolCache.invalidateAll();
+            sshPoolCacheOrNull.invalidateAll();
         }
         if (cleanupTask != null) {
             cleanupTask.cancel(false);
             cleanupTask = null;
+            sshPoolCacheOrNull = null;
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            close();
-        } finally {
-            super.finalize();
-        }
-    }
+    // should not be necessary, and causes objects to be kept around a lot longer than desired
+//    @Override
+//    protected void finalize() throws Throwable {
+//        try {
+//            close();
+//        } finally {
+//            super.finalize();
+//        }
+//    }
 
     @Override
     public InetAddress getAddress() {
@@ -436,10 +472,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     protected <T> T execSsh(final Map<String, ?> props, final Function<ShellTool, T> task) {
-        if (sshPoolCache == null) {
-            // required for uses that instantiate SshMachineLocation directly, so init() will not have been called
-            sshPoolCache = buildSshToolPoolCacheLoader();
-        }
+        final LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache = getSshPoolCache();
         Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
         if (LOG.isTraceEnabled()) {
             LOG.trace("{} execSsh got pool: {}", this, pool);
@@ -875,7 +908,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Override
     public void acquireMutex(String mutexId, String description) throws RuntimeInterruptedException {
         try {
-            mutexSupport.acquireMutex(mutexId, description);
+            getMutexSupport().acquireMutex(mutexId, description);
         } catch (InterruptedException ie) {
             throw new RuntimeInterruptedException("Interrupted waiting for mutex: " + mutexId, ie);
         }
@@ -883,26 +916,25 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public boolean tryAcquireMutex(String mutexId, String description) {
-        return mutexSupport.tryAcquireMutex(mutexId, description);
+        return getMutexSupport().tryAcquireMutex(mutexId, description);
     }
 
     @Override
     public void releaseMutex(String mutexId) {
-        mutexSupport.releaseMutex(mutexId);
+        getMutexSupport().releaseMutex(mutexId);
     }
 
     @Override
     public boolean hasMutex(String mutexId) {
-        return mutexSupport.hasMutex(mutexId);
+        return getMutexSupport().hasMutex(mutexId);
     }
 
     //We want the SshMachineLocation to be serializable and therefore the pool needs to be dealt with correctly.
     //In this case we are not serializing the pool (we made the field transient) and create a new pool when deserialized.
     //This fix is currently needed for experiments, but isn't used in normal Brooklyn usage.
-    private void readObject(java.io.ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        sshPoolCache = buildSshToolPoolCacheLoader();
+        getSshPoolCache();
     }
 
     /** returns the un-passphrased key-pair info if a key is being used, or else null */

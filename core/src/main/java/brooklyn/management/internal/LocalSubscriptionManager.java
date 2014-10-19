@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
@@ -198,7 +199,11 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
                         try {
                             sAtClosureCreation.listener.onEvent(event);
                         } catch (Throwable t) {
-                            LOG.warn("Error in "+this+": "+t, t);
+                            if (event!=null && event.getSource()!=null && Entities.isNoLongerManaged(event.getSource())) {
+                                LOG.debug("Error in "+this+", after entity unmanaged: "+t, t);
+                            } else {
+                                LOG.warn("Error in "+this+": "+t, t);
+                            }
                         }
                     }});
                 totalEventsDeliveredCount.incrementAndGet();

@@ -21,6 +21,7 @@ package brooklyn.entity.basic;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,6 @@ import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.SubscriptionTracker;
-import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
@@ -82,13 +82,13 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DeferredSupplier;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -563,7 +563,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         if (parent.isNull()) return;
         Entity oldParent = parent.get();
         parent.clear();
-        if (oldParent != null) oldParent.removeChild(getProxyIfAvailable());
+        if (oldParent != null) {
+            if (!Entities.isNoLongerManaged(oldParent)) 
+                oldParent.removeChild(getProxyIfAvailable());
+        }
     }
     
     /**
@@ -787,11 +790,20 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return (T) attributesInternal.getValue(nameParts);
     }
     
+    static Set<String> WARNED_READ_ONLY_ATTRIBUTES = Collections.synchronizedSet(MutableSet.<String>of());
+    
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
         if (LOG.isTraceEnabled())
             LOG.trace(""+this+" setAttribute "+attribute+" "+val);
         
+        if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
+            if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
+                LOG.warn(""+this+" setting "+attribute+" = "+val+" in read only mode; will have no effect (future messages for this sensor logged at trace)");
+            } else if (LOG.isTraceEnabled()) {
+                LOG.trace(""+this+" setting "+attribute+" = "+val+" in read only mode; will have no effect");
+            }
+        }
         T result = attributesInternal.update(attribute, val);
         if (result == null) {
             // could be this is a new sensor
@@ -1441,11 +1453,4 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public boolean containsTag(Object tag) {
         return getTagSupport().containsTag(tag);
     }    
-    
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        if (!getManagementSupport().wasDeployed() && !Boolean.TRUE.equals(getManagementSupport().isReadOnly()))
-            LOG.warn("Entity "+this+" ("+Integer.toHexString(System.identityHashCode(this))+") was never deployed -- explicit call to manage(Entity) required.");
-    }
 }
