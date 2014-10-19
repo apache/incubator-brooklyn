@@ -1427,3 +1427,8 @@ the element's children, who probably want to control their opacity separately. *
     /* matches Bootstrap */
     margin-bottom: 9px;
 }
+
+textarea.param-value {
+    height: 18px;
+    overflow: auto;
+}
