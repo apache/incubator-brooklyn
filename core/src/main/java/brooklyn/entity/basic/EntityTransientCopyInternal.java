@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import brooklyn.basic.BrooklynObject.TagSupport;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Application;
@@ -102,6 +103,7 @@ public interface EntityTransientCopyInternal {
     ManagementContext getManagementContext();
     Effector<?> getEffector(String effectorName);
     FeedSupport getFeedSupport();
+    TagSupport getTagSupport();
     RebindSupport<EntityMemento> getRebindSupport();
     // for REST calls on read-only entities which want to resolve values
     ExecutionContext getExecutionContext();

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -48,6 +49,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.task.DynamicTasks;
@@ -317,13 +319,19 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                     .period(200)
                     .baseUri(webConsoleUri)
                     .credentialsIfNotNull(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
-                    .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
+                    .poll(new HttpPollConfig<Boolean>(WEB_CONSOLE_ACCESSIBLE)
                             .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                             .setOnFailureOrException(false))
                     .build();
 
-        } else {
-            setAttribute(SERVICE_UP, true);
+            if (!Lifecycle.RUNNING.equals(getAttribute(SERVICE_STATE_ACTUAL))) {
+                // TODO when updating the map, if it would change from empty to empty on a successful run (see in nginx)
+                ServiceNotUpLogic.updateNotUpIndicator(this, WEB_CONSOLE_ACCESSIBLE, "No response from the web console yet");
+            }
+            addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+                .from(WEB_CONSOLE_ACCESSIBLE)
+                .computing(Functionals.ifNotEquals(true).value("URL where Brooklyn listens is not answering correctly") )
+                .build());
         }
     }
     
