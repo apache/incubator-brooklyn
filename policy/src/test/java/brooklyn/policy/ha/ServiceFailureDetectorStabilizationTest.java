@@ -24,6 +24,8 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -53,6 +55,8 @@ import com.google.common.collect.ImmutableMap;
 
 /** also see more primitive tests in {@link ServiceStateLogicTest} */
 public class ServiceFailureDetectorStabilizationTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceFailureDetectorStabilizationTest.class);
 
     private static final int TIMEOUT_MS = 10*1000;
     private static final int OVERHEAD = 250;
@@ -123,6 +127,7 @@ public class ServiceFailureDetectorStabilizationTest {
     
     @Test(groups="Integration") // Because slow
     public void testFailuresThenUpDownResetsStabilisationCount() throws Exception {
+        LOG.debug("Running testFailuresThenUpDownResetsStabilisationCount");
         final long stabilisationDelay = 1000;
         
         e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
@@ -132,6 +137,7 @@ public class ServiceFailureDetectorStabilizationTest {
         assertNoEventsContinually(Duration.of(stabilisationDelay - OVERHEAD));
 
         e1.setAttribute(TestEntity.SERVICE_UP, true);
+        Thread.sleep(OVERHEAD);
         e1.setAttribute(TestEntity.SERVICE_UP, false);
         assertNoEventsContinually(Duration.of(stabilisationDelay - OVERHEAD));
         
@@ -187,6 +193,7 @@ public class ServiceFailureDetectorStabilizationTest {
         assertNoEventsContinually(Duration.of(stabilisationDelay - OVERHEAD));
         
         e1.setAttribute(TestEntity.SERVICE_UP, false);
+        Thread.sleep(OVERHEAD);
         e1.setAttribute(TestEntity.SERVICE_UP, true);
         assertNoEventsContinually(Duration.of(stabilisationDelay - OVERHEAD));
 
