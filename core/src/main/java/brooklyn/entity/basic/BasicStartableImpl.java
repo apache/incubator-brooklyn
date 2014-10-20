@@ -79,6 +79,6 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
 
     // TODO make public in StartableMethods
     private static Iterable<Entity> filterStartableManagedEntities(Iterable<Entity> contenders) {
-        return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.managed()));
+        return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.isManaged()));
     }
 }

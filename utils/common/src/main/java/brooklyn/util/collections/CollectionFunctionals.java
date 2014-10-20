@@ -19,6 +19,7 @@
 package brooklyn.util.collections;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -152,5 +153,28 @@ public class CollectionFunctionals {
             return result;
         }
     }
+
+    // ---------
+    public static <I,T extends Collection<I>> Predicate<T> contains(I item) {
+        return new CollectionContains<I,T>(item);
+    }
+    
+    private static final class CollectionContains<I,T extends Collection<I>> implements Predicate<T> {
+        private final I item;
+        private CollectionContains(I item) {
+            this.item = item;
+        }
+        @Override
+        public boolean apply(T input) {
+            if (input==null) return false;
+            return input.contains(item);
+        }
+        @Override
+        public String toString() {
+            return "contains("+item+")";
+        }
+    }
+
+
 
 }

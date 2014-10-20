@@ -33,10 +33,26 @@ import com.google.common.collect.Iterables;
 
 public class StringPredicates {
 
-    /**
-     * @since 0.7.0
-     */
-    public static Predicate<CharSequence> isBlank() {
+    /** predicate form of {@link Strings#isBlank(CharSequence)} */
+    public static <T extends CharSequence> Predicate<T> isBlank() {
+        return new IsBlank<T>();
+    }
+
+    private static final class IsBlank<T extends CharSequence> implements Predicate<T> {
+        @Override
+        public boolean apply(@Nullable CharSequence input) {
+            return Strings.isBlank(input);
+        }
+
+        @Override
+        public String toString() {
+            return "isBlank()";
+        }
+    }
+
+    /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<CharSequence> isBlankOld() {
         return new Predicate<CharSequence>() {
             @Override
             public boolean apply(@Nullable CharSequence input) {
@@ -49,7 +65,55 @@ public class StringPredicates {
         };
     }
 
-    public static Predicate<CharSequence> containsLiteralCaseInsensitive(final String fragment) {
+    // -----------------
+    
+    public static <T extends CharSequence> Predicate<T> containsLiteralCaseInsensitive(final String fragment) {
+        return new ContainsLiteralCaseInsensitive<T>(fragment);
+    }
+
+    private static final class ContainsLiteralCaseInsensitive<T extends CharSequence> implements Predicate<T> {
+        private final String fragment;
+
+        private ContainsLiteralCaseInsensitive(String fragment) {
+            this.fragment = fragment;
+        }
+
+        @Override
+        public boolean apply(@Nullable CharSequence input) {
+            return Strings.containsLiteralIgnoreCase(input, fragment);
+        }
+
+        @Override
+        public String toString() {
+            return "containsLiteralCaseInsensitive("+fragment+")";
+        }
+    }
+
+    public static <T extends CharSequence> Predicate<T> containsLiteral(final String fragment) {
+        return new ContainsLiteral<T>(fragment);
+    }
+    
+    private static final class ContainsLiteral<T extends CharSequence> implements Predicate<T> {
+        private final String fragment;
+
+        private ContainsLiteral(String fragment) {
+            this.fragment = fragment;
+        }
+
+        @Override
+        public boolean apply(@Nullable CharSequence input) {
+            return Strings.containsLiteral(input, fragment);
+        }
+
+        @Override
+        public String toString() {
+            return "containsLiteral("+fragment+")";
+        }
+    }
+
+    /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<CharSequence> containsLiteralCaseInsensitiveOld(final String fragment) {
         return new Predicate<CharSequence>() {
             @Override
             public boolean apply(@Nullable CharSequence input) {
@@ -62,7 +126,9 @@ public class StringPredicates {
         };
     }
 
-    public static Predicate<CharSequence> containsLiteral(final String fragment) {
+    /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<CharSequence> containsLiteralOld(final String fragment) {
         return new Predicate<CharSequence>() {
             @Override
             public boolean apply(@Nullable CharSequence input) {
@@ -75,7 +141,22 @@ public class StringPredicates {
         };
     }
     
-    public static Predicate<CharSequence> containsAllLiterals(final String... fragments) {
+    // -----------------
+    
+    public static <T extends CharSequence> Predicate<T> containsAllLiterals(final String... fragments) {
+        return Predicates.and(Iterables.transform(Arrays.asList(fragments), new ConvertStringToContainsLiteralPredicate()));
+    }
+
+    private static final class ConvertStringToContainsLiteralPredicate implements Function<String, Predicate<CharSequence>> {
+        @Override
+        public Predicate<CharSequence> apply(String input) {
+            return containsLiteral(input);
+        }
+    }
+
+    /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<CharSequence> containsAllLiteralsOld(final String... fragments) {
         return Predicates.and(Iterables.transform(Arrays.asList(fragments), new Function<String,Predicate<CharSequence>>() {
             @Override
             public Predicate<CharSequence> apply(String input) {
@@ -83,13 +164,38 @@ public class StringPredicates {
             }
         }));
     }
+    
+    // -----------------
 
     public static Predicate<CharSequence> containsRegex(final String regex) {
         // "Pattern" ... what a bad name :)
         return Predicates.containsPattern(regex);
     }
 
-    public static Predicate<CharSequence> startsWith(final String prefix) {
+    // -----------------
+    
+    public static <T extends CharSequence> Predicate<T> startsWith(final String prefix) {
+        return new StartsWith<T>(prefix);
+    }
+
+    private static final class StartsWith<T extends CharSequence> implements Predicate<T> {
+        private final String prefix;
+        private StartsWith(String prefix) {
+            this.prefix = prefix;
+        }
+        @Override
+        public boolean apply(CharSequence input) {
+            return (input != null) && input.toString().startsWith(prefix);
+        }
+        @Override
+        public String toString() {
+            return "startsWith("+prefix+")";
+        }
+    }
+
+    /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<CharSequence> startsWithOld(final String prefix) {
         return new Predicate<CharSequence>() {
             @Override
             public boolean apply(CharSequence input) {
@@ -98,8 +204,17 @@ public class StringPredicates {
         };
     }
 
-    /** true if the object *is* a string starting with the given prefix */
+    // -----------------
+    
+    /** true if the object *is* a {@link CharSequence} starting with the given prefix */
     public static Predicate<Object> isStringStartingWith(final String prefix) {
+        return Predicates.<Object>and(Predicates.instanceOf(CharSequence.class),
+            Predicates.compose(new StartsWith<String>(prefix), StringFunctions.toStringFunction()));
+    }
+
+    /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<Object> isStringStartingWithOld(final String prefix) {
         return new Predicate<Object>() {
             @Override
             public boolean apply(Object input) {
@@ -108,11 +223,13 @@ public class StringPredicates {
         };
     }
 
-    public static Predicate<CharSequence> equalToAny(Iterable<String> vals) {
-        return new EqualToAny<CharSequence>(vals);
+    // ---------------
+    
+    public static <T> Predicate<T> equalToAny(Iterable<T> vals) {
+        return new EqualToAny<T>(vals);
     }
 
-    public static class EqualToAny<T> implements Predicate<T>, Serializable {
+    private static class EqualToAny<T> implements Predicate<T>, Serializable {
         private static final long serialVersionUID = 6209304291945204422L;
         private final Set<T> vals;
         
@@ -129,6 +246,44 @@ public class StringPredicates {
         }
     }
 
-    // TODO globs, matches regex, etc ... add as you need them!
+    // -----------
     
+    public static <T extends CharSequence> Predicate<T> matchesRegex(final String regex) {
+        return new MatchesRegex<T>(regex);
+    }
+
+    protected static class MatchesRegex<T extends CharSequence> implements Predicate<T> {
+        protected final String regex;
+        protected MatchesRegex(String regex) {
+            this.regex = regex;
+        }
+        @Override
+        public boolean apply(CharSequence input) {
+            return (input != null) && input.toString().matches(regex);
+        }
+        @Override
+        public String toString() {
+            return "matchesRegex("+regex+")";
+        }
+    }
+    
+    public static <T extends CharSequence> Predicate<T> matchesGlob(final String glob) {
+        return new MatchesGlob<T>(glob);
+    }
+
+    protected static class MatchesGlob<T extends CharSequence> implements Predicate<T> {
+        protected final String glob;
+        protected MatchesGlob(String glob) {
+            this.glob = glob;
+        }
+        @Override
+        public boolean apply(CharSequence input) {
+            return (input != null) && WildcardGlobs.isGlobMatched(glob, input.toString());
+        }
+        @Override
+        public String toString() {
+            return "matchesGlob("+glob+")";
+        }
+    }
+
 }
