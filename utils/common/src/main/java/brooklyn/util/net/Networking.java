@@ -21,6 +21,7 @@ package brooklyn.util.net;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -31,6 +32,7 @@ import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -38,8 +40,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.UnsignedBytes;
@@ -72,63 +76,75 @@ public class Networking {
         if (port < MIN_PORT_NUMBER || port > MAX_PORT_NUMBER) {
             throw new IllegalArgumentException("Invalid start port: " + port);
         }
+        Stopwatch watch = Stopwatch.createStarted();
         try {
-            Socket s = new Socket(localAddress, port);
             try {
-                s.close();
-            } catch (Exception e) {}
-            return false;
-        } catch (Exception e) {
-            //expected - shouldn't be able to connect
-        }
-        //despite http://stackoverflow.com/questions/434718/sockets-discover-port-availability-using-java
-        //(recommending the following) it isn't 100% reliable (e.g. nginx will happily coexist with ss+ds)
-        //so we also do the above check
-        ServerSocket ss = null;
-        DatagramSocket ds = null;
-        try {
-            ss = new ServerSocket(port);
-            ss.setReuseAddress(true);
-            ds = new DatagramSocket(port);
-            ds.setReuseAddress(true);
-            
-        } catch (IOException e) {
-            return false;
-        } finally {
-            if (ds != null) {
-                ds.close();
-            }
-
-            if (ss != null) {
+                Socket s = new Socket();
+                s.setSoTimeout(250);
+                s.connect(new InetSocketAddress(localAddress, port), 250);
                 try {
-                    ss.close();
-                } catch (IOException e) {
-                    /* should not be thrown */
-                }
+                    s.close();
+                } catch (Exception e) {}
+                return false;
+            } catch (Exception e) {
+                //expected - shouldn't be able to connect
             }
-        }
-        
-        
-        if (localAddress==null || ANY_NIC.equals(localAddress)) {
-            // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use; check 127.0.0.1 if 0.0.0.0 was requested
-            Enumeration<NetworkInterface> nis = null;
+            //despite http://stackoverflow.com/questions/434718/sockets-discover-port-availability-using-java
+            //(recommending the following) it isn't 100% reliable (e.g. nginx will happily coexist with ss+ds)
+            //so we also do the above check
+            ServerSocket ss = null;
+            DatagramSocket ds = null;
             try {
-                nis = NetworkInterface.getNetworkInterfaces();
-            } catch (SocketException e) {
-                throw Exceptions.propagate(e);
-            }
-            while (nis.hasMoreElements()) {
-                NetworkInterface ni = nis.nextElement();
-                Enumeration<InetAddress> as = ni.getInetAddresses();
-                while (as.hasMoreElements()) {
-                    InetAddress a = as.nextElement();
-                    if (!isPortAvailable(a, port))
-                        return false;
+                ss = new ServerSocket();
+                ss.setSoTimeout(250);
+                ss.bind(new InetSocketAddress(localAddress, port));
+                ss.setReuseAddress(true);
+                
+                ds = new DatagramSocket(port);
+                ds.setReuseAddress(true);
+                
+            } catch (IOException e) {
+                return false;
+            } finally {
+                if (ds != null) {
+                    ds.close();
+                }
+    
+                if (ss != null) {
+                    try {
+                        ss.close();
+                    } catch (IOException e) {
+                        /* should not be thrown */
+                    }
                 }
             }
+            
+            
+            if (localAddress==null || ANY_NIC.equals(localAddress)) {
+                // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use; check 127.0.0.1 if 0.0.0.0 was requested
+                Enumeration<NetworkInterface> nis = null;
+                try {
+                    nis = NetworkInterface.getNetworkInterfaces();
+                } catch (SocketException e) {
+                    throw Exceptions.propagate(e);
+                }
+                while (nis.hasMoreElements()) {
+                    NetworkInterface ni = nis.nextElement();
+                    Enumeration<InetAddress> as = ni.getInetAddresses();
+                    while (as.hasMoreElements()) {
+                        InetAddress a = as.nextElement();
+                        if (!isPortAvailable(a, port))
+                            return false;
+                    }
+                }
+            }
+            
+            return true;
+        } finally {
+            // Until timeout was added, was taking 1min5secs for /fe80:0:0:0:1cc5:1ff:fe81:a61d%8 : 8081
+            if (log.isTraceEnabled()) log.trace("Took {} to determine if port {} : {} was available", 
+                    new Object[] {Time.makeTimeString(watch.elapsed(TimeUnit.MILLISECONDS), true), localAddress, port});
         }
-        
-        return true;
     }
     /** returns the first port available on the local machine >= the port supplied */
     public static int nextAvailablePort(int port) {
