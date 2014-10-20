@@ -41,6 +41,13 @@ public interface BrooklynObject extends Identifiable {
      * They must not be null (as {@link ImmutableMap} may be used under the covers; also there is little point!);
      * and they should be amenable to our persistence (on-disk serialization) and our JSON serialization in the REST API.
      */
+    TagSupport tags();
+    
+    /**
+     * @since 0.7.0-M2
+     * @deprecated since 0.7.0-M2; use {@link #tags()}
+     */
+    @Deprecated
     TagSupport getTagSupport();
     
     public static interface TagSupport {

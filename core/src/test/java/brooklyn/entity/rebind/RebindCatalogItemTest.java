@@ -156,14 +156,14 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         assertEquals(Iterables.size(origManagementContext.getCatalog().getCatalogItems()), 1);
         CatalogItem<Object, Object> toTag = Iterables.getOnlyElement(origManagementContext.getCatalog().getCatalogItems());
         final String tag = "tag1";
-        toTag.getTagSupport().addTag(tag);
-        assertTrue(toTag.getTagSupport().containsTag(tag));
+        toTag.tags().addTag(tag);
+        assertTrue(toTag.tags().containsTag(tag));
 
         rebindAndAssertCatalogsAreEqual();
 
         toTag = Iterables.getOnlyElement(newManagementContext.getCatalog().getCatalogItems());
-        assertTrue(toTag.getTagSupport().containsTag(tag));
-        toTag.getTagSupport().removeTag(tag);
+        assertTrue(toTag.tags().containsTag(tag));
+        toTag.tags().removeTag(tag);
     }
 
     private void rebindAndAssertCatalogsAreEqual() {

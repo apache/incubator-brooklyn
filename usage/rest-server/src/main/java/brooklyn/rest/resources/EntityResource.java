@@ -153,7 +153,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
   @Override
   public List<Object> listTags(String applicationId, String entityId) {
       Entity entity = brooklyn().getEntity(applicationId, entityId);
-      return (List<Object>) getValueForDisplay(MutableList.copyOf(entity.getTagSupport().getTags()), true, true);
+      return (List<Object>) getValueForDisplay(MutableList.copyOf(entity.tags().getTags()), true, true);
   }
 
   @Override
@@ -214,7 +214,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
   public String getSpec(String applicationToken,  String entityToken) {
       EntityLocal entity = brooklyn().getEntity(applicationToken, entityToken);
-      NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.getTagSupport().getTags());
+      NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.tags().getTags());
       if (spec==null) return null;
       return (String) getValueForDisplay(spec.getContents(), true, true);
   }

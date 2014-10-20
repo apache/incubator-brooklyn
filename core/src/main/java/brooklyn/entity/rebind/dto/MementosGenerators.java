@@ -381,7 +381,7 @@ public class MementosGenerators {
         builder.type = instance.getClass().getName();
         builder.typeClass = instance.getClass();
         
-        for (Object tag : instance.getTagSupport().getTags()) {
+        for (Object tag : instance.tags().getTags()) {
             builder.tags.add(tag); 
         }
     }

@@ -63,7 +63,7 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
     
     protected void addTags(RebindContext rebindContext, T memento) {
         for (Object tag : memento.getTags()) {
-            instance.getTagSupport().addTag(tag);
+            instance.tags().addTag(tag);
         }
     }
 

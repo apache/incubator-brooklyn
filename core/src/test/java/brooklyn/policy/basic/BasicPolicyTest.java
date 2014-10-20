@@ -82,7 +82,7 @@ public class BasicPolicyTest extends BrooklynAppUnitTestSupport {
     public void testTagsFromSpec() throws Exception {
         MyPolicy policy = app.addPolicy(PolicySpec.create(MyPolicy.class).tag(99).uniqueTag("x"));
 
-        assertEquals(policy.getTagSupport().getTags(), MutableSet.of("x", 99));
+        assertEquals(policy.tags().getTags(), MutableSet.of("x", 99));
         assertEquals(policy.getUniqueTag(), "x");
     }
 

@@ -1436,21 +1436,21 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     public Set<Object> getTags() {
-        return getTagSupport().getTags();
+        return tags().getTags();
     }
 
     @Override
     public boolean addTag(Object tag) {
-        return getTagSupport().addTag(tag);
+        return tags().addTag(tag);
     }    
 
     @Override
     public boolean removeTag(Object tag) {
-        return getTagSupport().removeTag(tag);
+        return tags().removeTag(tag);
     }    
 
     @Override
     public boolean containsTag(Object tag) {
-        return getTagSupport().containsTag(tag);
+        return tags().containsTag(tag);
     }    
 }

@@ -156,7 +156,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     }
 
     @Override
-    public TagSupport getTagSupport() {
+    public TagSupport tags() {
         return new BasicTagSupport();
     }
 

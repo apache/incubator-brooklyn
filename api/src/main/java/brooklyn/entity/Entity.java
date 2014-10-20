@@ -258,25 +258,25 @@ public interface Entity extends BrooklynObject {
     
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     Set<Object> getTags();
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     boolean addTag(@Nonnull Object tag);
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     boolean removeTag(@Nonnull Object tag);
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     boolean containsTag(@Nonnull Object tag);

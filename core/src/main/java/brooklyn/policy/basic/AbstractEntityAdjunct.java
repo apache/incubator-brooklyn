@@ -358,7 +358,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return uniqueTag;
     }
 
-    public TagSupport getTagSupport() {
+    public TagSupport tags() {
         return new AdjunctTagSupport();
     }
 
