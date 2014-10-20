@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -45,6 +44,7 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 /** 
  * Emits {@link HASensors#ENTITY_FAILED} whenever the parent's default logic ({@link ComputeServiceState}) would detect a problem,
@@ -109,10 +109,23 @@ public class ServiceFailureDetector extends ServiceStateLogic.ComputeServiceStat
     
     protected Long publishEntityFailedTime = null;
     protected Long publishEntityRecoveredTime = null;
+    protected Long setEntityOnFireTime = null;
+    
+    protected LastPublished lastPublished = LastPublished.NONE;
 
     private final AtomicBoolean executorQueued = new AtomicBoolean(false);
     private volatile long executorTime = 0;
 
+    /**
+     * TODO Really don't want this mutex!
+     * ServiceStateLogic.setExpectedState() will call into `onEvent(null)`, so could get concurrent calls.
+     * How to handle that? I don't think `ServiceStateLogic.setExpectedState` should be making the call, but
+     * presumably that is their to remove a race condition so it is set before method returns. Caller shouldn't
+     * rely on that though.
+     * e.g. see `ServiceFailureDetectorTest.testNotifiedOfFailureOnStateOnFire`, where we get two notifications.
+     */
+    private final Object mutex = new Object();
+    
     public ServiceFailureDetector() {
         this(new ConfigBag());
     }
@@ -128,8 +141,13 @@ public class ServiceFailureDetector extends ServiceStateLogic.ComputeServiceStat
     
     @Override
     public void onEvent(SensorEvent<Object> event) {
-        if (firstUpTime==null && event!=null && Attributes.SERVICE_UP.equals(event.getSensor()) && Boolean.TRUE.equals(event.getValue())) {
-            firstUpTime = event.getTimestamp();
+        if (firstUpTime==null) {
+            if (event!=null && Attributes.SERVICE_UP.equals(event.getSensor()) && Boolean.TRUE.equals(event.getValue())) {
+                firstUpTime = event.getTimestamp();
+            } else if (event == null && Boolean.TRUE.equals(entity.getAttribute(Attributes.SERVICE_UP))) {
+                // If this enricher is registered after the entity is up, then we'll get a "synthetic" onEvent(null) 
+                firstUpTime = System.currentTimeMillis();
+            }
         }
         
         super.onEvent(event);
@@ -137,63 +155,119 @@ public class ServiceFailureDetector extends ServiceStateLogic.ComputeServiceStat
     
     @Override
     protected void setActualState(Lifecycle state) {
-        if (state==Lifecycle.ON_FIRE) {
-            if (currentFailureStartTime==null) {
-                currentFailureStartTime = System.currentTimeMillis();
-                publishEntityFailedTime = currentFailureStartTime + getConfig(ENTITY_FAILED_STABILIZATION_DELAY).toMilliseconds();
-            }
-            // cancel any existing recovery
-            currentRecoveryStartTime = null;
-            publishEntityRecoveredTime = null;
-            
-            long now = System.currentTimeMillis();
-            
-            long delayBeforeCheck = currentFailureStartTime+getConfig(SERVICE_ON_FIRE_STABILIZATION_DELAY).toMilliseconds() - now;
-            if (delayBeforeCheck<=0) {
-                super.setActualState(state);
+        long now = System.currentTimeMillis();
+
+        synchronized (mutex) {
+            if (state==Lifecycle.ON_FIRE) {
+                if (lastPublished == LastPublished.FAILED) {
+                    if (currentRecoveryStartTime != null) {
+                        if (LOG.isDebugEnabled()) LOG.debug("{} health-check for {}, component was recovering, now failing: {}", new Object[] {this, entity, getExplanation(state)});
+                        currentRecoveryStartTime = null;
+                        publishEntityRecoveredTime = null;
+                    } else {
+                        if (LOG.isTraceEnabled()) LOG.trace("{} health-check for {}, component still failed: {}", new Object[] {this, entity, getExplanation(state)});
+                    }
+                } else {
+                    if (firstUpTime == null && getConfig(ENTITY_FAILED_ONLY_IF_PREVIOUSLY_UP)) {
+                        // suppress; won't publish
+                    } else if (currentFailureStartTime == null) {
+                        if (LOG.isDebugEnabled()) LOG.debug("{} health-check for {}, component now failing: {}", new Object[] {this, entity, getExplanation(state)});
+                        currentFailureStartTime = now;
+                        publishEntityFailedTime = currentFailureStartTime + getConfig(ENTITY_FAILED_STABILIZATION_DELAY).toMilliseconds();
+                    } else {
+                        if (LOG.isTraceEnabled()) LOG.trace("{} health-check for {}, component continuing failing: {}", new Object[] {this, entity, getExplanation(state)});
+                    }
+                }
+                if (setEntityOnFireTime == null) {
+                    setEntityOnFireTime = now + getConfig(SERVICE_ON_FIRE_STABILIZATION_DELAY).toMilliseconds();
+                }
+                currentRecoveryStartTime = null;
+                publishEntityRecoveredTime = null;
+                
+            } else if (state == Lifecycle.RUNNING) {
+                if (lastPublished == LastPublished.FAILED) {
+                    if (currentRecoveryStartTime == null) {
+                        if (LOG.isDebugEnabled()) LOG.debug("{} health-check for {}, component now recovering: {}", new Object[] {this, entity, getExplanation(state)});
+                        currentRecoveryStartTime = now;
+                        publishEntityRecoveredTime = currentRecoveryStartTime + getConfig(ENTITY_RECOVERED_STABILIZATION_DELAY).toMilliseconds();
+                    } else {
+                        if (LOG.isTraceEnabled()) LOG.trace("{} health-check for {}, component continuing recovering: {}", new Object[] {this, entity, getExplanation(state)});
+                    }
+                } else {
+                    if (currentFailureStartTime != null) {
+                        if (LOG.isDebugEnabled()) LOG.debug("{} health-check for {}, component was failing, now healthy: {}", new Object[] {this, entity, getExplanation(state)});
+                    } else {
+                        if (LOG.isTraceEnabled()) LOG.trace("{} health-check for {}, component still healthy: {}", new Object[] {this, entity, getExplanation(state)});
+                    }
+                }
+                currentFailureStartTime = null;
+                publishEntityFailedTime = null;
+                setEntityOnFireTime = null;
+                
             } else {
-                recomputeAfterDelay(delayBeforeCheck);
+                if (LOG.isTraceEnabled()) LOG.trace("{} health-check for {}, in unconfirmed sate: {}", new Object[] {this, entity, getExplanation(state)});
             }
+
+            long recomputeIn = Long.MAX_VALUE; // For whether to call recomputeAfterDelay
             
-            if (publishEntityFailedTime!=null) {
-                delayBeforeCheck = publishEntityFailedTime - now;
-                if (firstUpTime==null && getConfig(ENTITY_FAILED_ONLY_IF_PREVIOUSLY_UP)) {
-                    // suppress
+            if (publishEntityFailedTime != null) {
+                long delayBeforeCheck = publishEntityFailedTime - now;
+                if (delayBeforeCheck<=0) {
+                    if (LOG.isDebugEnabled()) LOG.debug("{} publishing failed (state={}; currentFailureStartTime={}; now={}", 
+                            new Object[] {this, state, Time.makeDateString(currentFailureStartTime), Time.makeDateString(now)});
                     publishEntityFailedTime = null;
-                } else if (delayBeforeCheck<=0) {
-                    publishEntityFailedTime = null;
+                    lastPublished = LastPublished.FAILED;
                     entity.emit(HASensors.ENTITY_FAILED, new HASensors.FailureDescriptor(entity, getFailureDescription(now)));
                 } else {
-                    recomputeAfterDelay(delayBeforeCheck);
+                    recomputeIn = Math.min(recomputeIn, delayBeforeCheck);
                 }
-            }
-            
-        } else {
-            if (state == Lifecycle.RUNNING) {
-                if (currentFailureStartTime!=null) {
-                    currentFailureStartTime = null;
-                    publishEntityFailedTime = null;
-
-                    currentRecoveryStartTime = System.currentTimeMillis();
-                    publishEntityRecoveredTime = currentRecoveryStartTime + getConfig(ENTITY_RECOVERED_STABILIZATION_DELAY).toMilliseconds();
-                }
-            }
-
-            super.setActualState(state);
-            
-            if (publishEntityRecoveredTime!=null) {
-                long now = System.currentTimeMillis();
+            } else if (publishEntityRecoveredTime != null) {
                 long delayBeforeCheck = publishEntityRecoveredTime - now;
                 if (delayBeforeCheck<=0) {
-                    entity.emit(HASensors.ENTITY_RECOVERED, new HASensors.FailureDescriptor(entity, null));
+                    if (LOG.isDebugEnabled()) LOG.debug("{} publishing recovered (state={}; currentRecoveryStartTime={}; now={}", 
+                            new Object[] {this, state, Time.makeDateString(currentRecoveryStartTime), Time.makeDateString(now)});
                     publishEntityRecoveredTime = null;
+                    lastPublished = LastPublished.RECOVERED;
+                    entity.emit(HASensors.ENTITY_RECOVERED, new HASensors.FailureDescriptor(entity, null));
                 } else {
-                    recomputeAfterDelay(delayBeforeCheck);
+                    recomputeIn = Math.min(recomputeIn, delayBeforeCheck);
                 }
+            }
+            
+            if (setEntityOnFireTime != null) {
+                long delayBeforeCheck = setEntityOnFireTime - now;
+                if (delayBeforeCheck<=0) {
+                    if (LOG.isDebugEnabled()) LOG.debug("{} setting on-fire, now that deferred period has passed (state={})", 
+                            new Object[] {this, state});
+                    setEntityOnFireTime = null;
+                    super.setActualState(state);
+                } else {
+                    recomputeIn = Math.min(recomputeIn, delayBeforeCheck);
+                }
+            } else {
+                super.setActualState(state);
+            }
+            
+            if (recomputeIn < Long.MAX_VALUE) {
+                recomputeAfterDelay(recomputeIn);
             }
         }
     }
 
+    protected String getExplanation(Lifecycle state) {
+        Duration serviceFailedStabilizationDelay = getConfig(ENTITY_FAILED_STABILIZATION_DELAY);
+        Duration serviceRecoveredStabilizationDelay = getConfig(ENTITY_RECOVERED_STABILIZATION_DELAY);
+
+        return String.format("location=%s; status=%s; lastPublished=%s; timeNow=%s; "+
+                    "currentFailurePeriod=%s; currentRecoveryPeriod=%s",
+                entity.getLocations(), 
+                (state != null ? state : "<unreported>"),
+                lastPublished,
+                Time.makeDateString(System.currentTimeMillis()),
+                (currentFailureStartTime != null ? getTimeStringSince(currentFailureStartTime) : "<none>") + " (stabilization "+Time.makeTimeStringRounded(serviceFailedStabilizationDelay) + ")",
+                (currentRecoveryStartTime != null ? getTimeStringSince(currentRecoveryStartTime) : "<none>") + " (stabilization "+Time.makeTimeStringRounded(serviceRecoveredStabilizationDelay) + ")");
+    }
+    
     private String getFailureDescription(long now) {
         String description = null;
         Map<String, Object> serviceProblems = entity.getAttribute(Attributes.SERVICE_PROBLEMS);
@@ -248,4 +322,7 @@ public class ServiceFailureDetector extends ServiceStateLogic.ComputeServiceStat
         }
     }
     
+    private String getTimeStringSince(Long time) {
+        return time == null ? null : Time.makeTimeStringRounded(System.currentTimeMillis() - time);
+    }
 }
