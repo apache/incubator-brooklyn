@@ -206,6 +206,13 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         
         return result;
     }
+    
+    @Override
+    protected void postStopCustom() {
+        super.postStopCustom();
+        
+        entity().postStop();
+    }
 
 }
 

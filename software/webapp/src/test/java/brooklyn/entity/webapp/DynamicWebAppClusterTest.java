@@ -67,7 +67,7 @@ public class DynamicWebAppClusterTest {
 
     @Test
     public void testTestJavaWebAppEntity() throws Exception {
-        Entity test = app.createAndManageChild(EntitySpec.create(Entity.class, TestJavaWebAppEntity.class));
+        Entity test = app.createAndManageChild(EntitySpec.create(TestJavaWebAppEntity.class));
         test.invoke(Startable.START, ImmutableMap.of("locations", ImmutableList.of())).get();
     }
     
@@ -75,7 +75,7 @@ public class DynamicWebAppClusterTest {
     public void testRequestCountAggregation() throws Exception {
         final DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure("initialSize", 2)
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         
         app.start(ImmutableList.of(new SimulatedLocation()));
         
@@ -105,7 +105,7 @@ public class DynamicWebAppClusterTest {
     public void testSetsServiceUpIfMemberIsUp() throws Exception {
         DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
     
         app.start(ImmutableList.of(new SimulatedLocation()));
         
@@ -132,13 +132,14 @@ public class DynamicWebAppClusterTest {
     @Test
     public void testPropertiesToChildren() throws Exception {
         DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
-            .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(MutableMap.of("a", 1), TestJavaWebAppEntity.class))
+            .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)
+                .configure("a", 1))
             .configure(DynamicWebAppCluster.CUSTOM_CHILD_FLAGS, ImmutableMap.of("b", 2)));
 
         app.start(ImmutableList.of(new SimulatedLocation()));
         
         TestJavaWebAppEntity we = (TestJavaWebAppEntity) Iterables.getOnlyElement(cluster.getMembers());
-        assertEquals(we.a, 1);
-        assertEquals(we.b, 2);
+        assertEquals(we.getA(), 1);
+        assertEquals(we.getB(), 2);
     }
 }

@@ -23,10 +23,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.util.exceptions.Exceptions;
 
 public abstract class AbstractConfigurableEntityFactory<T extends Entity> implements ConfigurableEntityFactory<T>, Serializable {
+    private static final Logger log = LoggerFactory.getLogger(AbstractConfigurableEntityFactory.class);
+    
     protected final Map config = new LinkedHashMap();
 
     public AbstractConfigurableEntityFactory(){
@@ -67,7 +73,10 @@ public abstract class AbstractConfigurableEntityFactory<T extends Entity> implem
         Map flags2 = new HashMap();
         flags2.putAll(config);
         flags2.putAll(flags);
-        return newEntity2(flags2, parent);
+        T result = newEntity2(flags2, parent);
+        // we rely increasingly on init, which factory doesn't call; really should remove factories!
+        log.warn("Deprecated legacy compatibility, using factory (init will not be invoked): "+result);
+        return result;
     }
 
     public abstract T newEntity2(Map flags, Entity parent);

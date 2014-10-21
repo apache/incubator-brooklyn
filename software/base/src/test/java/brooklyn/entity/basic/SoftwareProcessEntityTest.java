@@ -35,13 +35,18 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMode;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.UserAndHostAndPort;
@@ -49,6 +54,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -169,6 +175,38 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         Assert.assertTrue(d.isRunning());
         entity.stop();
         Assert.assertEquals(d.events, ImmutableList.of("setup", "copyInstallResources", "install", "customize", "copyRuntimeResources", "launch", "stop"));
+        Assert.assertFalse(d.isRunning());
+    }
+    
+    @Test
+    public void testBasicSoftwareProcessRestarts() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        entity.start(ImmutableList.of(loc));
+        SimulatedDriver d = (SimulatedDriver) entity.getDriver();
+        Assert.assertTrue(d.isRunning());
+        
+        // this will cause restart to fail if it attempts to replace the machine
+        loc.removeMachine(Locations.findUniqueSshMachineLocation(entity.getLocations()).get());
+        
+        // with defaults, it won't reboot machine
+        entity.restart();
+        
+        // but here, it will try to reboot, and fail because there is no machine available
+        TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.RESTART, 
+                ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMode.TRUE)));
+        t1.asTask().blockUntilEnded(Duration.TEN_SECONDS);
+        if (!t1.asTask().isError()) {
+            Assert.fail("Should have thrown error during "+t1+" because no more machines available at "+loc);
+        }
+
+        // now it has a machine, so reboot should succeed
+        SshMachineLocation machine2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+            .configure("address", "localhost"));
+        loc.addMachine(machine2);
+        TaskAdaptable<Void> t2 = Entities.submit(entity, Effectors.invocation(entity, Startable.RESTART, 
+            ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMode.TRUE)));
+        t2.asTask().get();
+        
         Assert.assertFalse(d.isRunning());
     }
     

@@ -44,6 +44,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
@@ -130,9 +131,12 @@ public abstract class MachineLifecycleEffectorTasks {
 
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newRestartEffector() {
-        return Effectors.effector(Startable.RESTART).impl(newRestartEffectorTask()).build();
+        return Effectors.effector(Startable.RESTART).
+            parameter(RestartSoftwareParameters.RESTART_CHILDREN).
+            parameter(RestartSoftwareParameters.RESTART_MACHINE).
+            impl(newRestartEffectorTask()).build();
     }
-
+    
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newStopEffector() {
         return Effectors.effector(Startable.STOP).impl(newStopEffectorTask()).build();
@@ -434,12 +438,26 @@ public abstract class MachineLifecycleEffectorTasks {
      */
     public void restart(ConfigBag parameters) {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
-        DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
-            DynamicTasks.markInessential();
-            stopProcessesAtMachine();
-            DynamicTasks.waitForLast();
-            return "Stop of process completed with no errors.";
-        }});
+        
+        RestartMode isRestartMachine = parameters.get(RestartSoftwareParameters.RESTART_MACHINE_TYPED);
+        if (isRestartMachine==null) isRestartMachine=RestartMode.AUTO;
+        if (isRestartMachine==RestartMode.AUTO) isRestartMachine = RestartMode.FALSE;
+
+        if (isRestartMachine==RestartMode.FALSE) {
+            DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
+                DynamicTasks.markInessential();
+                stopProcessesAtMachine();
+                DynamicTasks.waitForLast();
+                return "Stop of process completed with no errors.";
+            }});
+        } else {
+            DynamicTasks.queue("stopping (machine)", new Callable<String>() { public String call() {
+                DynamicTasks.markInessential();
+                stop();
+                DynamicTasks.waitForLast();
+                return "Stop of machine completed with no errors.";
+            }});            
+        }
 
         DynamicTasks.queue("starting", new Runnable() { public void run() {
             // startInLocations will look up the location, and provision a machine if necessary
@@ -546,6 +564,10 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     protected void preStopCustom() {
+        // nothing needed here
+    }
+    
+    protected void postStopCustom() {
         // nothing needed here
     }
 

@@ -95,10 +95,10 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
         disconnectServiceUpIsRunning();
     }
 
-    /** @see JavaWebAppSoftwareProcessImpl#stop() */
+    /** @see JavaWebAppSoftwareProcessImpl#postStop() */
     @Override
-    protected void doStop() {
-        super.doStop();
+    protected void postStop() {
+        super.postStop();
         // zero our workrate derived workrates.
         setAttribute(REQUESTS_PER_SECOND_LAST, 0D);
         setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);

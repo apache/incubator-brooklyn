@@ -20,7 +20,6 @@ package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,10 +29,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,32 +50,39 @@ public class SoftwareProcessSubclassTest extends BrooklynAppUnitTestSupport {
     public static interface SubSoftwareProcess extends EmptySoftwareProcess {
         public List<String> getCallHistory();
         public void triggerStopOutsideOfEffector();
+        public void customRestart();
     }
     
     public static class SubSoftwareProcessImpl extends EmptySoftwareProcessImpl implements SubSoftwareProcess {
+        
         protected List<String> callHistory = Collections.synchronizedList(Lists.<String>newArrayList());
 
+        @Override
+        public void init() {
+            super.init();
+            getMutableEntityType().addEffector(new EffectorAndBody<Void>(SoftwareProcess.RESTART, new MethodEffector<Void>(SubSoftwareProcess.class, "customRestart").getBody()));
+        }
+        
         @Override
         public List<String> getCallHistory() {
             return callHistory;
         }
 
         @Override
-        public void doStart(Collection<? extends Location> locs) {
+        public void preStart() {
             callHistory.add("doStart");
-            super.doStart(locs);
+            super.preStart();
         }
         
         @Override
-        public void doStop() {
+        public void preStop() {
             callHistory.add("doStop");
-            super.doStop();
+            super.preStop();
         }
         
         @Override
-        public void doRestart(ConfigBag parameters) {
+        public void customRestart() {
             callHistory.add("doRestart");
-            super.doRestart(parameters);
         }
         
         @Override

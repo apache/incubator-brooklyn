@@ -157,9 +157,9 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     }
     
     @Override
-    protected void doStop() {
+    protected void postStop() {
         // TODO don't want stop to race with the last poll.
-        super.doStop();
+        super.postStop();
         setAttribute(SERVICE_UP, false);
     }
 

@@ -95,13 +95,13 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     }
 
     @Override
-    protected void doStop() {
+    protected void preStop() {
+        super.preStop();
         //shutdown only if running, any of stop_* could've been already previously
         if (getAttribute(Attributes.SERVICE_UP)) {
             Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
             DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.REQUEST_TIMEOUT, Duration.ONE_MINUTE)));
         }
-        super.doStop();
     }
 
     public static class DeployBlueprintEffectorBody extends EffectorBody<String> implements DeployBlueprintEffector {
@@ -229,6 +229,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 TaskTags.markInessential(shutdownTask);
             }
             DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
+            DynamicTasks.queue(Effectors.invocation(entity(), STOP, ConfigBag.EMPTY)).asTask().getUnchecked();
             Entities.destroy(entity);
             return null;
         }
@@ -250,6 +251,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 TaskTags.markInessential(shutdownTask);
             }
             DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
+            DynamicTasks.queue(Effectors.invocation(entity(), STOP, ConfigBag.EMPTY)).asTask().getUnchecked();
             Entities.destroy(entity);
             return null;
         }

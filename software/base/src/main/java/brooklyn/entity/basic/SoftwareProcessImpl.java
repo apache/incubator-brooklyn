@@ -118,6 +118,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     @Override
+    public void init() {
+        super.init();
+        LIFECYCLE_TASKS.attachLifecycleEffectors(this);
+    }
+    
+    @Override
     protected void initEnrichers() {
         super.initEnrichers();
         ServiceNotUpLogic.updateNotUpIndicator(this, SERVICE_PROCESS_IS_RUNNING, "No information yet about whether this service is running");
@@ -203,6 +209,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         // TODO feels like that confusion could be eliminated with a single place for pre/post logic!)
         log.debug("disconnecting sensors for "+this+" in entity.preStop");
         disconnectSensors();
+    }
+
+    /**
+     * Called after the rest of stop has completed (after VM deprovisioned, but before state set to STOPPED)
+     */
+    protected void postStop() {
     }
 
     /**
@@ -471,24 +483,33 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /**
      * To be overridden instead of {@link #start(Collection)}; sub-classes should call {@code super.doStart(locations)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     * @deprecated since 0.7.0 override {@link #preStart()} or {@link #postStart()}, or define custom lifecycle tasks if needed
+     * (this method is no longer invoked, hence now marking it final)
      */
-    protected void doStart(Collection<? extends Location> locations) {
+    @Deprecated
+    protected final void doStart(Collection<? extends Location> locations) {
         LIFECYCLE_TASKS.start(locations);
     }
     
     /**
      * To be overridden instead of {@link #stop()}; sub-classes should call {@code super.doStop()} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     * @deprecated since 0.7.0 override {@link #preStop()} or {@link #postStop()}, or define custom lifecycle tasks if needed
+     * (this method is no longer invoked, hence now marking it final)
      */
-    protected void doStop() {
+    @Deprecated
+    protected final void doStop() {
         LIFECYCLE_TASKS.stop();
     }
     
     /**
      * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart(ConfigBag)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     * @deprecated since 0.7.0 define custom lifecycle tasks if needed
+     * (this method is no longer invoked, hence now marking it final)
      */
-    protected void doRestart(ConfigBag parameters) {
+    @Deprecated
+    protected final void doRestart(ConfigBag parameters) {
         LIFECYCLE_TASKS.restart(parameters);
     }
 

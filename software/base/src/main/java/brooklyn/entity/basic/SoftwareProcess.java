@@ -22,7 +22,6 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
-import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
@@ -241,9 +240,11 @@ public interface SoftwareProcess extends Entity, Startable {
 
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
         public static final ConfigKey<Object> RESTART_MACHINE = ConfigKeys.newConfigKey(Object.class, "restartMachine",
-            "Whether to restart the machine where this is running: 'true', 'false', or 'auto' supported, "
-            + "with the default being auto, ie only restarting the machine if there is an apparent problem with the machine"
-            + " (only applies when the machine was provisioned for this entity)", RestartMode.AUTO.toString().toLowerCase());
+            "Whether to restart/replace the machine where this is running: 'true', 'false', or 'auto' supported, "
+            + "with the default being auto, ie only act at the machine level if there is nothing else to restart"
+            + " (e.g. there is no machine);"
+            + " NB: only applies when the machine was provisioned for this entity", 
+            RestartMode.AUTO.toString().toLowerCase());
         
         // we supply a typed variant for retrieval; we want the untyped (above) to use lower case as the default in the GUI
         // (very hard if using enum, since enum takes the name, and RendererHints do not apply to parameters) 
@@ -253,9 +254,6 @@ public interface SoftwareProcess extends Entity, Startable {
         public enum RestartMode { TRUE, FALSE, AUTO }
     }
     
-    brooklyn.entity.Effector<Void> RESTART = Effectors.effector(Startable.RESTART)
-        .parameter(RestartSoftwareParameters.RESTART_CHILDREN)
-        .parameter(RestartSoftwareParameters.RESTART_MACHINE)
-        .build();
+    // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks
 
 }

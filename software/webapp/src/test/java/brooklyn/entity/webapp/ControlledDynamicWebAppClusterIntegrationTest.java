@@ -124,9 +124,9 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
     // Needs to be integration test because still using nginx controller; could pass in mock controller
     @Test(groups="Integration")
     public void testSetsServiceLifecycle() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild( EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         

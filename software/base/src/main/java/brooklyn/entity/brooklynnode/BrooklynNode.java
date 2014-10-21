@@ -244,6 +244,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
         ConfigKey<Duration> DELAY_FOR_HTTP_RETURN = ConfigKeys.newConfigKey(Duration.class, "delayForHttpReturn", "The delay before exiting the process, to permit the REST response to be returned");
         Effector<Void> SHUTDOWN = Effectors.effector(Void.class, "shutdown")
             .description("Shutdown the remote brooklyn instance")
+            .description("Shutdown the remote brooklyn instance (stops via the REST API only; leaves any VM)")
             .parameter(STOP_APPS_FIRST)
             .parameter(FORCE_SHUTDOWN_ON_ERROR)
             .parameter(SHUTDOWN_TIMEOUT)

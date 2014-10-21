@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -36,11 +37,16 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTransientCopyInternal;
+import brooklyn.entity.effector.EffectorWithBody;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.TaskTags;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
@@ -192,7 +198,13 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
                 Object[] nonNullArgs = (args == null) ? new Object[0] : args;
                 Effector<?> eff = findEffector(m, nonNullArgs);
                 if (eff != null) {
-                    result = EffectorUtils.invokeMethodEffector(delegate, eff, nonNullArgs);
+                    @SuppressWarnings("rawtypes")
+                    Map parameters = EffectorUtils.prepareArgsForEffectorAsMapFromArray(eff, nonNullArgs);
+                    @SuppressWarnings({ "unchecked", "rawtypes" })
+                    TaskAdaptable<?> task = ((EffectorWithBody)eff).getBody().newTask(delegate, eff, ConfigBag.newInstance(parameters));
+                    // as per LocalManagementContext.runAtEntity(Entity entity, TaskAdaptable<T> task) 
+                    TaskTags.markInessential(task);
+                    result = DynamicTasks.queueIfPossible(task.asTask()).orSubmitAsync(delegate).andWaitForSuccess();
                 } else {
                     result = m.invoke(delegate, nonNullArgs);
                 }
