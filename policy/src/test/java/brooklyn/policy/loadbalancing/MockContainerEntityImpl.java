@@ -116,7 +116,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         emit(BalanceableContainer.ITEM_REMOVED, item);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Set<Movable> getBalanceableItems() {
         return (Set) Sets.newLinkedHashSet(getMembers());

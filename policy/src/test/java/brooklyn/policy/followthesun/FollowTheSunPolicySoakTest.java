@@ -75,10 +75,24 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
     public void testLoadBalancingManyItemsQuickTest() {
         RunConfig config = new RunConfig();
         config.numCycles = 1;
+        config.numLocations=2;
+        config.numContainersPerLocation = 3;
+        config.numLockedItemsPerLocation = 2;
+        config.numMovableItems = 10;
+        config.numContainerStopsPerCycle = 1;
+        config.numItemStopsPerCycle = 1;
+    
+        runFollowTheSunSoakTest(config);
+    }
+    
+    @Test(groups={"Integration"}) // takes ~2s
+    public void testLoadBalancingManyItemsNotTooLongTest() {
+        RunConfig config = new RunConfig();
+        config.numCycles = 1;
         config.numLocations=3;
         config.numContainersPerLocation = 5;
         config.numLockedItemsPerLocation = 2;
-        config.numMovableItems = 100;
+        config.numMovableItems = 500;
         config.numContainerStopsPerCycle = 1;
         config.numItemStopsPerCycle = 1;
     
