@@ -33,6 +33,7 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,9 +74,9 @@ public class SoftwareProcessSubclassTest extends BrooklynAppUnitTestSupport {
         }
         
         @Override
-        public void doRestart() {
+        public void doRestart(ConfigBag parameters) {
             callHistory.add("doRestart");
-            super.doRestart();
+            super.doRestart(parameters);
         }
         
         @Override

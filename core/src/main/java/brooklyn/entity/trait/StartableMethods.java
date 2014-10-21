@@ -33,6 +33,7 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.location.Location;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;
@@ -114,8 +115,12 @@ public class StartableMethods {
     }
 
     /** unsubmitted task for restarting children of the given entity */
-    public static TaskAdaptable<?> restartingChildren(Entity entity) {
-        return Effectors.invocation(Startable.RESTART, Collections.emptyMap(), filterStartableManagedEntities(entity.getChildren()));
+    public static TaskAdaptable<?> restartingChildren(Entity entity, ConfigBag parameters) {
+        return Effectors.invocation(Startable.RESTART, parameters.getAllConfig(), filterStartableManagedEntities(entity.getChildren()));
     }
-    
+    /** as {@link #restartingChildren(Entity, ConfigBag)} with no parameters */
+    public static TaskAdaptable<?> restartingChildren(Entity entity) {
+        return restartingChildren(entity, ConfigBag.EMPTY);
+    }
+
 }

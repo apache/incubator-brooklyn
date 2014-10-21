@@ -43,9 +43,11 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
@@ -57,6 +59,7 @@ import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
+import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -153,7 +156,7 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     /**
-     * Calls {@link #restart()}.
+     * Calls {@link #restart(ConfigBag)}.
      *
      * @see {@link #newStartEffectorTask()}
      */
@@ -161,7 +164,7 @@ public abstract class MachineLifecycleEffectorTasks {
         return new EffectorBody<Void>() {
             @Override
             public Void call(ConfigBag parameters) {
-                restart();
+                restart(parameters);
                 return null;
             }
         };
@@ -418,12 +421,18 @@ public abstract class MachineLifecycleEffectorTasks {
         // nothing by default
     }
 
+    /** @deprecated since 0.7.0 use {@link #restart(ConfigBag)} */
+    @Deprecated
+    public void restart() {
+        restart(ConfigBag.EMPTY);
+    }
+
     /**
      * Default restart implementation for an entity.
      * <p>
      * Stops processes if possible, then starts the entity again.
      */
-    public void restart() {
+    public void restart(ConfigBag parameters) {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
         DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
             DynamicTasks.markInessential();
@@ -437,9 +446,28 @@ public abstract class MachineLifecycleEffectorTasks {
             // (if it remembered the provisioning location)
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
             startInLocations(null);
-            DynamicTasks.waitForLast();
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         }});
+        
+        restartChildren(parameters);
+
+        DynamicTasks.waitForLast();
+        ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
+    }
+
+    protected void restartChildren(ConfigBag parameters) {
+        // TODO should we consult ChildStartableMode?
+
+        Boolean isRestartChildren = parameters.get(RestartSoftwareParameters.RESTART_CHILDREN);
+        if (isRestartChildren==null || !isRestartChildren) {
+            return;
+        }
+        
+        if (isRestartChildren) {
+            DynamicTasks.queue(StartableMethods.restartingChildren(entity(), parameters));
+            return;
+        }
+        
+        throw new IllegalArgumentException("Invalid value '"+isRestartChildren+"' for "+RestartSoftwareParameters.RESTART_CHILDREN.getName());
     }
 
     /**

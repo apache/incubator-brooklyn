@@ -461,9 +461,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     @Override
     public final void restart() {
         if (DynamicTasks.getTaskQueuingContext() != null) {
-            doRestart();
+            doRestart(ConfigBag.EMPTY);
         } else {
-            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(); } }).build();
+            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(ConfigBag.EMPTY); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
@@ -485,10 +485,16 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     /**
-     * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart()} and should
+     * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart(ConfigBag)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
      */
-    protected void doRestart() {
-        LIFECYCLE_TASKS.restart();
+    protected void doRestart(ConfigBag parameters) {
+        LIFECYCLE_TASKS.restart(parameters);
     }
+
+    @Deprecated /** @deprecated since 0.7.0 subclasses should instead override {@link #doRestart(ConfigBag)} */
+    protected final void doRestart() {
+        doRestart(ConfigBag.EMPTY);
+    }
+    
 }

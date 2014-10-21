@@ -20,6 +20,9 @@ package brooklyn.entity.trait;
 
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.annotation.EffectorParam;
@@ -31,6 +34,7 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.task.Tasks;
 
 /**
  * This interface describes an {@link brooklyn.entity.Entity} that can be started and stopped.
@@ -41,6 +45,7 @@ import brooklyn.util.config.ConfigBag;
  */
 public interface Startable {
 
+    
     AttributeSensor<Boolean> SERVICE_UP = Attributes.SERVICE_UP;
 
     public static class StartEffectorBody extends EffectorBody<Void> {
@@ -51,30 +56,68 @@ public interface Startable {
             parameters.put(LOCATIONS, entity().getManagementContext().getLocationRegistry().resolveList(parameters.get(LOCATIONS)));
             return new MethodEffector<Void>(Startable.class, "start").call(entity(), parameters.getAllConfig());
         }
-    };
-    
+    }
+
+    public static class StopEffectorBody extends EffectorBody<Void> {
+        private static final Logger log = LoggerFactory.getLogger(Startable.class);
+        
+        @Override public Void call(ConfigBag parameters) {
+            if (!parameters.isEmpty()) {
+                log.warn("Parameters "+parameters+" not supported for call to "+entity()+" - "+Tasks.current());
+            }
+            
+            return new MethodEffector<Void>(Startable.class, "stop").call(entity(), parameters.getAllConfig());
+        }
+    }
+
+    public static class RestartEffectorBody extends EffectorBody<Void> {
+        private static final Logger log = LoggerFactory.getLogger(Startable.class);
+
+        @Override public Void call(ConfigBag parameters) {
+            if (!parameters.isEmpty()) {
+                log.warn("Parameters "+parameters+" not supported for call to "+entity()+" - "+Tasks.current());
+            }
+            return new MethodEffector<Void>(Startable.class, "restart").call(entity(), parameters.getAllConfig());
+        }
+    }
+
     brooklyn.entity.Effector<Void> START = Effectors.effector(new MethodEffector<Void>(Startable.class, "start"))
         // override start to take strings etc
         .parameter(StartEffectorBody.LOCATIONS)
         .impl(new StartEffectorBody())
         .build();
-    brooklyn.entity.Effector<Void> STOP = new MethodEffector<Void>(Startable.class, "stop");
-    brooklyn.entity.Effector<Void> RESTART = new MethodEffector<Void>(Startable.class,"restart");
+    
+    brooklyn.entity.Effector<Void> STOP = Effectors.effector(new MethodEffector<Void>(Startable.class, "stop"))
+        .impl(new StopEffectorBody())
+        .build();
+    
+    brooklyn.entity.Effector<Void> RESTART = Effectors.effector(new MethodEffector<Void>(Startable.class, "restart"))
+        .impl(new RestartEffectorBody())
+        .build();
 
     /**
      * Start the entity in the given collection of locations.
+     * <p>
+     * Some entities may define custom {@link Effector} implementations which support
+     * a richer set of parameters.  See the entity-specific {@link #START} effector declaration.
      */
     @brooklyn.entity.annotation.Effector(description="Start the process/service represented by an entity")
     void start(@EffectorParam(name="locations") Collection<? extends Location> locations);
 
     /**
      * Stop the entity.
+     * <p>
+     * Some entities may define custom {@link Effector} implementations which support
+     * a richer set of parameters.  See the entity-specific {@link #START} effector declaration.
      */
     @brooklyn.entity.annotation.Effector(description="Stop the process/service represented by an entity")
     void stop();
 
     /**
      * Restart the entity.
+     * <p>
+     * Some entities may define custom {@link Effector} implementations which support
+     * a richer set of parameters.  See the entity-specific {@link #START} effector declaration.
      */
     @brooklyn.entity.annotation.Effector(description="Restart the process/service represented by an entity")
     void restart();

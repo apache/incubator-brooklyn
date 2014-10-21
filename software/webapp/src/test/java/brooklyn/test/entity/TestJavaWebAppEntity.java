@@ -35,6 +35,7 @@ import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.java.VanillaJavaAppImpl;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.location.Location;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -67,7 +68,7 @@ public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
     }
 
     @Override
-    public void doRestart() {
+    public void doRestart(ConfigBag parameters) {
         throw new UnsupportedOperationException();
     }
 
