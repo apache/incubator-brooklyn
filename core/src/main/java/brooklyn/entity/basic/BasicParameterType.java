@@ -25,9 +25,6 @@ import brooklyn.entity.ParameterType;
 
 import com.google.common.base.Objects;
 
-/**
- * TODO javadoc
- */
 public class BasicParameterType<T> implements ParameterType<T> {
     private static final long serialVersionUID = -5521879180483663919L;
     

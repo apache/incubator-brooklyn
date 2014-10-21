@@ -36,6 +36,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.brooklynnode.effector.SetHAModeEffectorBody;
@@ -102,6 +103,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
         getMutableEntityType().addEffector(SetHAPriorityEffectorBody.SET_HA_PRIORITY);
         getMutableEntityType().addEffector(SetHAModeEffectorBody.SET_HA_MODE);
+        getMutableEntityType().addEffector(BrooklynUpgradeEffector.UPGRADE);
     }
 
     @Override
@@ -191,13 +193,13 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
         @Override
         public Void call(ConfigBag parameters) {
-            Map<String, String> formParams = new MutableMap<String, String>()
-                    .addIfNotNull("stopAppsFirst", toNullableString(parameters.get(STOP_APPS_FIRST)))
-                    .addIfNotNull("forceShutdownOnError", toNullableString(parameters.get(FORCE_SHUTDOWN_ON_ERROR)))
-                    .addIfNotNull("shutdownTimeout", toNullableString(parameters.get(SHUTDOWN_TIMEOUT)))
-                    .addIfNotNull("requestTimeout", toNullableString(parameters.get(REQUEST_TIMEOUT)))
-                    .addIfNotNull("delayForHttpReturn", toNullableString(parameters.get(DELAY_FOR_HTTP_RETURN)));
+            MutableMap<String, String> formParams = MutableMap.of();
+            Lifecycle initialState = entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
+            for (ConfigKey<?> k: new ConfigKey<?>[] { STOP_APPS_FIRST, FORCE_SHUTDOWN_ON_ERROR, SHUTDOWN_TIMEOUT, REQUEST_TIMEOUT, DELAY_FOR_HTTP_RETURN })
+                formParams.addIfNotNull(k.getName(), toNullableString(parameters.get(k)));
             try {
+                log.debug("Shutting down "+entity()+" with "+formParams);
                 HttpToolResponse resp = ((BrooklynNode)entity()).http()
                     .post("/v1/server/shutdown",
                         ImmutableMap.of("Brooklyn-Allow-Non-Master-Access", "true"),
@@ -207,14 +209,15 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                Lifecycle state = entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL);
-                if (state!=Lifecycle.RUNNING) {
+                ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
+                if (initialState!=Lifecycle.RUNNING) {
                     // ignore failure in this task if the node is not currently running
                     Tasks.markInessential();
                 }
-                throw new PropagatedRuntimeException("Error shutting down remote node "+entity()+" (in state "+state+"): "+Exceptions.collapseText(e), e);
+                throw new PropagatedRuntimeException("Error shutting down remote node "+entity()+" (in state "+initialState+"): "+Exceptions.collapseText(e), e);
             }
-            ServiceNotUpLogic.updateNotUpIndicator(entity(), "brooklynnode.shutdown", "Shutdown of remote node has completed successfuly");
+            ServiceNotUpLogic.updateNotUpIndicator(entity(), SHUTDOWN.getName(), "Shutdown of remote node has completed successfuly");
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
             return null;
         }
 
@@ -228,6 +231,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
     }
 
+    @Override
+    protected void preStart() {
+        ServiceNotUpLogic.clearNotUpIndicator(this, SHUTDOWN.getName());
+    }
+    
     public static class StopNodeButLeaveAppsEffectorBody extends EffectorBody<Void> implements StopNodeButLeaveAppsEffector {
         public static final Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS).impl(new StopNodeButLeaveAppsEffectorBody()).build();
 

@@ -248,7 +248,6 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
         ConfigKey<Duration> REQUEST_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "requestTimeout", "Maximum time to block the request for the shutdown to finish, 0 to wait infinitely");
         ConfigKey<Duration> DELAY_FOR_HTTP_RETURN = ConfigKeys.newConfigKey(Duration.class, "delayForHttpReturn", "The delay before exiting the process, to permit the REST response to be returned");
         Effector<Void> SHUTDOWN = Effectors.effector(Void.class, "shutdown")
-            .description("Shutdown the remote brooklyn instance")
             .description("Shutdown the remote brooklyn instance (stops via the REST API only; leaves any VM)")
             .parameter(STOP_APPS_FIRST)
             .parameter(FORCE_SHUTDOWN_ON_ERROR)
@@ -263,7 +262,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public interface StopNodeButLeaveAppsEffector {
         ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "How long to wait before giving up on stopping the node", Duration.ONE_HOUR);
         Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(Void.class, "stopNodeButLeaveApps")
-                .description("Stop the node but if it was managing other applications, leave them running")
+                .description("Stop the Brooklyn process, and any VM created, and unmanage this entity; but if it was managing other applications, leave them running")
                 .parameter(TIMEOUT)
                 .buildAbstract();
     }
@@ -273,7 +272,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public interface StopNodeAndKillAppsEffector {
         ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "How long to wait before giving up on stopping the node", Duration.ONE_HOUR);
         Effector<Void> STOP_NODE_AND_KILL_APPS = Effectors.effector(Void.class, "stopNodeAndKillApps")
-                .description("Stop all apps managed by the node and shutdown the node")
+                .description("Stop all apps managed by the Brooklyn process, stop the process, and any VM created, and unmanage this entity")
                 .parameter(TIMEOUT)
                 .buildAbstract();
     }

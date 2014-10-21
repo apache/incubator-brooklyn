@@ -184,7 +184,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
     
     protected void setInstallLabel() {
-        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, true).isPresent()) return; 
+        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, true).isPresentAndNonNull()) return; 
         getEntity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, 
             getEntity().getEntityType().getSimpleName()+
             (Strings.isNonBlank(getVersion()) ? "_"+getVersion() : "")+
