@@ -70,7 +70,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         return Os.mergePathsUnix(getRunDir(), "console");
     }
     
-    private String getPidFile() {
+    protected String getPidFile() {
         return Os.mergePathsUnix(getRunDir(), "pid_java");
     }
     
