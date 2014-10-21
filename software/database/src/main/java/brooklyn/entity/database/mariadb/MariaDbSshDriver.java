@@ -19,7 +19,9 @@
 package brooklyn.entity.database.mariadb;
 
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
+import static brooklyn.util.ssh.BashCommands.installPackage;
+import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
 
 import java.io.InputStream;
@@ -72,17 +74,17 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         if (os == null) return "linux-i686";
         if (os.isWindows() || os.isMac())
             throw new UnsupportedOperationException("only support linux versions just now; OS details: " + os);
-        return "linux-" + (os.is64bit() ? "x86_64" : "i686");
+        return (os.is64bit() ? "linux-x86_64" : "linux-i686");
     }
 
     public String getDownloadParentDir() {
         // NOTE: cannot rely on OsDetails.isLinux() to return true for all linux flavours, so
         // explicitly test for unsupported OSes, otherwise assume generic linux.
         OsDetails os = getLocation().getOsDetails();
-        if (os == null) return "kvm-bintar-hardy-x86";
+        if (os == null) return "bintar-linux-x86";
         if (os.isWindows() || os.isMac())
             throw new UnsupportedOperationException("only support linux versions just now; OS details: " + os);
-        return "kvm-bintar-hardy-" + (os.is64bit() ? "amd64" : "x86");
+        return (os.is64bit() ? "bintar-linux-x86_64" : "bintar-linux-x86");
     }
 
     public String getMirrorUrl() {

@@ -42,12 +42,13 @@ public interface MariaDbNode extends SoftwareProcess, DatastoreCommon, HasShortN
 
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION =
-        ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.5.33a");
+        ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.5.40");
 
     // https://downloads.mariadb.org/interstitial/mariadb-5.5.33a/kvm-bintar-hardy-amd64/mariadb-5.5.33a-linux-x86_64.tar.gz/from/http://mirrors.coreix.net/mariadb
-    // above link points to a "donate" page, then ultimately downloads the artifact from:
-    // 64-bit: http://mirrors.coreix.net/mariadb/mariadb-5.5.33a/kvm-bintar-hardy-amd64/mariadb-5.5.33a-linux-x86_64.tar.gz
-    // 32-bit: http://mirrors.coreix.net/mariadb/mariadb-5.5.33a/kvm-bintar-hardy-x86/mariadb-5.5.33a-linux-i686.tar.gz
+    // above redirects to download the artifactd from the URLs below.
+    // Use `curl -sL -w "%{http_code} %{url_effective}\n" "http://..." -o target.tar.gz` to find out redirect URL.
+    //     64-bit: http://mirrors.coreix.net/mariadb/mariadb-5.5.40/bintar-linux-x86_64/mariadb-5.5.40-linux-x86_64.tar.gz
+    //     32-bit: http://mirrors.coreix.net/mariadb/mariadb-5.5.40/bintar-linux-x86/mariadb-5.5.40-linux-i686.tar.gz
 
     @SetFromFlag("downloadUrl")
     public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
