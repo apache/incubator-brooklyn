@@ -50,10 +50,12 @@ import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
-import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.PortRanges;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -66,6 +68,7 @@ import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Networking;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
@@ -103,8 +106,10 @@ public class BrooklynNodeIntegrationTest {
     
     private File pseudoBrooklynPropertiesFile;
     private File pseudoBrooklynCatalogFile;
-    private List<? extends Location> locs;
+    private LocalhostMachineProvisioningLocation loc;
+    private List<LocalhostMachineProvisioningLocation> locs;
     private TestApplication app;
+    private ManagementContext mgmt;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -115,13 +120,14 @@ public class BrooklynNodeIntegrationTest {
         pseudoBrooklynCatalogFile.delete();
 
         app = TestApplication.Factory.newManagedInstanceForTests();
-        Location localhost = app.getManagementSupport().getManagementContext().getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
-        locs = ImmutableList.of(localhost);
+        mgmt = app.getManagementContext();
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+        locs = ImmutableList.of(loc);
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        if (mgmt != null) Entities.destroyAll(mgmt);
         if (pseudoBrooklynPropertiesFile != null) pseudoBrooklynPropertiesFile.delete();
         if (pseudoBrooklynCatalogFile != null) pseudoBrooklynCatalogFile.delete();
     }
@@ -447,15 +453,30 @@ services:
 
     private void createNodeAndExecStopEffector(Effector<?> eff) throws Exception {
         BrooklynNode brooklynNode = setUpBrooklynNodeWithApp();
-
+        File pidFile = new File(getDriver(brooklynNode).getPidFile());
+        assertTrue(isPidRunning(pidFile));
+        
         brooklynNode.invoke(eff, Collections.<String, Object>emptyMap()).getUnchecked();
 
+        // Note can't use driver.isRunning to check shutdown; can't invoke scripts on an unmanaged entity
         EntityTestUtils.assertAttributeEquals(brooklynNode, BrooklynNode.SERVICE_UP, false);
-        //Use the driver's check of isRunning instead of local command since on Windows
-        //the test would be running remotely (needs some extra hoops to do it).
-        assertFalse(getDriver(brooklynNode).isRunning(), "Service process still running");
+        assertFalse(Entities.isManaged(brooklynNode));
+        assertFalse(isPidRunning(pidFile), "pid in "+pidFile+" still running");
     }
 
+    private boolean isPidRunning(File pidFile) throws Exception {
+        SshMachineLocation machine = loc.obtain();
+        try {
+            int result = machine.execScript("check-pid", ImmutableList.of(
+                    "test -f "+pidFile+" || exit 1",
+                    "ps -p `cat "+pidFile+"`"));
+            return result == 0;
+        } finally {
+            loc.release(machine);
+            Locations.unmanage(machine);
+        }
+    }
+    
     private BrooklynNodeSshDriver getDriver(BrooklynNode brooklynNode) {
         try {
             EntityProxyImpl entityProxy = (EntityProxyImpl)Proxy.getInvocationHandler(brooklynNode);
@@ -480,7 +501,7 @@ services:
                 .getAllConfig()).get();
 
         String baseUrl = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI).toString();
-        String entityUrl = baseUrl + "v1/applications/" + id + "/entities/" + id;
+        String entityUrl = Urls.mergePaths(baseUrl, "v1/applications/", id, "entities", id);
         
         Entity mirror = brooklynNode.addChild(EntitySpec.create(BrooklynEntityMirror.class)
                 .configure(BrooklynEntityMirror.MIRRORED_ENTITY_URL, entityUrl)
