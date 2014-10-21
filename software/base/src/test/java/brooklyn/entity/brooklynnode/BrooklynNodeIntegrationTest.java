@@ -131,7 +131,7 @@ public class BrooklynNodeIntegrationTest {
         log.info("Creating entity spec for "+JavaClassNames.callerNiceClassAndMethod(1));
         
         return EntitySpec.create(BrooklynNode.class)
-                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, Networking.LOOPBACK)
+                .configure(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS, Networking.ANY_NIC)
                 .configure(BrooklynNode.ON_EXISTING_PROPERTIES_FILE, ExistingFileBehaviour.DO_NOT_USE);
         
         /* yaml equivalent, for testing:
