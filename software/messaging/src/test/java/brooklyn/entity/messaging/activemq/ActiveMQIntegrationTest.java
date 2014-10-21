@@ -146,7 +146,7 @@ public class ActiveMQIntegrationTest {
     public void testCreatingQueuesNoAgent() throws Exception {
         String url = testCreatingQueuesInternal(JmxAgentModes.NONE);
         // localhost default is rmi
-        Assert.assertTrue(url.contains("rmi:///jndi"), "url="+url);
+        Assert.assertTrue(url.contains("service:jmx:rmi"), "url="+url);
         Assert.assertFalse(url.contains("jmxmp"), "url="+url);
     }
 
