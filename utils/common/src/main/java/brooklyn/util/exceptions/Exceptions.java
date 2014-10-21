@@ -71,7 +71,7 @@ public class Exceptions {
         do {
             was = s;
             for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLE_EXACT_TYPES) {
-                s = Strings.removeAllFromStart(type.getCanonicalName(), type.getName(), type.getSimpleName(), ":", " ");
+                s = Strings.removeAllFromStart(s, type.getCanonicalName(), type.getName(), type.getSimpleName(), ":", " ");
             }
         } while (!was.equals(s));
         return s;
@@ -155,21 +155,33 @@ public class Exceptions {
             collapseCount++;
             if (Strings.isNonBlank(messagesCause.getMessage())) {
                 message = messagesCause.getMessage();
+                messagesCause = messagesCause.getCause();
                 break;
             }
             messagesCause = messagesCause.getCause();
         }
+        
         if (collapseCount==0)
             return source;
-        if (Strings.isBlank(message))
+        
+        if (Strings.isBlank(message)) {
             return new PropagatedRuntimeException(collapseCausalChain ? collapsed : source);
-        else
+        } else {
+            if (messagesCause!=null) {
+                String extraMessage = collapseText(messagesCause);
+                message = appendSeparator(message, extraMessage);
+            }
             return new PropagatedRuntimeException(message, collapseCausalChain ? collapsed : source, true);
+        }
     }
     
     static String appendSeparator(String message, String next) {
         if (Strings.isBlank(message))
             return next;
+        if (Strings.isBlank(next))
+            return message;
+        if (message.endsWith(next))
+            return message;
         if (message.trim().endsWith(":") || message.trim().endsWith(";"))
             return message.trim()+" "+next;
         return message + ": " + next;
