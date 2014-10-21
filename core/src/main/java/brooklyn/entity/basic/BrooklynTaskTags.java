@@ -36,6 +36,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
+import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskTags;
@@ -353,4 +354,37 @@ public class BrooklynTaskTags extends TaskTags {
         EffectorCallTag result = getEffectorCallTag(task, true);
         return (result == null) ? null : result.getEffectorName();
     }
+    
+    // ---------------- entitlement tags ----------------
+    
+    public static class EntitlementTag {
+        private EntitlementContext entitlementContext;
+    }
+
+    public static EntitlementContext getEntitlement(Task<?> task) {
+        if (task==null) return null;
+        return getEntitlement(task.getTags());
+    }
+    
+    public static EntitlementContext getEntitlement(Collection<?> tags) {
+        if (tags==null) return null;
+        for (Object tag: tags) {
+            if (tag instanceof EntitlementTag) {
+                return ((EntitlementTag)tag).entitlementContext;
+            }
+        }
+        return null;
+    }
+    
+    public static EntitlementContext getEntitlement(EntitlementTag tag) {
+        if (tag==null) return null;
+        return tag.entitlementContext;
+    }
+    
+    public static EntitlementTag tagForEntitlement(EntitlementContext context) {
+        EntitlementTag tag = new EntitlementTag();
+        tag.entitlementContext = context;
+        return tag;
+    }
+    
 }

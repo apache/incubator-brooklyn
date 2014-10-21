@@ -53,12 +53,14 @@ public class AcmeEntitlementManagerTest {
 
     @BeforeMethod(alwaysRun=true)
     public void init() {
+        Entitlements.clearEntitlementContext();
         configBag = ConfigBag.newInstance();
         configBag.put(Entitlements.GLOBAL_ENTITLEMENT_MANAGER, AcmeEntitlementManager.class.getName());
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
+        Entitlements.clearEntitlementContext();
         if (app != null) Entities.destroyAll(app.getManagementContext());
         if (mgmt != null) Entities.destroyAll(mgmt);
         app = null;

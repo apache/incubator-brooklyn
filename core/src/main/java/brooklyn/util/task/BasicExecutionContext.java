@@ -41,6 +41,8 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.management.entitlement.EntitlementContext;
+import brooklyn.management.entitlement.Entitlements;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -109,6 +111,7 @@ public class BasicExecutionContext extends AbstractExecutionContext {
         // previously it was all very messy how that was handled (and it didn't really handle it in many cases)
         if (task instanceof Task<?>) taskTags.addAll( ((Task<?>)task).getTags() ); 
         Entity target = BrooklynTaskTags.getWrappedEntityOfType(taskTags, BrooklynTaskTags.TARGET_ENTITY);
+        
         if (target!=null && !tags.contains(BrooklynTaskTags.tagForContextEntity(target))) {
             // task is switching execution context boundaries
             /* 
@@ -122,6 +125,7 @@ public class BasicExecutionContext extends AbstractExecutionContext {
             final ExecutionContext tc = ((EntityInternal)target).getExecutionContext();
             if (log.isDebugEnabled())
                 log.debug("Switching task context on execution of "+task+": from "+this+" to "+target+" (in "+Tasks.current()+")");
+            
             if (task instanceof Task<?>) {
                 final Task<T> t = (Task<T>)task;
                 if (!Tasks.isQueuedOrSubmitted(t) && (!(Tasks.current() instanceof HasTaskChildren) || 
@@ -156,6 +160,13 @@ public class BasicExecutionContext extends AbstractExecutionContext {
             }
         }
         
+        EntitlementContext entitlementContext = BrooklynTaskTags.getEntitlement(taskTags);
+        if (entitlementContext==null)
+        entitlementContext = Entitlements.getEntitlementContext();
+        if (entitlementContext!=null) {
+            taskTags.add(BrooklynTaskTags.tagForEntitlement(entitlementContext));
+        }
+
         taskTags.addAll(tags);
         
         final Object startCallback = properties.get("newTaskStartCallback");

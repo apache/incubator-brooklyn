@@ -666,7 +666,8 @@ public class Entities {
             } else {
                 if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
                 
-                // TODO if destroying gracefully we might also want to do this:
+                // if destroying gracefully we might also want to do this (currently gets done by GC after unmanage,
+                // which is good enough for leaks, but not sure if that's ideal for subscriptions etc)
 //                ((LocalEntityManager)e.getApplication().getManagementContext().getEntityManager()).stopTasks(e, null);
                 
                 if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
