@@ -90,6 +90,15 @@ public class EntityPredicates {
         };
     }
     
+    public static <T> Predicate<Entity> attributeNotEqualTo(final AttributeSensor<T> attribute, final T val) {
+        return new SerializablePredicate<Entity>() {
+            @Override
+            public boolean apply(@Nullable Entity input) {
+                return (input != null) && !Objects.equal(input.getAttribute(attribute), val);
+            }
+        };
+    }
+    
     public static <T> Predicate<Entity> configEqualTo(final ConfigKey<T> configKey, final T val) {
         return new SerializablePredicate<Entity>() {
             @Override
