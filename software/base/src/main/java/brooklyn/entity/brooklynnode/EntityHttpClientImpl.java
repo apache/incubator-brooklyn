@@ -140,4 +140,14 @@ public class EntityHttpClientImpl implements EntityHttpClient {
         Preconditions.checkNotNull(url, "URL sensor " + urlSensor + " for entity " + entity + " is empty");
         return url.toString();
     }
+
+    @Override
+    public HttpToolResponse delete(String path, final Map<String, String> headers) {
+        return exec(path, new HttpCall() {
+            @Override
+            public HttpToolResponse call(HttpClient client, URI uri) {
+                return HttpTool.httpDelete(client, uri, headers);
+            }
+        });
+    }
 }

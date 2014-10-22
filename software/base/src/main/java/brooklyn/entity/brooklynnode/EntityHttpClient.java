@@ -52,9 +52,16 @@ public interface EntityHttpClient {
     /**
      * Makes an HTTP POST to a Brooklyn node entity.
      * @param path Relative path to resource on server, e.g v1/catalog
-     * @param body byte array of serialized JSON to attach to the request
+     * @param formParams The parameters to send in a x-www-form-urlencoded format
      * @return The server's response
      */
     public HttpToolResponse post(String path, Map<String, String> headers, Map<String, String> formParams);
+
+    /**
+     * Makes an HTTP DELETE to a Brooklyn node entity.
+     * @param path Relative path to resource on server, e.g v1/catalog
+     * @return The server's response
+     */
+    public HttpToolResponse delete(String path, Map<String, String> headers);
 
 }
