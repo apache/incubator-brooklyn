@@ -129,7 +129,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     
     @SuppressWarnings("unchecked")
     protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
-        if (newApp!=null || newManagementContext!=null) throw new IllegalStateException("already rebinded");
+        if (newApp!=null || newManagementContext!=null) throw new IllegalStateException("already rebound");
         
         RebindTestUtils.waitForPersisted(origApp);
         if (checkSerializable) {
