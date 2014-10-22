@@ -38,13 +38,17 @@ import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.brooklynnode.effector.SetHAModeEffectorBody;
+import brooklyn.entity.brooklynnode.effector.SetHAPriorityEffectorBody;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -52,6 +56,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.javalang.Enums;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.DynamicTasks;
@@ -62,6 +67,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
@@ -94,6 +100,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
         getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);
         getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
+        getMutableEntityType().addEffector(SetHAPriorityEffectorBody.SET_HA_PRIORITY);
+        getMutableEntityType().addEffector(SetHAModeEffectorBody.SET_HA_MODE);
     }
 
     @Override
@@ -191,7 +199,9 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                     .addIfNotNull("delayForHttpReturn", toNullableString(parameters.get(DELAY_FOR_HTTP_RETURN)));
             try {
                 HttpToolResponse resp = ((BrooklynNode)entity()).http()
-                    .post("/v1/server/shutdown", MutableMap.<String, String>of(), formParams);
+                    .post("/v1/server/shutdown",
+                        ImmutableMap.of("Brooklyn-Allow-Non-Master-Access", "true"),
+                        formParams);
                 if (resp.getResponseCode() != HttpStatus.SC_NO_CONTENT) {
                     throw new IllegalStateException("Response code "+resp.getResponseCode());
                 }
@@ -341,6 +351,10 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                     .poll(new HttpPollConfig<Boolean>(WEB_CONSOLE_ACCESSIBLE)
                             .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                             .setOnFailureOrException(false))
+                    .poll(new HttpPollConfig<ManagementNodeState>(MANAGEMENT_NODE_STATE)
+                            .suburl("/v1/server/ha/state")
+                            .onSuccess(Functionals.chain(Functionals.chain(HttpValueFunctions.jsonContents(), JsonFunctions.cast(String.class)), Enums.fromStringFunction(ManagementNodeState.class)))
+                            .setOnFailureOrException(null))
                     .build();
 
             if (!Lifecycle.RUNNING.equals(getAttribute(SERVICE_STATE_ACTUAL))) {

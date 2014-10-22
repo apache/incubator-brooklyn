@@ -25,8 +25,6 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.AbstractEntity;

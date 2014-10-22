@@ -38,6 +38,8 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.ha.HighAvailabilityManager;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -228,7 +230,28 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     public ManagementNodeState getHighAvailabilityNodeState() {
         return mgmt().getHighAvailabilityManager().getNodeState();
     }
-    
+
+    @Override
+    public ManagementNodeState setHighAvailabilityNodeState(HighAvailabilityMode mode) {
+        HighAvailabilityManager haMgr = mgmt().getHighAvailabilityManager();
+        ManagementNodeState existingState = haMgr.getNodeState();
+        haMgr.changeMode(mode);
+        return existingState;
+    }
+
+    @Override
+    public long getHighAvailabitlityPriority() {
+        return mgmt().getHighAvailabilityManager().getPriority();
+    }
+
+    @Override
+    public long setHighAvailabilityPriority(long priority) {
+        HighAvailabilityManager haMgr = mgmt().getHighAvailabilityManager();
+        long oldPrio = haMgr.getPriority();
+        haMgr.setPriority(priority);
+        return oldPrio;
+    }
+
     @Override
     public HighAvailabilitySummary getHighAvailabilityPlaneStates() {
         ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getManagementPlaneSyncState();
@@ -244,4 +267,5 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             return null; //User can be null if no authentication was requested
         }
     }
+
 }
