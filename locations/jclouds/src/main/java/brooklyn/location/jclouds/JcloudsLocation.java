@@ -128,6 +128,7 @@ import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;
@@ -789,7 +790,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(MIN_RAM, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
-                        tb.minRam(TypeCoercions.coerce(v, Integer.class));
+                        tb.minRam( (int)(ByteSizeStrings.parse(""+v, "m")/1024/1024) );
                     }})
             .put(MIN_CORES, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
@@ -797,7 +798,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(MIN_DISK, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
-                        tb.minDisk(TypeCoercions.coerce(v, Double.class));
+                        tb.minDisk( (int)(ByteSizeStrings.parse(""+v, "g")/1024/1024/1024) );
                     }})
             .put(HARDWARE_ID, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
