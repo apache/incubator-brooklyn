@@ -544,6 +544,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         setCreationString(setup);
         boolean waitForSshable = !"false".equalsIgnoreCase(setup.get(WAIT_FOR_SSHABLE));
         boolean usePortForwarding = setup.get(USE_PORT_FORWARDING);
+        boolean skipJcloudsSshing = Boolean.FALSE.equals(setup.get(USE_JCLOUDS_SSH_INIT)) || usePortForwarding;
         JcloudsPortForwarderExtension portForwarder = setup.get(PORT_FORWARDER);
         if (usePortForwarding) checkNotNull(portForwarder, "portForwarder, when use-port-forwarding enabled");
 
@@ -576,7 +577,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             try {
                 // Setup the template
                 template = buildTemplate(computeService, setup);
-                if (waitForSshable && !usePortForwarding) {
+                if (waitForSshable && !skipJcloudsSshing) {
                     initialCredentials = initTemplateForCreateUser(template, setup);
                 }
 
@@ -615,14 +616,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         Optional.<Integer>absent(), 
                         Protocol.TCP, 
                         Cidr.UNIVERSAL));
-                
-                if (waitForSshable) {
-                    // once that host:port is definitely reachable, we can create the user
-                    waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
-                    initialCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
-                }
             } else {
                 sshHostAndPortOverride = Optional.absent();
+            }
+                
+            if (waitForSshable && skipJcloudsSshing) {
+                // once that host:port is definitely reachable, we can create the user
+                waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
+                initialCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
             }
             
             // Figure out which login-credentials to use
@@ -632,8 +633,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 //set userName and other data, from these credentials
                 Object oldUsername = setup.put(USER, customCredentials.getUser());
                 LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, customCredentials.getUser(), oldUsername });
-                if (groovyTruth(customCredentials.getPassword())) setup.put(PASSWORD, customCredentials.getPassword());
-                if (groovyTruth(customCredentials.getPrivateKey())) setup.put(PRIVATE_KEY_DATA, customCredentials.getPrivateKey());
+                if (customCredentials.getOptionalPassword().isPresent()) setup.put(PASSWORD, customCredentials.getOptionalPassword().get());
+                if (customCredentials.getOptionalPrivateKey().isPresent()) setup.put(PRIVATE_KEY_DATA, customCredentials.getOptionalPrivateKey().get());
             }
             if (initialCredentials == null) {
                 initialCredentials = extractVmCredentials(setup, node);
@@ -1165,9 +1166,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
             if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
             
+            // TODO Retrying lots of times as workaround for vcloud-director. There the guest customizations
+            // can cause the VM to reboot shortly after it was ssh'able.
             Map<String,Object> execProps = Maps.newLinkedHashMap();
             execProps.put(ShellTool.PROP_RUN_AS_ROOT.getName(), true);
-            
+            execProps.put(SshTool.PROP_SSH_TRIES.getName(), 50);
+            execProps.put(SshTool.PROP_SSH_TRIES_TIMEOUT.getName(), 10*60*1000);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("VM {}: executing user creation/setup via {}@{}:{}; commands: {}", new Object[] {
+                        config.getDescription(), initialUser, address, port, commands});
+            }
+
             SshMachineLocation sshLoc = null;
             try {
                 if (isManaged()) {

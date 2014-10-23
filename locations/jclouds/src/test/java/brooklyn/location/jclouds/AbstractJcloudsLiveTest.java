@@ -57,6 +57,9 @@ public class AbstractJcloudsLiveTest {
 
     public static final String RACKSPACE_PROVIDER = "rackspace-cloudservers-uk";
     
+    public static final String SOFTLAYER_PROVIDER = "softlayer";
+    public static final String SOFTLAYER_AMS01_REGION_NAME = "ams01";
+    
     protected BrooklynProperties brooklynProperties;
     protected LocalManagementContext managementContext;
     
