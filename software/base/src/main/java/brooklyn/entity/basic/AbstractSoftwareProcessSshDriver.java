@@ -51,6 +51,8 @@ import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
@@ -275,6 +277,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
+        // TODO replace with SshEffectorTasks.ssh ?; remove the use of flags
+        
         Map flags = Maps.newLinkedHashMap();
         if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
@@ -285,6 +289,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             // attach tags here, as well as in ScriptHelper, because they may have just been read from the driver
             if (environment!=null) {
                 Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
+            }
+            if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDIN)==null) {
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, 
+                    Streams.byteArrayOfString(Strings.join(script, "\n"))));
             }
             if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDOUT)==null) {
                 ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -313,11 +321,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public void copyInstallResources() {
         getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
         try {
-            // Override environment variables for this simple command. Otherwise sub-classes might
+            // Ensure environment variables are not looked up here, otherwise sub-classes might
             // lookup port numbers and fail with ugly error if port is not set; better to wait
             // until in Entity's code (e.g. customize) where such checks are done explicitly.
-            execute(ImmutableMap.of("env", ImmutableMap.of()), ImmutableList.of("mkdir -p " + getInstallDir()), "create-install-dir");
+            DynamicTasks.queue(SshEffectorTasks.ssh("mkdir -p " + getInstallDir()).summary("create install directory")
+                .requiringExitCodeZero()).get();
 
+            // TODO see comment in copyResource, that should be queued as a task like the above
+            // (better reporting in activities console)
+            
             Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
             if (installFiles != null && installFiles.size() > 0) {
                 for (String source : installFiles.keySet()) {
@@ -462,6 +474,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return copyResource(MutableMap.of(), resource, target, createParentDir);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public int copyResource(Map sshFlags, String source, String target) {
         return copyResource(sshFlags, source, target, false);
     }
@@ -478,6 +491,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public int copyResource(Map<Object,Object> sshFlags, String source, String target, boolean createParentDir) {
+        // TODO use SshTasks.put instead, better logging
         Map flags = Maps.newLinkedHashMap();
         if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());

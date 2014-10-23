@@ -21,6 +21,7 @@ package brooklyn.entity.software;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -152,7 +153,10 @@ public abstract class MachineLifecycleEffectorTasks {
             @Override
             public Void call(ConfigBag parameters) {
                 Collection<? extends Location> locations = parameters.get(LOCATIONS);
-                Preconditions.checkNotNull(locations, "locations");
+                if (locations==null) {
+                    // null/empty will mean to inherit from parent
+                    locations = Collections.emptyList();
+                }
                 start(locations);
                 return null;
             }
