@@ -1249,59 +1249,68 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // -------- FEEDS --------------------
 
     /**
-     * Convenience, which calls {@link EntityInternal#getFeedSupport()} and {@link FeedSupport#addFeed(Feed)}.
+     * Convenience, which calls {@link EntityInternal#feeds()} and {@link FeedSupport#addFeed(Feed)}.
      */
     public <T extends Feed> T addFeed(T feed) {
-        return getFeedSupport().addFeed(feed);
+        return feeds().addFeed(feed);
     }
 
+    @Override
+    public FeedSupport feeds() {
+        return new BasicFeedSupport();
+    }
+    
+    @Override
+    @Deprecated
     public FeedSupport getFeedSupport() {
-        return new FeedSupport() {
-            @Override
-            public Collection<Feed> getFeeds() {
-                return ImmutableList.<Feed>copyOf(feeds);
+        return feeds();
+    }
+    
+    protected class BasicFeedSupport implements FeedSupport {
+        @Override
+        public Collection<Feed> getFeeds() {
+            return ImmutableList.<Feed>copyOf(feeds);
+        }
+
+        @Override
+        public <T extends Feed> T addFeed(T feed) {
+            Feed old = findApparentlyEqualAndWarnIfNotSameUniqueTag(feeds, feed);
+            if (old != null) {
+                LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
+                removeFeed(old);
             }
+            
+            feeds.add(feed);
+            if (!AbstractEntity.this.equals(((AbstractFeed)feed).getEntity()))
+                ((AbstractFeed)feed).setEntity(AbstractEntity.this);
 
-            @Override
-            public <T extends Feed> T addFeed(T feed) {
-                Feed old = findApparentlyEqualAndWarnIfNotSameUniqueTag(feeds, feed);
-                if (old != null) {
-                    LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
-                    removeFeed(old);
-                }
-                
-                feeds.add(feed);
-                if (!AbstractEntity.this.equals(((AbstractFeed)feed).getEntity()))
-                    ((AbstractFeed)feed).setEntity(AbstractEntity.this);
+            getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
+            getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
+            // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for feeds; no use-case for that yet
 
-                getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
-                getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
-                // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for feeds; no use-case for that yet
+            return feed;
+        }
 
-                return feed;
+        @Override
+        public boolean removeFeed(Feed feed) {
+            feed.stop();
+            boolean changed = feeds.remove(feed);
+            
+            if (changed) {
+                getManagementContext().getRebindManager().getChangeListener().onUnmanaged(feed);
+                getManagementSupport().getEntityChangeListener().onFeedRemoved(feed);
             }
+            return changed;
+        }
 
-            @Override
-            public boolean removeFeed(Feed feed) {
-                feed.stop();
-                boolean changed = feeds.remove(feed);
-                
-                if (changed) {
-                    getManagementContext().getRebindManager().getChangeListener().onUnmanaged(feed);
-                    getManagementSupport().getEntityChangeListener().onFeedRemoved(feed);
-                }
-                return changed;
+        @Override
+        public boolean removeAllFeeds() {
+            boolean changed = false;
+            for (Feed feed : feeds) {
+                changed = removeFeed(feed) || changed;
             }
-
-            @Override
-            public boolean removeAllFeeds() {
-                boolean changed = false;
-                for (Feed feed : feeds) {
-                    changed = removeFeed(feed) || changed;
-                }
-                return changed;
-            }
-        };
+            return changed;
+        }
     }
     
     // -------- SENSORS --------------------

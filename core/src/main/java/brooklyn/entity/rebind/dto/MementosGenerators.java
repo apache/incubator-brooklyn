@@ -190,7 +190,7 @@ public class MementosGenerators {
             builder.enrichers.add(enricher.getId()); 
         }
         
-        for (Feed feed : entity.getFeedSupport().getFeeds()) {
+        for (Feed feed : entity.feeds().getFeeds()) {
             builder.feeds.add(feed.getId()); 
         }
         

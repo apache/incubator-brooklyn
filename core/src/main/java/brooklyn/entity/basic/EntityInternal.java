@@ -133,8 +133,15 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     @Beta
     Effector<?> getEffector(String effectorName);
     
-    FeedSupport getFeedSupport();
+    FeedSupport feeds();
     
+    /**
+     * @since 0.7.0-M2
+     * @deprecated since 0.7.0-M2; use {@link #feeds()}
+     */
+    @Deprecated
+    FeedSupport getFeedSupport();
+
     Map<String, String> toMetadataRecord();
     
     @Override
