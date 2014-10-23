@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.SecureKeys;
@@ -44,8 +45,10 @@ public class SshMachineLocationIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        mgmt = app.getManagementContext();
+        mgmt = LocalManagementContextForTests.builder(true)
+            .useDefaultProperties()
+            .build();
+        app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
     }
 
     @AfterMethod(alwaysRun=true)
