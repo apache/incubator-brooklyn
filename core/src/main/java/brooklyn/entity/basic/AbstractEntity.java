@@ -1433,7 +1433,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         getManagementSupport().getEntityChangeListener().onChanged();
     }
 
+    /**
+     * As described in {@link EntityInternal#getRebindSupport()}...
+     * Users are strongly discouraged to call or override this method.
+     * It is for internal calls only, relating to persisting/rebinding entities.
+     * This method may change (or be removed) in a future release without notice.
+     */
     @Override
+    @Beta
     public RebindSupport<EntityMemento> getRebindSupport() {
         return new BasicEntityRebindSupport(this);
     }

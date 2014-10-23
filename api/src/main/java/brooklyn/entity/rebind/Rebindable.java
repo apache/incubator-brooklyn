@@ -20,12 +20,19 @@ package brooklyn.entity.rebind;
 
 import brooklyn.mementos.Memento;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Indicates that this can be recreated, e.g. after a brooklyn restart, and by
  * using a {@link Memento} it can repopulate the brooklyn objects. The purpose
  * of the rebind is to reconstruct and reconnect the brooklyn objects, including
  * binding them to external resources.
+ * 
+ * Users are strongly discouraged to call or use this interface.
+ * It is for internal use only, relating to persisting/rebinding entities.
+ * This interface may change (or be removed) in a future release without notice.
  */
+@Beta
 public interface Rebindable {
 
     public RebindSupport getRebindSupport();

@@ -144,7 +144,13 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
 
     Map<String, String> toMetadataRecord();
     
+    /**
+     * Users are strongly discouraged from calling or overriding this method.
+     * It is for internal calls only, relating to persisting/rebinding entities.
+     * This method may change (or be removed) in a future release without notice.
+     */
     @Override
+    @Beta
     RebindSupport<EntityMemento> getRebindSupport();
 
     /**
