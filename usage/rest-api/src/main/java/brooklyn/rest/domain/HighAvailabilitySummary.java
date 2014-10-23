@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 public class HighAvailabilitySummary {
@@ -70,12 +71,12 @@ public class HighAvailabilitySummary {
             
             @Override
             public boolean equals(Object o) {
-              return (o instanceof HaNodeSummary) && nodeId.equals(((HaNodeSummary)o).getNodeId());
+              return (o instanceof HaNodeSummary) && Objects.equal(nodeId, ((HaNodeSummary)o).getNodeId());
             }
 
             @Override
             public int hashCode() {
-              return nodeId != null ? nodeId.hashCode() : 0;
+              return Objects.hashCode(nodeId);
             }
 
             @Override
@@ -100,8 +101,8 @@ public class HighAvailabilitySummary {
     ) {
       this.ownId = ownId;
       this.masterId = masterId;
-      this.nodes = nodes;
-      this.links = links == null ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+      this.nodes = (nodes == null) ? ImmutableMap.<String, HaNodeSummary>of() : nodes;
+      this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
     }
 
     public String getOwnId() {

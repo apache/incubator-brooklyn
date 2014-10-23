@@ -52,7 +52,7 @@ public class LocationSummary extends LocationSpec implements HasName, HasId {
     super(name, spec, config);
     this.id = checkNotNull(id);
     this.type = type;
-    this.links = ImmutableMap.copyOf(links);
+    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
   }
 
   @Override

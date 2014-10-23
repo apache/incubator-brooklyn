@@ -21,7 +21,9 @@ package brooklyn.rest.domain;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 
+import java.net.URI;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -48,7 +50,7 @@ public class UsageStatistic implements HasId {
         this.start = start;
         this.end = end;
         this.duration = duration;
-        this.metadata = checkNotNull(metadata, "metadata");
+        this.metadata = (metadata == null) ? ImmutableMap.<String, String>of() : metadata;
     }
 
     public Status getStatus() {

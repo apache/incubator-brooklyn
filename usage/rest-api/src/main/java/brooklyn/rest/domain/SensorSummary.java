@@ -45,7 +45,7 @@ public class SensorSummary implements HasName {
     this.name = name;
     this.type = type;
     this.description = description;
-    this.links = links != null ? ImmutableMap.copyOf(links) : null;
+    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
   }
 
   @Override

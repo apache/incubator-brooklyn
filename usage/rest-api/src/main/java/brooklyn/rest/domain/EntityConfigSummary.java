@@ -45,7 +45,7 @@ public class EntityConfigSummary extends ConfigSummary {
       @JsonProperty("links") Map<String, URI> links
   ) {
     super(name, type, description, defaultValue, reconfigurable, label, priority, possibleValues);
-    this.links = links!=null ? ImmutableMap.copyOf(links) : null;
+    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
   }
 
   public EntityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {

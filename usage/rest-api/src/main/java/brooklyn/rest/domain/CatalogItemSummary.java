@@ -68,7 +68,7 @@ public class CatalogItemSummary implements HasId, HasName {
         this.planYaml = planYaml;
         this.description = description;
         this.iconUrl = iconUrl;
-        this.links = ImmutableMap.copyOf(links);
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
     }
     
     @Override
