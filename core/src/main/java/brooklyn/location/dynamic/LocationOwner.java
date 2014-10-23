@@ -27,6 +27,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
+import brooklyn.location.LocationDefinition;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.annotations.Beta;
@@ -69,6 +70,9 @@ public interface LocationOwner<L extends Location & DynamicLocation<E, L>, E ext
 
     AttributeSensor<Boolean> DYNAMIC_LOCATION_STATUS = Sensors.newBooleanSensor(
             "entity.dynamicLocation.status", "The status of the location owned by this entity");
+
+    AttributeSensor<LocationDefinition> LOCATION_DEFINITION = Sensors.newSensor(
+        LocationDefinition.class, "entity.dynamicLocation.definition", "The location definition for the location owned by this entity");
 
     L getDynamicLocation();
 
