@@ -156,19 +156,21 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
 
     @Test(groups = "Integration")
     public void testClusterIsUpIffHasChildLoadBalancer() {
+        // Note the up-quorum-check behaves different for initialSize==0 (if explicit value not given):
+        // it would accept a size==0 as being serviceUp=true. Therefore don't do that!
         loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure(LoadBalancerCluster.MEMBER_SPEC, nginxSpec)
-                .configure("initialSize", 0)
+                .configure("initialSize", 1)
                 .configure(NginxController.DOMAIN_NAME, "localhost"));
         
         app.start(ImmutableList.of(localhostProvisioningLoc));
-        EntityTestUtils.assertAttributeEqualsContinually(loadBalancerCluster, Startable.SERVICE_UP, false);
+        EntityTestUtils.assertAttributeEqualsContinually(loadBalancerCluster, Startable.SERVICE_UP, true);
+        
+        loadBalancerCluster.resize(0);
+        EntityTestUtils.assertAttributeEqualsEventually(loadBalancerCluster, Startable.SERVICE_UP, false);
         
         loadBalancerCluster.resize(1);
         EntityTestUtils.assertAttributeEqualsEventually(loadBalancerCluster, Startable.SERVICE_UP, true);
-
-        loadBalancerCluster.resize(0);
-        EntityTestUtils.assertAttributeEqualsEventually(loadBalancerCluster, Startable.SERVICE_UP, false);
     }
     
     // Warning: test is a little brittle for if a previous run leaves something on these required ports
