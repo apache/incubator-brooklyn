@@ -24,6 +24,8 @@ import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.google.common.collect.ImmutableSet;
+
 public class CatalogPolicySummary extends CatalogItemSummary {
 
     private final Set<PolicyConfigSummary> config;
@@ -40,7 +42,7 @@ public class CatalogPolicySummary extends CatalogItemSummary {
         ) {
         super(id, name, type, type, type, planYaml, description, iconUrl, links);
         // TODO expose config from policies
-        this.config = config;
+        this.config = (config == null) ? ImmutableSet.<PolicyConfigSummary>of() : config;
     }
     
     public Set<PolicyConfigSummary> getConfig() {

@@ -41,7 +41,7 @@ public class PolicyConfigSummary extends ConfigSummary {
       @JsonProperty("links") Map<String, URI> links
   ) {
     super(name, type, description, defaultValue, reconfigurable, null, null, null);
-    this.links = links!=null ? ImmutableMap.copyOf(links) : null;
+    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
   }
   
   @Override

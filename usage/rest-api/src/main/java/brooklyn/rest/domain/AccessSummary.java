@@ -38,7 +38,7 @@ public class AccessSummary {
             @JsonProperty("links") Map<String, URI> links
     ) {
         this.locationProvisioningAllowed = locationProvisioningAllowed;
-        this.links = links == null ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
       }
 
     public boolean isLocationProvisioningAllowed() {

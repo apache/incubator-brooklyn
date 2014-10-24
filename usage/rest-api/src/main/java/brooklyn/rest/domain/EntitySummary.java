@@ -40,7 +40,7 @@ public class EntitySummary implements HasId, HasName {
     this.type = type;
     this.id = id;
     this.name = name;
-    this.links = links == null ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
   }
 
   public String getType() {

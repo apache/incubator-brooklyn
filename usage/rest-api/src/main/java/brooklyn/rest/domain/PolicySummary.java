@@ -19,6 +19,7 @@
 package brooklyn.rest.domain;
 
 import com.google.common.collect.ImmutableMap;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.net.URI;
@@ -40,7 +41,7 @@ public class PolicySummary implements HasName, HasId {
     this.id = id;
     this.name = name;
     this.state = state;
-    this.links = ImmutableMap.copyOf(links);
+    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
   }
 
   @Override

@@ -94,7 +94,7 @@ public class TaskSummary implements HasId {
     this.description = description;
     this.entityId = entityId;
     this.entityDisplayName = entityDisplayName;
-    this.tags = ImmutableList.<Object>copyOf(tags);
+    this.tags = (tags == null) ? ImmutableList.of() : ImmutableList.<Object>copyOf(tags);
     this.submitTimeUtc = submitTimeUtc;
     this.startTimeUtc = startTimeUtc;
     this.endTimeUtc = endTimeUtc;
@@ -108,7 +108,7 @@ public class TaskSummary implements HasId {
     this.submittedByTask = submittedByTask;
     this.detailedStatus = detailedStatus;
     this.streams = streams;
-    this.links = ImmutableMap.copyOf(links);
+    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
 }
 
 

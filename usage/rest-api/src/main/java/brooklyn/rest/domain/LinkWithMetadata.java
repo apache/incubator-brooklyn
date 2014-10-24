@@ -39,7 +39,7 @@ public class LinkWithMetadata {
             @JsonProperty("link") String link, 
             @Nullable @JsonProperty("metadata") Map<String,?> metadata) {
         this.link = link;
-        this.metadata = metadata==null ? ImmutableMap.<String,Object>of() : ImmutableMap.<String,Object>copyOf(metadata);
+        this.metadata = (metadata == null) ? ImmutableMap.<String,Object>of() : ImmutableMap.<String,Object>copyOf(metadata);
     }
     
     public String getLink() {

@@ -43,7 +43,7 @@ public class UsageStatistics {
             @JsonProperty("links") Map<String, URI> links
     ) {
         this.statistics = statistics == null ? ImmutableList.<UsageStatistic>of() : ImmutableList.copyOf(statistics);
-        this.links = links == null ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
       }
 
     public List<UsageStatistic> getStatistics() {
