@@ -34,9 +34,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl;
 import brooklyn.location.LocationSpec;
-import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
@@ -85,17 +83,10 @@ public class TomcatAutoScalerPolicyTest {
          * wait til auto-scaling complete
          * assert cluster size 2
          */
-        
-        PortRange httpPort = PortRanges.fromString("7880+");
-        PortRange jmxP = PortRanges.fromString("32199+");
-        PortRange shutdownP = PortRanges.fromString("31880+");
-        
+
         final DynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
                 .configure(DynamicWebAppCluster.INITIAL_SIZE, 1)
-                .configure(DynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class)
-                        .configure(TomcatServer.HTTP_PORT.getConfigKey(), httpPort)
-                        .configure(TomcatServer.JMX_PORT.getConfigKey(), jmxP)
-                        .configure(TomcatServer.SHUTDOWN_PORT, shutdownP)));
+                .configure(DynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class)));
 
         final AutoScalerPolicy policy = AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.REQUEST_COUNT_PER_NODE)
