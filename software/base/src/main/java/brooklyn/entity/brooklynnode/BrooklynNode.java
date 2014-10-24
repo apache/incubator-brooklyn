@@ -120,6 +120,10 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
         "Path to the script to launch Brooklyn / the app relative to the subpath in the archive, defaulting to 'bin/brooklyn'", 
         "bin/brooklyn");
 
+    @SetFromFlag("launchParameters")
+    ConfigKey<String> EXTRA_LAUNCH_PARAMETERS = ConfigKeys.newStringConfigKey("brooklynnode.launch.parameters.extra",
+        "Launch parameters passed on the CLI, in addition to 'launch' and parameters implied by other config keys (and placed afterwards on the command line)");
+
     @SetFromFlag("launchCommandCreatesPidFile")
     ConfigKey<Boolean> LAUNCH_COMMAND_CREATES_PID_FILE = ConfigKeys.newBooleanConfigKey("brooklynnode.launch.command.pid.updated",
         "Whether the launch script creates/updates the PID file, if not the entity will do so, "

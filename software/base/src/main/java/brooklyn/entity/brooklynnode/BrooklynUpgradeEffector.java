@@ -49,6 +49,7 @@ import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
@@ -58,8 +59,10 @@ import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
-/** Upgrades a brooklyn node in-place on the box, by creating a child brooklyn node and ensuring it can rebind in HOT_STANDBY;
- * requires the target node to have persistence enabled 
+/** Upgrades a brooklyn node in-place on the box, 
+ * by creating a child brooklyn node and ensuring it can rebind in HOT_STANDBY
+ * <p>
+ * Requires the target node to have persistence enabled. 
  */
 public class BrooklynUpgradeEffector {
 
@@ -69,13 +72,21 @@ public class BrooklynUpgradeEffector {
     public static final ConfigKey<Map<String,Object>> EXTRA_CONFIG = MapConfigKey.builder(new TypeToken<Map<String,Object>>() {}).name("extraConfig").description("Additional new config to set on this entity as part of upgrading").build();
 
     public static final Effector<Void> UPGRADE = Effectors.effector(Void.class, "upgrade")
-        .description("Changes the Brooklyn build used to run this node, by spawning a dry-run node then copying the installed files across")
+        .description("Changes the Brooklyn build used to run this node, by spawning a dry-run node then copying the installed files across. "
+            + "This node must be running for persistence for in-place upgrading to work.")
         .parameter(BrooklynNode.SUGGESTED_VERSION).parameter(DOWNLOAD_URL).parameter(EXTRA_CONFIG)
         .impl(new UpgradeImpl()).build();
     
     public static class UpgradeImpl extends EffectorBody<Void> {
         @Override
         public Void call(ConfigBag parametersO) {
+            if (!isPersistenceModeEnabled(entity())) {
+                // would could try a `forcePersistNow`, but that's sloppy; 
+                // for now, require HA/persistence for upgrading 
+                DynamicTasks.queue( Tasks.warning("Persistence does not appear to be enabled at this node. "
+                    + "In-place upgrade is unlikely to succeed.", null) );
+            }
+            
             ConfigBag parameters = ConfigBag.newInstanceCopying(parametersO);
             
             /*
@@ -103,8 +114,11 @@ public class BrooklynUpgradeEffector {
                 .configure(parameters.getAllConfig()));
             
             //force this to start as hot-standby
-            String launchCommand = dryRunChild.getConfig(BrooklynNode.LAUNCH_COMMAND);
-            ((EntityInternal)dryRunChild).setConfig(BrooklynNode.LAUNCH_COMMAND, launchCommand + " --highAvailability "+HighAvailabilityMode.HOT_STANDBY);
+            String launchParameters = dryRunChild.getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
+            if (Strings.isBlank(launchParameters)) launchParameters = "";
+            else launchParameters += " ";
+            launchParameters += "--highAvailability "+HighAvailabilityMode.HOT_STANDBY;
+            ((EntityInternal)dryRunChild).setConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS, launchParameters);
             
             Entities.manage(dryRunChild);
             final String dryRunNodeUid = dryRunChild.getId();
@@ -150,6 +164,15 @@ public class BrooklynUpgradeEffector {
             Entities.unmanage(dryRunChild);
             
             return null;
+        }
+
+        private boolean isPersistenceModeEnabled(EntityInternal entity) {
+            // TODO when there are PERSIST* options in BrooklynNode, look at them here!
+            // or, better, have a sensor for persistence
+            String params = entity.getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
+            if (params==null) return false;
+            if (params.indexOf("persist")==0) return false;
+            return true;
         }
 
     }

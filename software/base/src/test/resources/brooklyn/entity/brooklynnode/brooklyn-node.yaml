@@ -17,11 +17,18 @@
 # under the License.
 #
 
+name: Example Brooklyn Node
+
 services:
 - type: brooklyn.entity.brooklynnode.BrooklynNode
+
   ## to use a local file, specify something such as the following:
   downloadUrl: file:///Users/alex/.m2/repository/org/apache/brooklyn/brooklyn-dist/0.7.0-SNAPSHOT/brooklyn-dist-0.7.0-SNAPSHOT-dist.tar.gz
   # downloadUrl: file:///tmp/brooklyn-dist-0.7.0-SNAPSHOT-dist.tar.gz
+  
+  ## to persist
+#  launchParameters: --persist auto --persistenceDir /tmp/brooklyn-persistence-example/
+
 
 ## NB if deploying to a remote machine you must also supply management{Username,Password} and a brooklyn properties with those values set 
 location: localhost
