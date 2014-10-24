@@ -128,4 +128,36 @@ public class ByteSizeStringsTest extends FixedLocaleTest {
         assertEquals(Iterables.get(bytes, 1), "21.8 GiB");
         assertEquals(Iterables.get(bytes, 2), "21.3 TiB");
     }
+    
+    public void testParse() {
+        assertEquals(ByteSizeStrings.parse("1", "k"), 1024);
+        
+        // basics
+        assertEquals(ByteSizeStrings.parse("1b"), 1);
+        assertEquals(ByteSizeStrings.parse("1k"), 1024);
+        assertEquals(ByteSizeStrings.parse("1m"), 1024*1024);
+        assertEquals(ByteSizeStrings.parse("1g"), 1024*1024*1024);
+        assertEquals(ByteSizeStrings.parse("1t"), 1024L*1024*1024*1024);
+
+        // iso
+        assertEquals(ByteSizeStrings.parse("64.0 KiB"), 65536);
+        // metric
+        assertEquals(ByteSizeStrings.parse("64.0 KB"), 64000);
+        // java
+        assertEquals(ByteSizeStrings.parse("64.0k"), 65536);
+        
+        // spaces and things
+        assertEquals(ByteSizeStrings.parse("64k"), 65536);
+        assertEquals(ByteSizeStrings.parse("64 k"), 65536);
+        
+        // smaller than zero
+        assertEquals(ByteSizeStrings.parse("0.5t"), 512L*1024*1024*1024);
+
+        // applying default unit
+        assertEquals(ByteSizeStrings.parse("1", "k"), 1024);
+        // not applying default unit
+        assertEquals(ByteSizeStrings.parse("1k", "m"), 1024);
+        // forcing use of metric
+        assertEquals(ByteSizeStrings.parse("1k", "m", ByteSizeStrings.metric()), 1000);
+    }
 }
