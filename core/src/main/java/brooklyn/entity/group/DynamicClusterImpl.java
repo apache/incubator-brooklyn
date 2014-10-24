@@ -295,12 +295,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         int initialSize = getConfig(INITIAL_SIZE).intValue();
         int initialQuorumSize = getInitialQuorumSize();
 
+        Exception resizeException = null;
         try {
             resize(initialSize);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            // apart from logging, ignore problems here; we extract them below
+            // Apart from logging, ignore problems here; we extract them below.
+            // But if it was this thread that threw the exception (rather than a sub-task), then need
+            // to record that failure here.
             LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
+            resizeException = e;
         }
 
         Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
@@ -328,12 +332,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             }
             Throwable firstError = Tasks.getError(Maybe.next(failed.iterator()).orNull());
             if (firstError!=null) {
-                if (severalFailed)
+                if (severalFailed) {
                     message += "; first failure is: "+Exceptions.collapseText(firstError);
-                else
+                } else {
                     message += ": "+Exceptions.collapseText(firstError);
+                }
+            } else {
+                firstError = resizeException;
             }
             throw new IllegalStateException(message, firstError);
+            
         } else if (currentSize < initialSize) {
             LOG.warn(
                     "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
