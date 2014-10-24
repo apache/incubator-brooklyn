@@ -790,7 +790,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(MIN_RAM, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
-                        tb.minRam( (int)(ByteSizeStrings.parse(""+v, "m")/1024/1024) );
+                        tb.minRam( (int)(ByteSizeStrings.parse(Strings.toString(v), "mb")/1000/1000) );
                     }})
             .put(MIN_CORES, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
@@ -798,7 +798,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(MIN_DISK, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
-                        tb.minDisk( (int)(ByteSizeStrings.parse(""+v, "g")/1024/1024/1024) );
+                        tb.minDisk( (int)(ByteSizeStrings.parse(Strings.toString(v), "gb")/1000/1000/1000) );
                     }})
             .put(HARDWARE_ID, new CustomizeTemplateBuilder() {
                     public void apply(TemplateBuilder tb, ConfigBag props, Object v) {
