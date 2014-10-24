@@ -259,14 +259,14 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     @Test
     public void testLocationTags() throws Exception {
         Location origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class));
-        origLoc.getTagSupport().addTag("foo");
-        origLoc.getTagSupport().addTag(origApp);
+        origLoc.tags().addTag("foo");
+        origLoc.tags().addTag(origApp);
         origApp.start(ImmutableList.of(origLoc));
 
         newApp = rebind();
         Location newLoc = (Location) newManagementContext.getLocationManager().getLocation(origLoc.getId());
 
-        Asserts.assertEqualsIgnoringOrder(newLoc.getTagSupport().getTags(), ImmutableSet.of("foo", newApp));
+        Asserts.assertEqualsIgnoringOrder(newLoc.tags().getTags(), ImmutableSet.of("foo", newApp));
     }
 
     public static class LocationChecksIsRebinding extends AbstractLocation {

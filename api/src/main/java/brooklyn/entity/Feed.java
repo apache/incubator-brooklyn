@@ -65,8 +65,11 @@ public interface Feed extends EntityAdjunct, Rebindable {
     void stop();
 
     /**
-     * This method will likely move out of this interface, into somewhere internal; users should not call this directly.  
+     * Users are strongly discouraged from calling or overriding this method.
+     * It is for internal calls only, relating to persisting/rebinding entities.
+     * This method may change (or be removed) in a future release without notice.
      */
     @Override
+    @Beta
     RebindSupport<FeedMemento> getRebindSupport();
 }

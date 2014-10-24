@@ -280,7 +280,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 referencedEnrichers.addAll(entity.getEnrichers());
             }
             if (persistFeedsEnabled) {
-                referencedFeeds.addAll(((EntityInternal)entity).getFeedSupport().getFeeds());
+                referencedFeeds.addAll(((EntityInternal)entity).feeds().getFeeds());
             }
         }
         
@@ -454,7 +454,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     deltaCollector.removedEnricherIds.add(enricher.getId());
                     deltaCollector.enrichers.remove(enricher);
                 }
-                for (Feed feed : ((EntityInternal)entity).getFeedSupport().getFeeds()) {
+                for (Feed feed : ((EntityInternal)entity).feeds().getFeeds()) {
                     deltaCollector.removedFeedIds.add(feed.getId());
                     deltaCollector.feeds.remove(feed);
                 }

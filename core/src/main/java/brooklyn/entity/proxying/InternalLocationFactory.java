@@ -104,7 +104,7 @@ public class InternalLocationFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractLocation)loc).setDisplayName(spec.getDisplayName());
             
-            loc.getTagSupport().addTags(spec.getTags());
+            loc.tags().addTags(spec.getTags());
             
             if (isNewStyle(clazz)) {
                 ((AbstractLocation)loc).setManagementContext(managementContext);

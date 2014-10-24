@@ -1249,59 +1249,68 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // -------- FEEDS --------------------
 
     /**
-     * Convenience, which calls {@link EntityInternal#getFeedSupport()} and {@link FeedSupport#addFeed(Feed)}.
+     * Convenience, which calls {@link EntityInternal#feeds()} and {@link FeedSupport#addFeed(Feed)}.
      */
     public <T extends Feed> T addFeed(T feed) {
-        return getFeedSupport().addFeed(feed);
+        return feeds().addFeed(feed);
     }
 
+    @Override
+    public FeedSupport feeds() {
+        return new BasicFeedSupport();
+    }
+    
+    @Override
+    @Deprecated
     public FeedSupport getFeedSupport() {
-        return new FeedSupport() {
-            @Override
-            public Collection<Feed> getFeeds() {
-                return ImmutableList.<Feed>copyOf(feeds);
+        return feeds();
+    }
+    
+    protected class BasicFeedSupport implements FeedSupport {
+        @Override
+        public Collection<Feed> getFeeds() {
+            return ImmutableList.<Feed>copyOf(feeds);
+        }
+
+        @Override
+        public <T extends Feed> T addFeed(T feed) {
+            Feed old = findApparentlyEqualAndWarnIfNotSameUniqueTag(feeds, feed);
+            if (old != null) {
+                LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
+                removeFeed(old);
             }
+            
+            feeds.add(feed);
+            if (!AbstractEntity.this.equals(((AbstractFeed)feed).getEntity()))
+                ((AbstractFeed)feed).setEntity(AbstractEntity.this);
 
-            @Override
-            public <T extends Feed> T addFeed(T feed) {
-                Feed old = findApparentlyEqualAndWarnIfNotSameUniqueTag(feeds, feed);
-                if (old != null) {
-                    LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
-                    removeFeed(old);
-                }
-                
-                feeds.add(feed);
-                if (!AbstractEntity.this.equals(((AbstractFeed)feed).getEntity()))
-                    ((AbstractFeed)feed).setEntity(AbstractEntity.this);
+            getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
+            getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
+            // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for feeds; no use-case for that yet
 
-                getManagementContext().getRebindManager().getChangeListener().onManaged(feed);
-                getManagementSupport().getEntityChangeListener().onFeedAdded(feed);
-                // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for feeds; no use-case for that yet
+            return feed;
+        }
 
-                return feed;
+        @Override
+        public boolean removeFeed(Feed feed) {
+            feed.stop();
+            boolean changed = feeds.remove(feed);
+            
+            if (changed) {
+                getManagementContext().getRebindManager().getChangeListener().onUnmanaged(feed);
+                getManagementSupport().getEntityChangeListener().onFeedRemoved(feed);
             }
+            return changed;
+        }
 
-            @Override
-            public boolean removeFeed(Feed feed) {
-                feed.stop();
-                boolean changed = feeds.remove(feed);
-                
-                if (changed) {
-                    getManagementContext().getRebindManager().getChangeListener().onUnmanaged(feed);
-                    getManagementSupport().getEntityChangeListener().onFeedRemoved(feed);
-                }
-                return changed;
+        @Override
+        public boolean removeAllFeeds() {
+            boolean changed = false;
+            for (Feed feed : feeds) {
+                changed = removeFeed(feed) || changed;
             }
-
-            @Override
-            public boolean removeAllFeeds() {
-                boolean changed = false;
-                for (Feed feed : feeds) {
-                    changed = removeFeed(feed) || changed;
-                }
-                return changed;
-            }
-        };
+            return changed;
+        }
     }
     
     // -------- SENSORS --------------------
@@ -1424,7 +1433,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         getManagementSupport().getEntityChangeListener().onChanged();
     }
 
+    /**
+     * As described in {@link EntityInternal#getRebindSupport()}...
+     * Users are strongly discouraged to call or override this method.
+     * It is for internal calls only, relating to persisting/rebinding entities.
+     * This method may change (or be removed) in a future release without notice.
+     */
     @Override
+    @Beta
     public RebindSupport<EntityMemento> getRebindSupport() {
         return new BasicEntityRebindSupport(this);
     }
@@ -1436,21 +1452,21 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     public Set<Object> getTags() {
-        return getTagSupport().getTags();
+        return tags().getTags();
     }
 
     @Override
     public boolean addTag(Object tag) {
-        return getTagSupport().addTag(tag);
+        return tags().addTag(tag);
     }    
 
     @Override
     public boolean removeTag(Object tag) {
-        return getTagSupport().removeTag(tag);
+        return tags().removeTag(tag);
     }    
 
     @Override
     public boolean containsTag(Object tag) {
-        return getTagSupport().containsTag(tag);
+        return tags().containsTag(tag);
     }    
 }

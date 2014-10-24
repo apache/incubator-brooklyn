@@ -100,7 +100,7 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
     public void testTagsFromSpec() throws Exception {
         MyEnricher enricher = app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
 
-        assertEquals(enricher.getTagSupport().getTags(), MutableSet.of("x", 99));
+        assertEquals(enricher.tags().getTags(), MutableSet.of("x", 99));
         assertEquals(enricher.getUniqueTag(), "x");
     }
 
@@ -112,8 +112,8 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
         assertEquals(app.getEnrichers().size(), 1);
         // the more recent one should dominate
         Enricher enricher = Iterables.getOnlyElement(app.getEnrichers());
-        Assert.assertTrue(enricher.getTagSupport().containsTag(94));
-        Assert.assertFalse(enricher.getTagSupport().containsTag(99));
+        Assert.assertTrue(enricher.tags().containsTag(94));
+        Assert.assertFalse(enricher.tags().containsTag(99));
     }
 
 }

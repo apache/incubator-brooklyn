@@ -80,8 +80,14 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     }
 
     @Override
+    public TagSupport tags() {
+        return itemDto.tags();
+    }
+
+    @Override
+    @Deprecated
     public TagSupport getTagSupport() {
-        return itemDto.getTagSupport();
+        return tags();
     }
 
     @Override

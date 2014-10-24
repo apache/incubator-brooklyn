@@ -67,7 +67,13 @@ public interface LocationInternal extends BrooklynObjectInternal, Location {
 
     ConfigBag getAllConfigBag();
 
+    /**
+     * Users are strongly discouraged from calling or overriding this method.
+     * It is for internal calls only, relating to persisting/rebinding entities.
+     * This method may change (or be removed) in a future release without notice.
+     */
     @Override
+    @Beta
     RebindSupport<LocationMemento> getRebindSupport();
     
     ManagementContext getManagementContext();

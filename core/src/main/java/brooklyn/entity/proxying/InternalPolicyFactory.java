@@ -106,7 +106,7 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setDisplayName(spec.getDisplayName());
             
-            pol.getTagSupport().addTags(spec.getTags());
+            pol.tags().addTags(spec.getTags());
             
             if (isNewStyle(clazz)) {
                 ((AbstractPolicy)pol).setManagementContext(managementContext);
@@ -143,7 +143,7 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractEnricher)enricher).setDisplayName(spec.getDisplayName());
             
-            enricher.getTagSupport().addTags(spec.getTags());
+            enricher.tags().addTags(spec.getTags());
             
             if (isNewStyle(clazz)) {
                 ((AbstractEnricher)enricher).setManagementContext(managementContext);

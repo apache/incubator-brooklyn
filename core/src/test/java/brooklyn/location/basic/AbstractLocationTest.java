@@ -178,7 +178,7 @@ public class AbstractLocationTest {
     @Test
     public void testLocationTags() throws Exception {
         LocationInternal loc = mgmt.getLocationManager().createLocation(LocationSpec.create(ConcreteLocation.class).tag("x"));
-        assertEquals(loc.getTagSupport().getTags(), MutableSet.of("x"));
+        assertEquals(loc.tags().getTags(), MutableSet.of("x"));
     }
 
 }

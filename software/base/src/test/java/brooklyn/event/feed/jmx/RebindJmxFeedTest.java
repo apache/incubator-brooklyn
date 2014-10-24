@@ -101,12 +101,12 @@ public class RebindJmxFeedTest extends RebindTestFixtureWithApp {
         GeneralisedDynamicMBean mbean = jmxService.registerMBean(MutableMap.of(JMX_ATTRIBUTE_NAME, "myval"), OBJECT_NAME);
         
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_STRING, "myval");
-        assertEquals(origEntity.getFeedSupport().getFeeds().size(), 1);
+        assertEquals(origEntity.feeds().getFeeds().size(), 1);
 
         newApp = rebind(false);
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
-        Collection<Feed> newFeeds = newEntity.getFeedSupport().getFeeds();
+        Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
         assertEquals(newFeeds.size(), 1);
         
         // Expect the feed to still be polling

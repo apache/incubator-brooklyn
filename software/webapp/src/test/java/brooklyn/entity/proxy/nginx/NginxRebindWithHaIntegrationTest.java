@@ -133,7 +133,7 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
         origApp.start(ImmutableList.of(loc));
         Assert.assertTrue(RecordingSshjTool.connectionCount.get()>0);
 
-        Collection<Feed> origFeeds = ((EntityInternal)origNginx).getFeedSupport().getFeeds();
+        Collection<Feed> origFeeds = ((EntityInternal)origNginx).feeds().getFeeds();
         LOG.info("feeds before rebind are: "+origFeeds);
         Assert.assertTrue(origFeeds.size() >= 1);
 
@@ -163,7 +163,7 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
 
         NginxController newNginx = Iterables.getOnlyElement(Entities.descendants(newApp, NginxController.class));
         
-        Collection<Feed> newFeeds = ((EntityInternal)newNginx).getFeedSupport().getFeeds();
+        Collection<Feed> newFeeds = ((EntityInternal)newNginx).feeds().getFeeds();
         LOG.info("feeds after rebind are: "+newFeeds);
         Assert.assertTrue(newFeeds.size() >= 1);
         

@@ -155,7 +155,7 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
             AbstractFeed feed = (AbstractFeed) rebindContext.getFeed(feedId);
             if (feed != null) {
                 try {
-                    ((EntityInternal)entity).getFeedSupport().addFeed(feed);
+                    ((EntityInternal)entity).feeds().addFeed(feed);
                 } catch (Exception e) {
                     rebindContext.getExceptionHandler().onAddFeedFailed(entity, feed, e);
                 }

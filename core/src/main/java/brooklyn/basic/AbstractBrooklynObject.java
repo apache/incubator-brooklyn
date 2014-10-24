@@ -171,8 +171,15 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
         requestPersist();
     }
 
-    public TagSupport getTagSupport() {
+    @Override
+    public TagSupport tags() {
         return new BasicTagSupport();
+    }
+
+    @Override
+    @Deprecated
+    public TagSupport getTagSupport() {
+        return tags();
     }
 
     protected class BasicTagSupport implements TagSupport {

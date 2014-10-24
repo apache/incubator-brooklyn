@@ -102,7 +102,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
                 .configure(MyEntityWithHttpFeedImpl.BASE_URL, baseUrl));
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)200);
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_STRING, "{\"foo\":\"myfoo\"}");
-        assertEquals(origEntity.getFeedSupport().getFeeds().size(), 1);
+        assertEquals(origEntity.feeds().getFeeds().size(), 1);
 
         final long taskCountBefore = ((BasicExecutionManager)origManagementContext.getExecutionManager()).getNumIncompleteTasks();
         
@@ -112,7 +112,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         newApp = rebind(false);
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
-        Collection<Feed> newFeeds = newEntity.getFeedSupport().getFeeds();
+        Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
         assertEquals(newFeeds.size(), 1);
         
         // Expect the feed to still be polling
@@ -151,12 +151,12 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
     public void testFunctionFeedRegisteredInInitIsPersisted() throws Exception {
         TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithFunctionFeedImpl.class));
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)1);
-        assertEquals(origEntity.getFeedSupport().getFeeds().size(), 1);
+        assertEquals(origEntity.feeds().getFeeds().size(), 1);
 
         newApp = rebind(false);
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
-        Collection<Feed> newFeeds = newEntity.getFeedSupport().getFeeds();
+        Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
         assertEquals(newFeeds.size(), 1);
         
         // Expect the feed to still be polling
@@ -175,12 +175,12 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         origApp.start(ImmutableList.<Location>of());
 
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)0);
-        assertEquals(origEntity.getFeedSupport().getFeeds().size(), 1);
+        assertEquals(origEntity.feeds().getFeeds().size(), 1);
 
         newApp = rebind(false);
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
-        Collection<Feed> newFeeds = newEntity.getFeedSupport().getFeeds();
+        Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
         assertEquals(newFeeds.size(), 1);
         
         // Expect the feed to still be polling

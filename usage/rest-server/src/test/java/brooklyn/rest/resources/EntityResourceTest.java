@@ -87,7 +87,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testTagsSanity() throws Exception {
-        entity.getTagSupport().addTag("foo");
+        entity.tags().addTag("foo");
         
         ClientResponse response = client().resource(entityEndpoint + "/tags")
                 .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -145,8 +145,8 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
     
     @Test
     public void testTagsDoNotSerializeTooMuch() throws Exception {
-        entity.getTagSupport().addTag("foo");
-        entity.getTagSupport().addTag(entity.getParent());
+        entity.tags().addTag("foo");
+        entity.tags().addTag(entity.getParent());
 
         ClientResponse response = client().resource(entityEndpoint + "/tags")
                 .accept(MediaType.APPLICATION_JSON)

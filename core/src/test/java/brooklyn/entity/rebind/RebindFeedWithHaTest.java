@@ -90,7 +90,7 @@ public class RebindFeedWithHaTest extends RebindTestFixtureWithApp {
                 .configure(RebindFeedTest.MyEntityWithHttpFeedImpl.BASE_URL, baseUrl));
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)200);
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_STRING, "{\"foo\":\"myfoo\"}");
-        assertEquals(origEntity.getFeedSupport().getFeeds().size(), 1);
+        assertEquals(origEntity.feeds().getFeeds().size(), 1);
         origManagementContext.getRebindManager().forcePersistNow();
 
         List<Task<?>> tasksBefore = ((BasicExecutionManager)origManagementContext.getExecutionManager()).getAllTasks();
@@ -114,7 +114,7 @@ public class RebindFeedWithHaTest extends RebindTestFixtureWithApp {
 
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
-        Collection<Feed> newFeeds = newEntity.getFeedSupport().getFeeds();
+        Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
         assertEquals(newFeeds.size(), 1);
         
         // Expect the feed to still be polling

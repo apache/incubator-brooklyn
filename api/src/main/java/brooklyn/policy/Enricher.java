@@ -62,7 +62,13 @@ public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
 
     Map<ConfigKey<?>, Object> getAllConfig();
 
+    /**
+     * Users are strongly discouraged from calling or overriding this method.
+     * It is for internal calls only, relating to persisting/rebinding entities.
+     * This method may change (or be removed) in a future release without notice.
+     */
     @Override
+    @Beta
     RebindSupport<EnricherMemento> getRebindSupport();
 
 }
