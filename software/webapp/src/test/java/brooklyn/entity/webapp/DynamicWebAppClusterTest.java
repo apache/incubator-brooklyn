@@ -27,7 +27,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -38,6 +37,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestJavaWebAppEntity;
+import brooklyn.test.entity.TestJavaWebAppEntityImpl;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
@@ -54,10 +54,12 @@ public class DynamicWebAppClusterTest {
     private static final int SHORT_WAIT_MS = 250;
     
     private TestApplication app;
+    private SimulatedLocation loc;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
+        loc = app.newSimulatedLocation();
     }
     
     @AfterMethod(alwaysRun=true)
@@ -77,7 +79,7 @@ public class DynamicWebAppClusterTest {
                 .configure("initialSize", 2)
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         
-        app.start(ImmutableList.of(new SimulatedLocation()));
+        app.start(ImmutableList.of(loc));
         
         for (Entity member : cluster.getMembers()) {
             ((TestJavaWebAppEntity)member).spoofRequest();
@@ -107,7 +109,7 @@ public class DynamicWebAppClusterTest {
                 .configure("initialSize", 1)
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
     
-        app.start(ImmutableList.of(new SimulatedLocation()));
+        app.start(ImmutableList.of(loc));
         
         // Should initially be true (now that TestJavaWebAppEntity sets true) 
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, DynamicWebAppCluster.SERVICE_UP, true);
@@ -136,7 +138,7 @@ public class DynamicWebAppClusterTest {
                 .configure("a", 1))
             .configure(DynamicWebAppCluster.CUSTOM_CHILD_FLAGS, ImmutableMap.of("b", 2)));
 
-        app.start(ImmutableList.of(new SimulatedLocation()));
+        app.start(ImmutableList.of(loc));
         
         TestJavaWebAppEntity we = (TestJavaWebAppEntity) Iterables.getOnlyElement(cluster.getMembers());
         assertEquals(we.getA(), 1);

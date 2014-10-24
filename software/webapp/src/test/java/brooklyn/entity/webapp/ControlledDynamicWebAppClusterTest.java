@@ -29,7 +29,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -44,7 +43,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestJavaWebAppEntity;
-import brooklyn.test.entity.TestJavaWebAppEntity.TestJavaWebAppEntityImpl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
