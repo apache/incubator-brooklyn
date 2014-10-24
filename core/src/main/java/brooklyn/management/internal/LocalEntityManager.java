@@ -38,6 +38,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
@@ -421,8 +422,12 @@ public class LocalEntityManager implements EntityManagerInternal {
         try {
             Set<Task<?>> tasksCancelled = MutableSet.of();
             for (Task<?> t: managementContext.getExecutionContext(entity).getTasks()) {
-                if (hasTaskAsAncestor(t, Tasks.current()))
+                if (entity.equals(BrooklynTaskTags.getContextEntity(Tasks.current())) && hasTaskAsAncestor(t, Tasks.current())) {
+                    // don't cancel if we are running inside a task on the target entity and
+                    // the task being considered is one we have submitted -- e.g. on "stop" don't cancel ourselves!
+                    // but if our current task is from another entity we probably do want to cancel them (we are probably invoking unmanage)
                     continue;
+                }
                 
                 if (!t.isDone()) {
                     try {
