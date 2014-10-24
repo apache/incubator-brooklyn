@@ -224,7 +224,8 @@ public class StringEscapes {
         public static void escapeJavaString(String value, Appendable out) throws IOException {
             for (int i=0; i<value.length(); i++) {
                 char c = value.charAt(i);
-                if (c=='\\' || c=='"' || c=='\'') {
+                if (c=='\\' || c=='"') {
+                    // NB do NOT escape single quotes; while valid for java, it is not in JSON (breaks jQuery.parseJSON)
                     appendEscaped(out, c);
                 } else if (c=='\n') {
                     appendEscaped(out, 'n');
