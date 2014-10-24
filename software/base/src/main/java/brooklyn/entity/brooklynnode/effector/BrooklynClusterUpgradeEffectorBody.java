@@ -57,8 +57,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 
-public class UpgradeClusterEffectorBody extends EffectorBody<Void> implements UpgradeClusterEffector {
-    public static final Effector<Void> UPGRADE_CLUSTER = Effectors.effector(UpgradeClusterEffector.UPGRADE_CLUSTER).impl(new UpgradeClusterEffectorBody()).build();
+public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> implements UpgradeClusterEffector {
+    public static final Effector<Void> UPGRADE_CLUSTER = Effectors.effector(UpgradeClusterEffector.UPGRADE_CLUSTER).impl(new BrooklynClusterUpgradeEffectorBody()).build();
 
     private AtomicBoolean upgradeInProgress = new AtomicBoolean();
 
@@ -101,6 +101,7 @@ public class UpgradeClusterEffectorBody extends EffectorBody<Void> implements Up
 
     private void upgrade(ConfigBag parameters) {
         //TODO might be worth separating each step in a task for better UI
+        //TODO currently this will fight with auto-scaler policies; you should turn them off
 
         Group cluster = (Group)entity();
         Collection<Entity> initialMembers = cluster.getMembers();
@@ -120,6 +121,9 @@ public class UpgradeClusterEffectorBody extends EffectorBody<Void> implements Up
         //   For members that were created meanwhile - they will be using the new version already. If the new version
         //   isn't good then they will fail to start as well, forcing the policies to retry (and succeed once the
         //   URL is reverted).
+        //TODO can get into problem state if more old nodes are created; better might be to set the
+        //version on this cluster before the above select-master call, and then delete any which are running the old
+        //version (would require tracking the version number at the entity)
         HashSet<Entity> oldMembers = new HashSet<Entity>(initialMembers);
         oldMembers.removeAll(remainingNodes);
         oldMembers.remove(initialNode);

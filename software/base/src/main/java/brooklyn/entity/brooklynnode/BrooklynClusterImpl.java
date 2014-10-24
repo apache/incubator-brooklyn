@@ -26,9 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
-import brooklyn.entity.brooklynnode.effector.UpgradeClusterEffectorBody;
+import brooklyn.entity.brooklynnode.effector.BrooklynClusterUpgradeEffectorBody;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
@@ -41,31 +42,35 @@ import com.google.common.collect.Iterables;
 public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynCluster {
 
     private static final String MSG_NO_MASTER = "No master node in cluster";
+    private static final String MSG_TOO_MANY_MASTERS = "Too many master nodes in cluster";
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynClusterImpl.class);
 
     //TODO set MEMBER_SPEC
 
+    @SuppressWarnings("unused")
     private FunctionFeed scanMaster;
 
     @Override
     public void init() {
         super.init();
         getMutableEntityType().addEffector(SelectMasterEffectorBody.SELECT_MASTER);
-        getMutableEntityType().addEffector(UpgradeClusterEffectorBody.UPGRADE_CLUSTER);
+        getMutableEntityType().addEffector(BrooklynClusterUpgradeEffectorBody.UPGRADE_CLUSTER);
 
-        ServiceNotUpLogic.updateNotUpIndicator(this, MASTER_NODE, MSG_NO_MASTER);
+        ServiceProblemsLogic.updateProblemsIndicator(this, MASTER_NODE, MSG_NO_MASTER);
         scanMaster = FunctionFeed.builder()
                 .entity(this)
                 .poll(new FunctionPollConfig<Object, BrooklynNode>(MASTER_NODE)
                         .period(Duration.ONE_SECOND)
-                        .callable(new Callable<BrooklynNode>() {
-                                @Override
-                                public BrooklynNode call() throws Exception {
-                                    return findMasterChild();
-                                }
-                            }))
+                        .callable(new MasterChildFinder()))
                 .build();
+    }
+
+    private final class MasterChildFinder implements Callable<BrooklynNode> {
+        @Override
+        public BrooklynNode call() throws Exception {
+            return findMasterChild();
+        }
     }
 
     private BrooklynNode findMasterChild() {
@@ -74,36 +79,32 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
                 .toList();
 
         if (masters.size() == 0) {
-            ServiceNotUpLogic.updateNotUpIndicator(this, MASTER_NODE, MSG_NO_MASTER);
+            ServiceProblemsLogic.updateProblemsIndicator(this, MASTER_NODE, MSG_NO_MASTER);
             return null;
+            
         } else if (masters.size() == 1) {
-            ServiceNotUpLogic.clearNotUpIndicator(this, MASTER_NODE);
+            ServiceStateLogic.ServiceProblemsLogic.clearProblemsIndicator(this, MASTER_NODE);
             return (BrooklynNode)Iterables.getOnlyElement(masters);
+            
         } else if (masters.size() == 2) {
-            //Probably hit a window where we have a new master
+            LOG.warn("Two masters detected, probably a handover just occured: " + masters);
+
+            //Don't clearProblemsIndicator - if there were no masters previously why have two now.
+            //But also don't set it. Probably hit a window where we have a new master
             //its BrooklynNode picked it up, but the BrooklynNode
             //for the old master hasn't refreshed its state yet.
             //Just pick one of them, should sort itself out in next update.
-            LOG.warn("Two masters detected, probably a handover just occured: " + masters);
-
-            //Don't clearNotUpIndicator - if there were no masters previously
-            //why have two now.
-
-            return (BrooklynNode)Iterables.getOnlyElement(masters);
+            
+            //TODO Do set such indicator if this continues for an extended period of time
+            
+            return (BrooklynNode)masters.iterator().next();
+            
         } else {
-            //Set on fire?
+            ServiceProblemsLogic.updateProblemsIndicator(this, MASTER_NODE, MSG_TOO_MANY_MASTERS);
             String msg = "Multiple (>=3) master nodes in cluster: " + masters;
             LOG.error(msg);
             throw new IllegalStateException(msg);
-        }
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
-
-        if (scanMaster != null && scanMaster.isActivated()) {
-            scanMaster.stop();
+            
         }
     }
 

@@ -26,11 +26,11 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.Sensors;
 
 @ImplementedBy(BrooklynClusterImpl.class)
 public interface BrooklynCluster extends DynamicCluster {
-    public static final AttributeSensor<BrooklynNode> MASTER_NODE = new BasicAttributeSensor<BrooklynNode>(
+    public static final AttributeSensor<BrooklynNode> MASTER_NODE = Sensors.newSensor(
             BrooklynNode.class, "brooklyncluster.master", "Pointer to the child node with MASTER state in the cluster");
 
     public interface SelectMasterEffector {

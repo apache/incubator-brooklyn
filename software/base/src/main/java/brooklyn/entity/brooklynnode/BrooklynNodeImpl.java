@@ -39,6 +39,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHAModeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHAPriorityEffectorBody;
 import brooklyn.entity.effector.EffectorBody;
@@ -103,7 +104,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
         getMutableEntityType().addEffector(SetHAPriorityEffectorBody.SET_HA_PRIORITY);
         getMutableEntityType().addEffector(SetHAModeEffectorBody.SET_HA_MODE);
-        getMutableEntityType().addEffector(BrooklynUpgradeEffector.UPGRADE);
+        getMutableEntityType().addEffector(BrooklynNodeUpgradeEffectorBody.UPGRADE);
     }
 
     @Override
