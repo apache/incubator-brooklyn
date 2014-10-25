@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.ServiceStateLogic;
@@ -46,7 +47,11 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynClusterImpl.class);
 
-    //TODO set MEMBER_SPEC
+    static {
+        RendererHints.register(MASTER_NODE, RendererHints.namedActionWithUrl());
+    }
+
+    // TODO should we set a default MEMBER_SPEC ?  difficult though because we'd need to set a password
 
     @SuppressWarnings("unused")
     private FunctionFeed scanMaster;
