@@ -19,7 +19,6 @@
 package brooklyn.entity.brooklynnode.effector;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,33 +28,27 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityPredicates;
+import brooklyn.entity.basic.EntityTasks;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.MapConfigKey;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.ReferenceWithError;
-import brooklyn.util.guava.Functionals;
 import brooklyn.util.net.Urls;
-import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Functions;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
 
@@ -70,21 +63,28 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
     private static final Logger log = LoggerFactory.getLogger(BrooklynNodeUpgradeEffectorBody.class);
     
     public static final ConfigKey<String> DOWNLOAD_URL = BrooklynNode.DOWNLOAD_URL.getConfigKey();
-    public static final ConfigKey<Map<String,Object>> EXTRA_CONFIG = MapConfigKey.builder(new TypeToken<Map<String,Object>>() {}).name("extraConfig").description("Additional new config to set on this entity as part of upgrading").build();
+    public static final ConfigKey<Map<String,Object>> EXTRA_CONFIG = MapConfigKey.builder(new TypeToken<Map<String,Object>>() {})
+        .name("extraConfig")
+        .description("Additional new config to set on the BrooklynNode as part of upgrading")
+        .build();
 
     public static final Effector<Void> UPGRADE = Effectors.effector(Void.class, "upgrade")
-        .description("Changes the Brooklyn build used to run this node, by spawning a dry-run node then copying the installed files across. "
+        .description("Changes the Brooklyn build used to run this node, "
+            + "by spawning a dry-run node then copying the installed files across. "
             + "This node must be running for persistence for in-place upgrading to work.")
-        .parameter(BrooklynNode.SUGGESTED_VERSION).parameter(DOWNLOAD_URL).parameter(EXTRA_CONFIG)
+        .parameter(BrooklynNode.SUGGESTED_VERSION)
+        .parameter(DOWNLOAD_URL)
+        .parameter(EXTRA_CONFIG)
         .impl(new BrooklynNodeUpgradeEffectorBody()).build();
     
     @Override
     public Void call(ConfigBag parametersO) {
         if (!isPersistenceModeEnabled(entity())) {
             // would could try a `forcePersistNow`, but that's sloppy; 
-            // for now, require HA/persistence for upgrading 
-            DynamicTasks.queue( Tasks.warning("Persistence does not appear to be enabled at this node. "
-                + "In-place upgrade is unlikely to succeed.", null) );
+            // for now, require HA/persistence for upgrading
+            DynamicTasks.queue( Tasks.warning("Check persistence", 
+                new IllegalStateException("Persistence does not appear to be enabled at this cluster. "
+                + "In-place node upgrade will not succeed unless a custom launch script enables it.")) );
         }
 
         ConfigBag parameters = ConfigBag.newInstanceCopying(parametersO);
@@ -114,6 +114,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
             .configure(parameters.getAllConfig()));
 
         //force this to start as hot-standby
+        // TODO alternatively could use REST API as in BrooklynClusterUpgradeEffectorBody
         String launchParameters = dryRunChild.getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
         if (Strings.isBlank(launchParameters)) launchParameters = "";
         else launchParameters += " ";
@@ -127,8 +128,8 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         DynamicTasks.queue(Effectors.invocation(dryRunChild, BrooklynNode.START, ConfigBag.EMPTY));
 
         // 2 confirm hot standby status
-        DynamicTasks.queue(newWaitForAttributeTask(dryRunChild, BrooklynNode.MANAGEMENT_NODE_STATE, 
-            Predicates.equalTo(ManagementNodeState.HOT_STANDBY), Duration.TWO_MINUTES));
+        DynamicTasks.queue(EntityTasks.awaitingAttribute(dryRunChild, BrooklynNode.MANAGEMENT_NODE_STATE, 
+            Predicates.equalTo(ManagementNodeState.HOT_STANDBY), Duration.FIVE_MINUTES));
 
         // 3 stop new version
         // 4 stop old version
@@ -166,47 +167,19 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         return null;
     }
 
-    private boolean isPersistenceModeEnabled(EntityInternal entity) {
+    @Beta
+    static boolean isPersistenceModeEnabled(Entity entity) {
         // TODO when there are PERSIST* options in BrooklynNode, look at them here!
         // or, better, have a sensor for persistence
-        String params = entity.getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
+        String params = null;
+        if (entity instanceof BrooklynCluster) {
+            EntitySpec<?> spec = entity.getConfig(BrooklynCluster.MEMBER_SPEC);
+            params = Strings.toString( spec.getConfig().get(BrooklynNode.EXTRA_LAUNCH_PARAMETERS) );
+        }
+        if (params==null) params = entity.getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
         if (params==null) return false;
         if (params.indexOf("persist")==0) return false;
         return true;
-    }
-
-    private static class WaitForRepeaterCallable implements Callable<Boolean> {
-        protected Repeater repeater;
-        protected boolean requireTrue;
-
-        public WaitForRepeaterCallable(Repeater repeater, boolean requireTrue) {
-            this.repeater = repeater;
-            this.requireTrue = requireTrue;
-        }
-
-        @Override
-        public Boolean call() {
-            ReferenceWithError<Boolean> result = repeater.runKeepingError();
-            if (Boolean.TRUE.equals(result.getWithoutError()))
-                return true;
-            if (result.hasError()) 
-                throw Exceptions.propagate(result.getError());
-            if (requireTrue)
-                throw new IllegalStateException("timeout - "+repeater.getDescription());
-            return false;
-        }
-    }
-
-    private static <T> TaskAdaptable<Boolean> newWaitForAttributeTask(Entity node, AttributeSensor<T> sensor, Predicate<T> condition, Duration timeout) {
-        return awaiting( Repeater.create("waiting on "+node+" "+sensor.getName()+" "+condition)
-                    .backoff(Duration.millis(10), 1.5, Duration.millis(200))
-                    .limitTimeTo(timeout==null ? Duration.PRACTICALLY_FOREVER : timeout)
-                    .until(Functionals.callable(Functions.forPredicate(EntityPredicates.attributeSatisfies(sensor, condition)), node)),
-                    true);
-    }
-
-    private static TaskAdaptable<Boolean> awaiting(Repeater repeater, boolean requireTrue) {
-        return Tasks.<Boolean>builder().name(repeater.getDescription()).body(new WaitForRepeaterCallable(repeater, requireTrue)).build();
     }
 
 }

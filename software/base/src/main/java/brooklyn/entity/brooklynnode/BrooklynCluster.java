@@ -18,10 +18,12 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import java.util.Map;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -45,9 +47,16 @@ public interface BrooklynCluster extends DynamicCluster {
     public static final Effector<Void> SELECT_MASTER = SelectMasterEffector.SELECT_MASTER;
 
     public interface UpgradeClusterEffector {
+        public static final ConfigKey<String> DOWNLOAD_URL = BrooklynNode.DOWNLOAD_URL.getConfigKey();
+        public static final ConfigKey<Map<String,Object>> EXTRA_CONFIG = BrooklynNodeUpgradeEffectorBody.EXTRA_CONFIG;
+
         Effector<Void> UPGRADE_CLUSTER = Effectors.effector(Void.class, "upgradeCluster")
-                .description("Upgrade the cluster with new distribution version")
-                .parameter(SoftwareProcess.DOWNLOAD_URL.getConfigKey())
+                .description("Upgrade the cluster with new distribution version, "
+                    + "by provisioning new nodes with the new version, failing over, "
+                    + "and then deprovisioning the original nodes")
+                .parameter(BrooklynNode.SUGGESTED_VERSION)
+                .parameter(DOWNLOAD_URL)
+                .parameter(EXTRA_CONFIG)
                 .buildAbstract();
     }
 

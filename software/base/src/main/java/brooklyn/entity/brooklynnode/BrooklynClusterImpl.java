@@ -48,6 +48,7 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynClusterImpl.class);
 
     static {
+        // XXX not needed or wanted
         RendererHints.register(MASTER_NODE, RendererHints.namedActionWithUrl());
     }
 
