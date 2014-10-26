@@ -22,7 +22,7 @@ import org.apache.http.HttpStatus;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.BrooklynNode.SetHAModeEffector;
+import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityModeEffector;
 import brooklyn.entity.brooklynnode.EntityHttpClient;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -39,8 +39,8 @@ import com.google.api.client.util.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 
-public class SetHAModeEffectorBody extends EffectorBody<ManagementNodeState> implements SetHAModeEffector {
-    public static final Effector<ManagementNodeState> SET_HA_MODE = Effectors.effector(SetHAModeEffector.SET_HA_MODE).impl(new SetHAModeEffectorBody()).build();
+public class SetHighAvailabilityModeEffectorBody extends EffectorBody<ManagementNodeState> implements SetHighAvailabilityModeEffector {
+    public static final Effector<ManagementNodeState> SET_HIGH_AVAILABILITY_MODE = Effectors.effector(SetHighAvailabilityModeEffector.SET_HIGH_AVAILABILITY_MODE).impl(new SetHighAvailabilityModeEffectorBody()).build();
 
     @Override
     public ManagementNodeState call(ConfigBag parameters) {

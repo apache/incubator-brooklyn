@@ -41,8 +41,8 @@ public class TestHttpEntity extends AbstractEntity implements BrooklynNode {
     @Override
     public void init() {
         super.init();
-        getMutableEntityType().addEffector(SetHAPriorityEffectorBody.SET_HA_PRIORITY);
-        getMutableEntityType().addEffector(SetHAModeEffectorBody.SET_HA_MODE);
+        getMutableEntityType().addEffector(SetHighAvailabilityPriorityEffectorBody.SET_HIGH_AVAILABILITY_PRIORITY);
+        getMutableEntityType().addEffector(SetHighAvailabilityModeEffectorBody.SET_HIGH_AVAILABILITY_MODE);
         setAttribute(HA_PRIORITY, 0);
     }
 

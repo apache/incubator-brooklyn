@@ -41,7 +41,7 @@ import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynCluster.SelectMasterEffector;
 import brooklyn.entity.brooklynnode.BrooklynCluster.UpgradeClusterEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.BrooklynNode.SetHAModeEffector;
+import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityModeEffector;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
@@ -192,8 +192,8 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
 
         //3. Set HOT_STANDBY in case it is not enabled on the command line ...
         DynamicTasks.queue(Effectors.invocation(
-                BrooklynNode.SET_HA_MODE,
-                MutableMap.of(SetHAModeEffector.MODE, HighAvailabilityMode.HOT_STANDBY), 
+                BrooklynNode.SET_HIGH_AVAILABILITY_MODE,
+                MutableMap.of(SetHighAvailabilityModeEffector.MODE, HighAvailabilityMode.HOT_STANDBY), 
                 newNodes)).asTask().getUnchecked();
         //... and wait until all of the nodes change state
         // TODO fail quicker if state changes to FAILED

@@ -40,8 +40,8 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
-import brooklyn.entity.brooklynnode.effector.SetHAModeEffectorBody;
-import brooklyn.entity.brooklynnode.effector.SetHAPriorityEffectorBody;
+import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
+import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -102,8 +102,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
         getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);
         getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
-        getMutableEntityType().addEffector(SetHAPriorityEffectorBody.SET_HA_PRIORITY);
-        getMutableEntityType().addEffector(SetHAModeEffectorBody.SET_HA_MODE);
+        getMutableEntityType().addEffector(SetHighAvailabilityPriorityEffectorBody.SET_HIGH_AVAILABILITY_PRIORITY);
+        getMutableEntityType().addEffector(SetHighAvailabilityModeEffectorBody.SET_HIGH_AVAILABILITY_MODE);
         getMutableEntityType().addEffector(BrooklynNodeUpgradeEffectorBody.UPGRADE);
     }
 

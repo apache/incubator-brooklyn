@@ -32,8 +32,8 @@ import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynCluster.SelectMasterEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.BrooklynNode.SetHAModeEffector;
-import brooklyn.entity.brooklynnode.BrooklynNode.SetHAPriorityEffector;
+import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityModeEffector;
+import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityPriorityEffector;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.management.ha.HighAvailabilityMode;
@@ -124,8 +124,8 @@ public class SelectMasterEffectorBody extends EffectorBody<Void> implements Sele
         ManagementNodeState oldState = DynamicTasks.queue(
                 Effectors.invocation(
                         oldMaster,
-                        BrooklynNode.SET_HA_MODE,
-                        MutableMap.of(SetHAModeEffector.MODE, mode))
+                        BrooklynNode.SET_HIGH_AVAILABILITY_MODE,
+                        MutableMap.of(SetHighAvailabilityModeEffector.MODE, mode))
             ).asTask().getUnchecked();
 
         if (oldState != ManagementNodeState.MASTER) {
@@ -138,8 +138,8 @@ public class SelectMasterEffectorBody extends EffectorBody<Void> implements Sele
         Integer oldPriority = DynamicTasks.queue(
                 Effectors.invocation(
                     newMaster,
-                    BrooklynNode.SET_HA_PRIORITY,
-                    MutableMap.of(SetHAPriorityEffector.PRIORITY, newPriority))
+                    BrooklynNode.SET_HIGH_AVAILABILITY_PRIORITY,
+                    MutableMap.of(SetHighAvailabilityPriorityEffector.PRIORITY, newPriority))
             ).asTask().getUnchecked();
 
         Integer expectedPriority = (newPriority == HA_MASTER_PRIORITY ? HA_STANDBY_PRIORITY : HA_MASTER_PRIORITY);

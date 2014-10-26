@@ -283,25 +283,25 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     public static final Effector<Void> STOP_NODE_AND_KILL_APPS = StopNodeAndKillAppsEffector.STOP_NODE_AND_KILL_APPS;
 
-    public interface SetHAPriorityEffector {
+    public interface SetHighAvailabilityPriorityEffector {
         ConfigKey<Integer> PRIORITY = ConfigKeys.newIntegerConfigKey("priority", "HA priority");
-        Effector<Integer> SET_HA_PRIORITY = Effectors.effector(Integer.class, "setHAPriotity")
-                .description("Set HA priority on the node, returns the old priority")
+        Effector<Integer> SET_HIGH_AVAILABILITY_PRIORITY = Effectors.effector(Integer.class, "setHighAvailabilityPriority")
+                .description("Set the HA priority on the node, returning the old priority")
                 .parameter(PRIORITY)
                 .buildAbstract();
     }
 
-    public static final Effector<Integer> SET_HA_PRIORITY = SetHAPriorityEffector.SET_HA_PRIORITY;
+    public static final Effector<Integer> SET_HIGH_AVAILABILITY_PRIORITY = SetHighAvailabilityPriorityEffector.SET_HIGH_AVAILABILITY_PRIORITY;
 
-    public interface SetHAModeEffector {
+    public interface SetHighAvailabilityModeEffector {
         ConfigKey<HighAvailabilityMode> MODE = ConfigKeys.newConfigKey(HighAvailabilityMode.class, "mode", "HA mode");
-        Effector<ManagementNodeState> SET_HA_MODE = Effectors.effector(ManagementNodeState.class, "setHAMode")
-                .description("Set HA mode on the node, returns the existing state")
+        Effector<ManagementNodeState> SET_HIGH_AVAILABILITY_MODE = Effectors.effector(ManagementNodeState.class, "setHighAvailabilityMode")
+                .description("Set the HA mode on the node, returning the existing state")
                 .parameter(MODE)
                 .buildAbstract();
     }
 
-    public static final Effector<ManagementNodeState> SET_HA_MODE = SetHAModeEffector.SET_HA_MODE;
+    public static final Effector<ManagementNodeState> SET_HIGH_AVAILABILITY_MODE = SetHighAvailabilityModeEffector.SET_HIGH_AVAILABILITY_MODE;
 
     public EntityHttpClient http();
 }

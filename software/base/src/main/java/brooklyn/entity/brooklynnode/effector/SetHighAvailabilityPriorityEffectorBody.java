@@ -22,7 +22,7 @@ import org.apache.http.HttpStatus;
 
 import brooklyn.entity.Effector;
 import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.BrooklynNode.SetHAPriorityEffector;
+import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityPriorityEffector;
 import brooklyn.entity.brooklynnode.EntityHttpClient;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -32,8 +32,8 @@ import brooklyn.util.http.HttpToolResponse;
 import com.google.api.client.util.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-public class SetHAPriorityEffectorBody extends EffectorBody<Integer> implements SetHAPriorityEffector {
-    public static final Effector<Integer> SET_HA_PRIORITY = Effectors.effector(SetHAPriorityEffector.SET_HA_PRIORITY).impl(new SetHAPriorityEffectorBody()).build();
+public class SetHighAvailabilityPriorityEffectorBody extends EffectorBody<Integer> implements SetHighAvailabilityPriorityEffector {
+    public static final Effector<Integer> SET_HIGH_AVAILABILITY_PRIORITY = Effectors.effector(SetHighAvailabilityPriorityEffector.SET_HIGH_AVAILABILITY_PRIORITY).impl(new SetHighAvailabilityPriorityEffectorBody()).build();
 
     @Override
     public Integer call(ConfigBag parameters) {
