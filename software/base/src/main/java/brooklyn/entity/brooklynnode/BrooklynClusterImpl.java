@@ -24,13 +24,14 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.render.RendererHints;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
-import brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
 import brooklyn.entity.brooklynnode.effector.BrooklynClusterUpgradeEffectorBody;
+import brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
@@ -46,11 +47,6 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
     private static final String MSG_TOO_MANY_MASTERS = "Too many master nodes in cluster";
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynClusterImpl.class);
-
-    static {
-        // XXX not needed or wanted
-        RendererHints.register(MASTER_NODE, RendererHints.namedActionWithUrl());
-    }
 
     // TODO should we set a default MEMBER_SPEC ?  difficult though because we'd need to set a password
 
@@ -70,6 +66,12 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
                         .period(Duration.ONE_SECOND)
                         .callable(new MasterChildFinder()))
                 .build();
+        
+        addEnricher( Enrichers.builder().transforming(MASTER_NODE)
+            .uniqueTag("master-node-web-uri")
+            .publishing(BrooklynNode.WEB_CONSOLE_URI)
+            .computing(EntityFunctions.attribute(BrooklynNode.WEB_CONSOLE_URI))
+            .build() );
     }
 
     private final class MasterChildFinder implements Callable<BrooklynNode> {
