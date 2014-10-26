@@ -44,7 +44,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
-import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMode;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
@@ -432,6 +432,21 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     /**
+     * whether when 'auto' mode is specified, the machine should be stopped
+     * <p>
+     * with {@link MachineLifecycleEffectorTasks}, a machine will always get created on restart if there wasn't one already
+     * (unlike certain subclasses which might attempt a shortcut process-level restart)
+     * so there is no reason for default behaviour of restart to throw away a provisioned machine,
+     * hence default impl returns <code>false</code>.
+     * <p>
+     * if it is possible to tell that a machine is unhealthy, or if {@link #restart(ConfigBag)} is overridden,
+     * then it might be appropriate to return <code>true</code> here.
+     */
+    protected boolean getDefaultRestartStopsMachine() {
+        return false;
+    }
+    
+    /**
      * Default restart implementation for an entity.
      * <p>
      * Stops processes if possible, then starts the entity again.
@@ -439,11 +454,13 @@ public abstract class MachineLifecycleEffectorTasks {
     public void restart(ConfigBag parameters) {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
         
-        RestartMode isRestartMachine = parameters.get(RestartSoftwareParameters.RESTART_MACHINE_TYPED);
-        if (isRestartMachine==null) isRestartMachine=RestartMode.AUTO;
-        if (isRestartMachine==RestartMode.AUTO) isRestartMachine = RestartMode.FALSE;
+        RestartMachineMode isRestartMachine = parameters.get(RestartSoftwareParameters.RESTART_MACHINE_TYPED);
+        if (isRestartMachine==null) 
+            isRestartMachine=RestartMachineMode.AUTO;
+        if (isRestartMachine==RestartMachineMode.AUTO) 
+            isRestartMachine = getDefaultRestartStopsMachine() ? RestartMachineMode.TRUE : RestartMachineMode.FALSE; 
 
-        if (isRestartMachine==RestartMode.FALSE) {
+        if (isRestartMachine==RestartMachineMode.FALSE) {
             DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
                 stopProcessesAtMachine();

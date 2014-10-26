@@ -108,7 +108,7 @@ public interface Startable {
      * Stop the entity.
      * <p>
      * Some entities may define custom {@link Effector} implementations which support
-     * a richer set of parameters.  See the entity-specific {@link #START} effector declaration.
+     * a richer set of parameters.  See the entity-specific {@link #STOP} effector declaration.
      */
     @brooklyn.entity.annotation.Effector(description="Stop the process/service represented by an entity")
     void stop();
@@ -117,7 +117,7 @@ public interface Startable {
      * Restart the entity.
      * <p>
      * Some entities may define custom {@link Effector} implementations which support
-     * a richer set of parameters.  See the entity-specific {@link #START} effector declaration.
+     * a richer set of parameters.  See the entity-specific {@link #RESTART} effector declaration.
      */
     @brooklyn.entity.annotation.Effector(description="Restart the process/service represented by an entity")
     void restart();

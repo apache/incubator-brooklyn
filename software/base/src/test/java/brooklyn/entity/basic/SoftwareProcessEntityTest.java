@@ -36,7 +36,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
-import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMode;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -193,7 +193,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         
         // but here, it will try to reboot, and fail because there is no machine available
         TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.RESTART, 
-                ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMode.TRUE)));
+                ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMachineMode.TRUE)));
         t1.asTask().blockUntilEnded(Duration.TEN_SECONDS);
         if (!t1.asTask().isError()) {
             Assert.fail("Should have thrown error during "+t1+" because no more machines available at "+loc);
@@ -204,7 +204,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
             .configure("address", "localhost"));
         loc.addMachine(machine2);
         TaskAdaptable<Void> t2 = Entities.submit(entity, Effectors.invocation(entity, Startable.RESTART, 
-            ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMode.TRUE)));
+            ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMachineMode.TRUE)));
         t2.asTask().get();
         
         Assert.assertFalse(d.isRunning());

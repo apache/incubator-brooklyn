@@ -240,18 +240,18 @@ public interface SoftwareProcess extends Entity, Startable {
 
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
         public static final ConfigKey<Object> RESTART_MACHINE = ConfigKeys.newConfigKey(Object.class, "restartMachine",
-            "Whether to restart/replace the machine where this is running: 'true', 'false', or 'auto' supported, "
-            + "with the default being auto, ie only act at the machine level if there is nothing else to restart"
-            + " (e.g. there is no machine);"
-            + " NB: only applies when the machine was provisioned for this entity", 
-            RestartMode.AUTO.toString().toLowerCase());
+            "Whether to restart/replace the machine provisioned for this entity:  'true', 'false', or 'auto' are supported, "
+            + "with the default being 'auto' which means to restart or reprovision the machine if there is no simpler way known to restart the entity "
+            + "(for example, if the machine is unhealthy, it would not be possible to restart the process, not even via a stop-then-start sequence); "
+            + "if the machine was not provisioned for this entity, this parameter has no effect", 
+            RestartMachineMode.AUTO.toString().toLowerCase());
         
         // we supply a typed variant for retrieval; we want the untyped (above) to use lower case as the default in the GUI
         // (very hard if using enum, since enum takes the name, and RendererHints do not apply to parameters) 
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
-        public static final ConfigKey<RestartMode> RESTART_MACHINE_TYPED = ConfigKeys.newConfigKey(RestartMode.class, "restartMachine");
+        public static final ConfigKey<RestartMachineMode> RESTART_MACHINE_TYPED = ConfigKeys.newConfigKey(RestartMachineMode.class, "restartMachine");
             
-        public enum RestartMode { TRUE, FALSE, AUTO }
+        public enum RestartMachineMode { TRUE, FALSE, AUTO }
     }
     
     // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks

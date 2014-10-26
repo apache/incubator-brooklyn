@@ -37,6 +37,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.Location;
@@ -483,8 +484,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /**
      * To be overridden instead of {@link #start(Collection)}; sub-classes should call {@code super.doStart(locations)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
-     * @deprecated since 0.7.0 override {@link #preStart()} or {@link #postStart()}, or define custom lifecycle tasks if needed
-     * (this method is no longer invoked, hence now marking it final)
+     * @deprecated since 0.7.0 override {@link #preStart()} or {@link #postStart()}, 
+     * or define a {@link SoftwareProcessDriverLifecycleEffectorTasks} subclass if more complex behaviour needed
+     * (this method is no longer invoked by the {@link EffectorBody} call path, 
+     * hence deprecating it and marking it final to highlight incompatibilities at compile time)
      */
     @Deprecated
     protected final void doStart(Collection<? extends Location> locations) {
@@ -494,8 +497,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /**
      * To be overridden instead of {@link #stop()}; sub-classes should call {@code super.doStop()} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
-     * @deprecated since 0.7.0 override {@link #preStop()} or {@link #postStop()}, or define custom lifecycle tasks if needed
-     * (this method is no longer invoked, hence now marking it final)
+     * @deprecated since 0.7.0 override {@link #preStop()} or {@link #postStop()}; see note on {@link #doStart(Collection)} for more information 
      */
     @Deprecated
     protected final void doStop() {
@@ -505,15 +507,14 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /**
      * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart(ConfigBag)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
-     * @deprecated since 0.7.0 define custom lifecycle tasks if needed
-     * (this method is no longer invoked, hence now marking it final)
+     * @deprecated since 0.7.0; see note on {@link #doStart(Collection)} for more information 
      */
     @Deprecated
     protected final void doRestart(ConfigBag parameters) {
         LIFECYCLE_TASKS.restart(parameters);
     }
 
-    @Deprecated /** @deprecated since 0.7.0 subclasses should instead override {@link #doRestart(ConfigBag)} */
+    @Deprecated /** @deprecated since 0.7.0 see {@link #doRestart(ConfigBag)} */
     protected final void doRestart() {
         doRestart(ConfigBag.EMPTY);
     }
