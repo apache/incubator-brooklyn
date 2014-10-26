@@ -181,7 +181,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
      * Can pass in the 'serverPool'.
      */
     @Override
-    public void bind(Map flags) {
+    public void bind(Map<?,?> flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
         } 
@@ -292,7 +292,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     protected void preStart() {
         super.preStart();
 
-        AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
+        AttributeSensor<String> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
         Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
         Maybe<Object> portSensor = getConfigRaw(PORT_NUMBER_SENSOR, true);
         if (hostAndPortSensor != null) {

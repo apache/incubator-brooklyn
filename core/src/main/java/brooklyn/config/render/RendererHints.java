@@ -20,8 +20,6 @@ package brooklyn.config.render;
 
 import groovy.lang.Closure;
 
-import java.net.URI;
-import java.net.URL;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -31,10 +29,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.net.UserAndHostAndPort;
-import brooklyn.util.text.StringFunctions;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,7 +45,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
 
 /**
  * Registry of hints for displaying items such as sensors, e.g. in the web console.
@@ -173,6 +166,7 @@ public class RendererHints {
             this.postProcessing = postProcessing;
         }
 
+        /** @deprecated since 0.7.0 call {@link #getUrlFromValue(Object)}, parsing the sensor value yourself */ @Deprecated
         public String getUrl(Entity e, AttributeSensor<T> s) {
             return getUrlFromValue(e.getAttribute(s));
         }

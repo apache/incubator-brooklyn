@@ -62,19 +62,22 @@ public class SensorTransformer {
         return new SensorSummary(sensor.getName(), sensor.getTypeName(), sensor.getDescription(), lb.build());
     }
 
-    // TODO should do this with config also (e.g. to show entities or URLs as clickable links); but we need to set up a ConfigTransformer
-    @SuppressWarnings("unchecked")
     private static <T> void addNamedAction(MutableMap.Builder<String, URI> lb, RendererHints.NamedAction na , Entity entity, Sensor<T> sensor) {
+        addNamedAction(lb, na, entity.getAttribute( ((AttributeSensor<T>) sensor) ), sensor, entity);
+    }
+    
+    @SuppressWarnings("unchecked")
+    static <T> void addNamedAction(MutableMap.Builder<String, URI> lb, RendererHints.NamedAction na, T value, Object context, Entity contextEntity) {
         if (na instanceof RendererHints.NamedActionWithUrl) {
             try {
-                String v = ((RendererHints.NamedActionWithUrl<T>) na).getUrl(entity, (AttributeSensor<T>) sensor);
+                String v = ((RendererHints.NamedActionWithUrl<T>) na).getUrlFromValue(value);
                 if (Strings.isNonBlank(v)) {
                     String action = na.getActionName().toLowerCase();
                     lb.putIfAbsent("action:"+action, URI.create(v));
                 }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                log.warn("Unable to make use of URL sensor "+sensor+" on "+entity+": "+e, e);
+                log.warn("Unable to make action "+na+" from "+context+" on "+contextEntity+": "+e, e);
             }
         }
     }

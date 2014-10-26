@@ -64,19 +64,22 @@ public interface LoadBalancer extends Entity, Startable {
             Group.class, "loadbalancer.urlmappings", "Special mapping rules (e.g. for domain/path matching, rewrite, etc); not supported by all load balancers");
     
     /** sensor for port to forward to on target entities */
+    @SuppressWarnings("serial")
     @SetFromFlag("portNumberSensor")
-    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> PORT_NUMBER_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
-            AttributeSensor.class, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port; not supported in all implementations)", Attributes.HTTP_PORT);
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor<Integer>> PORT_NUMBER_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor<Integer>>(
+        new TypeToken<AttributeSensor<Integer>>() {}, "member.sensor.portNumber", "Port number sensor on members (defaults to http.port; not supported in all implementations)", Attributes.HTTP_PORT);
 
     /** sensor for hostname to forward to on target entities */
+    @SuppressWarnings("serial")
     @SetFromFlag("hostnameSensor")
-    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> HOSTNAME_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
-            AttributeSensor.class, "member.sensor.hostname", "Hostname/IP sensor on members (defaults to host.name; not supported in all implementations)", Attributes.HOSTNAME);
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor<String>> HOSTNAME_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor<String>>(
+        new TypeToken<AttributeSensor<String>>() {}, "member.sensor.hostname", "Hostname/IP sensor on members (defaults to host.name; not supported in all implementations)", Attributes.HOSTNAME);
 
     /** sensor for hostname to forward to on target entities */
+    @SuppressWarnings("serial")
     @SetFromFlag("hostAndPortSensor")
-    public static final BasicAttributeSensorAndConfigKey<AttributeSensor> HOST_AND_PORT_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor>(
-            AttributeSensor.class, "member.sensor.hostandport", "host:port sensor on members (invalid to configure this and the portNumber or hostname sensors)", null);
+    public static final BasicAttributeSensorAndConfigKey<AttributeSensor<String>> HOST_AND_PORT_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor<String>>(
+            new TypeToken<AttributeSensor<String>>() {}, "member.sensor.hostandport", "host:port sensor on members (invalid to configure this and the portNumber or hostname sensors)", null);
     
     @SetFromFlag("port")
     /** port where this controller should live */
@@ -92,6 +95,7 @@ public interface LoadBalancer extends Entity, Startable {
     public static final AttributeSensor<URI> MAIN_URI = Attributes.MAIN_URI;
     public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
 
+    @SuppressWarnings("serial")
     public static final AttributeSensor<Map<Entity, String>> SERVER_POOL_TARGETS = Sensors.newSensor(
             new TypeToken<Map<Entity, String>>() {},
             "proxy.serverpool.targets", 
@@ -111,5 +115,5 @@ public interface LoadBalancer extends Entity, Startable {
      * Opportunity to do late-binding of the cluster that is being controlled. Must be called before start().
      * Can pass in the 'serverPool'.
      */
-    public void bind(Map flags);
+    public void bind(Map<?,?> flags);
 }
