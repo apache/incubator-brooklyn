@@ -19,8 +19,6 @@
 package brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import brooklyn.management.ha.OsgiManager;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 import io.airlift.command.Cli;
@@ -66,7 +64,7 @@ import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.mementos.BrooklynMementoRawData;
+import brooklyn.management.ha.OsgiManager;
 import brooklyn.rest.security.PasswordHasher;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -813,9 +811,9 @@ public class Main extends AbstractMain {
 
     /** method intended for overriding when a different {@link Cli} is desired,
      * or when the subclass wishes to change any of the arguments */
+    @SuppressWarnings("unchecked")
     @Override
     protected CliBuilder<BrooklynCommand> cliBuilder() {
-        @SuppressWarnings({ "unchecked" })
         CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
                 .withDescription("Brooklyn Management Service")
                 .withDefaultCommand(InfoCommand.class)

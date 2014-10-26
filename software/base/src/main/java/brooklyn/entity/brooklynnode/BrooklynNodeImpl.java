@@ -355,7 +355,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
                     .entity(this)
-                    .period(200)
+                    .period(getConfig(POLL_PERIOD))
                     .baseUri(webConsoleUri)
                     .credentialsIfNotNull(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                     .poll(new HttpPollConfig<Boolean>(WEB_CONSOLE_ACCESSIBLE)
@@ -365,6 +365,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                             .suburl("/v1/server/ha/state")
                             .onSuccess(Functionals.chain(Functionals.chain(HttpValueFunctions.jsonContents(), JsonFunctions.cast(String.class)), Enums.fromStringFunction(ManagementNodeState.class)))
                             .setOnFailureOrException(null))
+                    // TODO sensors for load, size, etc
                     .build();
 
             if (!Lifecycle.RUNNING.equals(getAttribute(SERVICE_STATE_ACTUAL))) {
