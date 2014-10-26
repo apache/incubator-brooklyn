@@ -93,7 +93,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
                     Integer webPort = getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
                     Preconditions.checkNotNull(webPort, CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT+" not set for %s; is an acceptable port available?", this);
                     String hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(CouchbaseNodeImpl.this, webPort).toString();
-                    setAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, format("http://%s", hostAndPort));
+                    setAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, URI.create(format("http://%s", hostAndPort)));
                 }
             }
         });
@@ -208,7 +208,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         super.connectSensors();
         connectServiceUpIsRunning();
                 
-        String adminUrl = DynamicTasks.submit(DependentConfiguration.attributeWhenReady(this, CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), this).getUnchecked(Duration.TWO_MINUTES);
+        URI adminUrl = DynamicTasks.submit(DependentConfiguration.attributeWhenReady(this, CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), this).getUnchecked(Duration.TWO_MINUTES);
         
         httpFeed = HttpFeed.builder()
             .entity(this)

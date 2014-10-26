@@ -18,9 +18,11 @@
  */
 package brooklyn.entity.basic;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -122,4 +124,16 @@ public interface Attributes {
     AttributeSensor<Integer> PID = Sensors.newIntegerSensor("pid", "Process ID for the previously launched instance");
 
     AttributeSensor<String> LOG_FILE_LOCATION = Sensors.newStringSensor("log.location", "Log file location");
+    
+    AttributeSensor<URI> MAIN_URI = MainUri.MAIN_URI;
+
+ // this class is added because the MAIN_URI relies on a static initialization which unfortunately can't be added to an interface.
+    class MainUri {
+        private final static AttributeSensor<URI> MAIN_URI = Sensors.newSensor(URI.class, "main.uri", "Main URI for contacting the service/endpoint offered by this entity");
+
+        static {
+            RendererHints.register(MAIN_URI, RendererHints.namedActionWithUrl());
+        }
+    }
+
 }

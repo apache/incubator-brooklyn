@@ -20,6 +20,7 @@ package brooklyn.qa.load;
 
 import static java.lang.String.format;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
@@ -70,7 +71,10 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
         }
 
         // From AbstractController.connectSensors
-        if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
+        if (getUrl()==null) {
+            setAttribute(MAIN_URI, URI.create(inferUrl()));
+            setAttribute(ROOT_URL, inferUrl());
+        }
         addServerPoolMemberTrackingPolicy();
 
         // From NginxController.connectSensors
@@ -78,7 +82,7 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
 
         if (!simulateExternalMonitoring) {
             // if simulating entity, then simulate work of periodic HTTP request; TODO but not parsing JSON response
-            String uriToPoll = (simulateEntity) ? "http://localhost:8081" : getAttribute(ROOT_URL);
+            String uriToPoll = (simulateEntity) ? "http://localhost:8081" : getAttribute(MAIN_URI).toString();
             
             httpFeed = HttpFeed.builder()
                     .entity(this)

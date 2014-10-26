@@ -93,7 +93,7 @@ define([
             this.revealIfHasValue("service.isUp", this.$(".serviceUp"), null, data)
             
             var renderAsLink = function(data) { return "<a href='"+_.escape(data)+"'>"+_.escape(data)+"</a>" };
-            this.revealIfHasValue("webapp.url", this.$(".url"), renderAsLink, data)
+            this.revealIfHasValue("main.uri", this.$(".url"), renderAsLink, data)
 
             var status = this.updateStatusIcon();
             

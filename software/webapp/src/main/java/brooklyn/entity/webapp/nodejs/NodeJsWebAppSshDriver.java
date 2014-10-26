@@ -18,8 +18,7 @@
  */
 package brooklyn.entity.webapp.nodejs;
 
-import static java.lang.String.format;
-
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,9 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
@@ -44,7 +41,6 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver implements NodeJsWebAppDriver {
@@ -72,6 +68,7 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
     @Override
     public void postLaunch() {
         String rootUrl = String.format("http://%s:%d/", getHostname(), getHttpPort());
+        entity.setAttribute(Attributes.MAIN_URI, URI.create(rootUrl));
         entity.setAttribute(WebAppService.ROOT_URL, rootUrl);
     }
 

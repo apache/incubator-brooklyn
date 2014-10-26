@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.proxy;
 
+import java.net.URI;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
@@ -88,6 +89,7 @@ public interface LoadBalancer extends Entity, Startable {
     
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
     
+    public static final AttributeSensor<URI> MAIN_URI = Attributes.MAIN_URI;
     public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
 
     public static final AttributeSensor<Map<Entity, String>> SERVER_POOL_TARGETS = Sensors.newSensor(

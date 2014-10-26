@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -131,7 +132,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         log.debug("Initializing tracker for "+this+", following "+targetEntityProvider);
         tracker = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("GeoDNS targets tracker")
-                .configure("sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS, WebAppService.ROOT_URL))
+                .configure("sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS, Attributes.MAIN_URI, WebAppService.ROOT_URL))
                 .configure("group", targetEntityProvider));
         refreshGroupMembership();
     }
@@ -302,10 +303,10 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     
     protected String inferHostname(Entity entity) {
         String hostname = entity.getAttribute(Attributes.HOSTNAME);
-        String url = entity.getAttribute(WebAppService.ROOT_URL);
+        URI url = entity.getAttribute(Attributes.MAIN_URI);
         if (url!=null) {
             try {
-                URL u = new URL(url);
+                URL u = url.toURL();
                 
                 String hostname2 = u.getHost(); 
                 if (hostname==null) {
