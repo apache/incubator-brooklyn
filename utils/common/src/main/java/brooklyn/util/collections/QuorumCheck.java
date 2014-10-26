@@ -16,18 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.basic;
+package brooklyn.util.collections;
 
 import java.io.Serializable;
 
 /**
  * For checking if a group/cluster is quorate. That is, whether the group has sufficient
  * healthy members.
- * @deprecated since 0.7.0 use {@link brooklyn.util.collections.QuorumCheck}. 
- * but keep this for a while as old quorum checks might be persisted. 
  */
-@Deprecated
-public interface QuorumCheck extends brooklyn.util.collections.QuorumCheck {
+public interface QuorumCheck {
 
     /**
      * @param sizeHealthy Number of healthy members
@@ -41,13 +38,13 @@ public interface QuorumCheck extends brooklyn.util.collections.QuorumCheck {
          * Checks that all members that should be up are up (i.e. ignores stopped nodes).
          */
         public static QuorumCheck all() {
-            return new NumericQuorumCheck(0, 1.0, false);
+            return new NumericQuorumCheck(0, 1.0, false, "all");
         }
         /**
          * Checks all members that should be up are up, and that there is at least one such member.
          */
         public static QuorumCheck allAndAtLeastOne() {
-            return new NumericQuorumCheck(1, 1.0, false);
+            return new NumericQuorumCheck(1, 1.0, false, "atLeastOne");
         }
         /**
          * Requires at least one member that should be up is up.
@@ -74,21 +71,22 @@ public interface QuorumCheck extends brooklyn.util.collections.QuorumCheck {
         }
     }
     
-    /** @deprecated since 0.7.0 use {@link brooklyn.util.collections.QuorumCheck}. 
-    * but keep this until we have a transition defined. 
-    */
-    @Deprecated
     public static class NumericQuorumCheck implements QuorumCheck, Serializable {
         private static final long serialVersionUID = -5090669237460159621L;
         
         protected final int minRequiredSize;
         protected final double minRequiredRatio;
         protected final boolean allowEmpty;
+        protected final String name;
 
         public NumericQuorumCheck(int minRequiredSize, double minRequiredRatio, boolean allowEmpty) {
+            this(minRequiredSize, minRequiredRatio, allowEmpty, null);
+        }
+        public NumericQuorumCheck(int minRequiredSize, double minRequiredRatio, boolean allowEmpty, String name) {
             this.minRequiredSize = minRequiredSize;
             this.minRequiredRatio = minRequiredRatio;
             this.allowEmpty = allowEmpty;
+            this.name = name;
         }
         
         @Override

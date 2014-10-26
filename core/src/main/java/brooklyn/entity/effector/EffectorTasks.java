@@ -47,6 +47,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
+ * Miscellaneous tasks which are useful in effectors.
  * @since 0.6.0
  */
 @Beta
