@@ -131,6 +131,7 @@ public class BrooklynDslCommon {
      * to the {@link Map} or a {@link BrooklynDslDeferredSupplier} if the arguments are not
      * yet fully resolved.
      */
+    @SuppressWarnings("unchecked")
     public static Object object(Map<String, Object> arguments) {
         ConfigBag config = ConfigBag.newInstance(arguments);
         String typeName = BrooklynYamlTypeInstantiator.InstantiatorFromKey.extractTypeName("object", config).orNull();
@@ -202,6 +203,7 @@ public class BrooklynDslCommon {
     }
 
     /** @deprecated since 0.7.0; use {@link DslFormatString} */
+    @SuppressWarnings("serial")
     @Deprecated
     protected static class FormatString extends DslFormatString {
         public FormatString(String pattern, Object[] args) {
@@ -223,6 +225,7 @@ public class BrooklynDslCommon {
             this.config = MutableMap.copyOf(config);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Task<Object> newTask() {
             List<TaskAdaptable<Object>> tasks = Lists.newLinkedList();

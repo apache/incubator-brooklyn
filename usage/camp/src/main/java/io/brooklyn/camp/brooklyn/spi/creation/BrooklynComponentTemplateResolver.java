@@ -264,6 +264,7 @@ public class BrooklynComponentTemplateResolver {
     }
 
     //called from BrooklynAssemblyTemplateInstantiator as well
+    @SuppressWarnings("unchecked")
     protected <T extends Entity> void populateSpec(EntitySpec<T> spec) {
         String name, templateId=null, planId=null;
         if (template.isPresent()) {
@@ -335,10 +336,22 @@ public class BrooklynComponentTemplateResolver {
         return entity;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void configureEntityConfig(EntitySpec<?> spec) {
         ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.getStringKey("brooklyn.config"));
         
+        // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
+        // (for component templates this will have been done already by BrooklynEntityMatcher, but for specs it is needed here)
+        ConfigBag bagFlags = ConfigBag.newInstanceCopying(attrs);
+        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bagFlags);
+        for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
+            if (r.getConfigKeyMaybeValue().isPresent())
+                bag.putIfAbsent((ConfigKey)r.getConfigKey(), r.getConfigKeyMaybeValue().get());
+            if (r.getFlagMaybeValue().isPresent())
+                bag.putAsStringKeyIfAbsent(r.getFlagName(), r.getFlagMaybeValue().get());
+        }
+
+        // now set configuration for all the items in the bag
         List<FlagConfigKeyAndValueRecord> records = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bag);
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {

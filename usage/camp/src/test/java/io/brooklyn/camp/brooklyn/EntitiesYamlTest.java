@@ -605,6 +605,25 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testEntitySpecFlags() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n"+
+                "  confName: inParent\n"+
+                "  brooklyn.config:\n"+
+                "   test.childSpec:\n"+
+                "     $brooklyn:entitySpec:\n"+
+                "       type: brooklyn.test.entity.TestEntity\n"+
+                "       confName: inchildspec\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
+        assertEquals(child.getConfig(TestEntity.CONF_NAME), "inchildspec");
+    }
+
+    @Test
     public void testEntitySpecWithChildren() throws Exception {
         String yaml =
                 "services:\n"+
