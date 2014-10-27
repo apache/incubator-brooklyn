@@ -37,6 +37,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
+import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.Location;
@@ -117,6 +118,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return Iterables.get(Iterables.filter(getLocations(), MachineLocation.class), 0, null);
     }
 
+    @Override
+    public void init() {
+        super.init();
+        LIFECYCLE_TASKS.attachLifecycleEffectors(this);
+    }
+    
     @Override
     protected void initEnrichers() {
         super.initEnrichers();
@@ -203,6 +210,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         // TODO feels like that confusion could be eliminated with a single place for pre/post logic!)
         log.debug("disconnecting sensors for "+this+" in entity.preStop");
         disconnectSensors();
+    }
+
+    /**
+     * Called after the rest of stop has completed (after VM deprovisioned, but before state set to STOPPED)
+     */
+    protected void postStop() {
     }
 
     /**
@@ -461,9 +474,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     @Override
     public final void restart() {
         if (DynamicTasks.getTaskQueuingContext() != null) {
-            doRestart();
+            doRestart(ConfigBag.EMPTY);
         } else {
-            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(); } }).build();
+            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(ConfigBag.EMPTY); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
@@ -471,24 +484,39 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /**
      * To be overridden instead of {@link #start(Collection)}; sub-classes should call {@code super.doStart(locations)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     * @deprecated since 0.7.0 override {@link #preStart()} or {@link #postStart()}, 
+     * or define a {@link SoftwareProcessDriverLifecycleEffectorTasks} subclass if more complex behaviour needed
+     * (this method is no longer invoked by the {@link EffectorBody} call path, 
+     * hence deprecating it and marking it final to highlight incompatibilities at compile time)
      */
-    protected void doStart(Collection<? extends Location> locations) {
+    @Deprecated
+    protected final void doStart(Collection<? extends Location> locations) {
         LIFECYCLE_TASKS.start(locations);
     }
     
     /**
      * To be overridden instead of {@link #stop()}; sub-classes should call {@code super.doStop()} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     * @deprecated since 0.7.0 override {@link #preStop()} or {@link #postStop()}; see note on {@link #doStart(Collection)} for more information 
      */
-    protected void doStop() {
+    @Deprecated
+    protected final void doStop() {
         LIFECYCLE_TASKS.stop();
     }
     
     /**
-     * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart()} and should
+     * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart(ConfigBag)} and should
      * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
+     * @deprecated since 0.7.0; see note on {@link #doStart(Collection)} for more information 
      */
-    protected void doRestart() {
-        LIFECYCLE_TASKS.restart();
+    @Deprecated
+    protected final void doRestart(ConfigBag parameters) {
+        LIFECYCLE_TASKS.restart(parameters);
     }
+
+    @Deprecated /** @deprecated since 0.7.0 see {@link #doRestart(ConfigBag)} */
+    protected final void doRestart() {
+        doRestart(ConfigBag.EMPTY);
+    }
+    
 }

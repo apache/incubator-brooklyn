@@ -24,11 +24,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcess.ChildStartableMode;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Strings;
 
@@ -43,28 +46,44 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     
     private static final Logger log = LoggerFactory.getLogger(SoftwareProcessDriverLifecycleEffectorTasks.class);
     
-    @Override
-    public void restart() {
-        // children are ignored during restart currently - see ChildStartableMode
-        
-        if (entity().getDriver() == null) {
-            log.debug("restart of "+entity()+" has no driver - doing machine-level restart");
-            super.restart();
-            return;
+    public void restart(ConfigBag parameters) {
+        RestartMachineMode isRestartMachine = parameters.get(RestartSoftwareParameters.RESTART_MACHINE_TYPED);
+        if (isRestartMachine==null) isRestartMachine=RestartMachineMode.AUTO;
+
+        if (isRestartMachine==RestartMachineMode.AUTO) {
+            isRestartMachine = getDefaultRestartStopsMachine() ? RestartMachineMode.TRUE : RestartMachineMode.FALSE;
         }
         
-        if (Strings.isEmpty(entity().getAttribute(Attributes.HOSTNAME))) {
-            log.debug("restart of "+entity()+" has no hostname - doing machine-level restart");
-            super.restart();
+        if (isRestartMachine==RestartMachineMode.TRUE) {
+            log.debug("restart of "+entity()+" requested be applied at machine level");
+            super.restart(parameters);
             return;
         }
         
         log.debug("restart of "+entity()+" appears to have driver and hostname - doing driver-level restart");
         entity().getDriver().restart();
+        
+        restartChildren(parameters);
+        
         DynamicTasks.queue("post-restart", new Runnable() { public void run() {
             postStartCustom();
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         }});
+    }
+    
+    @Override
+    protected boolean getDefaultRestartStopsMachine() {
+        if (entity().getDriver() == null) {
+            log.debug("restart of "+entity()+" has no driver - doing machine-level restart");
+            return true;
+        }
+
+        if (Strings.isEmpty(entity().getAttribute(Attributes.HOSTNAME))) {
+            log.debug("restart of "+entity()+" has no hostname - doing machine-level restart");
+            return true;
+        }
+        
+        return false;
     }
     
     @Override
@@ -191,6 +210,13 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
             throw new IllegalStateException(result+"; but error stopping child: "+childException, childException);
         
         return result;
+    }
+    
+    @Override
+    protected void postStopCustom() {
+        super.postStopCustom();
+        
+        entity().postStop();
     }
 
 }

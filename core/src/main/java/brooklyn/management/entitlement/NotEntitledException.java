@@ -32,5 +32,10 @@ public class NotEntitledException extends RuntimeException {
         this.permission = permission;
         this.typeArgument = typeArgument;
     }
+    
+    @Override
+    public String toString() {
+        return super.toString()+"["+entitlementContext+":"+permission+(typeArgument!=null ? "("+typeArgument+")" : "")+"]";
+    }
 
 }

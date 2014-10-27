@@ -23,6 +23,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -55,5 +56,5 @@ public interface MockContainerEntity extends AbstractGroup, BalanceableContainer
 
     public void removeItem(Entity item);
 
-    public void offloadAndStop(MockContainerEntity otherContainer);
+    public void offloadAndStop(@EffectorParam(name="otherContianer") MockContainerEntity otherContainer);
 }

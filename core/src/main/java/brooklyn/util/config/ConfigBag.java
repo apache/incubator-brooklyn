@@ -254,7 +254,7 @@ public class ConfigBag {
 
     protected void logInvalidKey(Object key) {
         String message = (key == null ? "Invalid key 'null'" : "Invalid key type "+key.getClass().getCanonicalName()+" ("+key+")") +
-                "being used for configuration, ignoring";
+                " being used for configuration, ignoring";
         log.debug(message, new Throwable("Source of "+message));
         log.warn(message);
     }

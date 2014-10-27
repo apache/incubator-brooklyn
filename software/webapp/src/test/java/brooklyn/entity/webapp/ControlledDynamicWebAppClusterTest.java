@@ -32,6 +32,7 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.TrackingAbstractController;
@@ -43,6 +44,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestJavaWebAppEntity;
+import brooklyn.test.entity.TestJavaWebAppEntity.TestJavaWebAppEntityImpl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -102,11 +104,22 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
     }
     
     @Test
+    public void testTheTestJavaWebApp() {
+        SoftwareProcess n = app.createAndManageChild(EntitySpec.create(TestJavaWebAppEntity.class));
+        app.start(locs);
+
+        EntityTestUtils.assertAttributeEqualsEventually(n, AbstractController.SERVICE_UP, true);
+        
+        app.stop();
+        EntityTestUtils.assertAttributeEqualsEventually(n, AbstractController.SERVICE_UP, false);
+    }
+    
+    @Test
     public void testSetsInitialSize() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 2)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         app.start(locs);
 
         Iterable<TestJavaWebAppEntity> webservers = Iterables.filter(cluster.getCluster().getMembers(), TestJavaWebAppEntity.class);
@@ -162,7 +175,7 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
         final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         app.start(locs);
         final DynamicWebAppCluster childCluster = cluster.getCluster();
         
@@ -195,7 +208,7 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
         final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         app.start(locs);
         final DynamicWebAppCluster childCluster = cluster.getCluster();
         LoadBalancer controller = cluster.getController();

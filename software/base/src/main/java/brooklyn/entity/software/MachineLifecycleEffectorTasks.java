@@ -43,9 +43,12 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
+import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
+import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
@@ -57,6 +60,7 @@ import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
+import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -127,9 +131,12 @@ public abstract class MachineLifecycleEffectorTasks {
 
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newRestartEffector() {
-        return Effectors.effector(Startable.RESTART).impl(newRestartEffectorTask()).build();
+        return Effectors.effector(Startable.RESTART).
+            parameter(RestartSoftwareParameters.RESTART_CHILDREN).
+            parameter(RestartSoftwareParameters.RESTART_MACHINE).
+            impl(newRestartEffectorTask()).build();
     }
-
+    
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newStopEffector() {
         return Effectors.effector(Startable.STOP).impl(newStopEffectorTask()).build();
@@ -153,7 +160,7 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     /**
-     * Calls {@link #restart()}.
+     * Calls {@link #restart(ConfigBag)}.
      *
      * @see {@link #newStartEffectorTask()}
      */
@@ -161,7 +168,7 @@ public abstract class MachineLifecycleEffectorTasks {
         return new EffectorBody<Void>() {
             @Override
             public Void call(ConfigBag parameters) {
-                restart();
+                restart(parameters);
                 return null;
             }
         };
@@ -418,28 +425,84 @@ public abstract class MachineLifecycleEffectorTasks {
         // nothing by default
     }
 
+    /** @deprecated since 0.7.0 use {@link #restart(ConfigBag)} */
+    @Deprecated
+    public void restart() {
+        restart(ConfigBag.EMPTY);
+    }
+
+    /**
+     * whether when 'auto' mode is specified, the machine should be stopped
+     * <p>
+     * with {@link MachineLifecycleEffectorTasks}, a machine will always get created on restart if there wasn't one already
+     * (unlike certain subclasses which might attempt a shortcut process-level restart)
+     * so there is no reason for default behaviour of restart to throw away a provisioned machine,
+     * hence default impl returns <code>false</code>.
+     * <p>
+     * if it is possible to tell that a machine is unhealthy, or if {@link #restart(ConfigBag)} is overridden,
+     * then it might be appropriate to return <code>true</code> here.
+     */
+    protected boolean getDefaultRestartStopsMachine() {
+        return false;
+    }
+    
     /**
      * Default restart implementation for an entity.
      * <p>
      * Stops processes if possible, then starts the entity again.
      */
-    public void restart() {
+    public void restart(ConfigBag parameters) {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
-        DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
-            DynamicTasks.markInessential();
-            stopProcessesAtMachine();
-            DynamicTasks.waitForLast();
-            return "Stop of process completed with no errors.";
-        }});
+        
+        RestartMachineMode isRestartMachine = parameters.get(RestartSoftwareParameters.RESTART_MACHINE_TYPED);
+        if (isRestartMachine==null) 
+            isRestartMachine=RestartMachineMode.AUTO;
+        if (isRestartMachine==RestartMachineMode.AUTO) 
+            isRestartMachine = getDefaultRestartStopsMachine() ? RestartMachineMode.TRUE : RestartMachineMode.FALSE; 
+
+        if (isRestartMachine==RestartMachineMode.FALSE) {
+            DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
+                DynamicTasks.markInessential();
+                stopProcessesAtMachine();
+                DynamicTasks.waitForLast();
+                return "Stop of process completed with no errors.";
+            }});
+        } else {
+            DynamicTasks.queue("stopping (machine)", new Callable<String>() { public String call() {
+                DynamicTasks.markInessential();
+                stop();
+                DynamicTasks.waitForLast();
+                return "Stop of machine completed with no errors.";
+            }});            
+        }
 
         DynamicTasks.queue("starting", new Runnable() { public void run() {
             // startInLocations will look up the location, and provision a machine if necessary
             // (if it remembered the provisioning location)
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
             startInLocations(null);
-            DynamicTasks.waitForLast();
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         }});
+        
+        restartChildren(parameters);
+
+        DynamicTasks.waitForLast();
+        ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
+    }
+
+    protected void restartChildren(ConfigBag parameters) {
+        // TODO should we consult ChildStartableMode?
+
+        Boolean isRestartChildren = parameters.get(RestartSoftwareParameters.RESTART_CHILDREN);
+        if (isRestartChildren==null || !isRestartChildren) {
+            return;
+        }
+        
+        if (isRestartChildren) {
+            DynamicTasks.queue(StartableMethods.restartingChildren(entity(), parameters));
+            return;
+        }
+        
+        throw new IllegalArgumentException("Invalid value '"+isRestartChildren+"' for "+RestartSoftwareParameters.RESTART_CHILDREN.getName());
     }
 
     /**
@@ -518,6 +581,10 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     protected void preStopCustom() {
+        // nothing needed here
+    }
+    
+    protected void postStopCustom() {
         // nothing needed here
     }
 

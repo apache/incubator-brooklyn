@@ -167,8 +167,8 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
     }
     
     @Override
-    protected void doStop() {
-        super.doStop();
+    protected void postStop() {
+        super.postStop();
         // zero our workrate derived workrates.
         // TODO might not be enough, as policy may still be executing and have a record of historic vals; should remove policies
         // (also not sure we want this; implies more generally a responsibility for sensors to announce things when disconnected,

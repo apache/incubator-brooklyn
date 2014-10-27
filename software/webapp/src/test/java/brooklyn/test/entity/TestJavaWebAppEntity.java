@@ -18,62 +18,90 @@
  */
 package brooklyn.test.entity;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.ServiceStateLogic;
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.effector.EffectorAndBody;
+import brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks;
+import brooklyn.entity.java.VanillaJavaApp;
 import brooklyn.entity.java.VanillaJavaAppImpl;
+import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.location.Location;
+import brooklyn.test.entity.TestJavaWebAppEntity.TestJavaWebAppEntityImpl;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Mock web application server entity for testing.
  */
-public class TestJavaWebAppEntity extends VanillaJavaAppImpl {
-    private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
-    public static final Effector<Void> START = new EffectorAndBody<Void>(SoftwareProcessImpl.START, new MethodEffector<Void>(TestJavaWebAppEntity.class, "customStart").getBody());
+@ImplementedBy(TestJavaWebAppEntityImpl.class)
+public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService {
 
-    @SetFromFlag public int a;
-    @SetFromFlag public int b;
-    @SetFromFlag public int c;
-
-    public TestJavaWebAppEntity() {}
-    public TestJavaWebAppEntity(@SuppressWarnings("rawtypes") Map flags, Entity parent) { super(flags, parent); }
+    void spoofRequest();
+    int getA();
+    int getB();
+    int getC();
     
-    public void waitForHttpPort() { }
+    public static class TestJavaWebAppEntityImpl extends VanillaJavaAppImpl implements TestJavaWebAppEntity {
 
-    
-    public void customStart(Collection<? extends Location> loc) {
-        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
-        LOG.trace("Starting {}", this);
-        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
-        setAttribute(Attributes.SERVICE_UP, true);
+        private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
+
+        @SetFromFlag public int a;
+        @SetFromFlag public int b;
+        @SetFromFlag public int c;
+
+        public TestJavaWebAppEntityImpl() {}
+        public TestJavaWebAppEntityImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) { super(flags, parent); }
+
+        private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
+            new SoftwareProcessDriverLifecycleEffectorTasks() {
+            public void start(java.util.Collection<? extends Location> locations) {
+                ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
+                LOG.trace("Starting {}", this);
+                entity().setAttribute(Attributes.SERVICE_UP, true);
+                ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
+            }
+            public void stop() {
+                ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
+                LOG.trace("Stopping {}", this);
+                entity().setAttribute(Attributes.SERVICE_UP, false);
+                ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
+            }
+        };
+
+        @Override
+        public void init() {
+            super.init();
+            LIFECYCLE_TASKS.attachLifecycleEffectors(this);
+        }
+
+        @Override
+        public synchronized void spoofRequest() {
+            Integer rc = getAttribute(WebAppServiceConstants.REQUEST_COUNT);
+            if (rc==null) rc = 0;
+            setAttribute(WebAppServiceConstants.REQUEST_COUNT, rc+1);
+        }
+
+        @Override
+        public int getA() {
+            return a;
+        }
+        
+        @Override
+        public int getB() {
+            return b;
+        }
+        
+        @Override
+        public int getC() {
+            return c;
+        }
     }
 
-    @Override
-    protected void doStop() {
-        LOG.trace("Stopping {}", this);
-    }
-
-    @Override
-    public void doRestart() {
-        throw new UnsupportedOperationException();
-    }
-
-    public synchronized void spoofRequest() {
-        Integer rc = getAttribute(WebAppServiceConstants.REQUEST_COUNT);
-        if (rc==null) rc = 0;
-        setAttribute(WebAppServiceConstants.REQUEST_COUNT, rc+1);
-    }
 }

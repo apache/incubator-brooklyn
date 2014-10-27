@@ -19,7 +19,6 @@
 package brooklyn.entity.webapp;
 
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +27,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractConfigurableEntityFactory;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
+import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Changeable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -70,20 +68,13 @@ public class DynamicWebAppFabricTest {
 
     @Test
     public void testRequestCountAggregation() {
-        // TODO Want to use EntitySpec, but TestJavaWebAppEntity not converted (so can't call spoofRequest on an interface).
-        //      .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpec.create(Entity.class).impl(TestJavaWebAppEntity.class)));
-        
         DynamicWebAppFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicWebAppFabric.class)
-                .configure(DynamicWebAppFabric.FACTORY, new AbstractConfigurableEntityFactory<TestJavaWebAppEntity>() {
-                    @Override public TestJavaWebAppEntity newEntity2(Map flags, Entity parent) {
-                        TestJavaWebAppEntity result = new TestJavaWebAppEntity(flags, parent);
-                        result.setAttribute(Changeable.GROUP_SIZE, 1);
-                        return result;
-                    }}));
+                .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         
         app.start(locs);
         
         for (Entity member : fabric.getChildren()) {
+            ((EntityInternal)member).setAttribute(DynamicGroup.GROUP_SIZE, 1);
             ((TestJavaWebAppEntity)member).spoofRequest();
         }
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), fabric, DynamicWebAppFabric.REQUEST_COUNT, 2);
@@ -101,9 +92,10 @@ public class DynamicWebAppFabricTest {
     @Test
     public void testRequestCountAggregationOverClusters() {
         DynamicWebAppFabric fabric = app.createAndManageChild(EntitySpec.create(DynamicWebAppFabric.class)
-                .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
+                .configure(DynamicWebAppFabric.MEMBER_SPEC, 
+                    EntitySpec.create(DynamicWebAppCluster.class)
                         .configure("initialSize", 2)
-                        .configure(DynamicWebAppCluster.FACTORY, new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class))));
+                        .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) ));
 
         app.start(locs);
         

@@ -25,6 +25,7 @@ import java.util.Collection;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 
@@ -41,13 +42,13 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
     /**
      * Restarts the entity and its children.
      * <p/>
-     * Subclasses should override {@link #doRestart} to customise behaviour. */
+     * Subclasses should override {@link #doRestart(ConfigBag)} to customise behaviour. */
     @Override
     public final void restart() {
         if (DynamicTasks.getTaskQueuingContext() != null) {
-            doRestart();
+            doRestart(ConfigBag.EMPTY);
         } else {
-            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(); } }).build();
+            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(ConfigBag.EMPTY); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
@@ -103,11 +104,16 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
 
     /**
      * To be overridden instead of {@link #restart()}; sub-classes should call {@code
-     * super.doRestart()} and should add do additional work via tasks, executed using
+     * super.doRestart(ConfigBag)} and should add do additional work via tasks, executed using
      * {@link DynamicTasks#queue(String, java.util.concurrent.Callable)}.
      */
-    protected void doRestart() {
-        LIFECYCLE_TASKS.restart();
+    protected void doRestart(ConfigBag parameters) {
+        LIFECYCLE_TASKS.restart(parameters);
+    }
+
+    @Deprecated /** @deprecated since 0.7.0 subclasses should instead override {@link #doRestart(ConfigBag)} */
+    protected final void doRestart() {
+        doRestart(ConfigBag.EMPTY);
     }
 
 }

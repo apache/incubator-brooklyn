@@ -31,11 +31,14 @@ import com.google.common.reflect.TypeToken;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 /** @since 0.7.0 */
@@ -220,8 +223,30 @@ public class Entitlements {
         public static final ThreadLocal<EntitlementContext> perThreadEntitlementsContextHolder = new ThreadLocal<EntitlementContext>();
     }
 
+    /** 
+     * Finds the currently applicable {@link EntitlementContext} by examining the current thread
+     * then by investigating the current task, its submitter, etc. */
+    // NOTE: entitlements are propagated to tasks whenever they are created, as tags
+    // (see BrooklynTaskTags.tagForEntitlement and BasicExecutionContext.submitInternal).
+    // It might be cheaper to only do this lookup, not to propagate as tags, and to ensure
+    // all entitlement operations are wrapped in a task at source; but currently we do not
+    // do that so we need at least to set entitlement on the outermost task.
+    // Setting it on tasks submitted by a task is not strictly necessary (i.e. in BasicExecutionContext)
+    // but seems cheap enough, and means checking entitlements is fast, if we choose to do that more often.
     public static EntitlementContext getEntitlementContext() {
-        return PerThreadEntitlementContextHolder.perThreadEntitlementsContextHolder.get();
+        EntitlementContext context;
+        context = PerThreadEntitlementContextHolder.perThreadEntitlementsContextHolder.get();
+        if (context!=null) return context;
+        
+        Task<?> task = Tasks.current();
+        while (task!=null) {
+            context = BrooklynTaskTags.getEntitlement(task);
+            if (context!=null) return context;
+            task = task.getSubmittedByTask();
+        }
+        
+        // no entitlements set -- assume entitlements not used, or system internal
+        return null;
     }
 
     public static void setEntitlementContext(EntitlementContext context) {

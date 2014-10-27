@@ -233,4 +233,27 @@ public interface SoftwareProcess extends Entity, Startable {
  
     AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
 
+    public static class RestartSoftwareParameters {
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<Boolean> RESTART_CHILDREN = ConfigKeys.newConfigKey(Boolean.class, "restartChildren",
+            "Whether to restart children; default false", false);
+
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<Object> RESTART_MACHINE = ConfigKeys.newConfigKey(Object.class, "restartMachine",
+            "Whether to restart/replace the machine provisioned for this entity:  'true', 'false', or 'auto' are supported, "
+            + "with the default being 'auto' which means to restart or reprovision the machine if there is no simpler way known to restart the entity "
+            + "(for example, if the machine is unhealthy, it would not be possible to restart the process, not even via a stop-then-start sequence); "
+            + "if the machine was not provisioned for this entity, this parameter has no effect", 
+            RestartMachineMode.AUTO.toString().toLowerCase());
+        
+        // we supply a typed variant for retrieval; we want the untyped (above) to use lower case as the default in the GUI
+        // (very hard if using enum, since enum takes the name, and RendererHints do not apply to parameters) 
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<RestartMachineMode> RESTART_MACHINE_TYPED = ConfigKeys.newConfigKey(RestartMachineMode.class, "restartMachine");
+            
+        public enum RestartMachineMode { TRUE, FALSE, AUTO }
+    }
+    
+    // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks
+
 }
