@@ -29,9 +29,9 @@ public interface ProvisioningLocation<T extends Location> extends Location {
      * 
      * @param flags Constraints and details of the location to be provisioned
      * @return the location provisioned
-     * @throws NoSuchLocationAvailableException if could not provision such a location
+     * @throws LocationNotAvailableException if could not provision such a location
      */
-    T obtain(Map<?,?> flags) throws NoSuchLocationAvailableException;
+    T obtain(Map<?,?> flags) throws LocationNotAvailableException;
 
     /**
      * Release a previously-obtained location.

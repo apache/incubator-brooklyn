@@ -20,16 +20,16 @@ package brooklyn.location;
 
 
 /**
- * Indicates no machines are available in a given location.
+ * Indicates that a {@link ProvisioningLocation} is not able to provision a requested location
  */
-public class NoSuchLocationAvailableException extends Exception {
+public class LocationNotAvailableException extends Exception {
     private static final long serialVersionUID = 1079817235289265761L;
     
-    public NoSuchLocationAvailableException(String s) {
+    public LocationNotAvailableException(String s) {
         super(s);
     }
 
-    public NoSuchLocationAvailableException(String s, Throwable throwable) {
+    public LocationNotAvailableException(String s, Throwable throwable) {
         super(s, throwable);
     }
 }
