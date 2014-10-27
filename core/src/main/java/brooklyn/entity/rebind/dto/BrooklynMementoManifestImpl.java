@@ -19,10 +19,13 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.mementos.CatalogItemMemento;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.collect.Maps;
 
@@ -37,17 +40,26 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     public static class Builder {
         protected String brooklynVersion;
         protected final Map<String, String> entityIdToType = Maps.newConcurrentMap();
+        protected final Map<String, Maybe<String>> entityIdToContextCatalogItemId = Maps.newConcurrentMap();
         protected final Map<String, String> locationIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> policyIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> enricherIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> feedIdToType = Maps.newConcurrentMap();
-        protected final Map<String, String> catalogItemIdToType = Maps.newConcurrentMap();
+        protected final Map<String, CatalogItemMemento> catalogItems = Maps.newConcurrentMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
         }
-        public Builder entity(String id, String type) {
-            entityIdToType.put(id, type); return this;
+        public Builder entity(String id, String type, String catalogItemId) {
+            entityIdToType.put(id, type);
+            Maybe<String> catalogItemIdOption;
+            if (catalogItemId != null) {
+                catalogItemIdOption = Maybe.of(catalogItemId);
+            } else {
+                catalogItemIdOption = Maybe.absent();
+            }
+            entityIdToContextCatalogItemId.put(id, catalogItemIdOption);
+            return this;
         }
         public Builder entities(Map<String, String> vals) {
             entityIdToType.putAll(vals); return this;
@@ -76,11 +88,11 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         public Builder feed(Map<String, String> vals) {
             feedIdToType.putAll(vals); return this;
         }
-        public Builder catalogItem(String id, String type) {
-            catalogItemIdToType.put(id, type); return this;
+        public Builder catalogItems(Map<String, CatalogItemMemento> vals) {
+            catalogItems.putAll(vals); return this;
         }
-        public Builder catalogItems(Map<String, String> vals) {
-            catalogItemIdToType.putAll(vals); return this;
+        public Builder catalogItem(CatalogItemMemento val) {
+            catalogItems.put(val.getId(), val); return this;
         }
 
         public BrooklynMementoManifest build() {
@@ -89,24 +101,31 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     }
 
     private final Map<String, String> entityIdToType;
+    private final Map<String, Maybe<String>> entityIdToContextCatalogItemId;
     private final Map<String, String> locationIdToType;
     private final Map<String, String> policyIdToType;
     private final Map<String, String> enricherIdToType;
     private final Map<String, String> feedIdToType;
-    private final Map<String, String> catalogItemIdToType;
+    private Map<String, CatalogItemMemento> catalogItems;
     
     private BrooklynMementoManifestImpl(Builder builder) {
         entityIdToType = builder.entityIdToType;
+        entityIdToContextCatalogItemId = builder.entityIdToContextCatalogItemId;
         locationIdToType = builder.locationIdToType;
         policyIdToType = builder.policyIdToType;
         enricherIdToType = builder.enricherIdToType;
         feedIdToType = builder.feedIdToType;
-        catalogItemIdToType = builder.catalogItemIdToType;
+        catalogItems = builder.catalogItems;
     }
 
     @Override
     public Map<String, String> getEntityIdToType() {
         return Collections.unmodifiableMap(entityIdToType);
+    }
+
+    @Override
+    public Map<String, Maybe<String>> getEntityIdToContextCatalogItemId() {
+        return Collections.unmodifiableMap(entityIdToContextCatalogItemId);
     }
 
     @Override
@@ -130,8 +149,18 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     }
     
     @Override
-    public Map<String, String> getCatalogItemIdToType() {
-        return Collections.unmodifiableMap(catalogItemIdToType);
+    public CatalogItemMemento getCatalogItemMemento(String id) {
+        return catalogItems.get(id);
+    }
+
+    @Override
+    public Collection<String> getCatalogItemIds() {
+        return Collections.unmodifiableSet(catalogItems.keySet());
+    }
+
+    @Override
+    public Map<String, CatalogItemMemento> getCatalogItemMementos() {
+        return Collections.unmodifiableMap(catalogItems);
     }
 
     @Override
@@ -141,7 +170,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
                 policyIdToType.isEmpty() &&
                 enricherIdToType.isEmpty() &&
                 feedIdToType.isEmpty() &&
-                catalogItemIdToType.isEmpty();
+                catalogItems.isEmpty();
     }
     
 }

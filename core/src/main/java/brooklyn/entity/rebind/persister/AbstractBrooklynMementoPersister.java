@@ -19,6 +19,11 @@
 package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Collection;
+
+import brooklyn.entity.basic.BrooklynTags;
+import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
@@ -51,7 +56,7 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     public BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) {
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
         for (EntityMemento entity : memento.getEntityMementos().values()) {
-            builder.entity(entity.getId(), entity.getType());
+            builder.entity(entity.getId(), entity.getType(), getContextCatalogItemId(entity.getTags()));
         }
         for (LocationMemento entity : memento.getLocationMementos().values()) {
             builder.location(entity.getId(), entity.getType());
@@ -63,9 +68,21 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
             builder.enricher(entity.getId(), entity.getType());
         }
         for (CatalogItemMemento entity : memento.getCatalogItemMementos().values()) {
-            builder.catalogItem(entity.getId(), entity.getType());
+            builder.catalogItem(entity);
         }
         return builder.build();
+    }
+
+    private String getContextCatalogItemId(Collection<Object> tags) {
+        for (Object obj : tags) {
+            if (obj instanceof NamedStringTag) {
+                NamedStringTag tag = (NamedStringTag) obj;
+                if (BrooklynTags.CONTEXT_CATALOG_ITEM_ID_KIND.equals(tag.getKind())) {
+                    return tag.getContents();
+                }
+            }
+        }
+        return null;
     }
 
     @Override public void enableWriteAccess() {}

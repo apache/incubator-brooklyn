@@ -42,6 +42,7 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -241,22 +242,27 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (specType==null) return null;
 
         String yaml = loadedItem.getPlanYaml();
-        SpecT spec = null;
 
         if (yaml!=null) {
             DeploymentPlan plan = makePlanFromYaml(yaml);
             BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
+            SpecT spec;
             switch (item.getCatalogItemType()) {
                 case TEMPLATE:
                 case ENTITY:
-                    return createEntitySpec(plan, loader);
+                    spec = createEntitySpec(plan, loader);
+                    break;
                 case POLICY:
-                    return createPolicySpec(plan, loader);
+                    spec = createPolicySpec(plan, loader);
+                    break;
                 default: throw new RuntimeException("Only entity & policy catalog items are supported. Unsupported catalog item type " + item.getCatalogItemType());
             }
+            ((AbstractBrooklynObjectSpec<?, ?>)spec).tag(BrooklynTags.newContextCatalogItemIdTag(item.getId()));
+            return spec;
         }
 
         // revert to legacy mechanism
+        SpecT spec = null;
         try {
             if (loadedItem.getJavaType()!=null) {
                 SpecT specT = (SpecT) Reflections.findMethod(specType, "create", Class.class).invoke(null, loadedItem.loadJavaClass(mgmt));

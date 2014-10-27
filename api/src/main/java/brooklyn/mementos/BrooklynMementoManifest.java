@@ -19,7 +19,10 @@
 package brooklyn.mementos;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
+
+import brooklyn.util.guava.Maybe;
 
 /**
  * Represents a manifest of the entities etc in the overall memento.
@@ -30,6 +33,8 @@ public interface BrooklynMementoManifest extends Serializable {
 
     public Map<String, String> getEntityIdToType();
 
+    public Map<String, Maybe<String>> getEntityIdToContextCatalogItemId();
+
     public Map<String, String> getLocationIdToType();
 
     public Map<String, String> getPolicyIdToType();
@@ -38,7 +43,11 @@ public interface BrooklynMementoManifest extends Serializable {
 
     public Map<String, String> getFeedIdToType();
     
-    public Map<String, String> getCatalogItemIdToType();
+    public CatalogItemMemento getCatalogItemMemento(String id);
+
+    public Collection<String> getCatalogItemIds();
+
+    public Map<String, CatalogItemMemento> getCatalogItemMementos();
 
     public boolean isEmpty();
     

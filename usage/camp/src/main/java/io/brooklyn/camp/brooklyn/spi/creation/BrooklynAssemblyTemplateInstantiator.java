@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -42,12 +41,13 @@ import org.slf4j.LoggerFactory;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
+import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -201,7 +201,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                 }
                 spec = entityResolver.resolveSpec();
             } else {
+                //TODO migrate to catalog.createSpec
                 spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+                spec.tag(BrooklynTags.newContextCatalogItemIdTag(item.getId()));
                 entityResolver.populateSpec(spec);
             }
         }
