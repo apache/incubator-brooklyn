@@ -27,6 +27,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.HighAvailabilitySummary;
@@ -90,14 +91,34 @@ public interface ServerApi {
     @ApiOperation(value = "Returns the HA state of this management node")
     public ManagementNodeState getHighAvailabilityNodeState();
     
+    @POST
+    @Path("/ha/state")
+    @ApiOperation(value = "Changes the HA state of this management node")
+    public ManagementNodeState setHighAvailabilityNodeState(
+            @ApiParam(name = "state", value = "The state to change to")
+            @FormParam("mode") HighAvailabilityMode mode);
+
     @GET
     @Path("/ha/states")
     @ApiOperation(value = "Returns the HA states and detail for all nodes in this management plane",
         responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
     public HighAvailabilitySummary getHighAvailabilityPlaneStates();
+
+    @GET
+    @Path("/ha/priority")
+    @ApiOperation(value = "Returns the HA node priority for MASTER failover")
+    public long getHighAvailabitlityPriority();
     
+    @POST
+    @Path("/ha/priority")
+    @ApiOperation(value = "Sets the HA node priority for MASTER failover")
+    public long setHighAvailabilityPriority(
+            @ApiParam(name = "priority", value = "The priority to be set")
+            @FormParam("priority") long priority);
+
     @GET
     @Path("/user")
     @ApiOperation(value = "Return user information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
-    public String getUser();
+    public String getUser(); 
+
 }
