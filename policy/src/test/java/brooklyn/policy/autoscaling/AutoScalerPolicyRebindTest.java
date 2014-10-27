@@ -77,14 +77,14 @@ public class AutoScalerPolicyRebindTest extends RebindTestFixtureWithApp {
                 .metricLowerBound(2)
                 .minPoolSize(0)
                 .maxPoolSize(3)
-                .minPeriodBetweenExecs(4)
-                .resizeUpStabilizationDelay(5)
-                .resizeDownStabilizationDelay(6)
+                .minPeriodBetweenExecs(Duration.of(4, TimeUnit.MILLISECONDS))
+                .resizeUpStabilizationDelay(Duration.of(5, TimeUnit.MILLISECONDS))
+                .resizeDownStabilizationDelay(Duration.of(6, TimeUnit.MILLISECONDS))
                 .poolHotSensor(POOL_HOT_SENSOR)
                 .poolColdSensor(POOL_COLD_SENSOR)
                 .poolOkSensor(POOL_OK_SENSOR)
                 .maxSizeReachedSensor(MAX_SIZE_REACHED_SENSOR)
-                .maxReachedNotificationDelay(7)
+                .maxReachedNotificationDelay(Duration.of(7, TimeUnit.MILLISECONDS))
                 .buildSpec());
         
         TestApplication newApp = rebind();
