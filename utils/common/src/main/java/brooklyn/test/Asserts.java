@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -287,7 +286,7 @@ public class Asserts {
                 sleepTimeBetweenAttempts = Math.min(sleepTimeBetweenAttempts*2, maxPeriod.toMilliseconds());
             }
             
-            log.debug("TestUtils.executeUntilSucceedsWithFinallyBlockInternal exceeded max attempts or timeout - {} attempts lasting {} ms", attempt, System.currentTimeMillis()-startTime);
+            log.info("succeedsEventually exceeded max attempts or timeout - {} attempts lasting {} ms, for {}", new Object[] {attempt, System.currentTimeMillis()-startTime, c});
             if (lastException != null)
                 throw lastException;
             throw fail("invalid result: "+result);
@@ -317,13 +316,16 @@ public class Asserts {
         long periodMs = period.toMilliseconds();
         long startTime = System.currentTimeMillis();
         long expireTime = startTime+duration.toMilliseconds();
+        int attempt = 0;
         
         boolean first = true;
         T result = null;
         while (first || System.currentTimeMillis() <= expireTime) {
+            attempt++;
             try {
                 result = job.call();
             } catch (Exception e) {
+                log.info("succeedsContinually failed - {} attempts lasting {} ms, for {} (rethrowing)", new Object[] {attempt, System.currentTimeMillis()-startTime, job});
                 throw propagate(e);
             }
             if (periodMs > 0) sleep(periodMs);
@@ -455,7 +457,25 @@ public class Asserts {
     }
     
     private static Callable<?> toCallable(Runnable r) {
-        return (r instanceof Callable) ? (Callable<?>)r : Executors.callable(r);
+        return (r instanceof Callable) ? (Callable<?>)r : new RunnableAdapter<Void>(r, null);
+    }
+    
+    /** Same as {@link java.util.concurrent.Executors#callable(Runnable)}, except includes toString() */
+    static final class RunnableAdapter<T> implements Callable<T> {
+        final Runnable task;
+        final T result;
+        RunnableAdapter(Runnable task, T result) {
+            this.task = task;
+            this.result = result;
+        }
+        public T call() {
+            task.run();
+            return result;
+        }
+        @Override
+        public String toString() {
+            return "RunnableAdapter("+task+")";
+        }
     }
     
     private static void sleep(long periodMs) {
