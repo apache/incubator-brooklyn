@@ -26,7 +26,7 @@ import java.util.Map;
  *
  * This interface extends {@link Location} to add the ability to provision {@link MachineLocation}s in this location.
  */
-public interface MachineProvisioningLocation<T extends MachineLocation> extends Location {
+public interface MachineProvisioningLocation<T extends MachineLocation> extends ProvisioningLocation<T> {
     /**
      * Obtain a machine in this location.
      * 
@@ -35,6 +35,7 @@ public interface MachineProvisioningLocation<T extends MachineLocation> extends 
      * @return a machine that is a child of this location.
      * @throws NoMachinesAvailableException if there are no machines available in this location (or impls may return null, but that is discouraged)
      */
+    @Override
     T obtain(Map<?,?> flags) throws NoMachinesAvailableException;
 
     /**
@@ -52,6 +53,7 @@ public interface MachineProvisioningLocation<T extends MachineLocation> extends 
      * @param machine a {@link MachineLocation} previously obtained from a call to {@link #obtain()}
      * @throws IllegalStateException if the machine did not come from a call to {@link #obtain()} or it has already been released.
      */
+    @Override
     void release(T machine);
     
     /**

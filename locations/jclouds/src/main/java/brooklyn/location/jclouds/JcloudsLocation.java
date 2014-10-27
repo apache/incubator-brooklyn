@@ -1645,7 +1645,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             computeService.destroyNode(instanceId);
         } finally {
         /*
-         //don't close, so can re-use...
+            // we don't close the compute service; this means if we provision add'l it is fast;
+            // however it also means an explicit System.exit may be needed for termination
             if (computeService != null) {
                 try {
                     computeService.getContext().close();

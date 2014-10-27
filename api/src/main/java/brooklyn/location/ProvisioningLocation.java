@@ -18,18 +18,27 @@
  */
 package brooklyn.location;
 
+import java.util.Map;
 
 /**
- * Indicates no machines are available in a given location.
+ * A location that is able to provision new locations within it.
  */
-public class NoMachinesAvailableException extends NoSuchLocationAvailableException {
-    private static final long serialVersionUID = 1079817235289265761L;
-    
-    public NoMachinesAvailableException(String s) {
-        super(s);
-    }
+public interface ProvisioningLocation<T extends Location> extends Location {
+    /**
+     * Obtain a new (sub)-location in the location represented by this class.
+     * 
+     * @param flags Constraints and details of the location to be provisioned
+     * @return the location provisioned
+     * @throws NoSuchLocationAvailableException if could not provision such a location
+     */
+    T obtain(Map<?,?> flags) throws NoSuchLocationAvailableException;
 
-    public NoMachinesAvailableException(String s, Throwable throwable) {
-        super(s, throwable);
-    }
+    /**
+     * Release a previously-obtained location.
+     *
+     * @param location a location previously obtained
+     * @throws IllegalStateException if the machine did not come from a call to {@link #obtain()} or it has already been released.
+     */
+    void release(T machine);
+    
 }
