@@ -364,9 +364,15 @@ public class EntityPredicates {
         }
     }
 
-    /** @deprecated since 0.7.0 use #locationsInclude */
+    /** @deprecated since 0.7.0 use {@link #locationsInclude(Location)} */
     @Deprecated 
     public static <T> Predicate<Entity> withLocation(final Location location) {
+        return locationsInclude(location);
+    }
+    
+    /** @deprecated since 0.7.0 use {@link #locationsInclude(Location)}, introduced to allow deserialization of anonymous inner class */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <T> Predicate<Entity> withLocationOld(final Location location) {
         return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
@@ -392,8 +398,14 @@ public class EntityPredicates {
         }
     }
 
-    /** @deprecated since 0.7.0 use #isManaged */
+    /** @deprecated since 0.7.0 use {@link #isManaged()} */ @Deprecated
     public static <T> Predicate<Entity> managed() {
+        return isManaged();
+    }
+
+    /** @deprecated since 0.7.0 use {@link #isManaged()}, introduced to allow deserialization of anonymous inner class */
+    @SuppressWarnings("unused") @Deprecated
+    private static <T> Predicate<Entity> managedOld() {
         return new SerializablePredicate<Entity>() {
             @Override
             public boolean apply(@Nullable Entity input) {
