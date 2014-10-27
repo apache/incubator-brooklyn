@@ -41,6 +41,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.flags.TypeCoercions;
@@ -325,10 +326,17 @@ public class EffectorUtils {
         return findEffector(entity.getEntityType().getEffectors(), effectorName);
     }
 
-    /** returns a (mutable) map of the standard flags which should be placed on an effector */
+    /** @deprecated since 0.7.0 use {@link #getTaskFlagsForEffectorInvocation(Entity, Effector, ConfigBag)} */
     public static Map<Object,Object> getTaskFlagsForEffectorInvocation(Entity entity, Effector<?> effector) {
+        return getTaskFlagsForEffectorInvocation(entity, effector, null);
+    }
+    
+    /** returns a (mutable) map of the standard flags which should be placed on an effector */
+    public static Map<Object,Object> getTaskFlagsForEffectorInvocation(Entity entity, Effector<?> effector, ConfigBag parameters) {
         return MutableMap.builder()
-                .put("description", "Invoking effector "+effector.getName()+" on "+entity.getDisplayName())
+                .put("description", "Invoking effector "+effector.getName()
+                    +" on "+entity.getDisplayName()
+                    +(parameters!=null ? " with parameters "+parameters.getAllConfig() : ""))
                 .put("displayName", effector.getName())
                 .put("tags", MutableList.of(
                         BrooklynTaskTags.EFFECTOR_TAG, 

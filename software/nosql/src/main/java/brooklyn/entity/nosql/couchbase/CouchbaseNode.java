@@ -18,17 +18,19 @@
  */
 package brooklyn.entity.nosql.couchbase;
 
+import java.net.URI;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -80,7 +82,7 @@ public interface CouchbaseNode extends SoftwareProcess {
 
     AttributeSensor<Boolean> IS_PRIMARY_NODE = Sensors.newBooleanSensor("couchbase.isPrimaryNode", "flag to determine if the current couchbase node is the primary node for the cluster");
     AttributeSensor<Boolean> IS_IN_CLUSTER = Sensors.newBooleanSensor("couchbase.isInCluster", "flag to determine if the current couchbase node has been added to a cluster");
-    public static final AttributeSensor<String> COUCHBASE_WEB_ADMIN_URL = WebAppServiceConstants.ROOT_URL; // By using this specific sensor, the value will be shown in the summary tab
+    public static final AttributeSensor<URI> COUCHBASE_WEB_ADMIN_URL = Attributes.MAIN_URI;
     
     // Interesting stats
     AttributeSensor<Double> OPS = Sensors.newDoubleSensor("couchbase.stats.ops", 
@@ -110,8 +112,8 @@ public interface CouchbaseNode extends SoftwareProcess {
     AttributeSensor<String> REBALANCE_STATUS = Sensors.newStringSensor("couchbase.rebalance.status", 
             "Displays the current rebalance status from pools/nodes/rebalanceStatus");
     
-    class RootUrl {
-        public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
+    class MainUri {
+        public static final AttributeSensor<URI> MAIN_URI = Attributes.MAIN_URI;
         
         static {
             // ROOT_URL does not need init because it refers to something already initialized
@@ -126,7 +128,7 @@ public interface CouchbaseNode extends SoftwareProcess {
     }
     
     // this long-winded reference is done just to trigger the initialization above
-    AttributeSensor<String> ROOT_URL = RootUrl.ROOT_URL;
+    AttributeSensor<URI> MAIN_URI = MainUri.MAIN_URI;
 
     MethodEffector<Void> SERVER_ADD = new MethodEffector<Void>(CouchbaseNode.class, "serverAdd");
     MethodEffector<Void> SERVER_ADD_AND_REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "serverAddAndRebalance");

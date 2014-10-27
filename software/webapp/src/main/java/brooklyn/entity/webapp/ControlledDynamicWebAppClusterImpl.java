@@ -251,12 +251,12 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     void connectSensors() {
         // FIXME no longer needed
         addEnricher(Enrichers.builder()
-                .propagatingAllButUsualAnd(ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
+                .propagatingAllButUsualAnd(Attributes.MAIN_URI, ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
                 .from(getCluster())
                 .build());
         addEnricher(Enrichers.builder()
                 // include hostname and address of controller (need both in case hostname only resolves to internal/private ip)
-                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, ROOT_URL)
+                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, Attributes.MAIN_URI, ROOT_URL)
                 .from(getController())
                 .build());
     }

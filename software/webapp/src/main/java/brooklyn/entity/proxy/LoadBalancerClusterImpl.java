@@ -66,7 +66,7 @@ public class LoadBalancerClusterImpl extends DynamicClusterImpl implements LoadB
     }
 
     @Override
-    public void bind(Map flags) {
+    public void bind(Map<?,?> flags) {
         for (Entity member : getMembers()) {
             if (member instanceof LoadBalancer) {
                 ((LoadBalancer)member).bind(flags);

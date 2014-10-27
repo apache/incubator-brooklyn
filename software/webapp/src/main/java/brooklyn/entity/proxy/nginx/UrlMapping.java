@@ -76,8 +76,6 @@ public interface UrlMapping extends AbstractGroup {
     AttributeSensor<Collection<String>> TARGET_ADDRESSES = Sensors.newSensor(new TypeToken<Collection<String>>() { },
             "urlmapping.target.addresses", "set of addresses which should be forwarded to by this URL mapping");
 
-    AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
-
     String getUniqueLabel();
 
     /** Adds a rewrite rule, must be called at config time. See {@link UrlRewriteRule} for more info. */

@@ -56,10 +56,10 @@ public class ScheduledTask extends BasicTask {
     protected Integer maxIterations = null;
     
     protected int runCount=0;
-    protected Task recentRun, nextRun;
+    protected Task<?> recentRun, nextRun;
 
     public int getRunCount() { return runCount; }
-    public ScheduledFuture getNextScheduled() { return (ScheduledFuture)internalFuture; }
+    public ScheduledFuture<?> getNextScheduled() { return (ScheduledFuture<?>)internalFuture; }
 
     public ScheduledTask(Callable<Task<?>> taskFactory) {
         this(MutableMap.of(), taskFactory);
@@ -111,7 +111,7 @@ public class ScheduledTask extends BasicTask {
         return taskFactory;
     }
 
-    public Task newTask() {
+    public Task<?> newTask() {
         try {
             return taskFactory.call();
         } catch (Exception e) {
@@ -122,11 +122,12 @@ public class ScheduledTask extends BasicTask {
     protected String getActiveTaskStatusString(int verbosity) {
         StringBuilder rv = new StringBuilder("Scheduler");
         if (runCount>0) rv.append(", iteration "+(runCount+1));
-        if (recentRun!=null) rv.append(", last run "+(System.currentTimeMillis()-recentRun.getStartTimeUtc())+" ms ago");
+        if (recentRun!=null) rv.append(", last run "+
+            Duration.sinceUtc(recentRun.getStartTimeUtc())+" ms ago");
         if (truth(getNextScheduled())) {
-            long untilNext = getNextScheduled().getDelay(TimeUnit.MILLISECONDS);
-            if (untilNext>0)
-                rv.append(", next in "+untilNext+" ms");
+            Duration untilNext = Duration.millis(getNextScheduled().getDelay(TimeUnit.MILLISECONDS));
+            if (untilNext.isPositive())
+                rv.append(", next in "+untilNext);
             else 
                 rv.append(", next imminent");
         }

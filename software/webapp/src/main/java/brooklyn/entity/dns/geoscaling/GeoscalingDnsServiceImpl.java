@@ -21,6 +21,7 @@ package brooklyn.entity.dns.geoscaling;
 import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_INFO;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
 
@@ -170,10 +171,14 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
             if (targetHosts.isEmpty()) {
                 setServiceState(Lifecycle.CREATED);
                 setAttribute(ROOT_URL, null);
+                setAttribute(MAIN_URI, null);
             } else {
                 setServiceState(Lifecycle.RUNNING);
                 String domain = getAttribute(MANAGED_DOMAIN);
-                if (!Strings.isEmpty(domain)) setAttribute(ROOT_URL, "http://"+domain+"/");
+                if (!Strings.isEmpty(domain)) {
+                    setAttribute(ROOT_URL, "http://"+domain+"/");
+                    setAttribute(MAIN_URI, URI.create("http://"+domain+"/"));
+                }
             }
         } else {
             log.warn("Failed to retrieve or create GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+

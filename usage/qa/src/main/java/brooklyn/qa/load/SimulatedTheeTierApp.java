@@ -28,6 +28,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
@@ -105,7 +106,7 @@ public class SimulatedTheeTierApp extends AbstractApplication {
                 build());
 
         addEnricher(Enrichers.builder()
-                .propagating(WebAppServiceConstants.ROOT_URL,
+                .propagating(Attributes.MAIN_URI, WebAppServiceConstants.ROOT_URL,
                         DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
                         HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW)
                 .from(web)

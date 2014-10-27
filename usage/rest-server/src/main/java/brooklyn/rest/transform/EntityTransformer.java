@@ -25,17 +25,21 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySummary;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.URLParamEncoder;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * @author Adam Lowe
@@ -90,7 +94,7 @@ public class EntityTransformer {
 
     protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
         Map<String, URI> mapOfLinks =  links==null ? null : ImmutableMap.copyOf(links);
-      return new EntityConfigSummary(config, label, priority, mapOfLinks);
+        return new EntityConfigSummary(config, label, priority, mapOfLinks);
     }
     /** generates a representation for a given config key, 
      * with label inferred from annoation in the entity class,
@@ -113,12 +117,20 @@ public class EntityTransformer {
 
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
         String entityUri = applicationUri + "/entities/" + entity.getId();
-        Map<String,URI> links = ImmutableMap.<String, URI>builder()
-                .put("self", URI.create(entityUri + "/config/" + config.getName()))
-                .put("application", URI.create(applicationUri))
-                .put("entity", URI.create(entityUri))
-                .build();
-        return entityConfigSummary(config, label, priority, links);
+        String selfUri = entityUri + "/config/" + URLParamEncoder.encode(config.getName());
+        
+        MutableMap.Builder<String, URI> lb = MutableMap.<String, URI>builder()
+            .put("self", URI.create(selfUri))
+            .put("application", URI.create(applicationUri))
+            .put("entity", URI.create(entityUri))
+            .put("action:json", URI.create(selfUri));
+
+        Iterable<RendererHints.NamedAction> hints = Iterables.filter(RendererHints.getHintsFor(config), RendererHints.NamedAction.class);
+        for (RendererHints.NamedAction na : hints) {
+            SensorTransformer.addNamedAction(lb, na, entity.getConfig(config), config, entity);
+        }
+    
+        return entityConfigSummary(config, label, priority, lb.build());
     }
 
     public static String applicationUri(Application entity) {

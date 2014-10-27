@@ -22,6 +22,7 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
@@ -179,7 +181,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
      * Can pass in the 'serverPool'.
      */
     @Override
-    public void bind(Map flags) {
+    public void bind(Map<?,?> flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
         } 
@@ -230,7 +232,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     /** primary URL this controller serves, if one can / has been inferred */
     @Override
     public String getUrl() {
-        return getAttribute(ROOT_URL);
+        return Strings.toString( getAttribute(MAIN_URI) );
     }
 
     @Override
@@ -290,7 +292,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     protected void preStart() {
         super.preStart();
 
-        AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
+        AttributeSensor<String> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
         Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
         Maybe<Object> portSensor = getConfigRaw(PORT_NUMBER_SENSOR, true);
         if (hostAndPortSensor != null) {
@@ -301,6 +303,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         ConfigToAttributes.apply(this);
 
         setAttribute(PROTOCOL, inferProtocol());
+        setAttribute(MAIN_URI, URI.create(inferUrl()));
         setAttribute(ROOT_URL, inferUrl());
  
         checkNotNull(getPortNumberSensor(), "no sensor configured to infer port number");
@@ -309,7 +312,10 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
+        if (getUrl()==null) {
+            setAttribute(MAIN_URI, URI.create(inferUrl()));
+            setAttribute(ROOT_URL, inferUrl());
+        }
         
         // TODO when rebind policies, and rebind calls connectSensors, then this will cause problems.
         // Also relying on addServerPoolMemberTrackingPolicy to set the serverPoolAddresses and serverPoolTargets.

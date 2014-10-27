@@ -35,6 +35,7 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.ProvisioningLocation;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.AccessController;
@@ -372,9 +373,20 @@ public class LocalLocationManager implements LocationManagerInternal {
         return true;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private synchronized void unmanageNonRecursiveClearItsFields(Location loc, ManagementTransitionMode mode) {
         if (mode==ManagementTransitionMode.DESTROYING) {
             ((AbstractLocation)loc).setParent(null, true);
+            
+            Location parent = ((AbstractLocation)loc).getParent();
+            if (parent instanceof ProvisioningLocation<?>) {
+                try {
+                    ((ProvisioningLocation)parent).release(loc);
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    log.debug("Error releasing "+loc+" in its parent "+parent+": "+e);
+                }
+            }
         } else {
             // if not destroying, don't change the parent's children list
             ((AbstractLocation)loc).setParent(null, false);
