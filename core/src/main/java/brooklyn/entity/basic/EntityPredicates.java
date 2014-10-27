@@ -206,6 +206,9 @@ public class EntityPredicates {
         };
     }
     
+    public static <T> Predicate<Entity> attributeNotEqualTo(final AttributeSensor<T> attribute, final T val) {
+        return attributeSatisfies(attribute, Predicates.not(Predicates.equalTo(val)));
+    }
 
     // ---------------------------
 

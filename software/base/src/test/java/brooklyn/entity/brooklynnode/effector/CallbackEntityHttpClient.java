@@ -87,4 +87,9 @@ public class CallbackEntityHttpClient implements EntityHttpClient {
         String result = callback.apply(new Request(entity, HttpPost.METHOD_NAME, path, formParams));
         return new HttpToolResponse(HttpStatus.SC_OK, Collections.<String, List<String>>emptyMap(), result.getBytes(), 0, 0, 0);
     }
+    
+    @Override
+    public HttpToolResponse delete(String path, Map<String, String> headers) {
+        throw new IllegalStateException("Method call not expected");
+    }
 }
