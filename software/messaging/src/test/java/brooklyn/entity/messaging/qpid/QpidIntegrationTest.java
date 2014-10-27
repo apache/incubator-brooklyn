@@ -97,10 +97,10 @@ public class QpidIntegrationTest {
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithHttpManagement() {
         qpid = app.createAndManageChild(EntitySpec.create(QpidBroker.class)
-                .configure("httpManagementPort", "8888"));
+                .configure("httpManagementPort", "8888+"));
         qpid.start(ImmutableList.of(testLocation));
         EntityTestUtils.assertAttributeEqualsEventually(qpid, Startable.SERVICE_UP, true);
-        String httpUrl = "http://"+qpid.getAttribute(QpidBroker.HOSTNAME)+":"+qpid.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT)+"/";
+        String httpUrl = "http://"+qpid.getAttribute(QpidBroker.HOSTNAME)+":"+qpid.getAttribute(QpidBroker.HTTP_MANAGEMENT_PORT)+"/management";
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(httpUrl, 200);
         // TODO check actual REST output
         qpid.stop();

@@ -16,30 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.dns.geoscaling
+package brooklyn.entity.dns.geoscaling;
 
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_INFO
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_COUNTRY_INFO
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_EXTRA_INFO
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_NETWORK_INFO
-import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_UPTIME_INFO
-import static org.testng.AssertJUnit.*
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_INFO;
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_COUNTRY_INFO;
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_EXTRA_INFO;
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_NETWORK_INFO;
+import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_UPTIME_INFO;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
-import org.testng.annotations.Test
+import javax.net.ssl.SSLSocketFactory;
 
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain
-import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain
+import org.apache.http.client.HttpClient;
+import org.testng.annotations.Test;
+
+import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
+import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
+import brooklyn.util.http.HttpTool;
 
 /**
  * {@link GeoscalingWebClient} unit tests.
  */
-class GeoscalingWebClientTest {
+public class GeoscalingWebClientTest {
     
     private final static String USERNAME = "cloudsoft";
     private final static String PASSWORD = "cl0uds0ft";
     private final static String PRIMARY_DOMAIN = "domain"+((int)(Math.random()*10000))+".test.org";
     private final static String SUBDOMAIN = "subdomain"+((int)(Math.random()*10000));
-    private final static String DEFAULT_SCRIPT = 'output[] = array("fail");'
+    private final static String DEFAULT_SCRIPT = "output[] = array(\"fail\");";
     
     
     @Test(groups = "Integration")
@@ -53,7 +58,10 @@ class GeoscalingWebClientTest {
     }
     
     public void testWebClient(String primaryDomainName, String smartSubdomainName) {
-        GeoscalingWebClient geoscaling = new GeoscalingWebClient();
+        // Insecurely use "trustAll" so that don't need to import signature into trust store
+        // before test will work on jenkins machine.
+        HttpClient httpClient = HttpTool.httpClientBuilder().uri("https://www.geoscaling.com").trustAll().build();
+        GeoscalingWebClient geoscaling = new GeoscalingWebClient(httpClient);
         geoscaling.login(USERNAME, PASSWORD);
         
         assertNull(geoscaling.getPrimaryDomain(primaryDomainName));
