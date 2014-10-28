@@ -1,7 +1,7 @@
 ##### Brooklyn note: File from OSX distribution of Riak 1.4.8
 
 ## Name of the riak node
--name riak@${driver.hostname}
+-name riak@${driver.subnetHostname}
 
 ## Cookie for distributed erlang.  All nodes in the same cluster
 ## should use the same cookie or they will not be able to communicate.

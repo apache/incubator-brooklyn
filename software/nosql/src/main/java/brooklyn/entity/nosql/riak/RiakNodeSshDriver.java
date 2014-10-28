@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -42,6 +43,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.collect.ImmutableList;
@@ -53,7 +55,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
     private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
-    private boolean isPackageInstall = false;
+    private boolean isPackageInstall = true;
     private boolean isRiakOnPath = true;
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
@@ -89,6 +91,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         if (osDetails.isLinux()) {
             commands.addAll(installLinux(getExpandedInstallDir()));
         } else if (osDetails.isMac()) {
+            isPackageInstall = false;
             commands.addAll(installMac(saveAs));
         } else if (osDetails.isWindows()) {
             throw new UnsupportedOperationException("RiakNode not supported on Windows instances");
@@ -103,7 +106,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private List<String> installLinux(String expandedInstallDir) {
         LOG.info("Ignoring version config ({}) and installing from package manager", getEntity().getConfig(RiakNode.SUGGESTED_VERSION));
-        isPackageInstall = true;
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         String osVersion = osDetails.getVersion();
         String osMajorVersion = osVersion.contains(".") ? osVersion.substring(0, osVersion.indexOf(".")) : osVersion;
@@ -114,12 +116,12 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 //debian fix
                 "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
                 "which apt-get",
-                ok(sudo("apt-get -y --allow-unauthenticated install apt-get install libpam0g-dev")),
-                ok(sudo("apt-get -y --allow-unauthenticated install apt-get install libssl0.9.8")),
+                ok(sudo("apt-get -y --allow-unauthenticated install logrotate libpam0g-dev libssl0.9.8")),
                 // TODO: Debian support (default debian image fails with 'sudo: command not found')
                 "[[ \"lucid natty precise\" =~ (^| )`lsb_release -sc`($| )  ]] && export OS_RELEASE=`lsb_release -sc` || export OS_RELEASE=precise",
                 String.format("wget http://s3.amazonaws.com/downloads.basho.com/riak/%s/%s/ubuntu/$OS_RELEASE/riak_%<s-1_amd64.deb", majorVersion, fullVersion),
-                sudo(String.format("dpkg -i riak_%s-1_amd64.deb", fullVersion)));
+                sudo(String.format("dpkg -i riak_%s-1_amd64.deb", fullVersion)),
+                sudo("apt-get -y --allow-unauthenticated -f install"));
         String yum = chainGroup(
                 "which yum",
                 ok(sudo("yum -y install openssl")),
@@ -159,6 +161,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
 
         List<String> commands = Lists.newLinkedList();
+        commands.add(sudo("mkdir -p " + getRiakEtcDir()));
 
         String vmArgsTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_VM_ARGS_TEMPLATE_URL));
         String saveAsVmArgs = Urls.mergePaths(getRunDir(), "vm.args");
@@ -177,7 +180,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         if (osDetails.isMac()) {
             commands.add("ulimit -n 4096");
         } else if (osDetails.isLinux()) {
-            commands.add(sudo("chown riak:riak " + getVmArgsLocation()));
+            commands.add(sudo("chown -R riak:riak " + getRiakEtcDir()));
         }
 
         ScriptHelper customizeScript = newScript(CUSTOMIZING)
@@ -192,14 +195,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         customizeScript.execute();
 
         //set the riak node name
-        entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getHostname()));
+        entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getEntity().getAttribute(Attributes.SUBNET_HOSTNAME)));
     }
 
     @Override
     public void launch() {
 
         String command = format("%s start >/dev/null 2>&1 < /dev/null &", getRiakCmd());
-        command = isPackageInstall ? "sudo " + command : command;
+        command = isPackageInstall ? BashCommands.sudo(command) : command;
 
         ScriptHelper launchScript = newScript(LAUNCHING)
                 .body.append(command);
@@ -376,8 +379,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         }
     }
 
-    private String getVmArgsLocation() {
-        return Urls.mergePaths(getRiakEtcDir(), "vm.args");
+    public String getSubnetHostname() {
+        return getEntity().getAttribute(Attributes.SUBNET_HOSTNAME);
     }
 
     private Boolean hasJoinedCluster() {
