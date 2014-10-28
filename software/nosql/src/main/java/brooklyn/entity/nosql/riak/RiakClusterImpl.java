@@ -182,7 +182,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         for (Entity entity : this.getMembers()) {
             if (entity instanceof RiakNode && entity.getAttribute(Attributes.SERVICE_UP)) {
                 RiakNode riakNode = (RiakNode) entity;
-                addresses += riakNode.getAttribute(Attributes.HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_WEB_PORT) + ",";
+                addresses += riakNode.getAttribute(Attributes.SUBNET_HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_WEB_PORT) + ",";
             }
         }
         if (addresses.length() > 0) {

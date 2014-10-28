@@ -34,6 +34,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
@@ -41,6 +42,7 @@ import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.net.HostAndPort;
 
 public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
@@ -88,11 +90,12 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
+        HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getRiakWebPort());
 
         httpFeed = HttpFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
-                .baseUri(String.format("http://%s:%d/stats", getAttribute(HOSTNAME), getRiakWebPort()))
+                .baseUri(String.format("http://%s/stats", accessible.toString()))
                 .poll(new HttpPollConfig<Integer>(NODE_GETS)
                         .onSuccess(HttpValueFunctions.jsonContents("node_gets", Integer.class))
                         .onFailureOrException(Functions.constant(-1)))
