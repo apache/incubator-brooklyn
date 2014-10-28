@@ -108,6 +108,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     }
 
     @Override
+    protected void preStart() {
+        ServiceNotUpLogic.clearNotUpIndicator(this, SHUTDOWN.getName());
+    }
+    
+    @Override
     protected void preStop() {
         super.preStop();
 
@@ -233,11 +238,6 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
     }
 
-    @Override
-    protected void preStart() {
-        ServiceNotUpLogic.clearNotUpIndicator(this, SHUTDOWN.getName());
-    }
-    
     public static class StopNodeButLeaveAppsEffectorBody extends EffectorBody<Void> implements StopNodeButLeaveAppsEffector {
         public static final Effector<Void> STOP_NODE_BUT_LEAVE_APPS = Effectors.effector(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS).impl(new StopNodeButLeaveAppsEffectorBody()).build();
 

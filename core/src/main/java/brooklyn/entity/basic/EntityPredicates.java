@@ -343,7 +343,7 @@ public class EntityPredicates {
      * Create a predicate that matches any entity who has an exact match for the given location
      * (i.e. {@code entity.getLocations().contains(location)}).
      */
-    public static <T> Predicate<Entity> locationsInclude(Location location) {
+    public static <T> Predicate<Entity> locationsIncludes(Location location) {
         return locationsSatisfy(CollectionFunctionals.contains(location));
         
     }
@@ -367,13 +367,13 @@ public class EntityPredicates {
         }
     }
 
-    /** @deprecated since 0.7.0 use {@link #locationsInclude(Location)} */
+    /** @deprecated since 0.7.0 use {@link #locationsIncludes(Location)} */
     @Deprecated 
     public static <T> Predicate<Entity> withLocation(final Location location) {
-        return locationsInclude(location);
+        return locationsIncludes(location);
     }
     
-    /** @deprecated since 0.7.0 use {@link #locationsInclude(Location)}, introduced to allow deserialization of anonymous inner class */
+    /** @deprecated since 0.7.0 use {@link #locationsIncludes(Location)}, introduced to allow deserialization of anonymous inner class */
     @SuppressWarnings("unused") @Deprecated 
     private static <T> Predicate<Entity> withLocationOld(final Location location) {
         return new SerializablePredicate<Entity>() {

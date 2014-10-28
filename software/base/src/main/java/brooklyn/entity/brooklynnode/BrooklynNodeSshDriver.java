@@ -224,7 +224,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         }
         
         String cmd = entity.getConfig(BrooklynNode.EXTRA_CUSTOMIZATION_SCRIPT);
-        if (!Strings.isBlank(cmd)) {
+        if (Strings.isNonBlank(cmd)) {
             DynamicTasks.queueIfPossible( SshEffectorTasks.ssh(cmd).summary("Bespoke BrooklynNode customization script")
                 .requiringExitCodeZero() )
                 .orSubmitAndBlock(getEntity());
@@ -285,7 +285,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         if (getEntity().getConfig(BrooklynNode.NO_SHUTDOWN_ON_EXIT)) {
             cmd += " --noShutdownOnExit ";
         }
-        if (!Strings.isBlank(getEntity().getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS))) {
+        if (Strings.isNonBlank(getEntity().getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS))) {
             cmd += " "+getEntity().getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
         }
         cmd += format(" >> %s/console 2>&1 </dev/null &", getRunDir());

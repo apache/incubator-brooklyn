@@ -50,9 +50,6 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
 
     // TODO should we set a default MEMBER_SPEC ?  difficult though because we'd need to set a password
 
-    @SuppressWarnings("unused")
-    private FunctionFeed scanMaster;
-
     @Override
     public void init() {
         super.init();
@@ -60,12 +57,12 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
         getMutableEntityType().addEffector(BrooklynClusterUpgradeEffectorBody.UPGRADE_CLUSTER);
 
         ServiceProblemsLogic.updateProblemsIndicator(this, MASTER_NODE, MSG_NO_MASTER);
-        scanMaster = FunctionFeed.builder()
+        addFeed(FunctionFeed.builder()
                 .entity(this)
                 .poll(new FunctionPollConfig<Object, BrooklynNode>(MASTER_NODE)
                         .period(Duration.ONE_SECOND)
                         .callable(new MasterChildFinder()))
-                .build();
+                .build());
         
         addEnricher( Enrichers.builder().transforming(MASTER_NODE)
             .uniqueTag("master-node-web-uri")
@@ -81,7 +78,7 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
         }
     }
 
-    private BrooklynNode findMasterChild() {
+    BrooklynNode findMasterChild() {
         Collection<Entity> masters = FluentIterable.from(getMembers())
                 .filter(EntityPredicates.attributeEqualTo(BrooklynNode.MANAGEMENT_NODE_STATE, ManagementNodeState.MASTER))
                 .toList();

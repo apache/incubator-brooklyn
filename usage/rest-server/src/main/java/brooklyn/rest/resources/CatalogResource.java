@@ -185,7 +185,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         if (Strings.isNonEmpty(regex))
             filters.add(CatalogPredicates.xml(StringPredicates.containsRegex(regex)));
         if (Strings.isNonEmpty(fragment))
-            filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralCaseInsensitive(fragment)));
+            filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralIgnoreCase(fragment)));
 
         return FluentIterable.from(brooklyn().getCatalog().getCatalogItems())
                 .filter(Predicates.and(filters))

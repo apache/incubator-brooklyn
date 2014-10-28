@@ -170,7 +170,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
     @Beta
     static boolean isPersistenceModeEnabled(Entity entity) {
         // TODO when there are PERSIST* options in BrooklynNode, look at them here!
-        // or, better, have a sensor for persistence
+        // or, even better, make a REST call to check persistence
         String params = null;
         if (entity instanceof BrooklynCluster) {
             EntitySpec<?> spec = entity.getConfig(BrooklynCluster.MEMBER_SPEC);

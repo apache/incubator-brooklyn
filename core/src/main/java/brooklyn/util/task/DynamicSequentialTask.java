@@ -138,6 +138,8 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         synchronized (jobTransitionLock) {
             if (primaryFinished)
                 throw new IllegalStateException("Cannot add a task to "+this+" which is already finished (trying to add "+t+")");
+            if (secondaryQueueAborted)
+                throw new IllegalStateException("Cannot add a task to "+this+" whose queue has been aborted (trying to add "+t+")");
             secondaryJobsAll.add(t);
             secondaryJobsRemaining.add(t);
             BrooklynTaskTags.addTagsDynamically(t, ManagementContextInternal.SUB_TASK_TAG);

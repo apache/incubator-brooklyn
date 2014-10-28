@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.brooklynnode.effector;
+package brooklyn.entity.brooklynnode;
 
 import java.util.Collection;
 
@@ -25,7 +25,9 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.EntityHttpClient;
-import brooklyn.entity.brooklynnode.effector.CallbackEntityHttpClient.Request;
+import brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
+import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
+import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
@@ -33,7 +35,7 @@ import brooklyn.location.Location;
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
 
-public class TestHttpEntity extends AbstractEntity implements BrooklynNode {
+public class MockBrooklynNode extends AbstractEntity implements BrooklynNode {
     @SuppressWarnings("serial")
     public static final ConfigKey<Function<Request, String>> HTTP_CLIENT_CALLBACK = ConfigKeys.newConfigKey(new TypeToken<Function<Request, String>>(){}, "httpClientCallback");
     public static final AttributeSensor<Integer> HA_PRIORITY = new BasicAttributeSensor<Integer>(Integer.class, "priority");

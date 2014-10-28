@@ -20,6 +20,7 @@ package brooklyn.util.text;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -30,6 +31,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class StringPredicates {
 
@@ -67,14 +69,14 @@ public class StringPredicates {
 
     // -----------------
     
-    public static <T extends CharSequence> Predicate<T> containsLiteralCaseInsensitive(final String fragment) {
-        return new ContainsLiteralCaseInsensitive<T>(fragment);
+    public static <T extends CharSequence> Predicate<T> containsLiteralIgnoreCase(final String fragment) {
+        return new ContainsLiteralIgnoreCase<T>(fragment);
     }
 
-    private static final class ContainsLiteralCaseInsensitive<T extends CharSequence> implements Predicate<T> {
+    private static final class ContainsLiteralIgnoreCase<T extends CharSequence> implements Predicate<T> {
         private final String fragment;
 
-        private ContainsLiteralCaseInsensitive(String fragment) {
+        private ContainsLiteralIgnoreCase(String fragment) {
             this.fragment = fragment;
         }
 
@@ -144,14 +146,11 @@ public class StringPredicates {
     // -----------------
     
     public static <T extends CharSequence> Predicate<T> containsAllLiterals(final String... fragments) {
-        return Predicates.and(Iterables.transform(Arrays.asList(fragments), new ConvertStringToContainsLiteralPredicate()));
-    }
-
-    private static final class ConvertStringToContainsLiteralPredicate implements Function<String, Predicate<CharSequence>> {
-        @Override
-        public Predicate<CharSequence> apply(String input) {
-            return containsLiteral(input);
+        List<Predicate<CharSequence>> fragmentPredicates = Lists.newArrayList();
+        for (String fragment : fragments) {
+            fragmentPredicates.add(containsLiteral(fragment));
         }
+        return Predicates.and(fragmentPredicates);
     }
 
     /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
@@ -209,7 +208,7 @@ public class StringPredicates {
     /** true if the object *is* a {@link CharSequence} starting with the given prefix */
     public static Predicate<Object> isStringStartingWith(final String prefix) {
         return Predicates.<Object>and(Predicates.instanceOf(CharSequence.class),
-            Predicates.compose(new StartsWith<String>(prefix), StringFunctions.toStringFunction()));
+            Predicates.compose(startsWith(prefix), StringFunctions.toStringFunction()));
     }
 
     /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */

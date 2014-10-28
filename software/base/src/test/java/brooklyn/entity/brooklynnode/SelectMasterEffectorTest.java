@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.brooklynnode.effector;
+package brooklyn.entity.brooklynnode;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -24,66 +24,51 @@ import static org.testng.Assert.fail;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.http.client.methods.HttpPost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynCluster.SelectMasterEffector;
-import brooklyn.entity.brooklynnode.BrooklynClusterImpl;
-import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.effector.CallbackEntityHttpClient.Request;
+import brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.BasicExecutionManager;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
-public class SelectMasterEffectorTest {
+public class SelectMasterEffectorTest extends BrooklynAppUnitTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynClusterImpl.class);
 
-    protected ManagementContext mgmt;
-    protected BasicApplication app;
-    protected BasicExecutionContext ec;
     protected BrooklynCluster cluster;
-    protected FunctionFeed scanMaster;
-    protected Poller<Void> poller; 
+    protected HttpCallback http; 
+    protected Poller<Void> poller;
 
-    @BeforeMethod
-    public void setUp() {
-        mgmt = new LocalManagementContextForTests();
-        EntitySpec<BasicApplication> appSpec = EntitySpec.create(BasicApplication.class)
-                .child(EntitySpec.create(BrooklynCluster.class));
-        app = ApplicationBuilder.newManagedApp(appSpec, mgmt);
-        cluster = (BrooklynCluster)Iterables.getOnlyElement(app.getChildren());
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        super.setUp();
 
-        BasicExecutionManager em = new BasicExecutionManager("mycontext");
-        ec = new BasicExecutionContext(em);
-
+        // because the effector calls wait for a state change, use a separate thread to drive that 
         poller = new Poller<Void>((EntityLocal)app, false);
         poller.scheduleAtFixedRate(
             new Callable<Void>() {
@@ -94,19 +79,30 @@ public class SelectMasterEffectorTest {
                 }
             },
             new DelegatingPollHandler<Void>(Collections.<AttributePollHandler<? super Void>>emptyList()),
-            Duration.millis(200));
+            Duration.millis(20));
         poller.start();
     }
 
-    @AfterMethod
-    public void tearDown() {
+    @Override
+    protected void setUpApp() {
+        super.setUpApp();
+        http = new HttpCallback();
+        cluster = app.createAndManageChild(EntitySpec.create(BrooklynCluster.class)
+            .location(app.newLocalhostProvisioningLocation())
+            .configure(BrooklynCluster.MEMBER_SPEC, EntitySpec.create(BrooklynNode.class)
+                .impl(MockBrooklynNode.class)
+                .configure(MockBrooklynNode.HTTP_CLIENT_CALLBACK, http)));
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
         poller.stop();
+        super.tearDown();
     }
 
     @Test
     public void testInvalidNewMasterIdFails() {
         try {
-            BrooklynCluster cluster = app.addChild(EntitySpec.create(BrooklynCluster.class));
             selectMaster(cluster, "1234");
             fail("Non-existend entity ID provided.");
         } catch (Exception e) {
@@ -114,47 +110,43 @@ public class SelectMasterEffectorTest {
         }
     }
 
-    @Test
-    public void testSelectMaster() {
-        HttpCallback cb = new HttpCallback();
-        BrooklynNode node1 = cluster.addMemberChild(EntitySpec.create(BrooklynNode.class)
-                .impl(TestHttpEntity.class)
-                .configure(TestHttpEntity.HTTP_CLIENT_CALLBACK, cb));
-        BrooklynNode node2 = cluster.addMemberChild(EntitySpec.create(BrooklynNode.class)
-                .impl(TestHttpEntity.class)
-                .configure(TestHttpEntity.HTTP_CLIENT_CALLBACK, cb));
+    @Test(groups="Integration") // because slow, due to sensor feeds
+    public void testSelectMasterAfterChange() {
+        List<Entity> nodes = makeTwoNodes();
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, BrooklynCluster.MASTER_NODE, (BrooklynNode)nodes.get(0));
 
-        cluster.addMemberChild(node1);
-        cluster.addMemberChild(node2);
-
-        setManagementState(node1, ManagementNodeState.MASTER);
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, BrooklynCluster.MASTER_NODE, node1);
-
-        selectMaster(cluster, node2.getId());
-        checkMaster(cluster, node2);
+        selectMaster(cluster, nodes.get(1).getId());
+        checkMaster(cluster, nodes.get(1));
     }
 
-    @Test(groups="WIP")
-    //after throwing an exception in HttpCallback tasks are no longer executed, why?
+    @Test
+    public void testFindMaster() {
+        List<Entity> nodes = makeTwoNodes();
+        Assert.assertEquals(((BrooklynClusterImpl)Entities.deproxy(cluster)).findMasterChild(), nodes.get(0));
+    }
+    
+    @Test(groups="Integration") // because slow, due to sensor feeds
     public void testSelectMasterFailsAtChangeState() {
-        HttpCallback cb = new HttpCallback();
-        cb.setFailAtStateChange(true);
+        http.setFailAtStateChange(true);
 
-        BrooklynNode node1 = cluster.addMemberChild(EntitySpec.create(BrooklynNode.class)
-                .impl(TestHttpEntity.class)
-                .configure(TestHttpEntity.HTTP_CLIENT_CALLBACK, cb));
-        BrooklynNode node2 = cluster.addMemberChild(EntitySpec.create(BrooklynNode.class)
-                .impl(TestHttpEntity.class)
-                .configure(TestHttpEntity.HTTP_CLIENT_CALLBACK, cb));
+        List<Entity> nodes = makeTwoNodes();
+        
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, BrooklynCluster.MASTER_NODE, (BrooklynNode)nodes.get(0));
 
-        cluster.addMemberChild(node1);
-        cluster.addMemberChild(node2);
+        try {
+            selectMaster(cluster, nodes.get(1).getId());
+            fail("selectMaster should have failed");
+        } catch (Exception e) {
+            // expected
+        }
+        checkMaster(cluster, nodes.get(0));
+    }
 
-        setManagementState(node1, ManagementNodeState.MASTER);
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, BrooklynCluster.MASTER_NODE, node1);
-
-        selectMaster(cluster, node2.getId());
-        checkMaster(cluster, node1);
+    private List<Entity> makeTwoNodes() {
+        List<Entity> nodes = MutableList.copyOf(cluster.resizeByDelta(2));
+        setManagementState(nodes.get(0), ManagementNodeState.MASTER);
+        setManagementState(nodes.get(1), ManagementNodeState.HOT_STANDBY);
+        return nodes;
     }
 
     private void checkMaster(Group cluster, Entity node) {
@@ -164,7 +156,7 @@ public class SelectMasterEffectorTest {
             if (member != node) {
                 assertEquals(member.getAttribute(BrooklynNode.MANAGEMENT_NODE_STATE), ManagementNodeState.HOT_STANDBY);
             }
-            assertEquals((int)member.getAttribute(TestHttpEntity.HA_PRIORITY), 0);
+            assertEquals((int)member.getAttribute(MockBrooklynNode.HA_PRIORITY), 0);
         }
     }
 
@@ -180,13 +172,13 @@ public class SelectMasterEffectorTest {
         public String apply(Request input) {
             if ("/v1/server/ha/state".equals(input.getPath())) {
                 if (failAtStateChange) {
-                    throw new RuntimeException("Testing failure at chaning node state");
+                    throw new RuntimeException("Testing failure at changing node state");
                 }
 
                 checkRequest(input, HttpPost.METHOD_NAME, "/v1/server/ha/state", "mode", "HOT_STANDBY");
                 Entity entity = input.getEntity();
                 EntityTestUtils.assertAttributeEquals(entity, BrooklynNode.MANAGEMENT_NODE_STATE, ManagementNodeState.MASTER);
-                EntityTestUtils.assertAttributeEquals(entity, TestHttpEntity.HA_PRIORITY, 0);
+                EntityTestUtils.assertAttributeEquals(entity, MockBrooklynNode.HA_PRIORITY, 0);
 
                 setManagementState(entity, ManagementNodeState.HOT_STANDBY);
 
@@ -208,19 +200,16 @@ public class SelectMasterEffectorTest {
             }
         }
 
-        public void checkRequest(Request input, String methodName, String path, String... keyValue) {
+        public void checkRequest(Request input, String methodName, String path, String key, String value) {
             if (!input.getMethod().equals(methodName) || !input.getPath().equals(path)) {
                 throw new IllegalStateException("Request doesn't match expected state. Expected = " + input.getMethod() + " " + input.getPath() + ". " +
                         "Actual = " + methodName + " " + path);
             }
-            for(int i = 0; i < keyValue.length / 2; i++) {
-                String key = keyValue[i];
-                String value = keyValue[i+1];
-                String inputValue = input.getParams().get(key);
-                if(!Objects.equal(value, inputValue)) {
-                    throw new IllegalStateException("Request doesn't match expected parameter " + methodName + " " + path + ". Parameter " + key + 
-                            " expected = " + value + ", actual = " + inputValue);
-                }
+
+            String inputValue = input.getParams().get(key);
+            if(!Objects.equal(value, inputValue)) {
+                throw new IllegalStateException("Request doesn't match expected parameter " + methodName + " " + path + ". Parameter " + key + 
+                    " expected = " + value + ", actual = " + inputValue);
             }
         }
 
@@ -231,11 +220,12 @@ public class SelectMasterEffectorTest {
     }
 
     private void masterFailoverIfNeeded() {
+        if (!Entities.isManaged(cluster)) return;
         if (cluster.getAttribute(BrooklynCluster.MASTER_NODE) == null) {
             Collection<Entity> members = cluster.getMembers();
             if (members.size() > 0) {
                 for (Entity member : members) {
-                    if (member.getAttribute(TestHttpEntity.HA_PRIORITY) == 1) {
+                    if (member.getAttribute(MockBrooklynNode.HA_PRIORITY) == 1) {
                         masterFailover(member);
                         return;
                     }
@@ -257,11 +247,11 @@ public class SelectMasterEffectorTest {
     }
 
     public static void setPriority(Entity entity, int priority) {
-        ((EntityLocal)entity).setAttribute(TestHttpEntity.HA_PRIORITY, priority);
+        ((EntityLocal)entity).setAttribute(MockBrooklynNode.HA_PRIORITY, priority);
     }
 
     private void selectMaster(DynamicCluster cluster, String id) {
-        ec.submit(Effectors.invocation(cluster, BrooklynCluster.SELECT_MASTER, ImmutableMap.of(SelectMasterEffector.NEW_MASTER_ID.getName(), id))).asTask().getUnchecked();
+        app.getExecutionContext().submit(Effectors.invocation(cluster, BrooklynCluster.SELECT_MASTER, ImmutableMap.of(SelectMasterEffector.NEW_MASTER_ID.getName(), id))).asTask().getUnchecked();
     }
 
 }

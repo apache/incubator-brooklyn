@@ -48,6 +48,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 
@@ -250,6 +251,11 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
         public String toString() {
             return name+Arrays.toString(parameterTypes);
         }
+    }
+    
+    @VisibleForTesting
+    public Entity getDelegate() {
+        return delegate;
     }
     
     @Override

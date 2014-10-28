@@ -42,7 +42,6 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
-import com.google.common.annotations.Beta;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -102,7 +101,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     }
     
     /**
-     * Wraps an entity spec so its configuration can be overridden without modifying the 
+     * Copies entity spec so its configuration can be overridden without modifying the 
      * original entity spec.
      */
     public static <T extends Entity> EntitySpec<T> create(EntitySpec<T> spec) {
@@ -230,11 +229,10 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     public Map<ConfigKey<?>, Object> getConfig() {
         return Collections.unmodifiableMap(config);
     }
-    
-    /** @return Live instance of the config map, for instance in case mass clearances are desired */
-    @Beta
-    public Map<ConfigKey<?>, Object> getConfigLive() {
-        return config;
+
+    /** Clears the config map, removing any config previously set. */
+    public void clearConfig() {
+        config.clear();
     }
         
     public List<PolicySpec<?>> getPolicySpecs() {

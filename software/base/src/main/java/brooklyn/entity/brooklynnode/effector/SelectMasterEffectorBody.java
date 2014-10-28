@@ -45,6 +45,7 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.time.Duration;
 
 import com.google.api.client.util.Preconditions;
+import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 
 public class SelectMasterEffectorBody extends EffectorBody<Void> implements SelectMasterEffector {
@@ -84,20 +85,21 @@ public class SelectMasterEffectorBody extends EffectorBody<Void> implements Sele
         final Entity newMaster = getMember(newMasterId);
 
         //1. Increase the priority of the node we wish to become master
-        setNodePriority(newMaster, HA_MASTER_PRIORITY);
+        toggleNodePriority(newMaster, HA_MASTER_PRIORITY);
 
-        //2. Denote the existing master so a new election takes place
+        //2. Demote the existing master so a new election takes place
         try {
-            //If no master was yet selected, at least wait to see
-            //if the new master will be what we expect.
+            // this allows the finally block to run even on failure
+            DynamicTasks.swallowChildrenFailures();
+            
             if (oldMaster != null) {
-                setNodeState(oldMaster, HighAvailabilityMode.HOT_STANDBY);
+                demoteOldMaster(oldMaster, HighAvailabilityMode.HOT_STANDBY);
             }
 
             waitMasterHandover(oldMaster, newMaster);
-        } finally {
+        } finally { 
             //3. Revert the priority of the node once it has become master
-            setNodePriority(newMaster, HA_STANDBY_PRIORITY);
+            toggleNodePriority(newMaster, HA_STANDBY_PRIORITY);
         }
 
         checkMasterSelected(newMaster);
@@ -105,13 +107,13 @@ public class SelectMasterEffectorBody extends EffectorBody<Void> implements Sele
 
     private void waitMasterHandover(final Entity oldMaster, final Entity newMaster) {
         boolean masterChanged = Repeater.create()
-            .backoff(Duration.millis(500), 1.2, Duration.FIVE_SECONDS)
+            .backoff(Duration.millis(50), 1.5, Duration.FIVE_SECONDS)
             .limitTimeTo(Duration.ONE_MINUTE)
             .until(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
                     Entity master = getMasterNode();
-                    return master != oldMaster && master != null;
+                    return !Objects.equal(master, oldMaster) && master != null;
                 }
             })
             .run();
@@ -120,7 +122,7 @@ public class SelectMasterEffectorBody extends EffectorBody<Void> implements Sele
         }
     }
 
-    private void setNodeState(Entity oldMaster, HighAvailabilityMode mode) {
+    private void demoteOldMaster(Entity oldMaster, HighAvailabilityMode mode) {
         ManagementNodeState oldState = DynamicTasks.queue(
                 Effectors.invocation(
                         oldMaster,
@@ -134,17 +136,17 @@ public class SelectMasterEffectorBody extends EffectorBody<Void> implements Sele
         }
     }
 
-    private void setNodePriority(Entity newMaster, int newPriority) {
+    private void toggleNodePriority(Entity node, int newPriority) {
         Integer oldPriority = DynamicTasks.queue(
                 Effectors.invocation(
-                    newMaster,
+                    node,
                     BrooklynNode.SET_HIGH_AVAILABILITY_PRIORITY,
                     MutableMap.of(SetHighAvailabilityPriorityEffector.PRIORITY, newPriority))
             ).asTask().getUnchecked();
 
         Integer expectedPriority = (newPriority == HA_MASTER_PRIORITY ? HA_STANDBY_PRIORITY : HA_MASTER_PRIORITY);
         if (oldPriority != expectedPriority) {
-            LOG.warn("The previous HA priority on node " + newMaster.getId() + " was " + oldPriority +
+            LOG.warn("The previous HA priority on node " + node.getId() + " was " + oldPriority +
                     ", while the expected value is " + expectedPriority + " (while setting priority " +
                     newPriority + ").");
         }

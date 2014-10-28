@@ -39,9 +39,9 @@ public class StringPredicatesTest {
         Assert.assertFalse(StringPredicates.containsLiteral("xx").apply("text test"));
         Assert.assertFalse(StringPredicates.containsLiteral("xx").apply("texXxt tessst"));
         
-        Assert.assertTrue(StringPredicates.containsLiteralCaseInsensitive("xx").apply("texxxt tessst"));
-        Assert.assertFalse(StringPredicates.containsLiteralCaseInsensitive("xx").apply("text test"));
-        Assert.assertTrue(StringPredicates.containsLiteralCaseInsensitive("xx").apply("texXxt tessst"));
+        Assert.assertTrue(StringPredicates.containsLiteralIgnoreCase("xx").apply("texxxt tessst"));
+        Assert.assertFalse(StringPredicates.containsLiteralIgnoreCase("xx").apply("text test"));
+        Assert.assertTrue(StringPredicates.containsLiteralIgnoreCase("xx").apply("texXxt tessst"));
         
         Assert.assertTrue(StringPredicates.containsAllLiterals("xx", "ss").apply("texxxt tessst"));
         Assert.assertFalse(StringPredicates.containsAllLiterals("xx", "tt").apply("texxxt tessst"));

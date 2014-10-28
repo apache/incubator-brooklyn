@@ -27,6 +27,7 @@ services:
 #      type: classpath://brooklyn/entity/brooklynnode/brooklyn-node-persisting-to-tmp.yaml
       type: brooklyn.entity.brooklynnode.BrooklynNode
       brooklyn.config:
+        # persistence location must be the same for all nodes; if anywhere other than localhost configure a shared obj store or nfs mount
         brooklynnode.launch.parameters.extra: --persist auto --persistenceDir /tmp/brooklyn-persistence-example/
 
 # location: localhost

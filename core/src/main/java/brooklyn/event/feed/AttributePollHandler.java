@@ -196,7 +196,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
 
     @SuppressWarnings("unchecked")
     protected void setSensor(Object v) {
-        if (!Entities.isManaged(entity)) {
+        if (Entities.isNoLongerManaged(entity)) {
             if (Tasks.isInterrupted()) return;
             log.warn(""+entity+" is not managed; feed "+this+" setting "+sensor+" to "+v+" at this time is not supported ("+Tasks.current()+")");
         }

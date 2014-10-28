@@ -21,7 +21,6 @@ package brooklyn.entity.brooklynnode.effector;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -49,7 +48,6 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
@@ -67,7 +65,7 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
     public static final Effector<Void> UPGRADE_CLUSTER = Effectors.effector(UpgradeClusterEffector.UPGRADE_CLUSTER)
         .impl(new BrooklynClusterUpgradeEffectorBody()).build();
 
-    private AtomicBoolean upgradeInProgress = new AtomicBoolean();
+    private final AtomicBoolean upgradeInProgress = new AtomicBoolean();
 
     @Override
     public Void call(ConfigBag parameters) {
@@ -75,37 +73,36 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
             throw new IllegalStateException("An upgrade is already in progress.");
         }
 
-        EntitySpec<?> memberSpec = entity().getConfig(BrooklynCluster.MEMBER_SPEC);
-        Preconditions.checkNotNull(memberSpec, BrooklynCluster.MEMBER_SPEC.getName() + " is required for " + UpgradeClusterEffector.class.getName());
+        EntitySpec<?> origMemberSpec = entity().getConfig(BrooklynCluster.MEMBER_SPEC);
+        Preconditions.checkNotNull(origMemberSpec, BrooklynCluster.MEMBER_SPEC.getName() + " is required for " + UpgradeClusterEffector.class.getName());
 
-        ConfigBag specCfg = ConfigBag.newInstance( memberSpec.getConfig() );
-        ConfigBag origSpecCfg = ConfigBag.newInstanceCopying(specCfg);
-        log.debug("Upgrading "+entity()+", changing "+BrooklynCluster.MEMBER_SPEC+" from "+memberSpec+" / "+origSpecCfg);
-        
+        log.debug("Upgrading "+entity()+", changing "+BrooklynCluster.MEMBER_SPEC+" from "+origMemberSpec+" / "+origMemberSpec.getConfig());
+
+        boolean success = false;
         try {
             String newDownloadUrl = parameters.get(DOWNLOAD_URL);
-            specCfg.putIfNotNull(DOWNLOAD_URL, newDownloadUrl);
-            specCfg.put(BrooklynNode.DISTRO_UPLOAD_URL, inferUploadUrl(newDownloadUrl));
             
-            specCfg.putAll(ConfigBag.newInstance(parameters.get(EXTRA_CONFIG)).getAllConfigAsConfigKeyMap());
+            EntitySpec<?> newMemberSpec = EntitySpec.create(origMemberSpec);
             
-            memberSpec.clearConfig();
-            memberSpec.configure(specCfg.getAllConfigAsConfigKeyMap());
-            // not necessary, but good practice
-            entity().setConfig(BrooklynCluster.MEMBER_SPEC, memberSpec);
-            log.debug("Upgrading "+entity()+", new "+BrooklynCluster.MEMBER_SPEC+": "+memberSpec+" / "+specCfg);
+            ConfigBag newConfig = ConfigBag.newInstance();
+            newConfig.putIfNotNull(DOWNLOAD_URL, newDownloadUrl);
+            newConfig.put(BrooklynNode.DISTRO_UPLOAD_URL, inferUploadUrl(newDownloadUrl));
+            newConfig.putAll(ConfigBag.newInstance(parameters.get(EXTRA_CONFIG)).getAllConfigAsConfigKeyMap());
+            newMemberSpec.configure(newConfig.getAllConfigAsConfigKeyMap());
+            
+            entity().setConfig(BrooklynCluster.MEMBER_SPEC, newMemberSpec);
+            
+            log.debug("Upgrading "+entity()+", new "+BrooklynCluster.MEMBER_SPEC+": "+newMemberSpec+" / "+newMemberSpec.getConfig()+" (adding: "+newConfig+")");
             
             upgrade(parameters);
-        } catch (Exception e) {
-            log.debug("Upgrading "+entity()+" failed, will rethrow after restoring "+BrooklynCluster.MEMBER_SPEC+" to: "+origSpecCfg);
-            memberSpec.clearConfig();
-            memberSpec.configure(origSpecCfg.getAllConfigAsConfigKeyMap());
-            // not necessary, but good practice
-            entity().setConfig(BrooklynCluster.MEMBER_SPEC, memberSpec);
-            
-            throw Exceptions.propagate(e);
-            
+
+            success = true;
         } finally {
+            if (!success) {
+                log.debug("Upgrading "+entity()+" failed, will rethrow after restoring "+BrooklynCluster.MEMBER_SPEC+" to: "+origMemberSpec);
+                entity().setConfig(BrooklynCluster.MEMBER_SPEC, origMemberSpec);
+            }
+            
             upgradeInProgress.set(false);
         }
         return null;
@@ -135,11 +132,15 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
                 new IllegalStateException("Persistence does not appear to be enabled at this cluster. "
                 + "Cluster upgrade will not succeed unless a custom launch script enables it.")) );
         }
+       
+        //TODO we'd like to disable these nodes as standby targets, ie in some 'hot standby but not available for failover' mode
+        //currently if failover happens to a new node, assumptions below may fail and the cluster may require manual repair
 
         //1. Initially create a single node to check if it will launch successfully
         TaskAdaptable<Collection<Entity>> initialNodeTask = DynamicTasks.queue(newCreateNodesTask(1, "Creating first upgraded version node"));
 
         //2. If everything is OK with the first node launch the rest as well
+        @SuppressWarnings("unused")
         TaskAdaptable<Collection<Entity>> remainingNodesTask = DynamicTasks.queue(newCreateNodesTask(initialClusterSize - 1, "Creating remaining upgraded version nodes ("+(initialClusterSize - 1)+")"));
 
         //3. Once we have all nodes running without errors switch master
@@ -151,13 +152,9 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
         //   For members that were created meanwhile - they will be using the new version already. If the new version
         //   isn't good then they will fail to start as well, forcing the policies to retry (and succeed once the
         //   URL is reverted).
-        //TODO can get into problem state if more old nodes are created; better might be to set the
-        //version on this cluster before the above select-master call, and then delete any which are running the old
-        //version (would require tracking the version number at the entity)
-        HashSet<Entity> oldMembers = new HashSet<Entity>(initialMembers);
-        oldMembers.removeAll(remainingNodesTask.asTask().getUnchecked());
-        oldMembers.removeAll(initialNodeTask.asTask().getUnchecked());
-        DynamicTasks.queue(Effectors.invocation(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, Collections.emptyMap(), oldMembers)).asTask().getUnchecked();
+        
+        //any other nodes created via other means should also be using the new spec, so initialMembers will be all the old version nodes
+        DynamicTasks.queue(Effectors.invocation(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, Collections.emptyMap(), initialMembers)).asTask().getUnchecked();
     }
 
     private TaskAdaptable<Collection<Entity>> newCreateNodesTask(int size, String name) {
@@ -187,6 +184,7 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
                 Predicates.not(Predicates.equalTo(Lifecycle.STARTING)), Duration.minutes(30)));
 
         //3. Set HOT_STANDBY in case it is not enabled on the command line ...
+        // TODO support via EntitySpec
         DynamicTasks.queue(Effectors.invocation(
                 BrooklynNode.SET_HIGH_AVAILABILITY_MODE,
                 MutableMap.of(SetHighAvailabilityModeEffector.MODE, HighAvailabilityMode.HOT_STANDBY), 
@@ -196,6 +194,8 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
         DynamicTasks.queue(EntityTasks.requiringAttributeEventually(newNodes, BrooklynNode.MANAGEMENT_NODE_STATE, 
                 Predicates.equalTo(ManagementNodeState.HOT_STANDBY), Duration.FIVE_MINUTES));
 
+        // TODO also check that the nodes created all report the original master, in case persistence changes it
+        
         //5. Just in case check if all of the nodes are SERVICE_UP (which would rule out ON_FIRE as well)
         Collection<Entity> failedNodes = Collections2.filter(newNodes, EntityPredicates.attributeEqualTo(BrooklynNode.SERVICE_UP, Boolean.FALSE));
         if (!failedNodes.isEmpty()) {

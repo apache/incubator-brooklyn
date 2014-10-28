@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.brooklynnode.effector;
+package brooklyn.entity.brooklynnode;
 
 import java.util.Collections;
 import java.util.List;
