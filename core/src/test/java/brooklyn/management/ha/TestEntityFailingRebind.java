@@ -18,9 +18,15 @@
  */
 package brooklyn.management.ha;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.test.entity.TestApplicationImpl;
 
 public class TestEntityFailingRebind extends TestApplicationImpl {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(TestEntityFailingRebind.class);
+
     public static class RebindException extends RuntimeException {
         private static final long serialVersionUID = 1L;
 
@@ -30,13 +36,19 @@ public class TestEntityFailingRebind extends TestApplicationImpl {
     }
     
     private static boolean throwOnRebind = true;
+    
     public static void setThrowOnRebind(boolean state) {
         throwOnRebind = state;
+    }
+    
+    public static boolean getThrowOnRebind() {
+        return throwOnRebind;
     }
 
     @Override
     public void rebind() {
         if (throwOnRebind) {
+            LOG.warn("Throwing intentional exception to simulate failure of rebinding " + this);
             throw new RebindException("Intentional exception thrown when rebinding " + this);
         }
     }

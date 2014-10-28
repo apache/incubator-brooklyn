@@ -82,7 +82,6 @@ public class HighAvailabilityManagerSplitBrainTest {
         private Ticker ticker;
         private AtomicLong currentTime; // used to set the ticker's return value
 
-        @BeforeMethod(alwaysRun=true)
         public void setUp() throws Exception {
             if (sharedTime==null)
                 currentTime = new AtomicLong(System.currentTimeMillis());
@@ -137,23 +136,31 @@ public class HighAvailabilityManagerSplitBrainTest {
         }
     }
     
+    private Boolean prevThrowOnRebind;
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        prevThrowOnRebind = TestEntityFailingRebind.getThrowOnRebind();
+        TestEntityFailingRebind.setThrowOnRebind(true);
         nodes.clear();
         sharedBackingStore.clear();
     }
     
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        try {
+            for (HaMgmtNode n: nodes)
+                n.tearDown();
+        } finally {
+            if (prevThrowOnRebind != null) TestEntityFailingRebind.setThrowOnRebind(prevThrowOnRebind);
+        }
+    }
+
     public HaMgmtNode newNode() throws Exception {
         HaMgmtNode node = new HaMgmtNode();
         node.setUp();
         nodes.add(node);
         return node;
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        for (HaMgmtNode n: nodes)
-            n.tearDown();
     }
 
     private void sharedTickerAdvance(Duration duration) {
@@ -192,6 +199,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         // first auto should become master
         n1.ha.start(HighAvailabilityMode.AUTO);
         n2.ha.start(HighAvailabilityMode.AUTO);
+        assertEquals(n1.ha.getNodeState(), ManagementNodeState.MASTER);
 
         TestApplication app = ApplicationBuilder.newManagedApp(
                 EntitySpec.create(TestApplication.class).impl(TestEntityFailingRebind.class), n1.mgmt);
@@ -220,7 +228,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.FAILED);
         assertEquals(memento.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.FAILED);
     }
-    
+
     @Test
     public void testStandbyRebind() throws Exception {
         useSharedTime();
