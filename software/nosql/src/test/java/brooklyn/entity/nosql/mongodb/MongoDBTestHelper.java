@@ -96,7 +96,14 @@ public class MongoDBTestHelper {
             Map<?, ?> parsedArgs = (Map<?, ?>)commandResult.get("parsed");
             if (parsedArgs == null) return false;
             Boolean configServer = (Boolean)parsedArgs.get("configsvr");
-            return (configServer != null && configServer.equals(true));
+            if (configServer != null) {
+                // v2.5 format
+                return Boolean.TRUE.equals(configServer);
+            } else {
+                // v2.6 format
+                String role = (String) ((Map)parsedArgs.get("sharding")).get("clusterRole");
+                return "configsvr".equals(role);
+            }
         } finally {
             mongoClient.close();
         }

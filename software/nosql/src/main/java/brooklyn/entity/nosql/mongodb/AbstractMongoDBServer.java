@@ -29,6 +29,10 @@ import brooklyn.util.flags.SetFromFlag;
 
 public interface AbstractMongoDBServer extends SoftwareProcess, Entity {
 
+    // TODO Need to properly test v2.4.x and v2.5.x support.
+    // I think the v2.5.x were dev releases.
+    // Should update mongo.config to yaml format, but no rush for that.
+    
     @SetFromFlag("dataDirectory")
     ConfigKey<String> DATA_DIRECTORY = ConfigKeys.newStringConfigKey(
             "mongodb.data.directory", "Data directory to store MongoDB journals");
@@ -40,7 +44,7 @@ public interface AbstractMongoDBServer extends SoftwareProcess, Entity {
     
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.5.4");
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.6.5");
 
     // TODO: Windows support
     // e.g. http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.2.tgz,
