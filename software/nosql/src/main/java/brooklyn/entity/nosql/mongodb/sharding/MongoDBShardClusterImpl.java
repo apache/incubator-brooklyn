@@ -89,11 +89,15 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
         for (Entity member : this.getMembers()) {
             if (member.getAttribute(Startable.SERVICE_UP) && !addedMembers.contains(member)) {
                 MongoDBServer primary = member.getAttribute(MongoDBReplicaSet.PRIMARY_ENTITY);
-                String addr = Strings.removeFromStart(primary.getAttribute(MongoDBServer.MONGO_SERVER_ENDPOINT), "http://");
-                String replicaSetURL = ((MongoDBReplicaSet) member).getName() + "/" + addr;
-                LOG.info("Using {} to add shard URL {}...", router, replicaSetURL);
-                client.addShardToRouter(replicaSetURL);
-                addedMembers.add(member);
+                if (primary != null) {
+                    String addr = Strings.removeFromStart(primary.getAttribute(MongoDBServer.MONGO_SERVER_ENDPOINT), "http://");
+                    String replicaSetURL = ((MongoDBReplicaSet) member).getName() + "/" + addr;
+                    LOG.info("Using {} to add shard URL {}...", router, replicaSetURL);
+                    client.addShardToRouter(replicaSetURL);
+                    addedMembers.add(member);
+                } else {
+                    LOG.debug("{} not set for member {}); not adding shart to router {}", new Object[] {MongoDBReplicaSet.PRIMARY_ENTITY, member, router});
+                }
             }
         }
     }
