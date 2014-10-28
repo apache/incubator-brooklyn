@@ -1001,16 +1001,19 @@ public class Entities {
     public static void waitForServiceUp(final Entity entity, Duration timeout) {
         String description = "Waiting for SERVICE_UP on "+entity;
         Tasks.setBlockingDetails(description);
-        if (!Repeater.create(description).limitTimeTo(timeout)
-                .rethrowException().backoffTo(Duration.ONE_SECOND)
-                .until(new Callable<Boolean>() {
-                    public Boolean call() {
-                        return entity.getAttribute(Startable.SERVICE_UP);
-                    }})
-                .run()) {
-            throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+entity);
+        try {
+            if (!Repeater.create(description).limitTimeTo(timeout)
+                    .rethrowException().backoffTo(Duration.ONE_SECOND)
+                    .until(new Callable<Boolean>() {
+                        public Boolean call() {
+                            return entity.getAttribute(Startable.SERVICE_UP);
+                        }})
+                    .run()) {
+                throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+entity);
+            }
+        } finally {
+            Tasks.resetBlockingDetails();
         }
-        Tasks.resetBlockingDetails();
         log.debug("Detected SERVICE_UP for software {}", entity);
     }
     public static void waitForServiceUp(final Entity entity, long duration, TimeUnit units) {
