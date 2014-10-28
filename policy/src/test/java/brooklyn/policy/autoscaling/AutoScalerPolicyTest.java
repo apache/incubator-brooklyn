@@ -18,8 +18,6 @@
  */
 package brooklyn.policy.autoscaling;
 
-import static brooklyn.test.TestUtils.assertSucceedsContinually;
-import static brooklyn.test.TestUtils.executeUntilSucceeds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -39,23 +37,21 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.TimeExtras;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class AutoScalerPolicyTest {
-
-    static { TimeExtras.init(); }
 
     private static long TIMEOUT_MS = 10*1000;
     private static long SHORT_WAIT_MS = 250;
@@ -92,7 +88,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 30L, 4*10L, 4*20L));
         
         // expect pool to shrink to 3 (i.e. maximum to have >= 40 per container)
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
     }
     
     @Test
@@ -100,7 +96,7 @@ public class AutoScalerPolicyTest {
         resizable.resize(4);
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 1L, 4*10L, 4*20L));
         
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
 
     @Test
@@ -109,7 +105,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 41L, 2*10L, 2*20L));
         
         // expect pool to grow to 3 (i.e. minimum to have <= 80 per container)
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
     }
 
     @Test
@@ -134,7 +130,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 0L, 4*10L, 4*20L));
         
         // expect pool to shrink only to the minimum
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 2));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 2));
     }
     
     @Test
@@ -149,7 +145,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(4, 1000000L, 4*10L, 4*20L));
         
         // expect pool to grow only to the maximum
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
     }
     
     @Test
@@ -182,7 +178,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 1L, 4*10L, 4*20L));
         // now expect pool to shrink to 1
         
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
     
     @Test(groups="Integration")
@@ -195,7 +191,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 81L, 2*10L, 2*20L));
         // now expect pool to grow to 5
         
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
     }
     
     @Test(groups="Integration")
@@ -208,7 +204,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(2, 1L, 2*10L, 2*20L));
         // now expect pool to shrink to 1
         
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
     
     @Test(groups="Integration")
@@ -221,7 +217,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(4, 81L, 4*10L, 4*20L));
         // now expect pool to grow to 5
         
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 5));
     }
     
     // FIXME failed in jenkins (e.g. #1035); with "lists don't have the same size expected:<3> but was:<2>"
@@ -235,7 +231,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 20L, 4*10L, 4*20L)); // shrink to 2
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 10L, 4*10L, 4*20L)); // shrink to 1
         
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
         assertEquals(resizable.sizes, ImmutableList.of(4, 3, 1));
     }
     
@@ -256,7 +252,7 @@ public class AutoScalerPolicyTest {
         
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(1, 21L, 1*10L, 1*20L)); // grow to 2
         
-        executeUntilSucceeds(MutableMap.of("timeout",TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout",TIMEOUT_MS), new Runnable() {
                 public void run() {
                     assertTrue(counter.get() >= 1, "cccounter="+counter);
                 }});
@@ -277,20 +273,20 @@ public class AutoScalerPolicyTest {
         resizable.addPolicy(policy);
         
         resizable.emit(customPoolHotSensor, message(1, 21L, 1*10L, 1*20L)); // grow to 2
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 2));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 2));
         
         resizable.emit(customPoolColdSensor, message(2, 1L, 1*10L, 1*20L)); // shrink to 1
-        executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
     
     @Test(groups="Integration")
     public void testResizeUpStabilizationDelayIgnoresBlip() throws Exception {
         long resizeUpStabilizationDelay = 1000L;
-        long minPeriodBetweenExecs = 0;
+        Duration minPeriodBetweenExecs = Duration.ZERO;
         resizable.removePolicy(policy);
         
         policy = AutoScalerPolicy.builder()
-                .resizeUpStabilizationDelay(resizeUpStabilizationDelay) 
+                .resizeUpStabilizationDelay(Duration.of(resizeUpStabilizationDelay, TimeUnit.MILLISECONDS)) 
                 .minPeriodBetweenExecs(minPeriodBetweenExecs)
                 .build();
         resizable.addPolicy(policy);
@@ -302,7 +298,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_OK_SENSOR, message(1, 11L, 4*10L, 4*20L)); // but 1 is still adequate
         
         assertEquals(resizable.getCurrentSize(), (Integer)1);
-        assertSucceedsContinually(MutableMap.of("duration", 2000L), new Runnable() {
+        Asserts.succeedsContinually(MutableMap.of("duration", 2000L), new Runnable() {
                 @Override public void run() {
                     assertEquals(resizable.sizes, ImmutableList.of(1));
                 }});
@@ -329,11 +325,11 @@ public class AutoScalerPolicyTest {
     @Test(groups="Integration")
     public void testResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Exception {
         long resizeUpStabilizationDelay = 1100L;
-        long minPeriodBetweenExecs = 0;
+        Duration minPeriodBetweenExecs = Duration.ZERO;
         resizable.removePolicy(policy);
         
         policy = AutoScalerPolicy.builder()
-                .resizeUpStabilizationDelay(resizeUpStabilizationDelay) 
+                .resizeUpStabilizationDelay(Duration.of(resizeUpStabilizationDelay, TimeUnit.MILLISECONDS)) 
                 .minPeriodBetweenExecs(minPeriodBetweenExecs)
                 .build();
         resizable.addPolicy(policy);
@@ -354,7 +350,7 @@ public class AutoScalerPolicyTest {
         // Wait for it to reach size 2, and confirm take expected time
         // TODO This is time sensitive, and sometimes fails in CI with size=4 if we wait for currentSize==2 (presumably GC kicking in?)
         //      Therefore do strong assertion of currentSize==2 later, so can write out times if it goes wrong.
-        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertTrue(resizable.getCurrentSize() >= 2, "currentSize="+resizable.getCurrentSize());
             }});
@@ -367,7 +363,7 @@ public class AutoScalerPolicyTest {
                 "Resizing to 2: time="+timeToResizeTo2+"; resizeUpStabilizationDelay="+resizeUpStabilizationDelay);
 
         // Will then grow to 4 $resizeUpStabilizationDelay milliseconds after that emission
-        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), 
+        Asserts.succeedsEventually(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), 
                 currentSizeAsserter(resizable, 4));
         long timeToResizeTo4 = stopwatch.elapsed(TimeUnit.MILLISECONDS) - postSleepTime;
         
@@ -379,11 +375,11 @@ public class AutoScalerPolicyTest {
     @Test(groups="Integration")
     public void testResizeUpStabilizationDelayResizesAfterDelay() {
         final long resizeUpStabilizationDelay = 1000L;
-        long minPeriodBetweenExecs = 0;
+        Duration minPeriodBetweenExecs = Duration.ZERO;
         resizable.removePolicy(policy);
         
         policy = resizable.addPolicy(AutoScalerPolicy.builder()
-                .resizeUpStabilizationDelay(resizeUpStabilizationDelay) 
+                .resizeUpStabilizationDelay(Duration.of(resizeUpStabilizationDelay, TimeUnit.MILLISECONDS)) 
                 .minPeriodBetweenExecs(minPeriodBetweenExecs)
                 .buildSpec());
         resizable.resize(1);
@@ -394,7 +390,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, need4); // would grow to 4
         final AtomicInteger emitCount = new AtomicInteger(0);
         
-        executeUntilSucceeds(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 if (System.currentTimeMillis() - emitTime > (2+emitCount.get())*resizeUpStabilizationDelay) {
                     //first one may not have been received, in a registration race 
@@ -411,11 +407,11 @@ public class AutoScalerPolicyTest {
     @Test(groups="Integration")
     public void testResizeDownStabilizationDelayIgnoresBlip() throws Exception {
         long resizeStabilizationDelay = 1000L;
-        long minPeriodBetweenExecs = 0;
+        Duration minPeriodBetweenExecs = Duration.ZERO;
         resizable.removePolicy(policy);
         
         policy = AutoScalerPolicy.builder()
-                .resizeDownStabilizationDelay(resizeStabilizationDelay) 
+                .resizeDownStabilizationDelay(Duration.of(resizeStabilizationDelay, TimeUnit.MILLISECONDS)) 
                 .minPeriodBetweenExecs(minPeriodBetweenExecs)
                 .build();
         resizable.addPolicy(policy);
@@ -427,7 +423,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_OK_SENSOR, message(2, 20L, 1*10L, 1*20L)); // but 2 is still adequate
         
         assertEquals(resizable.getCurrentSize(), (Integer)2);
-        assertSucceedsContinually(MutableMap.of("duration", 2000L), new Runnable() {
+        Asserts.succeedsContinually(MutableMap.of("duration", 2000L), new Runnable() {
                 public void run() {
                     assertEquals(resizable.sizes, ImmutableList.of(2));
                 }});
@@ -448,12 +444,12 @@ public class AutoScalerPolicyTest {
     @Test(groups="Integration")
     public void testResizeDownStabilizationDelayTakesMinSustainedDesired() throws Exception {
         long resizeDownStabilizationDelay = 1100L;
-        long minPeriodBetweenExecs = 0;
+        Duration minPeriodBetweenExecs = Duration.ZERO;
         policy.suspend();
         resizable.removePolicy(policy);
         
         policy = AutoScalerPolicy.builder()
-                .resizeDownStabilizationDelay(resizeDownStabilizationDelay)
+                .resizeDownStabilizationDelay(Duration.of(resizeDownStabilizationDelay, TimeUnit.MILLISECONDS))
                 .minPeriodBetweenExecs(minPeriodBetweenExecs)
                 .build();
         resizable.addPolicy(policy);
@@ -474,7 +470,7 @@ public class AutoScalerPolicyTest {
         // Wait for it to reach size 2, and confirm take expected time
         // TODO This is time sensitive, and sometimes fails in CI with size=1 if we wait for currentSize==2 (presumably GC kicking in?)
         //      Therefore do strong assertion of currentSize==2 later, so can write out times if it goes wrong.
-        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), new Runnable() {
                 public void run() {
                     assertTrue(resizable.getCurrentSize() <= 2, "currentSize="+resizable.getCurrentSize());
                 }});
@@ -487,7 +483,7 @@ public class AutoScalerPolicyTest {
                 "Resizing to 2: time="+timeToResizeTo2+"; resizeDownStabilizationDelay="+resizeDownStabilizationDelay);
 
         // Will then shrink to 1 $resizeUpStabilizationDelay milliseconds after that emission
-        executeUntilSucceeds(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), 
+        Asserts.succeedsEventually(MutableMap.of("period", 1, "timeout", TIMEOUT_MS), 
                 currentSizeAsserter(resizable, 1));
         long timeToResizeTo1 = stopwatch.elapsed(TimeUnit.MILLISECONDS) - postSleepTime;
         
@@ -499,11 +495,11 @@ public class AutoScalerPolicyTest {
     @Test(groups="Integration")
     public void testResizeDownStabilizationDelayResizesAfterDelay() throws Exception {
         final long resizeDownStabilizationDelay = 1000L;
-        long minPeriodBetweenExecs = 0;
+        Duration minPeriodBetweenExecs = Duration.ZERO;
         resizable.removePolicy(policy);
         
         policy = AutoScalerPolicy.builder()
-                .resizeDownStabilizationDelay(resizeDownStabilizationDelay)
+                .resizeDownStabilizationDelay(Duration.of(resizeDownStabilizationDelay, TimeUnit.MILLISECONDS))
                 .minPeriodBetweenExecs(minPeriodBetweenExecs)
                 .build();
         resizable.addPolicy(policy);
@@ -515,7 +511,7 @@ public class AutoScalerPolicyTest {
         resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, needJust1); // would shrink to 1
         final AtomicInteger emitCount = new AtomicInteger(0);
         
-        executeUntilSucceeds(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 public void run() {
                     if (System.currentTimeMillis() - emitTime > (2+emitCount.get())*resizeDownStabilizationDelay) {
                         //first one may not have been received, in a registration race

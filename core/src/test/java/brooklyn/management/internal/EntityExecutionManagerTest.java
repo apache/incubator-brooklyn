@@ -62,7 +62,10 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -367,7 +370,7 @@ public class EntityExecutionManagerTest {
             }
         }
     }
-    
+
     @Test(groups={"Integration"})
     public void testEffectorTasksGcedForMaxPerTag() throws Exception {
         int maxNumTasks = 2;
@@ -384,6 +387,11 @@ public class EntityExecutionManagerTest {
             Task<?> task = entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of());
             task.get();
             tasks.add(task);
+            
+            // TASKS_OLDEST_FIRST_COMPARATOR is based on comparing EndTimeUtc; but two tasks executed in
+            // rapid succession could finish in same millisecond
+            // (especially when using System.currentTimeMillis, which can return the same time for several millisconds).
+            Thread.sleep(10);
         }
         
         // Should initially have all tasks
@@ -397,10 +405,33 @@ public class EntityExecutionManagerTest {
             @Override public void run() {
                 Set<Task<?>> storedTasks2 = app.getManagementContext().getExecutionManager().getTasksWithAllTags(
                        ImmutableList.of(BrooklynTaskTags.tagForContextEntity(entity), ManagementContextInternal.EFFECTOR_TAG));
-                assertEquals(storedTasks2, ImmutableSet.copyOf(recentTasks), "storedTasks="+storedTasks2+"; expected="+recentTasks);
+                List<String> storedTasks2Str = FluentIterable
+                        .from(storedTasks2)
+                        .transform(new Function<Task<?>, String>() {
+                            @Override public String apply(Task<?> input) {
+                                return taskToVerboseString(input);
+                            }})
+                        .toList();
+                assertEquals(storedTasks2, ImmutableSet.copyOf(recentTasks), "storedTasks="+storedTasks2Str+"; expected="+recentTasks);
             }});
     }
     
+    private String taskToVerboseString(Task t) {
+        return Objects.toStringHelper(t)
+                .add("id", t.getId())
+                .add("displayName", t.getDisplayName())
+                .add("submitTime", t.getSubmitTimeUtc())
+                .add("startTime", t.getStartTimeUtc())
+                .add("endTime", t.getEndTimeUtc())
+                .add("status", t.getStatusSummary())
+                .add("tags", t.getTags())
+                .toString();
+    }
+    //2014-10-22 17:48:32,359 INFO  TESTNG FAILED: "Surefire test" - brooklyn.management.internal.EntityExecutionManagerTest.testEffectorTasksGcedForMaxPerTag() finished in 10020 ms
+    //java.lang.AssertionError: storedTasks=[Task[myEffector:dmCJkiM9], Task[myEffector:R2hPTpNL]]; expected=[Task[myEffector:Z9wTQ8We], Task[myEffector:R2hPTpNL]] 
+    // expected [[Task[myEffector:Z9wTQ8We], Task[myEffector:R2hPTpNL]]] 
+    // but found [[Task[myEffector:dmCJkiM9], Task[myEffector:R2hPTpNL]]]
+            
     @Test(groups="Integration")
     public void testEffectorTasksGcedForAge() throws Exception {
         Duration maxTaskAge = Duration.millis(100);

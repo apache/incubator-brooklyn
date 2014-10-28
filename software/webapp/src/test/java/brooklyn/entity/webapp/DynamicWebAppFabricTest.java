@@ -27,11 +27,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.Changeable;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
@@ -55,9 +56,9 @@ public class DynamicWebAppFabricTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        loc1 = new SimulatedLocation();
-        loc2 = new SimulatedLocation();
+        app = TestApplication.Factory.newManagedInstanceForTests();
+        loc1 = app.newSimulatedLocation();
+        loc2 = app.newSimulatedLocation();
         locs = ImmutableList.of(loc1, loc2);
     }
     
@@ -72,6 +73,9 @@ public class DynamicWebAppFabricTest {
                 .configure(DynamicWebAppFabric.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         
         app.start(locs);
+        for (Entity member : fabric.getChildren()) {
+            ((EntityLocal)member).setAttribute(Changeable.GROUP_SIZE, 1);
+        }
         
         for (Entity member : fabric.getChildren()) {
             ((EntityInternal)member).setAttribute(DynamicGroup.GROUP_SIZE, 1);
