@@ -181,7 +181,7 @@ public class CollectionFunctionals {
     // ---------
     
     public static <T,TT extends Iterable<T>> Predicate<TT> all(Predicate<T> attributeSatisfies) {
-        return new QuorumSatisfies<T, TT>(QuorumChecks.all(), attributeSatisfies);
+        return quorum(QuorumChecks.all(), attributeSatisfies);
     }
 
     public static <T,TT extends Iterable<T>> Predicate<TT> quorum(QuorumCheck quorumCheck, Predicate<T> attributeSatisfies) {

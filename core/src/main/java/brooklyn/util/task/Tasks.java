@@ -445,16 +445,28 @@ public class Tasks {
             return false;
         }
     }
-    
-    /** creates an (unsubmitted) task which waits for the given repeater, optionally failing if it does not complete with success */
-    public static TaskAdaptable<Boolean> awaiting(Repeater repeater, boolean requireTrue) {
-        return awaitingBuilder(repeater, requireTrue).build();
+
+    /** @return a {@link TaskBuilder} which tests whether the repeater terminates with success in its configured timeframe,
+     * returning true or false depending on whether repeater succeed */
+    public static TaskBuilder<Boolean> testing(Repeater repeater) {
+        return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, false))
+            .name("waiting for condition")
+            .description("Testing whether " + getTimeoutString(repeater) + ": "+repeater.getDescription());
     }
 
-    /** creates a partially instantiated builder which waits for the given repeater, optionally failing if it does not complete with success,
-     * for further task customization and then {@link TaskBuilder#build()} */
-    public static TaskBuilder<Boolean> awaitingBuilder(Repeater repeater, boolean requireTrue) {
-        return Tasks.<Boolean>builder().name(repeater.getDescription()).body(new WaitForRepeaterCallable(repeater, requireTrue));
+    /** @return a {@link TaskBuilder} which requires that the repeater terminate with success in its configured timeframe,
+     * throwing if it does not */
+    public static TaskBuilder<?> requiring(Repeater repeater) {
+        return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, true))
+            .name("waiting for condition")
+            .description("Requiring " + getTimeoutString(repeater) + ": "+repeater);
+    }
+    
+    private static String getTimeoutString(Repeater repeater) {
+        Duration timeout = repeater.getTimeLimit();
+        if (timeout==null || Duration.PRACTICALLY_FOREVER.equals(timeout))
+            return "eventually";
+        return "in "+timeout;
     }
 
 }

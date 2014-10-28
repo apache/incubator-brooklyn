@@ -386,5 +386,9 @@ public class Repeater {
     public String getDescription() {
         return description;
     }
+
+    public Duration getTimeLimit() {
+        return timeLimit;
+    }
     
 }

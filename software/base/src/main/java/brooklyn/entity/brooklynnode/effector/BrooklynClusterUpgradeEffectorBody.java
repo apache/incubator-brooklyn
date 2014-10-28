@@ -22,14 +22,12 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -91,9 +89,8 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
             
             specCfg.putAll(ConfigBag.newInstance(parameters.get(EXTRA_CONFIG)).getAllConfigAsConfigKeyMap());
             
-            Map<ConfigKey<?>, Object> cfgLive = memberSpec.getConfigLive();
-            cfgLive.clear();
-            cfgLive.putAll(specCfg.getAllConfigAsConfigKeyMap());
+            memberSpec.clearConfig();
+            memberSpec.configure(specCfg.getAllConfigAsConfigKeyMap());
             // not necessary, but good practice
             entity().setConfig(BrooklynCluster.MEMBER_SPEC, memberSpec);
             log.debug("Upgrading "+entity()+", new "+BrooklynCluster.MEMBER_SPEC+": "+memberSpec+" / "+specCfg);
@@ -101,9 +98,8 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
             upgrade(parameters);
         } catch (Exception e) {
             log.debug("Upgrading "+entity()+" failed, will rethrow after restoring "+BrooklynCluster.MEMBER_SPEC+" to: "+origSpecCfg);
-            Map<ConfigKey<?>, Object> cfgLive = memberSpec.getConfigLive();
-            cfgLive.clear();
-            cfgLive.putAll(origSpecCfg.getAllConfigAsConfigKeyMap());
+            memberSpec.clearConfig();
+            memberSpec.configure(origSpecCfg.getAllConfigAsConfigKeyMap());
             // not necessary, but good practice
             entity().setConfig(BrooklynCluster.MEMBER_SPEC, memberSpec);
             
@@ -187,7 +183,7 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
 
         //2. Wait for them to be RUNNING (or at least STARTING to have completed)
         // (should already be the case, because above is synchronous and, we think, it will fail if start does not succeed)
-        DynamicTasks.queue(EntityTasks.awaitingAttribute(newNodes, Attributes.SERVICE_STATE_ACTUAL, 
+        DynamicTasks.queue(EntityTasks.requiringAttributeEventually(newNodes, Attributes.SERVICE_STATE_ACTUAL, 
                 Predicates.not(Predicates.equalTo(Lifecycle.STARTING)), Duration.minutes(30)));
 
         //3. Set HOT_STANDBY in case it is not enabled on the command line ...
@@ -197,7 +193,7 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
                 newNodes)).asTask().getUnchecked();
         //... and wait until all of the nodes change state
         // TODO fail quicker if state changes to FAILED
-        DynamicTasks.queue(EntityTasks.awaitingAttribute(newNodes, BrooklynNode.MANAGEMENT_NODE_STATE, 
+        DynamicTasks.queue(EntityTasks.requiringAttributeEventually(newNodes, BrooklynNode.MANAGEMENT_NODE_STATE, 
                 Predicates.equalTo(ManagementNodeState.HOT_STANDBY), Duration.FIVE_MINUTES));
 
         //5. Just in case check if all of the nodes are SERVICE_UP (which would rule out ON_FIRE as well)

@@ -110,7 +110,7 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testWithLocation() throws Exception {
         entity.addLocations(ImmutableList.of(loc));
-        assertTrue(EntityPredicates.locationsInclude(loc).apply(entity));
-        assertFalse(EntityPredicates.locationsInclude(loc).apply(app));
+        assertTrue(EntityPredicates.locationsIncludes(loc).apply(entity));
+        assertFalse(EntityPredicates.locationsIncludes(loc).apply(app));
     }
 }
