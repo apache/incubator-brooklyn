@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.nosql.mongodb.MongoDBServer;
 import brooklyn.entity.nosql.mongodb.MongoDBTestHelper;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
@@ -54,7 +55,7 @@ public class MongoDBConfigServerIntegrationTest {
     @Test(groups = "Integration")
     public void testCanStartAndStop() throws Exception {
         MongoDBConfigServer entity = app.createAndManageChild(EntitySpec.create(MongoDBConfigServer.class)
-                .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
+                .configure(MongoDBServer.MONGODB_CONF_TEMPLATE_URL, "classpath:///test-mongodb-configserver.conf"));
         app.start(ImmutableList.of(localhostProvisioningLocation));
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, true);
