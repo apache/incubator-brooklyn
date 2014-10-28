@@ -224,6 +224,9 @@
                 <exclude>src/main/resources/brooklyn/entity/nosql/couchdb/couch.ini</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/mongodb/default-mongodb.conf</exclude>
+                <exclude>src/test/resources/test-mongodb.conf</exclude>
+                <exclude>src/test/resources/test-mongodb-configserver.conf</exclude>
+                <exclude>src/test/resources/test-mongodb-router.conf</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/redis/redis.conf</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/redis/slave.conf</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/riak/app.config</exclude>
