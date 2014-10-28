@@ -19,51 +19,50 @@
 package brooklyn.entity.nosql.mongodb.sharding;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
 import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
+import brooklyn.entity.nosql.mongodb.MongoDBServer;
 import brooklyn.entity.nosql.mongodb.MongoDBTestHelper;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.mongodb.DBObject;
 
-public class MongoDBShardedDeploymentIntegrationTest {
+public class MongoDBShardedDeploymentIntegrationTest extends BrooklynAppLiveTestSupport {
     
     private static final Integer ROUTER_CLUSTER_SIZE = 2;
     private static final Integer REPLICASET_SIZE = 2;
     private static final Integer SHARD_CLUSTER_SIZE = 3;
     
-    private TestApplication app;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        super.setUp();
+        localhostProvisioningLocation = app.newLocalhostProvisioningLocation();
     }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
-    
     private MongoDBShardedDeployment makeAndStartDeployment() {
         final MongoDBShardedDeployment deployment = app.createAndManageChild(EntitySpec.create(MongoDBShardedDeployment.class)
                 .configure(MongoDBShardedDeployment.INITIAL_ROUTER_CLUSTER_SIZE, ROUTER_CLUSTER_SIZE)
                 .configure(MongoDBShardedDeployment.SHARD_REPLICASET_SIZE, REPLICASET_SIZE)
-                .configure(MongoDBShardedDeployment.INITIAL_SHARD_CLUSTER_SIZE, SHARD_CLUSTER_SIZE));
+                .configure(MongoDBShardedDeployment.INITIAL_SHARD_CLUSTER_SIZE, SHARD_CLUSTER_SIZE)
+                .configure(MongoDBShardedDeployment.MONGODB_REPLICA_SET_SPEC, EntitySpec.create(MongoDBReplicaSet.class)
+                        .configure(MongoDBServer.MONGODB_CONF_TEMPLATE_URL, "classpath:///test-mongodb.conf")
+                        .configure(MongoDBReplicaSet.MEMBER_SPEC, EntitySpec.create(MongoDBServer.class)))
+                .configure(MongoDBShardedDeployment.MONGODB_ROUTER_SPEC, EntitySpec.create(MongoDBRouter.class)
+                        .configure(MongoDBConfigServer.MONGODB_CONF_TEMPLATE_URL, "classpath:///test-mongodb-router.conf"))
+                .configure(MongoDBShardedDeployment.MONGODB_CONFIG_SERVER_SPEC, EntitySpec.create(MongoDBConfigServer.class)
+                        .configure(MongoDBConfigServer.MONGODB_CONF_TEMPLATE_URL, "classpath:///test-mongodb-configserver.conf")));
         app.start(ImmutableList.of(localhostProvisioningLocation));
         EntityTestUtils.assertAttributeEqualsEventually(deployment, Startable.SERVICE_UP, true);
         return deployment;

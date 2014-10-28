@@ -99,7 +99,7 @@ public interface MongoDBServer extends AbstractMongoDBServer {
             "mongodb.server.replicaSet.primary.endpoint", "The host:port of the server which is acting as primary (master) for the replica set");
 
     AttributeSensor<String> MONGO_SERVER_ENDPOINT = Sensors.newStringSensor(
-        "mongodb.server.endpoint", "The host:port where this server is listening");
+            "mongodb.server.endpoint", "The host:port where this server is listening");
 
     /**
      * @return The replica set the server belongs to, or null if the server is a standalone instance.

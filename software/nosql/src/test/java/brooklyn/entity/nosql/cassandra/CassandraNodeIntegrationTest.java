@@ -83,7 +83,7 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void testCassandraVersion2() throws Exception {
-        String version = "2.0.9";
+        String version = "2.0.11";
         String majorMinorVersion = "2.0";
         
         cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)

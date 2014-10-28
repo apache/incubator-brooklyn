@@ -56,11 +56,14 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
         super.init();
         
         setAttribute(CONFIG_SERVER_CLUSTER, addChild(EntitySpec.create(MongoDBConfigServerCluster.class)
+                .configure(MongoDBConfigServerCluster.MEMBER_SPEC, getConfig(MONGODB_CONFIG_SERVER_SPEC))
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE))));
         setAttribute(ROUTER_CLUSTER, addChild(EntitySpec.create(MongoDBRouterCluster.class)
+                .configure(MongoDBRouterCluster.MEMBER_SPEC, getConfig(MONGODB_ROUTER_SPEC))
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_ROUTER_CLUSTER_SIZE))
                 .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(getAttribute(CONFIG_SERVER_CLUSTER), MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES))));
         setAttribute(SHARD_CLUSTER, addChild(EntitySpec.create(MongoDBShardCluster.class)
+                .configure(MongoDBShardCluster.MEMBER_SPEC, getConfig(MONGODB_REPLICA_SET_SPEC))
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_SHARD_CLUSTER_SIZE))));
         addEnricher(Enrichers.builder()
                 .propagating(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES)
