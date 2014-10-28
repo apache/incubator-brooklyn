@@ -154,6 +154,13 @@ public class MutableList<V> extends ArrayList<V> {
             return this;
         }
 
+        public Builder<V> addAll(V[] vals) {
+            for (V v : vals) {
+                result.add(v);
+            }
+            return this;
+        }
+
         public Builder<V> removeAll(Iterable<? extends V> iterable) {
             if (iterable instanceof Collection) {
                 result.removeAll((Collection<? extends V>) iterable);
