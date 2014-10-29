@@ -25,7 +25,6 @@ import java.util.Map;
 
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.CatalogItemMemento;
-import brooklyn.util.guava.Maybe;
 
 import com.google.common.collect.Maps;
 
@@ -39,8 +38,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     
     public static class Builder {
         protected String brooklynVersion;
-        protected final Map<String, String> entityIdToType = Maps.newConcurrentMap();
-        protected final Map<String, Maybe<String>> entityIdToContextCatalogItemId = Maps.newConcurrentMap();
+        protected final Map<String, EntityMementoManifest> entityIdToManifest = Maps.newConcurrentMap();
         protected final Map<String, String> locationIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> policyIdToType = Maps.newConcurrentMap();
         protected final Map<String, String> enricherIdToType = Maps.newConcurrentMap();
@@ -50,19 +48,9 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
         }
-        public Builder entity(String id, String type, String catalogItemId) {
-            entityIdToType.put(id, type);
-            Maybe<String> catalogItemIdOption;
-            if (catalogItemId != null) {
-                catalogItemIdOption = Maybe.of(catalogItemId);
-            } else {
-                catalogItemIdOption = Maybe.absent();
-            }
-            entityIdToContextCatalogItemId.put(id, catalogItemIdOption);
+        public Builder entity(String id, String type, String parent, String catalogItemId) {
+            entityIdToManifest.put(id, new EntityMementoManifestImpl(id, type, parent, catalogItemId));
             return this;
-        }
-        public Builder entities(Map<String, String> vals) {
-            entityIdToType.putAll(vals); return this;
         }
         public Builder location(String id, String type) {
             locationIdToType.put(id, type); return this;
@@ -100,8 +88,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         }
     }
 
-    private final Map<String, String> entityIdToType;
-    private final Map<String, Maybe<String>> entityIdToContextCatalogItemId;
+    private final Map<String, EntityMementoManifest> entityIdToManifest;
     private final Map<String, String> locationIdToType;
     private final Map<String, String> policyIdToType;
     private final Map<String, String> enricherIdToType;
@@ -109,8 +96,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     private Map<String, CatalogItemMemento> catalogItems;
     
     private BrooklynMementoManifestImpl(Builder builder) {
-        entityIdToType = builder.entityIdToType;
-        entityIdToContextCatalogItemId = builder.entityIdToContextCatalogItemId;
+        entityIdToManifest = builder.entityIdToManifest;
         locationIdToType = builder.locationIdToType;
         policyIdToType = builder.policyIdToType;
         enricherIdToType = builder.enricherIdToType;
@@ -119,13 +105,8 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     }
 
     @Override
-    public Map<String, String> getEntityIdToType() {
-        return Collections.unmodifiableMap(entityIdToType);
-    }
-
-    @Override
-    public Map<String, Maybe<String>> getEntityIdToContextCatalogItemId() {
-        return Collections.unmodifiableMap(entityIdToContextCatalogItemId);
+    public Map<String, EntityMementoManifest> getEntityIdToManifest() {
+        return Collections.unmodifiableMap(entityIdToManifest);
     }
 
     @Override
@@ -165,7 +146,7 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
 
     @Override
     public boolean isEmpty() {
-        return entityIdToType.isEmpty() &&
+        return entityIdToManifest.isEmpty() &&
                 locationIdToType.isEmpty() &&
                 policyIdToType.isEmpty() &&
                 enricherIdToType.isEmpty() &&

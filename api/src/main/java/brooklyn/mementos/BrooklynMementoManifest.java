@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.util.guava.Maybe;
+import brooklyn.entity.trait.Identifiable;
 
 /**
  * Represents a manifest of the entities etc in the overall memento.
@@ -30,10 +30,14 @@ import brooklyn.util.guava.Maybe;
  * @author aled
  */
 public interface BrooklynMementoManifest extends Serializable {
+    public interface EntityMementoManifest extends Identifiable{
+        public String getId();
+        public String getType();
+        public String getParent();
+        public String getContextCatalogItemId();
+    }
 
-    public Map<String, String> getEntityIdToType();
-
-    public Map<String, Maybe<String>> getEntityIdToContextCatalogItemId();
+    public Map<String, EntityMementoManifest> getEntityIdToManifest();
 
     public Map<String, String> getLocationIdToType();
 

@@ -42,6 +42,7 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
@@ -124,7 +125,8 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                     @Override public Entity lookupEntity(String id) {
                         List<Class<?>> types = MutableList.<Class<?>>builder()
                                 .add(Entity.class, EntityInternal.class, EntityProxy.class)
-                                .add(loadClass(manifest.getEntityIdToType().get(id)))
+                                //TODO Doesn't support loading from catalog item osgi bundles
+                                .add(loadClass(manifest.getEntityIdToManifest().get(id).getType()))
                                 .build();
                         return (Entity) java.lang.reflect.Proxy.newProxyInstance(
                                 classLoader,

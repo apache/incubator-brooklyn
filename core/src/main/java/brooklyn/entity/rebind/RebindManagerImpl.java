@@ -73,6 +73,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.mementos.BrooklynMementoRawData;
@@ -90,7 +91,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.ScheduledTask;
@@ -622,18 +622,18 @@ public class RebindManagerImpl implements RebindManager {
             }
             
             // Instantiate entities
-            LOG.debug("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToType().keySet());
-            for (Map.Entry<String, String> entry : mementoManifest.getEntityIdToType().entrySet()) {
+            LOG.debug("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToManifest().keySet());
+            for (Map.Entry<String, EntityMementoManifest> entry : mementoManifest.getEntityIdToManifest().entrySet()) {
                 String entityId = entry.getKey();
-                String entityType = entry.getValue();
-                Maybe<String> contextCatalogItemId = mementoManifest.getEntityIdToContextCatalogItemId().get(entityId);
+                EntityMementoManifest entityManifest = entry.getValue();
+                String contextCatalogItemId = findContextCatalogItemId(mementoManifest.getEntityIdToManifest(), entityManifest);
                 if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
                 
                 try {
-                    Entity entity = newEntity(entityId, entityType, getEntityLoadingContext(entityId, contextCatalogItemId, classLoader, rebindContext));
+                    Entity entity = newEntity(entityId, entityManifest.getType(), getLoadingContextFromCatalogItemId(contextCatalogItemId, classLoader, rebindContext));
                     rebindContext.registerEntity(entityId, entity);
                 } catch (Exception e) {
-                    exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityType, e);
+                    exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityManifest.getType(), e);
                 }
             }
             
@@ -918,31 +918,38 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
     
-    private BrooklynClassLoadingContext getEntityLoadingContext(String entityId, Maybe<String> contextCatalogItemId, ClassLoader classLoader, RebindContextImpl rebindContext) {
-        return getLoadingContextFromCatalogItemId(contextCatalogItemId, classLoader, rebindContext);
+    private String findContextCatalogItemId(Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
+        EntityMementoManifest ptr = entityManifest;
+        while (ptr != null) {
+            if (ptr.getContextCatalogItemId() != null) {
+                return ptr.getContextCatalogItemId();
+            }
+            ptr = entityIdToManifest.get(ptr.getParent());
+        }
+        return null;
     }
 
     private BrooklynClassLoadingContext getPolicyLoadingContext(String policyId, BrooklynMemento memento, ClassLoader classLoader, RebindContextImpl rebindContext) {
         PolicyMemento policyMemento = memento.getPolicyMemento(policyId);
-        Maybe<String> contextCatalogItemId = getContextCatalogItemIdFromTags(policyMemento.getTags());
+        String contextCatalogItemId = getContextCatalogItemIdFromTags(policyMemento.getTags());
         return getLoadingContextFromCatalogItemId(contextCatalogItemId, classLoader, rebindContext);
     }
 
-    private Maybe<String> getContextCatalogItemIdFromTags(Collection<Object> tags) {
+    private String getContextCatalogItemIdFromTags(Collection<Object> tags) {
         for (Object obj : tags) {
             if (obj instanceof NamedStringTag) {
                 NamedStringTag tag = (NamedStringTag) obj;
                 if (BrooklynTags.CONTEXT_CATALOG_ITEM_ID_KIND.equals(tag.getKind())) {
-                    return Maybe.of(tag.getContents());
+                    return tag.getContents();
                 }
             }
         }
-        return Maybe.absent();
+        return null;
     }
 
-    private BrooklynClassLoadingContext getLoadingContextFromCatalogItemId(Maybe<String> catalogItemId, ClassLoader classLoader, RebindContext rebindContext) {
-        if (catalogItemId.isPresent()) {
-            CatalogItem<?, ?> catalogItem = rebindContext.getCatalogItem(catalogItemId.get());
+    private BrooklynClassLoadingContext getLoadingContextFromCatalogItemId(String catalogItemId, ClassLoader classLoader, RebindContext rebindContext) {
+        if (catalogItemId != null) {
+            CatalogItem<?, ?> catalogItem = rebindContext.getCatalogItem(catalogItemId);
             if (catalogItem != null) {
                 return CatalogUtils.newClassLoadingContext(managementContext, catalogItem);
             } else {

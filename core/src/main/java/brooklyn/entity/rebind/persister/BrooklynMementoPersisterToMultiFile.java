@@ -48,6 +48,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 import brooklyn.util.xstream.XmlUtil;
@@ -194,8 +195,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String contents = readFile(file);
                     String id = (String) XmlUtil.xpath(contents, "/entity/id");
                     String type = (String) XmlUtil.xpath(contents, "/entity/type");
+                    String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
                     String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/tags/" + NamedStringTag.class.getName().replace("$", "_-") + "[kind='" + BrooklynTags.CONTEXT_CATALOG_ITEM_ID_KIND + "']/contents");
-                    builder.entity(id, type, contextCatalogItemId);
+                    builder.entity(id, type, Strings.emptyToNull(parentId), Strings.emptyToNull(contextCatalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENTITY, "File "+file, e);
                 }

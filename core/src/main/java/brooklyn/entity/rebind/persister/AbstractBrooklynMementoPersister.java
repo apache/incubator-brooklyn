@@ -56,7 +56,7 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     public BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) {
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
         for (EntityMemento entity : memento.getEntityMementos().values()) {
-            builder.entity(entity.getId(), entity.getType(), getContextCatalogItemId(entity.getTags()));
+            builder.entity(entity.getId(), entity.getType(), entity.getParent(), getContextCatalogItemId(entity.getTags()));
         }
         for (LocationMemento entity : memento.getLocationMementos().values()) {
             builder.location(entity.getId(), entity.getType());

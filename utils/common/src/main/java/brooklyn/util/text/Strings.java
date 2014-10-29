@@ -833,4 +833,14 @@ public class Strings {
         return replaceAllRegex(x, "\\s+", whitespaceReplacement);
     }
 
+    /**
+     * @return null if var is null or empty string, otherwise return var
+     */
+    public static String emptyToNull(String var) {
+        if (isNonEmpty(var)) {
+            return var;
+        } else {
+            return null;
+        }
+    }
 }

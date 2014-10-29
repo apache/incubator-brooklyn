@@ -254,8 +254,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                     case ENTITY:
                         String id = (String) XmlUtil.xpath(contents, "/entity/id");
                         String objType = (String) XmlUtil.xpath(contents, "/entity/type");
+                        String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
                         String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/tags/" + NamedStringTag.class.getName().replace("$", "_-") + "[kind='" + BrooklynTags.CONTEXT_CATALOG_ITEM_ID_KIND + "']/contents");
-                        builder.entity(id, objType, Strings.isEmpty(contextCatalogItemId) ? null : contextCatalogItemId);
+                        builder.entity(id, objType, Strings.emptyToNull(parentId), Strings.emptyToNull(contextCatalogItemId));
                         break;
                     case LOCATION:
                         id = (String) XmlUtil.xpath(contents, "/location/id");
@@ -303,7 +304,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded memento manifest; took {}; {} entities, {} locations, {} policies, {} enrichers, {} feeds, {} catalog items, from {}", new Object[]{
-                     Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), result.getEntityIdToType().size(), 
+                     Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), result.getEntityIdToManifest().size(), 
                      result.getLocationIdToType().size(), result.getPolicyIdToType().size(), result.getEnricherIdToType().size(), 
                      result.getFeedIdToType().size(), result.getCatalogItemMementos().size(),
                      objectStore.getSummaryName() });
