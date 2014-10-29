@@ -378,6 +378,7 @@ public class MementosGenerators {
     private static void populateBrooklynObjectMementoBuilder(BrooklynObject instance, AbstractMemento.Builder<?> builder) {
         builder.id = instance.getId();
         builder.displayName = instance.getDisplayName();
+        builder.contextCatalogItemId = instance.getContextCatalogItemId();
         builder.type = instance.getClass().getName();
         builder.typeClass = instance.getClass();
         

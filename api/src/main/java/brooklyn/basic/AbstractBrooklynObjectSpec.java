@@ -35,6 +35,7 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
     
     private final Class<? extends T> type;
     private String displayName;
+    private String contextCatalogItemId;
     private Set<Object> tags = MutableSet.of();
 
     protected AbstractBrooklynObjectSpec(Class<? extends T> type) {
@@ -56,6 +57,11 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
     
     public K displayName(String val) {
         displayName = val;
+        return self();
+    }
+    
+    public K contextCatalogItemId(String val) {
+        contextCatalogItemId = val;
         return self();
     }
     
@@ -82,6 +88,10 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
      */
     public final String getDisplayName() {
         return displayName;
+    }
+    
+    public final String getContextCatalogItemId() {
+        return contextCatalogItemId;
     }
 
     public final Set<Object> getTags() {

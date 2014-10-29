@@ -32,8 +32,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynTags;
-import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
@@ -196,7 +194,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String id = (String) XmlUtil.xpath(contents, "/entity/id");
                     String type = (String) XmlUtil.xpath(contents, "/entity/type");
                     String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
-                    String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/tags/" + NamedStringTag.class.getName().replace("$", "_-") + "[kind='" + BrooklynTags.CONTEXT_CATALOG_ITEM_ID_KIND + "']/contents");
+                    String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/contextCatalogItemId");
                     builder.entity(id, type, Strings.emptyToNull(parentId), Strings.emptyToNull(contextCatalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENTITY, "File "+file, e);

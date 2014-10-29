@@ -29,7 +29,6 @@ import com.google.common.annotations.Beta;
 public class BrooklynTags {
 
     public static final String YAML_SPEC_KIND = "yaml_spec";
-    public static final String CONTEXT_CATALOG_ITEM_ID_KIND = "context_catalog_item_id";
     public static final String NOTES_KIND = "notes";
     
     public static class NamedStringTag implements Serializable {
@@ -54,7 +53,6 @@ public class BrooklynTags {
     }
     
     public static NamedStringTag newYamlSpecTag(String contents) { return new NamedStringTag(YAML_SPEC_KIND, contents); }
-    public static NamedStringTag newContextCatalogItemIdTag(String contents) { return new NamedStringTag(CONTEXT_CATALOG_ITEM_ID_KIND, contents); }
     public static NamedStringTag newNotesTag(String contents) { return new NamedStringTag(NOTES_KIND, contents); }
     
     public static NamedStringTag findFirst(String kind, Iterable<Object> tags) {

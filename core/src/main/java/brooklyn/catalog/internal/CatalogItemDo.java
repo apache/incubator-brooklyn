@@ -59,6 +59,11 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     }
 
     @Override
+    public String getContextCatalogItemId() {
+        return null;
+    }
+
+    @Override
     public String getRegisteredTypeName() {
         return itemDto.getRegisteredTypeName();
     }

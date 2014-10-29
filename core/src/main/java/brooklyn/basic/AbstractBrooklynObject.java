@@ -48,6 +48,8 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     @SetFromFlag(value = "id")
     private String id = Identifiers.makeRandomId(8);
 
+    private String contextCatalogItemId;
+
     /** subclasses should synchronize on this for all access */
     @SetFromFlag(value = "tags")
     private final Set<Object> tags = Sets.newLinkedHashSet();
@@ -165,6 +167,15 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     @Override
     public String getId() {
         return id;
+    }
+
+    public void setContextCatalogItemId(String id) {
+        this.contextCatalogItemId = id;
+    }
+
+    @Override
+    public String getContextCatalogItemId() {
+        return contextCatalogItemId;
     }
 
     protected void onTagsChanged() {

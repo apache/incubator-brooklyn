@@ -37,9 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PeriodicDeltaChangeListener;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
@@ -255,7 +253,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         String id = (String) XmlUtil.xpath(contents, "/entity/id");
                         String objType = (String) XmlUtil.xpath(contents, "/entity/type");
                         String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
-                        String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/tags/" + NamedStringTag.class.getName().replace("$", "_-") + "[kind='" + BrooklynTags.CONTEXT_CATALOG_ITEM_ID_KIND + "']/contents");
+                        String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/contextCatalogItemId");
                         builder.entity(id, objType, Strings.emptyToNull(parentId), Strings.emptyToNull(contextCatalogItemId));
                         break;
                     case LOCATION:

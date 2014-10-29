@@ -42,6 +42,8 @@ public interface Memento extends Serializable {
     
     public String getType();
     
+    public String getContextCatalogItemId();
+    
     public String getDisplayName();
     
     /**

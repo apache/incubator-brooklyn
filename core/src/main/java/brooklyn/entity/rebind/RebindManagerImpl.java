@@ -47,8 +47,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.BrooklynTags;
-import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.InternalEntityFactory;
@@ -656,7 +654,7 @@ public class RebindManagerImpl implements RebindManager {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
                     
                     try {
-                        Policy policy = newPolicy(policyMemento, getPolicyLoadingContext(policyMemento.getId(), memento, classLoader, rebindContext));
+                        Policy policy = newPolicy(policyMemento, getLoadingContextFromCatalogItemId(policyMemento.getContextCatalogItemId(), classLoader, rebindContext));
                         rebindContext.registerPolicy(policyMemento.getId(), policy);
                     } catch (Exception e) {
                         exceptionHandler.onCreateFailed(BrooklynObjectType.POLICY, policyMemento.getId(), policyMemento.getType(), e);
@@ -924,24 +922,10 @@ public class RebindManagerImpl implements RebindManager {
             if (ptr.getContextCatalogItemId() != null) {
                 return ptr.getContextCatalogItemId();
             }
-            ptr = entityIdToManifest.get(ptr.getParent());
-        }
-        return null;
-    }
-
-    private BrooklynClassLoadingContext getPolicyLoadingContext(String policyId, BrooklynMemento memento, ClassLoader classLoader, RebindContextImpl rebindContext) {
-        PolicyMemento policyMemento = memento.getPolicyMemento(policyId);
-        String contextCatalogItemId = getContextCatalogItemIdFromTags(policyMemento.getTags());
-        return getLoadingContextFromCatalogItemId(contextCatalogItemId, classLoader, rebindContext);
-    }
-
-    private String getContextCatalogItemIdFromTags(Collection<Object> tags) {
-        for (Object obj : tags) {
-            if (obj instanceof NamedStringTag) {
-                NamedStringTag tag = (NamedStringTag) obj;
-                if (BrooklynTags.CONTEXT_CATALOG_ITEM_ID_KIND.equals(tag.getKind())) {
-                    return tag.getContents();
-                }
+            if (ptr.getParent() != null) {
+                ptr = entityIdToManifest.get(ptr.getParent());
+            } else {
+                ptr = null;
             }
         }
         return null;
