@@ -110,7 +110,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
         newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
                 .body.append(
-                        "./bin/jetty.sh start jetty.xml jetty-logging.xml jetty-stats.xml jetty-brooklyn " +
+                        "./bin/jetty.sh start jetty-brooklyn.xml jetty.xml jetty-logging.xml jetty-stats.xml " +
                                 (Strings.isEmpty(getConfigXmlTemplateUrl()) ? "" : "jetty-custom.xml ") +
                                 ">> $RUN_DIR/console 2>&1 < /dev/null",
                         "for i in {1..10} ; do\n" +
