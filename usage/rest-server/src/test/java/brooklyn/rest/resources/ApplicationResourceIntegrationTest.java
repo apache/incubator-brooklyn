@@ -54,15 +54,14 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
-    private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
-            entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
-            locations(ImmutableSet.of("localhost")).
-            build();
+    private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app")
+            .entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")))
+            .locations(ImmutableSet.of("localhost"))
+            .build();
 
     @Test(groups="Integration")
     public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
-        ClientResponse response = client().resource("/v1/applications/createLegacy")
-                .post(ClientResponse.class, redisSpec);
+        ClientResponse response = clientDeploy(redisSpec);
 
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
@@ -74,16 +73,14 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @Test(groups="Integration", dependsOnMethods = "testDeployRedisApplication")
     public void testListEntities() {
         Set<EntitySummary> entities = client().resource("/v1/applications/redis-app/entities")
-                .get(new GenericType<Set<EntitySummary>>() {
-                });
+                .get(new GenericType<Set<EntitySummary>>() {});
 
         for (EntitySummary entity : entities) {
             client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
             // TODO assertions on the above call?
 
             Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
-                    .get(new GenericType<Set<EntitySummary>>() {
-                    });
+                    .get(new GenericType<Set<EntitySummary>>() {});
             assertEquals(children.size(), 0);
         }
     }
@@ -91,8 +88,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @Test(groups="Integration", dependsOnMethods = "testDeployRedisApplication")
     public void testListSensorsRedis() {
         Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
-                .get(new GenericType<Set<SensorSummary>>() {
-                });
+                .get(new GenericType<Set<SensorSummary>>() {});
         assertTrue(sensors.size() > 0);
         SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
             @Override
