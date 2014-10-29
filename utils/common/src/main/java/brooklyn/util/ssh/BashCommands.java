@@ -533,7 +533,7 @@ public class BashCommands {
      * @see #installJava7Or6OrFail()
      * @see #installJavaLatestOrFail()
      */
-    public static String installJava(Integer version) {
+    public static String installJava(int version) {
         Preconditions.checkArgument(version == 6 || version == 7 || version == 8, "Supported Java versions are 6, 7, or 8");
         return installPackageOr(MutableMap.of("apt", "openjdk-" + version + "-jdk","yum", "java-1." + version + ".0-openjdk-devel"), null,
                 ifExecutableElse1("zypper", chainGroup(
@@ -576,6 +576,10 @@ public class BashCommands {
     }
     public static String installJavaLatestOrFail() {
         return alternatives(installJava8(), installJava7(), installJava6(), fail("java latest install failed", 9));
+    }
+
+    public static String installJavaLatestOrWarn() {
+        return alternatives(installJava8(), installJava7(), installJava6(), warn("java latest install failed, entity may subsequently fail"));
     }
 
     /** cats the given text to the given command, using bash << multi-line input syntax */

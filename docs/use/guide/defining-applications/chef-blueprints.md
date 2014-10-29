@@ -107,7 +107,7 @@ The structure of the archive must be that a single folder is off the root,
 and in that folder contains the usual Chef recipe and auxiliary files.
 For example, the archive might contain `mysql-master/recipes/server.rb`.
 Archives such as those above from github match this format.  
-The name of the that folder does not matter, as often they contain version information.
+The name of that folder does not matter, as often they contain version information.
 When deployed, these will be renamed to match the short name (the key in the `cookbooks_url` map,
 for instance `mysql` or `openssl`).
 
@@ -153,7 +153,7 @@ whether to start a service. Some services, e.g. postgres, will return 0 even if 
 is not running.)
 
 If a `pid_file` is supplied, Brooklyn will check whether a process with the PID specified in that
-file is running. This has been selected for mysql because it is appears to be more portable:
+file is running. This has been selected for mysql because it appears to be more portable:
 the service name varies among OS's:  it is `mysqld` on CentOS but `mysql` on Ubuntu!
 
 
@@ -270,7 +270,7 @@ A general schema for the supported YAML is below:
   pid_file: /var/run/cookbook.pid
 ```
 
-If you are interested in exploring the Java code for creating bluerpints,
+If you are interested in exploring the Java code for creating blueprints,
 start with the `TypedToyMySqlEntiyChef` class, which essentially does what this tutorial has shown;
 and then move on to the `DynamicToyMySqlEntiyChef` which starts to look at more sophisticated constructs.
 (Familiarity with BASH and basic Java blueprints may be useful at that stage.)

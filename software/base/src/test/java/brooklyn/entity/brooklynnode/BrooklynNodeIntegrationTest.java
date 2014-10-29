@@ -21,6 +21,7 @@ package brooklyn.entity.brooklynnode;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -434,11 +435,24 @@ services:
         Assert.assertEquals(response.getResponseCode(), 200);
     }
 
-    @Test(groups="Integration", expectedExceptions = PropagatedRuntimeException.class)
+    @Test(groups="Integration")
     public void testStopPlainThrowsException() throws Exception {
         BrooklynNode brooklynNode = setUpBrooklynNodeWithApp();
 
-        brooklynNode.stop();
+        // Not using annotation with `expectedExceptions = PropagatedRuntimeException.class` because want to 
+        // ensure exception comes from stop. On jenkins, was seeing setUpBrooklynNodeWithApp fail in 
+        // testStopAndKillAppsEffector; so can't tell if this method was really passing!
+        try {
+            brooklynNode.stop();
+            fail("Expected "+brooklynNode+" stop to fail, because has app");
+        } catch (Exception e) {
+            IllegalStateException ise = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
+            if (ise != null && ise.toString().contains("Can't stop instance with running applications")) {
+                // success
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Test(groups="Integration")

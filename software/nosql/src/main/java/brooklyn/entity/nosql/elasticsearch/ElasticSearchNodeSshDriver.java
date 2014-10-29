@@ -54,7 +54,7 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
         String saveAs = resolver.getFilename();
         
         List<String> commands = ImmutableList.<String>builder()
-            .add(BashCommands.installJavaLatestOrFail())
+            .add(BashCommands.installJavaLatestOrWarn())
             .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
             .add(String.format("tar zxvf %s", saveAs))
             .build();

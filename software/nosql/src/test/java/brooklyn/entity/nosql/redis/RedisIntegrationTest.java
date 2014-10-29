@@ -24,19 +24,18 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Test the operation of the {@link RedisStore} class.
@@ -49,8 +48,8 @@ public class RedisIntegrationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        loc = new LocalhostMachineProvisioningLocation();
+        app = TestApplication.Factory.newManagedInstanceForTests();
+        loc = app.newLocalhostProvisioningLocation();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -100,7 +99,11 @@ public class RedisIntegrationTest {
         JedisSupport support = new JedisSupport(redis);
         support.redisTest();
 
-        EntityTestUtils.assertPredicateEventuallyTrue(redis, new Predicate<RedisStore>() {
+        // Increase timeout because test was failing on jenkins sometimes. The log shows only one 
+        // call to `info server` (for obtaining uptime) which took 26 seconds; then 4 seconds later 
+        // this assert failed (with it checking every 500ms). The response did correctly contain
+        // `uptime_in_seconds:27`.
+        EntityTestUtils.assertPredicateEventuallyTrue(ImmutableMap.of("timeout", Duration.FIVE_MINUTES), redis, new Predicate<RedisStore>() {
             @Override public boolean apply(@Nullable RedisStore input) {
                 return input != null &&
                         input.getAttribute(RedisStore.UPTIME) > 0 &&
