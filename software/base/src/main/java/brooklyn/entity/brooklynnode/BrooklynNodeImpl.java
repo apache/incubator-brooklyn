@@ -34,6 +34,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
@@ -52,6 +53,7 @@ import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
@@ -97,10 +99,13 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void preStop() {
         super.preStop();
-        //shutdown only if running, any of stop_* could've been already previously
-        if (getAttribute(Attributes.SERVICE_UP)) {
+        // Shutdown only if accessible: any of stop_* could have already been called.
+        // Don't check serviceUp=true because stop() will already have set serviceUp=false && expectedState=stopping
+        if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
             Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
             DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.REQUEST_TIMEOUT, Duration.ONE_MINUTE)));
+        } else {
+            log.info("Skipping children.isEmpty check and shutdown call, because web-console not up for {}", this);
         }
     }
 
@@ -229,6 +234,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 TaskTags.markInessential(shutdownTask);
             }
             DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
+            waitForShutdown(entity, Duration.ONE_MINUTE);
+            
             DynamicTasks.queue(Effectors.invocation(entity(), STOP, ConfigBag.EMPTY)).asTask().getUnchecked();
             Entities.destroy(entity);
             return null;
@@ -251,10 +258,20 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 TaskTags.markInessential(shutdownTask);
             }
             DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
+            waitForShutdown(entity, Duration.ONE_MINUTE);
+            
             DynamicTasks.queue(Effectors.invocation(entity(), STOP, ConfigBag.EMPTY)).asTask().getUnchecked();
             Entities.destroy(entity);
             return null;
         }
+    }
+
+    protected static void waitForShutdown(Entity entity, Duration timeout) {
+        Repeater.create()
+            .until(entity, EntityPredicates.attributeEqualTo(BrooklynNode.WEB_CONSOLE_ACCESSIBLE, false))
+            .backoffTo(Duration.FIVE_SECONDS)
+            .limitTimeTo(timeout)
+            .runRequiringTrue();
     }
 
     public List<String> getClasspath() {
