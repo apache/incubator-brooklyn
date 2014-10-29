@@ -18,6 +18,9 @@
  */
 package brooklyn.entity.network.bind;
 
+import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
+import static org.testng.Assert.assertEquals;
+
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -27,16 +30,25 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SameServerEntity;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 public class BindDnsServerLiveTest {
 
@@ -44,6 +56,7 @@ public class BindDnsServerLiveTest {
 
     protected TestApplication app;
     protected Location testLocation;
+    protected DynamicCluster cluster;
     protected BindDnsServer dns;
 
     @BeforeMethod(alwaysRun = true)
@@ -74,11 +87,66 @@ public class BindDnsServerLiveTest {
         Map<String, String> properties = MutableMap.of("imageId", imageId);
         testLocation = app.getManagementContext().getLocationRegistry().resolve(provider, properties);
 
-        BindDnsServer dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class));
+        BindDnsServer dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class)
+                .enricher(EnricherSpec.create(PrefixAndIdEnricher.class)
+                        .configure(PrefixAndIdEnricher.PREFIX, "dns-live-test-")
+                        .configure(PrefixAndIdEnricher.MONITOR, Attributes.HOSTNAME)));
         dns.start(ImmutableList.of(testLocation));
 
-        EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.SERVICE_UP, true);
+        assertAttributeEqualsEventually(dns, BindDnsServer.SERVICE_UP, true);
+
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), 0);
+        assertEquals(dns.getAttribute(BindDnsServer.PTR_RECORDS).size(), 1);
+
         Entities.dumpInfo(app);
     }
 
+    @Test(groups = "Live", dataProvider = "virtualMachineData")
+    public void testUpdateWhenNewEntities(String imageId, String provider) {
+        Map<String, String> properties = MutableMap.of("imageId", imageId);
+        testLocation = app.getManagementContext().getLocationRegistry().resolve(provider, properties);
+
+        EntitySpec<EmptySoftwareProcess> memberSpec = EntitySpec.create(EmptySoftwareProcess.class)
+                .enricher(EnricherSpec.create(PrefixAndIdEnricher.class)
+                        .configure(PrefixAndIdEnricher.PREFIX, "dns-live-test-")
+                        .configure(PrefixAndIdEnricher.MONITOR, Attributes.HOSTNAME));
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, memberSpec)
+                .configure(DynamicCluster.INITIAL_SIZE, 1));
+        dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class)
+                .configure(BindDnsServer.ENTITY_FILTER, Predicates.instanceOf(EmptySoftwareProcess.class))
+                .configure(BindDnsServer.HOSTNAME_SENSOR, PrefixAndIdEnricher.SENSOR));
+
+        app.start(ImmutableList.of(testLocation));
+        assertAttributeEqualsEventually(dns, Attributes.SERVICE_UP, true);
+
+        logDnsMappings();
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), 0);
+        // Harder to make assertions on PTR because the entity servers might not be in the right CIDR
+
+        cluster.resize(2);
+        logDnsMappings();
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), 2);
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), 2);
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), 0);
+
+        cluster.resize(1);
+        logDnsMappings();
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), 0);
+    }
+
+    private void logDnsMappings() {
+        LOG.info("A:     " + Joiner.on(", ").withKeyValueSeparator("=").join(
+                dns.getAttribute(BindDnsServer.A_RECORDS)));
+        LOG.info("CNAME: " + Joiner.on(", ").withKeyValueSeparator("=").join(
+                dns.getAttribute(BindDnsServer.CNAME_RECORDS).asMap()));
+        LOG.info("PTR:   " + Joiner.on(", ").withKeyValueSeparator("=").join(
+                dns.getAttribute(BindDnsServer.PTR_RECORDS)));
+    }
 }

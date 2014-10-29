@@ -18,13 +18,39 @@
  */
 package brooklyn.entity.network.bind;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.location.basic.SshMachineLocation;
 
-public interface BindDnsServerDriver extends SoftwareProcessDriver {
+/**
+ * Implements methods in {@link brooklyn.entity.basic.AbstractSoftwareProcessSshDriver}.
+ * {@link #isRunning()} returns true.
+ */
+public class DoNothingSoftwareProcessDriver extends AbstractSoftwareProcessSshDriver {
 
-    /**
-     * Uploads configuration files and restarts the service.
-     */
-    public void updateBindConfiguration();
+    public DoNothingSoftwareProcessDriver(EntityLocal entity, SshMachineLocation machine) {
+        super(entity, machine);
+    }
+
+    @Override
+    public boolean isRunning() {
+        return true;
+    }
+
+    @Override
+    public void stop() {
+    }
+
+    @Override
+    public void install() {
+    }
+
+    @Override
+    public void customize() {
+    }
+
+    @Override
+    public void launch() {
+    }
 
 }
