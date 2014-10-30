@@ -400,6 +400,8 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * pinging the given URL.
      *
      * Everything can deploy hello world. Some subclasses deploy add'l apps.
+     * We're using the simplest hello-world (with no URL mapping) because JBoss 6 does not
+     * support URL mappings.
      */
     @DataProvider(name = "entitiesWithWarAndURL")
     public Object[][] entitiesWithWar() {
@@ -408,8 +410,8 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         for (Object[] entity : basicEntities()) {
             result.add(new Object[] {
                     entity[0],
-                    "hello-world.war",
-                    "hello-world/",
+                    "hello-world-no-mapping.war",
+                    "hello-world-no-mapping/",
                     "" // no sub-page path
                     });
         }
