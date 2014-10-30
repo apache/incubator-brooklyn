@@ -291,15 +291,16 @@ public class InternalEntityFactory extends InternalFactory {
                 
                 ((AbstractEntity)entity).addLocations(spec.getLocations());
 
-                for (EntityInitializer initializer: spec.getInitializers())
-                    initializer.apply((EntityInternal)entity);
-                /* 31 Mar 2014, moved initialization (above) into this task: primarily for consistency and traceability on failure.
+                /* 31 Mar 2014, moved initialization (below) into this task: primarily for consistency and traceability on failure.
                  * TBC whether this is good/bad/indifferent. My (Alex) opinion is that whether it is done in a subtask 
                  * should be the same as whether enricher/policy/etc (below) is done subtasks, which is was added recently
                  * in 249c96fbb18bd9d763029475e0a3dc251c01b287. @nakomis can you give exact reason code below is needed in a task
                  * commit message said was to do with wiring up yaml sensors and policies -- which makes sense but specifics would be handy!
-                 * and would let me know if there is any reason to do / not_do the initializer code above also here! 
+                 * and would let me know if there is any reason to do / not_do the initializer code below also here! 
                  */
+                for (EntityInitializer initializer: spec.getInitializers()) {
+                    initializer.apply((EntityInternal)entity);
+                }
                 
                 for (Enricher enricher : spec.getEnrichers()) {
                     entity.addEnricher(enricher);

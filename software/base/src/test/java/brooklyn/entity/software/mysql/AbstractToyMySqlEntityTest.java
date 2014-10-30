@@ -31,10 +31,9 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -67,7 +66,7 @@ public abstract class AbstractToyMySqlEntityTest extends BrooklynAppLiveTestSupp
     protected abstract Entity createMysql();
 
     // deliberately not marked as a test here so that subclasses mark it correctly (Live v Integration)
-    public void testMySqlOnProvisioningLocation() throws NoMachinesAvailableException {
+    public void testMySqlOnProvisioningLocation() throws Exception {
         Entity mysql = createMysql();
         app.start(MutableList.of(targetLocation));
         checkStartsRunning(mysql);
@@ -79,14 +78,14 @@ public abstract class AbstractToyMySqlEntityTest extends BrooklynAppLiveTestSupp
     }
 
     protected void checkStartsRunning(Entity mysql) {
-        // should be starting within a few seconds (and almost certainly won't complete in that time) 
-        Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_SECONDS),
-                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE_ACTUAL),
+        // should be starting within a few seconds (and almost certainly won't complete in that time)
+        EntityTestUtils.assertAttributeEventually(
+                mysql, 
+                Attributes.SERVICE_STATE_ACTUAL,
                 Predicates.or(Predicates.equalTo(Lifecycle.STARTING), Predicates.equalTo(Lifecycle.RUNNING)));
         // should be up and running within 5m 
-        Asserts.eventually(MutableMap.of("timeout", Duration.FIVE_MINUTES),
-                Entities.attributeSupplier(mysql, Attributes.SERVICE_STATE_ACTUAL),
-                Predicates.equalTo(Lifecycle.RUNNING));
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", Duration.FIVE_MINUTES),
+                mysql, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
     }
 
     protected void checkIsRunningAndStops(Entity mysql, SshMachineLocation lh) {
@@ -106,5 +105,4 @@ public abstract class AbstractToyMySqlEntityTest extends BrooklynAppLiveTestSupp
         mgmt.getExecutionManager().submit(t);
         Assert.assertNotEquals(t.block().getExitCode(), (Integer)0);
     }
-    
 }

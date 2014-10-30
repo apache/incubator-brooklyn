@@ -25,7 +25,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.chef.ChefLiveTestSupport;
 import brooklyn.entity.chef.ChefServerTasksIntegrationTest;
-import brooklyn.location.NoMachinesAvailableException;
 
 /** Expects knife on the path, but will use Brooklyn registered account,
  * and that account has the mysql recipe installed.
@@ -37,7 +36,7 @@ public class DynamicChefServerToyMySqlEntityLiveTest extends AbstractChefToyMySq
     
     // test here just so Eclipse IDE picks it up
     @Override @Test(groups="Live")
-    public void testMySqlOnProvisioningLocation() throws NoMachinesAvailableException {
+    public void testMySqlOnProvisioningLocation() throws Exception {
         super.testMySqlOnProvisioningLocation();
     }
     

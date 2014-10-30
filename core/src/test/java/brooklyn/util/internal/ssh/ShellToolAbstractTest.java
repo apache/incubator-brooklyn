@@ -293,7 +293,7 @@ public abstract class ShellToolAbstractTest {
         try {
             for (int i = 0; i < numCommands; i++) {
                 long delay = (long) (Math.random() * staggeredDelayBeforeStart);
-                if (i > 0 && delay >= 0) Time.sleep(delay);
+                if (i > 0) Time.sleep(delay);
                 
                 futures.add(executor.submit(new Runnable() {
                         public void run() {

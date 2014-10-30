@@ -135,7 +135,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: starting container {}", this);
         _lock.lock();
         try {
-            if (getDelay() > 0) Time.sleep(getDelay());
+            Time.sleep(getDelay());
             running = true;
             addLocations(locs);
             emit(Attributes.LOCATION_CHANGED, null);
@@ -151,7 +151,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         _lock.lock();
         try {
             running = false;
-            if (getDelay() > 0) Time.sleep(getDelay());
+            Time.sleep(getDelay());
             setAttribute(SERVICE_UP, false);
         } finally {
             _lock.unlock();
@@ -160,7 +160,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
 
     private void stopWithoutLock() {
         running = false;
-        if (getDelay() > 0) Time.sleep(getDelay());
+        Time.sleep(getDelay());
         setAttribute(SERVICE_UP, false);
     }
 

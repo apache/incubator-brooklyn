@@ -38,7 +38,7 @@ import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 
-@Test(groups="Integration")
+@Test(groups="Live")
 public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLauncherRebindTestFixture {
 
     // FIXME BrooklynLauncherRebindToCloudObjectStoreTest.testCleanDoesNotRebindToExistingApp failed:
@@ -91,53 +91,56 @@ public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLaunch
         checkPersistenceContainerNameIs(BrooklynServerConfig.DEFAULT_PERSISTENCE_CONTAINER_NAME);
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testRebindsToExistingApp() throws Exception {
         super.testRebindsToExistingApp();
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testRebindCanAddNewApps() throws Exception {
         super.testRebindCanAddNewApps();
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testAutoRebindsToExistingApp() throws Exception {
         super.testAutoRebindsToExistingApp();
     }
 
-    @Override @Test(groups="Integration")
+    // TODO Marked as work-in-progress because "clean" does not backup and then clean out the existing
+    // object store's bucket. Unclear what best behaviour there should be: should we really delete
+    // the data?! We better be confident about our backup!
+    @Override @Test(groups={"Live", "WIP"})
     public void testCleanDoesNotRebindToExistingApp() throws Exception {
         super.testCleanDoesNotRebindToExistingApp();
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testAutoRebindCreatesNewIfEmptyDir() throws Exception {
         super.testAutoRebindCreatesNewIfEmptyDir();
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testRebindRespectsPersistenceDirSetInProperties() throws Exception {
         super.testRebindRespectsPersistenceDirSetInProperties();
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testRebindRespectsDefaultPersistenceDir() throws Exception {
         super.testRebindRespectsDefaultPersistenceDir();
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testPersistenceFailsIfNoDir() throws Exception {
         super.testPersistenceFailsIfNoDir();
     }
 
-    @Override @Test(groups="Integration")
+    @Override @Test(groups="Live")
     public void testExplicitRebindFailsIfEmpty() throws Exception {
         super.testExplicitRebindFailsIfEmpty();
     }
 
     // TODO Remove duplication from BrooklynLauncherRebindTestToFiles.testCopyPersistedState()
-    @Test(groups="Integration")
+    @Test(groups="Live")
     public void testCopyPersistedState() throws Exception {
         EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
         populatePersistenceDir(persistenceDir, appSpec);
