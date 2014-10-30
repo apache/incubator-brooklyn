@@ -316,7 +316,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                     while (stopwatch.elapsed(TimeUnit.MILLISECONDS) < WebAppServiceMethods.DEFAULT_WINDOW_DURATION.toMilliseconds()) {
                         long preReqsTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
                         for (int i = 0; i < desiredMsgsPerSec; i++) { connectToUrl(url); }
-                        sleep(1000 - (stopwatch.elapsed(TimeUnit.MILLISECONDS)-preReqsTime));
+                        Time.sleep(1000 - (stopwatch.elapsed(TimeUnit.MILLISECONDS)-preReqsTime));
                         reqsSent.addAndGet(desiredMsgsPerSec);
                     }
     
@@ -492,8 +492,4 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of());
             }});
     }
-        
-    private void sleep(long millis) {
-        if (millis > 0) Time.sleep(millis);
-    }    
 }
