@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.AbstractLocation;
@@ -103,6 +104,10 @@ public class InternalLocationFactory extends InternalFactory {
 
             if (spec.getDisplayName()!=null)
                 ((AbstractLocation)loc).setDisplayName(spec.getDisplayName());
+            
+            if (spec.getContextCatalogItemId()!=null) {
+                ((AbstractLocation)loc).setContextCatalogItemId(spec.getContextCatalogItemId());
+            }
             
             loc.tags().addTags(spec.getTags());
             
