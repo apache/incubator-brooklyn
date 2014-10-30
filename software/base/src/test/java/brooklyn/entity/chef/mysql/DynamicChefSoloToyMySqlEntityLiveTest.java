@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.location.NoMachinesAvailableException;
 
 public class DynamicChefSoloToyMySqlEntityLiveTest extends AbstractChefToyMySqlEntityLiveTest {
 
@@ -31,7 +30,7 @@ public class DynamicChefSoloToyMySqlEntityLiveTest extends AbstractChefToyMySqlE
     
     // test here just so Eclipse IDE picks it up
     @Override @Test(groups="Live")
-    public void testMySqlOnProvisioningLocation() throws NoMachinesAvailableException {
+    public void testMySqlOnProvisioningLocation() throws Exception {
         super.testMySqlOnProvisioningLocation();
     }
     

@@ -69,6 +69,7 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Time;
 
@@ -76,7 +77,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 /**
  * Test fixture for implementations of JavaWebApp, checking start up and shutdown, 
@@ -140,7 +140,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         }
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun=true)
     public synchronized void shutdownMgmt() {
         if (mgmt != null) {
             Entities.destroyAll(mgmt);
@@ -436,7 +436,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+urlSubPathToPageToQuery, 200);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), urlSubPathToPageToQuery), 200);
                 
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/"));
             }});
@@ -457,7 +457,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+urlSubPathToWebApp+urlSubPathToPageToQuery, 200);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), urlSubPathToWebApp, urlSubPathToPageToQuery), 200);
             }});
     }
     
@@ -477,7 +477,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname/"+urlSubPathToPageToQuery, 200);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), "myartifactname/", urlSubPathToPageToQuery), 200);
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/myartifactname"));
             }});
         
@@ -486,7 +486,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname"+urlSubPathToPageToQuery, 404);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), "myartifactname", urlSubPathToPageToQuery), 404);
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of());
             }});
     }
