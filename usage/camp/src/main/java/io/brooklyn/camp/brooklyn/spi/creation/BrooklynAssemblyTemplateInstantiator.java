@@ -47,7 +47,6 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
-import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;

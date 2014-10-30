@@ -42,7 +42,6 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -117,7 +116,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     public void reset(CatalogDto dto) {
         // Unregister all existing persisted items.
-        for (CatalogItem toRemove : getCatalogItems()) {
+        for (CatalogItem<?, ?> toRemove : getCatalogItems()) {
             if (log.isTraceEnabled()) {
                 log.trace("Scheduling item for persistence removal: {}", toRemove.getId());
             }
@@ -133,9 +132,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         for (CatalogItem<?, ?> entry : getCatalogItems()) {
             boolean setManagementContext = false;
             if (entry instanceof CatalogItemDo) {
-                CatalogItemDo cid = CatalogItemDo.class.cast(entry);
+                CatalogItemDo<?, ?> cid = CatalogItemDo.class.cast(entry);
                 if (cid.getDto() instanceof CatalogItemDtoAbstract) {
-                    CatalogItemDtoAbstract cdto = CatalogItemDtoAbstract.class.cast(cid.getDto());
+                    CatalogItemDtoAbstract<?, ?> cdto = CatalogItemDtoAbstract.class.cast(cid.getDto());
                     if (cdto.getManagementContext() == null) {
                         cdto.setManagementContext((ManagementContextInternal) mgmt);
                     }
