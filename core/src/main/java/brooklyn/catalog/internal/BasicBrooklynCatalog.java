@@ -407,7 +407,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         CatalogUtils.installLibraries(mgmt, libraries);
 
-        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, CatalogUtils.newClassLoadingContext(mgmt, libraries));
+        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, CatalogUtils.newClassLoadingContext(mgmt, "<not created yet>", libraries, getRootClassLoader()));
 
         CatalogItemBuilder<?> builder = createItemBuilder(spec, registeredTypeName)
             .libraries(libraries)

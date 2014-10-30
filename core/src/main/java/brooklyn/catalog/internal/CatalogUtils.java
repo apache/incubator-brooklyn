@@ -51,20 +51,16 @@ public class CatalogUtils {
         if (libraries == null) {
             log.debug("CatalogItemDtoAbstract.getLibraries() is null.", new Exception("Trace for null CatalogItemDtoAbstract.getLibraries()"));
         }
-        return newClassLoadingContext(mgmt, libraries);
+        return newClassLoadingContext(mgmt, item.getId(), libraries, mgmt.getCatalog().getRootClassLoader());
     }
 
-    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, CatalogItemLibraries libraries) {
-        return newClassLoadingContext(mgmt, libraries, mgmt.getCatalog().getRootClassLoader());
-    }
-
-    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, CatalogItemLibraries libraries, ClassLoader classLoader) {
+    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, CatalogItemLibraries libraries, ClassLoader classLoader) {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
         if (libraries!=null) {
             List<String> bundles = libraries.getBundles();
             if (bundles!=null && !bundles.isEmpty()) {
-                result.add(new OsgiBrooklynClassLoadingContext(mgmt, bundles));
+                result.add(new OsgiBrooklynClassLoadingContext(mgmt, catalogItemId, bundles));
             }
         }
 
@@ -98,6 +94,14 @@ public class CatalogUtils {
             }
             if (log.isDebugEnabled()) log.debug("Registered {} bundles in {}",
                 new Object[]{bundles.size(), Time.makeTimeStringRounded(timer)});
+        }
+    }
+
+    public static String getContextCatalogItemIdFromLoader(BrooklynClassLoadingContext loader) {
+        if (loader instanceof OsgiBrooklynClassLoadingContext) {
+            return ((OsgiBrooklynClassLoadingContext)loader).getContextCatalogId();
+        } else {
+            return null;
         }
     }
 

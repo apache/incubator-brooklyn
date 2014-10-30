@@ -257,6 +257,7 @@ public class BrooklynComponentTemplateResolver {
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
+        spec.contextCatalogItemId(CatalogUtils.getContextCatalogItemIdFromLoader(loader));
         if (template.isPresent() && template.get().getSourceCode()!=null)
             spec.tag(BrooklynTags.newYamlSpecTag(template.get().getSourceCode()));
 
