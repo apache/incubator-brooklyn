@@ -73,7 +73,7 @@ public interface LoadBalancer extends Entity, Startable {
     @SuppressWarnings("serial")
     @SetFromFlag("hostnameSensor")
     public static final BasicAttributeSensorAndConfigKey<AttributeSensor<String>> HOSTNAME_SENSOR = new BasicAttributeSensorAndConfigKey<AttributeSensor<String>>(
-        new TypeToken<AttributeSensor<String>>() {}, "member.sensor.hostname", "Hostname/IP sensor on members (defaults to host.name; not supported in all implementations)", Attributes.HOSTNAME);
+        new TypeToken<AttributeSensor<String>>() {}, "member.sensor.hostname", "Hostname/IP sensor on members (defaults to host.subnet.hostname; not supported in all implementations)", Attributes.SUBNET_HOSTNAME);
 
     /** sensor for hostname to forward to on target entities */
     @SuppressWarnings("serial")
