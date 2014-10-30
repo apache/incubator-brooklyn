@@ -194,13 +194,13 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             CountdownTimer expiry = timeout.countdownTimer();
             scheduledTask.cancel(false);
             try {
-                waitForPendingComplete(expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+                waitForPendingComplete(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
             } catch (Exception e) {
                 throw Exceptions.propagate(e);
             }
-            scheduledTask.blockUntilEnded(expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            scheduledTask.blockUntilEnded(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
             scheduledTask.cancel(true);
-            boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(scheduledTask, expiry.getDurationRemaining().minimum(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+            boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(scheduledTask, expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
             if (!reallyEnded) {
                 LOG.warn("Persistence tasks took too long to complete when stopping persistence (ignoring): "+scheduledTask);
             }

@@ -136,16 +136,16 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
         
         t = Tasks.requiring(Repeater.create().until(Callables.returning(true)).every(Duration.millis(1))).build();
         app.getExecutionContext().submit(t);
-        t.get(Duration.ONE_SECOND);
+        t.get(Duration.TEN_SECONDS);
         
         t = Tasks.testing(Repeater.create().until(Callables.returning(true)).every(Duration.millis(1))).build();
         app.getExecutionContext().submit(t);
-        Assert.assertEquals(t.get(Duration.ONE_SECOND), true);
+        Assert.assertEquals(t.get(Duration.TEN_SECONDS), true);
         
         t = Tasks.requiring(Repeater.create().until(Callables.returning(false)).limitIterationsTo(2).every(Duration.millis(1))).build();
         app.getExecutionContext().submit(t);
         try {
-            t.get(Duration.ONE_SECOND);
+            t.get(Duration.TEN_SECONDS);
             Assert.fail("Should have failed");
         } catch (Exception e) {
             // expected
@@ -153,7 +153,7 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
 
         t = Tasks.testing(Repeater.create().until(Callables.returning(false)).limitIterationsTo(2).every(Duration.millis(1))).build();
         app.getExecutionContext().submit(t);
-        Assert.assertEquals(t.get(Duration.ONE_SECOND), false);
+        Assert.assertEquals(t.get(Duration.TEN_SECONDS), false);
     }
 
 }

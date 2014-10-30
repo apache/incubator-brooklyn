@@ -18,19 +18,19 @@
  */
 package brooklyn.util.exceptions;
 
-public class TimeoutException extends IllegalStateException {
+public class RuntimeTimeoutException extends IllegalStateException {
 
     private static final long serialVersionUID = -3359163414517503809L;
 
-    public TimeoutException() {
+    public RuntimeTimeoutException() {
         super("timeout");
     }
     
-    public TimeoutException(String message) {
+    public RuntimeTimeoutException(String message) {
         super(message);
     }
     
-    public TimeoutException(String message, Throwable cause) {
+    public RuntimeTimeoutException(String message, Throwable cause) {
         super(message, cause);
     }
 }

@@ -60,7 +60,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.NotManagedException;
-import brooklyn.util.exceptions.TimeoutException;
+import brooklyn.util.exceptions.RuntimeTimeoutException;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
@@ -189,16 +189,16 @@ public class DependentConfiguration {
          * now find a different problem. */
         private final static boolean DEFAULT_IGNORE_UNMANAGED = false;
         
-        final Entity source;
-        final AttributeSensor<T> sensor;
-        final Predicate<? super T> ready;
-        final List<AttributeAndSensorCondition<?>> abortSensorConditions;
-        final String blockingDetails;
-        final Function<? super T,? extends V> postProcess;
-        final Duration timeout;
-        final Maybe<V> onTimeout;
-        final boolean ignoreUnmanaged;
-        final Maybe<V> onUnmanaged;
+        protected final Entity source;
+        protected final AttributeSensor<T> sensor;
+        protected final Predicate<? super T> ready;
+        protected final List<AttributeAndSensorCondition<?>> abortSensorConditions;
+        protected final String blockingDetails;
+        protected final Function<? super T,? extends V> postProcess;
+        protected final Duration timeout;
+        protected final Maybe<V> onTimeout;
+        protected final boolean ignoreUnmanaged;
+        protected final Maybe<V> onUnmanaged;
         // TODO onError Continue / Throw / Return(V)
         
         protected WaitInTaskForAttributeReady(Builder<T, V> builder) {
@@ -311,7 +311,7 @@ public class DependentConfiguration {
                         }
                         if (timer.isExpired()) {
                             if (onTimeout.isPresent()) return onTimeout.get();
-                            throw new TimeoutException("Unsatisfied after "+Duration.sinceUtc(start));
+                            throw new RuntimeTimeoutException("Unsatisfied after "+Duration.sinceUtc(start));
                         }
                     }
 
@@ -328,14 +328,17 @@ public class DependentConfiguration {
                     }
 
                     // check any subscribed values which have come in first
-                    while (!publishedValues.isEmpty()) {
-                        synchronized (publishedValues) { value = publishedValues.pop(); }
+                    while (true) {
+                        synchronized (publishedValues) {
+                            if (publishedValues.isEmpty()) break;
+                            value = publishedValues.pop(); 
+                        }
                         if (ready(value)) break;
                     }
 
                     // if unmanaged then ignore the other abort conditions
                     if (!ignoreUnmanaged && Entities.isNoLongerManaged(entity)) {
-                        if (onTimeout.isPresent()) return onTimeout.get();
+                        if (onUnmanaged.isPresent()) return onUnmanaged.get();
                         throw new NotManagedException(entity);                        
                     }
                     
@@ -343,7 +346,7 @@ public class DependentConfiguration {
                         throw new CompoundRuntimeException("Aborted waiting for ready from "+source+" "+sensor, abortionExceptions);
                     }
 
-                    nextPeriod = nextPeriod.times(2).maximum(maxPeriod);
+                    nextPeriod = nextPeriod.times(2).upperBound(maxPeriod);
                 }
                 if (LOG.isDebugEnabled()) LOG.debug("Attribute-ready for {} in entity {}", sensor, source);
                 return postProcess(value);
