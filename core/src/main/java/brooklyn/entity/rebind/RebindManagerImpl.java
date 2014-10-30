@@ -504,6 +504,15 @@ public class RebindManagerImpl implements RebindManager {
             // the rebindContext. This should not affect normal production usage, because rebind is run
             // against a data-store that is not being written to by other brooklyn instance(s).
 
+            // TODO Rebinding to code in OSGi bundles:
+            // Inferring the catalog item id context:
+            //   * most of the time the creator will be passing "my catalog item id" 
+            //     (or API could also take "BrooklynObject me" as a creation context and the 
+            //     receiver query the creator's catalog item id)
+            //   * propagate the catalog item id when doing setEntity, addChild
+            //   * fall back to the context entity of Tasks.current() (if set)
+            //   * when none of the above work let the user specify the catalog item
+            
             //
             // PHASE ONE
             //
