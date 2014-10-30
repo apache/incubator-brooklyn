@@ -106,7 +106,10 @@ public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLaunch
         super.testAutoRebindsToExistingApp();
     }
 
-    @Override @Test(groups="Live")
+    // TODO Marked as work-in-progress because "clean" does not backup and then clean out the existing
+    // object store's bucket. Unclear what best behaviour there should be: should we really delete
+    // the data?! We better be confident about our backup!
+    @Override @Test(groups={"Live", "WIP"})
     public void testCleanDoesNotRebindToExistingApp() throws Exception {
         super.testCleanDoesNotRebindToExistingApp();
     }
