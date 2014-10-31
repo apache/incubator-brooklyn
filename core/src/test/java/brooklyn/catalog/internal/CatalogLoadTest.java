@@ -49,9 +49,9 @@ public class CatalogLoadTest {
                 loadFile("classpath://brooklyn/catalog/internal/osgi-catalog.xml"));
         assertNotNull(catalog);
         assertEquals(catalog.name, "OSGi catalogue");
-        assertEquals(catalog.entries.size(), 1, "Catalog entries = " + Joiner.on(", ").join(catalog.entries));
+        assertEquals(Iterables.size(catalog.getUniqueEntries()), 1, "Catalog entries = " + Joiner.on(", ").join(catalog.getUniqueEntries()));
 
-        CatalogItemDtoAbstract<?,?> template = Iterables.getOnlyElement(catalog.entries);
+        CatalogItemDtoAbstract<?,?> template = Iterables.getOnlyElement(catalog.getUniqueEntries());
         assertEquals(template.getDisplayName(), "Entity name");
         assertEquals(template.getVersion(), "9.1.3");
         assertEquals(template.getJavaType(), "com.example.ExampleApp");

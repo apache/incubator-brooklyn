@@ -22,12 +22,15 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.stream.Streams;
@@ -49,7 +52,8 @@ public class CatalogDto {
     String name;
     String description;
     CatalogClasspathDto classpath;
-    List<CatalogItemDtoAbstract<?,?>> entries = null;
+    private List<CatalogItemDtoAbstract<?,?>> entries = null;
+//    Map<String,CatalogItemDtoAbstract<?,?>> entries = null;
     
     // for thread-safety, any dynamic additions to this should be handled by a method 
     // in this class which does copy-on-write
@@ -176,6 +180,35 @@ public class CatalogDto {
                 .add("id", id)
                 .add("contentsDescription", contentsDescription)
                 .toString();
+    }
+
+    // temporary fix for issue where entries might not be unique
+    Iterable<CatalogItemDtoAbstract<?, ?>> getUniqueEntries() {
+        if (entries==null) return null;
+        Map<String, CatalogItemDtoAbstract<?, ?>> result = getEntriesMap();
+        return result.values();
+    }
+
+    private Map<String, CatalogItemDtoAbstract<?, ?>> getEntriesMap() {
+        if (entries==null) return null;
+        Map<String,CatalogItemDtoAbstract<?, ?>> result = MutableMap.of();
+        for (CatalogItemDtoAbstract<?,?> entry: entries) {
+            result.put(entry.getId(), entry);
+        }
+        return result;
+    }
+
+    void removeEntry(CatalogItemDtoAbstract<?, ?> entry) {
+        if (entries!=null)
+            entries.remove(entry);
+    }
+
+    void addEntry(CatalogItemDtoAbstract<?, ?> entry) {
+        if (entries == null) entries = MutableList.of();
+        CatalogItemDtoAbstract<?, ?> oldEntry = getEntriesMap().get(entry.getId());
+        entries.add(entry);
+        if (oldEntry!=null)
+            removeEntry(oldEntry);
     }
 
 }
