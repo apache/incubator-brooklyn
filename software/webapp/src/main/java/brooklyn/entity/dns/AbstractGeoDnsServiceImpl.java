@@ -49,6 +49,7 @@ import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
@@ -335,17 +336,21 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     }
     
     protected HostGeoInfo inferHostGeoInfo(String hostname, String ip) throws UnknownHostException {
-        // Look up the geo-info from the hostname/ip
-        HostGeoInfo geoH;
-        try {
-            InetAddress addr = (hostname == null) ? null : InetAddress.getByName(hostname);
-            geoH = (addr == null) ? null : HostGeoInfo.fromIpAddress(addr);
-        } catch (UnknownHostException e) {
-            if (ip == null) {
-                throw e;
-            } else {
-                if (log.isTraceEnabled()) log.trace("GeoDns failed to infer GeoInfo from hostname {}; will try with IP {} ({})", new Object[] {hostname, ip, e});
-                geoH = null;
+        HostGeoInfo geoH = null;
+        if (hostname != null) {
+            try {
+                // For some entities, the hostname can actually be an IP! Therefore use Networking.getInetAddressWithFixedName
+                InetAddress addr = Networking.getInetAddressWithFixedName(hostname);
+                geoH = HostGeoInfo.fromIpAddress(addr);
+            } catch (RuntimeException e) {
+                // Most likely caused by (a wrapped) UnknownHostException
+                Exceptions.propagateIfFatal(e);
+                if (ip == null) {
+                    if (log.isTraceEnabled()) log.trace("inferHostGeoInfo failing ("+Exceptions.getFirstInteresting(e)+"): hostname="+hostname+"; ip="+ip);
+                    throw e;
+                } else {
+                    if (log.isTraceEnabled()) log.trace("GeoDns failed to infer GeoInfo from hostname {}; will try with IP {} ({})", new Object[] {hostname, ip, e});
+                }
             }
         }
 

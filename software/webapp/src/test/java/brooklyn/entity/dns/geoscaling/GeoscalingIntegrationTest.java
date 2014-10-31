@@ -44,6 +44,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.BrooklynSystemProperties;
 import brooklyn.util.net.Networking;
 
@@ -190,10 +191,19 @@ public class GeoscalingIntegrationTest {
 
         @Override
         public HostGeoInfo getHostGeoInfo(InetAddress address) throws Exception {
-            if (HOMELESS_IP.equals(address.getHostAddress())) {
-                return null;
-            } else {
-                return delegate.getHostGeoInfo(address);
+            // Saw strange test failure on jenkins: hence paranoid logging, just in case exception is swallowed somehow.
+            try {
+                HostGeoInfo result;
+                if (HOMELESS_IP.equals(address.getHostAddress())) {
+                    result = null;
+                } else {
+                    result = delegate.getHostGeoInfo(address);
+                }
+                LOG.info("StubHostGeoLookup.getHostGeoInfo queried: address="+address+"; hostAddress="+address.getHostAddress()+"; result="+result);
+                return result;
+            } catch (Throwable t) {
+                LOG.error("StubHostGeoLookup.getHostGeoInfo encountered problem (rethrowing): address="+address+"; hostAddress="+address.getHostAddress(), t);
+                throw Exceptions.propagate(t);
             }
         }
     }
