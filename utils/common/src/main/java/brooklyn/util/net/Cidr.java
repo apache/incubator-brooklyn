@@ -19,6 +19,7 @@
 package brooklyn.util.net;
 
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +32,9 @@ import brooklyn.util.text.Strings;
 import com.google.common.collect.ImmutableList;
 
 /** represents a CIDR (classless inter-domain routing) token, i.e. 10.0.0.0/8 or 192.168.4.0/24 */
-public class Cidr {
+public class Cidr implements Serializable {
+
+    private static final long serialVersionUID = -4605909101590811958L;
 
     /** 0.0.0.0/0 -- matches all addresses */
     public static final Cidr UNIVERSAL = new Cidr();
@@ -53,7 +56,7 @@ public class Cidr {
 
     public static final List<Cidr> NON_PUBLIC_CIDRS = ImmutableList.<Cidr>builder().addAll(PRIVATE_NETWORKS_RFC_1918).add(LINK_LOCAL).add(LOOPBACK).build();
 
-    
+
     final int[] subnetBytes = new int[] { 0, 0, 0, 0 };
     final int length;
     

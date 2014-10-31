@@ -186,8 +186,8 @@ public class BrooklynRestApiLauncher {
         }
 
         if (securityProvider != null) {
-            ((BrooklynProperties) mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
-                    securityProvider.getName());
+            ((BrooklynProperties) mgmt.getConfig()).put(
+                    BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, securityProvider.getName());
         }
 
         if (forceUseOfDefaultCatalogWithJavaClassPath) {

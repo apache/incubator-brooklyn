@@ -66,6 +66,12 @@ public class DelegatingSecurityProvider implements SecurityProvider {
         StringConfigMap brooklynProperties = mgmt.getConfig();
 
         String className = brooklynProperties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME);
+
+        if (delegate != null && BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig())) {
+            log.debug("{} refusing to change from {}: No security provider set in reloaded properties.",
+                    this, delegate);
+            return delegate;
+        }
         log.info("REST using security provider " + className);
 
         try {
