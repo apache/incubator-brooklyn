@@ -65,6 +65,11 @@ public class ReflectiveEntityDriverFactoryTest {
         public Class<D> getDriverInterface() {
             return clazz;
         }
+        
+        @Override
+        public D getDriver() {
+            throw new UnsupportedOperationException();
+        }
     }
     
     public static interface MyDriver extends EntityDriver {

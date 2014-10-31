@@ -32,6 +32,8 @@ import brooklyn.entity.basic.EntityTasks;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynNode;
+import brooklyn.entity.brooklynnode.BrooklynNodeDriver;
+import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
@@ -43,7 +45,6 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -106,11 +107,9 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         // TODO could support 'dry_run_only' parameter, with optional resumption tasks (eg new dynamic effector)
 
         // 1 add new brooklyn version entity as child (so uses same machine), with same config apart from things in parameters
-        final BrooklynNode dryRunChild = entity().addChild(EntitySpec.create(BrooklynNode.class).configure(parameters.getAllConfig())
+        final BrooklynNode dryRunChild = entity().addChild(EntitySpec.create(BrooklynNode.class)
             .displayName("Upgraded Version Dry-Run Node")
-            // force dir and label back to their defaults (do not piggy back on what may have already been installed)
-            .configure(BrooklynNode.INSTALL_DIR, BrooklynNode.INSTALL_DIR.getConfigKey().getDefaultValue())
-            .configure(BrooklynNode.INSTALL_UNIQUE_LABEL, "upgrade-tmp-"+Identifiers.makeRandomId(8))
+            // install dir and label are recomputed because they are not inherited, and download_url will normally be different
             .configure(parameters.getAllConfig()));
 
         //force this to start as hot-standby
@@ -155,8 +154,11 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
                     ).summary("move files"));
             }
         }).build());
-
+        
+        DynamicTasks.waitForLast();
+        entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, null);
         entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
+        ((BrooklynNodeDriver)((DriverDependentEntity<?>)entity()).getDriver()).clearInstallDir();
 
         // 6 start this entity, running the new version
         DynamicTasks.queue(Effectors.invocation(entity(), BrooklynNode.START, ConfigBag.EMPTY));

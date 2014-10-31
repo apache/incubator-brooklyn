@@ -88,6 +88,12 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     }
 
     @Override
+    public void clearInstallDir() {
+        super.setInstallDir(null);
+        super.setExpandedInstallDir(null);
+    }
+    
+    @Override
     public void install() {
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
         
@@ -231,6 +237,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void launch() {
         String app = getEntity().getAttribute(BrooklynNode.APP);

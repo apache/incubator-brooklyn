@@ -20,7 +20,6 @@ package brooklyn.entity.basic;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -80,10 +79,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 
-    // we cache these in case the entity becomes unmanaged
+    // we cache these for efficiency and in case the entity becomes unmanaged
     private volatile String installDir;
     private volatile String runDir;
     private volatile String expandedInstallDir;
+    private final Object installDirSetupMutex = new Object();
 
     protected volatile DownloadResolver resolver;
     
@@ -160,33 +160,31 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public String getInstallDir() {
         if (installDir != null) return installDir;
 
-        String existingVal = getEntity().getAttribute(SoftwareProcess.INSTALL_DIR);
-        if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
-            installDir = existingVal;
+        synchronized (installDirSetupMutex) {
+            // previously we looked at sensor value, but we shouldn't as it might have been converted from the config key value
+            // *before* we computed the install label, or that label may have changed since previous install; now force a recompute
+            setInstallLabel();
+
+            // deprecated in 0.7.0 - "brooklyn.dirs.install" is no longer supported
+            Maybe<Object> minstallDir = getEntity().getConfigRaw(SoftwareProcess.INSTALL_DIR, false);
+            if (!minstallDir.isPresent() || minstallDir.get()==null) {
+                String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
+                if (installBasedir != null) {
+                    log.warn("Using legacy 'brooklyn.dirs.install' setting for "+entity+"; may be removed in future versions.");
+                    setInstallDir(Os.tidyPath(Os.mergePathsUnix(installBasedir, getEntityVersionLabel()+"_"+entity.getId())));
+                    return installDir;
+                }
+            }
+
+            // set it null first so that we force a recompute
+            setInstallDir(null);
+            setInstallDir(Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR)));
             return installDir;
         }
-        
-        setInstallLabel();
-        
-        // deprecated in 0.7.0
-        Maybe<Object> minstallDir = getEntity().getConfigRaw(SoftwareProcess.INSTALL_DIR, true);
-        if (!minstallDir.isPresent() || minstallDir.get()==null) {
-            String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
-            if (installBasedir != null) {
-                log.warn("Using legacy 'brooklyn.dirs.install' setting for "+entity+"; may be removed in future versions.");
-                installDir = Os.mergePathsUnix(installBasedir, getEntityVersionLabel()+"_"+entity.getId());
-                installDir = Os.tidyPath(installDir);
-                getEntity().setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
-                return installDir;
-            }
-        }
-
-        setInstallDir(Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR)));
-        return installDir;
     }
     
     protected void setInstallLabel() {
-        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, true).isPresentAndNonNull()) return; 
+        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, false).isPresentAndNonNull()) return; 
         getEntity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, 
             getEntity().getEntityType().getSimpleName()+
             (Strings.isNonBlank(getVersion()) ? "_"+getVersion() : "")+
@@ -236,12 +234,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     public void setExpandedInstallDir(String val) {
-        checkNotNull(val, "expandedInstallDir");
         String oldVal = getEntity().getAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR);
         if (Strings.isNonBlank(oldVal) && !oldVal.equals(val)) {
             log.info("Resetting expandedInstallDir (to "+val+" from "+oldVal+") for "+getEntity());
         }
         
+        expandedInstallDir = val;
         getEntity().setAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR, val);
     }
     
@@ -250,8 +248,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         
         String untidiedVal = ConfigToAttributes.apply(getEntity(), SoftwareProcess.EXPANDED_INSTALL_DIR);
         if (Strings.isNonBlank(untidiedVal)) {
-            expandedInstallDir = Os.tidyPath(untidiedVal);
-            entity.setAttribute(SoftwareProcess.INSTALL_DIR, expandedInstallDir);
+            setExpandedInstallDir(Os.tidyPath(untidiedVal));
             return expandedInstallDir;
         } else {
             throw new IllegalStateException("expandedInstallDir is null; most likely install was not called for "+getEntity());

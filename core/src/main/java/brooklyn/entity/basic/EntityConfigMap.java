@@ -65,6 +65,8 @@ public class EntityConfigMap implements ConfigMap {
      */
     private final Map<ConfigKey<?>,Object> ownConfig;
     private final Map<ConfigKey<?>,Object> inheritedConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
+    // TODO do we really want to have *both* bags and maps for these?  danger that they get out of synch.
+    // have added some logic (Oct 2014) so that the same changes are applied to both, in most places at least
     private final ConfigBag localConfigBag;
     private final ConfigBag inheritedConfigBag;
 
@@ -153,7 +155,7 @@ public class EntityConfigMap implements ConfigMap {
         return Maybe.absent();
     }
     
-    /** returns the config visible at this entity, local and inherited (preferring local) */
+    /** an immutable copy of the config visible at this entity, local and inherited (preferring local) */
     public Map<ConfigKey<?>,Object> getAllConfig() {
         Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(inheritedConfig.size()+ownConfig.size());
         result.putAll(inheritedConfig);
@@ -161,14 +163,14 @@ public class EntityConfigMap implements ConfigMap {
         return Collections.unmodifiableMap(result);
     }
 
-    /** returns the config defined at this entity, ie not inherited */
+    /** an immutable copy of the config defined at this entity, ie not inherited */
     public Map<ConfigKey<?>,Object> getLocalConfig() {
         Map<ConfigKey<?>,Object> result = new LinkedHashMap<ConfigKey<?>,Object>(ownConfig.size());
         result.putAll(ownConfig);
         return Collections.unmodifiableMap(result);
     }
     
-    /** returns the config visible at this entity, local and inherited (preferring local), including those that did not match config keys */
+    /** Creates an immutable copy of the config visible at this entity, local and inherited (preferring local), including those that did not match config keys */
     public ConfigBag getAllConfigBag() {
         return ConfigBag.newInstanceCopying(localConfigBag)
                 .putAll(ownConfig)
@@ -177,13 +179,14 @@ public class EntityConfigMap implements ConfigMap {
                 .seal();
     }
 
-    /** returns the config defined at this entity, ie not inherited, including those that did not match config keys */
+    /** Creates an immutable copy of the config defined at this entity, ie not inherited, including those that did not match config keys */
     public ConfigBag getLocalConfigBag() {
         return ConfigBag.newInstanceCopying(localConfigBag)
                 .putAll(ownConfig)
                 .seal();
     }
 
+    @SuppressWarnings("unchecked")
     public Object setConfig(ConfigKey<?> key, Object v) {
         Object val;
         if ((v instanceof Future) || (v instanceof DeferredSupplier)) {
@@ -205,13 +208,16 @@ public class EntityConfigMap implements ConfigMap {
         } else {
             oldVal = ownConfig.put(key, val);
         }
+        localConfigBag.put((ConfigKey<Object>)key, v);
         entity.refreshInheritedConfigOfChildren();
         return oldVal;
     }
     
     public void setLocalConfig(Map<ConfigKey<?>, ? extends Object> vals) {
         ownConfig.clear();
+        localConfigBag.clear();
         ownConfig.putAll(vals);
+        localConfigBag.putAll(vals);
     }
     
     public void setInheritedConfig(Map<ConfigKey<?>, ? extends Object> vals, ConfigBag configBagVals) {
@@ -258,6 +264,8 @@ public class EntityConfigMap implements ConfigMap {
     
     public void addToLocalBag(Map<String,?> vals) {
         localConfigBag.putAll(vals);
+        // quick fix for problem that ownConfig can get out of synch
+        ownConfig.putAll(localConfigBag.getAllConfigAsConfigKeyMap());
     }
 
     public void clearInheritedConfig() {

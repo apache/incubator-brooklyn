@@ -21,6 +21,7 @@ name: Example Persisting Brooklyn Node
 
 services:
 - type: classpath://brooklyn/entity/brooklynnode/brooklyn-node.yaml
-  launchParameters: --persist auto --persistenceDir /tmp/brooklyn-persistence-example/
+  brooklyn.config:
+    brooklynnode.launch.parameters.extra: --persist auto --persistenceDir /tmp/brooklyn-persistence-example/
 
-# location: localhost
+location: localhost
