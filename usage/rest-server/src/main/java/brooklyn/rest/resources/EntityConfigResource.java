@@ -39,6 +39,7 @@ import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -88,7 +89,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
   
   @Override
   public String getPlain(String application, String entityToken, String configKeyName, Boolean raw) {
-      return (String)get(true, application, entityToken, configKeyName, raw);
+      return Strings.toString(get(true, application, entityToken, configKeyName, raw));
   }
 
     public Object get(boolean preferJson, String application, String entityToken, String configKeyName, Boolean raw) {

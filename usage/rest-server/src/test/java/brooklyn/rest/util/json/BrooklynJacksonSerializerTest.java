@@ -18,13 +18,14 @@
  */
 package brooklyn.rest.util.json;
 
-import java.io.IOException;
 import java.io.NotSerializableException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
@@ -53,6 +54,7 @@ import brooklyn.util.http.HttpTool;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 
 public class BrooklynJacksonSerializerTest {
@@ -261,6 +263,45 @@ public class BrooklynJacksonSerializerTest {
         }
     }
     
+    // Ensure TEXT_PLAIN just returns toString for ManagementContext instance.
+    // Strangely, testWithLauncherSerializingListsContainingEntitiesAndOtherComplexStuff ended up in the 
+    // EntityConfigResource.getPlain code, throwing a ClassCastException.
+    // 
+    // TODO This tests the fix for that ClassCastException, but does not explain why 
+    // testWithLauncherSerializingListsContainingEntitiesAndOtherComplexStuff was calling it.
+    @Test(groups="Integration") //because of time
+    public void testWithAcceptsPlainText() throws Exception {
+        ManagementContext mgmt = LocalManagementContextForTests.newInstance();
+        Server server = null;
+        try {
+            server = BrooklynRestApiLauncher.launcher().managementContext(mgmt).start();
+            HttpClient client = HttpTool.httpClientBuilder().build();
+
+            TestApplication app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
+
+            String serverAddress = "http://localhost:"+server.getConnectors()[0].getLocalPort();
+            String appUrl = serverAddress + "/v1/applications/" + app.getId();
+            String entityUrl = appUrl + "/entities/" + app.getId();
+            URI configUri = new URIBuilder(entityUrl + "/config/" + TestEntity.CONF_OBJECT.getName())
+                    .addParameter("raw", "true")
+                    .build();
+
+            // assert config here is just mgmt.toString()
+            app.setConfig(TestEntity.CONF_OBJECT, mgmt);
+            String content = get(client, configUri, ImmutableMap.of("Accept", MediaType.TEXT_PLAIN));
+            log.info("CONFIG MGMT is:\n"+content);
+            Assert.assertEquals(content, mgmt.toString(), "content="+content);
+            
+        } finally {
+            try {
+                if (server != null) server.stop();
+            } catch (Exception e) {
+                log.warn("failed to stop server: "+e);
+            }
+            Entities.destroyAll(mgmt);
+        }
+    }
+        
     @Test(groups="Integration") //because of time
     public void testWithLauncherSerializingListsContainingEntitiesAndOtherComplexStuff() throws Exception {
         ManagementContext mgmt = LocalManagementContextForTests.newInstance();
@@ -284,17 +325,16 @@ public class BrooklynJacksonSerializerTest {
             log.info("CONFIG MGMT is:\n"+content);
             @SuppressWarnings("rawtypes")
             Map values = new Gson().fromJson(content, Map.class);
-            Assert.assertEquals(values.size(), 1, "Map is wrong size: "+values);
-            Assert.assertEquals(values.get("type"), LocalManagementContextForTests.class.getCanonicalName());
-            
+            Assert.assertEquals(values, ImmutableMap.of("type", LocalManagementContextForTests.class.getCanonicalName()), "values="+values);
+
             // assert normal API returns the same, containing links
             content = get(client, entityUrl);
             log.info("ENTITY is: \n"+content);
             values = new Gson().fromJson(content, Map.class);
             Assert.assertTrue(values.size()>=3, "Map is too small: "+values);
             Assert.assertTrue(values.size()<=6, "Map is too big: "+values);
-            Assert.assertEquals(values.get("type"), TestApplication.class.getCanonicalName());
-            Assert.assertNotNull(values.get("links"), "Map should have contained links");
+            Assert.assertEquals(values.get("type"), TestApplication.class.getCanonicalName(), "values="+values);
+            Assert.assertNotNull(values.get("links"), "Map should have contained links: values="+values);
 
             // but config etc returns our nicely json serialized
             app.setConfig(TestEntity.CONF_OBJECT, app);
@@ -302,9 +342,7 @@ public class BrooklynJacksonSerializerTest {
 
             log.info("CONFIG ENTITY is:\n"+content);
             values = new Gson().fromJson(content, Map.class);
-            Assert.assertEquals(values.size(), 2, "Map is wrong size: "+values);
-            Assert.assertEquals(values.get("type"), Entity.class.getCanonicalName());
-            Assert.assertEquals(values.get("id"), app.getId());
+            Assert.assertEquals(values, ImmutableMap.of("type", Entity.class.getCanonicalName(), "id", app.getId()), "values="+values);
 
             // and self-ref gives error + toString
             SelfRefNonSerializableClass angry = new SelfRefNonSerializableClass();
@@ -345,8 +383,11 @@ public class BrooklynJacksonSerializerTest {
     }
 
     private String get(HttpClient client, URI uri) {
-        return HttpTool.httpGet(client, uri, Collections.<String, String>emptyMap())
-                .getContentAsString();
+        return get(client, uri, Collections.<String, String>emptyMap());
+    }
+    
+    private String get(HttpClient client, URI uri, Map<String, String> headers) {
+        return HttpTool.httpGet(client, uri, headers).getContentAsString();
     }
 
 }
