@@ -146,7 +146,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
-        this(new JavaBrooklynClassLoadingContext(null, loader), contextObject, contextMessage);
+        this(JavaBrooklynClassLoadingContext.create(loader), contextObject, contextMessage);
     }
     
     public ResourceUtils(BrooklynClassLoadingContext loader, Object contextObject, String contextMessage) {
@@ -187,7 +187,7 @@ public class ResourceUtils {
         ManagementContext mgmt = null;
         BrooklynClassLoadingContext bl = BrooklynLoaderTracker.getLoader();
         if (bl!=null) mgmt = bl.getManagementContext();
-        return new JavaBrooklynClassLoadingContext(mgmt, loader);
+        return JavaBrooklynClassLoadingContext.create(mgmt, loader);
     }
     
     public BrooklynClassLoadingContext getLoader() {

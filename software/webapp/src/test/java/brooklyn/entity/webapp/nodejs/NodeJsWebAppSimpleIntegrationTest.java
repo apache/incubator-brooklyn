@@ -75,12 +75,13 @@ public class NodeJsWebAppSimpleIntegrationTest {
             app = TestApplication.Factory.newManagedInstanceForTests();
             nodejs = app.createAndManageChild(EntitySpec.create(NodeJsWebAppService.class).configure("httpPort", httpPort));
             try {
-                nodejs.start(ImmutableList.of(app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class))));
+                LocalhostMachineProvisioningLocation loc = app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+                nodejs.start(ImmutableList.of(loc));
                 fail("Should have thrown start-exception");
             } catch (Exception e) {
                 // LocalhostMachineProvisioningLocation does NetworkUtils.isPortAvailable, so get -1
                 IllegalArgumentException iae = Throwables2.getFirstThrowableOfType(e, IllegalArgumentException.class);
-                if (iae == null || iae.getMessage() == null || !iae.getMessage().equals("port for httpPort is null")) throw e;
+                if (iae == null || iae.getMessage() == null || !iae.getMessage().equals("port for http is null")) throw e;
             } finally {
                 nodejs.stop();
             }

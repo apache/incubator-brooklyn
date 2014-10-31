@@ -73,7 +73,7 @@ public class CatalogUtils {
             result.add(loader);
         }
 
-        result.addSecondary(new JavaBrooklynClassLoadingContext(mgmt, classLoader));
+        result.addSecondary(JavaBrooklynClassLoadingContext.create(mgmt, classLoader));
         return result;
     }
 

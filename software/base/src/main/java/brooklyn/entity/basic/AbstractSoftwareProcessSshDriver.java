@@ -313,7 +313,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public void copyInstallResources() {
         getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
         try {
-            execute("mkdir -p " + getInstallDir(), "create install directory");
+            // Override environment variables for this simple command. Otherwise sub-classes might
+            // lookup port numbers and fail with ugly error if port is not set; better to wait
+            // until in Entity's code (e.g. customize) where such checks are done explicitly.
+            execute(ImmutableMap.of("env", ImmutableMap.of()), ImmutableList.of("mkdir -p " + getInstallDir()), "create-install-dir");
 
             Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
             if (installFiles != null && installFiles.size() > 0) {

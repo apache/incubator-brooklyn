@@ -177,6 +177,12 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     @Override
     public boolean addMemberToReplicaSet(MongoDBServer secondary, Integer id) {
+        // TODO The attributes IS_PRIMARY_FOR_REPLICA_SET and REPLICA_SET_MEMBER_STATUS can be out-of-sync.
+        // The former is obtained by an enricher that listens to STATUS_BSON (set by client.getServerStatus()).
+        // The latter is set by a different feed doing client.getReplicaSetStatus().getInt("myState").
+        // The ReplicaSet uses REPLICA_SET_MEMBER_STATUS to determine which node to call.
+        // 
+        // Relying on caller to respect the `false` result, to retry.
         if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
             LOG.warn("Attempted to add {} to replica set at server that is not primary: {}", secondary, this);
             return false;

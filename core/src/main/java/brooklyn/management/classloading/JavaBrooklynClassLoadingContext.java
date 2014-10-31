@@ -18,34 +18,56 @@
  */
 package brooklyn.management.classloading;
 
-import java.net.URL;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Objects;
+import java.net.URL;
 
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
+import com.google.common.base.Objects;
+
 public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadingContext {
 
     private final ClassLoader loader;
 
-    public JavaBrooklynClassLoadingContext(ManagementContext mgmt, ClassLoader loader) {
+    public static JavaBrooklynClassLoadingContext create(ClassLoader loader) {
+        return new JavaBrooklynClassLoadingContext(null, checkNotNull(loader, "loader"));
+    }
+    
+    /**
+     * At least one of mgmt or loader must not be null.
+     */
+    public static JavaBrooklynClassLoadingContext create(ManagementContext mgmt, ClassLoader loader) {
+        checkState(mgmt != null || loader != null, "mgmt and loader must not both be null");
+        return new JavaBrooklynClassLoadingContext(mgmt, loader);
+    }
+    
+    public static JavaBrooklynClassLoadingContext newDefault(ManagementContext mgmt) {
+        return new JavaBrooklynClassLoadingContext(checkNotNull(mgmt, "mgmt"), null);
+    }
+
+    private JavaBrooklynClassLoadingContext(ManagementContext mgmt, ClassLoader loader) {
         super(mgmt);
         this.loader = loader;
     }
     
-    public static JavaBrooklynClassLoadingContext newDefault(ManagementContext mgmt) {
-        ClassLoader cl = null;
-        if (mgmt!=null) cl = mgmt.getCatalog().getRootClassLoader();
-        if (cl==null) cl = JavaBrooklynClassLoadingContext.class.getClassLoader();
-        return new JavaBrooklynClassLoadingContext(mgmt, cl);
+    // TODO Ugly workaround for rebind, where the classLoader cannot be serialized/deserialized.
+    // If we're supplying just mgmt (i.e. via {@link #newDefault(ManagementContext)} then can retrieve
+    // class loader from that.
+    // Will not work if trying to serialize/deserialize an instance created with a specific ClassLoader.
+    private ClassLoader getClassLoader() {
+        if (loader != null) return loader;
+        if (mgmt!=null) return mgmt.getCatalog().getRootClassLoader();
+        return JavaBrooklynClassLoadingContext.class.getClassLoader();
     }
-
+    
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Maybe<Class<?>> tryLoadClass(String className) {
         try {
-            return (Maybe) Maybe.of(loader.loadClass(className));
+            return (Maybe) Maybe.of(getClassLoader().loadClass(className));
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             return Maybe.absent("Invalid class: "+className, e);
@@ -54,25 +76,25 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
 
     @Override
     public String toString() {
-        return "java:"+loader;
+        return "java:"+getClassLoader();
     }
     
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), loader);
+        return Objects.hashCode(super.hashCode(), getClassLoader());
     }
     
     @Override
     public boolean equals(Object obj) {
         if (!super.equals(obj)) return false;
         if (!(obj instanceof JavaBrooklynClassLoadingContext)) return false;
-        if (!Objects.equal(loader, ((JavaBrooklynClassLoadingContext)obj).loader)) return false;
+        if (!Objects.equal(getClassLoader(), ((JavaBrooklynClassLoadingContext)obj).getClassLoader())) return false;
         return true;
     }
 
     @Override
     public URL getResource(String name) {
-        return loader.getResource(name);
+        return getClassLoader().getResource(name);
     }
     
 }
