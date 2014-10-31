@@ -480,11 +480,7 @@ public class DependentConfiguration {
             return this;
         }
         public Task<V> build() {
-            checkNotNull(source, "Entity source");
-            checkNotNull(sensor, "Sensor");
-            if (readiness == null) readiness = GroovyJavaMethods.truthPredicate();
-            if (postProcess == null) postProcess = (Function) Functions.identity();
-            
+            validate();
             return new BasicTask<V>(
                     MutableMap.of("tag", "attributeWhenReady", "displayName", "retrieving sensor "+sensor.getName()+" from "+source.getDisplayName()), 
                     new Callable<V>() {
@@ -495,8 +491,15 @@ public class DependentConfiguration {
                     });
         }
         public V runNow() {
+            validate();
             T result = waitInTaskForAttributeReady(source, sensor, readiness, abortConditions, blockingDetails);
             return postProcess.apply(result);
+        }
+        private void validate() {
+            checkNotNull(source, "Entity source");
+            checkNotNull(sensor, "Sensor");
+            if (readiness == null) readiness = GroovyJavaMethods.truthPredicate();
+            if (postProcess == null) postProcess = (Function) Functions.identity();
         }
     }
 
