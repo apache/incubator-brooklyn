@@ -20,7 +20,6 @@ package brooklyn.rest.util.json;
 
 import java.io.NotSerializableException;
 import java.net.URI;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -321,14 +320,14 @@ public class BrooklynJacksonSerializerTest {
 
             // assert config here is just mgmt
             app.setConfig(TestEntity.CONF_OBJECT, mgmt);
-            String content = get(client, configUri);
+            String content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             log.info("CONFIG MGMT is:\n"+content);
             @SuppressWarnings("rawtypes")
             Map values = new Gson().fromJson(content, Map.class);
             Assert.assertEquals(values, ImmutableMap.of("type", LocalManagementContextForTests.class.getCanonicalName()), "values="+values);
 
             // assert normal API returns the same, containing links
-            content = get(client, entityUrl);
+            content = get(client, entityUrl, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             log.info("ENTITY is: \n"+content);
             values = new Gson().fromJson(content, Map.class);
             Assert.assertTrue(values.size()>=3, "Map is too small: "+values);
@@ -338,8 +337,7 @@ public class BrooklynJacksonSerializerTest {
 
             // but config etc returns our nicely json serialized
             app.setConfig(TestEntity.CONF_OBJECT, app);
-            content = get(client, configUri);
-
+            content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             log.info("CONFIG ENTITY is:\n"+content);
             values = new Gson().fromJson(content, Map.class);
             Assert.assertEquals(values, ImmutableMap.of("type", Entity.class.getCanonicalName(), "id", app.getId()), "values="+values);
@@ -347,13 +345,13 @@ public class BrooklynJacksonSerializerTest {
             // and self-ref gives error + toString
             SelfRefNonSerializableClass angry = new SelfRefNonSerializableClass();
             app.setConfig(TestEntity.CONF_OBJECT, angry);
-            content = get(client, configUri);
+            content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             log.info("CONFIG ANGRY is:\n"+content);
             assertErrorObjectMatchingToString(content, angry);
             
             // as does Server
             app.setConfig(TestEntity.CONF_OBJECT, server);
-            content = get(client, configUri);
+            content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             // NOTE, if using the default visibility / object mapper, the getters of the object are invoked
             // resulting in an object which is huge, 7+MB -- and it wreaks havoc w eclipse console regex parsing!
             // (but with our custom VisibilityChecker server just gives us the nicer error!)
@@ -378,16 +376,11 @@ public class BrooklynJacksonSerializerTest {
         Assert.assertEquals(((Map<?,?>)value).get("toString"), expected.toString());
     }
 
-    private String get(HttpClient client, String uri) {
-        return get(client, URI.create(uri));
+    private String get(HttpClient client, String uri, Map<String, String> headers) {
+        return get(client, URI.create(uri), headers);
     }
 
-    private String get(HttpClient client, URI uri) {
-        return get(client, uri, Collections.<String, String>emptyMap());
-    }
-    
     private String get(HttpClient client, URI uri, Map<String, String> headers) {
         return HttpTool.httpGet(client, uri, headers).getContentAsString();
     }
-
 }
