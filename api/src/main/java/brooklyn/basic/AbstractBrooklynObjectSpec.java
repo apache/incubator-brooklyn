@@ -41,6 +41,7 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
     protected AbstractBrooklynObjectSpec(Class<? extends T> type) {
         checkValidType(type);
         this.type = type;
+        this.contextCatalogItemId = ApiObjectsFactory.get().getContextCatalogItemId();
     }
     
     @SuppressWarnings("unchecked")

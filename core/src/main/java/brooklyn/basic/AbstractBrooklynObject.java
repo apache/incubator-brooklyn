@@ -74,6 +74,8 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
             _legacyConstruction = true;
         }
 
+        contextCatalogItemId = ApiObjectsFactory.get().getContextCatalogItemId();
+
         // rely on sub-class to call configure(properties), because otherwise its fields will not have been initialised
     }
 

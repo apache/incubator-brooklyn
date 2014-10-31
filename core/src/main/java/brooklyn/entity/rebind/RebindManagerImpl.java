@@ -512,7 +512,15 @@ public class RebindManagerImpl implements RebindManager {
             //   * propagate the catalog item id when doing setEntity, addChild
             //   * fall back to the context entity of Tasks.current() (if set)
             //   * when none of the above work let the user specify the catalog item
-            
+            //
+            //  Precedence of setting the catalog item ID:
+            //   1. User-supplied catalog item ID.
+            //   2. Creating from a catalog item - all items resolved during the creation of a spec
+            //      from a catalog item receive the catalog item's ID as context.
+            //   3. When using the Java API for creating specs get the catalog item ID from the
+            //      context entity of the Tasks.current() task.
+            //   4. Propagate the context catalog item ID to children, adjuncts if they don't have one already.
+
             //
             // PHASE ONE
             //
