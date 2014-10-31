@@ -255,6 +255,21 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
+    public void testAttributeWhenReadyRunNowWithoutPostProcess() throws Exception {
+        Task<String> t  = submit(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return DependentConfiguration.builder()
+                        .attributeWhenReady(entity, TestEntity.NAME)
+                        .runNow();
+            }
+        });
+        entity.setAttribute(TestEntity.NAME, "myentity");
+        assertDoneEventually(t);
+        assertEquals(t.get(), "myentity");
+    }
+
+    @Test
     public void testAttributeWhenReadyAbortsWhenOnFireByDefault() {
         log.info("starting test "+JavaClassNames.niceClassAndMethod());
         final Task<String> t = submit(DependentConfiguration.builder()
