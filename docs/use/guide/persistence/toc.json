@@ -10,5 +10,7 @@
   "file":  "{{ site.url }}/use/guide/persistence/index.html#rebind" }, 
 { "title": "Handling Rebind Failures",
   "file":  "{{ site.url }}/use/guide/persistence/index.html#handling-rebind-failures" }, 
+{ "title": "High Availability",
+  "file":  "{{ site.url }}/use/guide/persistence/index.html#high-availability" }, 
 { "title": "Writing Persistable Code",
   "file":  "{{ site.url }}/use/guide/persistence/index.html#writing-persistable-code" }]
