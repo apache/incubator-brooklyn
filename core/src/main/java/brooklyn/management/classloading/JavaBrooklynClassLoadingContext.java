@@ -49,7 +49,8 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         return new JavaBrooklynClassLoadingContext(checkNotNull(mgmt, "mgmt"), null);
     }
 
-    private JavaBrooklynClassLoadingContext(ManagementContext mgmt, ClassLoader loader) {
+    @Deprecated /** @deprecated since 0.7.0 will become private; use one of the static methods to instantiate */
+    public JavaBrooklynClassLoadingContext(ManagementContext mgmt, ClassLoader loader) {
         super(mgmt);
         this.loader = loader;
     }
