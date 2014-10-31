@@ -22,51 +22,43 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
-import groovy.time.TimeDuration;
 
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.DBObject;
 
-public class MongoDBReplicaSetIntegrationTest {
+public class MongoDBReplicaSetIntegrationTest extends BrooklynAppLiveTestSupport {
 
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(MongoDBReplicaSetIntegrationTest.class);
     
-    private TestApplication app;
-    private Collection<LocalhostMachineProvisioningLocation> localhostMachineProvisioningLocation;
+    private Collection<LocalhostMachineProvisioningLocation> locs;
 
     // Replica sets can take a while to start
-    private static final TimeDuration TIMEOUT = new TimeDuration(0, 0, 180, 0);
+    private static final Duration TIMEOUT = Duration.of(3, TimeUnit.MINUTES);
 
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
-        localhostMachineProvisioningLocation = ImmutableList.of(location);
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        locs = ImmutableList.of(app.newLocalhostProvisioningLocation());
     }
 
     /**
@@ -81,7 +73,7 @@ public class MongoDBReplicaSetIntegrationTest {
                 .configure("memberSpec", EntitySpec.create(MongoDBServer.class)
                         .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf")
                         .configure("port", "27017+")));
-        app.start(localhostMachineProvisioningLocation);
+        app.start(locs);
 
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT), new Runnable() {
             @Override
