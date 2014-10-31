@@ -162,16 +162,15 @@ public class Networking {
         return port;
     }
 
-    public static void checkPortsValid(@SuppressWarnings("rawtypes") Map ports) {
-        for (Object ppo : ports.entrySet()) {
-            Map.Entry<?,?> pp = (Map.Entry<?,?>)ppo;
-            Object val = pp.getValue();
-            if(val == null){
-                throw new IllegalArgumentException("port for "+pp.getKey()+" is null");
-            }else if (!(val instanceof Integer)) {
-                throw new IllegalArgumentException("port "+val+" for "+pp.getKey()+" is not an integer ("+val.getClass()+")");
+    public static void checkPortsValid(Map<?, ?> ports) {
+        for (Map.Entry<?,?> entry : ports.entrySet()) {
+            Object val = entry.getValue();
+            if (val == null){
+                throw new IllegalArgumentException("port for "+entry.getKey()+" is null");
+            } else if (!(val instanceof Integer)) {
+                throw new IllegalArgumentException("port "+val+" for "+entry.getKey()+" is not an integer ("+val.getClass()+")");
             }
-            checkPortValid((Integer)val, ""+pp.getKey());
+            checkPortValid((Integer)val, ""+entry.getKey());
         }
     }
 
