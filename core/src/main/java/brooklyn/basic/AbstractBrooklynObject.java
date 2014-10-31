@@ -172,6 +172,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
         return id;
     }
 
+    @Override
     public void setCatalogItemId(String id) {
         this.catalogItemId = id;
     }

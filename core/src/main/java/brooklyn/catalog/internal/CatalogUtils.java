@@ -28,9 +28,12 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 
+import brooklyn.basic.BrooklynObject;
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemLibraries;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
@@ -103,6 +106,22 @@ public class CatalogUtils {
             return ((OsgiBrooklynClassLoadingContext)loader).getCatalogItemId();
         } else {
             return null;
+        }
+    }
+
+    public static void setCatalogItemIdOnAddition(Entity entity, BrooklynObject itemBeingAdded) {
+        if (entity.getCatalogItemId()!=null) {
+            if (itemBeingAdded.getCatalogItemId()==null) {
+                log.debug("Catalog item addition: "+entity+" from "+entity.getCatalogItemId()+" applying its catalog item ID to "+itemBeingAdded);
+                ((BrooklynObjectInternal)itemBeingAdded).setCatalogItemId(entity.getCatalogItemId());
+            } else {
+                if (!itemBeingAdded.getCatalogItemId().equals(entity.getCatalogItemId())) {
+                    // not a problem, but something to watch out for
+                    log.debug("Cross-catalog item detected: "+entity+" from "+entity.getCatalogItemId()+" has "+itemBeingAdded+" from "+itemBeingAdded.getCatalogItemId());
+                }
+            }
+        } else if (itemBeingAdded.getCatalogItemId()==null) {
+            log.debug("Catalog item addition: "+entity+" without catalog item ID has "+itemBeingAdded+" from "+itemBeingAdded.getCatalogItemId());
         }
     }
 

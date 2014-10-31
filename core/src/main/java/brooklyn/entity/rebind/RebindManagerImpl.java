@@ -509,9 +509,9 @@ public class RebindManagerImpl implements RebindManager {
             //   * most of the time the creator will be passing "my catalog item id" 
             //     (or API could also take "BrooklynObject me" as a creation context and the 
             //     receiver query the creator's catalog item id)
+            //   * look at the context entity of Tasks.current() (if set)
             //   * propagate the catalog item id when doing setEntity, addChild
-            //   * fall back to the context entity of Tasks.current() (if set)
-            //   * when none of the above work let the user specify the catalog item
+            //   * when none of the above work (or they are wrong) let the user specify the catalog item
             //
             //  Precedence of setting the catalog item ID:
             //   1. User-supplied catalog item ID.

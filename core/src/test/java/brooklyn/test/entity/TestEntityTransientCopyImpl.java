@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic;
+package brooklyn.test.entity;
 
-import brooklyn.entity.rebind.Rebindable;
+import brooklyn.entity.basic.EntityTransientCopyInternal;
 
-public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
-    
-    public void setCatalogItemId(String id);
-    
+/**
+ * Entity to give compilation errors if {@link EntityTransientCopyInternal} methods are not aligned
+ * with Entity methods. (Everything in that interface should be on EntityInternal, and if not, we want to know!)
+ */
+public class TestEntityTransientCopyImpl extends TestEntityImpl implements EntityTransientCopyInternal {
 }

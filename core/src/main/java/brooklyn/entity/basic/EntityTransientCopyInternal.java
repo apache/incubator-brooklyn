@@ -82,6 +82,7 @@ public interface EntityTransientCopyInternal {
     Maybe<Object> getConfigRaw(HasConfigKey<?> key, boolean includeInherited);
     @Deprecated Set<Object> getTags();
     @Deprecated boolean containsTag(@Nonnull Object tag);
+    String getCatalogItemId();
 
     
     // from entity local
@@ -107,5 +108,6 @@ public interface EntityTransientCopyInternal {
     RebindSupport<EntityMemento> getRebindSupport();
     // for REST calls on read-only entities which want to resolve values
     ExecutionContext getExecutionContext();
+    void setCatalogItemId(String id);
     
 }
