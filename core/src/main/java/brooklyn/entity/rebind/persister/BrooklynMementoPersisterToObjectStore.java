@@ -253,8 +253,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         String id = (String) XmlUtil.xpath(contents, "/entity/id");
                         String objType = (String) XmlUtil.xpath(contents, "/entity/type");
                         String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
-                        String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/contextCatalogItemId");
-                        builder.entity(id, objType, Strings.emptyToNull(parentId), Strings.emptyToNull(contextCatalogItemId));
+                        String catalogItemId = (String) XmlUtil.xpath(contents, "/entity/catalogItemId");
+                        builder.entity(id, objType, Strings.emptyToNull(parentId), Strings.emptyToNull(catalogItemId));
                         break;
                     case LOCATION:
                         id = (String) XmlUtil.xpath(contents, "/location/id");

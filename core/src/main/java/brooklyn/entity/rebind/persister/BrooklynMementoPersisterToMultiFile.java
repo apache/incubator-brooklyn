@@ -194,8 +194,8 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String id = (String) XmlUtil.xpath(contents, "/entity/id");
                     String type = (String) XmlUtil.xpath(contents, "/entity/type");
                     String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
-                    String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/contextCatalogItemId");
-                    builder.entity(id, type, Strings.emptyToNull(parentId), Strings.emptyToNull(contextCatalogItemId));
+                    String catalogItemId = (String) XmlUtil.xpath(contents, "/entity/catalogItemId");
+                    builder.entity(id, type, Strings.emptyToNull(parentId), Strings.emptyToNull(catalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENTITY, "File "+file, e);
                 }

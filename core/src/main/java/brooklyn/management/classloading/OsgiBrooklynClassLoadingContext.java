@@ -31,12 +31,12 @@ import com.google.common.base.Objects;
 public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadingContext {
 
     private final List<String> bundles;
-    private final String contextCatalogId;
+    private final String catalogItemId;
 
     public OsgiBrooklynClassLoadingContext(ManagementContext mgmt, String catalogItemId, List<String> bundles) {
         super(mgmt);
         this.bundles = bundles;
-        this.contextCatalogId = catalogItemId;
+        this.catalogItemId = catalogItemId;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -71,7 +71,7 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
     
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), bundles, contextCatalogId);
+        return Objects.hashCode(super.hashCode(), bundles, catalogItemId);
     }
     
     @Override
@@ -80,7 +80,7 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         if (!(obj instanceof OsgiBrooklynClassLoadingContext)) return false;
 
         OsgiBrooklynClassLoadingContext other = (OsgiBrooklynClassLoadingContext)obj;
-        if (!contextCatalogId.equals(other.contextCatalogId)) return false;
+        if (!catalogItemId.equals(other.catalogItemId)) return false;
         if (!Objects.equal(bundles, other.bundles)) return false;
         return true;
     }
@@ -96,8 +96,8 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         return null;
     }
     
-    public String getContextCatalogId() {
-        return contextCatalogId;
+    public String getCatalogItemId() {
+        return catalogItemId;
     }
 
 }

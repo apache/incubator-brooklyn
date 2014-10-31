@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
+import brooklyn.basic.internal.ApiObjectsFactory;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 
@@ -35,13 +36,13 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
     
     private final Class<? extends T> type;
     private String displayName;
-    private String contextCatalogItemId;
+    private String catalogItemId;
     private Set<Object> tags = MutableSet.of();
 
     protected AbstractBrooklynObjectSpec(Class<? extends T> type) {
         checkValidType(type);
         this.type = type;
-        this.contextCatalogItemId = ApiObjectsFactory.get().getContextCatalogItemId();
+        this.catalogItemId = ApiObjectsFactory.get().getCatalogItemIdFromContext();
     }
     
     @SuppressWarnings("unchecked")
@@ -61,8 +62,8 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
         return self();
     }
     
-    public K contextCatalogItemId(String val) {
-        contextCatalogItemId = val;
+    public K catalogItemId(String val) {
+        catalogItemId = val;
         return self();
     }
     
@@ -91,8 +92,8 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
         return displayName;
     }
     
-    public final String getContextCatalogItemId() {
-        return contextCatalogItemId;
+    public final String getCatalogItemId() {
+        return catalogItemId;
     }
 
     public final Set<Object> getTags() {

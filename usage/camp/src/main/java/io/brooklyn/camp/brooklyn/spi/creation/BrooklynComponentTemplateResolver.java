@@ -257,7 +257,7 @@ public class BrooklynComponentTemplateResolver {
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
-        spec.contextCatalogItemId(CatalogUtils.getContextCatalogItemIdFromLoader(loader));
+        spec.catalogItemId(CatalogUtils.getCatalogItemIdFromLoader(loader));
         if (template.isPresent() && template.get().getSourceCode()!=null)
             spec.tag(BrooklynTags.newYamlSpecTag(template.get().getSourceCode()));
 
@@ -282,9 +282,7 @@ public class BrooklynComponentTemplateResolver {
         if (childrenObj != null) {
             Set<String> encounteredCatalogTypes = MutableSet.of();
 
-            @SuppressWarnings("unchecked")
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
-
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
                 BrooklynAssemblyTemplateInstantiator instantiator = new BrooklynAssemblyTemplateInstantiator();

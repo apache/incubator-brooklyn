@@ -97,9 +97,10 @@ public class CatalogUtils {
         }
     }
 
-    public static String getContextCatalogItemIdFromLoader(BrooklynClassLoadingContext loader) {
+    /** Scans the given {@link BrooklynClassLoadingContext} to detect what catalog item id is in effect. */
+    public static String getCatalogItemIdFromLoader(BrooklynClassLoadingContext loader) {
         if (loader instanceof OsgiBrooklynClassLoadingContext) {
-            return ((OsgiBrooklynClassLoadingContext)loader).getContextCatalogId();
+            return ((OsgiBrooklynClassLoadingContext)loader).getCatalogItemId();
         } else {
             return null;
         }

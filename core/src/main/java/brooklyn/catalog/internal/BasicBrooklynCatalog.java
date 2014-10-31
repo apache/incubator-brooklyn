@@ -256,7 +256,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     break;
                 default: throw new RuntimeException("Only entity & policy catalog items are supported. Unsupported catalog item type " + item.getCatalogItemType());
             }
-            ((AbstractBrooklynObjectSpec<?, ?>)spec).contextCatalogItemId(item.getId());
+            ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(item.getId());
             return spec;
         }
 

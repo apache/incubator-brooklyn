@@ -38,8 +38,16 @@ public interface BrooklynObject extends Identifiable {
 
     /**
      * The catalog item ID this object was loaded from.
+     * <p>
+     * This can be used to understand the appropriate classloading context,
+     * such as for versioning purposes, as well as meta-information such as 
+     * branding (maybe you can even get an icon) and 
+     * potentially things like resource lifecycle (if a software version is being sunsetted).
+     * <p>
+     * In some cases this may be set heuristically from context and so may not be accurate.
+     * Callers can set an explicit catalog item ID if inferencing is not correct.
      */
-    String getContextCatalogItemId();
+    String getCatalogItemId();
     
     /** 
      * Tags are arbitrary objects which can be attached to an entity for subsequent reference.

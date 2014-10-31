@@ -24,13 +24,13 @@ public class EntityMementoManifestImpl implements EntityMementoManifest {
     private String id;
     private String type;
     private String parentId;
-    private String contextCatalogItemId;
+    private String catalogItemId;
 
-    public EntityMementoManifestImpl(String id, String type, String parentId, String contextCatalogItemId) {
+    public EntityMementoManifestImpl(String id, String type, String parentId, String catalogItemId) {
         this.id = id;
         this.type = type;
         this.parentId = parentId;
-        this.contextCatalogItemId = contextCatalogItemId;
+        this.catalogItemId = catalogItemId;
     }
 
     @Override
@@ -49,8 +49,8 @@ public class EntityMementoManifestImpl implements EntityMementoManifest {
     }
 
     @Override
-    public String getContextCatalogItemId() {
-        return contextCatalogItemId;
+    public String getCatalogItemId() {
+        return catalogItemId;
     }
 
 }

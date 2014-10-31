@@ -34,7 +34,7 @@ public interface BrooklynMementoManifest extends Serializable {
         public String getId();
         public String getType();
         public String getParent();
-        public String getContextCatalogItemId();
+        public String getCatalogItemId();
     }
 
     public Map<String, EntityMementoManifest> getEntityIdToManifest();

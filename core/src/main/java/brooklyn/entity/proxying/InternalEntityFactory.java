@@ -241,8 +241,8 @@ public class InternalEntityFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractEntity)entity).setDisplayName(spec.getDisplayName());
             
-            if (spec.getContextCatalogItemId()!=null) {
-                ((AbstractEntity)entity).setContextCatalogItemId(spec.getContextCatalogItemId());
+            if (spec.getCatalogItemId()!=null) {
+                ((AbstractEntity)entity).setCatalogItemId(spec.getCatalogItemId());
             }
             
             entity.tags().addTags(spec.getTags());

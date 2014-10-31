@@ -59,7 +59,7 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     }
 
     @Override
-    public String getContextCatalogItemId() {
+    public String getCatalogItemId() {
         return null;
     }
 

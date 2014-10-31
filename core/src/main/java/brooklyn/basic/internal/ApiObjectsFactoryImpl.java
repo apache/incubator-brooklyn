@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic;
+package brooklyn.basic.internal;
 
-import java.util.ServiceLoader;
+import brooklyn.basic.internal.ApiObjectsFactoryInterface;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.management.Task;
+import brooklyn.util.task.Tasks;
 
-public class ApiObjectsFactory {
-    public interface ApiObjectsFactoryInterface {
-        public String getContextCatalogItemId();
-    }
+public class ApiObjectsFactoryImpl implements ApiObjectsFactoryInterface {
 
-    private static ApiObjectsFactoryInterface INSTANCE = getFactoryInstance();
-
-    private static ApiObjectsFactoryInterface getFactoryInstance() {
-        ServiceLoader<ApiObjectsFactoryInterface> LOADER = ServiceLoader.load(ApiObjectsFactoryInterface.class);
-        for (ApiObjectsFactoryInterface item : LOADER) {
-            return item;
+    @Override
+    public String getCatalogItemIdFromContext() {
+        Task<?> currentTask = Tasks.current();
+        if (currentTask != null) {
+            Entity contextEntity = BrooklynTaskTags.getContextEntity(currentTask);
+            if (contextEntity != null) {
+                return contextEntity.getCatalogItemId();
+            }
         }
-        throw new IllegalStateException("Implementation of " + ApiObjectsFactoryInterface.class + " not found on classpath");
+        return null;
     }
 
-    public static ApiObjectsFactoryInterface get() {
-        return INSTANCE;
-    }
 }

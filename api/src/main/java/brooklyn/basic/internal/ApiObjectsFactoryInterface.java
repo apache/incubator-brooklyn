@@ -16,26 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic;
+package brooklyn.basic.internal;
 
-import brooklyn.basic.ApiObjectsFactory.ApiObjectsFactoryInterface;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.management.Task;
-import brooklyn.util.task.Tasks;
-
-public class ApiObjectsFactoryImpl implements ApiObjectsFactoryInterface {
-
-    @Override
-    public String getContextCatalogItemId() {
-        Task<?> currentTask = Tasks.current();
-        if (currentTask != null) {
-            Entity contextEntity = BrooklynTaskTags.getContextEntity(currentTask);
-            if (contextEntity != null) {
-                return contextEntity.getContextCatalogItemId();
-            }
-        }
-        return null;
-    }
-
+/** 
+ * Methods from downstream projects used in API classes at runtime. 
+ * See {@link ApiObjectsFactory}. 
+ */
+public interface ApiObjectsFactoryInterface {
+    
+    public String getCatalogItemIdFromContext();
+    
 }

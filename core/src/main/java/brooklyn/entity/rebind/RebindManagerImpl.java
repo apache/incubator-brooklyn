@@ -641,11 +641,11 @@ public class RebindManagerImpl implements RebindManager {
             for (Map.Entry<String, EntityMementoManifest> entry : mementoManifest.getEntityIdToManifest().entrySet()) {
                 String entityId = entry.getKey();
                 EntityMementoManifest entityManifest = entry.getValue();
-                String contextCatalogItemId = findContextCatalogItemId(mementoManifest.getEntityIdToManifest(), entityManifest);
+                String catalogItemId = findCatalogItemId(mementoManifest.getEntityIdToManifest(), entityManifest);
                 if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
                 
                 try {
-                    Entity entity = newEntity(entityId, entityManifest.getType(), getLoadingContextFromCatalogItemId(contextCatalogItemId, classLoader, rebindContext));
+                    Entity entity = newEntity(entityId, entityManifest.getType(), getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext));
                     rebindContext.registerEntity(entityId, entity);
                 } catch (Exception e) {
                     exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityManifest.getType(), e);
@@ -671,7 +671,7 @@ public class RebindManagerImpl implements RebindManager {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
                     
                     try {
-                        Policy policy = newPolicy(policyMemento, getLoadingContextFromCatalogItemId(policyMemento.getContextCatalogItemId(), classLoader, rebindContext));
+                        Policy policy = newPolicy(policyMemento, getLoadingContextFromCatalogItemId(policyMemento.getCatalogItemId(), classLoader, rebindContext));
                         rebindContext.registerPolicy(policyMemento.getId(), policy);
                     } catch (Exception e) {
                         exceptionHandler.onCreateFailed(BrooklynObjectType.POLICY, policyMemento.getId(), policyMemento.getType(), e);
@@ -933,11 +933,11 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
     
-    private String findContextCatalogItemId(Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
+    private String findCatalogItemId(Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
         EntityMementoManifest ptr = entityManifest;
         while (ptr != null) {
-            if (ptr.getContextCatalogItemId() != null) {
-                return ptr.getContextCatalogItemId();
+            if (ptr.getCatalogItemId() != null) {
+                return ptr.getCatalogItemId();
             }
             if (ptr.getParent() != null) {
                 ptr = entityIdToManifest.get(ptr.getParent());
@@ -957,7 +957,7 @@ public class RebindManagerImpl implements RebindManager {
                 throw new IllegalStateException("Failed to load catalog item " + catalogItemId + " required for rebinding.");
             }
         } else {
-            return new JavaBrooklynClassLoadingContext(managementContext, classLoader);
+            return JavaBrooklynClassLoadingContext.create(managementContext, classLoader);
         }
     }
 

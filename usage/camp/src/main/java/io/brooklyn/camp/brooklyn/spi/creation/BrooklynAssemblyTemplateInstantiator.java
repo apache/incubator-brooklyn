@@ -202,7 +202,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             } else {
                 //TODO migrate to catalog.createSpec
                 spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
-                spec.contextCatalogItemId(item.getId());
+                spec.catalogItemId(item.getId());
                 entityResolver.populateSpec(spec);
             }
         }
