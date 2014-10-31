@@ -62,6 +62,8 @@ public class ApplicationResourceIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
+    private static final Duration LONG_WAIT = Duration.minutes(10);
+    
     private final String redisSpec = "{\"name\": \"redis-app\", \"type\": \"brooklyn.entity.nosql.redis.RedisStore\", \"locations\": [ \"localhost\"]}";
     
     private final ApplicationSpec legacyRedisSpec = ApplicationSpec.builder().name("redis-legacy-app")
@@ -117,11 +119,7 @@ public class ApplicationResourceIntegrationTest {
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
         final String entityId = getManagementContext().getApplications().iterator().next().getChildren().iterator().next().getId();
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(10)), new Runnable() {
-            public void run() {
-                Object status = api.getSensorApi().get("redis-app", entityId, "service.state", false);
-                assertEquals(status, Lifecycle.RUNNING.toString());
-            }});
+        assertServiceStateEventually("redis-app", entityId, Lifecycle.RUNNING, LONG_WAIT);
     }
     
     @Test(groups = "Integration", dependsOnMethods = "testDeployRedisApplication")
@@ -130,11 +128,8 @@ public class ApplicationResourceIntegrationTest {
         Response response = api.getApplicationApi().create(legacyRedisSpec);
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 2);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(10)), new Runnable() {
-            public void run() {
-                Object status = api.getSensorApi().get("redis-legacy-app", "redis-ent", "service.state", false);
-                assertEquals(status, Lifecycle.RUNNING.toString());
-            }});
+        assertServiceStateEventually("redis-legacy-app", "redis-ent", Lifecycle.RUNNING, LONG_WAIT);
+        
         // Tear the app down so it doesn't interfere with other tests 
         Response deleteResponse = api.getApplicationApi().delete("redis-legacy-app");
         assertEquals(deleteResponse.getStatus(), 202);
@@ -167,12 +162,7 @@ public class ApplicationResourceIntegrationTest {
         Response response = api.getEffectorApi().invoke("redis-app", entityId, "stop", "5000", ImmutableMap.<String, Object>of());
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
-
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(10)), new Runnable() {
-            public void run() {
-                Object status = api.getSensorApi().get("redis-app", entityId, "service.state", false);
-                assertEquals(status, Lifecycle.STOPPED.toString());
-            }});
+        assertServiceStateEventually("redis-app", entityId, Lifecycle.STOPPED, LONG_WAIT);
     }
 
     @Test(groups = "Integration", dependsOnMethods = "testTriggerRedisStopEffector")
@@ -201,4 +191,11 @@ public class ApplicationResourceIntegrationTest {
         assertEquals(getManagementContext().getApplications().size(), size - 1);
     }
 
+    private void assertServiceStateEventually(final String app, final String entity, final Lifecycle state, Duration timeout) {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", timeout), new Runnable() {
+            public void run() {
+                Object status = api.getSensorApi().get(app, entity, "service.state", false);
+                assertTrue(state.toString().equalsIgnoreCase(status.toString()), "status="+status);
+            }});
+    }
 }

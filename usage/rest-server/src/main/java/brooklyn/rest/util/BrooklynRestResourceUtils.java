@@ -47,6 +47,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -273,7 +274,9 @@ public class BrooklynRestResourceUtils {
                     Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO));
                     instance.addChild(soleChild);
                     instance.addEnricher(Enrichers.builder()
-                            .propagatingAll()
+                            .propagatingAllBut(Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
+                                    Attributes.SERVICE_STATE_ACTUAL, Attributes.SERVICE_STATE_EXPECTED, 
+                                    Attributes.SERVICE_PROBLEMS)
                             .from(soleChild)
                             .build());
 
