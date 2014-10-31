@@ -31,6 +31,7 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
+import brooklyn.entity.drivers.downloads.DownloadSubstituters;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
@@ -76,14 +77,44 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
     
     @Override
     protected String getInstallLabelExtraSalt() {
-        return Identifiers.makeIdFromHash(Objects.hashCode(entity.getConfig(BrooklynNode.DOWNLOAD_URL), entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL)));
+        String downloadUrl = entity.getConfig(BrooklynNode.DOWNLOAD_URL);
+        String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
+        if (Objects.equal(downloadUrl, BrooklynNode.DOWNLOAD_URL.getConfigKey().getDefaultValue()) &&
+                Objects.equal(uploadUrl, BrooklynNode.DISTRO_UPLOAD_URL.getDefaultValue())) {
+            // if both are at the default value, then no salt
+            return null;
+        }
+        return Identifiers.makeIdFromHash(Objects.hashCode(downloadUrl, uploadUrl));
     }
 
     @Override
     public void preInstall() {
         resolver = Entities.newDownloader(this);
         String subpath = entity.getConfig(BrooklynNode.SUBPATH_IN_ARCHIVE);
-        if (Strings.isBlank(subpath)) subpath = format("brooklyn-%s", getVersion());
+        if (subpath==null) {
+            // assume the dir name is `basename-VERSION` where download link is `basename-VERSION-dist.tar.gz`
+            String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
+            String origDownloadName = uploadUrl;
+            if (origDownloadName==null) { 
+                String downloadUrlTemplate = entity.getAttribute(BrooklynNode.DOWNLOAD_URL);
+                if (downloadUrlTemplate!=null) {
+                    // BasicDownloadResolver makes it crazy hard to get the template-evaluated value of DOWNLOAD_URL
+                    origDownloadName = DownloadSubstituters.substitute(downloadUrlTemplate, DownloadSubstituters.getBasicEntitySubstitutions(this));
+                }
+            }
+            if (origDownloadName!=null) {
+                origDownloadName = Urls.getBasename(origDownloadName);
+                String downloadName = origDownloadName;
+                downloadName = Strings.removeFromEnd(downloadName, ".tar.gz");
+                downloadName = Strings.removeFromEnd(downloadName, ".tgz");
+                downloadName = Strings.removeFromEnd(downloadName, ".zip");
+                if (!downloadName.equals(origDownloadName)) {
+                    downloadName = Strings.removeFromEnd(downloadName, "-dist");
+                    subpath = downloadName;
+                }
+            }
+        }
+        if (subpath==null) subpath = format("brooklyn-%s", getVersion());
         setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(subpath)));
     }
 

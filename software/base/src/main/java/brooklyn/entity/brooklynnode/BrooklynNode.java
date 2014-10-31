@@ -87,7 +87,8 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     ConfigKey<String> SUBPATH_IN_ARCHIVE = ConfigKeys.newStringConfigKey("brooklynnode.download.archive.subpath",
         "Path to the main directory in the archive being supplied for installation; "
         + "to use the root of an archive, specify '.'; "
-        + "default value if left blank is the appropriate value for brooklyn,"
+        + "default value taken based on download URL (e.g. 'name' for 'http://path/name.tgz' or 'http://path/name-dist.tgz') "
+        + "falling back to an appropriate value for brooklyn, "
         + "e.g. 'brooklyn-"+BrooklynVersion.INSTANCE.getVersion()+"'", null);
 
     @SetFromFlag("managementUser")
