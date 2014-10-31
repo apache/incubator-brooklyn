@@ -117,10 +117,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         return "apache-cassandra-"+getVersion();
     }
     
+    protected boolean isV2() {
+        String version = getVersion();
+        return version.startsWith("2.");
+    }
+    
     @Override
     public boolean installJava() {
-        String version = getVersion();
-        if (version.startsWith("2.")) {
+        if (isV2()) {
             return checkForAndInstallJava7or8();
         } else {
             return super.installJava();
@@ -292,12 +296,14 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         }
 
         try {
-            newScript(MutableMap.of(USE_PID_FILE, getPidFile()), LAUNCHING)
+            // Relies on `bin/cassandra -p <pidfile>`, rather than us writing pid file ourselves.
+            newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
                     .body.append(
                             // log the date to attempt to debug occasional http://wiki.apache.org/cassandra/FAQ#schema_disagreement
                             // (can be caused by machines out of synch time-wise; but in our case it seems to be caused by other things!)
                             "echo date on cassandra server `hostname` when launching is `date`",
-                            launchEssentialCommand())
+                            launchEssentialCommand(),
+                            "echo after essential command")
                     .execute();
             if (!isClustered()) {
                 InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
@@ -337,7 +343,13 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
     
     protected String launchEssentialCommand() {
-        return String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile());
+        if (isV2()) {
+            return String.format("./bin/cassandra -p %s > ./cassandra-console.log 2>&1", getPidFile());
+        } else {
+            // TODO Could probably get rid of the nohup here, as script does equivalent itself
+            // with `exec ... <&- &`
+            return String.format("nohup ./bin/cassandra -p %s > ./cassandra-console.log 2>&1 &", getPidFile());
+        }
     }
 
     public String getPidFile() { return Os.mergePathsUnix(getRunDir(), "cassandra.pid"); }

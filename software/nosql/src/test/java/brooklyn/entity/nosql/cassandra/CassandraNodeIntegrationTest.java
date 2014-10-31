@@ -83,7 +83,14 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void testCassandraVersion2() throws Exception {
-        String version = "2.0.11";
+        // TODO In v2.0.10, the bin/cassandra script changed to add an additional check for JMX connectivity.
+        // This causes cassandera script to hang for us (presumably due to the CLASSPATH/JVM_OPTS we're passing
+        // in, regarding JMX agent).
+        // See:
+        //  - https://issues.apache.org/jira/browse/CASSANDRA-7254
+        //  - https://github.com/apache/cassandra/blame/trunk/bin/cassandra#L211-216
+        
+        String version = "2.0.9";
         String majorMinorVersion = "2.0";
         
         cassandra = app.createAndManageChild(EntitySpec.create(CassandraNode.class)
