@@ -66,7 +66,9 @@ public class EntityConfigMap implements ConfigMap {
     private final Map<ConfigKey<?>,Object> ownConfig;
     private final Map<ConfigKey<?>,Object> inheritedConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
     // TODO do we really want to have *both* bags and maps for these?  danger that they get out of synch.
-    // have added some logic (Oct 2014) so that the same changes are applied to both, in most places at least
+    // have added some logic (Oct 2014) so that the same changes are applied to both, in most places at least;
+    // i (alex) think we should prefer ConfigBag (the input keys don't matter, it is more a question of retrieval keys),
+    // but first we need ConfigBag to support StructuredConfigKeys 
     private final ConfigBag localConfigBag;
     private final ConfigBag inheritedConfigBag;
 
@@ -205,10 +207,14 @@ public class EntityConfigMap implements ConfigMap {
         Object oldVal;
         if (key instanceof StructuredConfigKey) {
             oldVal = ((StructuredConfigKey)key).applyValueToMap(val, ownConfig);
+            // TODO ConfigBag does not handle structured config keys; quick fix is to remove (and should also remove any subkeys;
+            // as it stands if someone set string a.b.c in the config bag then removed structured key a.b, then got a.b.c they'd get a vale);
+            // long term fix is to support structured config keys in ConfigBag, at which point i think we could remove ownConfig altogether
+            localConfigBag.remove(key);
         } else {
             oldVal = ownConfig.put(key, val);
+            localConfigBag.put((ConfigKey<Object>)key, v);
         }
-        localConfigBag.put((ConfigKey<Object>)key, v);
         entity.refreshInheritedConfigOfChildren();
         return oldVal;
     }
