@@ -231,6 +231,8 @@
                 <exclude>src/main/resources/brooklyn/entity/nosql/redis/slave.conf</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/riak/app.config</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/riak/vm.args</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/riak/riak.conf</exclude>
+                <exclude>src/main/resources/brooklyn/entity/nosql/riak/riak-mac.conf</exclude>
                 <exclude>src/main/resources/brooklyn/entity/nosql/solr/solr.xml</exclude>
 
                 <!--

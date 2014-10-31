@@ -20,6 +20,9 @@ package brooklyn.entity.nosql.riak;
 
 import java.util.List;
 
+import brooklyn.entity.basic.Attributes;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
+import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.catalog.Catalog;
@@ -42,8 +45,10 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "2.0.0");
+            "2.0.1");
 
+    // vm.args and app.config are used for pre-version 2.0.0. Later versions use the (simplified) riak.conf
+    // see https://github.com/joedevivo/ricon/blob/master/cuttlefish.md
     @SetFromFlag("vmArgsTemplateUrl")
     ConfigKey<String> RIAK_VM_ARGS_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
             "riak.vmArgs.templateUrl", "Template file (in freemarker format) for the vm.args config file",
@@ -52,6 +57,33 @@ public interface RiakNode extends SoftwareProcess {
     ConfigKey<String> RIAK_APP_CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
             "riak.appConfig.templateUrl", "Template file (in freemarker format) for the app.config config file",
             "classpath://brooklyn/entity/nosql/riak/app.config");
+    @SetFromFlag("appConfigTemplateUrlLinux")
+    ConfigKey<String> RIAK_CONF_TEMPLATE_URL_LINUX = ConfigKeys.newStringConfigKey(
+            "riak.riakConf.templateUrl.linux", "Template file (in freemarker format) for the app.config config file",
+            "classpath://brooklyn/entity/nosql/riak/riak.conf");
+    @SetFromFlag("appConfigTemplateUrlMac")
+    ConfigKey<String> RIAK_CONF_TEMPLATE_URL_MAC = ConfigKeys.newStringConfigKey(
+            "riak.riakConf.templateUrl.mac", "Template file (in freemarker format) for the app.config config file",
+            "classpath://brooklyn/entity/nosql/riak/riak-mac.conf");
+
+    @SetFromFlag("downloadUrlRhelCentos")
+    AttributeSensorAndConfigKey DOWNLOAD_URL_RHEL_CENTOS = new TemplatedStringAttributeSensorAndConfigKey("download.url.rhelcentos",
+            "URL pattern for downloading the linux RPM installer (will substitute things like ${version} automatically)",
+            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/rhel/${entity.osMajorVersion}/riak-${entity.fullVersion}-1.el6.x86_64.rpm");
+
+    @SetFromFlag("downloadUrlUbuntuDebian")
+    AttributeSensorAndConfigKey DOWNLOAD_URL_UBUNTU_DEBIAN = new TemplatedStringAttributeSensorAndConfigKey("download.url.ubuntudebian",
+            "URL pattern for downloading the linux RPM installer (will substitute things like ${version} automatically)",
+            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/$OS_NAME/$OS_RELEASE/riak_${entity.fullVersion}-1_amd64.deb");
+
+    @SetFromFlag("downloadUrlMac")
+    AttributeSensorAndConfigKey DOWNLOAD_URL_MAC = new TemplatedStringAttributeSensorAndConfigKey("download.url.mac",
+            "URL pattern for downloading the MAC binaries tarball (will substitute things like ${version} automatically)",
+            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/osx/10.8/riak-${entity.fullVersion}-OSX-x86_64.tar.gz");
+
+    // NB these two needed for clients to access
+    @SetFromFlag("riakWebPort")
+    PortAttributeSensorAndConfigKey RIAK_WEB_PORT = new PortAttributeSensorAndConfigKey("riak.webPort", "Riak Web Port", "8098+");
 
     @SetFromFlag("riakNodeHasJoinedCluster")
     AttributeSensor<Boolean> RIAK_NODE_HAS_JOINED_CLUSTER = Sensors.newBooleanSensor(
@@ -59,10 +91,6 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("riakNodeName")
     AttributeSensor<String> RIAK_NODE_NAME = Sensors.newStringSensor("riak.node", "Returns the riak node name as defined in vm.args");
-
-    // NB these two needed for clients to access
-    @SetFromFlag("riakWebPort")
-    PortAttributeSensorAndConfigKey RIAK_WEB_PORT = new PortAttributeSensorAndConfigKey("riak.webPort", "Riak Web Port", "8098+");
     @SetFromFlag("riakPbPort")
     PortAttributeSensorAndConfigKey RIAK_PB_PORT = new PortAttributeSensorAndConfigKey("riak.pbPort", "Riak Protocol Buffers Port", "8087+");
     // these needed for nodes to talk to each other, but not clients (so ideally set up in the security group for internal access)
@@ -70,6 +98,8 @@ public interface RiakNode extends SoftwareProcess {
     PortAttributeSensorAndConfigKey EPMD_LISTENER_PORT = new PortAttributeSensorAndConfigKey("riak.epmdListenerPort", "Erlang Port Mapper Daemon Listener Port", "4369");
     PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_START = new PortAttributeSensorAndConfigKey("riak.erlangPortRangeStart", "Erlang Port Range Start", "6000+");
     PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_END = new PortAttributeSensorAndConfigKey("riak.erlangPortRangeEnd", "Erlang Port Range End", "7999+");
+    PortAttributeSensorAndConfigKey SEARCH_SOLR_PORT = new PortAttributeSensorAndConfigKey("riak.search.solr.port", "Solr port", "8093+");
+    PortAttributeSensorAndConfigKey SEARCH_SOLR_JMX_PORT = new PortAttributeSensorAndConfigKey("riak.search.solr.jmx_port", "Solr port", "8985+");
     AttributeSensor<Integer> NODE_GETS = Sensors.newIntegerSensor("node.gets");
     AttributeSensor<Integer> NODE_GETS_TOTAL = Sensors.newIntegerSensor("node.gets.total");
     AttributeSensor<Integer> NODE_PUTS = Sensors.newIntegerSensor("node.puts");
@@ -89,10 +119,8 @@ public interface RiakNode extends SoftwareProcess {
     AttributeSensor<Integer> PBC_CONNECTS = Sensors.newIntegerSensor("pbc.connects");
     AttributeSensor<Integer> PBC_ACTIVE = Sensors.newIntegerSensor("pbc.active");
     @SuppressWarnings("serial")
-    AttributeSensor<List<String>> RING_MEMBERS = Sensors.newSensor(new TypeToken<List<String>>() {
-                                                                   },
-            "ring.members", "all the riak nodes in the ring"
-    );
+    AttributeSensor<List<String>> RING_MEMBERS = Sensors.newSensor(new TypeToken<List<String>>() {},
+            "ring.members", "all the riak nodes in the ring");
     public static final MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     public static final MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
     public static final MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
@@ -109,6 +137,16 @@ public interface RiakNode extends SoftwareProcess {
     Integer getErlangPortRangeStart();
 
     Integer getErlangPortRangeEnd();
+
+    Integer getSearchSolrPort();
+
+    Integer getSearchSolrJmxPort();
+
+    String getFullVersion();
+
+    String getMajorVersion();
+
+    String getOsMajorVersion();
 
     @Effector(description = "add this riak node to the riak cluster")
     public void joinCluster(@EffectorParam(name = "nodeName") String nodeName);

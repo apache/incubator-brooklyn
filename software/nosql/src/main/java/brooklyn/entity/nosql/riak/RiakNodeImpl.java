@@ -212,4 +212,24 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         return getAttribute(RiakNode.ERLANG_PORT_RANGE_END);
     }
 
+    public Integer getSearchSolrPort() {
+        return getAttribute(RiakNode.SEARCH_SOLR_PORT);
+    }
+
+    public Integer getSearchSolrJmxPort() {
+        return getAttribute(RiakNode.SEARCH_SOLR_JMX_PORT);
+    }
+
+    public String getMajorVersion() {
+        return getFullVersion().substring(0, 3);
+    }
+
+    public String getFullVersion() {
+        return getConfig(RiakNode.SUGGESTED_VERSION);
+    }
+
+    public String getOsMajorVersion() {
+        return getDriver().getOsMajorVersion();
+    }
+
 }

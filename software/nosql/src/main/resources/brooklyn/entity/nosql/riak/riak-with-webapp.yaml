@@ -18,19 +18,19 @@
 #
 
 name: Riak Cluster with Webapp
-location: jclouds:softlayer:sjc01
+location: aws-ec2:eu-west-1
 services:
 - type: brooklyn.entity.nosql.riak.RiakCluster
   initialSize: 2
   id: cluster
-  brooklyn.config:
-    install.version: 2.0.0
 - type: brooklyn.entity.webapp.jboss.JBoss7Server
   name: Web
   brooklyn.config:
     wars.root: "https://s3-eu-west-1.amazonaws.com/brooklyn-clocker/brooklyn-example-hello-world-sql-webapp.war"
     java.sysprops: 
       brooklyn.example.riak.nodes: $brooklyn:component("cluster").attributeWhenReady("riak.cluster.nodeList")
+  provisioning.properties:
+    osFamily: centos
 
 # Alternative URL for War file if available on classpath
 # "classpath://brooklyn-example-hello-world-sql-webapp.war"
