@@ -142,7 +142,7 @@ public class BrooklynLauncher {
     
     private boolean startWebApps = true;
     private boolean startBrooklynNode = false;
-    private PortRange port = PortRanges.fromString("8081+");
+    private PortRange port = null;
     private InetAddress bindAddress = null;
     private InetAddress publicAddress = null;
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
@@ -321,16 +321,14 @@ public class BrooklynLauncher {
     }
 
     /** 
-     * Specifies the port where the web console (and any additional webapps specified) will listen; 
-     * default "8081+" being the first available >= 8081.
+     * As {@link #webconsolePort(PortRange)} taking a single port
      */ 
     public BrooklynLauncher webconsolePort(int port) {
         return webconsolePort(PortRanges.fromInteger(port));
     }
 
     /**
-     * Specifies the port where the web console (and any additional webapps specified) will listen;
-     * default "8081+" being the first available >= 8081.
+     * As {@link #webconsolePort(PortRange)} taking a string range
      */
     public BrooklynLauncher webconsolePort(String port) {
         return webconsolePort(PortRanges.fromString(port));
@@ -338,7 +336,7 @@ public class BrooklynLauncher {
 
     /**
      * Specifies the port where the web console (and any additional webapps specified) will listen;
-     * default "8081+" being the first available >= 8081.
+     * default "8081+" (or "8443+" for https) being the first available >= 8081.
      */ 
     public BrooklynLauncher webconsolePort(PortRange port) {
         this.port = port;
