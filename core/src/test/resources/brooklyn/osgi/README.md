@@ -1,4 +1,7 @@
-Sample OSGi bundle files included here, either are built from /src/dependencies in this project, or contain their sources, or both.
+This directory contains OSGi bundle files used for testing.
+
+Source code including pom.xml is contained in the bundles,
+or in /src/dependencies, or both.
 
 ----
 Licensed to the Apache Software Foundation (ASF) under one
@@ -17,3 +20,4 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
