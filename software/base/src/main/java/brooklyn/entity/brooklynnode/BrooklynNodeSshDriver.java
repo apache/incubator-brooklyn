@@ -95,14 +95,12 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
             // assume the dir name is `basename-VERSION` where download link is `basename-VERSION-dist.tar.gz`
             String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
             String origDownloadName = uploadUrl;
-            if (origDownloadName==null) { 
-                String downloadUrlTemplate = entity.getAttribute(BrooklynNode.DOWNLOAD_URL);
-                if (downloadUrlTemplate!=null) {
-                    // BasicDownloadResolver makes it crazy hard to get the template-evaluated value of DOWNLOAD_URL
-                    origDownloadName = DownloadSubstituters.substitute(downloadUrlTemplate, DownloadSubstituters.getBasicEntitySubstitutions(this));
-                }
-            }
+            if (origDownloadName==null) 
+                origDownloadName = entity.getAttribute(BrooklynNode.DOWNLOAD_URL);
             if (origDownloadName!=null) {
+                // BasicDownloadResolver makes it crazy hard to get the template-evaluated value of DOWNLOAD_URL
+                origDownloadName = DownloadSubstituters.substitute(origDownloadName, DownloadSubstituters.getBasicEntitySubstitutions(this));
+                origDownloadName = Urls.decode(origDownloadName);
                 origDownloadName = Urls.getBasename(origDownloadName);
                 String downloadName = origDownloadName;
                 downloadName = Strings.removeFromEnd(downloadName, ".tar.gz");

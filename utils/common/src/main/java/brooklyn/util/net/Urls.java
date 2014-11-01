@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 import javax.annotation.Nullable;
@@ -141,6 +142,11 @@ public class Urls {
     @SuppressWarnings("deprecation")
     public static String encode(String text) {
         return URLEncoder.encode(text);
+    }
+    /** As {@link #encode(String)} */
+    @SuppressWarnings("deprecation")
+    public static String decode(String text) {
+        return URLDecoder.decode(text);
     }
 
     /** returns the protocol (e.g. http) if one appears to be specified, or else null;
