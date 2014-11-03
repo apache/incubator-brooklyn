@@ -18,6 +18,15 @@
  */
 package brooklyn.entity.nosql.riak;
 
+import static brooklyn.util.ssh.BashCommands.*;
+import static java.lang.String.format;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -30,6 +39,8 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.text.Strings;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -114,7 +125,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
                 "which apt-get",
                 ok(sudo("apt-get -y --allow-unauthenticated install logrotate libpam0g-dev libssl0.9.8")),
-                "export OS_NAME=" + osDetails.getName(),
+                "export OS_NAME=" + Strings.toLowerCase(osDetails.getName()),
                 // TODO: Debian support (default debian image fails with 'sudo: command not found')
                 "debian".equals(osDetails.getName()) ?
                     "export OS_RELEASE=" + osDetails.getVersion().substring(0, osDetails.getVersion().indexOf(".")) :

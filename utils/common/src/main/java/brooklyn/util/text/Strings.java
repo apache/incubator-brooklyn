@@ -587,7 +587,7 @@ public class Strings {
 
     public static String toInitialCapOnly(String value) {
         if (value==null || value.length()==0) return value;
-        return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+        return value.substring(0, 1).toUpperCase(Locale.ENGLISH) + value.substring(1).toLowerCase(Locale.ENGLISH);
     }
 
     public static String reverse(String name) {
@@ -831,6 +831,11 @@ public class Strings {
     public static String collapseWhitespace(String x, String whitespaceReplacement) {
         if (x==null) return null;
         return replaceAllRegex(x, "\\s+", whitespaceReplacement);
+    }
+
+    public static String toLowerCase(String value) {
+        if (value==null || value.length()==0) return value;
+        return value.toLowerCase(Locale.ENGLISH);
     }
 
 }
