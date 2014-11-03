@@ -24,6 +24,9 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;
@@ -38,6 +41,8 @@ import com.google.common.collect.Sets;
 
 public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynObject implements CatalogItem<T, SpecT> {
 
+    private static final Logger log = LoggerFactory.getLogger(CatalogItemDtoAbstract.class);
+    
     // TODO are ID and registeredType the same?
     @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
     @SetFromFlag String registeredType;
@@ -229,4 +234,12 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         }
     }
 
+    /** Use of this method is discouraged unless it is assigning the same (final) ID that this object already has. */
+    @Override
+    public void setCatalogItemId(String id) {
+        if (id!=null && !id.equals(getRegisteredTypeName())) {
+            log.warn("Setting 'catalog-item ID' of catalog item "+getId()+"/"+getRegisteredTypeName()+" to "+id+"; if set, catalog-item ID should match the registered type name.");
+        }
+        super.setCatalogItemId(id);
+    }
 }

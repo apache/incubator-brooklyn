@@ -1,0 +1,10 @@
+
+brooklyn.policies:
+- type: brooklyn.osgi.tests.SimplePolicy
+
+brooklyn.catalog:
+  id: simple-policy
+  version: 1.0
+  # see OsgiTestResources
+  libraries:
+  - classpath:/brooklyn/osgi/brooklyn-test-osgi-entities.jar

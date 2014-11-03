@@ -57,10 +57,11 @@ public class OsgiStandaloneTest {
 
     private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
 
-    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = OsgiTestResources.BROOKLYN_OSGI_TEST_A_0_1_0_URL;
+    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_PATH = OsgiTestResources.BROOKLYN_OSGI_TEST_A_0_1_0_PATH;
+    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:"+BROOKLYN_OSGI_TEST_A_0_1_0_PATH;
 
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH;
-    public static final String BROOKLYN_TEST_OSGI_ENTITIES_URL = OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_URL;
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_URL = "classpath:"+BROOKLYN_TEST_OSGI_ENTITIES_PATH;
 
     protected Framework framework = null;
     private File storageTempDir;

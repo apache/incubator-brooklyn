@@ -38,6 +38,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 
 public class OsgiManager {
 
@@ -91,7 +92,7 @@ public class OsgiManager {
             Bundle b = Osgis.install(framework, bundleUrl);
             nv = b.getSymbolicName()+":"+b.getVersion().toString();
             bundleUrlToNameVersionString.put(bundleUrl, nv);
-            log.debug("Bundle from "+bundleUrl+" successfully installed as " + nv);
+            log.debug("Bundle from "+bundleUrl+" successfully installed as " + nv + " ("+b+")");
         } catch (BundleException e) {
             log.debug("Bundle from "+bundleUrl+" failed to install (rethrowing): "+e);
             throw Throwables.propagate(e);
@@ -104,9 +105,11 @@ public class OsgiManager {
     public <T> Maybe<Class<T>> tryResolveClass(String type, Iterable<String> bundleUrlsOrNameVersionString) {
         Map<String,Throwable> bundleProblems = MutableMap.of();
         for (String bundleUrlOrNameVersionString: bundleUrlsOrNameVersionString) {
+            boolean noVersionInstalled = false;
             try {
                 String bundleNameVersion = bundleUrlToNameVersionString.get(bundleUrlOrNameVersionString);
                 if (bundleNameVersion==null) {
+                    noVersionInstalled = true;
                     bundleNameVersion = bundleUrlOrNameVersionString;
                 }
 
@@ -131,7 +134,16 @@ public class OsgiManager {
                 }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                bundleProblems.put(bundleUrlOrNameVersionString, e);
+                if (noVersionInstalled) {
+                    if (bundleUrlOrNameVersionString.contains("/")) {
+                        // suppress misleading nested trace if the input string looked like a URL
+                        bundleProblems.put(bundleUrlOrNameVersionString, new IllegalStateException("Bundle does not appear to be installed"));
+                    } else {
+                        bundleProblems.put(bundleUrlOrNameVersionString, new IllegalStateException("Bundle does not appear to be installed", e));
+                    }
+                } else {
+                    bundleProblems.put(bundleUrlOrNameVersionString, e);
+                }
 
                 Throwable cause = e.getCause();
                 if (cause != null && cause.getMessage().contains("Unresolved constraint in bundle")) {
@@ -140,7 +152,15 @@ public class OsgiManager {
                 }
             }
         }
-        return Maybe.absent("Unable to resolve class "+type+": "+bundleProblems);
+        if (bundleProblems.size()==1) {
+            Throwable error = Iterables.getOnlyElement(bundleProblems.values());
+            if (error instanceof ClassNotFoundException && error.getCause()!=null && error.getCause().getMessage()!=null) {
+                error = Exceptions.collapseIncludingAllCausalMessages(error);
+            }
+            return Maybe.absent("Unable to resolve class "+type+" in "+Iterables.getOnlyElement(bundleProblems.keySet()), error);
+        } else {
+            return Maybe.absent(Exceptions.create("Unable to resolve class "+type+": "+bundleProblems, bundleProblems.values()));
+        }
     }
 
     public URL getResource(String name, Iterable<String> bundleUrlsOrNameVersionString) {

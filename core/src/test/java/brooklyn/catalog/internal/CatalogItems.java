@@ -20,8 +20,8 @@ package brooklyn.catalog.internal;
 
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
-/** Deliberately package-private. Only for internal use. */
-class CatalogItems {
+/** Only for internal use / use in tests. */
+public class CatalogItems {
 
     public static CatalogTemplateItemDto newTemplateFromJava(String javaType, String name) {
         return newTemplateFromJava(javaType, name, null, null);

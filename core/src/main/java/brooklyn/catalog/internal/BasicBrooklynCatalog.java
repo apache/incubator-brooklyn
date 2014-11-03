@@ -167,10 +167,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     protected CatalogItemDo<?,?> getCatalogItemDo(String idOrRegisteredTypeName) {
-        CatalogItemDo<?, ?> item = catalog.getIdCache().get(idOrRegisteredTypeName);
-        if (item == null) {
-            item = catalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
-        }
+        CatalogItemDo<?, ?> item = null;
+        // TODO really need to remove redundancy of id v registered type;
+        // should also remove "manual additions" bucket; just have one map a la osgi
+        if (manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getIdCache().get(idOrRegisteredTypeName);
+        if (item == null) item = catalog.getIdCache().get(idOrRegisteredTypeName);
+        if (item == null && manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
+        if (item == null) item = catalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
         return item;
     }
     
@@ -498,6 +501,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public void addItem(CatalogItem<?,?> item) {
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
         checkNotNull(item, "item");
+        CatalogUtils.installLibraries(mgmt, item.getLibraries());
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(getAbstractCatalogItem(item));
     }

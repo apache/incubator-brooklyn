@@ -24,6 +24,7 @@ import java.util.List;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;

@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.guava;
+package brooklyn.osgi.tests.more;
 
-import com.google.common.base.Supplier;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.effector.EffectorBody;
+import brooklyn.util.config.ConfigBag;
 
-public class IllegalStateExceptionSupplier implements Supplier<RuntimeException> {
 
-    public static final IllegalStateExceptionSupplier EMPTY_EXCEPTION = new IllegalStateExceptionSupplier();
-    
-    protected final String message;
-    protected final Throwable cause;
-    
-    public IllegalStateExceptionSupplier() { this(null, null); }
-    public IllegalStateExceptionSupplier(String message) { this(message, null); }
-    public IllegalStateExceptionSupplier(Throwable cause) { this(cause!=null ? cause.getMessage() : null, cause); }
-    public IllegalStateExceptionSupplier(String message, Throwable cause) { 
-        this.message = message;
-        this.cause = cause;
+public class MoreEntityImpl extends AbstractEntity implements MoreEntity {
+
+    @Override
+    public void init() {
+        super.init();
+        getMutableEntityType().addEffector(SAY_HI, new EffectorBody<String>() {
+            @Override
+            public String call(ConfigBag parameters) {
+                return sayHI((String)parameters.getStringKey("name"));
+            }
+        });
     }
     
     @Override
-    public RuntimeException get() {
-        return new IllegalStateException(message, cause);
+    public String sayHI(String name) {
+        return "Hi "+name.toUpperCase();
     }
-
+    
 }

@@ -126,22 +126,36 @@ public class Exceptions {
         return collapse(source, true);
     }
     
+    /** as {@link #collapse(Throwable)} but includes causal messages in the message as per {@link #collapseTextIncludingAllCausalMessages(Throwable)};
+     * use with care (limit once) as repeated usage can result in multiple copies of the same message */ 
+    public static Throwable collapseIncludingAllCausalMessages(Throwable source) {
+        return collapse(source, true, true);
+    }
+    
     /** creates (but does not throw) a new {@link PropagatedRuntimeException} whose 
      * message is taken from the first _interesting_ element in the source,
      * and optionally also the causal chain */
     public static Throwable collapse(Throwable source, boolean collapseCausalChain) {
+        return collapse(source, collapseCausalChain, false);
+    }
+    
+    private static Throwable collapse(Throwable source, boolean collapseCausalChain, boolean includeAllCausalMessages) {
         String message = "";
         Throwable collapsed = source;
         int collapseCount = 0;
+        boolean messageIsFinal = false;
         // remove boring stack traces at the head
-        while (isBoring(collapsed)) {
+        while (isBoring(collapsed)  && !messageIsFinal) {
             collapseCount++;
             Throwable cause = collapsed.getCause();
             if (cause==null)
                 // everything in the tree is boring...
                 return source;
             String collapsedS = collapsed.getMessage();
-            if (Strings.isNonBlank(collapsedS)) {
+            if (collapsed instanceof PropagatedRuntimeException && ((PropagatedRuntimeException)collapsed).isCauseEmbeddedInMessage()) {
+                message = collapsed.getMessage();
+                messageIsFinal = true;
+            } else if (Strings.isNonBlank(collapsedS)) {
                 collapsedS = Strings.removeFromEnd(collapsedS, cause.toString(), stripBoringPrefixes(cause.toString()), cause.getMessage());
                 collapsedS = stripBoringPrefixes(collapsedS);
                 if (Strings.isNonBlank(collapsedS))
@@ -161,14 +175,19 @@ public class Exceptions {
             messagesCause = messagesCause.getCause();
         }
         
-        if (collapseCount==0)
+        if (collapseCount==0 && !includeAllCausalMessages)
             return source;
+        
+        if (collapseCount==0) {
+            message = messagesCause.toString();
+            messagesCause = messagesCause.getCause();
+        }
         
         if (Strings.isBlank(message)) {
             return new PropagatedRuntimeException(collapseCausalChain ? collapsed : source);
         } else {
-            if (messagesCause!=null) {
-                String extraMessage = collapseText(messagesCause);
+            if (messagesCause!=null && !messageIsFinal) {
+                String extraMessage = collapseText(messagesCause, includeAllCausalMessages);
                 message = appendSeparator(message, extraMessage);
             }
             return new PropagatedRuntimeException(message, collapseCausalChain ? collapsed : source, true);
@@ -195,8 +214,19 @@ public class Exceptions {
 
     /** like {@link #collapse(Throwable)} but returning a one-line message suitable for logging without traces */
     public static String collapseText(Throwable t) {
+        return collapseText(t, false);
+    }
+
+    /** normally {@link #collapseText(Throwable)} will stop following causal chains when encountering an interesting exception
+     * with a message; this variant will continue to follow such causal chains, showing all messages. 
+     * for use e.g. when verbose is desired in the single-line message. */
+    public static String collapseTextIncludingAllCausalMessages(Throwable t) {
+        return collapseText(t, true);
+    }
+    
+    private static String collapseText(Throwable t, boolean includeAllCausalMessages) {
         if (t == null) return null;
-        Throwable t2 = collapse(t);
+        Throwable t2 = collapse(t, true, includeAllCausalMessages);
         if (t2 instanceof PropagatedRuntimeException) {
             if (((PropagatedRuntimeException)t2).isCauseEmbeddedInMessage())
                 // normally
@@ -205,9 +235,19 @@ public class Exceptions {
                 return ""+t2.getCause();
             return ""+t2.getClass();
         }
-        return t2.toString();
+        String result = t2.toString();
+        if (!includeAllCausalMessages) {
+            return result;
+        }
+        Throwable cause = t2.getCause();
+        if (cause != null) {
+            String causeResult = collapseText(new PropagatedRuntimeException(cause));
+            if (result.indexOf(causeResult)>=0)
+                return result;
+            return result + "; caused by "+causeResult;
+        }
+        return result;
     }
-
 
     public static RuntimeException propagate(Collection<? extends Throwable> exceptions) {
         throw propagate(create(exceptions));

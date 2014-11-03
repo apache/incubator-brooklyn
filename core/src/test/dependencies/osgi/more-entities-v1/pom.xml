@@ -23,7 +23,7 @@
     <packaging>jar</packaging>
 
     <groupId>org.apache.brooklyn.test.resources.osgi</groupId>
-    <artifactId>brooklyn-test-osgi-entities</artifactId>
+    <artifactId>brooklyn-test-osgi-more-entities</artifactId>
     <version>0.1.0</version>
 
     <name>OSGi bundled test entities</name>
@@ -64,7 +64,7 @@
                 <version>2.3.2</version>
                 <configuration>
                     <outputDirectory>../../../resources/brooklyn/osgi</outputDirectory>
-                    <finalName>brooklyn-test-osgi-entities</finalName>
+                    <finalName>brooklyn-test-osgi-more-entities_${version}</finalName>
                 </configuration>
             </plugin>
             <plugin>

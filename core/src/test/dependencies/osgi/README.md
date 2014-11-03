@@ -1,7 +1,11 @@
-This directory contains OSGi bundle files used for testing.
+This directory contains source code for OSGi bundle files 
+used for testing.
 
-Source code including pom.xml is contained in the bundles,
-or in /src/dependencies, or both.
+Binaries are included under src/test/resources.  They are
+copied there when these projects are built, and the binaries
+are included in source control to speed up build times
+(as these projects do not change much).  These projects are
+NOT built as part of the normal brooklyn build.
 
 See OsgiTestResources.java for information on the bundles.
 
