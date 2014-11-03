@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.net.Urls;
@@ -120,7 +121,7 @@ public class CatalogDo {
     }
 
     private void loadCatalogItems() {
-        List<CatalogItemDtoAbstract<?, ?>> entries = dto.entries;
+        Iterable<CatalogItemDtoAbstract<?, ?>> entries = dto.getUniqueEntries();
         if (entries!=null) {
             for (CatalogItemDtoAbstract<?,?> entry : entries) {
                 CatalogUtils.installLibraries(mgmt, entry.getLibrariesDto());
@@ -190,8 +191,8 @@ public class CatalogDo {
                 cache.putAll(child.getIdCache());
             }
         }
-        if (dto.entries!=null) {
-            List<CatalogItemDtoAbstract<?,?>> entriesReversed = new ArrayList<CatalogItemDtoAbstract<?,?>>(dto.entries);
+        if (dto.getUniqueEntries()!=null) {
+            List<CatalogItemDtoAbstract<?,?>> entriesReversed = MutableList.copyOf(dto.getUniqueEntries());
             Collections.reverse(entriesReversed);
             for (CatalogItemDtoAbstract<?,?> entry: entriesReversed)
                 cache.put(entry.getId(), new CatalogItemDo(this, entry));
@@ -221,9 +222,7 @@ public class CatalogDo {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public synchronized void addEntry(CatalogItemDtoAbstract<?,?> entry) {
-        if (dto.entries == null)
-            dto.entries = new ArrayList<CatalogItemDtoAbstract<?,?>>();
-        dto.entries.add(entry);
+        dto.addEntry(entry);
         if (cacheById != null) {
             CatalogItemDo<?, ?> cdo = new CatalogItemDo(this, entry);
             cacheById.put(entry.getId(), cdo);
@@ -238,8 +237,7 @@ public class CatalogDo {
      * Removes the given entry from the catalog.
      */
     public synchronized void deleteEntry(CatalogItemDtoAbstract<?, ?> entry) {
-        if (dto.entries != null)
-            dto.entries.remove(entry);
+        dto.removeEntry(entry);
         if (cacheById != null) {
             cacheById.remove(entry.getId());
             cacheByRegisteredTypeName.remove(entry.getRegisteredTypeName());
