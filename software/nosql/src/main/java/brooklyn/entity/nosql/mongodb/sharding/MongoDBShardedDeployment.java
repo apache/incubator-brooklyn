@@ -24,6 +24,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
+import brooklyn.entity.nosql.mongodb.MongoDBServer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
@@ -75,7 +76,8 @@ public interface MongoDBShardedDeployment extends Entity, Startable {
             new TypeToken<EntitySpec<?>>() {},
             "mongodb.replicaset.spec", 
             "Spec for Replica Set",
-            EntitySpec.create(MongoDBReplicaSet.class));
+            EntitySpec.create(MongoDBReplicaSet.class)
+                    .configure(MongoDBReplicaSet.MEMBER_SPEC, EntitySpec.create(MongoDBServer.class)));
 
     @SuppressWarnings("serial")
     ConfigKey<EntitySpec<?>> MONGODB_CONFIG_SERVER_SPEC = ConfigKeys.newConfigKey(
