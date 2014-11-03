@@ -92,6 +92,7 @@ import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
@@ -825,6 +826,30 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             entityType.addSensorIfAbsentWithoutPublishing(attribute);
         }
         
+        getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
+        return result;
+    }
+
+    @Beta
+    @Override
+    public <T> T modifyAttribute(AttributeSensor<T> attribute, Function<? super T, Maybe<T>> modifier) {
+        if (LOG.isTraceEnabled())
+            LOG.trace(""+this+" modifyAttribute "+attribute+" "+modifier);
+        
+        if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
+            if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
+                LOG.warn(""+this+" modifying "+attribute+" = "+modifier+" in read only mode; will have no effect (future messages for this sensor logged at trace)");
+            } else if (LOG.isTraceEnabled()) {
+                LOG.trace(""+this+" setting "+attribute+" = "+modifier+" in read only mode; will have no effect");
+            }
+        }
+        T result = attributesInternal.modify(attribute, modifier);
+        if (result == null) {
+            // could be this is a new sensor
+            entityType.addSensorIfAbsent(attribute);
+        }
+        
+        // TODO Conditionally set onAttributeChanged, only if was modified
         getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
         return result;
     }

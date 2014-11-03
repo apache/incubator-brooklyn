@@ -90,31 +90,51 @@ public class ServiceStateLogic {
     }
 
     /** update the given key in the given map sensor */
-    public static <TKey,TVal> void updateMapSensorEntry(EntityLocal entity, AttributeSensor<Map<TKey,TVal>> sensor, TKey key, TVal v) {
-        Map<TKey, TVal> map = entity.getAttribute(sensor);
-
-        boolean created = (map==null);
-        if (created) map = MutableMap.of();
+    public static <TKey,TVal> void updateMapSensorEntry(EntityLocal entity, AttributeSensor<Map<TKey,TVal>> sensor, final TKey key, final TVal v) {
+        /*
+         * Important to *not* modify the existing attribute value; must make a copy, modify that, and publish.
+         * This is because a Propagator enricher will set this same value on another entity. There was very
+         * strange behaviour when this was done for a SERVICE_UP_INDICATORS sensor - the updates done here 
+         * applied to the attribute of both entities!
+         * 
+         * Need to do this update atomically (i.e. sequentially) because there is no threading control for
+         * what is calling updateMapSensorEntity. It is called directly on start, on initialising enrichers,
+         * and in event listeners. These calls could be concurrent.
+         */
+        Function<Map<TKey,TVal>, Maybe<Map<TKey,TVal>>> modifier = new Function<Map<TKey,TVal>, Maybe<Map<TKey,TVal>>>() {
+            @Override public Maybe<Map<TKey, TVal>> apply(Map<TKey, TVal> map) {
+                boolean created = (map==null);
+                if (created) map = MutableMap.of();
                 
-        boolean changed;
-        if (v == Entities.REMOVE) {
-            changed = map.containsKey(key);
-            if (changed)
-                map.remove(key);
-        } else {
-            TVal oldV = map.get(key);
-            if (oldV==null)
-                changed = (v!=null || !map.containsKey(key));
-            else
-                changed = !oldV.equals(v);
-            if (changed)
-                map.put(key, (TVal)v);
-        }
-        if (changed || created) {
-            if (!Entities.isNoLongerManaged(entity)) { 
-                // TODO synchronize; then emit a copy to prevent CME's e.g. UrlMappingTest
-                entity.setAttribute(sensor, map);
+                boolean changed;
+                if (v == Entities.REMOVE) {
+                    changed = map.containsKey(key);
+                    if (changed) {
+                        map = MutableMap.copyOf(map);
+                        map.remove(key);
+                    }
+                } else {
+                    TVal oldV = map.get(key);
+                    if (oldV==null) {
+                        changed = (v!=null || !map.containsKey(key));
+                    } else {
+                        changed = !oldV.equals(v);
+                    }
+                    if (changed) {
+                        map = MutableMap.copyOf(map);
+                        map.put(key, (TVal)v);
+                    }
+                }
+                if (changed || created) {
+                    return Maybe.of(map);
+                } else {
+                    return Maybe.absent();
+                }
             }
+        };
+        
+        if (!Entities.isNoLongerManaged(entity)) { 
+            entity.modifyAttribute(sensor, modifier);
         }
     }
     
@@ -424,11 +444,13 @@ public class ServiceStateLogic {
             }
 
             // override superclass to publish multiple sensors
-            if (getConfig(DERIVE_SERVICE_PROBLEMS))
+            if (getConfig(DERIVE_SERVICE_PROBLEMS)) {
                 updateMapSensor(SERVICE_PROBLEMS, computeServiceProblems());
+            }
 
-            if (getConfig(DERIVE_SERVICE_NOT_UP))
+            if (getConfig(DERIVE_SERVICE_NOT_UP)) {
                 updateMapSensor(SERVICE_NOT_UP_INDICATORS, computeServiceNotUp());
+            }
         }
 
         protected Object computeServiceNotUp() {
