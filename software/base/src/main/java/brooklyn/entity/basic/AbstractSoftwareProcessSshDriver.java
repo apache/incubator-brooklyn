@@ -20,7 +20,6 @@ package brooklyn.entity.basic;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -51,6 +50,8 @@ import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
@@ -78,10 +79,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessSshDriver.class);
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
 
-    // we cache these in case the entity becomes unmanaged
+    // we cache these for efficiency and in case the entity becomes unmanaged
     private volatile String installDir;
     private volatile String runDir;
     private volatile String expandedInstallDir;
+    private final Object installDirSetupMutex = new Object();
 
     protected volatile DownloadResolver resolver;
     
@@ -158,33 +160,31 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public String getInstallDir() {
         if (installDir != null) return installDir;
 
-        String existingVal = getEntity().getAttribute(SoftwareProcess.INSTALL_DIR);
-        if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
-            installDir = existingVal;
+        synchronized (installDirSetupMutex) {
+            // previously we looked at sensor value, but we shouldn't as it might have been converted from the config key value
+            // *before* we computed the install label, or that label may have changed since previous install; now force a recompute
+            setInstallLabel();
+
+            // deprecated in 0.7.0 - "brooklyn.dirs.install" is no longer supported
+            Maybe<Object> minstallDir = getEntity().getConfigRaw(SoftwareProcess.INSTALL_DIR, false);
+            if (!minstallDir.isPresent() || minstallDir.get()==null) {
+                String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
+                if (installBasedir != null) {
+                    log.warn("Using legacy 'brooklyn.dirs.install' setting for "+entity+"; may be removed in future versions.");
+                    setInstallDir(Os.tidyPath(Os.mergePathsUnix(installBasedir, getEntityVersionLabel()+"_"+entity.getId())));
+                    return installDir;
+                }
+            }
+
+            // set it null first so that we force a recompute
+            setInstallDir(null);
+            setInstallDir(Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR)));
             return installDir;
         }
-        
-        setInstallLabel();
-        
-        // deprecated in 0.7.0
-        Maybe<Object> minstallDir = getEntity().getConfigRaw(SoftwareProcess.INSTALL_DIR, true);
-        if (!minstallDir.isPresent() || minstallDir.get()==null) {
-            String installBasedir = ((EntityInternal)entity).getManagementContext().getConfig().getFirst("brooklyn.dirs.install");
-            if (installBasedir != null) {
-                log.warn("Using legacy 'brooklyn.dirs.install' setting for "+entity+"; may be removed in future versions.");
-                installDir = Os.mergePathsUnix(installBasedir, getEntityVersionLabel()+"_"+entity.getId());
-                installDir = Os.tidyPath(installDir);
-                getEntity().setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
-                return installDir;
-            }
-        }
-
-        setInstallDir(Os.tidyPath(ConfigToAttributes.apply(getEntity(), SoftwareProcess.INSTALL_DIR)));
-        return installDir;
     }
     
     protected void setInstallLabel() {
-        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, true).isPresent()) return; 
+        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, false).isPresentAndNonNull()) return; 
         getEntity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, 
             getEntity().getEntityType().getSimpleName()+
             (Strings.isNonBlank(getVersion()) ? "_"+getVersion() : "")+
@@ -234,12 +234,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     public void setExpandedInstallDir(String val) {
-        checkNotNull(val, "expandedInstallDir");
         String oldVal = getEntity().getAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR);
         if (Strings.isNonBlank(oldVal) && !oldVal.equals(val)) {
             log.info("Resetting expandedInstallDir (to "+val+" from "+oldVal+") for "+getEntity());
         }
         
+        expandedInstallDir = val;
         getEntity().setAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR, val);
     }
     
@@ -248,8 +248,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         
         String untidiedVal = ConfigToAttributes.apply(getEntity(), SoftwareProcess.EXPANDED_INSTALL_DIR);
         if (Strings.isNonBlank(untidiedVal)) {
-            expandedInstallDir = Os.tidyPath(untidiedVal);
-            entity.setAttribute(SoftwareProcess.INSTALL_DIR, expandedInstallDir);
+            setExpandedInstallDir(Os.tidyPath(untidiedVal));
             return expandedInstallDir;
         } else {
             throw new IllegalStateException("expandedInstallDir is null; most likely install was not called for "+getEntity());
@@ -275,6 +274,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
+        // TODO replace with SshEffectorTasks.ssh ?; remove the use of flags
+        
         Map flags = Maps.newLinkedHashMap();
         if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
@@ -285,6 +286,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             // attach tags here, as well as in ScriptHelper, because they may have just been read from the driver
             if (environment!=null) {
                 Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
+            }
+            if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDIN)==null) {
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, 
+                    Streams.byteArrayOfString(Strings.join(script, "\n"))));
             }
             if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDOUT)==null) {
                 ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -313,11 +318,15 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public void copyInstallResources() {
         getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
         try {
-            // Override environment variables for this simple command. Otherwise sub-classes might
+            // Ensure environment variables are not looked up here, otherwise sub-classes might
             // lookup port numbers and fail with ugly error if port is not set; better to wait
             // until in Entity's code (e.g. customize) where such checks are done explicitly.
-            execute(ImmutableMap.of("env", ImmutableMap.of()), ImmutableList.of("mkdir -p " + getInstallDir()), "create-install-dir");
+            DynamicTasks.queue(SshEffectorTasks.ssh("mkdir -p " + getInstallDir()).summary("create install directory")
+                .requiringExitCodeZero()).get();
 
+            // TODO see comment in copyResource, that should be queued as a task like the above
+            // (better reporting in activities console)
+            
             Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
             if (installFiles != null && installFiles.size() > 0) {
                 for (String source : installFiles.keySet()) {
@@ -462,6 +471,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return copyResource(MutableMap.of(), resource, target, createParentDir);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public int copyResource(Map sshFlags, String source, String target) {
         return copyResource(sshFlags, source, target, false);
     }
@@ -478,6 +488,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public int copyResource(Map<Object,Object> sshFlags, String source, String target, boolean createParentDir) {
+        // TODO use SshTasks.put instead, better logging
         Map flags = Maps.newLinkedHashMap();
         if (!sshFlags.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());

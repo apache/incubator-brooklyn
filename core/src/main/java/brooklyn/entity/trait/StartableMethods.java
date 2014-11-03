@@ -69,7 +69,7 @@ public class StartableMethods {
     }
     
     private static <T extends Entity> Iterable<T> filterStartableManagedEntities(Iterable<T> contenders) {
-        return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.managed()));
+        return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.isManaged()));
     }
 
     public static void stopSequentially(Iterable<? extends Startable> entities) {

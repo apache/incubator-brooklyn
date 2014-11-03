@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -294,8 +293,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         int initialSize = getConfig(INITIAL_SIZE).intValue();
         int initialQuorumSize = getInitialQuorumSize();
+        Exception internalError = null;
 
-        Exception resizeException = null;
         try {
             resize(initialSize);
         } catch (Exception e) {
@@ -304,18 +303,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             // But if it was this thread that threw the exception (rather than a sub-task), then need
             // to record that failure here.
             LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
-            resizeException = e;
+            internalError = e;
         }
 
         Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
-        Iterator<Task<?>> fi = failed.iterator();
-        boolean noFailed=true, severalFailed=false;
-        if (fi.hasNext()) {
-            noFailed = false;
-            fi.next();
-            if (fi.hasNext())
-                severalFailed = true;
-        }
+        boolean noFailed = Iterables.isEmpty(failed);
+        boolean severalFailed = Iterables.size(failed) > 1;
 
         int currentSize = getCurrentSize().intValue();
         if (currentSize < initialQuorumSize) {
@@ -331,14 +324,17 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                     + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
             }
             Throwable firstError = Tasks.getError(Maybe.next(failed.iterator()).orNull());
+            if (firstError==null && internalError!=null) {
+                // only use the internal error if there were no nested task failures
+                // (otherwise the internal error should be a wrapper around the nested failures)
+                firstError = internalError;
+            }
             if (firstError!=null) {
                 if (severalFailed) {
                     message += "; first failure is: "+Exceptions.collapseText(firstError);
                 } else {
                     message += ": "+Exceptions.collapseText(firstError);
                 }
-            } else {
-                firstError = resizeException;
             }
             throw new IllegalStateException(message, firstError);
             

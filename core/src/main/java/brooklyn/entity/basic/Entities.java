@@ -22,6 +22,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,6 +52,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.AttributeSensor;
@@ -91,6 +93,7 @@ import brooklyn.util.task.system.SystemTasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -768,6 +771,15 @@ public class Entities {
         return ((EntityInternal)e).getManagementSupport().isReadOnly();
     }
 
+    /** Unwraps a proxy to retrieve the real item, if available.
+     * <p>
+     * Only intended for use in tests. For normal operations, callers should ensure the method is
+     * available on an interface and accessed via the proxy. */
+    @Beta @VisibleForTesting
+    public static AbstractEntity deproxy(Entity e) {
+        return (AbstractEntity) ((EntityProxyImpl)Proxy.getInvocationHandler(e)).getDelegate();
+    }
+    
     /**
      * Brings this entity under management only if its ancestor is managed.
      * <p>

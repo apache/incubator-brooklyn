@@ -29,6 +29,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.reflect.TypeToken;

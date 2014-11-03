@@ -101,7 +101,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     }
     
     /**
-     * Wraps an entity spec so its configuration can be overridden without modifying the 
+     * Copies entity spec so its configuration can be overridden without modifying the 
      * original entity spec.
      */
     public static <T extends Entity> EntitySpec<T> create(EntitySpec<T> spec) {
@@ -228,6 +228,11 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
      */
     public Map<ConfigKey<?>, Object> getConfig() {
         return Collections.unmodifiableMap(config);
+    }
+
+    /** Clears the config map, removing any config previously set. */
+    public void clearConfig() {
+        config.clear();
     }
         
     public List<PolicySpec<?>> getPolicySpecs() {

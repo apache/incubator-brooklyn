@@ -20,13 +20,14 @@ package brooklyn.rest.testing.mocks;
 
 import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.EntityPredicates;
+import brooklyn.util.text.StringPredicates;
 
 public class NameMatcherGroupImpl extends DynamicGroupImpl implements NameMatcherGroup {
 
     @Override
     public void init() {
         super.init();
-        setConfig(ENTITY_FILTER, EntityPredicates.displayNameMatches(getConfig(NAME_REGEX)));
+        setConfig(ENTITY_FILTER, EntityPredicates.displayNameSatisfies(StringPredicates.matchesRegex(getConfig(NAME_REGEX))));
         rescanEntities();
     }
 }

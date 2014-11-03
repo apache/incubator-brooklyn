@@ -32,6 +32,8 @@ import brooklyn.entity.Entity;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
+/** @deprecated since 0.7.0; use EntitySpec instead, as per {@link EntityFactory} javadoc */
+@Deprecated
 public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractConfigurableEntityFactory<T> {
     private transient Class<? extends T> clazz;
     private final String clazzName;

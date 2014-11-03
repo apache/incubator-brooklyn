@@ -64,7 +64,7 @@ public class HostLocationResolver extends AbstractLocationResolver {
         Maybe<Location> testResolve = managementContext.getLocationRegistry().resolve(target, false, null);
         if (!testResolve.isPresent()) {
             throw new IllegalArgumentException("Invalid target location '" + target + "' for location '"+HOST+"': "+
-                Exceptions.collapseText( ((Absent<?>)testResolve).getException() ));
+                Exceptions.collapseText( ((Absent<?>)testResolve).getException() ), ((Absent<?>)testResolve).getException());
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(SingleMachineProvisioningLocation.class)

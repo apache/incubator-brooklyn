@@ -105,11 +105,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return getAttribute(PROVISIONING_LOCATION);
     }
     
+    @Override
     public SoftwareProcessDriver getDriver() {
         return driver;
     }
 
-      protected SoftwareProcessDriver newDriver(MachineLocation loc){
+    protected SoftwareProcessDriver newDriver(MachineLocation loc){
         EntityDriverManager entityDriverManager = getManagementContext().getEntityDriverManager();
         return (SoftwareProcessDriver)entityDriverManager.build(this, loc);
     }

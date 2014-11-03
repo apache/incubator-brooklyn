@@ -58,11 +58,10 @@ public class KeyValueParser {
         
         StringBuilder result = new StringBuilder();
         for (Map.Entry<String, String> entry : parts.entrySet()) {
+            if (result.length()>0) result.append(", ");
             result.append(tokenizer.quoteToken(entry.getKey()));
             if (entry.getValue() != null) result.append("="+tokenizer.quoteToken(entry.getValue()));
-            result.append(", ");
         }
-        if (result.length() > 0) result.deleteCharAt(result.length()-1);
         return result.toString();
     }
 

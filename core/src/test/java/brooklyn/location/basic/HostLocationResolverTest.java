@@ -68,6 +68,11 @@ public class HostLocationResolverTest {
     public void resolveHosts() {
         resolve("host:(\"1.1.1.1\")");
         resolve("host:(\"localhost\")");
+    }
+    
+    @Test(groups="Integration")
+    public void resolveRealHosts() {
+        // must be online to resolve this
         resolve("host:(\"www.foo.com\")");
     }
     

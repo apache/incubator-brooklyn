@@ -397,7 +397,7 @@ public class ConfigBag {
     }
 
     protected <T> T get(ConfigKey<T> key, boolean markUsed) {
-        // TODO for now, no evaluation -- closure content / smart (self-extracting) keys are NOT supported
+        // TODO for now, no evaluation -- maps / closure content / other smart (self-extracting) keys are NOT supported
         // (need a clean way to inject that behaviour, as well as desired TypeCoercions)
         if (config.containsKey(key.getName()))
             return coerceFirstNonNullKeyValue(key, getStringKey(key.getName(), markUsed));

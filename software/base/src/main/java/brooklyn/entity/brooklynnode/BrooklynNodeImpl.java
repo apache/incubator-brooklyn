@@ -36,15 +36,21 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
+import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
+import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -52,6 +58,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.javalang.Enums;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.DynamicTasks;
@@ -62,6 +69,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
@@ -94,11 +102,20 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         getMutableEntityType().addEffector(ShutdownEffectorBody.SHUTDOWN);
         getMutableEntityType().addEffector(StopNodeButLeaveAppsEffectorBody.STOP_NODE_BUT_LEAVE_APPS);
         getMutableEntityType().addEffector(StopNodeAndKillAppsEffectorBody.STOP_NODE_AND_KILL_APPS);
+        getMutableEntityType().addEffector(SetHighAvailabilityPriorityEffectorBody.SET_HIGH_AVAILABILITY_PRIORITY);
+        getMutableEntityType().addEffector(SetHighAvailabilityModeEffectorBody.SET_HIGH_AVAILABILITY_MODE);
+        getMutableEntityType().addEffector(BrooklynNodeUpgradeEffectorBody.UPGRADE);
     }
 
     @Override
+    protected void preStart() {
+        ServiceNotUpLogic.clearNotUpIndicator(this, SHUTDOWN.getName());
+    }
+    
+    @Override
     protected void preStop() {
         super.preStop();
+
         // Shutdown only if accessible: any of stop_* could have already been called.
         // Don't check serviceUp=true because stop() will already have set serviceUp=false && expectedState=stopping
         if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
@@ -183,28 +200,31 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
         @Override
         public Void call(ConfigBag parameters) {
-            Map<String, String> formParams = new MutableMap<String, String>()
-                    .addIfNotNull("stopAppsFirst", toNullableString(parameters.get(STOP_APPS_FIRST)))
-                    .addIfNotNull("forceShutdownOnError", toNullableString(parameters.get(FORCE_SHUTDOWN_ON_ERROR)))
-                    .addIfNotNull("shutdownTimeout", toNullableString(parameters.get(SHUTDOWN_TIMEOUT)))
-                    .addIfNotNull("requestTimeout", toNullableString(parameters.get(REQUEST_TIMEOUT)))
-                    .addIfNotNull("delayForHttpReturn", toNullableString(parameters.get(DELAY_FOR_HTTP_RETURN)));
+            MutableMap<String, String> formParams = MutableMap.of();
+            Lifecycle initialState = entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
+            for (ConfigKey<?> k: new ConfigKey<?>[] { STOP_APPS_FIRST, FORCE_SHUTDOWN_ON_ERROR, SHUTDOWN_TIMEOUT, REQUEST_TIMEOUT, DELAY_FOR_HTTP_RETURN })
+                formParams.addIfNotNull(k.getName(), toNullableString(parameters.get(k)));
             try {
+                log.debug("Shutting down "+entity()+" with "+formParams);
                 HttpToolResponse resp = ((BrooklynNode)entity()).http()
-                    .post("/v1/server/shutdown", MutableMap.<String, String>of(), formParams);
+                    .post("/v1/server/shutdown",
+                        ImmutableMap.of("Brooklyn-Allow-Non-Master-Access", "true"),
+                        formParams);
                 if (resp.getResponseCode() != HttpStatus.SC_NO_CONTENT) {
                     throw new IllegalStateException("Response code "+resp.getResponseCode());
                 }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                Lifecycle state = entity().getAttribute(Attributes.SERVICE_STATE_ACTUAL);
-                if (state!=Lifecycle.RUNNING) {
+                ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
+                if (initialState!=Lifecycle.RUNNING) {
                     // ignore failure in this task if the node is not currently running
                     Tasks.markInessential();
                 }
-                throw new PropagatedRuntimeException("Error shutting down remote node "+entity()+" (in state "+state+"): "+Exceptions.collapseText(e), e);
+                throw new PropagatedRuntimeException("Error shutting down remote node "+entity()+" (in state "+initialState+"): "+Exceptions.collapseText(e), e);
             }
-            ServiceNotUpLogic.updateNotUpIndicator(entity(), "brooklynnode.shutdown", "Shutdown of remote node has completed successfuly");
+            ServiceNotUpLogic.updateNotUpIndicator(entity(), SHUTDOWN.getName(), "Shutdown of remote node has completed successfuly");
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
             return null;
         }
 
@@ -335,12 +355,17 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
                     .entity(this)
-                    .period(200)
+                    .period(getConfig(POLL_PERIOD))
                     .baseUri(webConsoleUri)
                     .credentialsIfNotNull(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                     .poll(new HttpPollConfig<Boolean>(WEB_CONSOLE_ACCESSIBLE)
                             .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                             .setOnFailureOrException(false))
+                    .poll(new HttpPollConfig<ManagementNodeState>(MANAGEMENT_NODE_STATE)
+                            .suburl("/v1/server/ha/state")
+                            .onSuccess(Functionals.chain(Functionals.chain(HttpValueFunctions.jsonContents(), JsonFunctions.cast(String.class)), Enums.fromStringFunction(ManagementNodeState.class)))
+                            .setOnFailureOrException(null))
+                    // TODO sensors for load, size, etc
                     .build();
 
             if (!Lifecycle.RUNNING.equals(getAttribute(SERVICE_STATE_ACTUAL))) {

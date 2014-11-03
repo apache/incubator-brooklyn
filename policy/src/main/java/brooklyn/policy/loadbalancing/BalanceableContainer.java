@@ -24,9 +24,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.QuorumCheck;
-import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.util.collections.QuorumCheck;
+import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 
 /**
  * Contains worker items that can be moved between this container and others to effect load balancing.

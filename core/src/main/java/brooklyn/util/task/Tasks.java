@@ -37,6 +37,8 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.ReferenceWithError;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -421,5 +423,50 @@ public class Tasks {
         if (t==null) return false;
         return t.isCancelled();
     }
+
+    private static class WaitForRepeaterCallable implements Callable<Boolean> {
+        protected Repeater repeater;
+        protected boolean requireTrue;
+
+        public WaitForRepeaterCallable(Repeater repeater, boolean requireTrue) {
+            this.repeater = repeater;
+            this.requireTrue = requireTrue;
+        }
+
+        @Override
+        public Boolean call() {
+            ReferenceWithError<Boolean> result = repeater.runKeepingError();
+            if (Boolean.TRUE.equals(result.getWithoutError()))
+                return true;
+            if (result.hasError()) 
+                throw Exceptions.propagate(result.getError());
+            if (requireTrue)
+                throw new IllegalStateException("timeout - "+repeater.getDescription());
+            return false;
+        }
+    }
+
+    /** @return a {@link TaskBuilder} which tests whether the repeater terminates with success in its configured timeframe,
+     * returning true or false depending on whether repeater succeed */
+    public static TaskBuilder<Boolean> testing(Repeater repeater) {
+        return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, false))
+            .name("waiting for condition")
+            .description("Testing whether " + getTimeoutString(repeater) + ": "+repeater.getDescription());
+    }
+
+    /** @return a {@link TaskBuilder} which requires that the repeater terminate with success in its configured timeframe,
+     * throwing if it does not */
+    public static TaskBuilder<?> requiring(Repeater repeater) {
+        return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, true))
+            .name("waiting for condition")
+            .description("Requiring " + getTimeoutString(repeater) + ": "+repeater);
+    }
     
+    private static String getTimeoutString(Repeater repeater) {
+        Duration timeout = repeater.getTimeLimit();
+        if (timeout==null || Duration.PRACTICALLY_FOREVER.equals(timeout))
+            return "eventually";
+        return "in "+timeout;
+    }
+
 }

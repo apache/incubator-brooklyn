@@ -109,8 +109,12 @@ public class BrooklynWebServer {
 
     private WebAppContext rootContext;
     
+    /** base port to use, for http if enabled or else https; if not set, it uses httpPort or httpsPort */
+    @SetFromFlag("port")
+    protected PortRange requestedPort = null;
+    
     @SetFromFlag
-    protected PortRange port = PortRanges.fromString("8081+");
+    protected PortRange httpPort = PortRanges.fromString("8081+");
     @SetFromFlag
     protected PortRange httpsPort = PortRanges.fromString("8443+");
     
@@ -206,7 +210,7 @@ public class BrooklynWebServer {
     public BrooklynWebServer setPort(Object port) {
         if (getActualPort()>0)
             throw new IllegalStateException("Can't set port after port has been assigned to server (using "+getActualPort()+")");
-        this.port = TypeCoercions.coerce(port, PortRange.class);
+        this.requestedPort = TypeCoercions.coerce(port, PortRange.class);
         return this;
     }
 
@@ -222,7 +226,7 @@ public class BrooklynWebServer {
     }
     
     public PortRange getRequestedPort() {
-        return port;
+        return requestedPort;
     }
     
     /** returns port where this is running, or -1 if not yet known */
@@ -328,9 +332,13 @@ public class BrooklynWebServer {
         if (server != null) throw new IllegalStateException(""+this+" already running");
 
         if (actualPort == -1){
-            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), getHttpsEnabled()?httpsPort:port);
+            PortRange portRange = requestedPort;
+            if (portRange==null) {
+                portRange = getHttpsEnabled()? httpsPort : httpPort;
+            }
+            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), portRange);
             if (actualPort == -1) 
-                throw new IllegalStateException("Unable to provision port for web console (wanted "+(getHttpsEnabled()?httpsPort:port)+")");
+                throw new IllegalStateException("Unable to provision port for web console (wanted "+portRange+")");
         }
 
         server = new Server(new InetSocketAddress(bindAddress, actualPort));

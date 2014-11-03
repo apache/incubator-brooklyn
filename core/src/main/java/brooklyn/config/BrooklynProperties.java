@@ -433,6 +433,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
 
     @Override
     public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
+        // TODO does not support MapConfigKey etc where entries use subkey notation; for now, access using submap
         if (!containsKey(key.getName())) {
             if (defaultValue!=null) return defaultValue;
             return key.getDefaultValue();

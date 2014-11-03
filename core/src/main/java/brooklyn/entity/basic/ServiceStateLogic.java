@@ -49,6 +49,7 @@ import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.repeat.Repeater;
