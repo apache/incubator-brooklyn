@@ -53,7 +53,6 @@ public class CatalogDto {
     String description;
     CatalogClasspathDto classpath;
     private List<CatalogItemDtoAbstract<?,?>> entries = null;
-//    Map<String,CatalogItemDtoAbstract<?,?>> entries = null;
     
     // for thread-safety, any dynamic additions to this should be handled by a method 
     // in this class which does copy-on-write
