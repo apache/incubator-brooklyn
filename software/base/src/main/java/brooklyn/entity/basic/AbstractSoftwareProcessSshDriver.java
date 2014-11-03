@@ -258,6 +258,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public SshMachineLocation getMachine() { return getLocation(); }
     public String getHostname() { return entity.getAttribute(Attributes.HOSTNAME); }
     public String getAddress() { return entity.getAttribute(Attributes.ADDRESS); }
+    public String getSubnetHostname() { return entity.getAttribute(Attributes.SUBNET_HOSTNAME); }
+    public String getSubnetAddress() { return entity.getAttribute(Attributes.SUBNET_ADDRESS); }
 
     protected Map<String, Object> getSshFlags() {
         return SshEffectorTasks.getSshFlags(getEntity(), getMachine());

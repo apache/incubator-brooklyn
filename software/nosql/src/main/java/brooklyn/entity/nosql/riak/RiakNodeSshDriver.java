@@ -103,10 +103,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     private List<String> installLinux(String expandedInstallDir) {
-
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), SshTasks.OnFailingTask.WARN_OR_IF_DYNAMIC_FAIL_MARKING_INESSENTIAL)).orSubmitAndBlock();
-
-        isPackageInstall = true;
 
         String installBin = Urls.mergePaths(expandedInstallDir, "bin");
         String saveAsYum = "riak.rpm";
@@ -203,7 +200,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         customizeScript.failOnNonZeroResultCode().execute();
 
         //set the riak node name
-        entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getEntity().getAttribute(Attributes.SUBNET_HOSTNAME)));
+        entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getSubnetHostname()));
     }
 
     @Override
@@ -231,11 +228,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void stop() {
-
         leaveCluster();
 
         String command = format("%s stop", getRiakCmd());
-        command = isPackageInstall ? "sudo " + command : command;
+        command = isPackageInstall ? sudo(command) : command;
 
         ScriptHelper stopScript = newScript(ImmutableMap.of(USE_PID_FILE, false), STOPPING)
                 .body.append(command);
@@ -248,7 +244,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
         int result = stopScript.failOnNonZeroResultCode().execute();
         if (result != 0) {
-            newScript(ImmutableMap.of(USE_PID_FILE, ""), STOPPING).execute();
+            newScript(ImmutableMap.of(USE_PID_FILE, false), STOPPING).execute();
         }
     }
 
@@ -335,7 +331,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void commitCluster() {
-
         if (hasJoinedCluster()) {
             ScriptHelper commitClusterScript = newScript("commitCluster")
                     .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
@@ -366,10 +361,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
 
             String stopCommand = format("%s stop", getRiakCmd());
-            stopCommand = isPackageInstall ? "sudo " + stopCommand : stopCommand;
+            stopCommand = isPackageInstall ? sudo(stopCommand) : stopCommand;
 
             String startCommand = format("%s start >/dev/null 2>&1 < /dev/null &", getRiakCmd());
-            startCommand = isPackageInstall ? "sudo " + startCommand : startCommand;
+            startCommand = isPackageInstall ? sudo(startCommand) : startCommand;
 
             ScriptHelper recoverNodeScript = newScript("recoverNode")
                     .body.append(stopCommand)
@@ -392,10 +387,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         } else {
             log.warn("entity {}: is not in the riak cluster", entity.getId());
         }
-    }
-
-    public String getSubnetHostname() {
-        return getEntity().getAttribute(Attributes.SUBNET_HOSTNAME);
     }
 
     private Boolean hasJoinedCluster() {

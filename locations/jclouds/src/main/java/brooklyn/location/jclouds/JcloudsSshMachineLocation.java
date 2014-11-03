@@ -160,24 +160,11 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         return node.getPrivateAddresses();
     }
 
-    /** returns the hostname (or sometimes IP) for use by peers in the same subnet,
-     * defaulting to public hostname if nothing special
-     * <p>
-     * for use e.g. in clouds like amazon where other machines
-     * in the same subnet need to use a different IP
-     */
+    /** In most clouds, the public hostname is the only way to ensure VMs in different zones can access each other. */
     @Override
     public String getSubnetHostname() {
         String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
-        
-        if ("aws-ec2".equals(jcloudsParent.getProvider())) {
-            // prefer hostname over IP for aws (resolves to private ip in subnet, and to public from outside)
-            if (!Networking.isValidIp4(publicHostname)) {
-                return publicHostname; // assume it's a hostname; could check for ip6!
-            }
-        }
-        Optional<String> privateAddress = getPrivateAddress();
-        return privateAddress.isPresent() ? privateAddress.get() : publicHostname;
+        return publicHostname;
     }
 
     @Override
@@ -186,7 +173,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         if (privateAddress.isPresent()) {
             return privateAddress.get();
         }
-        
+
         String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
         if (hostname != null && !Networking.isValidIp4(hostname)) {
             try {
