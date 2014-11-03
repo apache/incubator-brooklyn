@@ -76,6 +76,9 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
                 .add(BashCommands.installPackage(installMakePackageFlags, "redis-prerequisites-make"))
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
+                .add("pushd deps")
+                .add("make lua hiredis linenoise")
+                .add("popd")
                 .add("make clean && make")
                 .build();
 
