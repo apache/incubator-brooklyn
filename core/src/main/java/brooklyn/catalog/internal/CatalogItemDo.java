@@ -59,6 +59,11 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     }
 
     @Override
+    public String getContextCatalogItemId() {
+        return null;
+    }
+
+    @Override
     public String getRegisteredTypeName() {
         return itemDto.getRegisteredTypeName();
     }
@@ -122,7 +127,7 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     @SuppressWarnings("unchecked")
     Class<? extends T> loadJavaClass(final ManagementContext mgmt) {
         if (javaClass!=null) return javaClass;
-        javaClass = (Class<T>)CatalogUtils.newClassLoadingContext(mgmt, getLibraries(), catalog.getRootClassLoader()).loadClass(getJavaType());
+        javaClass = (Class<T>)CatalogUtils.newClassLoadingContext(mgmt, getId(), getLibraries(), catalog.getRootClassLoader()).loadClass(getJavaType());
         return javaClass;
     }
 

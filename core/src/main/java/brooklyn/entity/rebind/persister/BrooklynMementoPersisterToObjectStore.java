@@ -60,6 +60,7 @@ import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 import brooklyn.util.xstream.XmlUtil;
@@ -251,7 +252,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                     case ENTITY:
                         String id = (String) XmlUtil.xpath(contents, "/entity/id");
                         String objType = (String) XmlUtil.xpath(contents, "/entity/type");
-                        builder.entity(id, objType);
+                        String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
+                        String contextCatalogItemId = (String) XmlUtil.xpath(contents, "/entity/contextCatalogItemId");
+                        builder.entity(id, objType, Strings.emptyToNull(parentId), Strings.emptyToNull(contextCatalogItemId));
                         break;
                     case LOCATION:
                         id = (String) XmlUtil.xpath(contents, "/location/id");
@@ -274,9 +277,16 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         builder.feed(id, objType);
                         break;
                     case CATALOG_ITEM:
-                        id = (String) XmlUtil.xpath(contents, "/catalogItem/id");
-                        objType = (String) XmlUtil.xpath(contents, "/catalogItem/type");
-                        builder.catalogItem(id, objType);
+                        try {
+                            CatalogItemMemento memento = (CatalogItemMemento) serializer.fromString(contents);
+                            if (memento == null) {
+                                LOG.warn("No "+type.toString().toLowerCase()+"-memento deserialized from " + subPath + "; ignoring and continuing");
+                            } else {
+                                builder.catalogItem(memento);
+                            }
+                        } catch (Exception e) {
+                            exceptionHandler.onLoadMementoFailed(type, "Memento "+subPath, e);
+                        }
                         break;
                     default:
                         throw new IllegalStateException("Unexpected brooklyn type: "+type);
@@ -292,9 +302,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded memento manifest; took {}; {} entities, {} locations, {} policies, {} enrichers, {} feeds, {} catalog items, from {}", new Object[]{
-                     Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), result.getEntityIdToType().size(), 
+                     Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), result.getEntityIdToManifest().size(), 
                      result.getLocationIdToType().size(), result.getPolicyIdToType().size(), result.getEnricherIdToType().size(), 
-                     result.getFeedIdToType().size(), result.getCatalogItemIdToType().size(),
+                     result.getFeedIdToType().size(), result.getCatalogItemMementos().size(),
                      objectStore.getSummaryName() });
         }
 

@@ -257,6 +257,7 @@ public class BrooklynComponentTemplateResolver {
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
+        spec.contextCatalogItemId(CatalogUtils.getContextCatalogItemIdFromLoader(loader));
         if (template.isPresent() && template.get().getSourceCode()!=null)
             spec.tag(BrooklynTags.newYamlSpecTag(template.get().getSourceCode()));
 
@@ -277,10 +278,14 @@ public class BrooklynComponentTemplateResolver {
         if (planId==null)
             planId = (String) attrs.getStringKey(BrooklynCampConstants.PLAN_ID_FLAG);
 
-        Object children = attrs.getStringKey("brooklyn.children");
-        if (children != null) {
+        Object childrenObj = attrs.getStringKey("brooklyn.children");
+        if (childrenObj != null) {
             Set<String> encounteredCatalogTypes = MutableSet.of();
-            for (Map<String,?> childAttrs : (Iterable<Map<String,?>>)children) {
+
+            @SuppressWarnings("unchecked")
+            Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
+
+            for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
                 BrooklynAssemblyTemplateInstantiator instantiator = new BrooklynAssemblyTemplateInstantiator();
                 // TODO: Creating a new set of encounteredCatalogTypes prevents the recursive definition check in

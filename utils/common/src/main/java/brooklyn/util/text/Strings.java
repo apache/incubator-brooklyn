@@ -838,4 +838,14 @@ public class Strings {
         return value.toLowerCase(Locale.ENGLISH);
     }
 
+    /**
+     * @return null if var is null or empty string, otherwise return var
+     */
+    public static String emptyToNull(String var) {
+        if (isNonEmpty(var)) {
+            return var;
+        } else {
+            return null;
+        }
+    }
 }

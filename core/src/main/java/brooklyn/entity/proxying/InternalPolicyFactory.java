@@ -23,6 +23,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Feed;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Enricher;
@@ -106,6 +107,10 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setDisplayName(spec.getDisplayName());
             
+            if (spec.getContextCatalogItemId()!=null) {
+                ((AbstractPolicy)pol).setContextCatalogItemId(spec.getContextCatalogItemId());
+            }
+            
             pol.tags().addTags(spec.getTags());
             
             if (isNewStyle(clazz)) {
@@ -142,6 +147,10 @@ public class InternalPolicyFactory extends InternalFactory {
             
             if (spec.getDisplayName()!=null)
                 ((AbstractEnricher)enricher).setDisplayName(spec.getDisplayName());
+            
+            if (spec.getContextCatalogItemId()!=null) {
+                ((AbstractEnricher)enricher).setContextCatalogItemId(spec.getContextCatalogItemId());
+            }
             
             enricher.tags().addTags(spec.getTags());
             

@@ -556,6 +556,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         
         getApplication();
         
+        if (getContextCatalogItemId() == null) {
+            setContextCatalogItemId(entity.getContextCatalogItemId());
+        }
+        
         return this;
     }
 

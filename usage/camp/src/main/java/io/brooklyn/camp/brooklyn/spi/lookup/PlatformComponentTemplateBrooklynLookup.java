@@ -40,7 +40,7 @@ public class PlatformComponentTemplateBrooklynLookup extends AbstractTemplateBro
     @Override
     public PlatformComponentTemplate adapt(CatalogItem<?,?> item) {
         return PlatformComponentTemplate.builder().
-                name(item.getName()).
+                name(item.getDisplayName()).
                 id(item.getId()).
                 description(item.getDescription()).
                 created(root.getCreated()).

@@ -35,6 +35,11 @@ public interface BrooklynObject extends Identifiable {
      * A display name; recommended to be a concise single-line description.
      */
     String getDisplayName();
+
+    /**
+     * The catalog item ID this object was loaded from.
+     */
+    String getContextCatalogItemId();
     
     /** 
      * Tags are arbitrary objects which can be attached to an entity for subsequent reference.

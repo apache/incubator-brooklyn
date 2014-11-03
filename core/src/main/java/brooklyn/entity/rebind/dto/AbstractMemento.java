@@ -43,6 +43,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         protected String type;
         protected Class<?> typeClass;
         protected String displayName;
+        protected String contextCatalogItemId;
         protected Map<String, Object> fields = Maps.newLinkedHashMap();
         protected List<Object> tags = Lists.newArrayList();
 
@@ -56,6 +57,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
             type = other.getType();
             typeClass = other.getTypeClass();
             displayName = other.getDisplayName();
+            contextCatalogItemId = other.getContextCatalogItemId();
             fields.putAll(other.getCustomFields());
             tags.addAll(other.getTags());
             return self();
@@ -75,6 +77,9 @@ public abstract class AbstractMemento implements Memento, Serializable {
         public B displayName(String val) {
             displayName = val; return self();
         }
+        public B contextCatalogItemId(String val) {
+            contextCatalogItemId = val; return self();
+        }
         /**
          * @deprecated since 0.7.0; use config/attributes so generic persistence will work, rather than requiring "custom fields"
          */
@@ -88,6 +93,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
     private String type;
     private String id;
     private String displayName;
+    private String contextCatalogItemId;
     private List<Object> tags;
 
     private transient Class<?> typeClass;
@@ -103,6 +109,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         type = builder.type;
         typeClass = builder.typeClass;
         displayName = builder.displayName;
+        contextCatalogItemId = builder.contextCatalogItemId;
         setCustomFields(builder.fields);
         tags = toPersistedList(builder.tags);
     }
@@ -141,6 +148,12 @@ public abstract class AbstractMemento implements Memento, Serializable {
         return displayName;
     }
 
+    @Override
+    public String getContextCatalogItemId() {
+        return contextCatalogItemId;
+    }
+
+    @Override
     public List<Object> getTags() {
         return fromPersistedList(tags);
     }
