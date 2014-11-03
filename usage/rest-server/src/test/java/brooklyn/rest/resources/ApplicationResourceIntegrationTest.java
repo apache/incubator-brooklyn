@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -102,15 +103,16 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @Test(groups="Integration", dependsOnMethods = { "testListSensorsRedis", "testListEntities" })
     public void testTriggerRedisStopEffector() throws InterruptedException {
         ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(ClientResponse.class, ImmutableMap.of());
-
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
         final URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
         final String expectedStatus = String.format("\"%s\"", Lifecycle.STOPPED.toString());
         Asserts.succeedsEventually(MutableMap.of("timeout", 60 * 1000), new Runnable() {
             public void run() {
-                assertEquals(client().resource(stateSensor).get(String.class), expectedStatus);
+                String val = client().resource(stateSensor).get(String.class);
+                assertTrue(expectedStatus.equalsIgnoreCase(val));
             }
         });
     }

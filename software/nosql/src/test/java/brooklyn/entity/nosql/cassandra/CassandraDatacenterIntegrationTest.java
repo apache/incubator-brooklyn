@@ -26,6 +26,7 @@ import java.math.BigInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -60,12 +61,21 @@ public class CassandraDatacenterIntegrationTest extends BrooklynAppLiveTestSuppo
     protected Location testLocation;
     protected CassandraDatacenter cluster;
 
-    @Override
     @BeforeMethod(alwaysRun = true)
+    @Override
     public void setUp() throws Exception {
+        CassandraNodeIntegrationTest.assertCassandraPortsAvailableEventually();
         super.setUp();
         testLocation = app.newLocalhostProvisioningLocation();
     }
+
+    @AfterMethod(alwaysRun=true)
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        CassandraNodeIntegrationTest.assertCassandraPortsAvailableEventually();
+    }
+    
 
     @Test(groups = "Integration")
     public void testStartAndShutdownClusterSizeOne() throws Exception {

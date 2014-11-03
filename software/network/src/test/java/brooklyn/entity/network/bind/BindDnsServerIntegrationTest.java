@@ -74,7 +74,7 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture {
         assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).keySet().size(), 1);
         assertMapSizes(3, 1, 2, 1);
 
-        rebind();
+        rebind(false);
         dns = (BindDnsServer) Iterables.getOnlyElement(Iterables.filter(newApp.getChildren(), Predicates.instanceOf(BindDnsServer.class)));
         cluster = (DynamicCluster) Iterables.getOnlyElement(Iterables.filter(newApp.getChildren(), Predicates.instanceOf(DynamicCluster.class)));
 

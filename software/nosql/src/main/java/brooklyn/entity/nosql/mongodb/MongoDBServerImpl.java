@@ -61,12 +61,17 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         super.connectSensors();
         connectServiceUpIsRunning();
 
-        int httpConsolePort = getAttribute(PORT) + 1000;
-        if (httpConsolePort != getAttribute(HTTP_PORT)+1000) {
+        int port = getAttribute(PORT);
+        int httpConsolePort = getAttribute(HTTP_PORT);
+        if (httpConsolePort !=  port + 1000) {
             // see comment on HTTP_PORT
-            LOG.warn(this+" may not have opened HTTP_PORT correctly as the default was not available");
+            LOG.warn("{} may not have opened HTTP_PORT correctly as the default was not available: port={}; consolePort={}; resetting consolePort to {}", 
+                    new Object[] {this, port, httpConsolePort, port + 1000});
+            httpConsolePort = port + 1000;
             setAttribute(HTTP_PORT, httpConsolePort);
         }
+
+        
         setAttribute(HTTP_INTERFACE_URL, String.format("http://%s:%d", getAttribute(HOSTNAME), httpConsolePort));
         setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d", getAttribute(HOSTNAME), getAttribute(MongoDBServer.PORT)));
 

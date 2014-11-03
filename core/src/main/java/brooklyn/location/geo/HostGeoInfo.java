@@ -81,6 +81,10 @@ public class HostGeoInfo implements Serializable {
         return cachedLookup.get();
     }
     
+    public static void clearCachedLookup() {
+        cachedLookup = null;
+    }
+    
     /** returns null if cannot be set */
     public static HostGeoInfo fromLocation(Location l) {
         if (l==null) return null;

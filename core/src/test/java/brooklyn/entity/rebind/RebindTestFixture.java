@@ -122,6 +122,13 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         return rebind(true);
     }
 
+    /**
+     * TODO We should (probably?!) change everywhere from asserting that they are serializable. 
+     * They only need to be xstream-serializable, which does not require `implements Serializable`. 
+     * Also, the xstream serializer has some special hooks that replaces an entity reference with 
+     * a marker for that entity, etc. Suggest we change the default {@link #rebind()} to use 
+     * {@code checkSerializable==false}, and deprecate this + the other overloaded methods?
+     */
     protected T rebind(boolean checkSerializable) throws Exception {
         // TODO What are sensible defaults?!
         return rebind(checkSerializable, false);

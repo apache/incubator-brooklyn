@@ -25,7 +25,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -35,8 +35,6 @@ import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -52,10 +50,18 @@ public class CassandraDatacenterRebindIntegrationTest extends RebindTestFixtureW
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        CassandraNodeIntegrationTest.assertCassandraPortsAvailableEventually();
         super.setUp();
         localhostProvisioningLocation = origApp.newLocalhostProvisioningLocation();
     }
 
+    @AfterMethod(alwaysRun=true)
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        CassandraNodeIntegrationTest.assertCassandraPortsAvailableEventually();
+    }
+    
     /**
      * Test that Brooklyn can rebind to a single node datacenter.
      */

@@ -76,7 +76,8 @@ public class GeoscalingIntegrationTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         origGeoLookupImpl = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getValue();
-        
+        HostGeoInfo.clearCachedLookup();
+
         app = TestApplication.Factory.newManagedInstanceForTests();
         mgmt = app.getManagementContext();
         
@@ -113,6 +114,7 @@ public class GeoscalingIntegrationTest {
             System.clearProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName());
         }
         if (mgmt != null) Entities.destroyAll(mgmt);
+        HostGeoInfo.clearCachedLookup();
     }
     
     @Test(groups={"Integration"})
@@ -130,13 +132,14 @@ public class GeoscalingIntegrationTest {
     }
     
     @Test(groups={"Integration"})
-    public void testIgnoresAddressWithoutGeography() {
+    public void testIgnoresAddressWithoutGeography() throws Exception {
         System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), StubHostGeoLookup.class.getName());
-        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
+        ((EntityLocal)geoDns).setConfig(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, false); // false is default
         
         app.start(ImmutableList.of(locWithoutGeo));
+        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
-        LOG.info("geo-scaling test, using {}.{}; expect to be wired to {}", new Object[] {subDomain, primaryDomain, addrWithoutGeo});
+        LOG.info("geo-scaling test, using {}.{}; expect not to be wired to {}", new Object[] {subDomain, primaryDomain, addrWithoutGeo});
         
         Asserts.succeedsContinually(MutableMap.of("timeout", 10*1000), new Runnable() {
             @Override public void run() {
@@ -149,13 +152,11 @@ public class GeoscalingIntegrationTest {
     public void testIncludesAddressWithoutGeography() {
         System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), StubHostGeoLookup.class.getName());
         ((EntityLocal)geoDns).setConfig(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
-        //target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
         app.start(ImmutableList.of(locWithoutGeo));
+        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
         LOG.info("geo-scaling test, using {}.{}; expect to be wired to {}", new Object[] {subDomain, primaryDomain, addrWithoutGeo});
-        
-        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
         assertTargetHostsEventually(geoDns, 1);
     }

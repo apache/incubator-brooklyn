@@ -453,7 +453,7 @@ public class BrooklynWebServer {
     public synchronized void stop() throws Exception {
         if (server==null) return;
         String root = getRootUrl();
-        Threads.removeShutdownHook(shutdownHook);
+        if (shutdownHook != null) Threads.removeShutdownHook(shutdownHook);
         if (log.isDebugEnabled())
             log.debug("Stopping Brooklyn web console at "+root+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
 
