@@ -22,8 +22,6 @@ import brooklyn.entity.basic.SoftwareProcessDriver;
 
 public interface RiakNodeDriver extends SoftwareProcessDriver {
 
-    public String getSubnetHostname();
-
     public String getRiakEtcDir();
 
     public void joinCluster(String nodeName);
@@ -33,4 +31,6 @@ public interface RiakNodeDriver extends SoftwareProcessDriver {
     public void recoverFailedNode(String nodeName);
 
     public void commitCluster();
+
+    public String getOsMajorVersion();
 }
