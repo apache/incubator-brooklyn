@@ -21,8 +21,6 @@ package brooklyn.entity.rebind;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -33,7 +31,6 @@ import org.testng.annotations.BeforeMethod;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.StartableApplication;
@@ -45,17 +42,12 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoManifest;
-import brooklyn.mementos.BrooklynMementoRawData;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.util.io.FileUtil;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 
 import com.google.api.client.util.Sets;
-import com.google.common.annotations.Beta;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public abstract class RebindTestFixture<T extends StartableApplication> {
@@ -72,6 +64,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     protected T origApp;
     protected T newApp;
     protected ManagementContext newManagementContext;
+
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -132,94 +125,83 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         origManagementContext = null;
     }
 
+    /** rebinds, and sets newApp */
+    protected T rebind() throws Exception {
+        return rebind(RebindOptions.create());
+    }
+
+    /**
+     * Checking serializable is overly strict.
+     * State only needs to be xstream-serializable, which does not require `implements Serializable`. 
+     * Also, the xstream serializer has some special hooks that replaces an entity reference with 
+     * a marker for that entity, etc.
+     * 
+     * @deprecated since 0.7.0; use {@link #rebind()} or {@link #rebind(RebindOptions)})
+     */
+    @Deprecated
+    protected T rebind(boolean checkSerializable) throws Exception {
+        return rebind(RebindOptions.create().checkSerializable(checkSerializable));
+    }
+    
+    /**
+     * Checking serializable is overly strict.
+     * State only needs to be xstream-serializable, which does not require `implements Serializable`. 
+     * Also, the xstream serializer has some special hooks that replaces an entity reference with 
+     * a marker for that entity, etc.
+     * 
+     * @deprecated since 0.7.0; use {@link #rebind(RebindOptions)})
+     */
+    @Deprecated
+    protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
+        return rebind(RebindOptions.create()
+                .checkSerializable(checkSerializable)
+                .terminateOrigManagementContext(terminateOrigManagementContext));
+    }
+
+    /**
+     * @deprecated since 0.7.0; use {@link #rebind(RebindOptions)})
+     */
+    @Deprecated
+    protected T rebind(RebindExceptionHandler exceptionHandler) throws Exception {
+        return rebind(RebindOptions.create().exceptionHandler(exceptionHandler));
+    }
+
+    /**
+     * @deprecated since 0.7.0; use {@link #rebind(RebindOptions)})
+     */
+    @Deprecated
+    protected T rebind(ManagementContext newManagementContext, RebindExceptionHandler exceptionHandler) throws Exception {
+        return rebind(RebindOptions.create()
+                .newManagementContext(newManagementContext)
+                .exceptionHandler(exceptionHandler));
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected T rebind(RebindOptions options) throws Exception {
+        if (newApp != null || newManagementContext != null) {
+            throw new IllegalStateException("already rebound");
+        }
+        
+        options = RebindOptions.create(options);
+        if (options.classLoader == null) options.classLoader(classLoader);
+        if (options.mementoDir == null) options.mementoDir(mementoDir);
+        if (options.origManagementContext == null) options.origManagementContext(origManagementContext);
+        if (options.newManagementContext == null) options.newManagementContext(createNewManagementContext());
+        
+        RebindTestUtils.waitForPersisted(origApp);
+        
+        newManagementContext = options.newManagementContext;
+        newApp = (T) RebindTestUtils.rebind(options);
+        return newApp;
+    }
+
     /**
      * Dumps out the persisted mementos that are at the given directory.
-     * 
-     * Binds to the persisted state (as a "hot standby") to load the raw data (as strings), and to write out the
-     * entity, location, policy, enricher, feed and catalog-item data.
      * 
      * @param dir The directory containing the persisted state (e.g. {@link #mementoDir} or {@link #mementoDirBackup})
      */
     protected void dumpMementoDir(File dir) {
-        LocalManagementContextForTests mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newEmpty());
-        FileBasedObjectStore store = null;
-        BrooklynMementoPersisterToObjectStore persister = null;
-        try {
-            store = new FileBasedObjectStore(dir);
-            store.injectManagementContext(mgmt);
-            store.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.HOT_STANDBY);
-            persister = new BrooklynMementoPersisterToObjectStore(store, BrooklynProperties.Factory.newEmpty(), classLoader);
-            BrooklynMementoRawData data = persister.loadMementoRawData(RebindExceptionHandlerImpl.builder().build());
-            List<BrooklynObjectType> types = ImmutableList.of(BrooklynObjectType.ENTITY, BrooklynObjectType.LOCATION, 
-                    BrooklynObjectType.POLICY, BrooklynObjectType.ENRICHER, BrooklynObjectType.FEED, 
-                    BrooklynObjectType.CATALOG_ITEM);
-            for (BrooklynObjectType type : types) {
-                LOG.info(type+" ("+data.getObjectsOfType(type).keySet()+"):");
-                for (Map.Entry<String, String> entry : data.getObjectsOfType(type).entrySet()) {
-                    LOG.info("\t"+type+" "+entry.getKey()+": "+entry.getValue());
-                }
-            }
-        } finally {
-            if (persister != null) persister.stop(false);
-            if (store != null) store.close();
-            mgmt.terminate();
-        }
-    }
-    
-    /** rebinds, and sets newApp */
-    protected T rebind() throws Exception {
-        return rebind(true);
-    }
-
-    /**
-     * TODO We should (probably?!) change everywhere from asserting that they are serializable. 
-     * They only need to be xstream-serializable, which does not require `implements Serializable`. 
-     * Also, the xstream serializer has some special hooks that replaces an entity reference with 
-     * a marker for that entity, etc. Suggest we change the default {@link #rebind()} to use 
-     * {@code checkSerializable==false}, and deprecate this + the other overloaded methods?
-     */
-    protected T rebind(boolean checkSerializable) throws Exception {
-        // TODO What are sensible defaults?!
-        return rebind(checkSerializable, false);
-    }
-
-    protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
-        return rebind(checkSerializable, terminateOrigManagementContext, (File)null);
-    }
-    
-    @Beta // temporary method while debugging; Aled will refactor all of this soon!
-    @SuppressWarnings("unchecked")
-    protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext, File backupDir) throws Exception {
-        if (newApp!=null || newManagementContext!=null) throw new IllegalStateException("already rebound");
-        
-        RebindTestUtils.waitForPersisted(origApp);
-        if (checkSerializable) {
-            RebindTestUtils.checkCurrentMementoSerializable(origApp);
-        }
-        if (terminateOrigManagementContext) {
-            origManagementContext.terminate();
-        }
-
-        if (backupDir != null) {
-            FileUtil.copyDir(mementoDir, backupDir);
-            FileUtil.setFilePermissionsTo700(backupDir);
-        }
-
-        newManagementContext = createNewManagementContext();
-        newApp = (T) RebindTestUtils.rebind((LocalManagementContext)newManagementContext, classLoader);
-        return newApp;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected T rebind(RebindExceptionHandler exceptionHandler) throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        return (T) RebindTestUtils.rebind(mementoDir, classLoader, exceptionHandler);
-    }
-
-    @SuppressWarnings("unchecked")
-    protected T rebind(ManagementContext newManagementContext, RebindExceptionHandler exceptionHandler) throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        return (T) RebindTestUtils.rebind(newManagementContext, mementoDir, classLoader, exceptionHandler);
+        RebindTestUtils.dumpMementoDir(dir);
     }
     
     protected BrooklynMementoManifest loadMementoManifest() throws Exception {

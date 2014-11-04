@@ -45,6 +45,7 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixture;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
@@ -121,7 +122,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         String clusterUrl = checkNotNull(origApp.getAttribute(WebClusterDatabaseExampleApp.ROOT_URL), "cluster url");
         WebAppMonitor monitor = newWebAppMonitor(clusterUrl, 200);
         
-        newApp = rebind(false, true);
+        newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         assertAppFunctional(newApp);
 
         // expect no failures during rebind

@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
@@ -95,7 +96,7 @@ public class JBoss7ServerRebindingIntegrationTest extends RebindTestFixtureWithA
         WebAppMonitor monitor = newWebAppMonitor(origServer.getAttribute(JBoss7Server.ROOT_URL));
         
         // Rebind
-        newApp = rebind(false, true);
+        newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         JBoss7Server newServer = (JBoss7Server) Iterables.find(newApp.getChildren(), Predicates.instanceOf(JBoss7Server.class));
         String newRootUrl = newServer.getAttribute(JBoss7Server.ROOT_URL);
         

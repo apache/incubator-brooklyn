@@ -80,7 +80,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
         origPortForwardManager.acquirePublicPortExplicit(publicIpId, 40080);
         origPortForwardManager.associate(publicIpId, 40080, origSimulatedMachine, 80);
      
-        newApp = rebind(false);
+        newApp = rebind();
         
         TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
         Location newSimulatedMachine = newApp.getManagementContext().getLocationManager().getLocation(origSimulatedMachine.getId());
