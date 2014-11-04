@@ -38,13 +38,10 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.util.exceptions.Exceptions;
+import brooklyn.test.NetworkingTestUtils;
 import brooklyn.util.math.MathPredicates;
-import brooklyn.util.net.Networking;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
@@ -57,41 +54,21 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
     private static final Logger LOG = LoggerFactory.getLogger(CassandraNodeIntegrationTest.class);
 
     public static void assertCassandraPortsAvailableEventually() {
-        // If we get into a TCP TIMED-WAIT state, it could take 4 minutes for the port to come available.
-        // Could that be causing our integration tests to fail sometimes when run in the suite?!
-        // Let's wait for the required ports in setup, rather than running+failing the test.
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.minutes(4)), new Runnable() {
-            private boolean logged = false;
-            public void run() {
-                try {
-                    assertCassandraPortsAvailable();
-                } catch (Throwable t) {
-                    if (!logged) {
-                        LOG.warn("Cassandra Port(s) not available; waiting for up to 4 minutes ("+Exceptions.getFirstInteresting(t)+")");
-                        logged = true;
-                    }
-                    throw Exceptions.propagate(t);
-                }
-            }});
+        Map<String, Integer> ports = getCassandraDefaultPorts();
+        NetworkingTestUtils.assertPortsAvailableEventually(ports);
+        LOG.info("Confirmed Cassandra ports are available: "+ports);
     }
     
-    public static void assertCassandraPortsAvailable() {
-        for (Map.Entry<PortAttributeSensorAndConfigKey, Integer> entry : getCassandraDefaultPorts().entrySet()) {
-            String errmsg = entry.getValue()+" not available for cassandra "+entry.getKey();
-            assertTrue(Networking.isPortAvailable(entry.getValue()), errmsg);
-        }
-    }
-    
-    public static Map<PortAttributeSensorAndConfigKey, Integer> getCassandraDefaultPorts() {
+    public static Map<String, Integer> getCassandraDefaultPorts() {
         List<PortAttributeSensorAndConfigKey> ports = ImmutableList.of(
                 CassandraNode.GOSSIP_PORT, 
                 CassandraNode.SSL_GOSSIP_PORT, 
                 CassandraNode.THRIFT_PORT, 
                 CassandraNode.NATIVE_TRANSPORT_PORT, 
                 CassandraNode.RMI_REGISTRY_PORT);
-        Map<PortAttributeSensorAndConfigKey, Integer> result = Maps.newLinkedHashMap();
+        Map<String, Integer> result = Maps.newLinkedHashMap();
         for (PortAttributeSensorAndConfigKey key : ports) {
-            result.put(key, key.getConfigKey().getDefaultValue().iterator().next());
+            result.put(key.getName(), key.getConfigKey().getDefaultValue().iterator().next());
         }
         return result;
     }
