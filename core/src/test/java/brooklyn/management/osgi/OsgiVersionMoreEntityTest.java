@@ -207,8 +207,8 @@ public class OsgiVersionMoreEntityTest {
         String catalogItemId = Iterables.getOnlyElement( me.getPolicies() ).getCatalogItemId();
         Assert.assertNotNull(catalogItemId);
         // must be the actual source bundle
-        Assert.assertFalse(catalogItemId.equals(me.getCatalogItemId()));
-        Assert.assertTrue(catalogItemId.startsWith("brooklyn-test-osgi-entities"));
+        Assert.assertFalse(catalogItemId.equals(me.getCatalogItemId()), "catalog item id is: "+catalogItemId);
+        Assert.assertTrue(catalogItemId.equals(OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY), "catalog item id is: "+catalogItemId);
     }
 
     @Test

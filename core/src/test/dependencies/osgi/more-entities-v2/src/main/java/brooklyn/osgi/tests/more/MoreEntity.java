@@ -32,7 +32,8 @@ public interface MoreEntity extends Entity {
         .parameter(String.class, "name")
         .buildAbstract();
 
-    /** Makes a string saying hi to the given name, in uppercase, for testing. */
+    /** Makes a string saying hi to the given name, in uppercase, for testing. 
+     * In contrast to v1, impl here returns HI not Hi. */
     String sayHI(String name);
     
 }
