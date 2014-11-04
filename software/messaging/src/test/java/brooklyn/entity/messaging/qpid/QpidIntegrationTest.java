@@ -18,7 +18,10 @@
  */
 package brooklyn.entity.messaging.qpid;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
@@ -118,7 +121,7 @@ public class QpidIntegrationTest {
     public void canStartupAndShutdownWithPlugin() {
         Map<String,String> qpidRuntimeFiles = MutableMap.<String,String>builder()
                 .put("classpath://qpid-test-config.xml", "etc/config.xml")
-                .put("classpath://qpid-test-plugin.jar", "lib/plugins/sample-plugin.jar")
+                .put("http://developers.cloudsoftcorp.com/brooklyn/repository-test/0.7.0/QpidBroker/qpid-test-plugin.jar", "lib/plugins/sample-plugin.jar")
                 .build();
         qpid = app.createAndManageChild(EntitySpec.create(QpidBroker.class)
                 .configure(SoftwareProcess.RUNTIME_FILES, qpidRuntimeFiles)
