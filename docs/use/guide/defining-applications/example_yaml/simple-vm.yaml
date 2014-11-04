@@ -3,6 +3,6 @@ services:
 - type: brooklyn.entity.basic.EmptySoftwareProcess
   name: VM
   provisioning.properties:
-    minRam: 8192m
+    minRam: 8192mb
     minCores: 4
-    minDisk: 100g
+    minDisk: 100gb
