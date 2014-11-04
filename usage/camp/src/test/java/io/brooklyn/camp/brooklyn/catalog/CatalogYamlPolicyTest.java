@@ -16,17 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.brooklyn.camp.brooklyn;
+package io.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.BasicEntity;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.Policy;

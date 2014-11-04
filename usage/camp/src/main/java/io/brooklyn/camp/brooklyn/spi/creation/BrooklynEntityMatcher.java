@@ -215,6 +215,8 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (attrs==null || attrs.isEmpty())
             return null;
         try {
+            // TODO don't use the mgmt loader, but instead use something like catalog.createSpec
+            // currently we get warnings and are unable to retrieve flags for items which come from catalog 
             Class<? extends Entity> type = BrooklynComponentTemplateResolver.Factory.newInstance(JavaBrooklynClassLoadingContext.newDefault(mgmt), typeName).loadEntityClass();
             ConfigBag bag = ConfigBag.newInstance(attrs);
             List<FlagConfigKeyAndValueRecord> values = FlagUtils.findAllFlagsAndConfigKeys(null, type, bag);
@@ -231,7 +233,14 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             return values;
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            log.warn("Ignoring configuration attributes on "+typeName+" due to "+e, e);
+            if (e.toString().contains("Could not find")) {
+                // TODO currently we get this error if a catalog item is passed, giving stack trace is too scary;
+                // when we are doing catalog.createSpec let's remove this block
+                log.warn("Ignoring configuration attributes on "+typeName+", item probably loaded from catalog and flags are not yet supported here");
+                log.debug("Ignoring configuration attributes on "+typeName+", details: "+e);
+            } else {
+                log.warn("Ignoring configuration attributes on "+typeName+" due to "+e, e);
+            }
             return null;
         }
     }

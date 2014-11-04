@@ -116,7 +116,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     public void reset(CatalogDto dto) {
         // Unregister all existing persisted items.
-        for (CatalogItem toRemove : getCatalogItems()) {
+        for (CatalogItem<?, ?> toRemove : getCatalogItems()) {
             if (log.isTraceEnabled()) {
                 log.trace("Scheduling item for persistence removal: {}", toRemove.getId());
             }
@@ -132,9 +132,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         for (CatalogItem<?, ?> entry : getCatalogItems()) {
             boolean setManagementContext = false;
             if (entry instanceof CatalogItemDo) {
-                CatalogItemDo cid = CatalogItemDo.class.cast(entry);
+                CatalogItemDo<?, ?> cid = CatalogItemDo.class.cast(entry);
                 if (cid.getDto() instanceof CatalogItemDtoAbstract) {
-                    CatalogItemDtoAbstract cdto = CatalogItemDtoAbstract.class.cast(cid.getDto());
+                    CatalogItemDtoAbstract<?, ?> cdto = CatalogItemDtoAbstract.class.cast(cid.getDto());
                     if (cdto.getManagementContext() == null) {
                         cdto.setManagementContext((ManagementContextInternal) mgmt);
                     }
@@ -167,10 +167,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     protected CatalogItemDo<?,?> getCatalogItemDo(String idOrRegisteredTypeName) {
-        CatalogItemDo<?, ?> item = catalog.getIdCache().get(idOrRegisteredTypeName);
-        if (item == null) {
-            item = catalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
-        }
+        CatalogItemDo<?, ?> item = null;
+        // TODO really need to remove redundancy of id v registered type;
+        // should also remove "manual additions" bucket; just have one map a la osgi
+        if (manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getIdCache().get(idOrRegisteredTypeName);
+        if (item == null) item = catalog.getIdCache().get(idOrRegisteredTypeName);
+        if (item == null && manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
+        if (item == null) item = catalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
         return item;
     }
     
@@ -241,22 +244,27 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (specType==null) return null;
 
         String yaml = loadedItem.getPlanYaml();
-        SpecT spec = null;
 
         if (yaml!=null) {
             DeploymentPlan plan = makePlanFromYaml(yaml);
             BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
+            SpecT spec;
             switch (item.getCatalogItemType()) {
                 case TEMPLATE:
                 case ENTITY:
-                    return createEntitySpec(plan, loader);
+                    spec = createEntitySpec(plan, loader);
+                    break;
                 case POLICY:
-                    return createPolicySpec(plan, loader);
+                    spec = createPolicySpec(plan, loader);
+                    break;
                 default: throw new RuntimeException("Only entity & policy catalog items are supported. Unsupported catalog item type " + item.getCatalogItemType());
             }
+            ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(item.getId());
+            return spec;
         }
 
         // revert to legacy mechanism
+        SpecT spec = null;
         try {
             if (loadedItem.getJavaType()!=null) {
                 SpecT specT = (SpecT) Reflections.findMethod(specType, "create", Class.class).invoke(null, loadedItem.loadJavaClass(mgmt));
@@ -401,7 +409,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         CatalogUtils.installLibraries(mgmt, libraries);
 
-        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, CatalogUtils.newClassLoadingContext(mgmt, libraries));
+        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, CatalogUtils.newClassLoadingContext(mgmt, "<not created yet>", libraries, getRootClassLoader()));
 
         CatalogItemBuilder<?> builder = createItemBuilder(spec, registeredTypeName)
             .libraries(libraries)
@@ -493,6 +501,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public void addItem(CatalogItem<?,?> item) {
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
         checkNotNull(item, "item");
+        CatalogUtils.installLibraries(mgmt, item.getLibraries());
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(getAbstractCatalogItem(item));
     }

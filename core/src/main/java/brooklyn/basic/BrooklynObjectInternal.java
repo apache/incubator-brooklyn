@@ -21,4 +21,7 @@ package brooklyn.basic;
 import brooklyn.entity.rebind.Rebindable;
 
 public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
+    
+    public void setCatalogItemId(String id);
+    
 }

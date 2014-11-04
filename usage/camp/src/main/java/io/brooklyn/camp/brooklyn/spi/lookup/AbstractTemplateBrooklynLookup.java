@@ -51,7 +51,7 @@ public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>
     public abstract T adapt(CatalogItem<?,?> item);
 
     protected ResolvableLink<T> newLink(CatalogItem<? extends Entity,EntitySpec<?>> li) {
-        return newLink(li.getId(), li.getName());
+        return newLink(li.getId(), li.getDisplayName());
     }
 
 }

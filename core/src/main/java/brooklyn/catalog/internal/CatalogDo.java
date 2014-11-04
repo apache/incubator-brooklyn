@@ -232,7 +232,7 @@ public class CatalogDo {
             mgmt.getRebindManager().getChangeListener().onManaged(entry);
         }
    }
-
+    
     /**
      * Removes the given entry from the catalog.
      */

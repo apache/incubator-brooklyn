@@ -42,7 +42,7 @@ public class AssemblyTemplateBrooklynLookup extends AbstractTemplateBrooklynLook
     @Override
     public AssemblyTemplate adapt(CatalogItem<?,?> item) {
         return AssemblyTemplate.builder().
-                name(item.getName()).
+                name(item.getDisplayName()).
                 id(item.getId()).
                 description(item.getDescription()).
                 created(root.getCreated()).

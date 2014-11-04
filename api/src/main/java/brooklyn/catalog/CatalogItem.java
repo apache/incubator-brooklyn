@@ -77,5 +77,12 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
 
     @Override
     RebindSupport<CatalogItemMemento> getRebindSupport();
-}
+    
+    /** Built up from {@link #getId()} and {@link #getVersion()}.
+     * 
+     * (It is a bit self-referential having this method on this type of {@link BrooklynObject},
+     * but it is easier this than making the interface hierarchy more complicated.) */
+    @Override
+    public String getCatalogItemId();
 
+}

@@ -29,7 +29,7 @@ public class IllegalStateExceptionSupplier implements Supplier<RuntimeException>
     
     public IllegalStateExceptionSupplier() { this(null, null); }
     public IllegalStateExceptionSupplier(String message) { this(message, null); }
-    public IllegalStateExceptionSupplier(Throwable cause) { this(null, cause); }
+    public IllegalStateExceptionSupplier(Throwable cause) { this(cause!=null ? cause.getMessage() : null, cause); }
     public IllegalStateExceptionSupplier(String message, Throwable cause) { 
         this.message = message;
         this.cause = cause;

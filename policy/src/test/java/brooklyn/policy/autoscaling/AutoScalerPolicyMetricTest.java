@@ -93,7 +93,7 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testIncrementsSizeInProportionToMetric() {
         tc.resize(5);
         
@@ -109,7 +109,7 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 11));
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testDecrementsSizeInProportionToMetric() {
         tc.resize(5);
         
@@ -128,7 +128,7 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 0));
     }
     
-    @Test
+    @Test(groups="Integration")
     public void testObeysMinAndMaxSize() {
         tc.resize(4);
         
@@ -147,7 +147,7 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
     }
     
-    @Test(invocationCount=100)
+    @Test(groups="Integration",invocationCount=20)
     public void testWarnsWhenMaxCapReached() {
         final List<MaxPoolSizeReachedEvent> maxReachedEvents = Lists.newCopyOnWriteArrayList();
         tc.resize(1);

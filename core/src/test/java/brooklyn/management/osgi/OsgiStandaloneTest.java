@@ -39,12 +39,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.InternalEntityFactory;
-import brooklyn.entity.proxying.InternalPolicyFactory;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.maven.MavenArtifact;
@@ -55,24 +49,20 @@ import brooklyn.util.osgi.Osgis;
 import brooklyn.util.osgi.Osgis.ManifestHelper;
 import brooklyn.util.stream.Streams;
 
-/** tests some assumptions about OSGi behaviour, in standalone mode (not part of brooklyn).
- * 
- * relies on the following bundles, which exist in the classpath (and contain their sources):
- * 
- * <li>brooklyn-osgi-test-a_0.1.0 -
- *     defines TestA which has a "times" method and a static multiplier field;
- *     we set the multiplier to determine when we are sharing versions and when not
- *     
- *  */
+/** 
+ * Tests some assumptions about OSGi behaviour, in standalone mode (not part of brooklyn).
+ * See {@link OsgiTestResources} for description of test resources.
+ */
 public class OsgiStandaloneTest {
 
     private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
 
-    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:/brooklyn/osgi/brooklyn-osgi-test-a_0.1.0.jar";
-    
-    public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = "/brooklyn/osgi/brooklyn-test-osgi-entities.jar";
+    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_PATH = OsgiTestResources.BROOKLYN_OSGI_TEST_A_0_1_0_PATH;
+    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:"+BROOKLYN_OSGI_TEST_A_0_1_0_PATH;
+
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH;
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_URL = "classpath:"+BROOKLYN_TEST_OSGI_ENTITIES_PATH;
-    
+
     protected Framework framework = null;
     private File storageTempDir;
 
@@ -84,6 +74,10 @@ public class OsgiStandaloneTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws BundleException, IOException, InterruptedException {
+        tearDownOsgiFramework(framework, storageTempDir);
+    }
+
+    public static void tearDownOsgiFramework(Framework framework, File storageTempDir) throws BundleException, InterruptedException, IOException {
         if (framework!=null) {
             framework.stop();
             Assert.assertEquals(framework.waitForStop(1000).getType(), FrameworkEvent.STOPPED);
@@ -139,34 +133,6 @@ public class OsgiStandaloneTest {
         //bundle after trying to install the same version.
         Bundle bundle = install(url);
         Assert.assertTrue(Osgis.isExtensionBundle(bundle));
-    }
-
-
-    /**
-     * Test fix for
-     * java.lang.NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities [41]
-     */
-    @Test
-    public void testEntityProxy() throws Exception {
-        ManagementContextInternal managementContext;
-        InternalEntityFactory factory;
-
-        managementContext = new LocalManagementContextForTests();
-        InternalPolicyFactory policyFactory = new InternalPolicyFactory(managementContext);
-        factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry(), policyFactory);
-
-        Bundle bundle = install(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
-        @SuppressWarnings("unchecked")
-        Class<? extends Entity> bundleCls = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntityImpl");
-        @SuppressWarnings("unchecked")
-        Class<? extends Entity> bundleInterface = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntity");
-
-        @SuppressWarnings("unchecked")
-        EntitySpec<Entity> spec = (EntitySpec<Entity>) (((EntitySpec<Entity>)EntitySpec.create(bundleInterface))).impl(bundleCls);
-        Entity entity = bundleCls.newInstance();
-        factory.createEntityProxy(spec, entity);
-
-        if (managementContext != null) Entities.destroyAll(managementContext);
     }
 
     @Test

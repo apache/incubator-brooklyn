@@ -25,6 +25,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.internal.ApiObjectsFactory;
 import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.management.ManagementContext;
@@ -47,6 +48,8 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
 
     @SetFromFlag(value = "id")
     private String id = Identifiers.makeRandomId(8);
+
+    private String catalogItemId;
 
     /** subclasses should synchronize on this for all access */
     @SetFromFlag(value = "tags")
@@ -71,6 +74,8 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
                 log.debug("Source of use of old-style construction", new Throwable("Source of use of old-style construction"));
             _legacyConstruction = true;
         }
+
+        catalogItemId = ApiObjectsFactory.get().getCatalogItemIdFromContext();
 
         // rely on sub-class to call configure(properties), because otherwise its fields will not have been initialised
     }
@@ -165,6 +170,16 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     @Override
     public String getId() {
         return id;
+    }
+
+    @Override
+    public void setCatalogItemId(String id) {
+        this.catalogItemId = id;
+    }
+
+    @Override
+    public String getCatalogItemId() {
+        return catalogItemId;
     }
 
     protected void onTagsChanged() {

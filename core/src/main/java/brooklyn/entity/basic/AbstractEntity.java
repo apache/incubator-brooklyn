@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.render.RendererHints;
@@ -582,6 +583,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     public <T extends Entity> T addChild(T child) {
         checkNotNull(child, "child must not be null (for entity %s)", this);
+        CatalogUtils.setCatalogItemIdOnAddition(this, child);
+        
         boolean changed;
         synchronized (children) {
             if (Entities.isAncestor(this, child)) throw new IllegalStateException("loop detected trying to add child "+child+" to "+this+"; it is already an ancestor");
@@ -1135,6 +1138,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             removePolicy(old);
         }
         
+        CatalogUtils.setCatalogItemIdOnAddition(this, policy);
         policies.add((AbstractPolicy)policy);
         ((AbstractPolicy)policy).setEntity(this);
         
@@ -1191,6 +1195,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             removeEnricher(old);
         }
         
+        CatalogUtils.setCatalogItemIdOnAddition(this, enricher);
         enrichers.add((AbstractEnricher) enricher);
         ((AbstractEnricher)enricher).setEntity(this);
         
@@ -1305,6 +1310,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                 removeFeed(old);
             }
             
+            CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, feed);
             feeds.add(feed);
             if (!AbstractEntity.this.equals(((AbstractFeed)feed).getEntity()))
                 ((AbstractFeed)feed).setEntity(AbstractEntity.this);

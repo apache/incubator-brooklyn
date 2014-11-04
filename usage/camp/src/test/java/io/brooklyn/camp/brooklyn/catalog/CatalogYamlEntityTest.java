@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.brooklyn.camp.brooklyn;
+package io.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import java.util.Collection;
 
@@ -30,12 +31,14 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
+import brooklyn.management.osgi.OsgiTestResources;
 
 import com.google.common.collect.Iterables;
 
 
 public class CatalogYamlEntityTest extends AbstractYamlTest {
-    private static final String SIMPLE_ENTITY_TYPE = "brooklyn.osgi.tests.SimpleEntity";
+    
+    private static final String SIMPLE_ENTITY_TYPE = OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY;
 
     @Test
     public void testAddCatalogItem() throws Exception {
