@@ -18,7 +18,13 @@
  */
 package brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
+import static brooklyn.util.ssh.BashCommands.ok;
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -44,14 +50,6 @@ import brooklyn.util.text.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
-
-import static brooklyn.util.ssh.BashCommands.*;
-import static java.lang.String.format;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
@@ -120,18 +118,29 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         String saveAsYum = "riak.rpm";
         String saveAsApt = "riak.deb";
         OsDetails osDetails = getMachine().getOsDetails();
+        
+        String downloadUrl;
+        String osReleaseCmd;
+        if ("debian".equalsIgnoreCase(osDetails.getName())) {
+            // TODO osDetails.getName() is returning "linux", instead of debian/ubuntu on AWS with jenkins image,
+            //      running as integration test targetting localhost. 
+            // TODO Debian support (default debian image fails with 'sudo: command not found')
+            downloadUrl = entity.getAttribute(RiakNode.DOWNLOAD_URL_DEBIAN);
+            osReleaseCmd = osDetails.getVersion().substring(0, osDetails.getVersion().indexOf("."));
+        } else {
+            // assume Ubuntu
+            downloadUrl = entity.getAttribute(RiakNode.DOWNLOAD_URL_UBUNTU);
+            osReleaseCmd = "`lsb_release -sc` && " +
+                    "export OS_RELEASE=`([[ \"lucid natty precise\" =~ (^| )\\$OS_RELEASE($| ) ]] && echo $OS_RELEASE || echo precise)`";
+        }
         String apt = chainGroup(
                 //debian fix
                 "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
                 "which apt-get",
                 ok(sudo("apt-get -y --allow-unauthenticated install logrotate libpam0g-dev libssl0.9.8")),
                 "export OS_NAME=" + Strings.toLowerCase(osDetails.getName()),
-                // TODO: Debian support (default debian image fails with 'sudo: command not found')
-                "debian".equals(osDetails.getName()) ?
-                    "export OS_RELEASE=" + osDetails.getVersion().substring(0, osDetails.getVersion().indexOf(".")) :
-                    "export OS_RELEASE=`lsb_release -sc` && " +
-                    "export OS_RELEASE=`([[ \"lucid natty precise\" =~ (^| )\\$OS_RELEASE($| ) ]] && echo $OS_RELEASE || echo precise)`",
-                String.format("wget -O %s %s", saveAsApt, entity.getAttribute(RiakNode.DOWNLOAD_URL_UBUNTU_DEBIAN)),
+                "export OS_RELEASE=" + osReleaseCmd,
+                String.format("wget -O %s %s", saveAsApt, downloadUrl),
                 sudo(String.format("dpkg -i %s", saveAsApt)));
         String yum = chainGroup(
                 "which yum",
