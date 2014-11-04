@@ -269,7 +269,8 @@ public class JmxSupport implements UsesJmx {
 
         switch (getJmxAgentMode()) {
         case JMXMP_AND_RMI:
-            result.put(JmxmpAgent.RMI_REGISTRY_PORT_PROPERTY, Preconditions.checkNotNull(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT), "registry port"));
+            Integer rmiRegistryPort = Preconditions.checkNotNull(entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT), "registry port (config val %s)", entity.getConfig(UsesJmx.RMI_REGISTRY_PORT));
+            result.put(JmxmpAgent.RMI_REGISTRY_PORT_PROPERTY, rmiRegistryPort);
         case JMXMP:
             if (jmxRemotePort==null || jmxRemotePort<=0)
                 throw new IllegalStateException("Unsupported JMX port "+jmxRemotePort+" - when applying system properties ("+getJmxAgentMode()+" / "+getEntity()+")");
