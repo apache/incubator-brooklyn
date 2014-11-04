@@ -16,97 +16,88 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.osgi.karaf
+package brooklyn.entity.osgi.karaf;
 
-import static brooklyn.test.TestUtils.*
-import static java.util.concurrent.TimeUnit.*
-import static org.testng.Assert.*
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
-import java.util.concurrent.TimeUnit
+import java.net.URL;
+import java.util.Map;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod
-import org.testng.annotations.BeforeMethod
-import org.testng.annotations.Test
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpec
+import brooklyn.entity.BrooklynAppLiveTestSupport;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.entity.trait.Startable
-import brooklyn.location.MachineProvisioningLocation
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import brooklyn.test.entity.TestApplication
-import brooklyn.util.internal.TimeExtras
-import brooklyn.util.text.Identifiers
+import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.Identifiers;
 
-public class KarafContainerTest {
-    static { TimeExtras.init() }
+import com.google.common.collect.ImmutableList;
 
-    MachineProvisioningLocation localhost;
-    TestApplication app
-    KarafContainer karaf
+public class KarafContainerTest extends BrooklynAppLiveTestSupport {
+
+    LocalhostMachineProvisioningLocation localhost;
+    KarafContainer karaf;
 
     @BeforeMethod(alwaysRun=true)
-    public void setup() {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+    public void setUp() throws Exception {
+        super.setUp();
         localhost = app.newLocalhostProvisioningLocation();
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void shutdown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-        app = null;
     }
 
     // FIXME Test failing in jenkins; not sure why. The karaf log shows the mbeans never being
     // registered so we are never able to connect to them over jmx.
-    @Test(groups = ["Integration", "WIP"])
-    public void canStartupAndShutdown() {
+    @Test(groups = {"Integration", "WIP"})
+    public void canStartupAndShutdown() throws Exception {
         karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
                 .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test"));
         
-        app.start([ localhost ]);
-        executeUntilSucceeds(timeout:30 * SECONDS) {
-            assertNotNull karaf.getAttribute(Startable.SERVICE_UP)
-            assertTrue karaf.getAttribute(Startable.SERVICE_UP)
-        }
+        app.start(ImmutableList.of(localhost));
+        EntityTestUtils.assertAttributeEqualsEventually(karaf, Attributes.SERVICE_UP, true);
         
         Entities.dumpInfo(karaf);
-        int pid = karaf.getAttribute(KarafContainer.KARAF_PID);
+        final int pid = karaf.getAttribute(KarafContainer.KARAF_PID);
         Entities.submit(app, SshEffectorTasks.requirePidRunning(pid).machine(localhost.obtain())).get();
         
         karaf.stop();
-        executeUntilSucceeds(timeout:10 * SECONDS) {
-            assertFalse karaf.getAttribute(Startable.SERVICE_UP)
-        }
+        EntityTestUtils.assertAttributeEqualsEventually(karaf, Attributes.SERVICE_UP, false);
         
-        Assert.assertFalse(Entities.submit(app, SshEffectorTasks.isPidRunning(pid).machine(localhost.obtain())).get());
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                try {
+                    Assert.assertFalse(Entities.submit(app, SshEffectorTasks.isPidRunning(pid).machine(localhost.obtain())).get());
+                } catch (NoMachinesAvailableException e) {
+                    throw Exceptions.propagate(e);
+                }
+            }});
     }
     
-    @Test(groups = ["Integration", "WIP"])
-    public void canStartupAndShutdownExplicitJmx() {
+    @Test(groups = {"Integration", "WIP"})
+    public void canStartupAndShutdownExplicitJmx() throws Exception {
         karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
                 .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
                 .configure("rmiRegistryPort", "8099+")
                 .configure("jmxPort", "9099+"));
         
-        app.start([ localhost ]);
-        executeUntilSucceeds(timeout:30 * SECONDS) {
-            assertNotNull karaf.getAttribute(Startable.SERVICE_UP)
-            assertTrue karaf.getAttribute(Startable.SERVICE_UP)
-        }
+        app.start(ImmutableList.of(localhost));
+        EntityTestUtils.assertAttributeEqualsEventually(karaf, Attributes.SERVICE_UP, true);
         
         karaf.stop();
-        executeUntilSucceeds(timeout:10 * SECONDS) {
-            assertFalse karaf.getAttribute(Startable.SERVICE_UP)
-        }
+        EntityTestUtils.assertAttributeEqualsEventually(karaf, Attributes.SERVICE_UP, false);
     }
     
-    @Test(groups = ["Integration", "WIP"])
-    public void canStartupAndShutdownLegacyJmx() {
+    @Test(groups = {"Integration", "WIP"})
+    public void canStartupAndShutdownLegacyJmx() throws Exception {
         karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
                 .configure("name", Identifiers.makeRandomId(8))
                 .configure("displayName", "Karaf Test")
@@ -114,29 +105,24 @@ public class KarafContainerTest {
                 .configure("rmiRegistryPort", "9099+"));
             // NB: now the above parameters have the opposite semantics to before
         
-        app.start([ localhost ]);
-        executeUntilSucceeds(timeout:30 * SECONDS) {
-            assertNotNull karaf.getAttribute(Startable.SERVICE_UP)
-            assertTrue karaf.getAttribute(Startable.SERVICE_UP)
-        }
+        app.start(ImmutableList.of(localhost));
+        EntityTestUtils.assertAttributeEqualsEventually(karaf, Attributes.SERVICE_UP, true);
         
         karaf.stop();
-        executeUntilSucceeds(timeout:10 * SECONDS) {
-            assertFalse karaf.getAttribute(Startable.SERVICE_UP)
-        }
+        EntityTestUtils.assertAttributeEqualsEventually(karaf, Attributes.SERVICE_UP, false);
     }
     
     // FIXME Test failing in jenkins; not sure why. The karaf log shows the mbeans never being
     // registered so we are never able to connect to them over jmx.
-    @Test(groups = ["Integration", "WIP"])
-    public void testCanInstallAndUninstallBundle() {
+    @Test(groups = {"Integration", "WIP"})
+    public void testCanInstallAndUninstallBundle() throws Exception {
         karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
             .configure("name", Identifiers.makeRandomId(8))
             .configure("displayName", "Karaf Test")
             .configure("jmxPort", "8099+")
             .configure("rmiRegistryPort", "9099+"));
         
-        app.start([ localhost ]);
+        app.start(ImmutableList.of(localhost));
         
         URL jarUrl = getClass().getClassLoader().getResource("hello-world.jar");
         assertNotNull(jarUrl);
