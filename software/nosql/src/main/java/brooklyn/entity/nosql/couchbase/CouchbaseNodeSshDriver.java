@@ -18,11 +18,7 @@
  */
 package brooklyn.entity.nosql.couchbase;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.alternatives;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.ok;
-import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.net.URI;
@@ -35,10 +31,7 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.http.HttpHeaders;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.HttpClient;
-import org.apache.http.entity.ContentType;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
@@ -53,10 +46,10 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
-import brooklyn.util.net.Urls;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -67,7 +60,6 @@ import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -116,12 +108,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         log.info("Installing "+getEntity()+" using couchbase-server-{} {}", getCommunityOrEnterprise(), getVersion());
 
         String apt = chainGroup(
-                "export DEBIAN_FRONTEND=noninteractive",
-                "which apt-get",
-                sudo("apt-get update"),
-                // The following line is required to run on Docker container
-                sudo("apt-get install -y python-httplib2"),
-                sudo("apt-get install -y libssl0.9.8"),
+                installPackage(MutableMap.of("apt", "python-httplib2 libssl0.9.8"), null),
                 sudo(format("dpkg -i %s", saveAs)));
 
         String yum = chainGroup(
@@ -138,7 +125,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         String link = new DownloadProducerFromUrlAttribute().apply(new BasicDownloadRequirement(this)).getPrimaryLocations().iterator().next();
         return ImmutableList.<String>builder()
                 .add(INSTALL_CURL)
-                .addAll(Arrays.asList(INSTALL_CURL, 
+                .addAll(Arrays.asList(INSTALL_CURL,
                     BashCommands.require(BashCommands.alternatives(BashCommands.simpleDownloadUrlAs(urls, saveAs),
                         // Referer link is required for 3.0.0; note mis-spelling is correct, as per http://en.wikipedia.org/wiki/HTTP_referer
                         "curl -f -L -k "+BashStringEscapes.wrapBash(link)
@@ -160,11 +147,11 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         //sudo echo 0 > /proc/sys/vm/swappiness
 
         //os page cache = 20%
-        
+
         //disable THP
         //sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
         //sudo echo never > /sys/kernel/mm/transparent_hugepage/defrag
-        
+
         //turn off transparent huge pages
         //limit page cache disty bytes
         //control the rate page cache is flused ... vm.dirty_*
@@ -214,17 +201,15 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public String getOsTag() {
-        return newDownloadLinkSegmentComputer().getOsTag(); 
+        return newDownloadLinkSegmentComputer().getOsTag();
     }
-    
-    protected DownloadLinkSegmentComputer newDownloadLinkSegmentComputer() {
-        return new DownloadLinkSegmentComputer(getLocation().getOsDetails(), !isPreV3(), ""+getEntity());
-    }
-    
-    public static class DownloadLinkSegmentComputer {
 
+    protected DownloadLinkSegmentComputer newDownloadLinkSegmentComputer() {
+        return new DownloadLinkSegmentComputer(getLocation().getOsDetails(), !isPreV3(), getEntity().toString());
+    }
+
+    public static class DownloadLinkSegmentComputer {
         // links are:
-        
         // http://packages.couchbase.com/releases/2.2.0/couchbase-server-community_2.2.0_x86_64.rpm
         // http://packages.couchbase.com/releases/2.2.0/couchbase-server-community_2.2.0_x86_64.deb
         // ^^^ preV3 is _ everywhere
@@ -232,14 +217,14 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         // ^^^ most V3 is _${version}-
         // http://packages.couchbase.com/releases/3.0.0/couchbase-server-community-3.0.0-centos6.x86_64.rpm
         // ^^^ but RHEL is -${version}-
-        
+
         @Nullable private final OsDetails os;
         @Nonnull private final boolean isV3OrLater;
         @Nonnull private final String context;
         @Nonnull private final String osName;
         @Nonnull private final boolean isRpm;
         @Nonnull private final boolean is64bit;
-        
+
         public DownloadLinkSegmentComputer(@Nullable OsDetails os, boolean isV3OrLater, @Nonnull String context) {
             this.os = os;
             this.isV3OrLater = isV3OrLater;
@@ -256,18 +241,20 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             isRpm = !(osName.contains("deb") || osName.contains("ubuntu"));
             is64bit = os.is64bit();
         }
+
         /** separator after the version number used to be _ but is - in 3.0 and later */
         public String getPreVersionSeparator() {
             if (!isV3OrLater) return "_";
             if (isRpm) return "-";
             return "_";
         }
+
         public String getOsTag() {
             // couchbase only provide certain versions; if on other platforms let's suck-it-and-see
             String family;
             if (osName.contains("debian")) family = "debian7_";
             else if (osName.contains("ubuntu")) family = "ubuntu12.04_";
-            else if (osName.contains("centos") || osName.contains("rhel") || (osName.contains("red") && osName.contains("hat"))) 
+            else if (osName.contains("centos") || osName.contains("rhel") || (osName.contains("red") && osName.contains("hat")))
                 family = "centos6.";
             else {
                 log.warn("Unrecognised OS "+os+" of "+context+"; assuming RPM distribution of Couchbase");
@@ -280,20 +267,20 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             }
             String arch = !is64bit ? "x86" : !isRpm && isV3OrLater ? "amd64" : "x86_64";
             String fileExtension = isRpm ? ".rpm" : ".deb";
-            
+
             if (isV3OrLater)
                 return family + arch + fileExtension;
             else
                 return arch + fileExtension;
         }
         public String getOsTagWithPrefix() {
-            return (!isV3OrLater ? "_" : "-") + getOsTag(); 
+            return (!isV3OrLater ? "_" : "-") + getOsTag();
         }
     }
-    
+
     @Override
     public String getDownloadLinkOsTagWithPrefix() {
-        return newDownloadLinkSegmentComputer().getOsTagWithPrefix(); 
+        return newDownloadLinkSegmentComputer().getOsTagWithPrefix();
     }
     @Override
     public String getDownloadLinkPreVersionSeparator() {
@@ -333,7 +320,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     private String getClusterInitRamSize() {
         return entity.getConfig(CouchbaseNode.COUCHBASE_CLUSTER_INIT_RAM_SIZE).toString();
     }
-        
+
     @Override
     public void rebalance() {
         entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "explicitly started");
@@ -343,7 +330,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                         getCouchbaseHostnameAndCredentials())
                 .failOnNonZeroResultCode()
                 .execute();
-        
+
         // wait until the re-balance is started
         // (if it's quick, this might miss it, but it will only block for 30s if so)
         Repeater.create()
@@ -361,10 +348,10 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 }
             })
             .run();
-        
+
         entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "waiting for completion");
         // NB: a sensor feed will also update this
-        
+
         // then wait until the re-balance is complete
         boolean completed = Repeater.create()
             .backoff(Duration.ONE_SECOND, 1.2, Duration.TEN_SECONDS)
@@ -381,6 +368,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 }
             })
             .run();
+
         if (completed) {
             entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "completed");
             ServiceStateLogic.ServiceNotUpLogic.clearNotUpIndicator(getEntity(), "rebalancing");
@@ -407,14 +395,14 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 return names;
             }
         };
-        HttpToolResponse nodesResponse = getApiResponse(String.format("http://%s:%s/pools/nodes", getHostname(), getWebPort()));
+        HttpToolResponse nodesResponse = getApiResponse(String.format("http://%s:%s/pools/nodes", getSubnetHostname(), getWebPort()));
         return Functionals.chain(
             HttpValueFunctions.jsonContents(),
             JsonFunctions.walkN("nodes"),
             getNodesAsList
         ).apply(nodesResponse);
     }
-    
+
     private boolean isNodeRebalancing(String nodeHostAndPort) {
         HttpToolResponse response = getApiResponse("http://" + nodeHostAndPort + "/pools/default/rebalanceProgress");
         if (response.getResponseCode() != 200) {
@@ -422,17 +410,17 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         }
         return !"none".equals(HttpValueFunctions.jsonContents("status", String.class).apply(response));
     }
-    
+
     private HttpToolResponse getApiResponse(String uri) {
         return HttpTool.httpGet(HttpTool.httpClientBuilder()
                 // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
                 .uri(uri)
                 .credentials(new UsernamePasswordCredentials(getUsername(), getPassword()))
-                .build(), 
-            URI.create(uri), 
+                .build(),
+            URI.create(uri),
             ImmutableMap.<String, String>of());
     }
-    
+
     @Override
     public void serverAdd(String serverToAdd, String username, String password) {
         // TODO the POST is failing with SocketException: Connection reset
@@ -445,21 +433,21 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 //        String baseUrl = Preconditions.checkNotNull(getEntity().getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), "web admin URL not available");
 //        String uri = Urls.mergePaths(baseUrl, "controller/addNode");
 //        URI uriU = URI.create(uri);
-//        
+//
 //        HttpClient client = HttpTool.httpClientBuilder()
 //            // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
 //            .uri(uriU.getScheme()+"://"+uriU.getHost())
 //            .credentials(new UsernamePasswordCredentials(getUsername(), getPassword()))
 //            .build();
-//        client.getParams().setParameter("http.socket.timeout", new Integer(0)); 
+//        client.getParams().setParameter("http.socket.timeout", new Integer(0));
 //        client.getParams().setParameter("http.connection.stalecheck", new Boolean(true));
-//        
-//        HttpToolResponse response = HttpTool.httpPost(client, 
-//            URI.create(uri), 
+//
+//        HttpToolResponse response = HttpTool.httpPost(client,
+//            URI.create(uri),
 ////            ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType()),
 //            // TODO do we need the above?
 //            ImmutableMap.<String,String>of(),
-//            
+//
 //            ("hostname="+Urls.encode(serverToAdd)+
 //                "&user"+Urls.encode(username)+
 //                "&password"+Urls.encode(password)).getBytes()
@@ -504,7 +492,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     @Override
     public void bucketCreate(String bucketName, String bucketType, Integer bucketPort, Integer bucketRamSize, Integer bucketReplica) {
         log.info("Adding bucket: {} to cluster {} primary node: {}", new Object[] { bucketName, CouchbaseClusterImpl.getClusterOrNode(getEntity()), getEntity() });
-        
+
         newScript("bucketCreate").body.append(couchbaseCli("bucket-create")
             + getCouchbaseHostnameAndCredentials() +
             " --bucket=" + BashStringEscapes.wrapBash(bucketName) +
@@ -519,23 +507,23 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     @Override
     public void addReplicationRule(Entity toCluster, String fromBucket, String toBucket) {
         DynamicTasks.queue(DependentConfiguration.attributeWhenReady(toCluster, Attributes.SERVICE_UP)).getUnchecked();
-        
+
         String destName = CouchbaseClusterImpl.getClusterName(toCluster);
-        
+
         log.info("Setting up XDCR for "+fromBucket+" from "+CouchbaseClusterImpl.getClusterName(getEntity())+" (via "+getEntity()+") "
             + "to "+destName+" ("+toCluster+")");
-        
+
         Entity destPrimaryNode = toCluster.getAttribute(CouchbaseCluster.COUCHBASE_PRIMARY_NODE);
         String destHostname = destPrimaryNode.getAttribute(Attributes.HOSTNAME);
         String destUsername = toCluster.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
         String destPassword = toCluster.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
 
         // on the REST API there is mention of a 'type' 'continuous' but i don't see other refs to this
-        
+
         // PROTOCOL   Select REST protocol or memcached for replication. xmem indicates memcached while capi indicates REST protocol.
         // looks like xmem is the default; leave off for now
 //        String replMode = "xmem";
-        
+
         DynamicTasks.queue(TaskTags.markInessential(SshEffectorTasks.ssh(
             couchbaseCli("xdcr-setup") +
             getCouchbaseHostnameAndCredentials() +
@@ -548,7 +536,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
         // would be nice to auto-create bucket, but we'll need to know the parameters; the port in particular is tedious
 //        ((CouchbaseNode)destPrimaryNode).bucketCreate(toBucket, "couchbase", null, 0, 0);
-        
+
         DynamicTasks.queue(SshEffectorTasks.ssh(
             couchbaseCli("xdcr-replicate") +
             getCouchbaseHostnameAndCredentials() +
