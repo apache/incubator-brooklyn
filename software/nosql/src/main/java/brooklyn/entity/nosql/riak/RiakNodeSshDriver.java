@@ -44,14 +44,6 @@ import brooklyn.util.text.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
-
-import static brooklyn.util.ssh.BashCommands.*;
-import static java.lang.String.format;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
@@ -78,6 +70,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         if (getEntity().getEpmdListenerPort() != null) {
             result.put("ERL_EPMD_PORT", "" + Integer.toString(getEntity().getEpmdListenerPort()));
         }
+        result.put("WAIT_FOR_ERLANG", "60");
         return result;
     }
 
