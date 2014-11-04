@@ -21,6 +21,7 @@ package brooklyn.entity.nosql.couchbase;
 import static java.lang.String.format;
 
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -59,18 +60,21 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.net.HostAndPort;
+import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
 public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseNode {
-    
+
     private static final Logger log = LoggerFactory.getLogger(CouchbaseNodeImpl.class);
-    
-    HttpFeed httpFeed;
+
+    private volatile HttpFeed httpFeed;
 
     @Override
     public Class<CouchbaseNodeDriver> getDriverInterface() {
@@ -85,7 +89,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     @Override
     public void init() {
         super.init();
-        
+
         subscribe(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override
             public void onEvent(SensorEvent<Boolean> booleanSensorEvent) {
@@ -97,7 +101,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
                 }
             }
         });
-        
+
         getMutableEntityType().addEffector(ADD_REPLICATION_RULE, new EffectorBody<Void>() {
             @Override
             public Void call(ConfigBag parameters) {
@@ -106,7 +110,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             }
         });
     }
-    
+
     protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
         ConfigBag result = ConfigBag.newInstance(super.obtainProvisioningFlags(location));
         result.configure(CloudLocationConfig.OS_64_BIT, true);
@@ -143,8 +147,8 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     }
 
     protected final static Function<HttpToolResponse, JsonElement> GET_THIS_NODE_STATS = Functionals.chain(
-        HttpValueFunctions.jsonContents(), 
-        JsonFunctions.walk("nodes"), 
+        HttpValueFunctions.jsonContents(),
+        JsonFunctions.walk("nodes"),
         new Function<JsonElement, JsonElement>() {
             @Override public JsonElement apply(JsonElement input) {
                 JsonArray nodes = input.getAsJsonArray();
@@ -157,12 +161,12 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
                 return null;
         }}
     );
-    
+
     protected final static <T> HttpPollConfig<T> getSensorFromNodeStat(AttributeSensor<T> sensor, String ...jsonPath) {
         return new HttpPollConfig<T>(sensor)
-            .onSuccess(Functionals.chain(GET_THIS_NODE_STATS, 
-                MaybeFunctions.<JsonElement>wrap(), 
-                JsonFunctions.walkM(jsonPath), 
+            .onSuccess(Functionals.chain(GET_THIS_NODE_STATS,
+                MaybeFunctions.<JsonElement>wrap(),
+                JsonFunctions.walkM(jsonPath),
                 JsonFunctions.castM(TypeTokens.getRawRawType(sensor.getTypeToken()), null)))
             .onFailureOrException(Functions.<T>constant(null));
     }
@@ -172,28 +176,24 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         super.postStart();
         renameServerToPublicHostname();
     }
-    
+
     protected void renameServerToPublicHostname() {
         // http://docs.couchbase.com/couchbase-manual-2.5/cb-install/#couchbase-getting-started-hostnames
         URI apiUri = null;
         try {
-            String hostname = getAttribute(Attributes.HOSTNAME); 
-            String port = ""+getAttribute(COUCHBASE_WEB_ADMIN_PORT);
-            apiUri = new URI("http://"+hostname+":"+port+"/node/controller/rename");
-            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(
-                getConfig(COUCHBASE_ADMIN_USERNAME), getConfig(COUCHBASE_ADMIN_PASSWORD));
-            HttpToolResponse response = HttpTool.httpPost(HttpTool.httpClientBuilder()
-                // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
-                .uri(apiUri)
-                .credentials(credentials)
-                .build(), 
-                apiUri, 
-                MutableMap.of(
-                    com.google.common.net.HttpHeaders.CONTENT_TYPE, MediaType.FORM_DATA.toString(),
-                    com.google.common.net.HttpHeaders.ACCEPT, "*/*",
-                    // this appears needed; without it we get org.apache.http.NoHttpResponseException !?
-                    com.google.common.net.HttpHeaders.AUTHORIZATION, HttpTool.toBasicAuthorizationValue(credentials)),
-                ("hostname="+Urls.encode(hostname)).getBytes());
+            HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getAttribute(COUCHBASE_WEB_ADMIN_PORT));
+            apiUri = URI.create(String.format("http://%s:%d/node/controller/rename", accessible.getHostText(), accessible.getPort()));
+            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(getConfig(COUCHBASE_ADMIN_USERNAME), getConfig(COUCHBASE_ADMIN_PASSWORD));
+            HttpToolResponse response = HttpTool.httpPost(
+                    // the uri is required by the HttpClientBuilder in order to set the AuthScope of the credentials
+                    HttpTool.httpClientBuilder().uri(apiUri).credentials(credentials).build(),
+                    apiUri,
+                    MutableMap.of(
+                            HttpHeaders.CONTENT_TYPE, MediaType.FORM_DATA.toString(),
+                            HttpHeaders.ACCEPT, "*/*",
+                            // this appears needed; without it we get org.apache.http.NoHttpResponseException !?
+                            HttpHeaders.AUTHORIZATION, HttpTool.toBasicAuthorizationValue(credentials)),
+                    Charsets.UTF_8.encode("hostname="+Urls.encode(accessible.getHostText())).array());
             log.debug("Renamed Couchbase server "+this+" via "+apiUri+": "+response);
             if (!HttpTool.isStatusCodeHealthy(response.getResponseCode())) {
                 log.warn("Invalid response code, renaming "+apiUri+": "+response);
@@ -207,13 +207,12 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
-                
-        URI adminUrl = DynamicTasks.submit(DependentConfiguration.attributeWhenReady(this, CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), this).getUnchecked(Duration.TWO_MINUTES);
-        
+
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, this.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
         httpFeed = HttpFeed.builder()
             .entity(this)
             .period(Duration.seconds(3))
-            .baseUri(adminUrl + "/pools/nodes/")
+            .baseUri("http://" + hostAndPort + "/pools/nodes/")
             .credentialsIfNotNull(getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME), getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD))
             .poll(getSensorFromNodeStat(CouchbaseNode.OPS, "ops"))
             .poll(getSensorFromNodeStat(CouchbaseNode.COUCH_DOCS_DATA_SIZE, "couch_docs_data_size"))
@@ -228,8 +227,8 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             .poll(getSensorFromNodeStat(CouchbaseNode.CMD_GET, "cmd_get"))
             .poll(getSensorFromNodeStat(CouchbaseNode.CURR_ITEMS_TOT, "curr_items_tot"))
             .poll(new HttpPollConfig<String>(CouchbaseNode.REBALANCE_STATUS)
-                        .onSuccess(HttpValueFunctions.jsonContents("rebalanceStatus", String.class))
-                        .onFailureOrException(Functions.constant("Could not retrieve")))
+                    .onSuccess(HttpValueFunctions.jsonContents("rebalanceStatus", String.class))
+                    .onFailureOrException(Functions.constant("Could not retrieve")))
             .build();
     }
 
@@ -246,10 +245,10 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         if (Strings.isBlank(bucketType)) bucketType = "couchbase";
         if (bucketRamSize==null || bucketRamSize<=0) bucketRamSize = 200;
         if (bucketReplica==null || bucketReplica<0) bucketReplica = 1;
-        
+
         getDriver().bucketCreate(bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
     }
-    
+
     /** exposed through {@link CouchbaseNode#ADD_REPLICATION_RULE} */
     protected void addReplicationRule(ConfigBag ruleArgs) {
         Object toClusterO = Preconditions.checkNotNull(ruleArgs.getStringKey("toCluster"), "toCluster must not be null");
@@ -257,16 +256,16 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
             toClusterO = getManagementContext().lookup((String)toClusterO);
         }
         Entity toCluster = Tasks.resolving(toClusterO, Entity.class).context(getExecutionContext()).get();
-        
+
         String fromBucket = Preconditions.checkNotNull( (String)ruleArgs.getStringKey("fromBucket"), "fromBucket must be specified" );
-        
+
         String toBucket = (String)ruleArgs.getStringKey("toBucket");
         if (toBucket==null) toBucket = fromBucket;
-        
+
         if (!ruleArgs.getUnusedConfig().isEmpty()) {
             throw new IllegalArgumentException("Unsupported replication rule data: "+ruleArgs.getUnusedConfig());
         }
-        
+
         getDriver().addReplicationRule(toCluster, fromBucket, toBucket);
     }
 

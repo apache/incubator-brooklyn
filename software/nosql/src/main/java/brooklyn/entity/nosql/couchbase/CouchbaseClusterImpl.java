@@ -39,6 +39,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
@@ -284,8 +285,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         @Override public List<String> apply(Set<Entity> input) {
             List<String> addresses = Lists.newArrayList();
             for (Entity entity : input) {
-                addresses.add(String.format("%s:%s", entity.getAttribute(Attributes.ADDRESS), 
-                        entity.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT)));
+                addresses.add(String.format("%s",
+                        BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT))));
             }
             return addresses;
         }
@@ -447,7 +448,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             return;
         }
         if (!isMemberInCluster(serverToAdd)) {
-            HostAndPort webAdmin = BrooklynAccessUtils.getBrooklynAccessibleAddress(serverToAdd, serverToAdd.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
+            HostAndPort webAdmin = HostAndPort.fromParts(serverToAdd.getAttribute(SoftwareProcess.SUBNET_HOSTNAME),
+                    serverToAdd.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
             String username = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME);
             String password = serverToAdd.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD);
 
@@ -512,15 +514,17 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                             CouchbaseClusterImpl.this.resetBucketCreation.get().stop();
                         }
                         setAttribute(CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, true);
-                        
+                        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(primaryNode, primaryNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
+
                         CouchbaseClusterImpl.this.resetBucketCreation.set(HttpFeed.builder()
                                 .entity(CouchbaseClusterImpl.this)
                                 .period(500, TimeUnit.MILLISECONDS)
-                                .baseUri(String.format("%s/pools/default/buckets/%s", primaryNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL), bucketName))
+                                .baseUri(String.format("http://%s/pools/default/buckets/%s", hostAndPort, bucketName))
                                 .credentials(primaryNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_USERNAME), primaryNode.getConfig(CouchbaseNode.COUCHBASE_ADMIN_PASSWORD))
                                 .poll(new HttpPollConfig<Boolean>(BUCKET_CREATION_IN_PROGRESS)
                                         .onSuccess(Functionals.chain(HttpValueFunctions.jsonContents(), JsonFunctions.walkN("nodes"), new Function<JsonElement, Boolean>() {
-                                            @Override public Boolean apply(JsonElement input) {
+                                            @Override
+                                            public Boolean apply(JsonElement input) {
                                                 // Wait until bucket has been created on all nodes and the couchApiBase element has been published (indicating that the bucket is useable)
                                                 JsonArray servers = input.getAsJsonArray();
                                                 if (servers.size() != CouchbaseClusterImpl.this.getMembers().size()) {
@@ -544,7 +548,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                                                     }
                                                 }
                                                 if (input instanceof Throwable)
-                                                    Exceptions.propagate((Throwable)input);
+                                                    Exceptions.propagate((Throwable) input);
                                                 throw new IllegalStateException("Unexpected response when creating bucket:" + input);
                                             }
                                         }))
