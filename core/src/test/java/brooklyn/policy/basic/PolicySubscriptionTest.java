@@ -16,116 +16,112 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy.basic
+package brooklyn.policy.basic;
 
-import static brooklyn.test.TestUtils.*
-import static org.testng.Assert.*
+import static org.testng.Assert.assertEquals;
 
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.testng.annotations.AfterMethod
-import org.testng.annotations.BeforeMethod
-import org.testng.annotations.Test
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder
-import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpec
-import brooklyn.event.SensorEvent
-import brooklyn.event.SensorEventListener
-import brooklyn.event.basic.BasicSensorEvent
-import brooklyn.location.basic.SimulatedLocation
-import brooklyn.management.SubscriptionHandle
-import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestEntity
+import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
+import brooklyn.event.basic.BasicSensorEvent;
+import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.management.SubscriptionHandle;
+import brooklyn.test.Asserts;
+import brooklyn.test.entity.TestEntity;
 
-public class PolicySubscriptionTest {
+import com.google.common.collect.ImmutableList;
+
+public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
 
     // TODO Duplication between this and EntitySubscriptionTest
     
-    private static final long TIMEOUT_MS = 5000;
     private static final long SHORT_WAIT_MS = 100;
     
     private SimulatedLocation loc;
-    private TestApplication app;
     private TestEntity entity;
-    private TestEntity entity2;
+    private TestEntity otherEntity;
     private AbstractPolicy policy;
     private RecordingSensorEventListener listener;
     
     @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        loc = new SimulatedLocation();
-        app = TestApplication.Factory.newManagedInstanceForTests();
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        loc = app.newSimulatedLocation();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        otherEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         listener = new RecordingSensorEventListener();
         policy = new AbstractPolicy() {};
         entity.addPolicy(policy);
-        app.start([loc])
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        app.start(ImmutableList.of(loc));
     }
 
     @Test
-    public void testSubscriptionReceivesEvents() {
+    public void testSubscriptionReceivesEvents() throws Exception {
         policy.subscribe(entity, TestEntity.SEQUENCE, listener);
         policy.subscribe(entity, TestEntity.NAME, listener);
         policy.subscribe(entity, TestEntity.MY_NOTIF, listener);
         
-        entity2.setAttribute(TestEntity.SEQUENCE, 456);
+        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
         entity.setAttribute(TestEntity.SEQUENCE, 123);
         entity.setAttribute(TestEntity.NAME, "myname");
         entity.emit(TestEntity.MY_NOTIF, 789);
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(listener.events, [
-                new BasicSensorEvent(TestEntity.SEQUENCE, entity, 123),
-                new BasicSensorEvent(TestEntity.NAME, entity, "myname"),
-                new BasicSensorEvent(TestEntity.MY_NOTIF, entity, 789)
-            ])
-        }
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.events, ImmutableList.of(
+                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, entity, 123),
+                        new BasicSensorEvent<String>(TestEntity.NAME, entity, "myname"),
+                        new BasicSensorEvent<Integer>(TestEntity.MY_NOTIF, entity, 789)));
+            }});
     }
     
     @Test
-    public void testUnsubscribeRemovesAllSubscriptionsForThatEntity() {
+    public void testUnsubscribeRemovesAllSubscriptionsForThatEntity() throws Exception {
         policy.subscribe(entity, TestEntity.SEQUENCE, listener);
         policy.subscribe(entity, TestEntity.NAME, listener);
         policy.subscribe(entity, TestEntity.MY_NOTIF, listener);
-        policy.subscribe(entity2, TestEntity.SEQUENCE, listener);
+        policy.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
         policy.unsubscribe(entity);
         
         entity.setAttribute(TestEntity.SEQUENCE, 123);
         entity.setAttribute(TestEntity.NAME, "myname");
         entity.emit(TestEntity.MY_NOTIF, 456);
-        entity2.setAttribute(TestEntity.SEQUENCE, 789);
+        otherEntity.setAttribute(TestEntity.SEQUENCE, 789);
         
-        Thread.sleep(SHORT_WAIT_MS)
-        assertEquals(listener.events, [
-            new BasicSensorEvent(TestEntity.SEQUENCE, entity2, 789)
-        ]);
+        Thread.sleep(SHORT_WAIT_MS);
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.events, ImmutableList.of(
+                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 789)));
+            }});
     }
     
     @Test
-    public void testUnsubscribeUsingHandleStopsEvents() {
+    public void testUnsubscribeUsingHandleStopsEvents() throws Exception {
         SubscriptionHandle handle1 = policy.subscribe(entity, TestEntity.SEQUENCE, listener);
         SubscriptionHandle handle2 = policy.subscribe(entity, TestEntity.NAME, listener);
-        SubscriptionHandle handle3 = policy.subscribe(entity2, TestEntity.SEQUENCE, listener);
+        SubscriptionHandle handle3 = policy.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
         
-        policy.unsubscribe(entity, handle2)
+        policy.unsubscribe(entity, handle2);
         
         entity.setAttribute(TestEntity.SEQUENCE, 123);
         entity.setAttribute(TestEntity.NAME, "myname");
-        entity2.setAttribute(TestEntity.SEQUENCE, 456);
+        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
         
-        executeUntilSucceeds(timeout:TIMEOUT_MS) {
-            assertEquals(listener.events, [
-                new BasicSensorEvent(TestEntity.SEQUENCE, entity, 123),
-                new BasicSensorEvent(TestEntity.SEQUENCE, entity2, 456)
-            ])
-        }
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.events, ImmutableList.of(
+                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, entity, 123),
+                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 456)));
+            }});
     }
     
     private static class RecordingSensorEventListener implements SensorEventListener<Object> {
