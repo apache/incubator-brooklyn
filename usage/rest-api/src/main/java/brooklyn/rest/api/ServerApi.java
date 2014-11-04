@@ -74,7 +74,7 @@ public interface ServerApi {
     @Deprecated /** @deprecated since 0.7.0 use /ha/node (which returns correct JSON) */
     @GET
     @Path("/status")
-    @ApiOperation(value = "Returns the status of this Brooklyn instance",
+    @ApiOperation(value = "Returns the status of this Brooklyn instance [DEPRECATED; see ../ha/state]",
         responseClass = "String",
         multiValueResponse = false)
     public String getStatus();
@@ -82,7 +82,7 @@ public interface ServerApi {
     @Deprecated /** @deprecated since 0.7.0 use /ha/states */
     @GET
     @Path("/highAvailability")
-    @ApiOperation(value = "Returns the status of all Brooklyn instances in the management plane",
+    @ApiOperation(value = "Returns the status of all Brooklyn instances in the management plane [DEPRECATED; see ../ha/states]",
         responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
     public HighAvailabilitySummary getHighAvailability();
     

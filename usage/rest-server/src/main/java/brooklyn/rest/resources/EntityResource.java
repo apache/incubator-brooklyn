@@ -212,6 +212,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
       return result;
   }
 
+  @Override
   public String getSpec(String applicationToken,  String entityToken) {
       EntityLocal entity = brooklyn().getEntity(applicationToken, entityToken);
       NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.tags().getTags());

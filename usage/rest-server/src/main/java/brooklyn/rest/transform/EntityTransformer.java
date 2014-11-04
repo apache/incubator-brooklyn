@@ -78,7 +78,7 @@ public class EntityTransformer {
         if (entity.getIconUrl()!=null)
             lb.put("iconUrl", URI.create(entityUri + "/icon"));
 
-        return new EntitySummary(entity.getId(), entity.getDisplayName(), type, lb.build());
+        return new EntitySummary(entity.getId(), entity.getDisplayName(), type, entity.getCatalogItemId(), lb.build());
     }
 
     public static List<EntitySummary> entitySummaries(Iterable<? extends Entity> entities) {

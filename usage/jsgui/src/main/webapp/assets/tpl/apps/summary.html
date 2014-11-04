@@ -66,6 +66,10 @@ under the License.
             <div class="name">ID</div>
             <div class="value"><%= entity.get('id') %></div>
         </div>
+        <div class="info-name-value catalogItemId hide">
+            <div class="name">Catalog Item</div>
+            <div class="value"><a href="#v1/catalog/entities/<%= entity.get('catalogItemId') %>"><%= entity.get('catalogItemId') %></a></div>
+        </div>
 
         <div class="additional-info-on-problem hide" style="margin-top: 12px;">
         </div>

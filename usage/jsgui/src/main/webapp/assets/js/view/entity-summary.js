@@ -38,6 +38,10 @@ define([
                 entity:this.model,
                 application:this.options.application,
             }));
+            if (this.model.get('catalogItemId'))
+                this.$("div.catalogItemId").show();
+            else
+                this.$("div.catalogItemId").hide();
             
             this.options.tabView.configView = new EntityConfigView({
                 model:this.options.model,

@@ -1432,3 +1432,7 @@ textarea.param-value {
     height: 18px;
     overflow: auto;
 }
+
+#catalog-details-accordion {
+    margin-top: 12px;
+}
