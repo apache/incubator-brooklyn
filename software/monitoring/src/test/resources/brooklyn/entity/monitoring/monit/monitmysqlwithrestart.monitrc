@@ -27,5 +27,5 @@ set logfile ${driver.runDir}/monit.log
 check process mysqld with pidfile ${targetPidFile}
 	group database
 	mode active
-    start program = "/bin/bash -c 'rm ${mySqlRunDir}/pid.txt ; ${mySqlInstallDir}/mysql-${mySqlVersion}-osx10.6-x86_64/bin/mysqld --defaults-file=${mySqlRunDir}/mymysql.cnf --user=root >> ${mySqlRunDir}/out.log 2>> ${mySqlRunDir}/err.log < /dev/null & echo $! > ${mySqlRunDir}/pid.txt'"
+    start program = "/bin/bash -c 'rm ${mySqlRunDir}/pid.txt ; ${mySqlInstallDir}/mysql-${mySqlVersion}-${mySqlOsFlavor}/bin/mysqld --defaults-file=${mySqlRunDir}/mymysql.cnf --user=root >> ${mySqlRunDir}/out.log 2>> ${mySqlRunDir}/err.log < /dev/null & echo $! > ${mySqlRunDir}/pid.txt'"
     stop program = "/bin/bash -c 'kill -s SIGTERM $(cat ${mySqlRunDir}/pid.txt) ; kill -s KILL $(cat ${mySqlRunDir}/pid.txt) ; rm ${mySqlRunDir}/pid.txt'"
