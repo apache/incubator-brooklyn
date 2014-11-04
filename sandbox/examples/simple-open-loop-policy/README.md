@@ -17,7 +17,7 @@ Redistributable embedded example:
 
   # To build a redistributable tar.gz with a start.sh script
   # which invokes the `main` method in the example class to start
-  # (the redistributable will be at:  target/brooklyn-*-bin.tar.gz )
+  # (the redistributable will be at:  target/brooklyn-?-bin.tar.gz )
   mvn clean assembly:assembly
 
 For more information, please visit:
@@ -32,26 +32,17 @@ This example sends an SMS message when the cluster has reached its max size (and
 would continue to increase the size if it were not capped). The message is sent using clickatell.com,
 using http://smsj.sourceforge.net.
 
-Because smsj is not available on maven central, a custom local maven repo has been built (and checked in to git):
+Because smsj is not available on maven central, you must obtain this library yourself and install it into
+your local Maven repository:
 
-  wget http://sourceforge.net/projects/smsj/files/smsj/smsj-snapshot-20051126/smsj-20051126.jar/download
+  wget -Osmsj-20051126.jar http://sourceforge.net/projects/smsj/files/smsj/smsj-snapshot-20051126/smsj-20051126.jar/download
 
   mvn org.apache.maven.plugins:maven-install-plugin:2.3.1:install-file \
       -Dfile=smsj-20051126.jar \
       -DgroupId=io.brooklyn \ 
       -DartifactId=org.marre.smsj \
       -Dversion=1.0.0-20051126 \
-      -Dpackaging=jar \
-      -DlocalRepositoryPath=localrepo
-
-And in the pom, this local repo is referenced:
-
-  <repositories>
-    <repository>
-      <id>brooklyn-examples-localrepo</id>
-      <url>file://${basedir}/localrepo</url>
-    </repository>
-  </repositories>
+      -Dpackaging=jar
 
 ----
 Licensed to the Apache Software Foundation (ASF) under one
