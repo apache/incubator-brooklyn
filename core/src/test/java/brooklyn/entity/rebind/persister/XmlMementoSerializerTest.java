@@ -161,7 +161,7 @@ public class XmlMementoSerializerTest {
         final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
         try {
-            CatalogItem<?, ?> catalogItem = CatalogItemBuilder.newEntity("registeredtypename")
+            CatalogItem<?, ?> catalogItem = CatalogItemBuilder.newEntity("registeredtypename", "0.0.1")
                     .displayName("test catalog item")
                     .description("description")
                     .plan("yaml plan")

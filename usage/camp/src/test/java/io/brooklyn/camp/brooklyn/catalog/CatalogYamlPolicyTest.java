@@ -43,7 +43,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         String registeredTypeName = "my.catalog.policy.id.load";
         addCatalogOSGiPolicy(registeredTypeName, SIMPLE_POLICY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(registeredTypeName);
+        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
         assertEquals(item.getRegisteredTypeName(), registeredTypeName);
         assertEquals(countCatalogPolicies(), 1);
 
@@ -117,7 +117,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "  name: My Catalog Policy",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",
-            "  version: 0.1.2",
+            "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",

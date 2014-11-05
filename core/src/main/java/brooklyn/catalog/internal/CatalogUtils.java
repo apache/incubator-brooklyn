@@ -50,6 +50,8 @@ import brooklyn.util.time.Time;
 public class CatalogUtils {
     private static final Logger log = LoggerFactory.getLogger(CatalogUtils.class);
 
+    public static final char VERSION_DELIMITER = ':';
+
     public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, CatalogItem<?, ?> item) {
         CatalogItemLibraries libraries = item.getLibraries();
         // TODO getLibraries() should never be null but sometimes it is still
@@ -143,6 +145,25 @@ public class CatalogUtils {
         else
             log.debug(message, args);
     }
-    
+
+    public static String getIdFromVersionedId(String versionedId) {
+        if (versionedId == null) return null;
+        int versionDelimiterPos = versionedId.lastIndexOf(CatalogUtils.VERSION_DELIMITER);
+        if (versionDelimiterPos != -1) {
+            return versionedId.substring(0, versionDelimiterPos);
+        } else {
+            return null;
+        }
+    }
+
+    public static String getVersionFromVersionedId(String versionedId) {
+        if (versionedId == null) return null;
+        int versionDelimiterPos = versionedId.lastIndexOf(CatalogUtils.VERSION_DELIMITER);
+        if (versionDelimiterPos != -1) {
+            return versionedId.substring(versionDelimiterPos+1);
+        } else {
+            return null;
+        }
+    }
 
 }

@@ -71,6 +71,7 @@ import com.google.common.collect.Sets;
 /** Tests of lightweight CAMP integration. Since the "real" integration is in brooklyn-camp project,
  * but some aspects of CAMP we want to be able to test here. */
 public class CampYamlLiteTest {
+    private static final String TEST_VERSION = "0.1.2";
 
     private static final Logger log = LoggerFactory.getLogger(CampYamlLiteTest.class);
     
@@ -209,7 +210,7 @@ public class CampYamlLiteTest {
                 "  name: My Catalog App\n" +
                 "  description: My description\n" +
                 "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n" +
-                "  version: 0.1.2\n" +
+                "  version: " + TEST_VERSION + "\n" +
                 "  libraries:\n" +
                 "  - url: " + bundleUrl + "\n" +
                 "\n" +
@@ -218,13 +219,12 @@ public class CampYamlLiteTest {
     }
 
     private void assertMgmtHasSampleMyCatalogApp(String registeredTypeName, String bundleUrl) {
-        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName);
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
         assertNotNull(item, "failed to load item with id=" + registeredTypeName + " from catalog. Entries were: " +
                 Joiner.on(",").join(mgmt.getCatalog().getCatalogItems()));
         assertEquals(item.getRegisteredTypeName(), registeredTypeName);
 
         // stored as yaml, not java
-//      assertEquals(entityItem.getJavaType(), "brooklyn.test.entity.TestEntity");
         assertNotNull(item.getPlanYaml());
         Assert.assertTrue(item.getPlanYaml().contains("io.camp.mock:AppServer"));
 

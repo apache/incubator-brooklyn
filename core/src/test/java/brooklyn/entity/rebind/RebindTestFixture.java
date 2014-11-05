@@ -32,9 +32,9 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
@@ -53,7 +53,6 @@ import brooklyn.util.time.Duration;
 
 import com.google.api.client.util.Sets;
 import com.google.common.annotations.Beta;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -242,16 +241,20 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         Set<String> expectedIds = getCatalogItemIds(expected.getCatalogItems());
         assertEquals(actualIds.size(), Iterables.size(actual.getCatalogItems()), "id keyset size != size of catalog. Are there duplicates in the catalog?");
         assertEquals(actualIds, expectedIds);
-        for (String id : actualIds) {
-            assertCatalogItemsEqual(actual.getCatalogItem(id), expected.getCatalogItem(id));
+        for (String versionedId : actualIds) {
+            String id = CatalogUtils.getIdFromVersionedId(versionedId);
+            String version = CatalogUtils.getVersionFromVersionedId(versionedId);
+            assertCatalogItemsEqual(actual.getCatalogItem(id, version), expected.getCatalogItem(id, version));
         }
     }
 
     private Set<String> getCatalogItemIds(Iterable<CatalogItem<Object, Object>> catalogItems) {
-        return FluentIterable.from(catalogItems)
-                .transform(EntityFunctions.id())
-                .copyInto(Sets.<String>newHashSet());
-    }
+        Set<String> itemIds = Sets.<String>newHashSet();
+        for (CatalogItem<?, ?> item : catalogItems) {
+            itemIds.add(item.getId() + ":" + item.getVersion());
+        }
+        return itemIds;
+   }
 
     protected void assertCatalogItemsEqual(CatalogItem<?, ?> actual, CatalogItem<?, ?> expected) {
         assertEquals(actual.getClass(), expected.getClass());

@@ -44,6 +44,7 @@ import com.google.common.base.Joiner;
 public abstract class AbstractYamlTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractYamlTest.class);
+    protected static final String TEST_VERSION = "0.1.2";
 
     private ManagementContext brooklynMgmt;
     protected BrooklynCampPlatform platform;
@@ -137,9 +138,9 @@ public abstract class AbstractYamlTest {
     }
 
     protected void deleteCatalogEntity(String catalogItem) {
-        mgmt().getCatalog().deleteCatalogItem(catalogItem);
+        mgmt().getCatalog().deleteCatalogItem(catalogItem, TEST_VERSION);
     }
-    
+
     protected Logger getLogger() {
         return LOG;
     }

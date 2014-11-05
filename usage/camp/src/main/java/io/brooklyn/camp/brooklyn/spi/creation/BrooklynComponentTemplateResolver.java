@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
@@ -190,7 +191,10 @@ public class BrooklynComponentTemplateResolver {
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
         String type = getBrooklynType();
         if (type != null) {
-            return loader.getManagementContext().getCatalog().getCatalogItem(Entity.class, type);
+            BrooklynCatalog catalog = loader.getManagementContext().getCatalog();
+            return catalog.getCatalogItem(Entity.class,
+                    CatalogUtils.getIdFromVersionedId(type),
+                    CatalogUtils.getVersionFromVersionedId(type));
         } else {
             return null;
         }

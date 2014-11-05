@@ -28,6 +28,7 @@ import java.util.Collection;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
@@ -44,11 +45,24 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     public void testAddCatalogItem() throws Exception {
         String registeredTypeName = "my.catalog.app.id.load";
         addCatalogOSGiEntity(registeredTypeName);
-
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(registeredTypeName);
+        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
         assertEquals(item.getRegisteredTypeName(), registeredTypeName);
 
         deleteCatalogEntity(registeredTypeName);
+    }
+
+    @Test
+    public void testAddCatalogItemWithoutVersionFail() throws Exception {
+        try {
+            addCatalogItem(
+                "brooklyn.catalog:",
+                "  name: My Catalog App",
+                "services:",
+                "- type: " + SIMPLE_ENTITY_TYPE);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(e.getMessage(), "'version' attribute missing in 'brooklyn.catalog' section.");
+        }
     }
 
     @Test
@@ -58,16 +72,35 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testLaunchApplicationReferencingUnversionedCatalogFail() throws Exception {
+        String registeredTypeName = "my.catalog.app.id.fail";
+        addCatalogOSGiEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
+        try {
+            String yaml = "name: simple-app-yaml\n" +
+                          "location: localhost\n" +
+                          "services: \n" +
+                          "  - serviceType: " + registeredTypeName;
+            try {
+                createAndStartApplication(yaml);
+            } catch (UnsupportedOperationException e) {
+                assertTrue(e.getMessage().endsWith("cannot be matched"));
+            }
+        } finally {
+            deleteCatalogEntity(registeredTypeName);
+        }
+    }
+
+    @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
         String referencedRegisteredTypeName = "my.catalog.app.id.referenced";
         String referrerRegisteredTypeName = "my.catalog.app.id.referring";
         addCatalogOSGiEntity(referencedRegisteredTypeName, SIMPLE_ENTITY_TYPE);
-        addCatalogOSGiEntity(referrerRegisteredTypeName, referencedRegisteredTypeName);
+        addCatalogOSGiEntity(referrerRegisteredTypeName, ver(referencedRegisteredTypeName));
 
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: "+referrerRegisteredTypeName;
+                      "  - serviceType: " + ver(referrerRegisteredTypeName);
         Entity app = createAndStartApplication(yaml);
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
@@ -159,7 +192,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  name: My Catalog App",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",
-            "  version: 0.1.2",
+            "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",
@@ -184,4 +217,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  - type: " + serviceType);
     }
 
+    private String ver(String id) {
+        return id + CatalogUtils.VERSION_DELIMITER + TEST_VERSION;
+    }
 }

@@ -49,7 +49,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     @SetFromFlag String javaType;
     @SetFromFlag String description;
     @SetFromFlag String iconUrl;
-    @SetFromFlag String version;
+    @SetFromFlag String version = BasicBrooklynCatalog.NO_VERSION;
     @SetFromFlag CatalogLibrariesDto libraries;
     @SetFromFlag String planYaml;
 

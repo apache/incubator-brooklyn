@@ -23,19 +23,22 @@ import com.google.common.base.Preconditions;
 public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?, ?>> {
     private CatalogItemType dto;
 
-    public static CatalogItemBuilder<CatalogEntityItemDto> newEntity(String registeredTypeName) {
+    public static CatalogItemBuilder<CatalogEntityItemDto> newEntity(String registeredTypeName, String version) {
         return new CatalogItemBuilder<CatalogEntityItemDto>(new CatalogEntityItemDto())
-                .registeredTypeName(registeredTypeName);
+                .registeredTypeName(registeredTypeName)
+                .version(version);
     }
 
-    public static CatalogItemBuilder<CatalogTemplateItemDto> newTemplate(String registeredTypeName) {
+    public static CatalogItemBuilder<CatalogTemplateItemDto> newTemplate(String registeredTypeName, String version) {
         return new CatalogItemBuilder<CatalogTemplateItemDto>(new CatalogTemplateItemDto())
-                .registeredTypeName(registeredTypeName);
+                .registeredTypeName(registeredTypeName)
+                .version(version);
     }
 
-    public static CatalogItemBuilder<CatalogPolicyItemDto> newPolicy(String registeredTypeName) {
+    public static CatalogItemBuilder<CatalogPolicyItemDto> newPolicy(String registeredTypeName, String version) {
         return new CatalogItemBuilder<CatalogPolicyItemDto>(new CatalogPolicyItemDto())
-                .registeredTypeName(registeredTypeName);
+                .registeredTypeName(registeredTypeName)
+                .version(version);
     }
 
     public CatalogItemBuilder(CatalogItemType dto) {
@@ -45,6 +48,12 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
 
     public CatalogItemBuilder<CatalogItemType> registeredTypeName(String registeredType) {
         dto.registeredType = registeredType;
+        return this;
+    }
+
+    @Deprecated
+    public CatalogItemBuilder<CatalogItemType> javaType(String javaType) {
+        dto.javaType = javaType;
         return this;
     }
 
@@ -66,6 +75,11 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
 
     public CatalogItemBuilder<CatalogItemType> iconUrl(String iconUrl) {
         dto.iconUrl = iconUrl;
+        return this;
+    }
+
+    public CatalogItemBuilder<CatalogItemType> version(String version) {
+        dto.version = version;
         return this;
     }
 
