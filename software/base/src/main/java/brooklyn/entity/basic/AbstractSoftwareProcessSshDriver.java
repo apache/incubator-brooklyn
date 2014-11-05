@@ -57,7 +57,6 @@ import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -283,7 +282,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             flags.putAll(getSshFlags());
         }
         flags.putAll(flags2);
-        Map<String, String> environment = Optional.fromNullable((Map<String,String>) flags.get("env")).or(getShellEnvironment());
+        Map<String, String> environment = (Map<String, String>) flags.get("env");
+        if (environment == null) {
+            // Important only to call getShellEnvironment() if env was not supplied; otherwise it
+            // could cause us to resolve config (e.g. block for attributeWhenReady) too early.
+            environment = getShellEnvironment();
+        }
         if (Tasks.current()!=null) {
             // attach tags here, as well as in ScriptHelper, because they may have just been read from the driver
             if (environment!=null) {
@@ -368,7 +372,11 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     @Override
     public void copyRuntimeResources() {
         try {
-            execute("mkdir -p " + getRunDir(), "create run directory");
+            // Ensure environment variables are not looked up here, otherwise sub-classes might
+            // lookup port numbers and fail with ugly error if port is not set. It could also
+            // cause us to block for attribute ready earlier than we need.
+            DynamicTasks.queue(SshEffectorTasks.ssh("mkdir -p " + getRunDir()).summary("create run directory")
+                .requiringExitCodeZero()).get();
 
             Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
             if (runtimeFiles != null && runtimeFiles.size() > 0) {

@@ -70,6 +70,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         commands.add(format("tar xvzf %s", saveAs));
 
         newScript(INSTALLING)
+                .environmentVariablesReset()
                 .body.append(commands)
                 .execute();
     }
@@ -91,7 +92,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
     @Override
     public void launch() {
-        Map ports = MutableMap.of("httpPort", getHttpPort(), "shutdownPort", getShutdownPort());
+        Map<String, Integer> ports = MutableMap.of("httpPort", getHttpPort(), "shutdownPort", getShutdownPort());
         Networking.checkPortsValid(ports);
 
         // We wait for evidence of tomcat running because, using 
