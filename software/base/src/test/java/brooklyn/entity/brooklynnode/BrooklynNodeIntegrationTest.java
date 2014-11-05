@@ -48,6 +48,7 @@ import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
+import brooklyn.entity.brooklynnode.BrooklynNode.StopNodeAndKillAppsEffector;
 import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
@@ -63,7 +64,6 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
@@ -72,6 +72,7 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -451,6 +452,12 @@ services:
                 // success
             } else {
                 throw e;
+            }
+        } finally {
+            try {
+                brooklynNode.invoke(BrooklynNode.STOP_NODE_AND_KILL_APPS, ImmutableMap.of(StopNodeAndKillAppsEffector.TIMEOUT.getName(), Duration.THIRTY_SECONDS)).getUnchecked();
+            } catch (Exception e) {
+                log.warn("Error in stopNodeAndKillApps for "+brooklynNode+" (continuing)", e);
             }
         }
     }
