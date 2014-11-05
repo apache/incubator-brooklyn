@@ -646,7 +646,9 @@ public class RebindManagerImpl implements RebindManager {
                 
                 try {
                     Entity entity = newEntity(entityId, entityManifest.getType(), getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext));
+                    ((EntityInternal)entity).getManagementSupport().setReadOnly( rebindContext.isReadOnly(entity) );
                     rebindContext.registerEntity(entityId, entity);
+                    
                 } catch (Exception e) {
                     exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityManifest.getType(), e);
                 }
@@ -880,8 +882,6 @@ public class RebindManagerImpl implements RebindManager {
             EntityManagerInternal entityManager = (EntityManagerInternal)managementContext.getEntityManager();
             Set<String> oldEntities = Sets.newLinkedHashSet(entityManager.getEntityIds());
             for (Entity entity: rebindContext.getEntities()) {
-                ((EntityInternal)entity).getManagementSupport().setReadOnly( rebindContext.isReadOnly(entity) );
-                
                 ManagementTransitionMode oldMode = entityManager.getLastManagementTransitionMode(entity.getId());
                 entityManager.setManagementTransitionMode(entity, computeMode(entity, oldMode, rebindContext.isReadOnly(entity)) );
                 if (oldMode!=null)

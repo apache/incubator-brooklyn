@@ -290,12 +290,18 @@ public class LocalEntityManager implements EntityManagerInternal {
             if (mode==null) {
                 setManagementTransitionMode(it, mode = initialMode);
             }
-            if (it.getManagementSupport().isReadOnlyRaw()==null) {
+            
+            Boolean isReadOnlyFromEntity = it.getManagementSupport().isReadOnlyRaw();
+            if (isReadOnlyFromEntity==null) {
                 if (mode.isReadOnly()) {
                     // should have been marked by rebinder
                     log.warn("Read-only entity "+it+" not marked as such on call to manage; marking and continuing");
                 }
                 it.getManagementSupport().setReadOnly(mode.isReadOnly());
+            } else {
+                if (!isReadOnlyFromEntity.equals(mode.isReadOnly())) {
+                    log.warn("Read-only status at entity "+it+" ("+isReadOnlyFromEntity+") not consistent with management mode "+mode);
+                }
             }
             
             if (it.getManagementSupport().isDeployed()) {
