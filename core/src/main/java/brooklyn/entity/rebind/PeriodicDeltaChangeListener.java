@@ -168,7 +168,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                             } catch (Exception e) {
                                 // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
                                 // if we throw an exception, then our task will never get executed again
-                                LOG.warn("Problem persisting change-delta", e);
+                                LOG.error("Problem persisting change-delta", e);
                                 return null;
                             } catch (Throwable t) {
                                 LOG.warn("Problem persisting change-delta (rethrowing)", t);
@@ -332,7 +332,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
             addReferencedObjects(prevDeltaCollector);
 
-            if (LOG.isDebugEnabled()) LOG.debug("Persister delta with references: "
+            if (LOG.isTraceEnabled()) LOG.trace("Persister delta with references: "
                     + "updating {} entities, {} locations, {} policies, {} enrichers, {} catalog items; "
                     + "removing {} entities, {} locations, {} policies, {} enrichers, {} catalog items",
                     new Object[] {

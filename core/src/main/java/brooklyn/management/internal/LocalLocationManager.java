@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
+import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
@@ -212,11 +214,13 @@ public class LocalLocationManager implements LocationManagerInternal {
         long count = LOCATION_CNT.incrementAndGet();
         if (log.isDebugEnabled()) {
             String msg = "Managing location " + loc + " ("+initialMode+"), from " + Tasks.current()+" / "+Entitlements.getEntitlementContext();
+            LoggingLevel level = (initialMode==ManagementTransitionMode.REBINDING_READONLY ? LoggingLevel.TRACE : LoggingLevel.DEBUG);
             if (count % 100 == 0) {
                 // include trace periodically in case we get leaks or too much location management
-                log.debug(msg, new Exception("Informational stack trace of call to manage location "+loc+" ("+count+" calls; "+getLocations().size()+" currently managed)"));
+                BrooklynLogging.log(log, level,
+                    msg, new Exception("Informational stack trace of call to manage location "+loc+" ("+count+" calls; "+getLocations().size()+" currently managed)"));
             } else {
-                log.debug(msg);
+                BrooklynLogging.log(log, level, msg);
             }
         }
 
@@ -240,7 +244,9 @@ public class LocalLocationManager implements LocationManagerInternal {
                 it.setManagementContext(managementContext);
                 if (!mode.isReadOnly()) {
                     it.onManagementStarted();
-                    recordLocationEvent(it, Lifecycle.CREATED);
+                    if (!mode.wasReadOnly()) {
+                        recordLocationEvent(it, Lifecycle.CREATED);
+                    }
                 }
                 managementContext.getRebindManager().getChangeListener().onManaged(it);
             }

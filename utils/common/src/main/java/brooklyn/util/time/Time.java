@@ -134,7 +134,9 @@ public class Time {
     /** @see #makeTimeString(long, boolean) */
     public static String makeTimeStringNano(long tn, boolean round) {
         if (tn<0) return "-"+makeTimeStringNano(-tn, round);
-        if (tn==0) return "0";
+        // units don't matter, but since ms is the usual finest granularity let's use it
+        // (previously was just "0" but that was too ambiguous in contexts like "took 0")
+        if (tn==0) return "0ms";
         
         long tnm = tn % 1000000;
         long t = tn/1000000;

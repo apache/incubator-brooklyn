@@ -39,8 +39,10 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.config.BrooklynLogging;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -95,10 +97,13 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.api.client.repackaged.com.google.common.base.Preconditions;
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -141,6 +146,7 @@ public class RebindManagerImpl implements RebindManager {
     private volatile boolean readOnlyRunning = false;
     private volatile ScheduledTask readOnlyTask = null;
     private transient Semaphore rebindActive = new Semaphore(1);
+    private transient int readOnlyRebindCount = Integer.MIN_VALUE;
     
     private volatile BrooklynMementoPersister persistenceStoreAccess;
 
@@ -161,6 +167,7 @@ public class RebindManagerImpl implements RebindManager {
      * 
      * @author aled
      */
+    @Beta
     public static class RebindTracker {
         private static ThreadLocal<Boolean> rebinding = new ThreadLocal<Boolean>();
         
@@ -191,7 +198,7 @@ public class RebindManagerImpl implements RebindManager {
         addPolicyFailureMode = managementContext.getConfig().getConfig(ADD_POLICY_FAILURE_MODE);
         loadPolicyFailureMode = managementContext.getConfig().getConfig(LOAD_POLICY_FAILURE_MODE);
 
-        LOG.debug("Persistence in {} of: policies={}, enrichers={}, feeds={}, catalog={}",
+        LOG.debug("{} initialized, settings: policies={}, enrichers={}, feeds={}, catalog={}",
                 new Object[]{this, persistPoliciesEnabled, persistEnrichersEnabled, persistFeedsEnabled, persistCatalogItemsEnabled});
     }
 
@@ -251,15 +258,16 @@ public class RebindManagerImpl implements RebindManager {
         if (readOnlyRunning) {
             throw new IllegalStateException("Cannot start read-only when already running with persistence");
         }
-        LOG.debug("Starting persistence, mgmt "+managementContext.getManagementNodeId());
+        LOG.debug("Starting persistence ("+this+"), mgmt "+managementContext.getManagementNodeId());
         persistenceRunning = true;
+        readOnlyRebindCount = Integer.MIN_VALUE;
         persistenceStoreAccess.enableWriteAccess();
         if (persistenceRealChangeListener != null) persistenceRealChangeListener.start();
     }
     
     @Override
     public void stopPersistence() {
-        LOG.debug("Stopping rebind (persistence), mgmt "+managementContext.getManagementNodeId());
+        LOG.debug("Stopping persistence ("+this+"), mgmt "+managementContext.getManagementNodeId());
         persistenceRunning = false;
         if (persistenceRealChangeListener != null) persistenceRealChangeListener.stop();
         if (persistenceStoreAccess != null) persistenceStoreAccess.disableWriteAccess(true);
@@ -276,12 +284,13 @@ public class RebindManagerImpl implements RebindManager {
             LOG.warn("Cannot request read-only mode for "+this+" when already running - "+readOnlyTask+"; ignoring");
             return;
         }
-        LOG.debug("Starting read-only rebinding, mgmt "+managementContext.getManagementNodeId());
+        LOG.debug("Starting read-only rebinding ("+this+"), mgmt "+managementContext.getManagementNodeId());
         
         if (persistenceRealChangeListener != null) persistenceRealChangeListener.stop();
         if (persistenceStoreAccess != null) persistenceStoreAccess.disableWriteAccess(true);
         
         readOnlyRunning = true;
+        readOnlyRebindCount = 0;
 
         try {
             rebind(null, null, ManagementNodeState.HOT_STANDBY);
@@ -295,21 +304,24 @@ public class RebindManagerImpl implements RebindManager {
                     public Void call() {
                         try {
                             rebind(null, null, ManagementNodeState.HOT_STANDBY);
+                            readOnlyRebindCount++;
                             return null;
                         } catch (RuntimeInterruptedException e) {
                             LOG.debug("Interrupted rebinding (re-interrupting): "+e);
                             if (LOG.isTraceEnabled())
-                                LOG.trace("Interrupted rebinding (re-interrupting): "+e, e);
+                                LOG.trace("Interrupted rebinding (re-interrupting), details: "+e, e);
                             Thread.currentThread().interrupt();
                             return null;
                         } catch (Exception e) {
                             // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
                             // if we throw an exception, then our task will never get executed again
                             if (!readOnlyRunning) {
-                                if (LOG.isTraceEnabled())
-                                    LOG.trace("Problem rebinding (read-only running turned off): "+e, e);
+                                LOG.debug("Problem rebinding (read-only running has probably just been turned off): "+e);
+                                if (LOG.isTraceEnabled()) {
+                                    LOG.trace("Problem rebinding (read-only running has probably just been turned off), details: "+e, e);
+                                }
                             } else {
-                                LOG.warn("Problem rebinding: "+Exceptions.collapseText(e), e);
+                                LOG.error("Problem rebinding: "+Exceptions.collapseText(e), e);
                             }
                             return null;
                         } catch (Throwable t) {
@@ -327,7 +339,7 @@ public class RebindManagerImpl implements RebindManager {
     public void stopReadOnly() {
         readOnlyRunning = false;
         if (readOnlyTask!=null) {
-            LOG.debug("Stopping read-only rebinding, mgmt "+managementContext.getManagementNodeId());
+            LOG.debug("Stopping read-only rebinding ("+this+"), mgmt "+managementContext.getManagementNodeId());
             readOnlyTask.cancel(true);
             readOnlyTask.blockUntilEnded();
             boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(readOnlyTask, Duration.TEN_SECONDS);
@@ -335,7 +347,7 @@ public class RebindManagerImpl implements RebindManager {
                 LOG.warn("Rebind (read-only) tasks took too long to die after interrupt (ignoring): "+readOnlyTask);
             }
             readOnlyTask = null;
-            LOG.debug("Stopped read-only rebinding, mgmt "+managementContext.getManagementNodeId());
+            LOG.debug("Stopped read-only rebinding ("+this+"), mgmt "+managementContext.getManagementNodeId());
         }
     }
     
@@ -476,6 +488,7 @@ public class RebindManagerImpl implements RebindManager {
         } catch (InterruptedException e1) { Exceptions.propagate(e1); }
         RebindTracker.setRebinding();
         try {
+            Stopwatch timer = Stopwatch.createStarted();
             exceptionHandler.onStart();
             
             Reflections reflections = new Reflections(classLoader);
@@ -527,20 +540,18 @@ public class RebindManagerImpl implements RebindManager {
 
             //The manifest contains full catalog items mementos. Reading them at this stage means that
             //we don't support references to entities/locations withing tags.
+            
+            LOG.debug("Rebinding ("+mode+", iteration "+readOnlyRebindCount+") from "+getPersister().getBackingStoreDescription()+"...");
 
             BrooklynMementoManifest mementoManifest = persistenceStoreAccess.loadMementoManifest(exceptionHandler);
 
             boolean isEmpty = mementoManifest.isEmpty();
-            if (!isEmpty) {
-                if (mode==ManagementNodeState.HOT_STANDBY)
-                    LOG.debug("Rebinding (read-only) from "+getPersister().getBackingStoreDescription()+"...");
-                else
+            if (mode!=ManagementNodeState.HOT_STANDBY) {
+                if (!isEmpty) { 
                     LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
-            } else {
-                if (mode==ManagementNodeState.HOT_STANDBY)
-                    LOG.debug("Rebind check (read-only): no existing state, reading from "+getPersister().getBackingStoreDescription());
-                else
+                } else {
                     LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
+                }
             }
 
             //
@@ -549,7 +560,7 @@ public class RebindManagerImpl implements RebindManager {
             
             // Instantiate catalog items
             if (persistCatalogItemsEnabled) {
-                LOG.debug("RebindManager instantiating catalog items: {}", mementoManifest.getCatalogItemIds());
+                logRebindingDebug("RebindManager instantiating catalog items: {}", mementoManifest.getCatalogItemIds());
                 for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating catalog item {}", catalogItemMemento);
                     try {
@@ -560,15 +571,15 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             } else {
-                LOG.debug("Not rebinding catalog; feature disabled: {}", mementoManifest.getCatalogItemIds());
+                logRebindingDebug("Not rebinding catalog; feature disabled: {}", mementoManifest.getCatalogItemIds());
             }
 
             // Reconstruct catalog entries
             if (persistCatalogItemsEnabled) {
-                LOG.debug("RebindManager reconstructing catalog items");
+                logRebindingDebug("RebindManager reconstructing catalog items");
                 for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
                     CatalogItem<?, ?> item = rebindContext.getCatalogItem(catalogItemMemento.getId());
-                    LOG.debug("RebindManager reconstructing catalog item {}", catalogItemMemento);
+                    logRebindingDebug("RebindManager reconstructing catalog item {}", catalogItemMemento);
                     if (item == null) {
                         exceptionHandler.onNotFound(BrooklynObjectType.CATALOG_ITEM, catalogItemMemento.getId());
                     } else {
@@ -593,27 +604,27 @@ public class RebindManagerImpl implements RebindManager {
                         || (isEmpty && catalogLoadMode == CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL_IF_NO_PERSISTED_STATE);
                 if (shouldResetCatalog) {
                     // Reset catalog with previously persisted state
-                    LOG.debug("RebindManager resetting management context catalog to previously persisted state");
+                    logRebindingDebug("RebindManager resetting management context catalog to previously persisted state");
                     managementContext.getCatalog().reset(rebindContext.getCatalogItems());
                 } else if (shouldLoadDefaultCatalog) {
                     // Load catalogue as normal
                     // TODO in read-only mode, should do this less frequently than entities etc
-                    LOG.debug("RebindManager loading default catalog");
+                    logRebindingDebug("RebindManager loading default catalog");
                     ((BasicBrooklynCatalog) managementContext.getCatalog()).resetCatalogToContentsAtConfiguredUrl();
                 } else {
                     // Management context should have taken care of loading the catalogue
                     Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
                     String message = "RebindManager not resetting catalog to persisted state. Catalog load mode is {}.";
-                    if (!catalogItems.isEmpty()) {
+                    if (!catalogItems.isEmpty() && shouldLogRebinding()) {
                         LOG.info(message + " There {} {} item{} persisted.", new Object[]{
                                 catalogLoadMode, catalogItems.size() == 1 ? "was" : "were", catalogItems.size(), Strings.s(catalogItems)});
                     } else if (LOG.isDebugEnabled()) {
-                        LOG.debug(message, catalogLoadMode);
+                        logRebindingDebug(message, catalogLoadMode);
                     }
                 }
                 // TODO destroy old (as above)
             } else {
-                LOG.debug("RebindManager not resetting catalog because catalog persistence is disabled");
+                logRebindingDebug("RebindManager not resetting catalog because catalog persistence is disabled");
             }
             
             
@@ -622,7 +633,7 @@ public class RebindManagerImpl implements RebindManager {
             //
             
             // Instantiate locations
-            LOG.debug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
+            logRebindingDebug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
             for (Map.Entry<String, String> entry : mementoManifest.getLocationIdToType().entrySet()) {
                 String locId = entry.getKey();
                 String locType = entry.getValue();
@@ -637,7 +648,7 @@ public class RebindManagerImpl implements RebindManager {
             }
             
             // Instantiate entities
-            LOG.debug("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToManifest().keySet());
+            logRebindingDebug("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToManifest().keySet());
             for (Map.Entry<String, EntityMementoManifest> entry : mementoManifest.getEntityIdToManifest().entrySet()) {
                 String entityId = entry.getKey();
                 EntityMementoManifest entityManifest = entry.getValue();
@@ -668,9 +679,9 @@ public class RebindManagerImpl implements RebindManager {
             
             // Instantiate policies
             if (persistPoliciesEnabled) {
-                LOG.debug("RebindManager instantiating policies: {}", memento.getPolicyIds());
+                logRebindingDebug("RebindManager instantiating policies: {}", memento.getPolicyIds());
                 for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
-                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating policy {}", policyMemento);
+                    logRebindingDebug("RebindManager instantiating policy {}", policyMemento);
                     
                     try {
                         Policy policy = newPolicy(policyMemento, getLoadingContextFromCatalogItemId(policyMemento.getCatalogItemId(), classLoader, rebindContext));
@@ -680,14 +691,14 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             } else {
-                LOG.debug("Not rebinding policies; feature disabled: {}", memento.getPolicyIds());
+                logRebindingDebug("Not rebinding policies; feature disabled: {}", memento.getPolicyIds());
             }
             
             // Instantiate enrichers
             if (persistEnrichersEnabled) {
-                LOG.debug("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
+                logRebindingDebug("RebindManager instantiating enrichers: {}", memento.getEnricherIds());
                 for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
-                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating enricher {}", enricherMemento);
+                    logRebindingDebug("RebindManager instantiating enricher {}", enricherMemento);
 
                     try {
                         Enricher enricher = newEnricher(enricherMemento, reflections);
@@ -697,12 +708,12 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             } else {
-                LOG.debug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
+                logRebindingDebug("Not rebinding enrichers; feature disabled: {}", memento.getEnricherIds());
             } 
             
             // Instantiate feeds
             if (persistFeedsEnabled) {
-                LOG.debug("RebindManager instantiating feeds: {}", memento.getFeedIds());
+                logRebindingDebug("RebindManager instantiating feeds: {}", memento.getFeedIds());
                 for (FeedMemento feedMemento : memento.getFeedMementos().values()) {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating feed {}", feedMemento);
 
@@ -714,7 +725,7 @@ public class RebindManagerImpl implements RebindManager {
                     }
                 }
             } else {
-                LOG.debug("Not rebinding feeds; feature disabled: {}", memento.getFeedIds());
+                logRebindingDebug("Not rebinding feeds; feature disabled: {}", memento.getFeedIds());
             } 
 
             //
@@ -722,10 +733,10 @@ public class RebindManagerImpl implements RebindManager {
             //
             
             // Reconstruct locations
-            LOG.debug("RebindManager reconstructing locations");
+            logRebindingDebug("RebindManager reconstructing locations");
             for (LocationMemento locMemento : sortParentFirst(memento.getLocationMementos()).values()) {
                 Location location = rebindContext.getLocation(locMemento.getId());
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing location {}", locMemento);
+                logRebindingDebug("RebindManager reconstructing location {}", locMemento);
                 if (location == null) {
                     // usually because of creation-failure, when not using fail-fast
                     exceptionHandler.onNotFound(BrooklynObjectType.LOCATION, locMemento.getId());
@@ -740,10 +751,10 @@ public class RebindManagerImpl implements RebindManager {
 
             // Reconstruct policies
             if (persistPoliciesEnabled) {
-                LOG.debug("RebindManager reconstructing policies");
+                logRebindingDebug("RebindManager reconstructing policies");
                 for (PolicyMemento policyMemento : memento.getPolicyMementos().values()) {
                     Policy policy = rebindContext.getPolicy(policyMemento.getId());
-                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing policy {}", policyMemento);
+                    logRebindingDebug("RebindManager reconstructing policy {}", policyMemento);
     
                     if (policy == null) {
                         // usually because of creation-failure, when not using fail-fast
@@ -761,10 +772,10 @@ public class RebindManagerImpl implements RebindManager {
 
             // Reconstruct enrichers
             if (persistEnrichersEnabled) {
-                LOG.debug("RebindManager reconstructing enrichers");
+                logRebindingDebug("RebindManager reconstructing enrichers");
                 for (EnricherMemento enricherMemento : memento.getEnricherMementos().values()) {
                     Enricher enricher = rebindContext.getEnricher(enricherMemento.getId());
-                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing enricher {}", enricherMemento);
+                    logRebindingDebug("RebindManager reconstructing enricher {}", enricherMemento);
         
                     if (enricher == null) {
                         // usually because of creation-failure, when not using fail-fast
@@ -782,10 +793,10 @@ public class RebindManagerImpl implements RebindManager {
     
             // Reconstruct feeds
             if (persistFeedsEnabled) {
-                LOG.debug("RebindManager reconstructing feeds");
+                logRebindingDebug("RebindManager reconstructing feeds");
                 for (FeedMemento feedMemento : memento.getFeedMementos().values()) {
                     Feed feed = rebindContext.getFeed(feedMemento.getId());
-                    if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing feed {}", feedMemento);
+                    logRebindingDebug("RebindManager reconstructing feed {}", feedMemento);
         
                     if (feed == null) {
                         // usually because of creation-failure, when not using fail-fast
@@ -803,10 +814,10 @@ public class RebindManagerImpl implements RebindManager {
             }
     
             // Reconstruct entities
-            LOG.debug("RebindManager reconstructing entities");
+            logRebindingDebug("RebindManager reconstructing entities");
             for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
+                logRebindingDebug("RebindManager reconstructing entity {}", entityMemento);
     
                 if (entity == null) {
                     // usually because of creation-failure, when not using fail-fast
@@ -826,10 +837,10 @@ public class RebindManagerImpl implements RebindManager {
             //
             
             // Associate policies+enrichers+feeds with entities
-            LOG.debug("RebindManager reconstructing entities");
+            logRebindingDebug("RebindManager reconstructing entities");
             for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
                 Entity entity = rebindContext.getEntity(entityMemento.getId());
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager reconstructing entity {}", entityMemento);
+                logRebindingDebug("RebindManager reconstructing entity {}", entityMemento);
     
                 if (entity == null) {
                     // usually because of creation-failure, when not using fail-fast
@@ -853,7 +864,7 @@ public class RebindManagerImpl implements RebindManager {
             // PHASE EIGHT
             //
 
-            LOG.debug("RebindManager managing locations");
+            logRebindingDebug("RebindManager managing locations");
             LocationManagerInternal locationManager = (LocationManagerInternal)managementContext.getLocationManager();
             Set<String> oldLocations = Sets.newLinkedHashSet(locationManager.getLocationIds());
             for (Location location: rebindContext.getLocations()) {
@@ -878,7 +889,7 @@ public class RebindManagerImpl implements RebindManager {
             }
             
             // Manage the top-level apps (causing everything under them to become managed)
-            LOG.debug("RebindManager managing entities");
+            logRebindingDebug("RebindManager managing entities");
             EntityManagerInternal entityManager = (EntityManagerInternal)managementContext.getEntityManager();
             Set<String> oldEntities = Sets.newLinkedHashSet(entityManager.getEntityIds());
             for (Entity entity: rebindContext.getEntities()) {
@@ -909,9 +920,11 @@ public class RebindManagerImpl implements RebindManager {
 
             exceptionHandler.onDone();
 
-            if (!isEmpty && mode!=ManagementNodeState.HOT_STANDBY) {
-                LOG.info("Rebind complete: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}, {} feed{}, {} catalog item{}", new Object[]{
-                    apps.size(), Strings.s(apps),
+            if (!isEmpty) {
+                BrooklynLogging.log(LOG, shouldLogRebinding() ? LoggingLevel.INFO : LoggingLevel.DEBUG, 
+                    "Rebind complete " + "("+mode+(readOnlyRebindCount>=0 ? ", iteration "+readOnlyRebindCount : "")+")" +
+                        " in {}: {} app{}, {} entit{}, {} location{}, {} polic{}, {} enricher{}, {} feed{}, {} catalog item{}", new Object[]{
+                    Time.makeTimeStringRounded(timer), apps.size(), Strings.s(apps),
                     rebindContext.getEntities().size(), Strings.ies(rebindContext.getEntities()),
                     rebindContext.getLocations().size(), Strings.s(rebindContext.getLocations()),
                     rebindContext.getPolicies().size(), Strings.ies(rebindContext.getPolicies()),
@@ -922,7 +935,7 @@ public class RebindManagerImpl implements RebindManager {
             }
 
             // Return the top-level applications
-            LOG.debug("RebindManager complete; return apps: {}", memento.getApplicationIds());
+            logRebindingDebug("RebindManager complete; apps: {}", memento.getApplicationIds());
             return apps;
 
         } catch (Exception e) {
@@ -1235,7 +1248,20 @@ public class RebindManagerImpl implements RebindManager {
             }
         }
     }
+
+    /** logs at debug, except during subsequent read-only rebinds, in which it logs trace */
+    private void logRebindingDebug(String message, Object... args) {
+        if (shouldLogRebinding()) {
+            LOG.debug(message, args);
+        } else {
+            LOG.trace(message, args);
+        }
+    }
     
+    protected boolean shouldLogRebinding() {
+        return (readOnlyRebindCount < 5) || (readOnlyRebindCount%1000==0);
+    }
+
     @Override
     public String toString() {
         return super.toString()+"[mgmt="+managementContext.getManagementNodeId()+"]";

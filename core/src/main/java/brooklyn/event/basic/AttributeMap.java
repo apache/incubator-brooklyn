@@ -27,6 +27,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.AttributeSensor;
@@ -153,9 +154,8 @@ public final class AttributeMap implements Serializable {
     }
 
     public void remove(AttributeSensor<?> attribute) {
-        if (log.isDebugEnabled()) {
-            log.debug("removing attribute {} on {}", attribute.getName(), entity);
-        }
+        BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(entity),
+            "removing attribute {} on {}", attribute.getName(), entity);
 
         remove(attribute.getNameParts());
     }

@@ -277,7 +277,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         if (allowReuse) {
             ComputeService result = cachedComputeServices.get(cacheKey);
             if (result!=null) {
-                LOG.debug("jclouds ComputeService cache hit for compute service, for "+Entities.sanitize(properties));
+                LOG.trace("jclouds ComputeService cache hit for compute service, for "+Entities.sanitize(properties));
                 return result;
             }
             LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));

@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -575,7 +576,8 @@ public class LocalEntityManager implements EntityManagerInternal {
             return false;
         }
         
-        if (log.isDebugEnabled()) log.debug("{} starting management of entity {}", this, e);
+        BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(e), 
+            "{} starting management of entity {}", this, e);
         Entity realE = toRealEntity(e);
         
         Entity oldProxy = entityProxiesById.get(e.getId());

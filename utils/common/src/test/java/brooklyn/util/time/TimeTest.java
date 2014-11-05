@@ -129,11 +129,11 @@ public class TimeTest {
     }
 
     @Test
-    public void testMakeStringExactZero() { check(0, "0"); }
+    public void testMakeStringExactZero() { check(0, "0ms"); }
     @Test
     public void testMakeStringExactNegative() { check(-1, "-1ms"); }
     @Test
-    public void testMakeStringRoundedZero() { checkR(0, "0"); }
+    public void testMakeStringRoundedZero() { checkR(0, "0ms"); }
     @Test
     public void testMakeStringRoundedNegative() { checkR(-1, "-1ms"); }
 

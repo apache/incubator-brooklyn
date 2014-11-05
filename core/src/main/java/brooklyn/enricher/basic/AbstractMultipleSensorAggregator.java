@@ -26,6 +26,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -57,7 +58,8 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
     
     @Override
     protected void setEntityBeforeSubscribingProducerChildrenEvents() {
-        if (LOG.isDebugEnabled()) LOG.debug("{} subscribing to children of {}", new Object[] {this, producer });
+        BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(producer),
+            "{} subscribing to children of {}", this, producer);
         for (Sensor<?> sourceSensor: getSourceSensors()) {
             subscribeToChildren(producer, sourceSensor, this);
         }
@@ -84,7 +86,8 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
 
     @Override
     protected void onProducerAdded(Entity producer) {
-        if (LOG.isDebugEnabled()) LOG.debug("{} listening to {}", new Object[] {this, producer});
+        BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(producer),
+            "{} listening to {}", this, producer);
         synchronized (values) {
             for (Sensor<?> sensor: getSourceSensors()) {
                 Map<Entity,Object> vs = values.get(sensor.getName());

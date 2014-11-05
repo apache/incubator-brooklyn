@@ -35,6 +35,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
+import brooklyn.util.os.Os.DeletionResult;
 import brooklyn.util.osgi.Osgis;
 
 import com.google.common.base.Throwables;
@@ -76,7 +77,11 @@ public class OsgiManager {
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
-        osgiTempDir = Os.deleteRecursively(osgiTempDir).asNullOrThrowing();
+        DeletionResult deleteRecursively = Os.deleteRecursively(osgiTempDir);
+        if (deleteRecursively.getThrowable()!=null) {
+            log.debug("Unable to delete "+osgiTempDir+" (possibly already deleted?): "+deleteRecursively.getThrowable());
+        }
+        osgiTempDir = null;
         framework = null;
     }
 
@@ -85,12 +90,14 @@ public class OsgiManager {
             String nv = bundleUrlToNameVersionString.get(bundleUrl);
             if (nv!=null) {
                 if (Osgis.getBundle(framework, nv).isPresent()) {
-                    log.debug("Bundle from "+bundleUrl+" already installed as "+nv+"; not re-registering");
+                    log.trace("Bundle from "+bundleUrl+" already installed as "+nv+"; not re-registering");
                     return;
                 }
             }
             Bundle b = Osgis.install(framework, bundleUrl);
             nv = b.getSymbolicName()+":"+b.getVersion().toString();
+            // TODO if there is another entry for name:version we should log a warning at the very least,
+            // or better provide a way to get back *this* bundle
             bundleUrlToNameVersionString.put(bundleUrl, nv);
             log.debug("Bundle from "+bundleUrl+" successfully installed as " + nv + " ("+b+")");
         } catch (BundleException e) {

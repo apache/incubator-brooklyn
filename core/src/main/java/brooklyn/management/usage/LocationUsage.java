@@ -47,7 +47,7 @@ public class LocationUsage {
             this.state = checkNotNull(state, "state");
             this.entityId = checkNotNull(entityId, "entityId");
             this.entityType = checkNotNull(entityType, "entityType");
-            this.applicationId = checkNotNull(applicationId, "applicationId");
+            this.applicationId = checkNotNull(applicationId, "applicationId (entity "+entityId+")");
         }
 
         public Date getDate() {

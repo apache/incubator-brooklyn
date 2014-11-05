@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.management.ManagementContext;
+import brooklyn.mementos.CatalogItemMemento;
 
 import com.google.common.base.Preconditions;
 
@@ -152,7 +153,7 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     }
 
     @Override
-    public RebindSupport getRebindSupport() {
+    public RebindSupport<CatalogItemMemento> getRebindSupport() {
         return itemDto.getRebindSupport();
     }
 }

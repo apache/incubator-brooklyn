@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 
@@ -33,7 +34,9 @@ import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemLibraries;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;
+import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
@@ -89,14 +92,18 @@ public class CatalogUtils {
             if (osgi.isAbsent()) {
                 throw new IllegalStateException("Unable to load bundles "+bundles+" because OSGi is not running.");
             }
-            if (log.isDebugEnabled()) log.debug("Loading bundles in {}: {}", 
+            if (log.isDebugEnabled()) 
+                logDebugOrTraceIfRebinding(log, 
+                    "Loading bundles in {}: {}", 
                     new Object[] {managementContext, Joiner.on(", ").join(bundles)});
             Stopwatch timer = Stopwatch.createStarted();
             for (String bundleUrl : bundles) {
                 osgi.get().registerBundle(bundleUrl);
             }
-            if (log.isDebugEnabled()) log.debug("Registered {} bundles in {}",
-                new Object[]{bundles.size(), Time.makeTimeStringRounded(timer)});
+            if (log.isDebugEnabled()) 
+                logDebugOrTraceIfRebinding(log, 
+                    "Registered {} bundles in {}",
+                    new Object[]{bundles.size(), Time.makeTimeStringRounded(timer)});
         }
     }
 
@@ -112,7 +119,9 @@ public class CatalogUtils {
     public static void setCatalogItemIdOnAddition(Entity entity, BrooklynObject itemBeingAdded) {
         if (entity.getCatalogItemId()!=null) {
             if (itemBeingAdded.getCatalogItemId()==null) {
-                log.debug("Catalog item addition: "+entity+" from "+entity.getCatalogItemId()+" applying its catalog item ID to "+itemBeingAdded);
+                if (log.isDebugEnabled())
+                    BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(entity),
+                        "Catalog item addition: "+entity+" from "+entity.getCatalogItemId()+" applying its catalog item ID to "+itemBeingAdded);
                 ((BrooklynObjectInternal)itemBeingAdded).setCatalogItemId(entity.getCatalogItemId());
             } else {
                 if (!itemBeingAdded.getCatalogItemId().equals(entity.getCatalogItemId())) {
@@ -120,9 +129,20 @@ public class CatalogUtils {
                     log.debug("Cross-catalog item detected: "+entity+" from "+entity.getCatalogItemId()+" has "+itemBeingAdded+" from "+itemBeingAdded.getCatalogItemId());
                 }
             }
-        } else if (itemBeingAdded.getCatalogItemId()==null) {
-            log.debug("Catalog item addition: "+entity+" without catalog item ID has "+itemBeingAdded+" from "+itemBeingAdded.getCatalogItemId());
+        } else if (itemBeingAdded.getCatalogItemId()!=null) {
+            if (log.isDebugEnabled())
+                BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(entity),
+                    "Catalog item addition: "+entity+" without catalog item ID has "+itemBeingAdded+" from "+itemBeingAdded.getCatalogItemId());
         }
     }
+
+    @Beta
+    public static void logDebugOrTraceIfRebinding(Logger log, String message, Object ...args) {
+        if (RebindTracker.isRebinding())
+            log.trace(message, args);
+        else
+            log.debug(message, args);
+    }
+    
 
 }

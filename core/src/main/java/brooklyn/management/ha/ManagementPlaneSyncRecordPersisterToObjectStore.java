@@ -236,7 +236,8 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         }
         init();
         
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento; updating {}", delta);
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        if (LOG.isTraceEnabled()) LOG.trace("Checkpointing delta of manager-memento; updating {}", delta);
         
         for (ManagementNodeSyncRecord m : delta.getNodes()) {
             persist(m);
@@ -256,15 +257,18 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         default:
             throw new IllegalStateException("Unknown state for master-change: "+delta.getMasterChange());
         }
+        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento in "+Time.makeTimeStringRounded(stopwatch)+": "+delta);
     }
 
     private void persistMaster(String nodeId, String optionalExpectedId) {
         if (optionalExpectedId!=null) {
             String currentRemoteMaster = masterWriter.get();
             if (currentRemoteMaster==null) {
-                // nothing at remote is okay
+                // okay to have nothing at remote
             } else if (!currentRemoteMaster.trim().equals(optionalExpectedId.trim())) {
-                LOG.warn("Master at server is "+currentRemoteMaster+"; expected "+optionalExpectedId+" in order to set as "+nodeId+", so not applying (yet)");
+                LOG.warn("Master at server is "+currentRemoteMaster+"; expected "+optionalExpectedId+" "
+                    + (Strings.isNonBlank(nodeId) ? "and would set as "+nodeId : "and would clear") 
+                    + ", so not applying (yet)");
                 return;
             }
         }
@@ -333,5 +337,5 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         }
         return writer;
     }
-    
+
 }
