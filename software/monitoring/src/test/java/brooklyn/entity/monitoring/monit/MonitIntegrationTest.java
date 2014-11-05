@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.location.MachineDetails;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
@@ -76,7 +78,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
     }
     
     @Test(groups = "Integration")
-    public void test_localhost() throws InterruptedException {
+    public void test_localhost() throws Exception {
         final MonitNode monitNode = app.createAndManageChild(EntitySpec.create(MonitNode.class)
             .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monit.monitrc"));
         app.start(ImmutableSet.of(loc));
@@ -85,7 +87,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
     }
     
     @Test(groups = "Integration")
-    public void test_monitorMySql() throws InterruptedException {
+    public void test_monitorMySql() throws Exception {
         SameServerEntity sameServerEntity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
         MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class));
         Entities.manage(mySqlNode);
@@ -117,7 +119,21 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
     }
     
     @Test(groups = "Integration")
-    public void test_monitorMySqlAutoRestart() throws InterruptedException {
+    public void test_monitorMySqlAutoRestart() throws Exception {
+        // This runs on localhost; free to obtain another machine with impunity.
+        final String osFlavor;
+        MachineDetails machineDetails = app.getExecutionContext().submit(new Callable<MachineDetails>() {
+            public MachineDetails call() throws Exception {
+                return loc.obtain().getMachineDetails();
+            }}).get();
+        if (machineDetails.getOsDetails().isMac()) {
+            osFlavor = "osx10.6-x86_64";
+        } else if (machineDetails.getOsDetails().isWindows()) {
+            throw new UnsupportedOperationException("Windows not supported for test_monitorMySqlAutoRestart");
+        } else {
+            osFlavor = "linux2.6-x86_64"; // assume 64 bit linux
+        }
+        
         // The monit node needs to know the installation and run directory of the mysql dir, so we need to specify it explicitly  
         File tempDir = Files.createTempDir();
         tempDir.deleteOnExit();
@@ -138,10 +154,12 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
                     "targetPidFile", input,
                     "mySqlInstallDir", mySqlInstallDir,
                     "mySqlRunDir", mySqlRunDir,
-                    "mySqlVersion", mySqlVersion
+                    "mySqlVersion", mySqlVersion,
+                    "mySqlOsFlavor", osFlavor
                 );
             }
         };
+        
         EntitySpec<MonitNode> monitSpec = EntitySpec.create(MonitNode.class)
                 .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monitmysqlwithrestart.monitrc")
                 .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode,
@@ -182,7 +200,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
                 }
                 String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
                 LOG.debug("MonitNode target status: {}", targetStatus);
-                assertEquals(elvis(targetStatus, ""), "Running");
+                assertEquals(targetStatus, "Running");
             }
         });
     }
