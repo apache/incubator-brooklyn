@@ -20,9 +20,12 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +40,13 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.usage.ApplicationUsage;
 import brooklyn.management.usage.LocationUsage;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class LocalUsageManager implements UsageManager {
 
@@ -62,13 +68,19 @@ public class LocalUsageManager implements UsageManager {
     private final LocalManagementContext managementContext;
     
     private final Object mutex = new Object();
+
+    private final List<UsageListener> listeners = Lists.newCopyOnWriteArrayList();
     
+    private ExecutorService listenerExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+            .setNameFormat("brooklyn-usagemanager-listener-%d")
+            .build());
+
     public LocalUsageManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
 
     @Override
-    public void recordApplicationEvent(Application app, Lifecycle state) {
+    public void recordApplicationEvent(final Application app, final Lifecycle state) {
         log.debug("Storing application lifecycle usage event: application {} in state {}", new Object[] {app, state});
         ConcurrentMap<String, ApplicationUsage> eventMap = managementContext.getStorage().getMap(APPLICATION_USAGE_KEY);
         synchronized (mutex) {
@@ -76,8 +88,21 @@ public class LocalUsageManager implements UsageManager {
             if (usage == null) {
                 usage = new ApplicationUsage(app.getId(), app.getDisplayName(), app.getEntityType().getName(), ((EntityInternal)app).toMetadataRecord());
             }
-            usage.addEvent(new ApplicationUsage.ApplicationEvent(state));        
+            final ApplicationUsage.ApplicationEvent event = new ApplicationUsage.ApplicationEvent(state);
+            usage.addEvent(event);        
             eventMap.put(app.getId(), usage);
+            
+            for (final UsageListener listener : listeners) {
+                listenerExecutor.execute(new Runnable() {
+                    public void run() {
+                        try {
+                            listener.onApplicationEvent(app.getId(), app.getDisplayName(), app.getEntityType().getName(), ((EntityInternal)app).toMetadataRecord(), event);
+                        } catch (Exception e) {
+                            log.error("Problem notifying listener "+listener+" of applicationEvent("+app+", "+state+")", e);
+                            Exceptions.propagateIfFatal(e);
+                        }
+                    }});
+            }
         }
     }
     
@@ -86,7 +111,7 @@ public class LocalUsageManager implements UsageManager {
      * record if one does not already exist).
      */
     @Override
-    public void recordLocationEvent(Location loc, Lifecycle state) {
+    public void recordLocationEvent(final Location loc, final Lifecycle state) {
         // TODO This approach (i.e. recording events on manage/unmanage would not work for
         // locations that are reused. For example, in a FixedListMachineProvisioningLocation
         // the ssh machine location is returned to the pool and handed back out again.
@@ -116,7 +141,7 @@ public class LocalUsageManager implements UsageManager {
             Entity caller = (Entity) callerContext;
             String entityTypeName = caller.getEntityType().getName();
             String appId = caller.getApplicationId();
-            LocationUsage.LocationEvent event = new LocationUsage.LocationEvent(state, caller.getId(), entityTypeName, appId);
+            final LocationUsage.LocationEvent event = new LocationUsage.LocationEvent(state, caller.getId(), entityTypeName, appId);
             
             ConcurrentMap<String, LocationUsage> usageMap = managementContext.getStorage().<String, LocationUsage>getMap(LOCATION_USAGE_KEY);
             synchronized (mutex) {
@@ -126,6 +151,18 @@ public class LocalUsageManager implements UsageManager {
                 }
                 usage.addEvent(event);
                 usageMap.put(loc.getId(), usage);
+                
+                for (final UsageListener listener : listeners) {
+                    listenerExecutor.execute(new Runnable() {
+                        public void run() {
+                            try {
+                                listener.onLocationEvent(loc.getId(), ((LocationInternal)loc).toMetadataRecord(), event);
+                            } catch (Exception e) {
+                                log.error("Problem notifying listener "+listener+" of locationEvent("+loc+", "+state+")", e);
+                                Exceptions.propagateIfFatal(e);
+                            }
+                        }});
+                }
             }
         } else {
             // normal for high-level locations
@@ -193,5 +230,15 @@ public class LocalUsageManager implements UsageManager {
             }
         }
         return result;
+    }
+
+    @Override
+    public void addUsageListener(UsageListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public void removeUsageListener(UsageListener listener) {
+        listeners.remove(listener);
     }
 }
