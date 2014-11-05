@@ -33,6 +33,7 @@ import brooklyn.entity.rebind.persister.StoreObjectAccessorLocking;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.time.Duration;
 
 @Test(groups={"Live", "Live-sanity"})
 public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObjectAccessorWriterTestFixture {
@@ -60,6 +61,13 @@ public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObject
         return new StoreObjectAccessorLocking(store.newAccessor("sample-file-"+Identifiers.makeRandomId(4)));
     }
 
+    @Override
+    protected Duration getLastModifiedResolution() {
+        // Not sure what timing resolution is on things like Softlayer's Swift.
+        // It passed for Aled repeatedly on 2014-11-05 with 2 seconds.
+        return Duration.seconds(2);
+    }
+    
     protected int biggishSize() {
         // bit smaller since it's actually uploading here!
         return 10000;
