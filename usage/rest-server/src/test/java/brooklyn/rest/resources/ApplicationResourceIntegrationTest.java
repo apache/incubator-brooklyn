@@ -112,7 +112,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
         Asserts.succeedsEventually(MutableMap.of("timeout", 60 * 1000), new Runnable() {
             public void run() {
                 String val = client().resource(stateSensor).get(String.class);
-                assertTrue(expectedStatus.equalsIgnoreCase(val));
+                assertTrue(expectedStatus.equalsIgnoreCase(val) || ("\""+expectedStatus+"\"").equalsIgnoreCase(val), "state="+val);
             }
         });
     }

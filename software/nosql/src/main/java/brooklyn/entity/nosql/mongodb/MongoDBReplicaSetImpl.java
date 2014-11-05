@@ -218,6 +218,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      * seconds time (in the hope that next time the primary will be available).
      */
     private void addSecondaryWhenPrimaryIsNonNull(final MongoDBServer secondary) {
+        // TODO Don't use executor, use ExecutionManager
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -377,12 +378,18 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         //  - if the set is being stopped forever it's irrelevant
         //  - if the set might be restarted I think it just inconveniences us
         // Terminate the executor immediately.
-        // Note that after this the executor will not run if the set is restarted.
+        // TODO Note that after this the executor will not run if the set is restarted.
         executor.shutdownNow();
         super.stop();
         setAttribute(Startable.SERVICE_UP, false);
     }
 
+    @Override
+    public void onManagementStopped() {
+        super.onManagementStopped();
+        executor.shutdownNow();
+    }
+    
     public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
         @Override protected void onEntityChange(Entity member) {
             // Ignored

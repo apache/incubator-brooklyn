@@ -72,7 +72,7 @@ public class MongoDBShardedDeploymentIntegrationTest extends BrooklynAppLiveTest
     public void testCanStartAndStopDeployment() {
         MongoDBShardedDeployment deployment = makeAndStartDeployment();
         deployment.stop();
-        Assert.assertFalse(deployment.getAttribute(Startable.SERVICE_UP));
+        EntityTestUtils.assertAttributeEqualsEventually(deployment, Startable.SERVICE_UP, false);
     }
     
     @Test(groups = "Integration")
