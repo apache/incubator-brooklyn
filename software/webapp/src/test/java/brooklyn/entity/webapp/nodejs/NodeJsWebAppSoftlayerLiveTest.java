@@ -18,15 +18,15 @@
  */
 package brooklyn.entity.webapp.nodejs;
 
-import static brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegrationTest.*;
-import static org.testng.Assert.assertNotNull;
+import static brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegrationTest.APP_FILE;
+import static brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegrationTest.APP_NAME;
+import static brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegrationTest.GIT_REPO_URL;
 
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractSoftlayerLiveTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -49,13 +49,6 @@ public class NodeJsWebAppSoftlayerLiveTest extends AbstractSoftlayerLiveTest {
 
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(url, 200);
         HttpTestUtils.assertContentContainsText(url, "Hello");
-
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                assertNotNull(server.getAttribute(NodeJsWebAppService.REQUEST_COUNT));
-                assertNotNull(server.getAttribute(NodeJsWebAppService.ERROR_COUNT));
-                assertNotNull(server.getAttribute(NodeJsWebAppService.TOTAL_PROCESSING_TIME));
-            }});
     }
 
     @Test(groups = {"Live", "Live-sanity"})
