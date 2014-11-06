@@ -541,7 +541,9 @@ public class RebindManagerImpl implements RebindManager {
             //The manifest contains full catalog items mementos. Reading them at this stage means that
             //we don't support references to entities/locations withing tags.
             
-            LOG.debug("Rebinding ("+mode+", iteration "+readOnlyRebindCount+") from "+getPersister().getBackingStoreDescription()+"...");
+            LOG.debug("Rebinding ("+mode+
+                (readOnlyRebindCount>Integer.MIN_VALUE ? ", iteration "+readOnlyRebindCount : "")+
+                ") from "+getPersister().getBackingStoreDescription()+"...");
 
             BrooklynMementoRawData mementoRawData = persistenceStoreAccess.loadMementoRawData(exceptionHandler);
             BrooklynMementoManifest mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);

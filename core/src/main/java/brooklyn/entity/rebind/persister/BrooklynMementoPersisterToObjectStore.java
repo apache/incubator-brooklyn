@@ -65,6 +65,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -93,9 +94,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             "Maximum number of attempts to serialize a memento (e.g. if first attempts fail because of concurrent modifications of an entity)", 
             5);
 
-    static final BrooklynObjectType[] PERSISTED_OBJECT_TYPES_IN_ORDER = new BrooklynObjectType[] { 
+    static final List<BrooklynObjectType> PERSISTED_OBJECT_TYPES_IN_ORDER = ImmutableList.of( 
         BrooklynObjectType.ENTITY, BrooklynObjectType.LOCATION, BrooklynObjectType.POLICY,
-        BrooklynObjectType.ENRICHER, BrooklynObjectType.FEED, BrooklynObjectType.CATALOG_ITEM };
+        BrooklynObjectType.ENRICHER, BrooklynObjectType.FEED, BrooklynObjectType.CATALOG_ITEM);
 
     private final PersistenceObjectStore objectStore;
     private final MementoSerializer<Object> serializer;
