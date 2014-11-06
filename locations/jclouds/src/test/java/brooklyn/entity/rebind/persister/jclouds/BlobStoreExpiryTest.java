@@ -32,11 +32,9 @@ import org.jclouds.blobstore.domain.PageSet;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.domain.Credentials;
 import org.jclouds.openstack.domain.AuthenticationResponse;
-import org.jclouds.openstack.handlers.RetryOnRenew;
 import org.jclouds.openstack.reference.AuthHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -88,7 +86,6 @@ public class BlobStoreExpiryTest {
     private ManagementContext mgmt;
     private String testContainerName;
 
-    Module myAuth;
     private String identity;
     private String credential;
     private String provider;
@@ -124,8 +121,11 @@ public class BlobStoreExpiryTest {
         if (context!=null) context.close();
         context = null;
     }
-    
-    public void testRenewAuthFailsInSoftlayer() throws IOException {
+
+    // test disabled as https://issues.apache.org/jira/browse/JCLOUDS-589 fixed the issue for Keystone greater than 1.1
+    // the test would be applicable if pointed at a Swift endpoint that was using Keystone v1.1.
+    @Test(enabled = false)
+    public void testRenewAuthFailsInKeystoneV1_1() throws IOException {
         doTestRenewAuth(false);
     }
 
@@ -136,7 +136,7 @@ public class BlobStoreExpiryTest {
     protected void doTestRenewAuth(boolean applyFix) throws IOException {
         getBlobStoreContext(applyFix);
         
-        injectShortLivedTokenForSoftlayerAmsterdam();
+        injectShortLivedTokenForKeystoneV1_1();
         
         context.getBlobStore().createContainerInLocation(null, testContainerName);
         
@@ -150,7 +150,6 @@ public class BlobStoreExpiryTest {
             // with the fix not applied, we have to invalidate the cache manually
             try {
                 assertContainerFound();
-                Assert.fail("should fail as long as "+RetryOnRenew.class+" is not working");
             } catch (Exception e) {
                 log.info("failed, as expected: "+e);
             }
@@ -168,17 +167,19 @@ public class BlobStoreExpiryTest {
         BlobStoreTest.assertHasItemNamed(ps, testContainerName);
     }
 
-    private void injectShortLivedTokenForSoftlayerAmsterdam() {
-        HttpToolResponse tokenHttpResponse1 = requestTokenWithExplicitLifetime("https://ams01.objectstorage.softlayer.net/auth/v1.0/v1.0", "ams01.objectstorage.softlayer.net", 
+    private void injectShortLivedTokenForKeystoneV1_1() {
+        HttpToolResponse tokenHttpResponse1 = requestTokenWithExplicitLifetime("https://keystone-endpoint/v1.1", "CHANGE_ME",
             identity, credential, Duration.FIVE_SECONDS);
         
         Builder<String, URI> servicesMapBuilder = ImmutableMap.builder();
         for (Entry<String, List<String>> entry : tokenHttpResponse1.getHeaderLists().entrySet()) {
-           if (entry.getKey().toLowerCase().endsWith(URL_SUFFIX.toLowerCase()))
-              servicesMapBuilder.put(entry.getKey(), URI.create(entry.getValue().iterator().next()));
+            if (entry.getKey().toLowerCase().endsWith(URL_SUFFIX.toLowerCase()) ||
+                    entry.getKey().toLowerCase().endsWith("X-Auth-Token-Expires".toLowerCase())){
+                servicesMapBuilder.put(entry.getKey(), URI.create(entry.getValue().iterator().next()));
+            }
         }
         AuthenticationResponse authResponse = new AuthenticationResponse(tokenHttpResponse1.getHeaderLists().get(AuthHeaders.AUTH_TOKEN).get(0), servicesMapBuilder.build());
-        
+
         getAuthCache().put(new Credentials(identity, credential), authResponse);
     }
 
@@ -201,8 +202,8 @@ public class BlobStoreExpiryTest {
             .add(AuthHeaders.AUTH_USER, user)
             .add(AuthHeaders.AUTH_KEY, key)
             .add("Host", host)
-            .add("X-Auth-New-Token", ""+true)
-            .add("X-Auth-Token-Lifetime", ""+expiration.toSeconds())
+            .add("X-Auth-New-Token", "" + true)
+            .add("X-Auth-Token-Lifetime", "" + expiration.toSeconds())
             );
 //        curl -v https://ams01.objectstorage.softlayer.net/auth/v1.0/v1.0 -H "X-Auth-User: IBMOS321366-2:cloudsoft" -H "X-Auth-Key: 06cef1beff5432cc9453934e06beb85de5f0a53a2340d7e0cd4a4705655e8132" -H "Host: ams01.objectstorage.softlayer.net" -H "X-Auth-New-Token: true" -H "X-Auth-Token-Lifetime: 15"
 //            -H "Host: ams01.objectstorage.softlayer.net" -H "X-Auth-New-Token: true" -H "X-Auth-Token-Lifetime: 15"
