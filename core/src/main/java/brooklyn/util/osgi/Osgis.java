@@ -28,10 +28,14 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
@@ -56,13 +60,16 @@ import org.slf4j.LoggerFactory;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.ReferenceWithError;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
@@ -82,54 +89,195 @@ public class Osgis {
 
     private static final String EXTENSION_PROTOCOL = "system";
     private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
+    private static final Set<String> SYSTEM_BUNDLES = MutableSet.of();
 
-    public static List<Bundle> getBundlesByName(Framework framework, String symbolicName, Predicate<Version> versionMatcher) {
-        List<Bundle> result = MutableList.of();
-        for (Bundle b: framework.getBundleContext().getBundles()) {
-            if (symbolicName.equals(b.getSymbolicName()) && versionMatcher.apply(b.getVersion())) {
+    public static class BundleFinder {
+        protected final Framework framework;
+        protected String symbolicName;
+        protected String version;
+        protected String url;
+        protected boolean urlMandatory = false;
+        protected final List<Predicate<? super Bundle>> predicates = MutableList.of();
+        
+        protected BundleFinder(Framework framework) {
+            this.framework = framework;
+        }
+
+        public BundleFinder symbolicName(String symbolicName) {
+            this.symbolicName = symbolicName;
+            return this;
+        }
+
+        public BundleFinder version(String version) {
+            this.version = version;
+            return this;
+        }
+        
+        public BundleFinder id(String symbolicNameOptionallyWithVersion) {
+            if (Strings.isBlank(symbolicNameOptionallyWithVersion))
+                return this;
+            
+            Maybe<String[]> partsM = parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
+            if (partsM.isAbsent())
+                throw new IllegalArgumentException("Cannot parse symbolic-name:version string '"+symbolicNameOptionallyWithVersion+"'");
+            String[] parts = partsM.get();
+            
+            symbolicName(parts[0]);
+            if (parts.length >= 2) version(parts[1]);
+            
+            return this;
+        }
+
+        /** Looks for a bundle matching the given URL;
+         * unlike {@link #requiringFromUrl(String)} however, if the URL does not match any bundles
+         * it will return other matching bundles <i>if</if> a {@link #symbolicName(String)} is specified.
+         */
+        public BundleFinder preferringFromUrl(String url) {
+            this.url = url;
+            urlMandatory = false;
+            return this;
+        }
+
+        /** Requires the bundle to have the given URL set as its location. */
+        public BundleFinder requiringFromUrl(String url) {
+            this.url = url;
+            urlMandatory = true;
+            return this;
+        }
+
+        /** Finds the best matching bundle. */
+        public Maybe<Bundle> find() {
+            return findOne(false);
+        }
+        
+        /** Finds the matching bundle, requiring it to be unique. */
+        public Maybe<Bundle> findUnique() {
+            return findOne(true);
+        }
+
+        protected Maybe<Bundle> findOne(boolean requireExactlyOne) {
+            if (symbolicName==null && url==null)
+                throw new IllegalStateException(this+" must be given either a symbolic name or a URL");
+            
+            List<Bundle> result = findAll();
+            if (result.isEmpty())
+                return Maybe.absent("No bundle matching "+getConstraintsDescription());
+            if (requireExactlyOne && result.size()>1)
+                return Maybe.absent("Multiple bundles ("+result.size()+") matching "+getConstraintsDescription());
+            
+            return Maybe.of(result.get(0));
+        }
+        
+        /** Finds all matching bundles, in decreasing version order. */
+        public List<Bundle> findAll() {
+            boolean urlMatched = false;
+            List<Bundle> result = MutableList.of();
+            for (Bundle b: framework.getBundleContext().getBundles()) {
+                if (symbolicName!=null && !symbolicName.equals(b.getSymbolicName())) continue;
+                if (version!=null && !Version.parseVersion(version).equals(b.getVersion())) continue;
+                for (Predicate<? super Bundle> predicate: predicates) {
+                    if (!predicate.apply(b)) continue;
+                }
+
+                // check url last, because if it isn't mandatory we should only clear if we find a url
+                // for which the other items also match
+                if (url!=null) {
+                    boolean matches = url.equals(b.getLocation());
+                    if (urlMandatory) {
+                        if (!matches) continue;
+                    } else {
+                        if (matches) {
+                            if (!urlMatched) {
+                                result.clear();
+                                urlMatched = true;
+                            }
+                        } else {
+                            if (urlMatched) {
+                                // can't use this bundle as we have previously found a preferred bundle, with a matching url
+                                continue;
+                            }
+                        }
+                    }
+                }
+                                
                 result.add(b);
             }
+            
+            if (symbolicName==null && url!=null && !urlMatched) {
+                // if we only "preferred" the url, and we did not match it, and we did not have a symbolic name,
+                // then clear the results list!
+                result.clear();
+            }
+
+            Collections.sort(result, new Comparator<Bundle>() {
+                @Override
+                public int compare(Bundle o1, Bundle o2) {
+                    return o2.getVersion().compareTo(o1.getVersion());
+                }
+            });
+            
+            return result;
         }
-        return result;
+        
+        public String getConstraintsDescription() {
+            List<String> parts = MutableList.of();
+            if (symbolicName!=null) parts.add("symbolicName="+symbolicName);
+            if (version!=null) parts.add("version="+version);
+            if (url!=null)
+                parts.add("url["+(urlMandatory ? "required" : "preferred")+"]="+url);
+            if (!predicates.isEmpty())
+                parts.add("predicates="+predicates);
+            return Joiner.on(";").join(parts);
+        }
+        
+        public String toString() {
+            return getClass().getCanonicalName()+"["+getConstraintsDescription()+"]";
+        }
+
+        public BundleFinder version(final Predicate<Version> versionPredicate) {
+            return satisfying(new Predicate<Bundle>() {
+                @Override
+                public boolean apply(Bundle input) {
+                    return versionPredicate.apply(input.getVersion());
+                }
+            });
+        }
+        
+        public BundleFinder satisfying(Predicate<? super Bundle> predicate) {
+            predicates.add(predicate);
+            return this;
+        }
+    }
+    
+    public static BundleFinder bundleFinder(Framework framework) {
+        return new BundleFinder(framework);
     }
 
+    /** @deprecated since 0.7.0 use {@link #bundleFinder(Framework)} */ @Deprecated
+    public static List<Bundle> getBundlesByName(Framework framework, String symbolicName, Predicate<Version> versionMatcher) {
+        return bundleFinder(framework).symbolicName(symbolicName).version(versionMatcher).findAll();
+    }
+
+    /** @deprecated since 0.7.0 use {@link #bundleFinder(Framework)} */ @Deprecated
     public static List<Bundle> getBundlesByName(Framework framework, String symbolicName) {
-        return getBundlesByName(framework, symbolicName, Predicates.<Version>alwaysTrue());
+        return bundleFinder(framework).symbolicName(symbolicName).findAll();
     }
 
     /**
      * Tries to find a bundle in the given framework with name matching either `name' or `name:version'.
-     */
+     * @deprecated since 0.7.0 use {@link #bundleFinder(Framework)} */ @Deprecated
     public static Maybe<Bundle> getBundle(Framework framework, String symbolicNameOptionallyWithVersion) {
-        String[] parts = symbolicNameOptionallyWithVersion.split(":");
-        Maybe<Bundle> result = Maybe.absent("No bundles matching "+symbolicNameOptionallyWithVersion);
-        if (parts.length == 2) {
-            result = getBundle(framework, parts[0], parts[1]);
-        } else if (parts.length == 1) {
-            // TODO: Select latest version rather than first result
-            List<Bundle> matches = getBundlesByName(framework, symbolicNameOptionallyWithVersion);
-            if (!matches.isEmpty()) {
-                result = Maybe.of(matches.iterator().next());
-            }
-        } else {
-            throw new IllegalArgumentException("Cannot parse symbolic-name:version string '"+symbolicNameOptionallyWithVersion+"'");
-        }
-        return result;
+        return bundleFinder(framework).id(symbolicNameOptionallyWithVersion).find();
     }
     
+    /** @deprecated since 0.7.0 use {@link #bundleFinder(Framework)} */ @Deprecated
     public static Maybe<Bundle> getBundle(Framework framework, String symbolicName, String version) {
-        return getBundle(framework, symbolicName, Version.parseVersion(version));
+        return bundleFinder(framework).symbolicName(symbolicName).version(version).find();
     }
 
+    /** @deprecated since 0.7.0 use {@link #bundleFinder(Framework)} */ @Deprecated
     public static Maybe<Bundle> getBundle(Framework framework, String symbolicName, Version version) {
-        List<Bundle> matches = getBundlesByName(framework, symbolicName, Predicates.equalTo(version));
-        if (matches.isEmpty()) {
-            return Maybe.absent("No bundles matching name=" + symbolicName + " version=" + version);
-        } else if (matches.size() > 1) {
-            LOG.warn("More than one bundle in framework={} matched name={}, version={}! Returning first of matches={}",
-                    new Object[]{framework, symbolicName, version, Joiner.on(", ").join(matches)});
-        }
-        return Maybe.of(matches.iterator().next());
+        return bundleFinder(framework).symbolicName(symbolicName).version(Predicates.equalTo(version)).findUnique();
     }
 
     // -------- creating
@@ -168,6 +316,7 @@ public class Osgis {
         Map<Object,Object> cfg = MutableMap.copyOf(extraStartupConfig);
         if (clean) cfg.put(Constants.FRAMEWORK_STORAGE_CLEAN, "onFirstInit");
         if (felixCacheDir!=null) cfg.put(Constants.FRAMEWORK_STORAGE, felixCacheDir);
+        cfg.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_MULTIPLE);
         FrameworkFactory factory = newFrameworkFactory();
 
         Stopwatch timer = Stopwatch.createStarted();
@@ -180,12 +329,14 @@ public class Osgis {
             // framework bundle start exceptions are not interesting to caller...
             throw Exceptions.propagate(e);
         }
+        LOG.debug("System bundles are: "+SYSTEM_BUNDLES);
         LOG.debug("OSGi framework started in " + Duration.of(timer));
-
         return framework;
     }
 
     private static void installBootBundles(Framework framework) {
+        Stopwatch timer = Stopwatch.createStarted();
+        LOG.debug("Installing OSGi boot bundles from "+Osgis.class.getClassLoader()+"...");
         Enumeration<URL> resources;
         try {
             resources = Osgis.class.getClassLoader().getResources(MANIFEST_PATH);
@@ -193,29 +344,32 @@ public class Osgis {
             throw Exceptions.propagate(e);
         }
         BundleContext bundleContext = framework.getBundleContext();
-        Map<String, Bundle> installedBundles = getInstalledBundles(bundleContext);
+        Map<String, Bundle> installedBundles = getInstalledBundlesById(bundleContext);
         while(resources.hasMoreElements()) {
             URL url = resources.nextElement();
-            ReferenceWithError<Boolean> installResult = installExtensionBundle(bundleContext, url, installedBundles, getVersionedId(framework));
-            if (installResult.hasError()) {
-                if (installResult.getWithoutError()) {
-                    // true return code means it was installed or trivially not installed
-                    if (LOG.isTraceEnabled())
-                        LOG.trace(installResult.getError().getMessage());
-                } else {
-                    if (installResult.masksErrorIfPresent()) {
-                        // if error is masked, then it's not so important (many of the bundles we are looking at won't have manifests)
-                        LOG.debug(installResult.getError().getMessage());
+            ReferenceWithError<?> installResult = installExtensionBundle(bundleContext, url, installedBundles, getVersionedId(framework));
+            if (installResult.hasError() && !installResult.masksErrorIfPresent()) {
+                // it's reported as a critical error, so warn here
+                LOG.warn("Unable to install manifest from "+url+": "+installResult.getError(), installResult.getError());
+            } else {
+                Object result = installResult.getWithoutError();
+                if (result instanceof Bundle) {
+                    String v = getVersionedId( (Bundle)result );
+                    SYSTEM_BUNDLES.add(v);
+                    if (installResult.hasError()) {
+                        LOG.debug(installResult.getError().getMessage()+(result!=null ? " ("+result+"/"+v+")" : ""));
                     } else {
-                        // it's reported as a critical error, so warn here
-                        LOG.warn("Unable to install manifest from "+url+": "+installResult.getError(), installResult.getError());
+                        LOG.debug("Installed "+v+" from "+url);
                     }
+                } else if (installResult.hasError()) {
+                    LOG.debug(installResult.getError().getMessage());
                 }
             }
         }
+        LOG.debug("Installed OSGi boot bundles in "+Time.makeTimeStringRounded(timer)+": "+Arrays.asList(framework.getBundleContext().getBundles()));
     }
 
-    private static Map<String, Bundle> getInstalledBundles(BundleContext bundleContext) {
+    private static Map<String, Bundle> getInstalledBundlesById(BundleContext bundleContext) {
         Map<String, Bundle> installedBundles = new HashMap<String, Bundle>();
         Bundle[] bundles = bundleContext.getBundles();
         for (Bundle b : bundles) {
@@ -224,15 +378,21 @@ public class Osgis {
         return installedBundles;
     }
 
-    private static ReferenceWithError<Boolean> installExtensionBundle(BundleContext bundleContext, URL manifestUrl, Map<String, Bundle> installedBundles, String frameworkVersionedId) {
+    /** Wraps the bundle if successful or already installed, wraps TRUE if it's the system entry,
+     * wraps null if the bundle is already installed from somewhere else;
+     * in all these cases <i>masking</i> an explanatory error if already installed or it's the system entry.
+     * <p>
+     * Returns an instance wrapping null and <i>throwing</i> an error if the bundle could not be installed.
+     */
+    private static ReferenceWithError<?> installExtensionBundle(BundleContext bundleContext, URL manifestUrl, Map<String, Bundle> installedBundles, String frameworkVersionedId) {
         //ignore http://felix.extensions:9/ system entry
         if("felix.extensions".equals(manifestUrl.getHost())) 
-            return ReferenceWithError.newInstanceMaskingError(true, new IllegalArgumentException("Skiping install of internal extension bundle from "+manifestUrl));
+            return ReferenceWithError.newInstanceMaskingError(null, new IllegalArgumentException("Skipping install of internal extension bundle from "+manifestUrl));
 
         try {
             Manifest manifest = readManifest(manifestUrl);
             if (!isValidBundle(manifest)) 
-                return ReferenceWithError.newInstanceMaskingError(false, new IllegalArgumentException("Resource at "+manifestUrl+" is not an OSGi bundle: no valid manifest"));
+                return ReferenceWithError.newInstanceMaskingError(null, new IllegalArgumentException("Resource at "+manifestUrl+" is not an OSGi bundle: no valid manifest"));
             
             String versionedId = getVersionedId(manifest);
             URL bundleUrl = ResourceUtils.getContainerUrl(manifestUrl, MANIFEST_PATH);
@@ -242,9 +402,9 @@ public class Osgis {
                 if (!bundleUrl.equals(existingBundle.getLocation()) &&
                         //the framework bundle is always pre-installed, don't display duplicate info
                         !versionedId.equals(frameworkVersionedId)) {
-                    return ReferenceWithError.newInstanceMaskingError(false, new IllegalArgumentException("Bundle "+versionedId+" (from manifest " + manifestUrl + ") is already installed, from " + existingBundle.getLocation()));
+                    return ReferenceWithError.newInstanceMaskingError(null, new IllegalArgumentException("Bundle "+versionedId+" (from manifest " + manifestUrl + ") is already installed, from " + existingBundle.getLocation()));
                 }
-                return ReferenceWithError.newInstanceMaskingError(true, new IllegalArgumentException("Bundle "+versionedId+" from manifest " + manifestUrl + " is already installed"));
+                return ReferenceWithError.newInstanceMaskingError(existingBundle, new IllegalArgumentException("Bundle "+versionedId+" from manifest " + manifestUrl + " is already installed"));
             }
             
             byte[] jar = buildExtensionBundle(manifest);
@@ -253,10 +413,10 @@ public class Osgis {
             //(since we cannot access BundleImpl.isExtension)
             Bundle newBundle = bundleContext.installBundle(EXTENSION_PROTOCOL + ":" + bundleUrl.toString(), new ByteArrayInputStream(jar));
             installedBundles.put(versionedId, newBundle);
-            return ReferenceWithError.newInstanceWithoutError(true);
+            return ReferenceWithError.newInstanceWithoutError(newBundle);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            return ReferenceWithError.newInstanceThrowingError(false, 
+            return ReferenceWithError.newInstanceThrowingError(null, 
                 new IllegalStateException("Problem installing extension bundle " + manifestUrl + ": "+e, e));
         }
     }
@@ -364,10 +524,11 @@ public class Osgis {
             return bundle;
         }
 
-        //Note that in OSGi 4.3+ it could be possible to have the same version installed
-        //multiple times in more advanced scenarios. In our case we don't support it.
+        // We now support same version installed multiple times (avail since OSGi 4.3+).
+        // However we do not support overriding *system* bundles, ie anything already on the classpath.
+        // If we wanted to disable multiple versions, see comments below, and reference to FRAMEWORK_BSNVERSION_MULTIPLE above.
         
-        //Felix already assumes the stream is pointing to a Jar
+        // Felix already assumes the stream is pointing to a JAR
         JarInputStream stream;
         try {
             stream = new JarInputStream(getUrlStream(url));
@@ -379,7 +540,15 @@ public class Osgis {
         String versionedId = getVersionedId(manifest);
         for (Bundle installedBundle : framework.getBundleContext().getBundles()) {
             if (versionedId.equals(getVersionedId(installedBundle))) {
-                return installedBundle;
+                if (SYSTEM_BUNDLES.contains(versionedId)) {
+                    LOG.debug("Already have system bundle "+versionedId+" from "+installedBundle+"/"+installedBundle.getLocation()+" when requested "+url+"; not installing");
+                    // "System bundles" (ie things on the classpath) cannot be overridden
+                    return installedBundle;
+                } else {
+                    LOG.debug("Already have bundle "+versionedId+" from "+installedBundle+"/"+installedBundle.getLocation()+" when requested "+url+"; but it is not a system bundle so proceeding");
+                    // Other bundles can be installed multiple times. To ignore multiples and continue to use the old one, 
+                    // just return the installedBundle as done just above for system bundles.
+                }
             }
         }
         return null;
@@ -395,6 +564,25 @@ public class Osgis {
                 EXTENSION_PROTOCOL.equals(Urls.getProtocol(location));
     }
 
+    /** Takes a string which might be of the form "symbolic-name" or "symbolic-name:version" (or something else entirely)
+     * and returns an array of 1 or 2 string items being the symbolic name or symbolic name and version if possible
+     * (or returning {@link Maybe#absent()} if not, with a suitable error message). */
+    public static Maybe<String[]> parseOsgiIdentifier(String symbolicNameOptionalWithVersion) {
+        if (Strings.isBlank(symbolicNameOptionalWithVersion))
+            return Maybe.absent("OSGi identifier is blank");
+        
+        String[] parts = symbolicNameOptionalWithVersion.split(":");
+        if (parts.length>2)
+            return Maybe.absent("OSGi identifier has too many parts; max one ':' symbol");
+        
+        try {
+            Version.parseVersion(parts[1]);
+        } catch (IllegalArgumentException e) {
+            return Maybe.absent("OSGi identifier has invalid version string");
+        }
+        
+        return Maybe.of(parts);
+    }
 
     /**
      * The class is not used, staying for future reference.

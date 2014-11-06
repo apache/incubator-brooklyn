@@ -21,6 +21,7 @@ package brooklyn.management.osgi;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -46,6 +47,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.PolicySpec;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 
@@ -66,6 +68,8 @@ public class OsgiVersionMoreEntityTest {
     public static final String BROOKLYN_TEST_MORE_ENTITIES_V1_URL = "classpath:"+BROOKLYN_TEST_MORE_ENTITIES_V1_PATH;
     public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_PATH = OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V2_PATH;
     public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_URL = "classpath:"+BROOKLYN_TEST_MORE_ENTITIES_V2_PATH;
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_PATH = OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_PATH;
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL = "classpath:"+BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_PATH;
     
     protected LocalManagementContext mgmt;
     protected TestApplication app;
@@ -115,17 +119,23 @@ public class OsgiVersionMoreEntityTest {
         }
     }
     
+    protected CatalogItem<?, ?> addCatalogItemWithTypeAsName(String type, String ...libraries) {
+        return addCatalogItemWithNameAndType(type, type, libraries);
+    }
     @SuppressWarnings("deprecation")
-    protected CatalogItem<?, ?> addCatalogItem(String type, String ...libraries) {
-        CatalogEntityItemDto c1 = newCatalogItem(type, libraries);
+    protected CatalogItem<?, ?> addCatalogItemWithNameAndType(String symName, String type, String ...libraries) {
+        CatalogEntityItemDto c1 = newCatalogItemWithNameAndType(symName, type, libraries);
         mgmt.getCatalog().addItem(c1);
         CatalogItem<?, ?> c2 = mgmt.getCatalog().getCatalogItem(type);
         return c2;
     }
 
-    static CatalogEntityItemDto newCatalogItem(String type, String ...libraries) {
-        CatalogEntityItemDto c1 = CatalogItems.newEntityFromJava(type, type);
-        c1.setCatalogItemId(type);
+    static CatalogEntityItemDto newCatalogItemWithTypeAsName(String type, String ...libraries) {
+        return newCatalogItemWithNameAndType(type, type, libraries);
+    }
+    static CatalogEntityItemDto newCatalogItemWithNameAndType(String symName, String type, String ...libraries) {
+        CatalogEntityItemDto c1 = CatalogItems.newEntityFromJavaWithRegisteredTypeName(symName, type);
+        c1.setCatalogItemId(symName);
         for (String library: libraries)
             c1.getLibrariesDto().addBundle(library);
         return c1;
@@ -149,6 +159,9 @@ public class OsgiVersionMoreEntityTest {
     public static void assertV2MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Assert.assertEquals(doMethodCallBrooklyn(me), "HI BROOKLYN");
     }
+    public static void assertV2EvilTwinMethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        Assert.assertEquals(doMethodCallBrooklyn(me), "HO BROOKLYN");
+    }
 
     public static Object doMethodCallBrooklyn(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         return me.getClass().getMethod("sayHI", String.class).invoke(me, "Brooklyn");
@@ -160,6 +173,9 @@ public class OsgiVersionMoreEntityTest {
     public static void assertV2EffectorCall(Entity me) {
         Assert.assertEquals(doEffectorCallBrooklyn(me), "HI BROOKLYN");
     }
+    public static void assertV2EvilTwinEffectorCall(Entity me) {
+        Assert.assertEquals(doEffectorCallBrooklyn(me), "HO BROOKLYN");
+    }
 
     public static String doEffectorCallBrooklyn(Entity me) {
         return me.invoke(Effectors.effector(String.class, "sayHI").buildAbstract(), ImmutableMap.of("name", "brooklyn")).getUnchecked();
@@ -167,7 +183,7 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1() throws Exception {
-        CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
         
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);
@@ -193,12 +209,12 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1Policy() throws Exception {
-        CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
         
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);
 
-        CatalogItem<?, ?> cp = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY, 
+        CatalogItem<?, ?> cp = addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY, 
             BROOKLYN_TEST_OSGI_ENTITIES_URL);
         me.addPolicy(getPolicySpec(cp));
         
@@ -213,7 +229,7 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV2FailsWithoutBasicTestOsgiEntitiesBundle() throws Exception {
-        CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
+        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V2_URL);
         
         // test load and instantiate
@@ -231,7 +247,7 @@ public class OsgiVersionMoreEntityTest {
     // and has policy, with policy item catalog ID is reasonable
     @Test
     public void testMoreEntitiesV2() throws Exception {
-        CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
+        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
         
         // test load and instantiate
@@ -250,9 +266,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1ThenV2GivesV2() throws Exception {
-        addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
+        addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
-        addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
+        addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
         
         // test load and instantiate
@@ -265,9 +281,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV2ThenV1GivesV1() throws Exception {
-        addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
+        addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
-        addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
+        addCatalogItemWithTypeAsName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
         
         // test load and instantiate
@@ -301,18 +317,64 @@ public class OsgiVersionMoreEntityTest {
         Assert.assertEquals(me.getPolicies().size(), 0, "Wrong number of policies: "+me.getPolicies());
     }
 
-    // TODO test YAML for many of the above (in the camp project CAMP, using other code below)
-    
+    @Test
+    public void testUnfazedByMoreEntitiesV1AndV2AndV2EvilTwin() throws Exception {
+        addCatalogItemWithNameAndType("v1", OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+        addCatalogItemWithNameAndType("v2", OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
+        addCatalogItemWithNameAndType("v2-evil", OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
+
+        // test osgi finding
+        
+        List<Bundle> bundles = Osgis.bundleFinder(mgmt.getOsgiManager().get().getFramework())
+            .symbolicName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FULL).findAll();
+        Assert.assertEquals(bundles.size(), 3, "Wrong list of bundles: "+bundles);
+        
+        Maybe<Bundle> preferredVersion = Osgis.bundleFinder(mgmt.getOsgiManager().get().getFramework())
+            .symbolicName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FULL).find();
+        Assert.assertTrue(preferredVersion.isPresent());
+        Assert.assertEquals(preferredVersion.get().getVersion().toString(), "0.2.0");
+        
+        Maybe<Bundle> evilVersion = Osgis.bundleFinder(mgmt.getOsgiManager().get().getFramework()).
+            preferringFromUrl(BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL).find();
+        Assert.assertTrue(evilVersion.isPresent());
+        Assert.assertEquals(evilVersion.get().getVersion().toString(), "0.2.0");
+
+        // test preferredUrl vs requiredUrl
+
+        Maybe<Bundle> versionIgnoresInvalidPreferredUrl = Osgis.bundleFinder(mgmt.getOsgiManager().get().getFramework())
+            .symbolicName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FULL)
+            .version("0.1.0")
+            .preferringFromUrl(BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL).find();
+        Assert.assertTrue(versionIgnoresInvalidPreferredUrl.isPresent());
+        Assert.assertEquals(versionIgnoresInvalidPreferredUrl.get().getVersion().toString(), "0.1.0");
+
+        Maybe<Bundle> versionRespectsInvalidRequiredUrl = Osgis.bundleFinder(mgmt.getOsgiManager().get().getFramework())
+            .symbolicName(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FULL)
+            .version("0.1.0")
+            .requiringFromUrl(BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL).find();
+        Assert.assertFalse(versionRespectsInvalidRequiredUrl.isPresent());
+
+        // test entity resolution
+        
+        Entity v2 = addItemFromCatalog( mgmt.getCatalog().getCatalogItem("v2") );
+        assertV2MethodCall(v2);
+        assertV2EffectorCall(v2);
+        Assert.assertEquals(v2.getPolicies().size(), 1, "Wrong number of policies: "+v2.getPolicies());
+
+        Entity v2_evil = addItemFromCatalog( mgmt.getCatalog().getCatalogItem("v2-evil") );
+        assertV2EvilTwinMethodCall(v2_evil);
+        assertV2EvilTwinEffectorCall(v2_evil);
+        Assert.assertEquals(v2_evil.getPolicies().size(), 1, "Wrong number of policies: "+v2_evil.getPolicies());
+
+        Entity v1 = addItemFromCatalog( mgmt.getCatalog().getCatalogItem("v1") );
+        assertV1MethodCall(v1);
+        assertV1EffectorCall(v1);
+        Assert.assertEquals(v1.getPolicies().size(), 0, "Wrong number of policies: "+v1.getPolicies());
+    }
+
     // TODO versioning (WIP until #92), install both V1 and V2 with version number, and test that both work
-    
-    // TODO other code which might be useful - but requires CAMP:
-//        mgmt.getCatalog().addItem(Strings.lines(
-//            "brooklyn.catalog:",
-//            "  id: my-entity",
-//            "brooklyn.library:",
-//            "- url: "+BROOKLYN_TEST_MORE_ENTITIES_V1_URL,
-//            "services:",
-//            "- type: "+OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY
-//        ));
-    
+        
 }

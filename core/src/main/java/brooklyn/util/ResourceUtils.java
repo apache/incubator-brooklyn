@@ -323,7 +323,7 @@ public class ResourceUtils {
         } catch (MalformedURLException e) {
             throw Exceptions.propagate(e);
         }
-        if (!urlOut.equals(in) && log.isDebugEnabled()) {
+        if (!urlOut.equals(url) && log.isDebugEnabled()) {
             log.debug("quietly changing " + url + " to " + urlOut);
         }
         return urlOut;

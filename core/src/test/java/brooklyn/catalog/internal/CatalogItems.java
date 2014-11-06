@@ -18,6 +18,8 @@
  */
 package brooklyn.catalog.internal;
 
+import com.google.common.annotations.Beta;
+
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
 /** Only for internal use / use in tests. */
@@ -41,6 +43,12 @@ public class CatalogItems {
         return target;
     }
     
+    // TODO just added this method to expose registeredTypeName for tests; but it should all go away;
+    // so long as tests pass no need to keep deprecation imho
+    @Beta
+    public static CatalogEntityItemDto newEntityFromJavaWithRegisteredTypeName(String registeredTypeName, String javaType) {
+        return set(new CatalogEntityItemDto(), registeredTypeName, javaType, registeredTypeName, null, null);
+    }
     public static CatalogEntityItemDto newEntityFromJava(String javaType, String name) {
         return newEntityFromJava(javaType, name, null, null);
     }
