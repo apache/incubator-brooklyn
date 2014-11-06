@@ -19,8 +19,12 @@ under the License.
 <div class="catalog-details">
 
     <h2><%- model.get("name") %></h2>
-    <p><%- model.get("registeredType") %></p>
-    <p><%- model.get("description") %></p>
+    <% if (model.get("registeredType") && (model.get("name") != model.get("registeredType"))) { %>
+        <p><%- model.get("registeredType") %></p>
+    <% } %>
+    <% if (model.get("description")) { %>
+        <p><%- model.get("description") %></p>
+    <% } %>
 
     <div id="catalog-details-accordion" class="accordion">
       <% if (model.get("planYaml")) { %>

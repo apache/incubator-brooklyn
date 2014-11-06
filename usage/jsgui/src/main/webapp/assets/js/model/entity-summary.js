@@ -26,6 +26,7 @@ define(["underscore", "backbone"], function (_, Backbone) {
                 'id':'',
                 'name':'',
                 'type':'',
+                'catalogItemId':'',
                 'links':{}
             }
         },

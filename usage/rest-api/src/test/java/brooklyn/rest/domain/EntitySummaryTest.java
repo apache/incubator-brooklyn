@@ -46,7 +46,7 @@ public class EntitySummaryTest {
   }
 
   static final EntitySummary entitySummary = new EntitySummary(
-          "zQsqdXzi", "MyTomcat", "brooklyn.entity.webapp.tomcat.TomcatServer", links);
+          "zQsqdXzi", "MyTomcat", "brooklyn.entity.webapp.tomcat.TomcatServer", null, links);
 
   @Test
   public void testSerializeToJSON() throws IOException {
