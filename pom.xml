@@ -28,7 +28,7 @@
 
     <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
-    <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.7.0-M2-incubating</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Parent Project</name>
     <description>
@@ -121,7 +121,7 @@
         <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
 
         <!-- Dependencies -->
-        <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+        <brooklyn.version>0.7.0-M2-incubating</brooklyn.version>  <!-- BROOKLYN_VERSION -->
         <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
         <jclouds.version>1.8.0</jclouds.version>
         <guava.version>17.0</guava.version>

@@ -22,7 +22,7 @@
 
   <groupId>org.apache.brooklyn</groupId>
   <artifactId>brooklyn-downstream-parent</artifactId>
-  <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+  <version>0.7.0-M2-incubating</version>  <!-- BROOKLYN_VERSION -->
   <packaging>pom</packaging>
   
   <name>Brooklyn Downstream Project Parent</name>
@@ -44,7 +44,7 @@
     <excludedTestGroups>Integration,Acceptance,Live,Live-sanity,WIP</excludedTestGroups>
     
     <!-- Dependencies -->
-    <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+    <brooklyn.version>0.7.0-M2-incubating</brooklyn.version>  <!-- BROOKLYN_VERSION -->
     <!-- versions should match those used by Brooklyn, to avoid conflicts -->
     <jclouds.version>1.8.0</jclouds.version>
     <logback.version>1.0.7</logback.version>

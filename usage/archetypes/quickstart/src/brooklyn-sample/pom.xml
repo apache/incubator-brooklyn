@@ -54,7 +54,7 @@
     <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
 
     <!-- Dependencies -->
-    <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+    <brooklyn.version>0.7.0-M2-incubating</brooklyn.version>  <!-- BROOKLYN_VERSION -->
     <logback.version>1.0.7</logback.version>
   </properties>
 
