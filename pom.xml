@@ -28,7 +28,7 @@
 
     <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
-    <version>0.7.0-M3-incubating-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Parent Project</name>
     <description>
@@ -66,7 +66,7 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf?p=incubator-brooklyn.git</url>
-      <tag>0.7.0-M2-incubating</tag>
+      <tag>HEAD</tag>
   </scm>
     <issueManagement>
         <system>JIRA</system>
