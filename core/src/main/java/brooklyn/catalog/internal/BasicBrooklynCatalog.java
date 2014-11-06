@@ -123,9 +123,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             mgmt.getRebindManager().getChangeListener().onUnmanaged(toRemove);
         }
         CatalogDo catalog = new CatalogDo(mgmt, dto);
-        log.debug("Resetting "+this+" catalog to "+dto);
+        CatalogUtils.logDebugOrTraceIfRebinding(log, "Resetting "+this+" catalog to "+dto);
         catalog.load(mgmt, null);
-        log.debug("Reloaded catalog for "+this+", now switching");
+        CatalogUtils.logDebugOrTraceIfRebinding(log, "Reloaded catalog for "+this+", now switching");
         this.catalog = catalog;
 
         // Inject management context into and persist all the new entries.
@@ -158,7 +158,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
      */
     @Override
     public void reset(Collection<CatalogItem<?, ?>> entries) {
-        CatalogDto newDto = CatalogDto.newDtoFromCatalogItems(entries);
+        CatalogDto newDto = CatalogDto.newDtoFromCatalogItems(entries, "explicit-catalog-reset");
         reset(newDto);
     }
     

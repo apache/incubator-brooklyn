@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
 
+import com.google.api.client.repackaged.com.google.common.base.Objects;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Sets;
 
@@ -107,5 +108,15 @@ public class ManagementPlaneSyncRecordDeltaImpl implements Delta {
     @Override
     public String getExpectedMasterToClear() {
         return expectedOldMaster;
+    }
+    
+    @Override
+    public String toString() {
+        return getClass().getCanonicalName()+"["+
+            (masterChange!=null && masterChange != MasterChange.NO_CHANGE ? 
+                masterChange+": "+expectedOldMaster+"->"+masterId+"; " : "")+
+            "nodes: "+nodes+
+            (removedNodeIds!=null && !removedNodeIds.isEmpty() ? "; removing: "+removedNodeIds : "")
+            +"]";
     }
 }

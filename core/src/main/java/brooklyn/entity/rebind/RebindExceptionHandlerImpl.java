@@ -222,7 +222,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (creationFailedIds.contains(id)) {
             // already know about this; ignore
         } else {
-            String errmsg = type+" '"+id+"' not found";
+            String errmsg = type.toCamelCase()+" '"+id+"' not found";
             exceptions.add(new IllegalStateException(errmsg));
             onErrorImpl(errmsg);
         }
@@ -231,7 +231,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     @Override
     public void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem rebinding "+type+" "+instance.getId()+" ("+instance+")";
+        String errmsg = "problem rebinding "+type.toCamelCase()+" "+instance.getId()+" ("+instance+")";
         
         switch (type) {
         case FEED:
@@ -318,7 +318,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     @Override
     public void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
         Exceptions.propagateIfFatal(e);
-        String errmsg = "problem managing "+type+" "+instance.getId()+" ("+instance+")";
+        String errmsg = "problem managing "+type.toCamelCase()+" "+instance.getId()+" ("+instance+")";
         
         exceptions.add(new IllegalStateException(errmsg, e));
         onErrorImpl(errmsg, e);

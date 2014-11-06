@@ -120,9 +120,16 @@ public class CatalogDto {
         return result;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    /** @deprecated since 0.7.0 use {@link #newDtoFromCatalogItems(Collection, String)}, supplying a description for tracking */
+    @Deprecated
     public static CatalogDto newDtoFromCatalogItems(Collection<CatalogItem<?, ?>> entries) {
+        return newDtoFromCatalogItems(entries, null);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static CatalogDto newDtoFromCatalogItems(Collection<CatalogItem<?, ?>> entries, String description) {
         CatalogDto result = new CatalogDto();
+        result.contentsDescription = description;
         // Weird casts because compiler does not seem to like
         // .copyInto(Lists.<CatalogItemDtoAbstract<?, ?>>newArrayListWithExpectedSize(entries.size()));
         result.entries = (List<CatalogItemDtoAbstract<?, ?>>) (List) FluentIterable.from(entries)
@@ -140,7 +147,7 @@ public class CatalogDto {
                 LOG.debug("Catalog DTO has no contents and no description; ignoring call to populate it. Description should be set to suppress this message.");
                 return;
             } else {
-                LOG.debug("Nothing needs doing (no contents or URL) for catalog with contents described as "+contentsDescription+".");
+                LOG.trace("Nothing needs doing (no contents or URL) for catalog with contents described as "+contentsDescription+".");
                 return;
             }
         }

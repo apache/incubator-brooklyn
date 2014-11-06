@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -162,7 +163,8 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     protected void subscribeToGroup(final Group group) {
         Preconditions.checkNotNull(group, "The group must not be null");
 
-        LOG.debug("Subscribing to group "+group+", for memberAdded, memberRemoved, and {}", getSensorsToTrack());
+        BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(group),
+            "Subscribing to group "+group+", for memberAdded, memberRemoved, and {}", getSensorsToTrack());
         
         subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {

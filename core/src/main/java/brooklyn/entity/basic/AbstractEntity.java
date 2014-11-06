@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.render.RendererHints;
@@ -89,6 +90,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Equals;
 import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Strings;
 
@@ -802,10 +804,20 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             LOG.trace(""+this+" setAttribute "+attribute+" "+val);
         
         if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
-            if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
-                LOG.warn(""+this+" setting "+attribute+" = "+val+" in read only mode; will have no effect (future messages for this sensor logged at trace)");
-            } else if (LOG.isTraceEnabled()) {
-                LOG.trace(""+this+" setting "+attribute+" = "+val+" in read only mode; will have no effect");
+            T oldVal = getAttribute(attribute);
+            if (Equals.approximately(val, oldVal)) {
+                // ignore, probably an enricher resetting values or something on init
+            } else {
+                String message = this+" setting "+attribute+" = "+val+" (was "+oldVal+") in read only mode; will have very little effect"; 
+                if (!getManagementSupport().isDeployed()) {
+                    if (getManagementSupport().wasDeployed()) message += " (no longer deployed)"; 
+                    else message += " (not yet deployed)";
+                }
+                if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
+                    LOG.warn(message + " (future messages for this sensor logged at trace)");
+                } else if (LOG.isTraceEnabled()) {
+                    LOG.trace(message);
+                }
             }
         }
         T result = attributesInternal.update(attribute, val);
@@ -840,10 +852,15 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             LOG.trace(""+this+" modifyAttribute "+attribute+" "+modifier);
         
         if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
+            String message = this+" modifying "+attribute+" = "+modifier+" in read only mode; will have very little effect"; 
+            if (!getManagementSupport().isDeployed()) {
+                if (getManagementSupport().wasDeployed()) message += " (no longer deployed)"; 
+                else message += " (not yet deployed)";
+            }
             if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
-                LOG.warn(""+this+" modifying "+attribute+" = "+modifier+" in read only mode; will have no effect (future messages for this sensor logged at trace)");
+                LOG.warn(message + " (future messages for this sensor logged at trace)");
             } else if (LOG.isTraceEnabled()) {
-                LOG.trace(""+this+" setting "+attribute+" = "+modifier+" in read only mode; will have no effect");
+                LOG.trace(message);
             }
         }
         T result = attributesInternal.modify(attribute, modifier);
@@ -1356,7 +1373,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             LOG.warn("Strongly discouraged use of emit with sensor event as value "+sensor+" "+val+"; value should be unpacked!",
                 new Throwable("location of discouraged event "+sensor+" emit"));
         }
-        if (LOG.isDebugEnabled()) LOG.debug("Emitting sensor notification {} value {} on {}", new Object[] {sensor.getName(), val, this});
+        BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(this),
+            "Emitting sensor notification {} value {} on {}", sensor.getName(), val, this);
         emitInternal(sensor, val);
     }
     

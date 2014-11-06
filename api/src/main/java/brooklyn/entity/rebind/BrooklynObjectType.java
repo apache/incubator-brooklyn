@@ -19,14 +19,28 @@
 package brooklyn.entity.rebind;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.CaseFormat;
 
 @Beta
 public enum BrooklynObjectType {
-    ENTITY,
-    LOCATION,
-    POLICY,
-    ENRICHER,
-    FEED,
-    CATALOG_ITEM,
-    UNKNOWN;
+    ENTITY("entities"),
+    LOCATION("locations"),
+    POLICY("policies"),
+    ENRICHER("enrichers"),
+    FEED("feeds"),
+    CATALOG_ITEM("catalog"),
+    UNKNOWN("unknown");
+    
+    private final String subPathName;
+    
+    BrooklynObjectType(String subPathName) {
+        this.subPathName = subPathName;
+    }
+    public String toCamelCase() {
+        return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, this.name());
+    }
+
+    public String getSubPathName() {
+        return subPathName;
+    }
 }

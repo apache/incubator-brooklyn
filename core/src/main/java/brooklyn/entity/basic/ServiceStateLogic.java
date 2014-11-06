@@ -29,7 +29,9 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.enricher.basic.AbstractMultipleSensorAggregator;
@@ -142,7 +144,7 @@ public class ServiceStateLogic {
     public static void setExpectedState(Entity entity, Lifecycle state) {
         if (state==Lifecycle.RUNNING) {
             Boolean up = ((EntityInternal)entity).getAttribute(Attributes.SERVICE_UP);
-            if (!Boolean.TRUE.equals(up)) {
+            if (!Boolean.TRUE.equals(up) && !Boolean.TRUE.equals(Entities.isReadOnly(entity))) {
                 // pause briefly to allow any recent problem-clearing processing to complete
                 Stopwatch timer = Stopwatch.createStarted();
                 boolean nowUp = Repeater.create().every(Duration.millis(10)).limitTimeTo(Duration.millis(200)).until(entity, 
@@ -313,7 +315,8 @@ public class ServiceStateLogic {
             if (log.isTraceEnabled()) log.trace("{} setting actual state {}", this, state);
             if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) {
                 // won't catch everything, but catches some
-                log.debug(entity+" is no longer managed when told to set actual state to "+state+"; suppressing");
+                BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(entity),
+                    entity+" is no longer managed when told to set actual state to "+state+"; suppressing");
                 return;
             }
             emit(SERVICE_STATE_ACTUAL, (state==null ? Entities.REMOVE : state));
@@ -440,7 +443,8 @@ public class ServiceStateLogic {
         protected void onUpdated() {
             if (entity==null || !Entities.isManaged(entity)) {
                 // either invoked during setup or entity has become unmanaged; just ignore
-                if (log.isDebugEnabled()) log.debug("Ignoring {} onUpdated when entity is not in valid state ({})", this, entity);
+                BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(entity),
+                    "Ignoring {} onUpdated when entity is not in valid state ({})", this, entity);
                 return;
             }
 

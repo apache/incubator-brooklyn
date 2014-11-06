@@ -179,8 +179,7 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
         }
         
         // exception handler should have been told about failure
-        // two exceptions: one for loadMementoManifest; one for loadMemento
-        assertEquals(exceptionHandler.loadMementoFailures.size(), 2, "exceptions="+exceptionHandler.loadMementoFailures);
+        assertFalse(exceptionHandler.loadMementoFailures.isEmpty(), "exceptions="+exceptionHandler.loadMementoFailures);
     }
 
     protected void assertFailureRebindingError(Exception e) {

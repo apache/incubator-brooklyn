@@ -42,7 +42,6 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
-import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
@@ -116,7 +115,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                         .build();
                 PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
                 persister.checkpoint(memento, persistenceExceptionHandler);
-                final BrooklynMementoManifest manifest = persister.loadMementoManifest(rebindExceptionHandler);
+                final BrooklynMementoManifest manifest = persister.loadMementoManifest(null, rebindExceptionHandler);
                 LookupContext dummyLookupContext = new LookupContext() {
                     @Override
                     public ManagementContext lookupManagementContext() {
@@ -181,7 +180,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                 };
 
                 // Not actually reconstituting, because need to use a real lookupContext to reconstitute all the entities
-                persister.loadMemento(dummyLookupContext, rebindExceptionHandler);
+                persister.loadMemento(null, dummyLookupContext, rebindExceptionHandler);
             } finally {
                 Os.deleteRecursively(tempDir);
             }

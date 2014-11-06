@@ -94,6 +94,7 @@ public class CatalogDo {
 
     protected synchronized void loadThisCatalog(ManagementContext mgmt, CatalogDo parent) {
         if (isLoaded()) return;
+        CatalogUtils.logDebugOrTraceIfRebinding(log, "Loading catalog {} into {}", this, parent);
         if (this.parent!=null && !this.parent.equals(parent))
             log.warn("Catalog "+this+" being initialised with different parent "+parent+" when already parented by "+this.parent, new Throwable("source of reparented "+this));
         if (this.mgmt!=null && !this.mgmt.equals(mgmt))
@@ -173,7 +174,7 @@ public class CatalogDo {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected synchronized Map<String, CatalogItemDo<?,?>> buildCaches() {
         if (cacheById != null) return cacheById;
-        log.debug("Building cache for "+this);
+        CatalogUtils.logDebugOrTraceIfRebinding(log, "Building cache for {}", this);
         if (!isLoaded()) 
             log.debug("Catalog not fully loaded when loading cache of "+this);
         

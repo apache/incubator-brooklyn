@@ -23,9 +23,13 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
+
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
@@ -52,13 +56,37 @@ public interface BrooklynMementoPersister {
         Feed lookupFeed(String id);
         CatalogItem<?, ?> lookupCatalogItem(String id);
     }
-
-    BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) throws IOException;
-
+    
     /**
-     * Note that this method is *not* thread safe.
+     * Loads raw data contents of the mementos.
+     * <p>
+     * Some classes (esp deprecated ones) may return null here,
+     * meaning that the {@link #loadMementoManifest(BrooklynMementoRawData, RebindExceptionHandler)}
+     * and {@link #loadMemento(BrooklynMementoRawData, LookupContext, RebindExceptionHandler)} methods
+     * will populate the raw data via another source.
      */
+    BrooklynMementoRawData loadMementoRawData(RebindExceptionHandler exceptionHandler);
+
+    /** @deprecated since 0.7.0 use {@link #loadMementoManifest(BrooklynMementoRawData, RebindExceptionHandler)} */
+    BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) throws IOException;
+    
+    /**
+     * Loads minimal manifest information (almost entirely *not* deserialized).
+     * Implementations should load the raw data if {@link BrooklynMementoRawData} is not supplied,
+     * but callers are encouraged to supply that for optimal performance.
+     */
+    BrooklynMementoManifest loadMementoManifest(@Nullable BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) throws IOException;
+
+    /** @deprecated since 0.7.0 use {@link #loadMemento(RebindExceptionHandler)} */
     BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException;
+     /**
+      * Retrieves the memento class, containing deserialized objects (but not the {@link BrooklynObject} class).
+      * Implementations should load the raw data if {@link BrooklynMementoRawData} is not supplied,
+      * but callers are encouraged to supply that for optimal performance.
+      * <p>
+      * Note that this method is *not* thread safe.
+      */
+    BrooklynMemento loadMemento(@Nullable BrooklynMementoRawData mementoData, LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException;
     
     void checkpoint(BrooklynMemento memento, PersistenceExceptionHandler exceptionHandler);
 
@@ -94,6 +122,9 @@ public interface BrooklynMementoPersister {
         Collection<String> removedEnricherIds();
         Collection<String> removedFeedIds();
         Collection<String> removedCatalogItemIds();
+        
+        Collection<? extends Memento> getObjectsOfType(BrooklynObjectType type);
+        Collection<String> getRemovedObjectsOfType(BrooklynObjectType type);
     }
 
 }

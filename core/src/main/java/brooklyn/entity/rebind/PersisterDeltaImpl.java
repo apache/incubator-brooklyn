@@ -26,6 +26,7 @@ import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 
 import com.google.common.collect.Sets;
@@ -163,5 +164,35 @@ public class PersisterDeltaImpl implements Delta {
     @Override
     public Collection<String> removedCatalogItemIds() {
         return removedCatalogItemIds;
+    }
+    
+    @Override
+    public Collection<? extends Memento> getObjectsOfType(BrooklynObjectType type) {
+        switch (type) {
+        case ENTITY: return entities();
+        case LOCATION: return locations();
+        case POLICY: return policies();
+        case ENRICHER: return enrichers();
+        case FEED: return feeds();
+        case CATALOG_ITEM: return catalogItems();
+        case UNKNOWN: 
+        default:
+            throw new IllegalArgumentException(type+" not supported");
+        }
+    }
+    
+    @Override
+    public Collection<String> getRemovedObjectsOfType(BrooklynObjectType type) {
+        switch (type) {
+        case ENTITY: return removedEntityIds();
+        case LOCATION: return removedLocationIds();
+        case POLICY: return removedPolicyIds();
+        case ENRICHER: return removedEnricherIds();
+        case FEED: return removedFeedIds();
+        case CATALOG_ITEM: return removedCatalogItemIds();
+        case UNKNOWN: 
+        default:
+            throw new IllegalArgumentException(type+" not supported");
+        }
     }
 }

@@ -28,7 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
@@ -74,7 +76,8 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
         
     @Override
     protected void setEntityBeforeSubscribingProducerChildrenEvents() {
-        if (LOG.isDebugEnabled()) LOG.debug("{} subscribing to children of {}", new Object[] {this, producer });
+        BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(producer),
+            "{} subscribing to children of {}", this, producer);
         subscribeToChildren(producer, sourceSensor, this);
     }
 
@@ -98,7 +101,8 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
 
     @Override
     protected void onProducerAdded(Entity producer) {
-        if (LOG.isDebugEnabled()) LOG.debug("{} listening to {}", new Object[] {this, producer});
+        BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(producer),
+            "{} listening to {}", this, producer);
         synchronized (values) {
             T vo = values.get(producer);
             if (vo==null) {

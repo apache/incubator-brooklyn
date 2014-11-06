@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.CatalogItemMemento;
 
@@ -81,6 +82,20 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         }
         public Builder catalogItem(CatalogItemMemento val) {
             catalogItems.put(val.getId(), val); return this;
+        }
+
+        public Builder putType(BrooklynObjectType type, String id, String javaType) {
+            switch (type) {
+            case ENTITY: throw new IllegalArgumentException(type.toCamelCase()+" requires additional parameters");
+            case LOCATION: return location(id, javaType);
+            case POLICY: return policy(id, javaType);
+            case ENRICHER: return enricher(id, javaType);
+            case FEED: return feed(id, javaType);
+            case CATALOG_ITEM: throw new IllegalArgumentException(type.toCamelCase()+" requires different parameters");
+            case UNKNOWN: 
+            default: 
+                throw new IllegalArgumentException(type.toCamelCase()+" not supported");
+            }
         }
 
         public BrooklynMementoManifest build() {

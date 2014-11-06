@@ -111,7 +111,7 @@ public abstract class BrooklynMementoPersisterTestFixture {
         rebindContext.registerEntity(app.getId(), app);
         rebindContext.registerEntity(entity.getId(), entity);
         
-        BrooklynMemento reloadedMemento = persister.loadMemento(lookupContext, failFast);
+        BrooklynMemento reloadedMemento = persister.loadMemento(null, lookupContext, failFast);
         return reloadedMemento;
     }
     

@@ -63,9 +63,11 @@ public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
         CatalogLibrariesDto dto = new CatalogLibrariesDto();
         for (Object object : possibleLibraries) {
             if (object instanceof Map) {
+                @SuppressWarnings("rawtypes")
                 Map entry = (Map) object;
-                String name = stringValOrNull(entry, "name");
-                String version = stringValOrNull(entry, "version");
+                // these might be useful in the future
+//                String name = stringValOrNull(entry, "name");
+//                String version = stringValOrNull(entry, "version");
                 String url = stringValOrNull(entry, "url");
                 dto.addBundle(url);
             } else if (object instanceof String) {
@@ -77,6 +79,7 @@ public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
         return dto;
     }
 
+    @SuppressWarnings("rawtypes")
     private static String stringValOrNull(Map map, String key) {
         Object val = map.get(key);
         return val != null ? String.valueOf(val) : null;
