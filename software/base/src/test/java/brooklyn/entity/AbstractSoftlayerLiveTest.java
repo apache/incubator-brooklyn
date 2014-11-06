@@ -37,6 +37,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.StringShortener;
+import brooklyn.util.text.Strings;
 
 /**
  * Runs a test with many different distros and versions.
@@ -44,6 +46,8 @@ import brooklyn.util.collections.MutableMap;
 public abstract class AbstractSoftlayerLiveTest {
     
     public static final String PROVIDER = "softlayer";
+    public static final int MAX_TAG_LENGTH = 20;
+    public static final int MAX_VM_NAME_LENGTH = 30;
 
     protected BrooklynProperties brooklynProperties;
     protected ManagementContext ctx;
@@ -96,9 +100,11 @@ public abstract class AbstractSoftlayerLiveTest {
     }
     
     protected void runTest(Map<String,?> flags) throws Exception {
+        StringShortener shortener = Strings.shortener().separator("-");
+        shortener.canTruncate(getClass().getSimpleName(), MAX_TAG_LENGTH);
         Map<String,?> allFlags = MutableMap.<String,Object>builder()
-                .put("tags", ImmutableList.of(getClass().getName()))
-                .put("vmNameMaxLength", 30)
+                .put("tags", ImmutableList.of(shortener.getStringOfMaxLength(MAX_TAG_LENGTH)))
+                .put("vmNameMaxLength", MAX_VM_NAME_LENGTH)
                 .putAll(flags)
                 .build();
         jcloudsLocation = ctx.getLocationRegistry().resolve(PROVIDER, allFlags);
