@@ -323,7 +323,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 deltaCollector = new DeltaCollector();
             }
             
-            if (LOG.isDebugEnabled()) LOG.debug("Persister delta as reported: "
+            if (LOG.isDebugEnabled()) LOG.debug("Checkpointing delta of memento: "
                     + "updating entities={}, locations={}, policies={}, enrichers={}, catalog items={}; "
                     + "removing entities={}, locations={}, policies={}, enrichers={}, catalog items={}",
                     new Object[] {
@@ -332,7 +332,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
 
             addReferencedObjects(prevDeltaCollector);
 
-            if (LOG.isTraceEnabled()) LOG.trace("Persister delta with references: "
+            if (LOG.isTraceEnabled()) LOG.trace("Checkpointing delta of memento with references: "
                     + "updating {} entities, {} locations, {} policies, {} enrichers, {} catalog items; "
                     + "removing {} entities, {} locations, {} policies, {} enrichers, {} catalog items",
                     new Object[] {

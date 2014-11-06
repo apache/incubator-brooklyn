@@ -26,6 +26,7 @@ import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
@@ -42,13 +43,28 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     protected volatile MutableBrooklynMemento memento = new MutableBrooklynMemento();
     
     @Override
-    public BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
+    public BrooklynMementoRawData loadMementoRawData(RebindExceptionHandler exceptionHandler) {
+        return null;
+    }
+    
+    @Override
+    public BrooklynMemento loadMemento(BrooklynMementoRawData mementoData, LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
         // Trusting people not to cast+modify, because the in-memory persister wouldn't be used in production code
         return memento;
     }
     
     @Override
+    public BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
+        return loadMemento(null, lookupContext, exceptionHandler);
+    }
+    
+    @Override
     public BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) {
+        return loadMementoManifest(null, exceptionHandler);
+    }
+    
+    @Override
+    public BrooklynMementoManifest loadMementoManifest(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) {
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
         for (EntityMemento entity : memento.getEntityMementos().values()) {
             builder.entity(entity.getId(), entity.getType(), entity.getParent(), entity.getCatalogItemId());

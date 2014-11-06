@@ -543,7 +543,8 @@ public class RebindManagerImpl implements RebindManager {
             
             LOG.debug("Rebinding ("+mode+", iteration "+readOnlyRebindCount+") from "+getPersister().getBackingStoreDescription()+"...");
 
-            BrooklynMementoManifest mementoManifest = persistenceStoreAccess.loadMementoManifest(exceptionHandler);
+            BrooklynMementoRawData mementoRawData = persistenceStoreAccess.loadMementoRawData(exceptionHandler);
+            BrooklynMementoManifest mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
 
             boolean isEmpty = mementoManifest.isEmpty();
             if (mode!=ManagementNodeState.HOT_STANDBY) {
@@ -670,7 +671,7 @@ public class RebindManagerImpl implements RebindManager {
             // PHASE FOUR
             //
             
-            BrooklynMemento memento = persistenceStoreAccess.loadMemento(realLookupContext, exceptionHandler);
+            BrooklynMemento memento = persistenceStoreAccess.loadMemento(mementoRawData, realLookupContext, exceptionHandler);
             
             
             //

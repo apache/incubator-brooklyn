@@ -43,7 +43,7 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
 
     @Override
     public void onLoadMementoFailed(BrooklynObjectType type, String msg, Exception e) {
-        loadMementoFailures.add(new IllegalStateException("problem loading "+type+" memento: "+msg, e));
+        loadMementoFailures.add(new IllegalStateException("problem loading "+type.toCamelCase()+" memento: "+msg, e));
         super.onLoadMementoFailed(type, msg, e);
     }
     
@@ -71,13 +71,13 @@ public class RecordingRebindExceptionHandler extends RebindExceptionHandlerImpl 
     
     @Override
     public void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
-        rebindFailures.put(instance, new IllegalStateException("problem rebinding "+type+" "+instance.getId()+" ("+instance+")", e));
+        rebindFailures.put(instance, new IllegalStateException("problem rebinding "+type.toCamelCase()+" "+instance.getId()+" ("+instance+")", e));
         super.onRebindFailed(type, instance, e);
     }
 
     @Override
     public void onManageFailed(BrooklynObjectType type, BrooklynObject instance, Exception e) {
-        manageFailures.put(instance, new IllegalStateException("problem managing "+type+" "+instance.getId()+" ("+instance+")", e));
+        manageFailures.put(instance, new IllegalStateException("problem managing "+type.toCamelCase()+" "+instance.getId()+" ("+instance+")", e));
         super.onManageFailed(type, instance, e);
     }
 

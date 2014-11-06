@@ -21,6 +21,8 @@ package brooklyn.mementos;
 import java.util.Collections;
 import java.util.Map;
 
+import brooklyn.entity.rebind.BrooklynObjectType;
+
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
 
@@ -85,6 +87,34 @@ public class BrooklynMementoRawData {
         public Builder catalogItems(Map<String, String> vals) {
             catalogItems.putAll(vals); return this;
         }
+        
+        public Builder put(BrooklynObjectType type, String id, String val) {
+            switch (type) {
+            case ENTITY: return entity(id, val);
+            case LOCATION: return location(id, val);
+            case POLICY: return policy(id, val);
+            case ENRICHER: return enricher(id, val);
+            case FEED: return feed(id, val);
+            case CATALOG_ITEM: return catalogItem(id, val);
+            case UNKNOWN:
+            default:
+                throw new IllegalArgumentException(type+" not supported");
+            }
+        }
+        public Builder putAll(BrooklynObjectType type, Map<String,String> vals) {
+            switch (type) {
+            case ENTITY: return entities(vals);
+            case LOCATION: return locations(vals);
+            case POLICY: return policies(vals);
+            case ENRICHER: return enrichers(vals);
+            case FEED: return feeds(vals);
+            case CATALOG_ITEM: return catalogItems(vals);
+            case UNKNOWN:
+            default:
+                throw new IllegalArgumentException(type+" not supported");
+            }
+        }
+
         public BrooklynMementoRawData build() {
             return new BrooklynMementoRawData(this);
         }
@@ -132,5 +162,18 @@ public class BrooklynMementoRawData {
     
     public boolean isEmpty() {
         return entities.isEmpty() && locations.isEmpty() && policies.isEmpty() && enrichers.isEmpty() && feeds.isEmpty() && catalogItems.isEmpty();
+    }
+    
+    public Map<String, String> getObjectsOfType(BrooklynObjectType type) {
+        switch (type) {
+        case ENTITY: return getEntities();
+        case LOCATION: return getLocations();
+        case POLICY: return getPolicies();
+        case ENRICHER: return getEnrichers();
+        case FEED: return getFeeds();
+        case CATALOG_ITEM: return getCatalogItems();
+        default:
+            throw new IllegalArgumentException("Type "+type+" not supported");
+        }
     }
 }

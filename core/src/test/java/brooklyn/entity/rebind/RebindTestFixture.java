@@ -173,7 +173,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
                 ((ManagementContextInternal)newManagementContext).getBrooklynProperties(),
                 classLoader);
         RebindExceptionHandler exceptionHandler = new RecordingRebindExceptionHandler(RebindManager.RebindFailureMode.FAIL_AT_END, RebindManager.RebindFailureMode.FAIL_AT_END);
-        BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(exceptionHandler);
+        BrooklynMementoManifest mementoManifest = persister.loadMementoManifest(null, exceptionHandler);
         persister.stop(false);
         return mementoManifest;
     }

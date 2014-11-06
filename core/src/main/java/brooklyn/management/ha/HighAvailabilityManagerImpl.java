@@ -57,6 +57,7 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -634,11 +635,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             String message = "Management node "+ownNodeId+" detected ";
             if (weAreNewMaster) message += "we should be master, changing from ";
             else message += "master change, from ";
-            message +=currMasterNodeId + " (" + (currMasterNodeRecord==null ? "?" : currMasterNodeRecord.getRemoteTimestamp()) + ")"
+            message +=currMasterNodeId + " (" + (currMasterNodeRecord==null ? "?" : timestampString(currMasterNodeRecord.getRemoteTimestamp())) + ")"
                 + " to "
                 + (newMasterNodeId == null ? "<none>" :
                     (weAreNewMaster ? "us " : "")
-                    + newMasterNodeId + " (" + newMasterNodeRecord.getRemoteTimestamp() + ")" 
+                    + newMasterNodeId + " (" + timestampString(newMasterNodeRecord.getRemoteTimestamp()) + ")" 
                     + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  );
             LOG.warn(message);
         }
@@ -649,6 +650,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
     
+    private static String timestampString(Long remoteTimestamp) {
+        if (remoteTimestamp==null) return null;
+        return remoteTimestamp+" / "+Time.makeTimeStringRounded( Duration.sinceUtc(remoteTimestamp))+" ago";
+    }
+
     protected void promoteToMaster() {
         if (!running) {
             LOG.warn("Ignoring promote-to-master request, as HighAvailabilityManager is no longer running");
