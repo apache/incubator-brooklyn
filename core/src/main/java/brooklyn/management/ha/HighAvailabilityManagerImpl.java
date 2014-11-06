@@ -24,7 +24,6 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -34,9 +33,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.BrooklynVersion;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
@@ -105,7 +106,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     // They may not have seen each other's heartbeats yet, so will all claim mastery!
     // But this should be resolved shortly afterwards.
 
-    // TODO Should we pass in a classloader on construction, so it can be passed to {@link RebindManager#rebind(ClassLoader)} 
+    // TODO Should we pass in a classloader on construction, so it can be passed to {@link RebindManager#rebind(ClassLoader)}
+
+    public final ConfigKey<Duration> POLL_PERIOD = ConfigKeys.newConfigKey(Duration.class, "brooklyn.ha.pollPeriod",
+        "How often nodes should poll to detect whether master is healthy", Duration.seconds(5));
+    public final ConfigKey<Duration> HEARTBEAT_TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "brooklyn.ha.heartbeatTimeout",
+        "Maximum allowable time for detection of a peer's heartbeat; if no sign of master after this time, "
+        + "another node may promote itself", Duration.THIRTY_SECONDS);
     
     @VisibleForTesting /* only used in tests currently */
     public static interface PromotionListener {
@@ -119,8 +126,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile ManagementPlaneSyncRecordPersister persister;
     private volatile PromotionListener promotionListener;
     private volatile MasterChooser masterChooser = new AlphabeticMasterChooser();
-    private volatile Duration pollPeriod = Duration.of(5, TimeUnit.SECONDS);
-    private volatile Duration heartbeatTimeout = Duration.THIRTY_SECONDS;
     private volatile Ticker localTickerUtc = new Ticker() {
         // strictly not a ticker because returns millis UTC, but it works fine even so
         @Override
@@ -136,6 +141,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile ManagementNodeState nodeState = ManagementNodeState.INITIALIZING;
     private volatile boolean nodeStateTransitionComplete = false;
     private volatile long priority = 0;
+    
+    private volatile transient Duration pollPeriodLocalOverride;
+    private volatile transient Duration heartbeatTimeoutOverride;
 
     public HighAvailabilityManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
@@ -152,8 +160,18 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return persister;
     }
     
+    protected synchronized Duration getPollPeriod() {
+        if (pollPeriodLocalOverride!=null) return pollPeriodLocalOverride;
+        return managementContext.getBrooklynProperties().getConfig(POLL_PERIOD);
+    }
+    
+    /** Overrides {@link #POLL_PERIOD} from brooklyn config, 
+     * including e.g. {@link Duration#PRACTICALLY_FOREVER} to disable polling;
+     * or <code>null</code> to clear a local override */
     public HighAvailabilityManagerImpl setPollPeriod(Duration val) {
-        this.pollPeriod = checkNotNull(val, "pollPeriod");
+        synchronized (this) {
+            this.pollPeriodLocalOverride = val;
+        }
         if (running) {
             registerPollTask();
         }
@@ -165,8 +183,16 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return this;
     }
 
-    public HighAvailabilityManagerImpl setHeartbeatTimeout(Duration val) {
-        this.heartbeatTimeout = checkNotNull(val, "heartbeatTimeout");
+    public synchronized Duration getHeartbeatTimeout() {
+        if (heartbeatTimeoutOverride!=null) return heartbeatTimeoutOverride;
+        return managementContext.getBrooklynProperties().getConfig(HEARTBEAT_TIMEOUT);
+    }
+    
+    /** Overrides {@link #HEARTBEAT_TIMEOUT} from brooklyn config, 
+     * including e.g. {@link Duration#PRACTICALLY_FOREVER} to prevent failover due to heartbeat absence;
+     * or <code>null</code> to clear a local override */
+    public synchronized HighAvailabilityManagerImpl setHeartbeatTimeout(Duration val) {
+        this.heartbeatTimeoutOverride = val;
         return this;
     }
 
@@ -452,8 +478,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         };
         
-        LOG.debug("Registering poll task for "+this+", period "+pollPeriod);
-        if (pollPeriod==null || pollPeriod.equals(Duration.PRACTICALLY_FOREVER)) {
+        LOG.debug("Registering poll task for "+this+", period "+getPollPeriod());
+        if (getPollPeriod().equals(Duration.PRACTICALLY_FOREVER)) {
             // don't schedule - used for tests
             // (scheduling fires off one initial task in the background before the delay, 
             // which affects tests that want to know exactly when publishing happens;
@@ -461,7 +487,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         } else {
             if (pollingTask!=null) pollingTask.cancel(true);
             
-            ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollPeriod, "displayName", "scheduled:[HA poller task]"), taskFactory);
+            ScheduledTask task = new ScheduledTask(MutableMap.of("period", getPollPeriod(), "displayName", "scheduled:[HA poller task]"), taskFactory);
             pollingTask = managementContext.getExecutionManager().submit(task);
         }
     }
@@ -534,7 +560,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         Long timestampMaster = masterNode.getRemoteTimestamp();
         Long timestampMe = meNode.getRemoteTimestamp();
         if (timestampMaster==null || timestampMe==null) return false;
-        return (timestampMe - timestampMaster) <= heartbeatTimeout.toMilliseconds();
+        return (timestampMe - timestampMaster) <= getHeartbeatTimeout().toMilliseconds();
     }
     
     protected ManagementNodeSyncRecord hasHealthyMaster() {
@@ -615,7 +641,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
         
         // Need to choose a new master
-        newMasterNodeRecord = masterChooser.choose(memento, heartbeatTimeout, ownNodeId);
+        newMasterNodeRecord = masterChooser.choose(memento, getHeartbeatTimeout(), ownNodeId);
         
         String newMasterNodeId = (newMasterNodeRecord == null) ? null : newMasterNodeRecord.getNodeId();
         URI newMasterNodeUri = (newMasterNodeRecord == null) ? null : newMasterNodeRecord.getUri();
@@ -628,7 +654,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     (currMasterNodeRecord == null ? currMasterNodeId+" (no memento)": currMasterNodeRecord.toVerboseString()),
                     memento,
                     ownNodeRecord.toVerboseString(), 
-                    heartbeatTimeout
+                    getHeartbeatTimeout()
                 });
         }
         if (!initializing) {
