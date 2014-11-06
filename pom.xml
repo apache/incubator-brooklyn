@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <parent>
@@ -29,7 +28,7 @@
 
     <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
-    <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.7.0-M3-incubating-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Parent Project</name>
     <description>
@@ -67,7 +66,8 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf?p=incubator-brooklyn.git</url>
-    </scm>
+      <tag>0.7.0-M2-incubating</tag>
+  </scm>
     <issueManagement>
         <system>JIRA</system>
         <url>https://issues.apache.org/jira/browse/BROOKLYN</url>
@@ -204,7 +204,7 @@
         <!-- Release -->
         <!-- no passphrase by default, so we can do automated deploy builds;
              you can still supply your own passphrase with -Dgpg.passphrase=XXX -->
-        <gpg.passphrase></gpg.passphrase>
+        <gpg.passphrase />
     </properties>
 
     <dependencyManagement>
@@ -859,7 +859,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -872,7 +872,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -885,7 +885,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -898,7 +898,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -911,7 +911,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -925,7 +925,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -938,7 +938,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -951,7 +951,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -968,7 +968,7 @@
                                     </goals>
                                   </pluginExecutionFilter>
                                   <action>
-                                    <ignore></ignore>
+                                    <ignore />
                                   </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -1028,7 +1028,7 @@
                             <!-- Checks for whitespace                               -->
                             <!-- See http://checkstyle.sf.net/config_whitespace.html -->
                             <module name="FileTabCharacter">
-                                <property name="eachLine" value="true"/>
+                                <property name="eachLine" value="true" />
                             </module>
                         </module>
                     </checkstyleRules>
@@ -1120,12 +1120,12 @@
                                 <replacement>
                                     <xpath>/classpath/classpathentry[@path='src/main/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
                                     <token>**</token>
-                                    <value></value>
+                                    <value />
                                 </replacement>
                                 <replacement>
                                     <xpath>/classpath/classpathentry[@path='src/test/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
                                     <token>**</token>
-                                    <value></value>
+                                    <value />
                                 </replacement>
                             </replacements>
                         </configuration>
@@ -1444,7 +1444,7 @@
                                 </goals>
                                 <configuration>
                                     <forceCreation>true</forceCreation>
-                                    <archive combine.self="override"></archive>
+                                    <archive combine.self="override" />
                                 </configuration>
                             </execution>
                         </executions>
@@ -1665,8 +1665,7 @@
                                                 <copy todir="target/cobertura/coverage-classes">
                                                     <fileset erroronmissingdir="false" dir="target/classes" />
                                                 </copy>
-                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser"
-                                                    todir="target/test-classes">
+                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser" todir="target/test-classes">
                                                     <fileset erroronmissingdir="false" dir="target/classes">
                                                         <include name="brooklyn/**/*.class" />
                                                         <exclude name="brooklyn/**/*Test.class" />
@@ -1695,8 +1694,7 @@
                                             <available property="gogocobertura" file="target/cobertura/cobertura.ser" />
                                             <then>
                                                 <echo message="GENERATING COBERTURA COVERAGE REPORT" />
-                                                <cobertura-report format="xml" destdir="target/site/cobertura"
-                                                    datafile="target/cobertura/cobertura.ser">
+                                                <cobertura-report format="xml" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
                                                     <fileset erroronmissingdir="false" dir="src/java" />
                                                     <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
                                                 </cobertura-report>

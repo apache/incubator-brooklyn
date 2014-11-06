@@ -17,13 +17,12 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.brooklyn</groupId>
   <artifactId>brooklyn-downstream-parent</artifactId>
-  <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+  <version>0.7.0-M3-incubating-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
   <packaging>pom</packaging>
   
   <name>Brooklyn Downstream Project Parent</name>
@@ -45,7 +44,7 @@
     <excludedTestGroups>Integration,Acceptance,Live,Live-sanity,WIP</excludedTestGroups>
     
     <!-- Dependencies -->
-    <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+    <brooklyn.version>0.7.0-M3-incubating-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
     <!-- versions should match those used by Brooklyn, to avoid conflicts -->
     <jclouds.version>1.8.0</jclouds.version>
     <logback.version>1.0.7</logback.version>
@@ -218,7 +217,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -231,7 +230,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -244,7 +243,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -257,7 +256,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -271,7 +270,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -284,7 +283,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -297,7 +296,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -426,7 +425,7 @@
         </property>
       </activation>
       <properties>
-        <gpg.passphrase></gpg.passphrase>
+        <gpg.passphrase />
       </properties>
       <build>
         <plugins>
