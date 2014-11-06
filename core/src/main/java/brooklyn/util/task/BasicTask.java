@@ -756,6 +756,8 @@ public class BasicTask<T> implements TaskInternal<T> {
             }
             if (!t.isDone()) {
                 // shouldn't happen
+                // TODO But does happen if management context was terminated (e.g. running test suite).
+                //      Should check if Execution Manager is running, and only log if it was not terminated?
                 log.warn("Task "+t+" is being finalized before completion");
                 return;
             }
