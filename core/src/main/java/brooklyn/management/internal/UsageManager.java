@@ -18,10 +18,13 @@
  */
 package brooklyn.management.internal;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
 import brooklyn.management.usage.ApplicationUsage;
@@ -31,9 +34,17 @@ import brooklyn.management.usage.LocationUsage.LocationEvent;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 
 @Beta
 public interface UsageManager {
+
+    @SuppressWarnings("serial")
+    public static final ConfigKey<List<UsageListener>> USAGE_LISTENERS = ConfigKeys.newConfigKey(
+            new TypeToken<List<UsageListener>>() {},
+            "brooklyn.usageManager.listeners", "Optional usage listeners (i.e. for metering)",
+            ImmutableList.<UsageListener>of());
 
     public interface UsageListener {
         public static final UsageListener NOOP = new UsageListener() {

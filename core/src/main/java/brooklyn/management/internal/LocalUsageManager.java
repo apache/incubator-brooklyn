@@ -20,6 +20,7 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,8 +42,12 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.usage.ApplicationUsage;
 import brooklyn.management.usage.LocationUsage;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.javalang.Reflections;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -59,6 +64,23 @@ public class LocalUsageManager implements UsageManager {
     
     private static final Logger log = LoggerFactory.getLogger(LocalUsageManager.class);
 
+    // Register a coercion from String->UsageListener, so that USAGE_LISTENERS defined in brooklyn.properties
+    // will be instantiated, given their class names.
+    static {
+        TypeCoercions.registerAdapter(String.class, UsageListener.class, new Function<String, UsageListener>() {
+            @Override public UsageListener apply(String input) {
+                // TODO Want to use classLoader = mgmt.getCatalog().getRootClassLoader();
+                ClassLoader classLoader = LocalUsageManager.class.getClassLoader();
+                Optional<Object> result = Reflections.invokeConstructorWithArgs(classLoader, input);
+                if (result.isPresent()) {
+                    return (UsageListener) result.get();
+                } else {
+                    throw new IllegalStateException("Failed to create UsageListener from class name '"+input+"' using no-arg constructor");
+                }
+            }
+        });
+    }
+    
     @VisibleForTesting
     public static final String APPLICATION_USAGE_KEY = "usage-application";
     
@@ -77,6 +99,13 @@ public class LocalUsageManager implements UsageManager {
 
     public LocalUsageManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
+        
+        Collection<UsageListener> listeners = managementContext.getBrooklynProperties().getConfig(UsageManager.USAGE_LISTENERS);
+        if (listeners != null) {
+            for (UsageListener listener : listeners) {
+                addUsageListener(listener);
+            }
+        }
     }
 
     @Override
