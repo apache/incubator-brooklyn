@@ -971,6 +971,13 @@
                                     <ignore />
                                   </action>
                                 </pluginExecution>
+                                <pluginExecution>
+                                  <action>
+                                    <execute>
+                                      <runOnIncremental>false</runOnIncremental>
+                                    </execute>
+                                  </action>
+                                </pluginExecution>
                             </pluginExecutions>
                         </lifecycleMappingMetadata>
                     </configuration>
