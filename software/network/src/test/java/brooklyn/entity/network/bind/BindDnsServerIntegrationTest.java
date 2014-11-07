@@ -34,7 +34,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestFixture;
@@ -44,14 +43,14 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 
-public class BindDnsServerIntegrationTest extends RebindTestFixture {
+public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplication> {
 
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerIntegrationTest.class);
     private BindDnsServer dns;
     private DynamicCluster cluster;
 
     @Override
-    protected StartableApplication createApp() {
+    protected TestApplication createApp() {
         TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
         dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class, TestBindDnsServerImpl.class)
                 .configure(BindDnsServer.ENTITY_FILTER, Predicates.instanceOf(EmptySoftwareProcess.class))
@@ -66,31 +65,39 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture {
         return app;
     }
 
-    @Test(groups = "Integration")
-    public void testRebindDns() throws Exception {
+    @Test(invocationCount=1, groups = "Integration")
+    public void testRebindDns() throws Throwable {
         LocationSpec.create(LocalhostMachineProvisioningLocation.class);
         origApp.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
         logDnsMappings();
         assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).keySet().size(), 1);
         assertMapSizes(3, 1, 2, 1);
 
-        rebind(false);
-        dns = (BindDnsServer) Iterables.getOnlyElement(Iterables.filter(newApp.getChildren(), Predicates.instanceOf(BindDnsServer.class)));
-        cluster = (DynamicCluster) Iterables.getOnlyElement(Iterables.filter(newApp.getChildren(), Predicates.instanceOf(DynamicCluster.class)));
-
-        // assert original attributes restored and the server can be updated.
-        logDnsMappings();
-        assertMapSizes(3, 1, 2, 1);
-        cluster.resize(1);
-        assertDnsEntityEventuallyHasActiveMembers(1);
-        logDnsMappings();
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, DynamicCluster.GROUP_SIZE, 1);
-        assertMapSizes(1, 1, 0, 1);
-        cluster.resize(5);
-        assertDnsEntityEventuallyHasActiveMembers(5);
-        logDnsMappings();
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, DynamicCluster.GROUP_SIZE, 5);
-        assertMapSizes(5, 1, 4, 1);
+        rebind(false, true, mementoDirBackup);
+        try {
+            dns = (BindDnsServer) Iterables.getOnlyElement(Iterables.filter(newApp.getChildren(), Predicates.instanceOf(BindDnsServer.class)));
+            cluster = (DynamicCluster) Iterables.getOnlyElement(Iterables.filter(newApp.getChildren(), Predicates.instanceOf(DynamicCluster.class)));
+    
+            // assert original attributes restored and the server can be updated.
+            logDnsMappings();
+            assertMapSizes(3, 1, 2, 1);
+            cluster.resize(1);
+            assertDnsEntityEventuallyHasActiveMembers(1);
+            logDnsMappings();
+            EntityTestUtils.assertAttributeEqualsEventually(cluster, DynamicCluster.GROUP_SIZE, 1);
+            assertMapSizes(1, 1, 0, 1);
+            cluster.resize(5);
+            assertDnsEntityEventuallyHasActiveMembers(5);
+            logDnsMappings();
+            EntityTestUtils.assertAttributeEqualsEventually(cluster, DynamicCluster.GROUP_SIZE, 5);
+            assertMapSizes(5, 1, 4, 1);
+        } catch (Throwable t) {
+            // Failing in jenkins occassionally; don't know why and can't reproduce.
+            // Therefore dumping out lots more info on failure.
+            LOG.error("Test failed; dumping out contents of original persistence dir used for rebind...", t);
+            dumpMementoDir(mementoDirBackup);
+            throw t;
+        }
     }
 
     @Test(groups = "Integration")
