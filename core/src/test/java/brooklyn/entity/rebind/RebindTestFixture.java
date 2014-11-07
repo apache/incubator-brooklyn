@@ -21,6 +21,8 @@ package brooklyn.entity.rebind;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -30,6 +32,7 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.StartableApplication;
@@ -41,11 +44,17 @@ import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.mementos.BrooklynMementoRawData;
+import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.os.Os;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 
 import com.google.api.client.util.Sets;
+import com.google.common.annotations.Beta;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public abstract class RebindTestFixture<T extends StartableApplication> {
@@ -57,6 +66,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     protected ClassLoader classLoader = getClass().getClassLoader();
     protected LocalManagementContext origManagementContext;
     protected File mementoDir;
+    protected File mementoDirBackup;
     
     protected T origApp;
     protected T newApp;
@@ -65,6 +75,9 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         mementoDir = Os.newTempDir(getClass());
+        File mementoDirParent = mementoDir.getParentFile();
+        mementoDirBackup = new File(mementoDirParent, mementoDir.getName()+"."+Identifiers.makeRandomId(4)+".bak");
+
         origManagementContext = createOrigManagementContext();
         origApp = createApp();
         
@@ -114,9 +127,44 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
 
         if (origManagementContext != null) Entities.destroyAll(origManagementContext);
         if (mementoDir != null) FileBasedObjectStore.deleteCompletely(mementoDir);
+        if (mementoDirBackup != null) FileBasedObjectStore.deleteCompletely(mementoDir);
         origManagementContext = null;
     }
 
+    /**
+     * Dumps out the persisted mementos that are at the given directory.
+     * 
+     * Binds to the persisted state (as a "hot standby") to load the raw data (as strings), and to write out the
+     * entity, location, policy, enricher, feed and catalog-item data.
+     * 
+     * @param dir The directory containing the persisted state (e.g. {@link #mementoDir} or {@link #mementoDirBackup})
+     */
+    protected void dumpMementoDir(File dir) {
+        LocalManagementContextForTests mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newEmpty());
+        FileBasedObjectStore store = null;
+        BrooklynMementoPersisterToObjectStore persister = null;
+        try {
+            store = new FileBasedObjectStore(dir);
+            store.injectManagementContext(mgmt);
+            store.prepareForSharedUse(PersistMode.AUTO, HighAvailabilityMode.HOT_STANDBY);
+            persister = new BrooklynMementoPersisterToObjectStore(store, BrooklynProperties.Factory.newEmpty(), classLoader);
+            BrooklynMementoRawData data = persister.loadMementoRawData(RebindExceptionHandlerImpl.builder().build());
+            List<BrooklynObjectType> types = ImmutableList.of(BrooklynObjectType.ENTITY, BrooklynObjectType.LOCATION, 
+                    BrooklynObjectType.POLICY, BrooklynObjectType.ENRICHER, BrooklynObjectType.FEED, 
+                    BrooklynObjectType.CATALOG_ITEM);
+            for (BrooklynObjectType type : types) {
+                LOG.info(type+" ("+data.getObjectsOfType(type).keySet()+"):");
+                for (Map.Entry<String, String> entry : data.getObjectsOfType(type).entrySet()) {
+                    LOG.info("\t"+type+" "+entry.getKey()+": "+entry.getValue());
+                }
+            }
+        } finally {
+            if (persister != null) persister.stop(false);
+            if (store != null) store.close();
+            mgmt.terminate();
+        }
+    }
+    
     /** rebinds, and sets newApp */
     protected T rebind() throws Exception {
         return rebind(true);
@@ -133,9 +181,15 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         // TODO What are sensible defaults?!
         return rebind(checkSerializable, false);
     }
-    
+
     @SuppressWarnings("unchecked")
     protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
+        return rebind(checkSerializable, terminateOrigManagementContext, (File)null);
+    }
+    
+    @Beta // temporary method while debugging; Aled will refactor all of this soon!
+    @SuppressWarnings("unchecked")
+    protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext, File backupDir) throws Exception {
         if (newApp!=null || newManagementContext!=null) throw new IllegalStateException("already rebound");
         
         RebindTestUtils.waitForPersisted(origApp);
@@ -145,7 +199,12 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         if (terminateOrigManagementContext) {
             origManagementContext.terminate();
         }
-        
+
+        if (backupDir != null) {
+            FileUtil.copyDir(mementoDir, backupDir);
+            FileUtil.setFilePermissionsTo700(backupDir);
+        }
+
         newManagementContext = createNewManagementContext();
         newApp = (T) RebindTestUtils.rebind((LocalManagementContext)newManagementContext, classLoader);
         return newApp;
