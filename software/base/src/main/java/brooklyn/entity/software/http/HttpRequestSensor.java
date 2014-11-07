@@ -39,6 +39,9 @@ import java.util.Map;
 /**
  * Configurable {@link brooklyn.entity.proxying.EntityInitializer} which adds an HTTP sensor feed to retrieve the
  * <code>JSONObject</code> from a JSON response in order to populate the sensor with the indicated <code>name</code>.
+ *
+ * @see SshCommandSensor
+ * @see JmxAttributeSensor
  */
 @Beta
 public final class HttpRequestSensor<T> extends AddSensor<T, AttributeSensor<T>> {

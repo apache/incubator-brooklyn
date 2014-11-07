@@ -42,6 +42,9 @@ import com.google.common.base.Supplier;
 /** 
  * Configurable {@link EntityInitializer} which adds an SSH sensor feed running the <code>command</code> supplied
  * in order to populate the sensor with the indicated <code>name</code>.
+ *
+ * @see HttpRequestSensor
+ * @see JmxAttributeSensor
  */
 // generics introduced here because we might support a configurable 'targetType` parameter in future, 
 // with automatic casting (e.g. for ints); this way it remains compatible
