@@ -152,7 +152,7 @@ public class BrooklynServerConfig {
     public static String resolvePersistencePath(String optionalSuppliedValue, StringConfigMap brooklynProperties, String optionalObjectStoreLocationSpec) {
         String path = optionalSuppliedValue;
         if (path==null) path = brooklynProperties.getConfig(PERSISTENCE_DIR);
-        if (optionalObjectStoreLocationSpec==null) {
+        if (optionalObjectStoreLocationSpec==null || "localhost".equals(optionalObjectStoreLocationSpec)) {
             // file system
             if (path==null) path=DEFAULT_PERSISTENCE_DIR_FOR_FILESYSTEM;
             return resolveAgainstBaseDir(brooklynProperties, path);

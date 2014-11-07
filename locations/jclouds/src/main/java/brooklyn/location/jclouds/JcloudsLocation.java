@@ -87,6 +87,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.rebind.persister.LocationWithObjectStore;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore;
+import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineManagementMixins.MachineMetadata;
@@ -166,7 +169,7 @@ import com.google.common.primitives.Ints;
  * Configuration flags are defined in {@link JcloudsLocationConfig}.
  */
 @SuppressWarnings("serial")
-public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<SshMachineLocation> {
+public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<SshMachineLocation>, LocationWithObjectStore {
 
     // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting 
     // things into and taking them out of maps; it's not type-safe, and it's thus very error-prone.
@@ -2040,4 +2043,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
        }
        return iptablesRules;
     }
+    
+    @Override
+    public PersistenceObjectStore newPersistenceObjectStore(String container) {
+        return new JcloudsBlobStoreBasedObjectStore(this, container);
+    }
+    
 }

@@ -16,7 +16,7 @@ of your choice.
 Command Line Options
 --------------------
 
-To configure brooklyn, the relevant command line options are:
+To configure brooklyn, the relevant command line options for the `launch` commands are:
 
 * `--persist` <persistence mode>
   The persistence mode.
@@ -33,6 +33,12 @@ For the persistence mode, the possible values are:
 * `clean` means that any existing state will be deleted, and Brooklyn will be started afresh.
 * `auto` means Brooklyn will rebind if there is any existing state, or will start afresh if 
   there is no state.
+
+The persistence directory and location can instead be specified from `brooklyn.properties` using
+the following config keys:
+
+* `brooklyn.persistence.dir`
+* `brooklyn.persistence.location.spec`
 
 
 <a name="file-based-persistence"></a>

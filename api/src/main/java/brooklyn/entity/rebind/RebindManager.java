@@ -72,7 +72,7 @@ public interface RebindManager {
     @Beta
     public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode);
 
-    public BrooklynMementoRawData retrieveMementoRawData() throws IOException;
+    public BrooklynMementoRawData retrieveMementoRawData();
 
     public ChangeListener getChangeListener();
 

@@ -55,9 +55,9 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
-import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -784,13 +784,8 @@ public class Main extends AbstractMain {
             return null;
         }
 
-        protected CompoundTransformer loadTransformer(String transformations) {
-            if (transformations == null) {
-                return CompoundTransformer.NOOP; 
-            } else {
-                String contents = ResourceUtils.create(this).getResourceAsString(transformations);
-                return CompoundTransformerLoader.load(contents);
-            }
+        protected CompoundTransformer loadTransformer(String transformationsFileUrl) {
+            return BrooklynPersistenceUtils.loadTransformer(ResourceUtils.create(this), transformationsFileUrl);
         }
         
         @Override
