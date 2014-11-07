@@ -222,6 +222,12 @@ public class TypeCoercionsTest {
     }
 
     @Test
+    @SuppressWarnings("serial")
+    public void testCoerceRecursivelyStringToGenericsCollection() {
+        assertEquals(TypeCoercions.coerce("1,2", new TypeToken<List<Integer>>() {}), ImmutableList.of(1, 2));
+    }
+    
+    @Test
     public void testJsonStringToMapCoercion() {
         Map<?,?> s = TypeCoercions.coerce("{ \"a\" : \"1\", b : 2 }", Map.class);
         Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", 2));

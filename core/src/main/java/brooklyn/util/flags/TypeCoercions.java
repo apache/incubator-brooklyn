@@ -64,6 +64,7 @@ import brooklyn.util.yaml.Yamls;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
@@ -235,7 +236,18 @@ public class TypeCoercions {
             Map<Class, Function> adapters = registry.row(targetType);
             for (Map.Entry<Class, Function> entry : adapters.entrySet()) {
                 if (entry.getKey().isInstance(value)) {
-                    return (T) entry.getValue().apply(value);
+                    T result = (T) entry.getValue().apply(value);
+                    
+                    // Check if need to unwrap again (e.g. if want List<Integer> and are given a String "1,2,3"
+                    // then we'll have so far converted to List.of("1", "2", "3"). Call recursively.
+                    // First check that value has changed, to avoid stack overflow!
+                    if (!Objects.equal(value, result) && targetTypeToken.getType() instanceof ParameterizedType) {
+                        // Could duplicate check for `result instanceof Collection` etc; but recursive call
+                        // will be fine as if that doesn't match we'll safely reach `targetType.isInstance(value)`
+                        // and just return the result.
+                        return coerce(result, targetTypeToken);
+                    }
+                    return result;
                 }
             }
         }
@@ -459,7 +471,7 @@ public class TypeCoercions {
         return null;
     }
 
-    public synchronized static <A,B> void registerAdapter(Class<A> sourceType, Class<B> targetType, Function<A,B> fn) {
+    public synchronized static <A,B> void registerAdapter(Class<A> sourceType, Class<B> targetType, Function<? super A,B> fn) {
         registry.put(targetType, sourceType, fn);
     }
 
