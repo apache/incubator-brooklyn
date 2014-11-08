@@ -18,9 +18,12 @@
  */
 package brooklyn.entity.software.java;
 
-import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
@@ -30,7 +33,6 @@ import brooklyn.entity.effector.AddSensor;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.http.HttpRequestSensor;
 import brooklyn.entity.software.ssh.SshCommandSensor;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -53,27 +55,30 @@ import com.google.common.base.Preconditions;
  * @see HttpRequestSensor
  */
 @Beta
-public final class JmxAttributeSensor<T> extends AddSensor<T, AttributeSensor<T>> {
+public final class JmxAttributeSensor<T> extends AddSensor<T> {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(JmxAttributeSensor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmxAttributeSensor.class);
 
-    public static final ConfigKey<String> OBJECT_NAME = ConfigKeys.newStringConfigKey("objectName");
-    public static final ConfigKey<String> ATTRIBUTE = ConfigKeys.newStringConfigKey("attribute");
-    public static final ConfigKey<Object> DEFAULT_VALUE = ConfigKeys.newConfigKey(Object.class, "default");
+    public static final ConfigKey<String> OBJECT_NAME = ConfigKeys.newStringConfigKey("objectName", "JMX object name for sensor lookup");
+    public static final ConfigKey<String> ATTRIBUTE = ConfigKeys.newStringConfigKey("attribute", "JMX attribute to poll in object");
+    public static final ConfigKey<Object> DEFAULT_VALUE = ConfigKeys.newConfigKey(Object.class, "defaultValue", "Default value for sensor; normally null");
 
-    private final String objectName;
-    private final String attribute;
-    private final Object defaultValue;
+    protected final String objectName;
+    protected final String attribute;
+    protected final Object defaultValue;
 
-    public JmxAttributeSensor(Map<String, String> params) {
-        this(ConfigBag.newInstance(params));
-    }
-
-    public JmxAttributeSensor(ConfigBag params) {
-        super(AddSensor.<T>newSensor(params));
-        objectName = Preconditions.checkNotNull(params.get(OBJECT_NAME), OBJECT_NAME);
-        attribute = Preconditions.checkNotNull(params.get(ATTRIBUTE), ATTRIBUTE);
+    public JmxAttributeSensor(final ConfigBag params) {
+        super(params);
+ 
+        objectName = Preconditions.checkNotNull(params.get(OBJECT_NAME), "objectName");
+        attribute = Preconditions.checkNotNull(params.get(ATTRIBUTE), "attribute");
         defaultValue = params.get(DEFAULT_VALUE);
+
+        try {
+            ObjectName.getInstance(objectName);
+        } catch (MalformedObjectNameException mone) {
+            throw new IllegalArgumentException("Malformed JMX object name: " + objectName, mone);
+        }
     }
 
     @Override
@@ -81,8 +86,8 @@ public final class JmxAttributeSensor<T> extends AddSensor<T, AttributeSensor<T>
         super.apply(entity);
 
         if (entity instanceof UsesJmx) {
-            if (log.isDebugEnabled()) {
-                log.debug("Submitting task to add JMX sensor "+sensor+" to "+entity+" polling "+objectName+" for "+attribute);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Submitting task to add JMX sensor {} to {}", name, entity);
             }
 
             Task<Integer> jmxPortTask = DependentConfiguration.attributeWhenReady(entity, UsesJmx.JMX_PORT);
@@ -103,8 +108,7 @@ public final class JmxAttributeSensor<T> extends AddSensor<T, AttributeSensor<T>
                                             .attributeName(attribute)
                                             .onFailureOrException(Functions.<T>constant((T) defaultValue)))
                                     .build();
-                            feed.start();
-                            return feed;
+                           return feed;
                         }
                     })
                     .build();
