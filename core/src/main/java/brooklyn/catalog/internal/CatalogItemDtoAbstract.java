@@ -62,6 +62,14 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @SetFromFlag Collection<CatalogBundle> libraries;
     private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
 
+    /**
+     * Config not supported for catalog item. See {@link #getPlanYaml()}.
+     */
+    @Override
+    public ConfigurationSupportInternal config() {
+        throw new UnsupportedOperationException();
+    }
+        
     @Override
     public String getId() {
         return getCatalogItemId();

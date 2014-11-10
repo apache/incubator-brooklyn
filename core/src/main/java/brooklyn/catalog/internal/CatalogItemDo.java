@@ -46,6 +46,14 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     public CatalogItem<T,SpecT> getDto() {
         return itemDto;
     }
+    
+    /**
+     * Config not supported for catalog item. See {@link #getPlanYaml()}.
+     */
+    @Override
+    public ConfigurationSupportInternal config() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public CatalogItemType getCatalogItemType() {

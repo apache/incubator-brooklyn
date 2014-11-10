@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
@@ -49,12 +50,14 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
+import brooklyn.management.Task;
 import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.policy.EntityAdjunct;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
@@ -75,6 +78,8 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
 
     protected transient ExecutionContext execution;
 
+    private final BasicConfigurationSupport config = new BasicConfigurationSupport();
+    
     /**
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
@@ -168,8 +173,104 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return _legacyNoConstructionInit;
     }
 
+    @Override
+    public ConfigurationSupportInternal config() {
+        return config;
+    }
+
+    private class BasicConfigurationSupport implements ConfigurationSupportInternal {
+
+        @Override
+        public <T> T get(ConfigKey<T> key) {
+            return configsInternal.getConfig(key);
+        }
+
+        @Override
+        public <T> T get(HasConfigKey<T> key) {
+            return get(key.getConfigKey());
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T set(ConfigKey<T> key, T val) {
+            if (entity != null && isRunning()) {
+                doReconfigureConfig(key, val);
+            }
+            T result = (T) configsInternal.setConfig(key, val);
+            onChanged();
+            return result;
+        }
+
+        @Override
+        public <T> T set(HasConfigKey<T> key, T val) {
+            return setConfig(key.getConfigKey(), val);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T set(ConfigKey<T> key, Task<T> val) {
+            if (entity != null && isRunning()) {
+                // TODO Support for AbstractEntityAdjunct
+                throw new UnsupportedOperationException();
+            }
+            T result = (T) configsInternal.setConfig(key, val);
+            onChanged();
+            return result;
+        }
+
+        @Override
+        public <T> T set(HasConfigKey<T> key, Task<T> val) {
+            return set(key.getConfigKey(), val);
+        }
+
+        @Override
+        public ConfigBag getBag() {
+            return getLocalBag();
+        }
+
+        @Override
+        public ConfigBag getLocalBag() {
+            return ConfigBag.newInstance(configsInternal.getAllConfig());
+        }
+
+        @Override
+        public Maybe<Object> getRaw(ConfigKey<?> key) {
+            return configsInternal.getConfigRaw(key, true);
+        }
+
+        @Override
+        public Maybe<Object> getRaw(HasConfigKey<?> key) {
+            return getRaw(key.getConfigKey());
+        }
+
+        @Override
+        public Maybe<Object> getLocalRaw(ConfigKey<?> key) {
+            return configsInternal.getConfigRaw(key, false);
+        }
+
+        @Override
+        public Maybe<Object> getLocalRaw(HasConfigKey<?> key) {
+            return getLocalRaw(key.getConfigKey());
+        }
+
+        @Override
+        public void addToLocalBag(Map<String, ?> vals) {
+            configsInternal.addToLocalBag(vals);
+        }
+        
+        @Override
+        public void refreshInheritedConfig() {
+            // no-op for location
+        }
+        
+        @Override
+        public void refreshInheritedConfigOfChildren() {
+            // no-op for location
+        }
+    }
+
     public <T> T getConfig(ConfigKey<T> key) {
-        return configsInternal.getConfig(key);
+        return config().get(key);
     }
     
     public Map<ConfigKey<?>, Object> getAllConfig() {
@@ -177,18 +278,12 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     }
     
     protected <K> K getRequiredConfig(ConfigKey<K> key) {
-        return checkNotNull(getConfig(key), key.getName());
+        return checkNotNull(config().get(key), key.getName());
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
-        if (entity != null && isRunning()) {
-            doReconfigureConfig(key, val);
-        }
-        T result = (T) configsInternal.setConfig(key, val);
-        onChanged();
-        return result;
+        return config().set(key, val);
     }
     
     // TODO make immutable

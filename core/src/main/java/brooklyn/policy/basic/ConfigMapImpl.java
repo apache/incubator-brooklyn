@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -160,6 +161,12 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
         return oldVal;
     }
     
+    public void addToLocalBag(Map<String, ?> vals) {
+        for (Map.Entry<String, ?> entry : vals.entrySet()) {
+            setConfig(ConfigKeys.newConfigKey(Object.class, entry.getKey()), entry.getValue());
+        }
+    }
+
     @Override
     public ConfigMapImpl submap(Predicate<ConfigKey<?>> filter) {
         ConfigMapImpl m = new ConfigMapImpl(adjunct);

@@ -60,11 +60,27 @@ public interface EntityLocal extends Entity, Configurable {
     void setDisplayName(String displayName);
 
     /**
-     * Must be called before the entity is managed.
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
      */
+    @Deprecated
     <T> T setConfig(ConfigKey<T> key, T val);
+    
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
+     */
+    @Deprecated
     <T> T setConfig(ConfigKey<T> key, Task<T> val);
+    
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
+     */
+    @Deprecated
     <T> T setConfig(HasConfigKey<T> key, T val);
+    
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
+     */
+    @Deprecated
     <T> T setConfig(HasConfigKey<T> key, Task<T> val);
 
     /**

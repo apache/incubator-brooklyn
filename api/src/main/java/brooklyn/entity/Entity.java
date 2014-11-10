@@ -194,24 +194,32 @@ public interface Entity extends BrooklynObject {
     <T> T getAttribute(AttributeSensor<T> sensor);
 
     /**
-     * Gets the given configuration value for this entity, in the following order of preference:
-     * <li> value (including null) explicitly set on the entity
-     * <li> value (including null) explicitly set on an ancestor (inherited)
-     * <li> a default value (including null) on the best equivalent static key of the same name declared on the entity
-     *      (where best equivalence is defined as preferring a config key which extends another, 
-     *      as computed in EntityDynamicType.getConfigKeys)
-     * <li> a default value (including null) on the key itself
-     * <li> null
+     * Convenience for calling {@link ConfigurationSupport#getConfig(ConfigKey)},
+     * via code like {@code config().get(key)}.
      */
     <T> T getConfig(ConfigKey<T> key);
-    <T> T getConfig(HasConfigKey<T> key);
     
+    /**
+     * @see #getConfig(ConfigKey)}
+     */
+    <T> T getConfig(HasConfigKey<T> key);
     
     /**
      * Returns the uncoerced value for this config key as set on this entity, if available,
      * not following any inheritance chains and not taking any default.
+     * 
+     * @deprecated since 0.7.0; use {@code ((EntityInternal)entity).config().getRaw()} or
+     *             {@code ((EntityInternal)entity).config().getLocalRaw()}
      */
+    @Deprecated
     Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited);
+    
+    /**
+     * @see {@link #getConfigRaw(ConfigKey, boolean)}.
+     * 
+     * @deprecated since 0.7.0
+     */
+    @Deprecated
     Maybe<Object> getConfigRaw(HasConfigKey<?> key, boolean includeInherited);
 
     /**
