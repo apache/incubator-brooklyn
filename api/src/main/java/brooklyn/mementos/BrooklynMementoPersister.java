@@ -92,6 +92,7 @@ public interface BrooklynMementoPersister {
       */
     BrooklynMemento loadMemento(@Nullable BrooklynMementoRawData mementoData, LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException;
     
+    // TODO can this be deprecated? not used much, and cumbersome
     void checkpoint(BrooklynMemento memento, PersistenceExceptionHandler exceptionHandler);
 
     void delta(Delta delta, PersistenceExceptionHandler exceptionHandler);

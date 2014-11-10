@@ -104,7 +104,9 @@ public interface EntityTransientCopyInternal {
     ManagementContext getManagementContext();
     Effector<?> getEffector(String effectorName);
     FeedSupport getFeedSupport();
+    FeedSupport feeds();
     TagSupport getTagSupport();
+    TagSupport tags();
     RebindSupport<EntityMemento> getRebindSupport();
     // for REST calls on read-only entities which want to resolve values
     ExecutionContext getExecutionContext();

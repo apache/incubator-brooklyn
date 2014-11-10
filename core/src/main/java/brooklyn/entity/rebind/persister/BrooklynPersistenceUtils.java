@@ -18,9 +18,18 @@
  */
 package brooklyn.entity.rebind.persister;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
+import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
 import brooklyn.location.Location;
@@ -28,15 +37,26 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
+import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoRawData;
+import brooklyn.mementos.Memento;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
+
+import com.google.common.base.Stopwatch;
 
 public class BrooklynPersistenceUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(BrooklynPersistenceUtils.class);
+    
     /** Creates a {@link PersistenceObjectStore} for general-purpose use. */
     public static PersistenceObjectStore newPersistenceObjectStore(ManagementContext managementContext,
             String locationSpec, String locationContainer) {
@@ -100,4 +120,55 @@ public class BrooklynPersistenceUtils {
         }
     }
 
+    public static Memento newObjectMemento(BrooklynObject instance) {
+        return MementosGenerators.newMemento(instance);
+    }
+    
+    public static BrooklynMementoRawData newFullMemento(ManagementContext mgmt) {
+        BrooklynMementoRawData.Builder result = BrooklynMementoRawData.builder();
+        MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(mgmt.getClass().getClassLoader());
+        RetryingMementoSerializer<Object> serializer = new RetryingMementoSerializer<Object>(rawSerializer, 1);
+        
+        for (Location instance: mgmt.getLocationManager().getLocations())
+            result.location(instance.getId(), serializer.toString(newObjectMemento(instance)));
+        for (Entity instance: mgmt.getEntityManager().getEntities()) {
+            result.entity(instance.getId(), serializer.toString(newObjectMemento(instance)));
+            for (Feed instanceAdjunct: ((EntityInternal)instance).feeds().getFeeds())
+                result.feed(instanceAdjunct.getId(), serializer.toString(newObjectMemento(instanceAdjunct)));
+            for (Enricher instanceAdjunct: instance.getEnrichers())
+                result.enricher(instanceAdjunct.getId(), serializer.toString(newObjectMemento(instanceAdjunct)));
+            for (Policy instanceAdjunct: instance.getPolicies())
+                result.policy(instanceAdjunct.getId(), serializer.toString(newObjectMemento(instanceAdjunct)));
+        }
+        for (CatalogItem<?,?> instance: mgmt.getCatalog().getCatalogItems())
+            result.catalogItem(instance.getId(), serializer.toString(newObjectMemento(instance)));
+        
+        return result.build();
+    }
+
+    /** generates and writes mementos for the given mgmt context to the given targetStore;
+     * this may be taken from {@link MementoCopyMode#LOCAL} current state 
+     * or {@link MementoCopyMode#REMOTE} persisted state, or the default {@link MementoCopyMode#AUTO} detected
+     */
+    public static void writeMemento(ManagementContext mgmt, PersistenceObjectStore targetStore, MementoCopyMode preferredOrigin) {
+        if (preferredOrigin==null || preferredOrigin==MementoCopyMode.AUTO) 
+            preferredOrigin = (mgmt.getHighAvailabilityManager().getNodeState()==ManagementNodeState.MASTER ? MementoCopyMode.LOCAL : MementoCopyMode.REMOTE);
+
+        Stopwatch timer = Stopwatch.createStarted();
+        
+        BrooklynMementoRawData dataRecord = null; 
+        switch (preferredOrigin) {
+        case LOCAL: dataRecord = newFullMemento(mgmt); break;
+        case REMOTE: dataRecord = mgmt.getRebindManager().retrieveMementoRawData(); break;
+        case AUTO: throw new IllegalStateException("Should not come here, should have autodetected");
+        }
+
+        ManagementPlaneSyncRecord mgmtRecord = mgmt.getHighAvailabilityManager().getManagementPlaneSyncState();
+        
+        writeMemento(mgmt, dataRecord, targetStore);
+        writeManagerMemento(mgmt, mgmtRecord, targetStore);
+        
+        log.debug("Wrote full memento to "+targetStore+" in "+Time.makeTimeStringRounded(Duration.of(timer)));
+    }
+    
 }

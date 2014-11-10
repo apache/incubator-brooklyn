@@ -92,6 +92,7 @@ public class ImmediateDeltaChangeListener implements ChangeListener {
         if (running && persister != null) {
             PersisterDeltaImpl delta = new PersisterDeltaImpl();
             Memento memento = ((BrooklynObjectInternal)instance).getRebindSupport().getMemento();
+            // XXX use switch statement, and above, and in MementosGenerator
             if (instance instanceof Entity) {
                 delta.entities.add((EntityMemento) memento);
                 addEntityAdjuncts((Entity)instance, delta);

@@ -364,9 +364,6 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             allExceptions.add(new IllegalStateException(this+" has already been informed of rebind done"));
         }
         done = true;
-        if (!started) {
-            allExceptions.add(new IllegalStateException(this+" was not informed of start of rebind run"));
-        }
         if (e != null) {
             allExceptions.add(e);
         }
@@ -400,7 +397,10 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (rebindFailureMode != RebindManager.RebindFailureMode.CONTINUE) {
             allExceptions.addAll(exceptions);
         }
-        
+        if (!started) {
+            allExceptions.add(new IllegalStateException(this+" was not informed of start of rebind run"));
+        }
+
         if (allExceptions.isEmpty()) {
             return; // no errors
         } else {

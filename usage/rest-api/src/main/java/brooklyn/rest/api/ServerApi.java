@@ -25,7 +25,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
@@ -43,6 +45,10 @@ import com.wordnik.swagger.core.ApiParam;
 @Beta
 public interface ServerApi {
 
+    public final String MIME_TYPE_ZIP = "applicaiton/zip";
+    // TODO support TGZ, and check mime type
+    public final String MIME_TYPE_TGZ = "applicaiton/gzip";
+    
     @POST
     @Path("/properties/reload")
     @ApiOperation(value = "Reload brooklyn.properties")
@@ -95,7 +101,7 @@ public interface ServerApi {
     @Path("/ha/state")
     @ApiOperation(value = "Changes the HA state of this management node")
     public ManagementNodeState setHighAvailabilityNodeState(
-            @ApiParam(name = "state", value = "The state to change to")
+            @ApiParam(name = "mode", value = "The state to change to")
             @FormParam("mode") HighAvailabilityMode mode);
 
     @GET
@@ -115,6 +121,31 @@ public interface ServerApi {
     public long setHighAvailabilityPriority(
             @ApiParam(name = "priority", value = "The priority to be set")
             @FormParam("priority") long priority);
+    
+    @GET
+    @Produces(MIME_TYPE_ZIP)
+    @Path("/ha/persist/export")
+    @ApiOperation(value = "Retrieves the persistence store data, as an archive")
+    public Response exportPersistenceData(
+        @ApiParam(name = "origin", value = "Whether to take from LOCAL or REMOTE state; default to AUTO detect, "
+            + "using LOCAL as master and REMOTE for other notes")
+        @QueryParam("origin") @DefaultValue("AUTO") String origin);
+
+    // TODO would be nice to allow setting, as a means to recover / control more easily than messing with persistent stores
+//    @POST
+//    @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
+//    @Path("/ha/persist/import")
+//    @ApiOperation(value = "Causes the supplied persistence data (tgz) to be imported and added "
+//        + "(fails if the node is not master), optionally removing any items not referenced")
+//    public Response importPersistenceData(
+//          // question: do we want the MementoCopyMode, cf export above?
+//        @ApiParam(name = "clearOthers", value = "Whether to clear all existing items before adding these", required = false, defaultValue = "false")
+//        @FormParam("clearOthers") Boolean clearOthers,
+//        @ApiParam(name = "data",
+//        value = "TGZ contents of a persistent directory to be imported", required = true)
+//    @Valid String dataTgz);
+
+    // TODO /ha/persist/backup set of endpoints, to list and retrieve specific backups
 
     @GET
     @Path("/user")

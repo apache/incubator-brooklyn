@@ -71,7 +71,6 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
             FileUtil.setFilePermissionsTo600(tmpFile);
             Files.write(val, tmpFile, Charsets.UTF_8);
             FileBasedObjectStore.moveFile(tmpFile, file);
-            
         } catch (IOException e) {
             throw Exceptions.propagate(e);
         } catch (InterruptedException e) {
