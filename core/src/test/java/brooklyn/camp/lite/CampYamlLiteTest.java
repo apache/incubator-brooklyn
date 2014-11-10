@@ -154,13 +154,13 @@ public class CampYamlLiteTest {
     public void testYamlServiceForCatalog() {
         CatalogItem<?, ?> realItem = mgmt.getCatalog().addItem(Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml")));
         Iterable<CatalogItem<Object, Object>> retrievedItems = mgmt.getCatalog()
-                .getCatalogItems(CatalogPredicates.registeredType(Predicates.equalTo("catalog-name")));
+                .getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo("catalog-name")));
         
         Assert.assertEquals(Iterables.size(retrievedItems), 1, "Wrong retrieved items: "+retrievedItems);
         CatalogItem<Object, Object> retrievedItem = Iterables.getOnlyElement(retrievedItems);
         Assert.assertEquals(retrievedItem, realItem);
 
-        Collection<CatalogBundle> bundles = retrievedItem.getLibraries().getBundles();
+        Collection<CatalogBundle> bundles = retrievedItem.getLibraries();
         Assert.assertEquals(bundles.size(), 1);
         CatalogBundle bundle = Iterables.getOnlyElement(bundles);
         Assert.assertEquals(bundle.getUrl(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL);
@@ -175,20 +175,20 @@ public class CampYamlLiteTest {
 
     @Test
     public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() throws IOException {
-        String registeredTypeName = "my.catalog.app.id";
+        String symbolicName = "my.catalog.app.id";
         String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
-        String yaml = getSampleMyCatalogAppYaml(registeredTypeName, bundleUrl);
+        String yaml = getSampleMyCatalogAppYaml(symbolicName, bundleUrl);
 
         mgmt.getCatalog().addItem(yaml);
 
-        assertMgmtHasSampleMyCatalogApp(registeredTypeName, bundleUrl);
+        assertMgmtHasSampleMyCatalogApp(symbolicName, bundleUrl);
     }
 
     @Test
     public void testResetXmlWithCustomEntity() throws IOException {
-        String registeredTypeName = "my.catalog.app.id";
+        String symbolicName = "my.catalog.app.id";
         String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
-        String yaml = getSampleMyCatalogAppYaml(registeredTypeName, bundleUrl);
+        String yaml = getSampleMyCatalogAppYaml(symbolicName, bundleUrl);
 
         LocalManagementContext mgmt2 = LocalManagementContextForTests.newInstanceWithOsgi();
         try {
@@ -202,12 +202,12 @@ public class CampYamlLiteTest {
             mgmt2.terminate();
         }
 
-        assertMgmtHasSampleMyCatalogApp(registeredTypeName, bundleUrl);
+        assertMgmtHasSampleMyCatalogApp(symbolicName, bundleUrl);
     }
 
-    private String getSampleMyCatalogAppYaml(String registeredTypeName, String bundleUrl) {
+    private String getSampleMyCatalogAppYaml(String symbolicName, String bundleUrl) {
         return "brooklyn.catalog:\n" +
-                "  id: " + registeredTypeName + "\n" +
+                "  id: " + symbolicName + "\n" +
                 "  name: My Catalog App\n" +
                 "  description: My description\n" +
                 "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n" +
@@ -219,20 +219,18 @@ public class CampYamlLiteTest {
                 "- type: io.camp.mock:AppServer\n";
     }
 
-    private void assertMgmtHasSampleMyCatalogApp(String registeredTypeName, String bundleUrl) {
-        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
-        assertNotNull(item, "failed to load item with id=" + registeredTypeName + " from catalog. Entries were: " +
+    private void assertMgmtHasSampleMyCatalogApp(String symbolicName, String bundleUrl) {
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        assertNotNull(item, "failed to load item with id=" + symbolicName + " from catalog. Entries were: " +
                 Joiner.on(",").join(mgmt.getCatalog().getCatalogItems()));
-        assertEquals(item.getRegisteredTypeName(), registeredTypeName);
+        assertEquals(item.getSymbolicName(), symbolicName);
 
         // stored as yaml, not java
         assertNotNull(item.getPlanYaml());
         Assert.assertTrue(item.getPlanYaml().contains("io.camp.mock:AppServer"));
 
-        assertEquals(item.getId(), registeredTypeName);
-
         // and let's check we have libraries
-        Collection<CatalogBundle> libs = item.getLibraries().getBundles();
+        Collection<CatalogBundle> libs = item.getLibraries();
         assertEquals(libs.size(), 1);
         CatalogBundle bundle = Iterables.getOnlyElement(libs);
         assertEquals(bundle.getUrl(), bundleUrl);

@@ -29,7 +29,6 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
-import brooklyn.catalog.CatalogItem.CatalogItemLibraries;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;
@@ -54,23 +53,19 @@ public class CatalogUtils {
     public static final char VERSION_DELIMITER = ':';
 
     public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, CatalogItem<?, ?> item) {
-        CatalogItemLibraries libraries = item.getLibraries();
         // TODO getLibraries() should never be null but sometimes it is still
         // e.g. run CatalogResourceTest without the above check
-        if (libraries == null) {
+        if (item.getLibraries() == null) {
             log.debug("CatalogItemDtoAbstract.getLibraries() is null.", new Exception("Trace for null CatalogItemDtoAbstract.getLibraries()"));
         }
-        return newClassLoadingContext(mgmt, item.getId(), libraries, mgmt.getCatalog().getRootClassLoader());
+        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), mgmt.getCatalog().getRootClassLoader());
     }
 
-    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, CatalogItemLibraries libraries, ClassLoader classLoader) {
+    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<CatalogBundle> libraries, ClassLoader classLoader) {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
-        if (libraries!=null) {
-            Collection<CatalogBundle> bundles = libraries.getBundles();
-            if (bundles!=null && !bundles.isEmpty()) {
-                result.add(new OsgiBrooklynClassLoadingContext(mgmt, catalogItemId, bundles));
-            }
+        if (libraries!=null && !libraries.isEmpty()) {
+            result.add(new OsgiBrooklynClassLoadingContext(mgmt, catalogItemId, libraries));
         }
 
         BrooklynClassLoadingContext loader = BrooklynLoaderTracker.getLoader();
@@ -85,28 +80,27 @@ public class CatalogUtils {
     /**
      * Registers all bundles with the management context's OSGi framework.
      */
-    public static void installLibraries(ManagementContext managementContext, @Nullable CatalogItemLibraries libraries) {
+    public static void installLibraries(ManagementContext managementContext, @Nullable Collection<CatalogBundle> libraries) {
         if (libraries == null) return;
 
         ManagementContextInternal mgmt = (ManagementContextInternal) managementContext;
-        Collection<CatalogBundle> bundles = libraries.getBundles();
-        if (!bundles.isEmpty()) {
+        if (!libraries.isEmpty()) {
             Maybe<OsgiManager> osgi = mgmt.getOsgiManager();
             if (osgi.isAbsent()) {
-                throw new IllegalStateException("Unable to load bundles "+bundles+" because OSGi is not running.");
+                throw new IllegalStateException("Unable to load bundles "+libraries+" because OSGi is not running.");
             }
             if (log.isDebugEnabled()) 
                 logDebugOrTraceIfRebinding(log, 
                     "Loading bundles in {}: {}", 
-                    new Object[] {managementContext, Joiner.on(", ").join(bundles)});
+                    new Object[] {managementContext, Joiner.on(", ").join(libraries)});
             Stopwatch timer = Stopwatch.createStarted();
-            for (CatalogBundle bundleUrl : bundles) {
+            for (CatalogBundle bundleUrl : libraries) {
                 osgi.get().registerBundle(bundleUrl);
             }
             if (log.isDebugEnabled()) 
                 logDebugOrTraceIfRebinding(log, 
                     "Registered {} bundles in {}",
-                    new Object[]{bundles.size(), Time.makeTimeStringRounded(timer)});
+                    new Object[]{libraries.size(), Time.makeTimeStringRounded(timer)});
         }
     }
 
@@ -165,6 +159,10 @@ public class CatalogUtils {
         } else {
             return null;
         }
+    }
+
+    public static String getVersionedId(String id, String version) {
+        return id + VERSION_DELIMITER + version;
     }
 
 }

@@ -74,11 +74,11 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   @Test
   /** based on CampYamlLiteTest */
   public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() {
-    String registeredTypeName = "my.catalog.entity.id";
+    String symbolicName = "my.catalog.entity.id";
     String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
     String yaml =
         "brooklyn.catalog:\n"+
-        "  id: " + registeredTypeName + "\n"+
+        "  id: " + symbolicName + "\n"+
         "  name: My Catalog App\n"+
         "  description: My description\n"+
         "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
@@ -94,44 +94,42 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
-    CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+registeredTypeName + "/" + TEST_VERSION)
+    CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+symbolicName + "/" + TEST_VERSION)
             .get(CatalogEntitySummary.class);
 
-    assertEquals(entityItem.getRegisteredType(), registeredTypeName);
-    
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
     
-    assertEquals(entityItem.getId(), ver(registeredTypeName));
-    assertEquals(entityItem.getSymbolicName(), registeredTypeName);
+    assertEquals(entityItem.getId(), ver(symbolicName));
+    assertEquals(entityItem.getSymbolicName(), symbolicName);
     assertEquals(entityItem.getVersion(), TEST_VERSION);
     
     // and internally let's check we have libraries
-    CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
+    CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
     Assert.assertNotNull(item);
-    Collection<CatalogBundle> libs = item.getLibraries().getBundles();
+    Collection<CatalogBundle> libs = item.getLibraries();
     assertEquals(libs.size(), 1);
     assertEquals(Iterables.getOnlyElement(libs).getUrl(), bundleUrl);
 
     // now let's check other things on the item
     assertEquals(entityItem.getName(), "My Catalog App");
     assertEquals(entityItem.getDescription(), "My description");
-    assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/" + registeredTypeName);
+    assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/" + symbolicName + "/" + entityItem.getVersion());
     assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
     
-    byte[] iconData = client().resource("/v1/catalog/icon/"+registeredTypeName + "/" + TEST_VERSION).get(byte[].class);
+    byte[] iconData = client().resource("/v1/catalog/icon/"+symbolicName + "/" + TEST_VERSION).get(byte[].class);
     assertEquals(iconData.length, 43);
   }
 
   @Test
   public void testRegisterOSGiPolicy() {
-    String registeredTypeName = "my.catalog.policy.id";
+    String symbolicName = "my.catalog.policy.id";
     String policyType = "brooklyn.osgi.tests.SimplePolicy";
     String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
 
     String yaml =
         "brooklyn.catalog:\n"+
-        "  id: " + registeredTypeName + "\n"+
+        "  id: " + symbolicName + "\n"+
         "  name: My Catalog App\n"+
         "  description: My description\n"+
         "  version: " + TEST_VERSION + "\n" +
@@ -144,11 +142,10 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     CatalogPolicySummary entityItem = client().resource("/v1/catalog")
         .post(CatalogPolicySummary.class, yaml);
 
-    assertEquals(entityItem.getRegisteredType(), registeredTypeName);
     Assert.assertNotNull(entityItem.getPlanYaml());
     Assert.assertTrue(entityItem.getPlanYaml().contains(policyType));
-    assertEquals(entityItem.getId(), ver(registeredTypeName));
-    assertEquals(entityItem.getSymbolicName(), registeredTypeName);
+    assertEquals(entityItem.getId(), ver(symbolicName));
+    assertEquals(entityItem.getSymbolicName(), symbolicName);
     assertEquals(entityItem.getVersion(), TEST_VERSION);
   }
 
@@ -241,12 +238,12 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   
   @Test
   public void testDeleteCustomEntityFromCatalog() {
-    String registeredTypeName = "my.catalog.app.id.to.subsequently.delete";
+    String symbolicName = "my.catalog.app.id.to.subsequently.delete";
     String yaml =
-        "name: "+registeredTypeName+"\n"+
+        "name: "+symbolicName+"\n"+
         // FIXME name above should be unnecessary when brooklyn.catalog below is working
         "brooklyn.catalog:\n"+
-        "  id: " + registeredTypeName + "\n"+
+        "  id: " + symbolicName + "\n"+
         "  name: My Catalog App To Be Deleted\n"+
         "  description: My description\n"+
         "  version: " + TEST_VERSION + "\n"+
@@ -257,12 +254,12 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     client().resource("/v1/catalog")
             .post(ClientResponse.class, yaml);
     
-    ClientResponse deleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName+"/"+TEST_VERSION)
+    ClientResponse deleteResponse = client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
             .delete(ClientResponse.class);
 
     assertEquals(deleteResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
 
-    ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+registeredTypeName+"/"+TEST_VERSION)
+    ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
             .get(ClientResponse.class);
     assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
   }

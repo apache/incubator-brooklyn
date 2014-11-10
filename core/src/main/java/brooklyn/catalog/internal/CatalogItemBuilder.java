@@ -18,42 +18,47 @@
  */
 package brooklyn.catalog.internal;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import brooklyn.catalog.CatalogItem.CatalogBundle;
+
 import com.google.common.base.Preconditions;
 
 public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?, ?>> {
     private CatalogItemType dto;
 
-    public static CatalogItemBuilder<CatalogEntityItemDto> newEntity(String registeredTypeName, String version) {
+    public static CatalogItemBuilder<CatalogEntityItemDto> newEntity(String symbolicName, String version) {
         return new CatalogItemBuilder<CatalogEntityItemDto>(new CatalogEntityItemDto())
-                .registeredTypeName(registeredTypeName)
+                .symbolicName(symbolicName)
                 .version(version);
     }
 
-    public static CatalogItemBuilder<CatalogTemplateItemDto> newTemplate(String registeredTypeName, String version) {
+    public static CatalogItemBuilder<CatalogTemplateItemDto> newTemplate(String symbolicName, String version) {
         return new CatalogItemBuilder<CatalogTemplateItemDto>(new CatalogTemplateItemDto())
-                .registeredTypeName(registeredTypeName)
+                .symbolicName(symbolicName)
                 .version(version);
     }
 
-    public static CatalogItemBuilder<CatalogPolicyItemDto> newPolicy(String registeredTypeName, String version) {
+    public static CatalogItemBuilder<CatalogPolicyItemDto> newPolicy(String symbolicName, String version) {
         return new CatalogItemBuilder<CatalogPolicyItemDto>(new CatalogPolicyItemDto())
-                .registeredTypeName(registeredTypeName)
+                .symbolicName(symbolicName)
                 .version(version);
     }
 
     public CatalogItemBuilder(CatalogItemType dto) {
         this.dto = dto;
-        this.dto.libraries = new CatalogLibrariesDto();
+        this.dto.setLibraries(Collections.<CatalogBundle>emptyList());
     }
 
-    public CatalogItemBuilder<CatalogItemType> registeredTypeName(String registeredType) {
-        dto.registeredType = registeredType;
+    public CatalogItemBuilder<CatalogItemType> symbolicName(String symbolicName) {
+        dto.setSymbolicName(symbolicName);
         return this;
     }
 
     @Deprecated
     public CatalogItemBuilder<CatalogItemType> javaType(String javaType) {
-        dto.javaType = javaType;
+        dto.setJavaType(javaType);
         return this;
     }
 
@@ -64,40 +69,41 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
     }
 
     public CatalogItemBuilder<CatalogItemType> displayName(String displayName) {
-        dto.name = displayName;
+        dto.setDisplayName(displayName);
         return this;
     }
 
     public CatalogItemBuilder<CatalogItemType> description(String description) {
-        dto.description = description;
+        dto.setDescription(description);
         return this;
     }
 
     public CatalogItemBuilder<CatalogItemType> iconUrl(String iconUrl) {
-        dto.iconUrl = iconUrl;
+        dto.setIconUrl(iconUrl);
         return this;
     }
 
     public CatalogItemBuilder<CatalogItemType> version(String version) {
-        dto.version = version;
+        dto.setVersion(version);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> libraries(CatalogLibrariesDto libraries) {
-        dto.libraries = libraries;
+    public CatalogItemBuilder<CatalogItemType> libraries(Collection<CatalogBundle> libraries) {
+        dto.setLibraries(libraries);
         return this;
     }
 
     public CatalogItemBuilder<CatalogItemType> plan(String yaml) {
-        dto.planYaml = yaml;
+        dto.setPlanYaml(yaml);
         return this;
     }
 
     public CatalogItemType build() {
-        Preconditions.checkNotNull(dto.registeredType);
+        Preconditions.checkNotNull(dto.getSymbolicName());
+        Preconditions.checkNotNull(dto.getVersion());
 
-        if (dto.libraries == null) {
-            dto.libraries = new CatalogLibrariesDto();
+        if (dto.getLibraries() == null) {
+            dto.setLibraries(Collections.<CatalogBundle>emptyList());
         }
 
         CatalogItemType ret = dto;

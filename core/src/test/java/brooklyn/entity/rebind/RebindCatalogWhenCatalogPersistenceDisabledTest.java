@@ -82,7 +82,7 @@ public class RebindCatalogWhenCatalogPersistenceDisabledTest extends RebindTestF
     public void testModificationsToCatalogAreNotPersistedWhenCatalogPersistenceFeatureIsDisabled() throws Exception {
         assertEquals(Iterables.size(origManagementContext.getCatalog().getCatalogItems()), 1);
         CatalogItem<Object, Object> toRemove = Iterables.getOnlyElement(origManagementContext.getCatalog().getCatalogItems());
-        origManagementContext.getCatalog().deleteCatalogItem(toRemove.getId(), toRemove.getVersion());
+        origManagementContext.getCatalog().deleteCatalogItem(toRemove.getSymbolicName(), toRemove.getVersion());
         assertEquals(Iterables.size(origManagementContext.getCatalog().getCatalogItems()), 0);
 
         rebind();

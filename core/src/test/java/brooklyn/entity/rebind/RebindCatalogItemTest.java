@@ -150,7 +150,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         // persistence window. Because BrooklynMementoPersisterToObjectStore applies writes/deletes
         // asynchronously the winner is down to a race and the test might pass or fail.
         origManagementContext.getRebindManager().forcePersistNow();
-        origManagementContext.getCatalog().deleteCatalogItem(toRemove.getId(), toRemove.getVersion());
+        origManagementContext.getCatalog().deleteCatalogItem(toRemove.getSymbolicName(), toRemove.getVersion());
         assertEquals(Iterables.size(origManagementContext.getCatalog().getCatalogItems()), 0);
         rebindAndAssertCatalogsAreEqual();
         assertEquals(Iterables.size(newManagementContext.getCatalog().getCatalogItems()), 0);

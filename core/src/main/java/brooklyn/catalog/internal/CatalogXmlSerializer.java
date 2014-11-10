@@ -30,6 +30,7 @@ import brooklyn.util.xstream.XmlSerializer;
 
 public class CatalogXmlSerializer extends XmlSerializer<Object> {
 
+    @SuppressWarnings("deprecation")
     public CatalogXmlSerializer() {
         xstream.addDefaultImplementation(ArrayList.class, Collection.class);
         
@@ -49,8 +50,8 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
         xstream.aliasType("entity", CatalogEntityItemDto.class);
         xstream.aliasType("policy", CatalogPolicyItemDto.class);
 
-        xstream.useAttributeFor(CatalogItemDtoAbstract.class, "type");
-        xstream.useAttributeFor(CatalogItemDtoAbstract.class, "name");
+        xstream.aliasAttribute(CatalogItemDtoAbstract.class, "javaType", "type");
+        xstream.aliasAttribute(CatalogItemDtoAbstract.class, "displayName", "name");
         xstream.useAttributeFor(CatalogItemDtoAbstract.class, "version");
 
         xstream.useAttributeFor(CatalogClasspathDto.class, "scan");

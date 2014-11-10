@@ -21,6 +21,8 @@ package brooklyn.catalog.internal;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -28,6 +30,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
@@ -76,7 +79,7 @@ public class CatalogDtoTest {
         CatalogDo loader = new CatalogDo(managementContext, root).load();
         
         // test app comes from jar, by default
-        CatalogItemDo<?,?> worker = loader.getRegisteredTypeNameCache().get(new CatalogItemId(TestApplication.class.getCanonicalName(), BasicBrooklynCatalog.NO_VERSION));
+        CatalogItemDo<?,?> worker = loader.getIdCache().get(CatalogUtils.getVersionedId(TestApplication.class.getCanonicalName(), BasicBrooklynCatalog.NO_VERSION));
         assertNotNull(worker);
         assertEquals(worker.getDisplayName(), "Test App from JAR");
         
@@ -117,9 +120,10 @@ public class CatalogDtoTest {
                 CatalogDto.newNamedInstance("Test Entities from OSGi",
                         "A catalog whose entries define their libraries as a list of OSGi bundles", "test-osgi-defined"));
         osgiCatalog.setClasspathScanForEntities(CatalogScanningModes.NONE);
-        CatalogEntityItemDto osgiEntity = CatalogItemBuilder.newEntity(TestEntity.class.getCanonicalName(), "Test Entity from OSGi").build();
-        // NB: this is not actually an OSGi bundle, but it's okay as we don't instantiate the bundles ahead of time (currently)
-        osgiEntity.libraries.addBundle(null, null, bundleUrl);
+        CatalogEntityItemDto osgiEntity = CatalogItemBuilder.newEntity(TestEntity.class.getCanonicalName(), "Test Entity from OSGi")
+                // NB: this is not actually an OSGi bundle, but it's okay as we don't instantiate the bundles ahead of time (currently)
+                .libraries(Arrays.<CatalogBundle>asList(new CatalogBundleDto(null, null, bundleUrl)))
+                .build();
         testEntitiesJavaCatalog.addEntry(osgiEntity);
         root.addCatalog(osgiCatalog.dto);
 

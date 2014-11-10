@@ -70,27 +70,23 @@ public class CatalogTransformer {
         for (Effector<?> x: type.getEffectors())
             effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
 
-        return new CatalogEntitySummary(item.getId(), item.getVersion(), item.getDisplayName(),
-            item.getRegisteredTypeName(), item.getJavaType(), 
-            item.getRegisteredTypeName(),
-            item.getPlanYaml(),
-                item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
-                config, sensors, effectors,
-                makeLinks(item));
+        return new CatalogEntitySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
+            item.getJavaType(), item.getPlanYaml(),
+            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
+            config, sensors, effectors,
+            makeLinks(item));
     }
 
     public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?,?> item) {
-        return new CatalogItemSummary(item.getId(), item.getVersion(), item.getDisplayName(), 
-                item.getRegisteredTypeName(), item.getJavaType(), 
-                item.getRegisteredTypeName(),
-                item.getPlanYaml(),
+        return new CatalogItemSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
+                item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), makeLinks(item));
     }
 
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
         Set<PolicyConfigSummary> config = ImmutableSet.of();
-        return new CatalogPolicySummary(item.getId(), item.getVersion(), item.getDisplayName(), item.getRegisteredTypeName(),
-                item.getPlanYaml(),
+        return new CatalogPolicySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
+                item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
                 makeLinks(item));
     }
@@ -101,7 +97,7 @@ public class CatalogTransformer {
     
     private static String tidyIconLink(BrooklynRestResourceUtils b, CatalogItem<?,?> item, String iconUrl) {
         if (b.isUrlServerSideAndSafe(iconUrl))
-            return "/v1/catalog/icon/"+item.getId();
+            return "/v1/catalog/icon/"+item.getSymbolicName() + "/" + item.getVersion();
         return iconUrl;
     }
 

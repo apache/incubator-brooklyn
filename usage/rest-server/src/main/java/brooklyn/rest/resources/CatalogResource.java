@@ -112,10 +112,6 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
             return Response.created(URI.create("policies/" + itemId))
                     .entity(CatalogTransformer.catalogPolicySummary(brooklyn(), (CatalogItem<? extends Policy, PolicySpec<?>>) item))
                     .build();
-        case CONFIGURATION:
-            return Response.created(URI.create("configurations/" + itemId))
-                    .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
-                    .build();
         default:
             throw new IllegalStateException("Unsupported catalog item type "+item.getCatalogItemType()+": "+item);
         }

@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind.dto;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -28,6 +29,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogBundle;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.mementos.CatalogItemMemento;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
@@ -41,12 +44,12 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
 
     public static class Builder extends AbstractMemento.Builder<Builder> {
         protected String description;
-        protected String registeredTypeName;
+        protected String symbolicName;
         protected String iconUrl;
         protected String javaType;
         protected String version;
         protected String planYaml;
-        protected CatalogItem.CatalogItemLibraries libraries;
+        protected Collection<CatalogItem.CatalogBundle> libraries;
         protected CatalogItem.CatalogItemType catalogItemType;
         protected Class<?> catalogItemJavaType;
         protected Class<?> specType;
@@ -56,8 +59,8 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
             return self();
         }
 
-        public Builder registeredTypeName(String registeredTypeName) {
-            this.registeredTypeName = registeredTypeName;
+        public Builder symbolicName(String symbolicName) {
+            this.symbolicName = symbolicName;
             return self();
         }
 
@@ -81,7 +84,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
             return self();
         }
 
-        public Builder libraries(CatalogItem.CatalogItemLibraries libraries) {
+        public Builder libraries(Collection<CatalogItem.CatalogBundle> libraries) {
             this.libraries = libraries;
             return self();
         }
@@ -104,12 +107,12 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
         public Builder from(CatalogItemMemento other) {
             super.from(other);
             description = other.getDescription();
-            registeredTypeName = other.getRegisteredTypeName();
+            symbolicName = other.getSymbolicName();
             iconUrl = other.getIconUrl();
             javaType = other.getJavaType();
             version = other.getVersion();
             planYaml = other.getPlanYaml();
-            libraries = other.getLibraries();
+            libraries = other.getBundles();
             catalogItemType = other.getCatalogItemType();
             catalogItemJavaType = other.getCatalogItemJavaType();
             specType = other.getSpecType();
@@ -122,11 +125,16 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     }
 
     private String description;
-    private String registeredTypeName;
+    private String symbolicName;
     private String iconUrl;
     private String javaType;
     private String version;
     private String planYaml;
+    //Keep libraries for deserialization compatibility and
+    //introduce bundles to hold the new libraries type from
+    //catalog item
+    private Collection<CatalogItem.CatalogBundle> bundles;
+    @SuppressWarnings("deprecation")
     private CatalogItem.CatalogItemLibraries libraries;
     private CatalogItem.CatalogItemType catalogItemType;
     private Class<?> catalogItemJavaType;
@@ -138,11 +146,12 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     protected BasicCatalogItemMemento(Builder builder) {
         super(builder);
         this.description = builder.description;
-        this.registeredTypeName = builder.registeredTypeName;
+        this.symbolicName = builder.symbolicName;
         this.iconUrl = builder.iconUrl;
         this.version = builder.version;
         this.planYaml = builder.planYaml;
-        this.libraries = builder.libraries;
+        this.bundles = builder.libraries;
+        this.libraries = null;
         this.catalogItemJavaType = builder.catalogItemJavaType;
         this.catalogItemType = builder.catalogItemType;
         this.specType = builder.specType;
@@ -155,8 +164,8 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     }
 
     @Override
-    public String getRegisteredTypeName() {
-        return registeredTypeName;
+    public String getSymbolicName() {
+        return symbolicName;
     }
 
     @Override
@@ -166,7 +175,11 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
 
     @Override
     public String getVersion() {
-        return version;
+        if (version != null) {
+            return version;
+        } else {
+            return BasicBrooklynCatalog.NO_VERSION;
+        }
     }
 
     @Override
@@ -180,8 +193,16 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     }
 
     @Override
-    public CatalogItem.CatalogItemLibraries getLibraries() {
-        return libraries;
+    public Collection<CatalogItem.CatalogBundle> getBundles() {
+        if (bundles != null) {
+            return bundles;
+        } else if (libraries != null) {
+            @SuppressWarnings("deprecation")
+            Collection<CatalogBundle> b = libraries.getBundles();
+            return b;
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -216,11 +237,11 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     protected Objects.ToStringHelper newVerboseStringHelper() {
         return super.newVerboseStringHelper()
                 .add("description", getDescription())
-                .add("registeredTypeName", getRegisteredTypeName())
+                .add("symbolicName", getSymbolicName())
                 .add("iconUrl", getIconUrl())
                 .add("version", getVersion())
                 .add("planYaml", getPlanYaml())
-                .add("libraries", getLibraries())
+                .add("bundles", getBundles())
                 .add("catalogItemJavaType", getCatalogItemJavaType())
                 .add("catalogItemType", getCatalogItemType())
                 .add("javaType", getJavaType())

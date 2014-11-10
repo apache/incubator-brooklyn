@@ -25,6 +25,7 @@ import brooklyn.catalog.CatalogItem.CatalogBundle;
 
 import com.google.common.base.Preconditions;
 
+@Deprecated
 public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
 
     private final CatalogLibrariesDto librariesDto;

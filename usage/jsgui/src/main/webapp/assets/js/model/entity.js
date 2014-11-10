@@ -31,7 +31,7 @@ define(["underscore", "backbone"], function (_, Backbone) {
         getVersionedAttr: function(name) {
             var attr = this.get(name);
             var version = this.get('version');
-            if (version && version != '0.0.0') {
+            if (version && version != '0.0.0_SNAPSHOT') {
                 return attr + ':' + version;
             } else {
                 return attr;

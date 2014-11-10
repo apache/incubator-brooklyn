@@ -22,7 +22,6 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -39,9 +38,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.ReflectionScanner;
 import brooklyn.util.javalang.UrlClassLoader;
@@ -244,15 +241,13 @@ public class CatalogClasspathDo {
     @Deprecated
     public CatalogItem<?,?> addCatalogEntry(CatalogItemDtoAbstract<?,?> item, Class<?> c) {
         Catalog annotations = c.getAnnotation(Catalog.class);
-        Map<String, Object> flags = MutableMap.<String, Object>of("id", c.getName());
-        FlagUtils.setFieldsFromFlags(flags, item);
-        item.registeredType = c.getName();
-        item.javaType = c.getName();
-        item.name = firstNonEmpty(c.getSimpleName(), c.getName());
+        item.setSymbolicName(c.getName());
+        item.setJavaType(c.getName());
+        item.setDisplayName(firstNonEmpty(c.getSimpleName(), c.getName()));
         if (annotations!=null) {
-            item.name = firstNonEmpty(annotations.name(), item.name);
-            item.description = firstNonEmpty(annotations.description());
-            item.iconUrl = firstNonEmpty(annotations.iconUrl());
+            item.setDisplayName(firstNonEmpty(annotations.name(), item.getDisplayName()));
+            item.setDescription(firstNonEmpty(annotations.description()));
+            item.setIconUrl(firstNonEmpty(annotations.iconUrl()));
         }
         if (log.isTraceEnabled())
             log.trace("adding to catalog: "+c+" (from catalog "+catalog+")");

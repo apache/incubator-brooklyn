@@ -249,11 +249,9 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     }
 
     private Set<String> getCatalogItemIds(Iterable<CatalogItem<Object, Object>> catalogItems) {
-        Set<String> itemIds = Sets.<String>newHashSet();
-        for (CatalogItem<?, ?> item : catalogItems) {
-            itemIds.add(item.getId() + ":" + item.getVersion());
-        }
-        return itemIds;
+        return FluentIterable.from(catalogItems)
+                .transform(EntityFunctions.id())
+                .copyInto(Sets.<String>newHashSet());
    }
 
     protected void assertCatalogItemsEqual(CatalogItem<?, ?> actual, CatalogItem<?, ?> expected) {
@@ -268,11 +266,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         assertEquals(actual.getCatalogItemJavaType(), expected.getCatalogItemJavaType());
         assertEquals(actual.getCatalogItemType(), expected.getCatalogItemType());
         assertEquals(actual.getSpecType(), expected.getSpecType());
-        assertEquals(actual.getRegisteredTypeName(), expected.getRegisteredTypeName());
-        if (actual.getLibraries() != null && expected.getLibraries() != null) {
-            assertEquals(actual.getLibraries().getBundles(), expected.getLibraries().getBundles());
-        } else {
-            assertEquals(actual.getLibraries(), expected.getLibraries());
-        }
+        assertEquals(actual.getSymbolicName(), expected.getSymbolicName());
+        assertEquals(actual.getLibraries(), expected.getLibraries());
     }
 }

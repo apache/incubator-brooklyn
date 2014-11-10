@@ -313,17 +313,18 @@ define([
             return this;
         },
 
-        singleItemTempalter: function(name, active, isChild, model, index) {
+        singleItemTemplater: function(isChild, model, index) {
             var args = _.extend({
                     cid: model.cid,
                     isChild: isChild,
-                    extraClasses: (activeDetailsView == name && model.cid == active) ? "active" : ""
+                    extraClasses: (activeDetailsView == this.name && model.cid == this.activeCid) ? "active" : ""
                 }, this.entryTemplateArgs(model));
+            console.log(args);
             return this.template(args);
         },
 
         renderEntries: function() {
-            var elements = this.collection.map(_.partial(this.singleItemTemplater, this.name, this.activeCid, false), this);
+            var elements = this.collection.map(_.partial(this.singleItemTemplater, false), this);
             this.updateContent(elements.join(''));
         },
 
@@ -370,7 +371,7 @@ define([
     
     var AccordionEntityView = AccordionItemView.extend({
         renderEntries: function() {
-            var symbolicNameFn = function(model) {return model.get("symbolicName")};
+            var symbolicNameFn = function(model) {return model.get("type")};
             var groups = this.collection.groupBy(symbolicNameFn);
             var orderedIds = _.uniq(this.collection.map(symbolicNameFn), true);
 

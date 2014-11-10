@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -43,6 +44,11 @@ import com.google.common.collect.ImmutableList;
 public class FileUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileUtil.class);
+
+    //Linux allows any characters except /
+    //Windows reserves the following set: < > : " / \ | ? *
+    //Object stores: ???, better be conservative
+    private static final Pattern FILE_NAME_BLACKLIST_CHARACTERS = Pattern.compile("[^\\w\\d \\-_.()\\[\\]$!]");
 
     private static boolean loggedSetFilePermissionsWarning = false;
     
@@ -196,5 +202,9 @@ public class FileUtil {
             Streams.closeQuietly(outgobbler);
             Streams.closeQuietly(errgobbler);
         }
+    }
+
+    public static String getSafeFileName(String str) {
+        return FILE_NAME_BLACKLIST_CHARACTERS.matcher(str).replaceAll("_");
     }
 }

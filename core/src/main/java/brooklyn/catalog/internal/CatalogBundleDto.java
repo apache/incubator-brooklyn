@@ -19,6 +19,7 @@
 package brooklyn.catalog.internal;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 
@@ -30,6 +31,13 @@ public class CatalogBundleDto implements CatalogBundle {
     public CatalogBundleDto() {}
 
     public CatalogBundleDto(String name, String version, String url) {
+        if (name == null && version == null) {
+            Preconditions.checkNotNull(url, "url");
+        } else {
+            Preconditions.checkNotNull(name, "name");
+            Preconditions.checkNotNull(version, "version");
+        }
+
         this.name = name;
         this.version = version;
         this.url = url;

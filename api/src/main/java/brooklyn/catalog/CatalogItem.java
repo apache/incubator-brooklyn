@@ -20,7 +20,6 @@ package brooklyn.catalog;
 
 import java.util.Collection;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.basic.BrooklynObject;
@@ -34,7 +33,7 @@ import com.google.common.annotations.Beta;
 public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     
     public static enum CatalogItemType {
-        TEMPLATE, ENTITY, POLICY, CONFIGURATION
+        TEMPLATE, ENTITY, POLICY
     }
     
     public static interface CatalogBundle {
@@ -46,7 +45,7 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
         public boolean isNamed();
     }
 
-    @Beta
+    @Deprecated
     public static interface CatalogItemLibraries {
         Collection<CatalogBundle> getBundles();
     }
@@ -59,25 +58,22 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     /** @return The type of the spec e.g. EntitySpec corresponding to {@link #getCatalogItemJavaType()} */
     public Class<SpecT> getSpecType();
     
-    /** @return The type name registered in the catalog for this item */
-    @Nonnull
-    public String getRegisteredTypeName();
-    
     /** @return The underlying java type of the item represented, or null if not known (e.g. if it comes from yaml) */
-    // TODO references to this should probably query getRegisteredType
     @Nullable public String getJavaType();
 
     /** @deprecated since 0.7.0. Use {@link #getDisplayName} */
     @Deprecated
     public String getName();
 
-    public String getDescription();
+    @Nullable public String getDescription();
 
-    public String getIconUrl();
+    @Nullable public String getIconUrl();
+
+    public String getSymbolicName();
 
     public String getVersion();
 
-    public CatalogItemLibraries getLibraries();
+    public Collection<CatalogBundle> getLibraries();
 
     public String toXmlString();
 
@@ -87,7 +83,7 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     @Override
     RebindSupport<CatalogItemMemento> getRebindSupport();
     
-    /** Built up from {@link #getId()} and {@link #getVersion()}.
+    /** Built up from {@link #getSymbolicName()} and {@link #getVersion()}.
      * 
      * (It is a bit self-referential having this method on this type of {@link BrooklynObject},
      * but it is easier this than making the interface hierarchy more complicated.) */

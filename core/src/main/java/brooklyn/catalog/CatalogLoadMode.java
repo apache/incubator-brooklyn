@@ -18,7 +18,6 @@
  */
 package brooklyn.catalog;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.persister.PersistMode;

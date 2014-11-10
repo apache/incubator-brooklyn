@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogItemBuilder;
-import brooklyn.catalog.internal.CatalogLibrariesDto;
+import brooklyn.catalog.internal.CatalogItemDtoAbstract;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.Entities;
@@ -161,12 +161,12 @@ public class XmlMementoSerializerTest {
         final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
         try {
-            CatalogItem<?, ?> catalogItem = CatalogItemBuilder.newEntity("registeredtypename", "0.0.1")
+            CatalogItem<?, ?> catalogItem = CatalogItemBuilder.newEntity("symbolicName", "0.0.1")
                     .displayName("test catalog item")
                     .description("description")
                     .plan("yaml plan")
                     .iconUrl("iconUrl")
-                    .libraries(CatalogLibrariesDto.from(ImmutableList.of("library-url")))
+                    .libraries(CatalogItemDtoAbstract.parseLibraries(ImmutableList.of("library-url")))
                     .build();
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),

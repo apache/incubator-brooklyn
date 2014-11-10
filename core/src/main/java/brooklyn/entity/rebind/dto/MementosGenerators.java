@@ -362,16 +362,15 @@ public class MementosGenerators {
         BasicCatalogItemMemento.Builder builder = BasicCatalogItemMemento.builder();
         populateBrooklynObjectMementoBuilder(catalogItem, builder);
         builder.catalogItemJavaType(catalogItem.getCatalogItemJavaType())
-        .catalogItemType(catalogItem.getCatalogItemType())
-        .description(catalogItem.getDescription())
-        .iconUrl(catalogItem.getIconUrl())
-        .javaType(catalogItem.getJavaType())
-        .libraries(catalogItem.getLibraries())
-        .registeredTypeName(catalogItem.getRegisteredTypeName())
-        .specType(catalogItem.getSpecType())
-        .version(catalogItem.getVersion())
-        .planYaml(catalogItem.getPlanYaml())
-        ;
+            .catalogItemType(catalogItem.getCatalogItemType())
+            .description(catalogItem.getDescription())
+            .iconUrl(catalogItem.getIconUrl())
+            .javaType(catalogItem.getJavaType())
+            .libraries(catalogItem.getLibraries())
+            .symbolicName(catalogItem.getSymbolicName())
+            .specType(catalogItem.getSpecType())
+            .version(catalogItem.getVersion())
+            .planYaml(catalogItem.getPlanYaml());
         return builder.build();
     }
     

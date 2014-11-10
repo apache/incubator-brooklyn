@@ -56,11 +56,11 @@ public class CatalogLoadTest {
         assertEquals(template.getDisplayName(), "Entity name");
         assertEquals(template.getVersion(), "9.1.3");
         assertEquals(template.getJavaType(), "com.example.ExampleApp");
-        assertEquals(template.getLibraries().getBundles().size(), 2,
-                "Template bundles=" + Joiner.on(", ").join(template.getLibraries().getBundles()));
+        assertEquals(template.getLibraries().size(), 2,
+                "Template bundles=" + Joiner.on(", ").join(template.getLibraries()));
         
         boolean foundBundle1 = false, foundBundle2 = false;
-        for (CatalogBundle bundle : template.getLibraries().getBundles()) {
+        for (CatalogBundle bundle : template.getLibraries()) {
             if (bundle.getUrl().equals("file://path/to/bundle.jar")) {
                 foundBundle1 = true;
             }

@@ -33,13 +33,15 @@ import com.google.common.collect.ImmutableMap;
  * see also, subclasses */
 public class CatalogItemSummary implements HasId, HasName {
 
+    private final String id;
     private final String symbolicName;
     private final String version;
-    
-    // TODO too many types, see in CatalogItem
+
+    //needed for backwards compatibility only (json serializer works on fields, not getters)
+    @Deprecated
     private final String type;
+    
     private final String javaType;
-    private final String registeredType;
     
     private final String name;
     @JsonSerialize(include=Inclusion.NON_EMPTY)
@@ -53,21 +55,19 @@ public class CatalogItemSummary implements HasId, HasName {
     public CatalogItemSummary(
             @JsonProperty("symbolicName") String symbolicName,
             @JsonProperty("version") String version,
-            @JsonProperty("name") String name,
-            @JsonProperty("registeredType") String registeredType,
+            @JsonProperty("name") String displayName,
             @JsonProperty("javaType") String javaType,
-            @JsonProperty("type") String highLevelType,
             @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
             @JsonProperty("links") Map<String, URI> links
         ) {
+        this.id = symbolicName + ":" + version;
         this.symbolicName = symbolicName;
+        this.type = symbolicName;
         this.version = version;
-        this.name = name;
+        this.name = displayName;
         this.javaType = javaType;
-        this.registeredType = registeredType;
-        this.type = highLevelType;
         this.planYaml = planYaml;
         this.description = description;
         this.iconUrl = iconUrl;
@@ -76,7 +76,7 @@ public class CatalogItemSummary implements HasId, HasName {
 
     @Override
     public String getId() {
-        return symbolicName + ":" + version;
+        return id;
     }
 
     public String getSymbolicName() {
@@ -87,22 +87,18 @@ public class CatalogItemSummary implements HasId, HasName {
         return version;
     }
 
-    public String getType() {
-        return type;
-    }
-
     public String getJavaType() {
         return javaType;
     }
 
-    public String getRegisteredType() {
-        return registeredType;
+    public String getType() {
+        return type;
     }
 
     public String getPlanYaml() {
         return planYaml;
     }
-    
+
     @Override
     public String getName() {
         return name;
@@ -130,7 +126,7 @@ public class CatalogItemSummary implements HasId, HasName {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(symbolicName, version, name, type);
+        return Objects.hashCode(symbolicName, version, name, javaType);
     }
     
     @Override

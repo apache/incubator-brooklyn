@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogEntityItemDto;
 import brooklyn.catalog.internal.CatalogItemBuilder;
-import brooklyn.catalog.internal.CatalogLibrariesDto;
+import brooklyn.catalog.internal.CatalogItemDtoAbstract;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
@@ -138,11 +138,11 @@ public class OsgiVersionMoreEntityTest {
         return newCatalogItemWithNameAndType(type, version, type, libraries);
     }
     static CatalogEntityItemDto newCatalogItemWithNameAndType(String symName, String version, String type, String ...libraries) {
+        @SuppressWarnings("deprecation")
         CatalogEntityItemDto c1 = CatalogItemBuilder.newEntity(symName, version)
                 .javaType(type)
-                .libraries(CatalogLibrariesDto.from(Arrays.asList(libraries)))
+                .libraries(CatalogItemDtoAbstract.parseLibraries(Arrays.asList(libraries)))
                 .build();
-        c1.setCatalogItemId(type);
         return c1;
     }
 
@@ -153,7 +153,7 @@ public class OsgiVersionMoreEntityTest {
         // not a great test as we set the ID here; but:
         // YAML test will do better;
         // and we can check that downstream items are loaded correctly
-        spec.catalogItemId(c2.getRegisteredTypeName());
+        spec.catalogItemId(c2.getId());
         Entity me = app.createAndManageChild(spec);
         return me;
     }
@@ -195,7 +195,7 @@ public class OsgiVersionMoreEntityTest {
         
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);
-        Assert.assertEquals(me.getCatalogItemId(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
+        Assert.assertEquals(me.getCatalogItemId(), CatalogUtils.getVersionedId(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION));
         
         assertV1MethodCall(me);
         assertV1EffectorCall(me);
@@ -204,14 +204,14 @@ public class OsgiVersionMoreEntityTest {
         BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, c2);
         @SuppressWarnings({ "unchecked", "rawtypes" })
         Entity me2 = me.addChild(EntitySpec.create( (Class)loader.loadClass(c2.getJavaType()) ));
-        Assert.assertEquals(me2.getCatalogItemId(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
+        Assert.assertEquals(me2.getCatalogItemId(), CatalogUtils.getVersionedId(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected PolicySpec<?> getPolicySpec(CatalogItem<?, ?> cp) {
         BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, cp);
         PolicySpec spec = PolicySpec.create( (Class)loader.loadClass(cp.getJavaType()) );
-        spec.catalogItemId(cp.getRegisteredTypeName());
+        spec.catalogItemId(cp.getId());
         return spec;
     }
 
@@ -237,7 +237,7 @@ public class OsgiVersionMoreEntityTest {
         Assert.assertNotNull(catalogItemId);
         // must be the actual source bundle
         Assert.assertFalse(catalogItemId.equals(me.getCatalogItemId()), "catalog item id is: "+catalogItemId);
-        Assert.assertTrue(catalogItemId.equals(OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY), "catalog item id is: "+catalogItemId);
+        Assert.assertTrue(catalogItemId.equals(CatalogUtils.getVersionedId(OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY, TEST_VERSION)), "catalog item id is: "+catalogItemId);
     }
 
     @Test
@@ -270,7 +270,7 @@ public class OsgiVersionMoreEntityTest {
         
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);
-        Assert.assertEquals(me.getCatalogItemId(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
+        Assert.assertEquals(me.getCatalogItemId(), CatalogUtils.getVersionedId(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION));
         
         assertV2MethodCall(me);
         assertV2EffectorCall(me);

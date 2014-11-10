@@ -44,12 +44,12 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testAddCatalogItem() throws Exception {
-        String registeredTypeName = "my.catalog.app.id.load";
-        addCatalogOSGiEntity(registeredTypeName);
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(registeredTypeName, TEST_VERSION);
-        assertEquals(item.getRegisteredTypeName(), registeredTypeName);
+        String symbolicName = "my.catalog.app.id.load";
+        addCatalogOSGiEntity(symbolicName);
+        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        assertEquals(item.getSymbolicName(), symbolicName);
 
-        deleteCatalogEntity(registeredTypeName);
+        deleteCatalogEntity(symbolicName);
     }
 
     @Test
@@ -68,55 +68,55 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testLaunchApplicationReferencingCatalog() throws Exception {
-        String registeredTypeName = "my.catalog.app.id.launch";
-        registerAndLaunchAndAssertSimpleEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
+        String symbolicName = "my.catalog.app.id.launch";
+        registerAndLaunchAndAssertSimpleEntity(symbolicName, SIMPLE_ENTITY_TYPE);
     }
 
     @Test
     public void testLaunchApplicationReferencingUnversionedCatalogFail() throws Exception {
-        String registeredTypeName = "my.catalog.app.id.fail";
-        addCatalogOSGiEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
+        String symbolicName = "my.catalog.app.id.fail";
+        addCatalogOSGiEntity(symbolicName, SIMPLE_ENTITY_TYPE);
         try {
             String yaml = "name: simple-app-yaml\n" +
                           "location: localhost\n" +
                           "services: \n" +
-                          "  - serviceType: " + ver(registeredTypeName);
+                          "  - serviceType: " + ver(symbolicName);
             try {
                 createAndStartApplication(yaml);
             } catch (UnsupportedOperationException e) {
                 assertTrue(e.getMessage().endsWith("cannot be matched"));
             }
         } finally {
-            deleteCatalogEntity(registeredTypeName);
+            deleteCatalogEntity(symbolicName);
         }
     }
 
     @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
-        String referencedRegisteredTypeName = "my.catalog.app.id.referenced";
-        String referrerRegisteredTypeName = "my.catalog.app.id.referring";
-        addCatalogOSGiEntity(referencedRegisteredTypeName, SIMPLE_ENTITY_TYPE);
-        addCatalogOSGiEntity(referrerRegisteredTypeName, ver(referencedRegisteredTypeName));
+        String referencedSymbolicName = "my.catalog.app.id.referenced";
+        String referrerSymbolicName = "my.catalog.app.id.referring";
+        addCatalogOSGiEntity(referencedSymbolicName, SIMPLE_ENTITY_TYPE);
+        addCatalogOSGiEntity(referrerSymbolicName, ver(referencedSymbolicName));
 
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: " + ver(referrerRegisteredTypeName);
+                      "  - serviceType: " + ver(referrerSymbolicName);
         Entity app = createAndStartApplication(yaml);
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
         assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
 
-        deleteCatalogEntity(referencedRegisteredTypeName);
-        deleteCatalogEntity(referrerRegisteredTypeName);
+        deleteCatalogEntity(referencedSymbolicName);
+        deleteCatalogEntity(referrerSymbolicName);
     }
 
     @Test
     public void testLaunchApplicationChildWithCatalogReferencingOtherCatalog() throws Exception {
-        String referencedRegisteredTypeName = "my.catalog.app.id.child.referenced";
-        String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
-        addCatalogOSGiEntity(referencedRegisteredTypeName, SIMPLE_ENTITY_TYPE);
-        addCatalogChildOSGiEntity(referrerRegisteredTypeName, ver(referencedRegisteredTypeName));
+        String referencedSymbolicName = "my.catalog.app.id.child.referenced";
+        String referrerSymbolicName = "my.catalog.app.id.child.referring";
+        addCatalogOSGiEntity(referencedSymbolicName, SIMPLE_ENTITY_TYPE);
+        addCatalogChildOSGiEntity(referrerSymbolicName, ver(referencedSymbolicName));
 
         Entity app = createAndStartApplication(
             "name: simple-app-yaml",
@@ -124,7 +124,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "services:",
             "- serviceType: "+BasicEntity.class.getName(),
             "  brooklyn.children:",
-            "  - type: " + ver(referrerRegisteredTypeName));
+            "  - type: " + ver(referrerSymbolicName));
 
         Collection<Entity> children = app.getChildren();
         assertEquals(children.size(), 1);
@@ -139,32 +139,32 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         Entity grandGrandChild = Iterables.getOnlyElement(grandGrandChildren);
         assertEquals(grandGrandChild.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
 
-        deleteCatalogEntity(referencedRegisteredTypeName);
-        deleteCatalogEntity(referrerRegisteredTypeName);
+        deleteCatalogEntity(referencedSymbolicName);
+        deleteCatalogEntity(referrerSymbolicName);
     }
 
     @Test
     public void testLaunchApplicationWithTypeUsingJavaColonPrefix() throws Exception {
-        String registeredTypeName = SIMPLE_ENTITY_TYPE;
+        String symbolicName = SIMPLE_ENTITY_TYPE;
         String serviceName = "java:"+SIMPLE_ENTITY_TYPE;
-        registerAndLaunchAndAssertSimpleEntity(registeredTypeName, serviceName);
+        registerAndLaunchAndAssertSimpleEntity(symbolicName, serviceName);
     }
 
     @Test
     public void testLaunchApplicationLoopWithJavaTypeName() throws Exception {
-        String registeredTypeName = SIMPLE_ENTITY_TYPE;
+        String symbolicName = SIMPLE_ENTITY_TYPE;
         String serviceName = SIMPLE_ENTITY_TYPE;
-        registerAndLaunchAndAssertSimpleEntity(registeredTypeName, serviceName);
+        registerAndLaunchAndAssertSimpleEntity(symbolicName, serviceName);
     }
 
     @Test
     public void testLaunchApplicationChildLoopCatalogIdFails() throws Exception {
-        String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
+        String referrerSymbolicName = "my.catalog.app.id.child.referring";
         try {
-            addCatalogChildOSGiEntity(referrerRegisteredTypeName, ver(referrerRegisteredTypeName));
+            addCatalogChildOSGiEntity(referrerSymbolicName, ver(referrerSymbolicName));
             fail("Expected to throw IllegalStateException");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("Could not find "+referrerRegisteredTypeName));
+            assertTrue(e.getMessage().contains("Could not find "+referrerSymbolicName));
         }
     }
 
@@ -334,28 +334,28 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         Assert.assertNotNull(spec);
     }
 
-    private void registerAndLaunchAndAssertSimpleEntity(String registeredTypeName, String serviceType) throws Exception {
-        addCatalogOSGiEntity(registeredTypeName, serviceType);
+    private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
+        addCatalogOSGiEntity(symbolicName, serviceType);
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: "+ver(registeredTypeName);
+                      "  - serviceType: "+ver(symbolicName);
         Entity app = createAndStartApplication(yaml);
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
         assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
 
-        deleteCatalogEntity(registeredTypeName);
+        deleteCatalogEntity(symbolicName);
     }
 
-    private void addCatalogOSGiEntity(String registeredTypeName) {
-        addCatalogOSGiEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
+    private void addCatalogOSGiEntity(String symbolicName) {
+        addCatalogOSGiEntity(symbolicName, SIMPLE_ENTITY_TYPE);
     }
 
-    private void addCatalogOSGiEntity(String registeredTypeName, String serviceType) {
+    private void addCatalogOSGiEntity(String symbolicName, String serviceType) {
         addCatalogItem(
             "brooklyn.catalog:",
-            "  id: " + registeredTypeName,
+            "  id: " + symbolicName,
             "  name: My Catalog App",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",
@@ -367,10 +367,10 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "- type: " + serviceType);
     }
 
-    private void addCatalogChildOSGiEntity(String registeredTypeName, String serviceType) {
+    private void addCatalogChildOSGiEntity(String symbolicName, String serviceType) {
         addCatalogItem(
             "brooklyn.catalog:",
-            "  id: " + registeredTypeName,
+            "  id: " + symbolicName,
             "  name: My Catalog App",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",

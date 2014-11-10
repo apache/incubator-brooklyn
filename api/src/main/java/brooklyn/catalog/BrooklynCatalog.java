@@ -25,35 +25,37 @@ import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
 
-    /** @return The item with the given ID or {@link brooklyn.catalog.CatalogItem#getRegisteredTypeName()
-     * registeredTypeName}, or null if not found.
+    /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+     * symbolicName}, or null if not found.
      * @deprecated since 0.7.0 use {@link #getCatalogItem(String, String)} */
     @Deprecated
-    CatalogItem<?,?> getCatalogItem(String idOrRegisteredTypeName);
+    CatalogItem<?,?> getCatalogItem(String symbolicName);
 
-    /** @return The item with the given ID or {@link brooklyn.catalog.CatalogItem#getRegisteredTypeName()
-     * registeredTypeName}, or null if not found. */
-    CatalogItem<?,?> getCatalogItem(String idOrRegisteredTypeName, String version);
+    /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+     * symbolicName}, or null if not found. */
+    CatalogItem<?,?> getCatalogItem(String symbolicName, String version);
 
-    /** @return Deletes the item with the given ID
+    /** @return Deletes the item with the given
+     *  {@link brooklyn.catalog.CatalogItem#getSymbolicName() symbolicName}
      * @throws NoSuchElementException if not found
      * @deprecated since 0.7.0 use {@link #deleteCatalogItem(String, String)} */
     @Deprecated
-    void deleteCatalogItem(String id);
+    void deleteCatalogItem(String symbolicName);
 
-    /** @return Deletes the item with the given ID and version
+    /** @return Deletes the item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+     * symbolicName} and version
      * @throws NoSuchElementException if not found */
-    void deleteCatalogItem(String id, String version);
+    void deleteCatalogItem(String symbolicName, String version);
 
     /** variant of {@link #getCatalogItem(String)} which checks (and casts) type for convenience
      * (returns null if type does not match)
      * @deprecated since 0.7.0 use {@link #getCatalogItem(Class<T>, String, String)} */
     @Deprecated
-    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id);
+    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String symbolicName);
 
     /** variant of {@link #getCatalogItem(String, String)} which checks (and casts) type for convenience
      * (returns null if type does not match) */
-    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id, String version);
+    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String symbolicName, String version);
 
     /** @return All items in the catalog */
     <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems();
