@@ -18,19 +18,46 @@
  */
 package brooklyn.management.internal;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
 import brooklyn.management.usage.ApplicationUsage;
+import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
 import brooklyn.management.usage.LocationUsage;
+import brooklyn.management.usage.LocationUsage.LocationEvent;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 
 @Beta
 public interface UsageManager {
+
+    @SuppressWarnings("serial")
+    public static final ConfigKey<List<UsageListener>> USAGE_LISTENERS = ConfigKeys.newConfigKey(
+            new TypeToken<List<UsageListener>>() {},
+            "brooklyn.usageManager.listeners", "Optional usage listeners (i.e. for metering)",
+            ImmutableList.<UsageListener>of());
+
+    public interface UsageListener {
+        public static final UsageListener NOOP = new UsageListener() {
+            @Override public void onApplicationEvent(String applicationId, String applicationName, String entityType, 
+                    Map<String, String> metadata, ApplicationEvent event) {} 
+            @Override public void onLocationEvent(String locationId, Map<String, String> metadata, LocationEvent event) {}
+        };
+        
+        void onApplicationEvent(String applicationId, String applicationName, String entityType, 
+                Map<String, String> metadata, ApplicationEvent event);
+        
+        void onLocationEvent(String locationId, Map<String, String> metadata, LocationEvent event);
+    }
 
     /**
      * Adds this application event to the usage record for the given app (creating the usage 
@@ -66,4 +93,17 @@ public interface UsageManager {
      */
     Set<ApplicationUsage> getApplicationUsage(Predicate<? super ApplicationUsage> filter);
 
+    /**
+     * Adds the given listener, to be notified on recording of application/location events.
+     * The listener notifications may be asynchronous.
+     * 
+     * As of 0.7.0, the listener is not persisted so will be lost on restart/rebind. This
+     * behaviour may change in a subsequent release. 
+     */
+    void addUsageListener(UsageListener listener);
+
+    /**
+     * Removes the given listener.
+     */
+    void removeUsageListener(UsageListener listener);
 }
