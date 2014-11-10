@@ -34,8 +34,7 @@ import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 
 /**
- * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; 
- *             this class will be merged with {@link BrooklynMementoPersisterInMemory} in test code.
+ * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToObjectStore} instead 
  */
 @Deprecated
 public abstract class AbstractBrooklynMementoPersister implements BrooklynMementoPersister {
@@ -92,6 +91,11 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
         memento.reset(checkNotNull(newMemento, "memento"));
     }
+    
+    public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
+        throw new IllegalStateException("Not supported; use "+BrooklynMementoPersisterToObjectStore.class);
+    }
+    
 
     @Override
     public void delta(Delta delta, PersistenceExceptionHandler exceptionHanlder) {

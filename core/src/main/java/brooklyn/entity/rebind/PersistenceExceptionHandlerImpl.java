@@ -82,16 +82,18 @@ public class PersistenceExceptionHandlerImpl implements PersistenceExceptionHand
         onErrorImpl(errmsg, e, prevFailedPersisters.add(id));
     }
     
-    protected void onErrorImpl(String errmsg, Exception e, boolean isRepeat) {
+    protected void onErrorImpl(String errmsg, Exception e, boolean isNew) {
+        // TODO the default behaviour is simply to warn; we should have a "fail_at_end" behaviour,
+        // and a way for other subsystems to tune in to such failures
         Exceptions.propagateIfFatal(e);
         if (isActive()) {
-            if (isRepeat) {
+            if (!isNew) {
                 if (LOG.isDebugEnabled()) LOG.debug("Repeating problem: "+errmsg, e);
             } else {
                 LOG.warn("Problem: "+errmsg, e);
             }
         } else {
-            if (isRepeat) {
+            if (!isNew) {
                 if (LOG.isTraceEnabled()) LOG.trace("Repeating problem: "+errmsg+"; but no longer active (ignoring)", e);
             } else {
                 if (LOG.isDebugEnabled()) LOG.debug("Problem: "+errmsg+"; but no longer active (ignoring)", e);

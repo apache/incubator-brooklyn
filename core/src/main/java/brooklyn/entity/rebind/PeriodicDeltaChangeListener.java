@@ -31,14 +31,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
@@ -79,18 +80,19 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     private static final Logger LOG = LoggerFactory.getLogger(PeriodicDeltaChangeListener.class);
 
     private static class DeltaCollector {
-        Set<Location> locations = Sets.newLinkedHashSet();
-        Set<Entity> entities = Sets.newLinkedHashSet();
-        Set<Policy> policies = Sets.newLinkedHashSet();
-        Set<Enricher> enrichers = Sets.newLinkedHashSet();
-        Set<Feed> feeds = Sets.newLinkedHashSet();
-        Set<CatalogItem<?, ?>> catalogItems = Sets.newLinkedHashSet();
-        Set<String> removedLocationIds = Sets.newLinkedHashSet();
-        Set<String> removedEntityIds = Sets.newLinkedHashSet();
-        Set<String> removedPolicyIds = Sets.newLinkedHashSet();
-        Set<String> removedEnricherIds = Sets.newLinkedHashSet();
-        Set<String> removedFeedIds = Sets.newLinkedHashSet();
-        Set<String> removedCatalogItemIds = Sets.newLinkedHashSet();
+        private Set<Location> locations = Sets.newLinkedHashSet();
+        private Set<Entity> entities = Sets.newLinkedHashSet();
+        private Set<Policy> policies = Sets.newLinkedHashSet();
+        private Set<Enricher> enrichers = Sets.newLinkedHashSet();
+        private Set<Feed> feeds = Sets.newLinkedHashSet();
+        private Set<CatalogItem<?, ?>> catalogItems = Sets.newLinkedHashSet();
+        
+        private Set<String> removedLocationIds = Sets.newLinkedHashSet();
+        private Set<String> removedEntityIds = Sets.newLinkedHashSet();
+        private Set<String> removedPolicyIds = Sets.newLinkedHashSet();
+        private Set<String> removedEnricherIds = Sets.newLinkedHashSet();
+        private Set<String> removedFeedIds = Sets.newLinkedHashSet();
+        private Set<String> removedCatalogItemIds = Sets.newLinkedHashSet();
 
         public boolean isEmpty() {
             return locations.isEmpty() && entities.isEmpty() && policies.isEmpty() && 
@@ -100,6 +102,56 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     removedEnricherIds.isEmpty() && removedFeedIds.isEmpty() &&
                     removedCatalogItemIds.isEmpty();
         }
+        
+        public void add(BrooklynObject instance) {
+            BrooklynObjectType type = BrooklynObjectType.of(instance);
+            getUnsafeCollectionOfType(type).add(instance);
+        }
+        
+        public void addIfNotRemoved(BrooklynObject instance) {
+            BrooklynObjectType type = BrooklynObjectType.of(instance);
+            if (!getRemovedIdsOfType(type).contains(instance.getId())) {
+                getUnsafeCollectionOfType(type).add(instance);
+            }
+        }
+
+        public void remove(BrooklynObject instance) {
+            BrooklynObjectType type = BrooklynObjectType.of(instance);
+            getUnsafeCollectionOfType(type).remove(instance);
+            getRemovedIdsOfType(type).add(instance.getId());
+        }
+
+        @SuppressWarnings("unchecked")
+        private Set<BrooklynObject> getUnsafeCollectionOfType(BrooklynObjectType type) {
+            return (Set<BrooklynObject>)getCollectionOfType(type);
+        }
+
+        private Set<? extends BrooklynObject> getCollectionOfType(BrooklynObjectType type) {
+            switch (type) {
+            case ENTITY: return entities;
+            case LOCATION: return locations;
+            case ENRICHER: return enrichers;
+            case FEED: return feeds;
+            case POLICY: return policies;
+            case CATALOG_ITEM: return catalogItems;
+            case UNKNOWN: break;
+            }
+            throw new IllegalStateException("No collection for type "+type);
+        }
+        
+        private Set<String> getRemovedIdsOfType(BrooklynObjectType type) {
+            switch (type) {
+            case ENTITY: return removedEntityIds;
+            case LOCATION: return removedLocationIds;
+            case ENRICHER: return removedEnricherIds;
+            case FEED: return removedFeedIds;
+            case POLICY: return removedPolicyIds;
+            case CATALOG_ITEM: return removedCatalogItemIds;
+            case UNKNOWN: break;
+            }
+            throw new IllegalStateException("No removed ids for type "+type);
+        }
+
     }
     
     private final ExecutionContext executionContext;
@@ -262,47 +314,28 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     }
     
     private void addReferencedObjects(DeltaCollector deltaCollector) {
-        Set<Location> referencedLocations = Sets.newLinkedHashSet();
-        Set<Policy> referencedPolicies = Sets.newLinkedHashSet();
-        Set<Enricher> referencedEnrichers = Sets.newLinkedHashSet();
-        Set<Feed> referencedFeeds = Sets.newLinkedHashSet();
+        Set<BrooklynObject> referencedObjects = Sets.newLinkedHashSet();
         
+        // collect references
         for (Entity entity : deltaCollector.entities) {
             // FIXME How to let the policy/location tell us about changes? Don't do this every time!
             for (Location location : entity.getLocations()) {
                 Collection<Location> findLocationsInHierarchy = TreeUtils.findLocationsInHierarchy(location);
-                referencedLocations.addAll(findLocationsInHierarchy);
+                referencedObjects.addAll(findLocationsInHierarchy);
             }
             if (persistPoliciesEnabled) {
-                referencedPolicies.addAll(entity.getPolicies());
+                referencedObjects.addAll(entity.getPolicies());
             }
             if (persistEnrichersEnabled) {
-                referencedEnrichers.addAll(entity.getEnrichers());
+                referencedObjects.addAll(entity.getEnrichers());
             }
             if (persistFeedsEnabled) {
-                referencedFeeds.addAll(((EntityInternal)entity).feeds().getFeeds());
+                referencedObjects.addAll(((EntityInternal)entity).feeds().getFeeds());
             }
         }
         
-        for (Location loc : referencedLocations) {
-            if (!deltaCollector.removedLocationIds.contains(loc.getId())) {
-                deltaCollector.locations.add(loc);
-            }
-        }
-        for (Policy pol : referencedPolicies) {
-            if (!deltaCollector.removedPolicyIds.contains(pol.getId())) {
-                deltaCollector.policies.add(pol);
-            }
-        }
-        for (Enricher enr : referencedEnrichers) {
-            if (!deltaCollector.removedEnricherIds.contains(enr.getId())) {
-                deltaCollector.enrichers.add(enr);
-            }
-        }
-        for (Feed feed : referencedFeeds) {
-            if (!deltaCollector.removedFeedIds.contains(feed.getId())) {
-                deltaCollector.feeds.add(feed);
-            }
+        for (BrooklynObject instance : referencedObjects) {
+            deltaCollector.addIfNotRemoved(instance);
         }
     }
     
@@ -344,54 +377,19 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 if (LOG.isTraceEnabled()) LOG.trace("No changes to persist since last delta");
             } else {
                 PersisterDeltaImpl persisterDelta = new PersisterDeltaImpl();
-                for (Location location : prevDeltaCollector.locations) {
-                    try {
-                        persisterDelta.locations.add(((LocationInternal)location).getRebindSupport().getMemento());
-                    } catch (Exception e) {
-                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.LOCATION, location, e);
+                
+                for (BrooklynObjectType type: BrooklynPersistenceUtils.STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER) {
+                    for (BrooklynObject instance: prevDeltaCollector.getCollectionOfType(type)) {
+                        try {
+                            persisterDelta.add(type, ((BrooklynObjectInternal)instance).getRebindSupport().getMemento());
+                        } catch (Exception e) {
+                            exceptionHandler.onGenerateMementoFailed(type, instance, e);
+                        }
                     }
                 }
-                for (Entity entity : prevDeltaCollector.entities) {
-                    try {
-                        persisterDelta.entities.add(((EntityInternal)entity).getRebindSupport().getMemento());
-                    } catch (Exception e) {
-                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.ENTITY, entity, e);
-                    }
+                for (BrooklynObjectType type: BrooklynPersistenceUtils.STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER) {
+                    persisterDelta.removed(type, prevDeltaCollector.getRemovedIdsOfType(type));
                 }
-                for (Policy policy : prevDeltaCollector.policies) {
-                    try {
-                        persisterDelta.policies.add(policy.getRebindSupport().getMemento());
-                    } catch (Exception e) {
-                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.POLICY, policy, e);
-                    }
-                }
-                for (Enricher enricher : prevDeltaCollector.enrichers) {
-                    try {
-                        persisterDelta.enrichers.add(enricher.getRebindSupport().getMemento());
-                    } catch (Exception e) {
-                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.ENRICHER, enricher, e);
-                    }
-                }
-                for (Feed feed : prevDeltaCollector.feeds) {
-                    try {
-                        persisterDelta.feeds.add(feed.getRebindSupport().getMemento());
-                    } catch (Exception e) {
-                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.FEED, feed, e);
-                    }
-                }
-                for (CatalogItem<?, ?> catalogItem : prevDeltaCollector.catalogItems) {
-                    try {
-                        persisterDelta.catalogItems.add(catalogItem.getRebindSupport().getMemento());
-                    } catch (Exception e) {
-                        exceptionHandler.onGenerateMementoFailed(BrooklynObjectType.CATALOG_ITEM, catalogItem, e);
-                    }
-                }
-                persisterDelta.removedLocationIds = prevDeltaCollector.removedLocationIds;
-                persisterDelta.removedEntityIds = prevDeltaCollector.removedEntityIds;
-                persisterDelta.removedPolicyIds = prevDeltaCollector.removedPolicyIds;
-                persisterDelta.removedEnricherIds = prevDeltaCollector.removedEnricherIds;
-                persisterDelta.removedFeedIds = prevDeltaCollector.removedFeedIds;
-                persisterDelta.removedCatalogItemIds = prevDeltaCollector.removedCatalogItemIds;
 
                 /*
                  * Need to guarantee "happens before", with any thread that subsequently reads
@@ -441,63 +439,30 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     public synchronized void onUnmanaged(BrooklynObject instance) {
         if (LOG.isTraceEnabled()) LOG.trace("onUnmanaged: {}", instance);
         if (!isStopped()) {
+            removeFromCollector(instance);
             if (instance instanceof Entity) {
                 Entity entity = (Entity) instance;
-                deltaCollector.removedEntityIds.add(entity.getId());
-                deltaCollector.entities.remove(entity);
-                
-                for (Policy policy : entity.getPolicies()) {
-                    deltaCollector.removedPolicyIds.add(policy.getId());
-                    deltaCollector.policies.remove(policy);
-                }
-                for (Enricher enricher : entity.getEnrichers()) {
-                    deltaCollector.removedEnricherIds.add(enricher.getId());
-                    deltaCollector.enrichers.remove(enricher);
-                }
-                for (Feed feed : ((EntityInternal)entity).feeds().getFeeds()) {
-                    deltaCollector.removedFeedIds.add(feed.getId());
-                    deltaCollector.feeds.remove(feed);
-                }
-            } else if (instance instanceof Location) {
-                deltaCollector.removedLocationIds.add(instance.getId());
-                deltaCollector.locations.remove(instance);
-            } else if (instance instanceof Policy) {
-                deltaCollector.removedPolicyIds.add(instance.getId());
-                deltaCollector.policies.remove(instance);
-            } else if (instance instanceof Enricher) {
-                deltaCollector.removedEnricherIds.add(instance.getId());
-                deltaCollector.enrichers.remove(instance);
-            } else if (instance instanceof Feed) {
-                deltaCollector.removedFeedIds.add(instance.getId());
-                deltaCollector.feeds.remove(instance);
-            } else if (instance instanceof CatalogItem) {
-                deltaCollector.removedCatalogItemIds.add(instance.getId());
-                deltaCollector.catalogItems.remove(instance);
-            } else {
-                throw new IllegalStateException("Unexpected brooklyn type: "+instance);
+                for (BrooklynObject adjunct : entity.getPolicies()) removeFromCollector(adjunct);
+                for (BrooklynObject adjunct : entity.getEnrichers()) removeFromCollector(adjunct);
+                for (BrooklynObject adjunct : ((EntityInternal)entity).feeds().getFeeds()) removeFromCollector(adjunct);
             }
         }
+    }
+    
+    private void removeFromCollector(BrooklynObject instance) {
+        deltaCollector.remove(instance);
     }
 
     @Override
     public synchronized void onChanged(BrooklynObject instance) {
         if (LOG.isTraceEnabled()) LOG.trace("onChanged: {}", instance);
         if (!isStopped()) {
-            if (instance instanceof Entity) {
-                deltaCollector.entities.add((Entity)instance);
-            } else if (instance instanceof Location) {
-                deltaCollector.locations.add((Location) instance);
-            } else if (instance instanceof Policy) {
-                deltaCollector.policies.add((Policy) instance);
-            } else if (instance instanceof Enricher) {
-                deltaCollector.enrichers.add((Enricher) instance);
-            } else if (instance instanceof Feed) {
-                deltaCollector.feeds.add((Feed) instance);
-            } else if (instance instanceof CatalogItem) {
-                deltaCollector.catalogItems.add((CatalogItem<?,?>) instance);
-            } else {
-                throw new IllegalStateException("Unexpected brooklyn type: "+instance);
-            }
+            deltaCollector.add(instance);
         }
     }
+    
+    public PersistenceExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
+    }
+    
 }

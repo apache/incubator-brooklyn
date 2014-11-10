@@ -59,7 +59,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
 /**
- * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; class be moved to tests
+ * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToObjectStore} instead; class be moved to tests
  * <code>
  * new BrooklynMementoPersisterToObjectStore(new InMemoryObjectStore(), classLoader)
  * </code>

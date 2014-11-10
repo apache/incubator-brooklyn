@@ -18,10 +18,11 @@
  */
 package brooklyn.entity.rebind;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.annotation.Nullable;
 
 import brooklyn.entity.Application;
 import brooklyn.management.ha.ManagementNodeState;
@@ -110,7 +111,17 @@ public interface RebindManager {
     /** waits for any needed or pending writes to complete */
     @VisibleForTesting
     public void waitForPendingComplete(Duration duration) throws InterruptedException, TimeoutException;
-    /** Forcibly performs persistence, in the foreground */
+    /** Forcibly performs persistence, in the foreground 
+     * @deprecated since 0.7.0; use {@link #forcePersistNow(boolean)}, 
+     * default parameter here is false to mean incremental, with  */
     @VisibleForTesting
     public void forcePersistNow();
+    /** Forcibly performs persistence, in the foreground, either full (all entities) or incremental;
+     * if no exception handler specified, the default one from the persister is used.
+     * <p>
+     * Note that full persistence does *not* delete items; incremental should normally be sufficient.
+     * (A clear then full persistence would have the same effect, but that is risky in a production
+     * setting if the process fails after the clear!) */
+    @VisibleForTesting
+    public void forcePersistNow(boolean full, @Nullable PersistenceExceptionHandler exceptionHandler);
 }

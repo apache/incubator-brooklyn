@@ -57,6 +57,7 @@ import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -396,8 +397,20 @@ public class RebindManagerImpl implements RebindManager {
     @Override
     @VisibleForTesting
     public void forcePersistNow() {
-//        XXX persistenceStoreAccess.checkpoint(memento, exceptionHandler);
-        persistenceRealChangeListener.persistNow();
+        forcePersistNow(false, null);
+    }
+    @Override
+    @VisibleForTesting
+    public void forcePersistNow(boolean full, PersistenceExceptionHandler exceptionHandler) {
+        if (full) {
+            BrooklynMementoRawData memento = BrooklynPersistenceUtils.newFullMemento(managementContext);
+            if (exceptionHandler==null) {
+                exceptionHandler = persistenceRealChangeListener.getExceptionHandler();
+            }
+            persistenceStoreAccess.checkpoint(memento, exceptionHandler);
+        } else {
+            persistenceRealChangeListener.persistNow();
+        }
     }
     
     @Override

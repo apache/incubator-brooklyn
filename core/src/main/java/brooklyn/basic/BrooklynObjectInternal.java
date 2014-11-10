@@ -18,10 +18,14 @@
  */
 package brooklyn.basic;
 
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 
 public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     
-    public void setCatalogItemId(String id);
+    void setCatalogItemId(String id);
+    
+    @SuppressWarnings("rawtypes")  // subclasses typically apply stronger typing
+    RebindSupport getRebindSupport();
     
 }

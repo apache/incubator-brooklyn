@@ -71,7 +71,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -99,10 +98,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             "persister.maxSerializationAttempts",
             "Maximum number of attempts to serialize a memento (e.g. if first attempts fail because of concurrent modifications of an entity)", 
             5);
-
-    static final List<BrooklynObjectType> PERSISTED_OBJECT_TYPES_IN_ORDER = ImmutableList.of( 
-        BrooklynObjectType.ENTITY, BrooklynObjectType.LOCATION, BrooklynObjectType.POLICY,
-        BrooklynObjectType.ENRICHER, BrooklynObjectType.FEED, BrooklynObjectType.CATALOG_ITEM);
 
     private final PersistenceObjectStore objectStore;
     private final MementoSerializer<Object> serializerWithStandardClassLoader;
@@ -251,7 +246,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
         Stopwatch stopwatch = Stopwatch.createStarted();
         try {
-            for (BrooklynObjectType type: PERSISTED_OBJECT_TYPES_IN_ORDER)
+            for (BrooklynObjectType type: BrooklynPersistenceUtils.STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER)
                 subPathDataBuilder.putAll(type, makeIdSubPathMap(objectStore.listContentsWithSubPath(type.getSubPathName())));
             
         } catch (Exception e) {
@@ -459,7 +454,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             }
         }
         
-        for (BrooklynObjectType type: PERSISTED_OBJECT_TYPES_IN_ORDER) {
+        for (BrooklynObjectType type: BrooklynPersistenceUtils.STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER) {
             for (final Map.Entry<String,String> entry : rawData.getObjectsOfType(type).entrySet()) {
                 futures.add(executor.submit(new VisitorWrapper(type, entry)));
             }
@@ -501,6 +496,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
     }
     
+    /** See {@link BrooklynPersistenceUtils} for conveniences for using this method. */
+    @Override
     @Beta
     public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
         checkWritesAllowed();
@@ -516,7 +513,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             Stopwatch stopwatch = Stopwatch.createStarted();
             List<ListenableFuture<?>> futures = Lists.newArrayList();
             
-            for (BrooklynObjectType type: PERSISTED_OBJECT_TYPES_IN_ORDER) {
+            for (BrooklynObjectType type: BrooklynPersistenceUtils.STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER) {
                 for (Map.Entry<String, String> entry : newMemento.getObjectsOfType(type).entrySet()) {
                     futures.add(asyncPersist(type.getSubPathName(), type, entry.getKey(), entry.getValue(), exceptionHandler));
                 }
@@ -541,14 +538,14 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
         checkWritesAllowed();
 
-        Delta delta = PersisterDeltaImpl.builder()
-                .entities(newMemento.getEntityMementos().values())
-                .locations(newMemento.getLocationMementos().values())
-                .policies(newMemento.getPolicyMementos().values())
-                .enrichers(newMemento.getEnricherMementos().values())
-                .feeds(newMemento.getFeedMementos().values())
-                .catalogItems(newMemento.getCatalogItemMementos().values())
-                .build();
+        MutableDelta delta = new PersisterDeltaImpl();
+        delta.addAll(BrooklynObjectType.ENTITY, newMemento.getEntityMementos().values());
+        delta.addAll(BrooklynObjectType.LOCATION, newMemento.getLocationMementos().values());
+        delta.addAll(BrooklynObjectType.POLICY, newMemento.getPolicyMementos().values());
+        delta.addAll(BrooklynObjectType.ENRICHER, newMemento.getEnricherMementos().values());
+        delta.addAll(BrooklynObjectType.FEED, newMemento.getFeedMementos().values());
+        delta.addAll(BrooklynObjectType.CATALOG_ITEM, newMemento.getCatalogItemMementos().values());
+        
         Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
         
         if (LOG.isDebugEnabled()) LOG.debug("Checkpointed entire memento in {}", Time.makeTimeStringRounded(stopwatch));
@@ -587,13 +584,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             Stopwatch stopwatch = Stopwatch.createStarted();
             List<ListenableFuture<?>> futures = Lists.newArrayList();
             
-            for (BrooklynObjectType type: PERSISTED_OBJECT_TYPES_IN_ORDER) {
+            for (BrooklynObjectType type: BrooklynPersistenceUtils.STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER) {
                 for (Memento entity : delta.getObjectsOfType(type)) {
                     futures.add(asyncPersist(type.getSubPathName(), entity, exceptionHandler));
                 }
             }
-            for (BrooklynObjectType type: PERSISTED_OBJECT_TYPES_IN_ORDER) {
-                for (String id : delta.getRemovedObjectsOfType(type)) {
+            for (BrooklynObjectType type: BrooklynPersistenceUtils.STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER) {
+                for (String id : delta.getRemovedIdsOfType(type)) {
                     futures.add(asyncDelete(type.getSubPathName(), id, exceptionHandler));
                 }
             }

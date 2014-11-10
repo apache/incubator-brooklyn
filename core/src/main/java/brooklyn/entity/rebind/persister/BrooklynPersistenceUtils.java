@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.rebind.persister;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,7 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.dto.MementosGenerators;
@@ -51,12 +54,19 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
 public class BrooklynPersistenceUtils {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynPersistenceUtils.class);
     
+    @Beta
+    public static final List<BrooklynObjectType> STANDARD_BROOKLYN_OBJECT_TYPE_PERSISTENCE_ORDER = ImmutableList.of( 
+        BrooklynObjectType.ENTITY, BrooklynObjectType.LOCATION, BrooklynObjectType.POLICY,
+        BrooklynObjectType.ENRICHER, BrooklynObjectType.FEED, BrooklynObjectType.CATALOG_ITEM);
+
     /** Creates a {@link PersistenceObjectStore} for general-purpose use. */
     public static PersistenceObjectStore newPersistenceObjectStore(ManagementContext managementContext,
             String locationSpec, String locationContainer) {

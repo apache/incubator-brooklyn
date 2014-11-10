@@ -390,6 +390,12 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         for (CatalogItemMemento m : newMemento.getCatalogItemMementos().values()) {
             persist(m);
         }
+        LOG.warn("Using legacy persister; feeds will not be persisted");
+    }
+    
+    @Override
+    public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
+        throw new IllegalStateException("Not supported; use "+BrooklynMementoPersisterToObjectStore.class);
     }
     
     @Override
