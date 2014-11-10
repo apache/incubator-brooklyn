@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
+import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsLocationConfig;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
@@ -100,8 +101,9 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
 
     @Test(groups = {"Live"})
     public void test_CentOS_6_3() throws Exception {
+        // TODO Should openIptables=true be the default?!
         // Image: {id=us-east-1/ami-a96b01c0, providerId=ami-a96b01c0, name=CentOS-6.3-x86_64-GA-EBS-02-85586466-5b6c-4495-b580-14f72b4bcf51-ami-bb9af1d2.1, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.3, description=aws-marketplace/CentOS-6.3-x86_64-GA-EBS-02-85586466-5b6c-4495-b580-14f72b4bcf51-ami-bb9af1d2.1, is64Bit=true}, description=CentOS-6.3-x86_64-GA-EBS-02 on EBS x86_64 20130527:1219, version=bb9af1d2.1, status=AVAILABLE[available], loginUser=root, userMetadata={owner=679593333241, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}})
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-a96b01c0", "hardwareId", SMALL_HARDWARE_ID));
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-a96b01c0", "hardwareId", SMALL_HARDWARE_ID, JcloudsLocation.OPEN_IPTABLES.getName(), true));
     }
 
     @Test(groups = {"Live"})

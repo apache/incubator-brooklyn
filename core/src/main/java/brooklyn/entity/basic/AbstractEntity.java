@@ -55,6 +55,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.internal.BrooklynFeatureEnablement;
@@ -1032,12 +1033,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         Map<AttributeSensor, Object> result = Maps.newLinkedHashMap();
         Map<String, Object> attribs = attributesInternal.asMap();
         for (Map.Entry<String,Object> entry : attribs.entrySet()) {
-            AttributeSensor attribKey = (AttributeSensor) entityType.getSensor(entry.getKey());
+            AttributeSensor<?> attribKey = (AttributeSensor<?>) entityType.getSensor(entry.getKey());
             if (attribKey == null) {
-                LOG.warn("When retrieving all attributes of {}, ignoring attribute {} because no matching AttributeSensor found", this, entry.getKey());
-            } else {
-                result.put(attribKey, entry.getValue());
+                // Most likely a race: e.g. persister thread calling getAllAttributes; writer thread
+                // has written attribute value and is in process of calling entityType.addSensorIfAbsent(attribute)
+                // Just use a synthetic AttributeSensor, rather than ignoring value.
+                // TODO If it's not a race, then don't log.warn every time!
+                LOG.warn("When retrieving all attributes of {}, no AttributeSensor for attribute {} (creating synthetic)", this, entry.getKey());
+                attribKey = Sensors.newSensor(Object.class, entry.getKey());
             }
+            result.put(attribKey, entry.getValue());
         }
         return result;
     }
