@@ -35,6 +35,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
@@ -53,6 +54,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.api.client.util.Sets;
 import com.google.common.annotations.Beta;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -181,7 +183,6 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         return rebind(checkSerializable, false);
     }
 
-    @SuppressWarnings("unchecked")
     protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
         return rebind(checkSerializable, terminateOrigManagementContext, (File)null);
     }

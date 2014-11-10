@@ -135,7 +135,7 @@ public class CatalogDtoTest {
     public void testVersionedIdSplitter() {
         String id = "simple.id";
         String version = "0.1.2";
-        String versionedId = id + CatalogUtils.VERSION_DELIMITER + version;
+        String versionedId = CatalogUtils.getVersionedId(id, version);
         
         Assert.assertNull(CatalogUtils.getIdFromVersionedId(null));
         Assert.assertNull(CatalogUtils.getVersionFromVersionedId(null));

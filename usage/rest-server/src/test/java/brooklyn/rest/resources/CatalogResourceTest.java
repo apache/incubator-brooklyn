@@ -265,6 +265,6 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   }
   
   private static String ver(String id) {
-      return id + CatalogUtils.VERSION_DELIMITER + TEST_VERSION;
+      return CatalogUtils.getVersionedId(id, TEST_VERSION);
   }
 }

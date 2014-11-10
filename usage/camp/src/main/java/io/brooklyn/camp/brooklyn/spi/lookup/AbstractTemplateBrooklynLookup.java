@@ -25,6 +25,7 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
@@ -50,13 +51,7 @@ public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>
     }
 
     private CatalogItem<?, ?> getCatalogItem(String versionedId) {
-        String id = CatalogUtils.getIdFromVersionedId(versionedId);
-        String version = CatalogUtils.getVersionFromVersionedId(versionedId);
-        if (id != null) {
-            return bmc.getCatalog().getCatalogItem(id, version);
-        } else {
-            return bmc.getCatalog().getCatalogItem(id);
-        }
+        return CatalogUtils.getCatalogItemOptionalVersion(bmc, versionedId);
     }
 
     public abstract T adapt(CatalogItem<?,?> item);

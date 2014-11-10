@@ -44,6 +44,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -384,7 +385,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     private void checkEntityTypeIsValid(String type) {
-        if (brooklyn().getCatalog().getCatalogItem(type) == null) {
+        if (CatalogUtils.getCatalogItemOptionalVersion(mgmt(), type) == null) {
             try {
                 brooklyn().getCatalog().getRootClassLoader().loadClass(type);
             } catch (ClassNotFoundException e) {

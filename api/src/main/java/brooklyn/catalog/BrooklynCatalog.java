@@ -24,6 +24,7 @@ import java.util.NoSuchElementException;
 import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
+    static String DEFAULT_VERSION = "0.0.0_DEFAULT_VERSION";
 
     /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
      * symbolicName}, or null if not found.
@@ -47,7 +48,7 @@ public interface BrooklynCatalog {
      * @throws NoSuchElementException if not found */
     void deleteCatalogItem(String symbolicName, String version);
 
-    /** variant of {@link #getCatalogItem(String)} which checks (and casts) type for convenience
+    /** variant of {@link #getCatalogItem(String, String)} which checks (and casts) type for convenience
      * (returns null if type does not match)
      * @deprecated since 0.7.0 use {@link #getCatalogItem(Class<T>, String, String)} */
     @Deprecated

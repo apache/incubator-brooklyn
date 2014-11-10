@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -33,6 +34,7 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
@@ -126,20 +128,20 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public void deleteEntity(String entityId) throws Exception {
-        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId);
-        if (result==null) {
+        try {
+            brooklyn().getCatalog().deleteCatalogItem(entityId);
+        } catch (NoSuchElementException e) {
             throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
         }
-        brooklyn().getCatalog().deleteCatalogItem(entityId);
     }
 
     @Override
     public void deleteEntity(String entityId, String version) throws Exception {
-      CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(entityId, version);
-      if (result==null) {
-        throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
+      try {
+          brooklyn().getCatalog().deleteCatalogItem(entityId, version);
+      } catch (NoSuchElementException e) {
+          throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", entityId, version);
       }
-      brooklyn().getCatalog().deleteCatalogItem(entityId, version);
     }
 
     @Override
@@ -160,7 +162,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         //Or we could provide asEntity/asPolicy cast methods on the CataloItem doing a safety check internally
         @SuppressWarnings("unchecked")
         CatalogItem<? extends Entity,EntitySpec<?>> result =
-                (CatalogItem<? extends Entity,EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(entityId);
+                (CatalogItem<? extends Entity,EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(entityId, BrooklynCatalog.DEFAULT_VERSION);
 
         if (result==null) {
             throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
@@ -203,7 +205,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     public CatalogItemSummary getPolicy(String policyId) {
         @SuppressWarnings("unchecked")
         CatalogItem<? extends Policy, PolicySpec<?>> result =
-                (CatalogItem<? extends Policy, PolicySpec<?>>) brooklyn().getCatalog().getCatalogItem(policyId);
+                (CatalogItem<? extends Policy, PolicySpec<?>>) brooklyn().getCatalog().getCatalogItem(policyId, BrooklynCatalog.DEFAULT_VERSION);
 
         if (result==null) {
             throw WebResourceUtils.notFound("Policy with id '%s' not found", policyId);
@@ -243,7 +245,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public Response getIcon(String itemId) {
-        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId);
+        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId, BrooklynCatalog.DEFAULT_VERSION);
         return getCatalogItemIcon(result);
     }
 

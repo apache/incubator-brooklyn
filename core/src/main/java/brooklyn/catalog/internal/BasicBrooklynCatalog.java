@@ -68,6 +68,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 public class BasicBrooklynCatalog implements BrooklynCatalog {
@@ -168,7 +169,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     protected CatalogItemDo<?,?> getCatalogItemDo(String symbolicName, String version) {
-        String versionedId = CatalogUtils.getVersionedId(symbolicName, version);
+        String fixedVersionId = getFixedVersionId(symbolicName, version);
+        if (fixedVersionId == null) {
+            //no items with symbolicName exist
+            return null;
+        }
+
+        String versionedId = CatalogUtils.getVersionedId(symbolicName, fixedVersionId);
         CatalogItemDo<?, ?> item = null;
         //TODO should remove "manual additions" bucket; just have one map a la osgi
         if (manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getIdCache().get(versionedId);
@@ -176,10 +183,28 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return item;
     }
     
+    private String getFixedVersionId(String symbolicName, String version) {
+        if (!DEFAULT_VERSION.equals(version)) {
+            return version;
+        } else {
+            return getDefaultVersion(symbolicName);
+        }
+    }
+
+    private String getDefaultVersion(String symbolicName) {
+        Iterable<CatalogItem<Object, Object>> versions = getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        ImmutableSortedSet<CatalogItem<?, ?>> orderedVersions = ImmutableSortedSet.orderedBy(new CatalogItemVersionComparator()).addAll(versions).build();
+        if (!orderedVersions.isEmpty()) {
+            return orderedVersions.iterator().next().getVersion();
+        } else {
+            return null;
+        }
+    }
+
     @Override
     @Deprecated
     public CatalogItem<?,?> getCatalogItem(String id) {
-        return getCatalogItem(id, NO_VERSION);
+        return getCatalogItem(id, DEFAULT_VERSION);
     }
     
     @Override
@@ -194,6 +219,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @Override
     @Deprecated
     public void deleteCatalogItem(String id) {
+        //Delete only if installed through the
+        //deprecated methods. Don't support DEFAULT_VERSION for delete.
         deleteCatalogItem(id, NO_VERSION);
     }
 
@@ -201,7 +228,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     public void deleteCatalogItem(String id, String version) {
         log.debug("Deleting manual catalog item from "+mgmt+": "+id + ":" + version);
         checkNotNull(id, "id");
-        checkNotNull(id, "version");
+        checkNotNull(version, "version");
+        if (DEFAULT_VERSION.equals(version)) {
+            throw new IllegalStateException("Deleting items with unspecified version (argument DEFAULT_VERSION) not supported.");
+        }
         CatalogItem<?, ?> item = getCatalogItem(id, version);
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(item);
         if (itemDto == null) {
@@ -224,7 +254,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @Override
     @Deprecated
     public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
-        return getCatalogItem(type, id, NO_VERSION);
+        return getCatalogItem(type, id, DEFAULT_VERSION);
     }
     
     @SuppressWarnings("unchecked")
@@ -417,7 +447,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         symbolicName = (String) catalog.getMaybe("symbolicName").orNull();
         if (Strings.isBlank(symbolicName)) {
             symbolicName = (String) catalog.getMaybe("id").orNull();
-            if (Strings.isNonBlank(symbolicName) && symbolicName.indexOf(CatalogUtils.VERSION_DELIMITER) != -1) {
+            if (Strings.isNonBlank(symbolicName) && CatalogUtils.looksLikeVersionedId(symbolicName)) {
                 symbolicName = CatalogUtils.getIdFromVersionedId(symbolicName);
                 version = CatalogUtils.getVersionFromVersionedId(symbolicName);
             }

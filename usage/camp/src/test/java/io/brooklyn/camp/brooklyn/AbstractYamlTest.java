@@ -153,7 +153,7 @@ public abstract class AbstractYamlTest {
     }
 
     protected String ver(String id) {
-        return id + CatalogUtils.VERSION_DELIMITER + TEST_VERSION;
+        return CatalogUtils.getVersionedId(id, TEST_VERSION);
     }
 
     public void forceCatalogUpdate() {

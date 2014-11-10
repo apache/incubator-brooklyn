@@ -122,12 +122,12 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
             decorations.add(spec);
         }
         private CatalogItem<?, ?> getPolicyCatalogItem(BrooklynCatalog catalog, String policyType) {
-            String id = CatalogUtils.getIdFromVersionedId(policyType);
-            String version = CatalogUtils.getVersionFromVersionedId(policyType);
-            if (id != null) {
+            if (CatalogUtils.looksLikeVersionedId(policyType)) {
+                String id = CatalogUtils.getIdFromVersionedId(policyType);
+                String version = CatalogUtils.getVersionFromVersionedId(policyType);
                 return catalog.getCatalogItem(id, version);
             } else {
-                return catalog.getCatalogItem(policyType);
+                return catalog.getCatalogItem(policyType, BrooklynCatalog.DEFAULT_VERSION);
             }
         }
     }

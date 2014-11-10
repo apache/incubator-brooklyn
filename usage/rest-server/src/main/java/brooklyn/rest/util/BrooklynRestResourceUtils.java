@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Application;
@@ -366,7 +367,7 @@ public class BrooklynRestResourceUtils {
 
     protected Map<?, ?> getRenderingConfigurationFor(String catalogId) {
         MutableMap<Object, Object> result = MutableMap.of();
-        CatalogItem<?,?> item = mgmt.getCatalog().getCatalogItem(catalogId);
+        CatalogItem<?,?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, catalogId);
         if (item==null) return result;
         
         result.addIfNotNull("iconUrl", item.getIconUrl());

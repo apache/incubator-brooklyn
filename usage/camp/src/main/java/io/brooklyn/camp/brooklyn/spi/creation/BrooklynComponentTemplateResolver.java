@@ -191,10 +191,7 @@ public class BrooklynComponentTemplateResolver {
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
         String type = getBrooklynType();
         if (type != null) {
-            BrooklynCatalog catalog = loader.getManagementContext().getCatalog();
-            return catalog.getCatalogItem(Entity.class,
-                    CatalogUtils.getIdFromVersionedId(type),
-                    CatalogUtils.getVersionFromVersionedId(type));
+            return CatalogUtils.getCatalogItemOptionalVersion(loader.getManagementContext(), Entity.class,  type);
         } else {
             return null;
         }

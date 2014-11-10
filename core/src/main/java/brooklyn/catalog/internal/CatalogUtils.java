@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
@@ -141,9 +142,13 @@ public class CatalogUtils {
             log.debug(message, args);
     }
 
+    public static boolean looksLikeVersionedId(String versionedId) {
+        return versionedId.indexOf(VERSION_DELIMITER) != -1;
+    }
+
     public static String getIdFromVersionedId(String versionedId) {
         if (versionedId == null) return null;
-        int versionDelimiterPos = versionedId.lastIndexOf(CatalogUtils.VERSION_DELIMITER);
+        int versionDelimiterPos = versionedId.lastIndexOf(VERSION_DELIMITER);
         if (versionDelimiterPos != -1) {
             return versionedId.substring(0, versionDelimiterPos);
         } else {
@@ -153,7 +158,7 @@ public class CatalogUtils {
 
     public static String getVersionFromVersionedId(String versionedId) {
         if (versionedId == null) return null;
-        int versionDelimiterPos = versionedId.lastIndexOf(CatalogUtils.VERSION_DELIMITER);
+        int versionDelimiterPos = versionedId.lastIndexOf(VERSION_DELIMITER);
         if (versionDelimiterPos != -1) {
             return versionedId.substring(versionDelimiterPos+1);
         } else {
@@ -163,6 +168,29 @@ public class CatalogUtils {
 
     public static String getVersionedId(String id, String version) {
         return id + VERSION_DELIMITER + version;
+    }
+
+    //TODO Don't really like this, but it's better to have it here than on the interface to keep the API's 
+    //surface minimal. Could instead have the interface methods accept VerionedId object and have the helpers
+    //construct it as needed.
+    public static CatalogItem<?, ?> getCatalogItemOptionalVersion(ManagementContext mgmt, String versionedId) {
+        if (looksLikeVersionedId(versionedId)) {
+            String id = getIdFromVersionedId(versionedId);
+            String version = getVersionFromVersionedId(versionedId);
+            return mgmt.getCatalog().getCatalogItem(id, version);
+        } else {
+            return mgmt.getCatalog().getCatalogItem(versionedId, BrooklynCatalog.DEFAULT_VERSION);
+        }
+    }
+
+    public static <T,SpecT> CatalogItem<T, SpecT> getCatalogItemOptionalVersion(ManagementContext mgmt, Class<T> type, String versionedId) {
+        if (looksLikeVersionedId(versionedId)) {
+            String id = getIdFromVersionedId(versionedId);
+            String version = getVersionFromVersionedId(versionedId);
+            return mgmt.getCatalog().getCatalogItem(type, id, version);
+        } else {
+            return mgmt.getCatalog().getCatalogItem(type, versionedId, BrooklynCatalog.DEFAULT_VERSION);
+        }
     }
 
 }
