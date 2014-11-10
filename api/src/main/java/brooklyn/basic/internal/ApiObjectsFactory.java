@@ -47,7 +47,8 @@ public class ApiObjectsFactory {
             INSTANCE = Maybe.of(item);
             return INSTANCE.get();
         }
-        INSTANCE = Maybe.absent("Implementation of " + ApiObjectsFactoryInterface.class + " not found on classpath");
+        INSTANCE = Maybe.absent("Implementation of " + ApiObjectsFactoryInterface.class + " not found on classpath; "
+            + "can be caused by IDE not copying resources, or by something else clobbering non-class resources needed for service loading");
         return INSTANCE.get();
     }
 

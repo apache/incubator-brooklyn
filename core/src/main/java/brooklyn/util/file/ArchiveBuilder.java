@@ -35,14 +35,12 @@ import java.util.zip.ZipOutputStream;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveUtils.ArchiveType;
-import brooklyn.util.io.FileUtil;
 import brooklyn.util.os.Os;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 /**
@@ -86,6 +84,11 @@ public class ArchiveBuilder {
         return new ArchiveBuilder(ArchiveType.JAR);
     }
 
+    // TODO would be nice to support TAR and TGZ
+    // e.g. using commons-compress
+    // TarArchiveOutputStream out = new TarArchiveOutputStream(new GZIPOutputStream(bytes));
+    // but I think the way entries are done is slightly different so we'd need a bit of refactoring
+    
     private final ArchiveType type;
     private File archive;
     private Manifest manifest;

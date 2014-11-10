@@ -45,7 +45,6 @@ To persist to the file system, start brooklyn with:
 brooklyn launch --persist auto --persistenceDir /path/to/myPersistenceDir
 {% endhighlight %}
 
-an
 If there is already data at `/path/to/myPersistenceDir`, then a backup of the directory will 
 be made. This will have a name like `/path/to/myPersistenceDir.20140701-142101345.bak`.
 
@@ -104,6 +103,25 @@ Once all have been created, Brooklyn will "manage" the entities. This will bind 
 underlying entities under management to update the each entity's sensors (e.g. to poll over 
 HTTP or JMX). This new state will be reported in the web-console and can also trigger 
 any registered policies.
+
+
+<a name="copy-state"></a>
+Copying Persistence State
+-------------------------
+
+Brooklyn includes a command to copy persistence state easily between two locations.
+The `copy-state` CLI command takes the following arguments:
+
+* `--persistenceDir` <source persistence dir>
+  The directory to read persisted state (or container name if using an object store).
+* `--persistenceLocation` <source persistence location>
+  The location spec for an object store to read persisted state.
+* `--destinationDir` <target persistence dir>
+  The directory to copy persistence data to (or container name if using an object store).
+* `--destinationLocation` <target persistence location>
+  The location spec for an object store to copy data to.
+* `--transformations` <transformations>
+  The local transformations file to be applied to the copy of the data before uploading it.
 
 
 <a name="handling-rebind-failures"></a>
@@ -223,6 +241,11 @@ including setting priority to control which nodes will be promoted on master fai
 * `/server/ha/states`: Returns the HA states and detail for all nodes in a management plane
 * `/server/ha/priority`: Returns the HA node priority for MASTER failover (GET),
   or sets that priority (POST)
+
+Note that when POSTing to a non-master server it is necessary to pass a `Brooklyn-Allow-Non-Master-Access: true` header.
+For example, the following cURL command could be used to change the state of a `STANDBY` node on `localhost:8082` to `HOT_STANDBY`:
+
+    curl -v -X POST -d mode=HOT_STANDBY -H "Brooklyn-Allow-Non-Master-Access: true" http://localhost:8082/v1/server/ha/state
 
 
 <a name="writing-persistable-code"></a>
