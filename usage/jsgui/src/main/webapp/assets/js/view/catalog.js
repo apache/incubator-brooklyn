@@ -319,7 +319,6 @@ define([
                     isChild: isChild,
                     extraClasses: (activeDetailsView == this.name && model.cid == this.activeCid) ? "active" : ""
                 }, this.entryTemplateArgs(model));
-            console.log(args);
             return this.template(args);
         },
 
@@ -376,9 +375,8 @@ define([
             var orderedIds = _.uniq(this.collection.map(symbolicNameFn), true);
 
             function getLatestStableVersion(items) {
-                //TODO implement more sophisticated "default" version selection
-                //Could let the server choose it
-                return items[items.length-1];
+                //the server sorts items by descending version, snapshots at the back
+                return items[0];
             }
 
             var catalogTree = orderedIds.map(function(symbolicName) {

@@ -193,7 +193,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     private String getDefaultVersion(String symbolicName) {
         Iterable<CatalogItem<Object, Object>> versions = getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo(symbolicName)));
-        ImmutableSortedSet<CatalogItem<?, ?>> orderedVersions = ImmutableSortedSet.orderedBy(new CatalogItemVersionComparator()).addAll(versions).build();
+        ImmutableSortedSet<CatalogItem<?, ?>> orderedVersions = ImmutableSortedSet.orderedBy(new CatalogItemComparator()).addAll(versions).build();
         if (!orderedVersions.isEmpty()) {
             return orderedVersions.iterator().next().getVersion();
         } else {

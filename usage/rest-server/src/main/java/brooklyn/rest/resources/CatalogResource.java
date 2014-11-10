@@ -39,6 +39,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
+import brooklyn.catalog.internal.CatalogItemComparator;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
@@ -48,7 +49,6 @@ import brooklyn.rest.api.CatalogApi;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
-import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.CatalogTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
@@ -62,6 +62,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 
@@ -236,10 +238,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         if (Strings.isNonEmpty(fragment))
             filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralIgnoreCase(fragment)));
 
-        return FluentIterable.from(brooklyn().getCatalog().getCatalogItems())
-                .filter(Predicates.and(filters))
-                .transform(TO_CATALOG_ITEM_SUMMARY)
-                .toSortedList(SummaryComparators.displayNameComparator());
+        ImmutableList<CatalogItem<Object, Object>> sortedItems =
+                FluentIterable.from(brooklyn().getCatalog().getCatalogItems())
+                    .filter(Predicates.and(filters))
+                    .toSortedList(CatalogItemComparator.INSTANCE);
+        return Lists.transform(sortedItems, TO_CATALOG_ITEM_SUMMARY);
     }
 
     @Override
