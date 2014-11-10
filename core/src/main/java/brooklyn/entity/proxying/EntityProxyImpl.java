@@ -37,6 +37,7 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityTransientCopyInternal;
+import brooklyn.entity.basic.EntityTransientCopyInternal.SpecialEntityTransientCopyInternal;
 import brooklyn.entity.effector.EffectorWithBody;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
@@ -101,6 +102,9 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
             extras.removeAll(ENTITY_NON_EFFECTOR_METHODS);
             throw new IllegalStateException("Entity read-only methods contains items not known as Entity methods: "+
                 extras);
+        }
+        for (Method m : SpecialEntityTransientCopyInternal.class.getMethods()) {
+            ENTITY_PERMITTED_READ_ONLY_METHODS.add(new MethodSignature(m));
         }
     }
     
