@@ -72,16 +72,21 @@ public class AddSensor<T> implements EntityInitializer {
 
     private AttributeSensor<T> newSensor() {
         String className = getFullClassName(type);
+        Class<T> clazz = getType(className);
+        return Sensors.newSensor(clazz, name);
+    }
+
+    protected Class<T> getType(String className) {
         Class<T> clazz = null;
         try {
             clazz = (Class<T>) Class.forName(className);
         } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException("Invalid target type for sensor "+name+": " + className);
         }
-        return Sensors.newSensor(clazz, name);
+        return clazz;
     }
 
-    private String getFullClassName(String className) {
+    protected String getFullClassName(String className) {
         if (className.equalsIgnoreCase("string")) {
             return "java.lang.String";
         } else if (className.equalsIgnoreCase("int") || className.equalsIgnoreCase("integer")) {

@@ -36,9 +36,11 @@ import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -51,10 +53,8 @@ import com.google.common.base.Supplier;
  * @see HttpRequestSensor
  * @see JmxAttributeSensor
  */
-// generics introduced here because we might support a configurable 'targetType` parameter in future, 
-// with automatic casting (e.g. for ints); this way it remains compatible
 @Beta
-public final class SshCommandSensor<T extends String> extends AddSensor<String> {
+public final class SshCommandSensor<T> extends AddSensor<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SshCommandSensor.class);
 
@@ -63,7 +63,7 @@ public final class SshCommandSensor<T extends String> extends AddSensor<String> 
     protected final String command;
 
     public SshCommandSensor(final ConfigBag params) {
-        super(params.configure(SENSOR_TYPE, "String"));
+        super(params);
 
         // TODO create a supplier for the command string to support attribute embedding
         command = Preconditions.checkNotNull(params.get(SENSOR_COMMAND), "command");
@@ -96,13 +96,17 @@ public final class SshCommandSensor<T extends String> extends AddSensor<String> 
             }
         };
 
-        SshPollConfig<String> pollConfig = new SshPollConfig<String>(sensor)
+        SshPollConfig<T> pollConfig = new SshPollConfig<T>(sensor)
                 .period(period)
                 .env(envSupplier)
                 .command(commandSupplier)
                 .checkSuccess(SshValueFunctions.exitStatusEquals(0))
-                .onFailureOrException(Functions.constant((String) null))
-                .onSuccess(SshValueFunctions.stdout());
+                .onFailureOrException(Functions.constant((T) null))
+                .onSuccess(Functions.compose(new Function<String, T>() {
+                        @Override
+                        public T apply(String input) {
+                            return TypeCoercions.coerce(input, getType(type));
+                        }}, SshValueFunctions.stdout()));
 
         SshFeed.builder()
                 .entity(entity)
