@@ -54,6 +54,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.MemoryUsageTracker;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.ExecutionListener;
 import brooklyn.util.task.Tasks;
@@ -219,7 +220,8 @@ public class BrooklynGarbageCollector {
     public String getUsageString() {
         return
             Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
-            Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory; "+
+            Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory" +
+            " ("+Strings.makeSizeString(MemoryUsageTracker.SOFT_REFERENCES.getBytesUsed()) + " soft); "+
             "storage: " + storage.getStorageMetrics() + "; " +
             "tasks: " +
             executionManager.getNumActiveTasks()+" active, "+

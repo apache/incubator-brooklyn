@@ -83,10 +83,6 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
-                        <index>true</index>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                        </manifest>
                         <manifestEntries>
                             <Premain-Class>brooklyn.util.jmx.jmxmp.JmxmpAgent</Premain-Class>
                             <Agent-Class>brooklyn.util.jmx.jmxmp.JmxmpAgent</Agent-Class>

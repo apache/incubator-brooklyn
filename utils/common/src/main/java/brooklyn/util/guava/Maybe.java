@@ -248,11 +248,16 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         @Override
         public T get() {
             T result = value.get();
-            if (result==null) {
-                if (defaultValue==null) throw new IllegalStateException("Softly present item has been GC'd");
-                return defaultValue.get();
-            }
-            return result;
+            if (result!=null) return result;
+            if (defaultValue==null) throw new IllegalStateException("Softly present item has been GC'd");
+            return defaultValue.get();
+        }
+        @Override
+        public T orNull() {
+            T result = value.get();
+            if (result!=null) return result;
+            if (defaultValue==null) return null;
+            return defaultValue.orNull();
         }
         @Override
         public boolean isPresent() {

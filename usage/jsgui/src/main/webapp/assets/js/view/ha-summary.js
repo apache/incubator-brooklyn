@@ -30,7 +30,7 @@ define([
                 "<% if (isSelf) { %><span class='pull-right badge badge-success'>this</span><% } %>" +
             "</td>" +
             "<td><%= status %></td>" +
-            "<td><span class='timestamp' data-timestamp='<%= timestamp %>'><%= timestampDisplay %><span></td>" +
+            "<td><%= timestampDisplayPrefix %><span class='timestamp' data-timestamp='<%= timestamp %>'><%= timestampDisplay %><span><%= timestampDisplaySuffix %></td>" +
         "</tr>");
     var noServers = "<tr><td colspan='3'><i>Failed to load servers!</i></td></tr>";
 
@@ -59,22 +59,38 @@ define([
             $target.empty();
             // undefined check just in case server returns something odd
             if (nodes == undefined || _.isEmpty(nodes)) {
-                $target.html(noServers)
+                $target.html(noServers);
             } else {
                 _.each(nodes, function (n) {
                     var node = _.clone(n);
+                    node.timestampDisplayPrefix = "";
+                    node.timestampDisplaySuffix = "";
                     if (node['remoteTimestamp']) {
                         node.timestamp = node.remoteTimestamp;
-                        node.timestampDisplay = moment(node.remoteTimestamp).fromNow();
                     } else {
                         node.timestamp = node.localTimestamp;
-                        node.timestampDisplay = moment(node.localTimestamp).fromNow()+" (local)";
+                        node.timestampDisplaySuffix = " (local)";
                     }
+                    if (node.timestamp >= moment().utc() + 10*1000) {
+                        // if server reports time significantly in future, report this, with no timestampe
+                        node.timestampDisplayPrefix = "server clock in future by "+
+                            moment.duration(moment(node.timestamp).diff(moment())).humanize();
+                        node.timestamp = "";
+                        node.timestampDisplay = "";
+                    } else {
+                        // else use timestamp
+                        if (node.timestamp >= moment().utc()) {
+                            // but if just a little bit in future, backdate to show "a few seconds ago"
+                            node.timestamp = moment().utc()-1;
+                        }
+                        node.timestampDisplay = moment(node.timestamp).fromNow();
+                    }
+                    
                     node.isSelf = node.nodeId == self;
                     node.isMaster = self == master;
                     node.isTerminated = node.status == "TERMINATED";
                     $target.append(nodeRowTemplate(node));
-                })
+                });
             }
         },
         updateTimestamps: function() {

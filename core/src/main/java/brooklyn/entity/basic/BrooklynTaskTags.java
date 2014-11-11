@@ -38,6 +38,7 @@ import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.MemoryUsageTracker;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskTags;
 import brooklyn.util.task.Tasks;
@@ -208,14 +209,16 @@ public class BrooklynTaskTags extends TaskTags {
     /** not a stream, but inserted with the same mechanism */
     public static final String STREAM_ENV = "env";
     
+    private static final Maybe<ByteArrayOutputStream> STREAM_GARBAGE_COLLECTED_MAYBE = Maybe.of(Streams.byteArrayOfString("<contents-garbage-collected>"));
+
     /** creates a tag suitable for marking a stream available on a task */
     public static WrappedStream tagForStream(String streamType, ByteArrayOutputStream stream) {
         return new WrappedStream(streamType, stream);
     }
     /** creates a tag suitable for marking a stream available on a task, but which might be GC'd */
     public static WrappedStream tagForStreamSoft(String streamType, ByteArrayOutputStream stream) {
-        Maybe<ByteArrayOutputStream> weakStream = Maybe.softThen(stream, 
-            Maybe.of(Streams.byteArrayOfString("<contents-garbage-collected>")));
+        MemoryUsageTracker.SOFT_REFERENCES.track(stream, stream.size());
+        Maybe<ByteArrayOutputStream> weakStream = Maybe.softThen(stream, STREAM_GARBAGE_COLLECTED_MAYBE);
         return new WrappedStream(streamType,
             Suppliers.compose(Functions.toStringFunction(), weakStream),
             Suppliers.compose(Streams.sizeFunction(), weakStream));

@@ -110,4 +110,12 @@ public interface EntityTransientCopyInternal {
     ExecutionContext getExecutionContext();
     void setCatalogItemId(String id);
     
+    /** more methods, but which are only on selected entities */
+    public interface SpecialEntityTransientCopyInternal {
+        // from Group
+        Collection<Entity> getMembers();
+        boolean hasMember(Entity member);
+        Integer getCurrentSize();
+    }
+
 }

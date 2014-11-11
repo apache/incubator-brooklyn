@@ -24,8 +24,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Iterables;
+
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
@@ -69,6 +70,12 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         commands.add(BashCommands.INSTALL_TAR);
         commands.add(format("tar xvzf %s", saveAs));
 
+        if (getEnabledProtocols().size()!=1) {
+            log.warn("TomcatServer only supports one protocol, http; ignoring requested protocols "+getEnabledProtocols());
+        } else if (!"http".equalsIgnoreCase(Iterables.getOnlyElement(getEnabledProtocols()))) {
+            log.warn("TomcatServer only supports one protocol, http; ignoring requested protocol "+getEnabledProtocols());
+        }
+        
         newScript(INSTALLING)
                 .environmentVariablesReset()
                 .body.append(commands)

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Couchbase Two Bucket
+name: Couchbase One Bucket
 
 location: softlayer:wdc01
 
