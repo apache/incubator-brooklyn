@@ -28,6 +28,7 @@ package brooklyn.management.osgi;
  */
 public class OsgiTestResources {
 
+
     /**
      * brooklyn-osgi-test-a_0.1.0 -
      * defines TestA which has a "times" method and a static multiplier field;
@@ -48,7 +49,10 @@ public class OsgiTestResources {
      * another bundle with a minimal sayHi effector, used to test versioning and dependencies
      * (this one has no dependencies, but see also {@value #BROOKLYN_TEST_MORE_ENTITIES_V2_PATH})
      */
-    public static final String BROOKLYN_TEST_MORE_ENTITIES_V1_PATH = "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.1.0.jar";
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FINAL_PART = "brooklyn-test-osgi-more-entities";
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FULL = 
+        "org.apache.brooklyn.test.resources.osgi."+BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FINAL_PART;
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_V1_PATH = "/brooklyn/osgi/" + BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FINAL_PART + "_0.1.0.jar";
     public static final String BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY = "brooklyn.osgi.tests.more.MoreEntity";
     
     /**
@@ -56,6 +60,14 @@ public class OsgiTestResources {
      * similar to {@link #BROOKLYN_TEST_MORE_ENTITIES_V1_PATH} but saying "HI NAME" rather than "Hi NAME",
      * and declaring an explicit dependency on SimplePolicy from {@link #BROOKLYN_TEST_OSGI_ENTITIES_PATH}
      */
-    public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_PATH = "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.2.0.jar";
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_PATH = "/brooklyn/osgi/" + BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FINAL_PART + "_0.2.0.jar";
+    
+    /**
+     * bundle with identical metadata (same symbolic name and version -- hence being an evil twin) 
+     * as {@link #BROOKLYN_TEST_MORE_ENTITIES_V2_PATH},
+     * but slightly different behaviour -- saying "HO NAME" -- in order to make sure we can differentiate two two
+     * at runtime.
+     */
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_PATH = "/brooklyn/osgi/" + BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FINAL_PART + "_evil-twin_0.2.0.jar";
     
 }
