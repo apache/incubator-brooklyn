@@ -229,6 +229,7 @@ public class Osgis {
                     boolean matches = url.equals(b.getLocation());
                     if (urlMandatory) {
                         if (!matches) continue;
+                        else urlMatched = true;
                     } else {
                         if (matches) {
                             if (!urlMatched) {

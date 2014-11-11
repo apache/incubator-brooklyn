@@ -174,6 +174,7 @@ public class CatalogUtils {
     //surface minimal. Could instead have the interface methods accept VerionedId object and have the helpers
     //construct it as needed.
     public static CatalogItem<?, ?> getCatalogItemOptionalVersion(ManagementContext mgmt, String versionedId) {
+        if (versionedId == null) return null;
         if (looksLikeVersionedId(versionedId)) {
             String id = getIdFromVersionedId(versionedId);
             String version = getVersionFromVersionedId(versionedId);

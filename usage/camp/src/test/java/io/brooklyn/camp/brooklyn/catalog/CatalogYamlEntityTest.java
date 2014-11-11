@@ -53,17 +53,18 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testAddCatalogItemWithoutVersionFail() throws Exception {
-        try {
-            addCatalogItem(
-                "brooklyn.catalog:",
-                "  name: My Catalog App",
-                "services:",
-                "- type: " + SIMPLE_ENTITY_TYPE);
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(), "'version' attribute missing in 'brooklyn.catalog' section.");
-        }
+    public void testAddCatalogItemWithoutVersion() throws Exception {
+        String id = "unversioned.app";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  name: " + id,
+            "  libraries:",
+            "  - " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "services:",
+            "- type: " + SIMPLE_ENTITY_TYPE);
+        CatalogItem<?, ?> catalogItem = mgmt().getCatalog().getCatalogItem(id, BrooklynCatalog.DEFAULT_VERSION);
+        assertEquals(catalogItem.getVersion(), "0.0.0_SNAPSHOT");
+        mgmt().getCatalog().deleteCatalogItem(id, "0.0.0_SNAPSHOT");
     }
 
     @Test
@@ -73,19 +74,15 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testLaunchApplicationReferencingUnversionedCatalogFail() throws Exception {
+    public void testLaunchApplicationUnverionedCatalogReference() throws Exception {
         String symbolicName = "my.catalog.app.id.fail";
         addCatalogOSGiEntity(symbolicName, SIMPLE_ENTITY_TYPE);
         try {
             String yaml = "name: simple-app-yaml\n" +
                           "location: localhost\n" +
                           "services: \n" +
-                          "  - serviceType: " + ver(symbolicName);
-            try {
-                createAndStartApplication(yaml);
-            } catch (UnsupportedOperationException e) {
-                assertTrue(e.getMessage().endsWith("cannot be matched"));
-            }
+                          "  - serviceType: " + symbolicName;
+            createAndStartApplication(yaml);
         } finally {
             deleteCatalogEntity(symbolicName);
         }
@@ -214,7 +211,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (IllegalStateException e) {
-            Assert.assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} not already registered by name:version, but URL is empty.");
+            Assert.assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} not previously registered, but URL is empty.");
         }
     }
 
@@ -304,7 +301,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             fail();
         } catch (IllegalStateException e) {
             assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} " +
-                    "not already registered by name:version, but URL is empty.");
+                    "not previously registered, but URL is empty.");
         }
     }
     

@@ -109,11 +109,19 @@ public class OsgiManager {
     }
 
     private void checkCorrectlyInstalled(CatalogBundle bundle, Bundle b) {
+        String nv = b.getSymbolicName()+":"+b.getVersion().toString();
+
+        if (bundle.isNamed() &&
+                (!bundle.getName().equals(b.getSymbolicName()) ||
+                !bundle.getVersion().equals(b.getVersion().toString()))) {
+            log.warn("Bundle at " + bundle.getUrl() + " installed as " + nv +
+                    " but user explicitly requested " + bundle.getName() + ":" + bundle.getVersion());
+        }
+
         List<Bundle> matches = Osgis.bundleFinder(framework)
                 .symbolicName(b.getSymbolicName())
                 .version(b.getVersion().toString())
                 .findAll();
-        String nv = b.getSymbolicName()+":"+b.getVersion().toString();
         if (matches.isEmpty()) {
             log.error("OSGi could not find bundle "+nv+" in search after installing it from "+bundle.getUrl());
         } else if (matches.size()==1) {
@@ -211,11 +219,19 @@ public class OsgiManager {
     }
 
     public Maybe<Bundle> findBundle(CatalogBundle catalogBundle) {
+        //Either fail at install time when the user supplied name:version is different
+        //from the one reported from the bundle
+        //or
+        //Ignore user supplied name:version when URL is supplied to be able to find the
+        //bundle even if it's with a different version.
+        //
+        //For now we just log a warning if there's a version discrepancy at install time,
+        //so prefer URL if supplied.
         BundleFinder bundleFinder = Osgis.bundleFinder(framework);
-        if (catalogBundle.isNamed()) {
-            bundleFinder.symbolicName(catalogBundle.getName()).version(catalogBundle.getVersion());
-        } else {
+        if (catalogBundle.getUrl() != null) {
             bundleFinder.requiringFromUrl(catalogBundle.getUrl());
+        } else {
+            bundleFinder.symbolicName(catalogBundle.getName()).version(catalogBundle.getVersion());
         }
         return bundleFinder.find();
     }

@@ -345,12 +345,18 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testUnfazedByMoreEntitiesV1AndV2AndV2EvilTwin() throws Exception {
-        addCatalogItemWithNameAndType("v1", OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
-            BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
-        addCatalogItemWithNameAndType("v2", OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
-            BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
-        addCatalogItemWithNameAndType("v2-evil", OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
-            BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
+        addCatalogItemWithNameAndType("v1",
+                TEST_VERSION,
+                OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+                BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+        addCatalogItemWithNameAndType("v2",
+                TEST_VERSION,
+                OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+                BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
+        addCatalogItemWithNameAndType("v2-evil", 
+                TEST_VERSION,
+                OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+                BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
 
         // test osgi finding
         
