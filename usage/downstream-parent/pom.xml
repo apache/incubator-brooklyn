@@ -38,8 +38,8 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- Testing -->
-    <testng.version>6.8</testng.version>
-    <surefire.version>2.17</surefire.version>
+    <testng.version>6.8.8</testng.version>
+    <surefire.version>2.18</surefire.version>
     <includedTestGroups />
     <excludedTestGroups>Integration,Acceptance,Live,Live-sanity,WIP</excludedTestGroups>
     
