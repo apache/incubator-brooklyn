@@ -123,7 +123,7 @@
         <!-- Dependencies -->
         <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
         <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
-        <jclouds.version>1.8.0</jclouds.version>
+        <jclouds.version>1.8.1</jclouds.version>
         <guava.version>17.0</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>
