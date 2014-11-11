@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
-import java.lang.Long;
 import java.util.Collection;
 import java.util.Map;
 
@@ -56,6 +55,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.event.Sensor;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.policy.PolicySpec;
@@ -137,7 +137,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         super.init();
         checkNotNull(getConfig(HOSTNAME_SENSOR), "{} requires value for {}", getClass().getName(), HOSTNAME_SENSOR);
         DynamicGroup entities = addChild(EntitySpec.create(DynamicGroup.class)
-                .configure("entityFilter", getConfig(ENTITY_FILTER)));
+                .configure(DynamicGroup.ENTITY_FILTER, getConfig(ENTITY_FILTER)));
         setAttribute(ENTITIES, entities);
         setAttribute(A_RECORDS, ImmutableMap.<String, String>of());
         setAttribute(CNAME_RECORDS, ImmutableMultimap.<String, String>of());
@@ -193,8 +193,8 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
         addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Address tracker")
-                .configure("sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR)))
-                .configure("group", getEntities()));
+                .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(getConfig(HOSTNAME_SENSOR)))
+                .configure(AbstractMembershipTrackingPolicy.GROUP, getEntities()));
     }
 
     @Override

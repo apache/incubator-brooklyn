@@ -92,6 +92,39 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
     }
 
     @Test(groups = "Integration")
+    public void testCanConfigureToListenToChildrenOfEntityOtherThanParent() {
+        // Ignoring origApp
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
+
+        EnricherSpec<PrefixAndIdEnricher> dnsEnricher = EnricherSpec.create(PrefixAndIdEnricher.class)
+                .configure(PrefixAndIdEnricher.PREFIX, "dns-integration-test-")
+                .configure(PrefixAndIdEnricher.MONITOR, Attributes.HOSTNAME);
+        EntitySpec<EmptySoftwareProcess> emptySoftwareProcessSpec = EntitySpec.create(EmptySoftwareProcess.class)
+                .enricher(dnsEnricher);
+
+        // App DNS will listen to
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, emptySoftwareProcessSpec)
+                .configure(DynamicCluster.INITIAL_SIZE, 3));
+
+        // Apps that DNS should not listen to. Appreciate that their having dnsEnricher is unrealistic!
+        app.createAndManageChild(emptySoftwareProcessSpec);
+        app.createAndManageChild(emptySoftwareProcessSpec);
+
+        Predicate<Entity> entityFilter = Predicates.and(
+                Predicates.instanceOf(EmptySoftwareProcess.class),
+                EntityPredicates.isChildOf(cluster));
+        dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class, TestBindDnsServerImpl.class)
+                .configure(BindDnsServer.ENTITY_FILTER, entityFilter)
+                .configure(BindDnsServer.HOSTNAME_SENSOR, PrefixAndIdEnricher.SENSOR));
+
+        app.start(ImmutableList.of(app.newLocalhostProvisioningLocation()));
+        logDnsMappings();
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).keySet().size(), 1);
+        assertMapSizes(3, 1, 2, 1);
+    }
+
+    @Test(invocationCount=1, groups = "Integration")
     public void testRebindDns() throws Throwable {
         origApp.start(ImmutableList.of(origApp.newLocalhostProvisioningLocation()));
         logDnsMappings();

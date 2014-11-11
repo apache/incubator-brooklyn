@@ -54,7 +54,8 @@ public interface BindDnsServer extends SoftwareProcess {
 
     @SetFromFlag("filter")
     ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(new TypeToken<Predicate<? super Entity>>() {},
-            "bind.entity.filter", "Filter for entities which will use the BIND DNS service for name resolution",
+            "bind.entity.filter", "Filter for entities which will use the BIND DNS service for name resolution." +
+                    "Default is all instances of SoftwareProcess in the application.",
             Predicates.instanceOf(SoftwareProcess.class));
 
     @SetFromFlag("domainName")
