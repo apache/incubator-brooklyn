@@ -21,6 +21,7 @@ package brooklyn.util.internal
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit
 
 import org.testng.annotations.Test
@@ -66,7 +67,7 @@ public class RepeaterTest {
 
     @Test(expectedExceptions = [ NullPointerException.class ])
     public void repeatFailsIfClosureIsNull() {
-        new Repeater("repeatFailsIfClosureIsNull").repeat(null);
+        new Repeater("repeatFailsIfClosureIsNull").repeat((Callable<?>)null);
         fail "Expected exception was not thrown"
     }
 
