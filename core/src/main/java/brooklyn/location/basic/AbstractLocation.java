@@ -102,7 +102,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     private Reference<HostGeoInfo> hostGeoInfo = new BasicReference<HostGeoInfo>();
 
-    private ConfigurationSupportInternal config = new BasicConfigurationSupport();
+    private BasicConfigurationSupport config = new BasicConfigurationSupport();
     
     private ConfigBag configBag = new ConfigBag();
 
@@ -401,7 +401,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         public ConfigBag getBag() {
             ConfigBag result = ConfigBag.newInstanceExtending(configBag, ImmutableMap.of());
             Location p = getParent();
-            if (p!=null) result.putIfAbsent(((LocationInternal)p).getAllConfigBag().getAllConfig());
+            if (p!=null) result.putIfAbsent(((LocationInternal)p).config().getBag().getAllConfig());
             return result;
         }
 
@@ -447,6 +447,14 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         public void refreshInheritedConfigOfChildren() {
             // no-op for location
         }
+        
+        private boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
+            if (includeInherited && isInherited(key)) {
+                return getBag().containsKey(key);
+            } else {
+                return getLocalBag().containsKey(key);
+            }
+        }
     }
     
     @Override
@@ -460,12 +468,9 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     }
 
     @Override
+    @Deprecated
     public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
-        boolean locally = config().getLocalBag().containsKey(key);
-        if (locally) return true;
-        if (!includeInherited || !isInherited(key)) return false;
-        if (getParent()!=null) return getParent().hasConfig(key, true);
-        return false;
+        return config.hasConfig(key, includeInherited);
     }
 
     private boolean isInherited(ConfigKey<?> key) {
@@ -479,12 +484,14 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     }
 
     @Override
+    @Deprecated
     public Map<String,Object> getAllConfig(boolean includeInherited) {
         ConfigBag bag = (includeInherited ? config().getBag() : config().getLocalBag());
         return bag.getAllConfig();
     }
     
     @Override
+    @Deprecated
     public ConfigBag getAllConfigBag() {
         // TODO see comments in EntityConfigMap and on interface methods. 
         // here ConfigBag is used exclusively so
@@ -502,11 +509,13 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
      * @deprecated since 0.7; use {@link #getLocalConfigBag()}
      * @since 0.6
      */
+    @Deprecated
     public ConfigBag getRawLocalConfigBag() {
         return config().getLocalBag();
     }
     
     @Override
+    @Deprecated
     public <T> T setConfig(ConfigKey<T> key, T value) {
         return config().set(key, value);
     }

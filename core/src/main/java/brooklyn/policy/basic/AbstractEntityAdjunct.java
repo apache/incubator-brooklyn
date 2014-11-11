@@ -273,6 +273,10 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return config().get(key);
     }
     
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().getBag()}
+     */
+    @Deprecated
     public Map<ConfigKey<?>, Object> getAllConfig() {
         return configsInternal.getAllConfig();
     }
@@ -282,6 +286,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     }
 
     @Override
+    @Deprecated
     public <T> T setConfig(ConfigKey<T> key, T val) {
         return config().set(key, val);
     }
@@ -289,6 +294,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     // TODO make immutable
     /** for inspection only */
     @Beta
+    @Deprecated
     public ConfigMap getConfigMap() {
         return configsInternal;
     }

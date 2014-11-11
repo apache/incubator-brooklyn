@@ -71,10 +71,21 @@ public interface Policy extends EntityAdjunct, Rebindable, Configurable {
      */
     boolean isSuspended();
     
+    /**
+     * Convenience method for {@code config().get(key)}
+     */
     <T> T getConfig(ConfigKey<T> key);
     
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().setConfig(key, val)}
+     */
+    @Deprecated
     <T> T setConfig(ConfigKey<T> key, T val);
     
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().getBag()}
+     */
+    @Deprecated
     Map<ConfigKey<?>, Object> getAllConfig();
 
     /**

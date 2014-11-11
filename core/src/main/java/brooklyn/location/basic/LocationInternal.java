@@ -64,12 +64,19 @@ public interface LocationInternal extends BrooklynObjectInternal, Location {
      */
     public Map<String, String> toMetadataRecord();
 
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code ((LocationInternal)location).config().getLocalBag()}
+     */
+    @Deprecated
     ConfigBag getLocalConfigBag();
 
-    /** Returns all config, including that inherited from parents.
-     * TODO this method does not respect {@link ConfigInheritance} and so usage is discouraged.  
+    /**
+     * Returns all config, including that inherited from parents.
+     * TODO this method does not respect {@link ConfigInheritance} and so usage is discouraged.
+     * 
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code ((LocationInternal)location).config().getBag()}
      */
-    @Beta  // made beta in 0.7.0 due to inheritance problems
+    @Deprecated
     ConfigBag getAllConfigBag();
 
     /**
