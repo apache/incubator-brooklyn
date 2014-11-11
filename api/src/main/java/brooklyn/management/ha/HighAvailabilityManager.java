@@ -53,7 +53,7 @@ public interface HighAvailabilityManager {
      * and will not persist HA meta-information (meaning other nodes cannot join). 
      * <p>
      * Subsequently can expect {@link #getNodeState()} to be {@link ManagementNodeState#MASTER} 
-     * and {@link #getManagementPlaneSyncState()} to show just this one node --
+     * and {@link #loadManagementPlaneSyncRecord(boolean)} to show just this one node --
      * as if it were running HA with just one node --
      * but {@link #isRunning()} will return false.
      * <p>
@@ -97,12 +97,24 @@ public interface HighAvailabilityManager {
     long getPriority();
     
     /**
-     * Returns a snapshot of the management-plane's current / most-recently-known status.
-     * <p>
-     * This is mainly the nodes and their {@link ManagementNodeSyncRecord} instances, 
-     * as known (for this node) or last read (other nodes).  
+     * Returns a snapshot of the management-plane's current / most-recently-known status,
+     * as last read from {@link #loadManagementPlaneSyncRecord(boolean)}, or null if none read.
+     */
+    ManagementPlaneSyncRecord getLastManagementPlaneSyncRecord();
+    
+    /**
+     * @deprecated since 0.7.0 use {@link #getLastManagementPlaneSyncRecord()} or {@link #loadManagementPlaneSyncRecord(boolean)}
+     * to be explicit about the source.  
      */
     ManagementPlaneSyncRecord getManagementPlaneSyncState();
+    
+    /**
+     * @param useLocalKnowledgeForThisNode - if true, the record for this mgmt node will be replaced with the
+     * actual current status known in this JVM (may be more recent than what is persisted);
+     * for most purposes there is little difference but in some cases the local node being updated
+     * may be explicitly wanted or not wanted
+     */
+    ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean useLocalKnowledgeForThisNode);
     
     @VisibleForTesting
     ManagementPlaneSyncRecordPersister getPersister();

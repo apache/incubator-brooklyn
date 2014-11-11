@@ -189,6 +189,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
         
         Boolean backups = mgmt.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED);
         if (Boolean.TRUE.equals(backups)) {
+            log.warn("Using legacy backup for "+this+"; functionality will be removed in future versions, in favor of promotion/demotion-specific backups to a configurable backup location.");
             throw new FatalConfigurationRuntimeException("Backups not supported for object store ("+this+")");
         }
     }

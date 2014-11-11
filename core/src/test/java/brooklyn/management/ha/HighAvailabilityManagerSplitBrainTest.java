@@ -205,7 +205,7 @@ public class HighAvailabilityManagerSplitBrainTest {
                 EntitySpec.create(TestApplication.class).impl(TestEntityFailingRebind.class), n1.mgmt);
         app.start(ImmutableList.<Location>of());
 
-        n1.mgmt.getRebindManager().forcePersistNow();
+        n1.mgmt.getRebindManager().forcePersistNow(false, null);
 
         //don't publish state for a while (i.e. long store delays, failures)
         sharedTickerAdvance(Duration.ONE_MINUTE);
@@ -224,7 +224,7 @@ public class HighAvailabilityManagerSplitBrainTest {
             assertNestedRebindException(e);
         }
 
-        ManagementPlaneSyncRecord memento = n1.ha.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento = n1.ha.loadManagementPlaneSyncRecord(true);
         assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.FAILED);
         assertEquals(memento.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.FAILED);
     }
@@ -243,7 +243,7 @@ public class HighAvailabilityManagerSplitBrainTest {
                 EntitySpec.create(TestApplication.class).impl(TestEntityFailingRebind.class), n1.mgmt);
         app.start(ImmutableList.<Location>of());
 
-        n1.mgmt.getRebindManager().forcePersistNow();
+        n1.mgmt.getRebindManager().forcePersistNow(false, null);
 
         //don't publish state for a while (i.e. long store delays, failures)
         sharedTickerAdvance(Duration.ONE_MINUTE);
@@ -258,7 +258,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         TestEntityFailingRebind.setThrowOnRebind(false);
         n1.ha.publishAndCheck(false);
 
-        ManagementPlaneSyncRecord memento = n1.ha.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento = n1.ha.loadManagementPlaneSyncRecord(true);
         assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
         assertEquals(memento.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.FAILED);
     }
@@ -284,7 +284,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         
         // first auto should become master
         n1.ha.start(HighAvailabilityMode.AUTO);
-        ManagementPlaneSyncRecord memento1 = n1.ha.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento1 = n1.ha.loadManagementPlaneSyncRecord(true);
         
         log.info(n1+" HA: "+memento1);
         assertEquals(memento1.getMasterNodeId(), n1.ownNodeId);
@@ -294,7 +294,7 @@ public class HighAvailabilityManagerSplitBrainTest {
 
         // second - make explicit hot; that's a strictly more complex case than cold standby, so provides pretty good coverage
         n2.ha.start(HighAvailabilityMode.HOT_STANDBY);
-        ManagementPlaneSyncRecord memento2 = n2.ha.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento2 = n2.ha.loadManagementPlaneSyncRecord(true);
         
         log.info(n2+" HA: "+memento2);
         assertEquals(memento2.getMasterNodeId(), n1.ownNodeId);
@@ -315,7 +315,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(n1.mgmt.getApplications().size(), 1);
         assertEquals(n2.mgmt.getApplications().size(), 0);
         log.info("persisting "+n1.ownNodeId);
-        n1.mgmt.getRebindManager().forcePersistNow();
+        n1.mgmt.getRebindManager().forcePersistNow(false, null);
         
         n1.objectStore.setWritesFailSilently(true);
         log.info(n1+" writes off");
@@ -325,7 +325,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         
         log.info("publish "+n2.ownNodeId);
         n2.ha.publishAndCheck(false);
-        ManagementPlaneSyncRecord memento2b = n2.ha.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento2b = n2.ha.loadManagementPlaneSyncRecord(true);
         log.info(n2+" HA now: "+memento2b);
         
         // n2 infers n1 as failed 
@@ -414,7 +414,7 @@ public class HighAvailabilityManagerSplitBrainTest {
             final Stopwatch timer = Stopwatch.createStarted();
             Asserts.succeedsEventually(new Runnable() {
                 @Override public void run() {
-                    ManagementPlaneSyncRecord memento = nodes.get(0).ha.getManagementPlaneSyncState();
+                    ManagementPlaneSyncRecord memento = nodes.get(0).ha.loadManagementPlaneSyncRecord(true);
                     List<ManagementNodeState> counts = MutableList.of(), savedCounts = MutableList.of();
                     for (HaMgmtNode n: nodes) {
                         counts.add(n.ha.getNodeState());

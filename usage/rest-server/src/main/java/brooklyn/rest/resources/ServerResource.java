@@ -269,7 +269,9 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public HighAvailabilitySummary getHighAvailabilityPlaneStates() {
-        ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getLastManagementPlaneSyncRecord();
+        if (memento==null) memento = mgmt().getHighAvailabilityManager().loadManagementPlaneSyncRecord(true);
+        if (memento==null) return null;
         return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
     }
 

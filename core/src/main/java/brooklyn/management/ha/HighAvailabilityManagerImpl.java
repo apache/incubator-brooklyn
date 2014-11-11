@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.BrooklynVersion;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -40,6 +41,7 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManager;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
@@ -145,6 +147,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile transient Duration pollPeriodLocalOverride;
     private volatile transient Duration heartbeatTimeoutOverride;
 
+    private volatile ManagementPlaneSyncRecord lastSyncRecord;
+    
     public HighAvailabilityManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
     }
@@ -295,7 +299,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             // don't care; let's start and see if we promote ourselves
             publishAndCheck(true);
             if (nodeState == ManagementNodeState.STANDBY || nodeState == ManagementNodeState.HOT_STANDBY) {
-                ManagementPlaneSyncRecord newState = getManagementPlaneSyncState();
+                ManagementPlaneSyncRecord newState = loadManagementPlaneSyncRecord(true);;
                 String masterNodeId = newState.getMasterNodeId();
                 ManagementNodeSyncRecord masterNodeDetails = newState.getManagementNodes().get(masterNodeId);
                 LOG.info("Management node "+ownNodeId+" running as HA " + nodeState + " autodetected, " +
@@ -340,7 +344,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             if (getNodeState()==ManagementNodeState.MASTER) {
                 message += " but election re-promoted this node)";
             } else {
-                ManagementPlaneSyncRecord newState = getManagementPlaneSyncState();
+                ManagementPlaneSyncRecord newState = loadManagementPlaneSyncRecord(true);
                 if (Strings.isBlank(newState.getMasterNodeId())) {
                     message += "); no master currently (subsequent election may repair)";
                 } else {
@@ -448,6 +452,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return nodeState;
     }
 
+    public ManagementPlaneSyncRecord getLastManagementPlaneSyncRecord() {
+        return lastSyncRecord;
+    }
+    
     @Override
     public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
         return loadManagementPlaneSyncRecord(true);
@@ -714,22 +722,30 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         managementContext.getRebindManager().start();
     }
     
+    protected void backupOnDemotionIfNeeded() {
+        if (managementContext.getBrooklynProperties().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED_ON_DEMOTION)) {
+            BrooklynPersistenceUtils.createBackup(managementContext, "demotion", MementoCopyMode.LOCAL);
+        }
+    }
+
     protected void demoteToFailed() {
         // TODO merge this method with the one below
         boolean wasMaster = nodeState == ManagementNodeState.MASTER;
+        if (wasMaster) backupOnDemotionIfNeeded();
         ManagementTransitionMode mode = (wasMaster ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
         nodeState = ManagementNodeState.FAILED;
         onDemotionStopItems(mode);
         nodeStateTransitionComplete = true;
         publishDemotion(wasMaster);
     }
-
+    
     protected void demoteToStandby(boolean hot) {
         if (!running) {
             LOG.warn("Ignoring demote-from-master request, as HighAvailabilityManager is no longer running");
             return;
         }
         boolean wasMaster = nodeState == ManagementNodeState.MASTER;
+        if (wasMaster) backupOnDemotionIfNeeded();
         ManagementTransitionMode mode = (wasMaster ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
 
         nodeStateTransitionComplete = false;
@@ -796,13 +812,14 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
     
-    /**
-     * @param reportCleanedState - if true, the record for this mgmt node will be replaced with the
-     * actual current status known in this JVM (may be more recent than what is persisted);
-     * for most purposes there is little difference but in some cases the local node being updated
-     * may be explicitly wanted or not wanted
-     */
-    protected ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean reportCleanedState) {
+    @Override
+    public ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean useLocalKnowledgeForThisNode) {
+        ManagementPlaneSyncRecord record = loadManagementPlaneSyncRecordInternal(useLocalKnowledgeForThisNode);
+        lastSyncRecord = record;
+        return record; 
+    }
+    
+    private ManagementPlaneSyncRecord loadManagementPlaneSyncRecordInternal(boolean useLocalKnowledgeForThisNode) {
         if (disabled) {
             // if HA is disabled, then we are the only node - no persistence; just load a memento to describe this node
             Builder builder = ManagementPlaneSyncRecordImpl.builder()
@@ -824,7 +841,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             try {
                 ManagementPlaneSyncRecord result = persister.loadSyncRecord();
                 
-                if (reportCleanedState) {
+                if (useLocalKnowledgeForThisNode) {
                     // Report this node's most recent state, and detect AWOL nodes
                     ManagementNodeSyncRecord me = BasicManagementNodeSyncRecord.builder()
                         .from(result.getManagementNodes().get(ownNodeId), true)

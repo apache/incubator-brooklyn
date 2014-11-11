@@ -68,6 +68,7 @@ import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -262,12 +263,17 @@ public class RebindManagerImpl implements RebindManager {
             throw new IllegalStateException("Cannot start read-only when already running with persistence");
         }
         LOG.debug("Starting persistence ("+this+"), mgmt "+managementContext.getManagementNodeId());
+        if (!persistenceRunning) {
+            if (managementContext.getBrooklynProperties().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED_ON_PROMOTION)) {
+                BrooklynPersistenceUtils.createBackup(managementContext, "promotion", MementoCopyMode.REMOTE);
+            }
+        }
         persistenceRunning = true;
         readOnlyRebindCount = Integer.MIN_VALUE;
         persistenceStoreAccess.enableWriteAccess();
         if (persistenceRealChangeListener != null) persistenceRealChangeListener.start();
     }
-    
+
     @Override
     public void stopPersistence() {
         LOG.debug("Stopping persistence ("+this+"), mgmt "+managementContext.getManagementNodeId());
@@ -403,7 +409,7 @@ public class RebindManagerImpl implements RebindManager {
     @VisibleForTesting
     public void forcePersistNow(boolean full, PersistenceExceptionHandler exceptionHandler) {
         if (full) {
-            BrooklynMementoRawData memento = BrooklynPersistenceUtils.newFullMemento(managementContext);
+            BrooklynMementoRawData memento = BrooklynPersistenceUtils.newStateMemento(managementContext, MementoCopyMode.LOCAL);
             if (exceptionHandler==null) {
                 exceptionHandler = persistenceRealChangeListener.getExceptionHandler();
             }

@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigPredicates;
@@ -482,7 +483,7 @@ public class BrooklynLauncher {
             BrooklynMementoRawData memento = managementContext.getRebindManager().retrieveMementoRawData();
             if (transformer != null) memento = transformer.transform(memento);
             
-            ManagementPlaneSyncRecord planeState = managementContext.getHighAvailabilityManager().getManagementPlaneSyncState();
+            ManagementPlaneSyncRecord planeState = managementContext.getHighAvailabilityManager().loadManagementPlaneSyncRecord(true);
             
             LOG.info("Persisting state to "+destinationDir+(destinationLocationSpec!=null ? " @ "+destinationLocationSpec : ""));
             PersistenceObjectStore destinationObjectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(
@@ -735,7 +736,7 @@ public class BrooklynLauncher {
                 if (persistenceLocation == null) {
                     persistenceLocation = brooklynProperties.getConfig(BrooklynServerConfig.PERSISTENCE_LOCATION_SPEC);
                 }
-                persistenceDir = BrooklynServerConfig.resolvePersistencePath(persistenceDir, brooklynProperties, persistenceLocation);
+                persistenceDir = BrooklynServerPaths.newMainPersistencePathResolver(brooklynProperties).location(persistenceLocation).dir(persistenceDir).resolve();
                 objectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(managementContext, persistenceLocation, persistenceDir, 
                     persistMode, highAvailabilityMode);
                     

@@ -19,7 +19,6 @@
 package brooklyn.launcher;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -28,14 +27,13 @@ import java.io.File;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
@@ -68,7 +66,7 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
 
     protected void checkPersistenceContainerNameIsDefault() {
-        String expected = BrooklynServerConfig.resolvePersistencePath(null, BrooklynProperties.Factory.newEmpty(), null);
+        String expected = BrooklynServerPaths.newMainPersistencePathResolver(BrooklynProperties.Factory.newEmpty()).location(null).dir(null).resolve();
         checkPersistenceContainerNameIs(expected);
     }
 

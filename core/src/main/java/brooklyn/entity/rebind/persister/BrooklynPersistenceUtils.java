@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityInternal;
@@ -50,6 +51,7 @@ import brooklyn.mementos.Memento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -79,7 +81,7 @@ public class BrooklynPersistenceUtils {
     public static PersistenceObjectStore newPersistenceObjectStore(ManagementContext managementContext,
             String locationSpec, String locationContainer, PersistMode persistMode, HighAvailabilityMode highAvailabilityMode) {
         PersistenceObjectStore destinationObjectStore;
-        locationContainer = BrooklynServerConfig.resolvePersistencePath(locationContainer, managementContext.getConfig(), locationSpec);
+        locationContainer = BrooklynServerPaths.newMainPersistencePathResolver(managementContext).location(locationSpec).dir(locationContainer).resolve();
 
         Location location = null;
         try {
@@ -134,7 +136,32 @@ public class BrooklynPersistenceUtils {
         return MementosGenerators.newMemento(instance);
     }
     
-    public static BrooklynMementoRawData newFullMemento(ManagementContext mgmt) {
+    public static BrooklynMementoRawData newStateMemento(ManagementContext mgmt, MementoCopyMode source) {
+        switch (source) {
+        case LOCAL: 
+            return newStateMementoFromLocal(mgmt); 
+        case REMOTE: 
+            return mgmt.getRebindManager().retrieveMementoRawData(); 
+        case AUTO: 
+            throw new IllegalStateException("Copy mode AUTO not supported here");
+        }
+        throw new IllegalStateException("Should not come here, unknown mode "+source);
+    }
+    
+    public static ManagementPlaneSyncRecord newManagerMemento(ManagementContext mgmt, MementoCopyMode source) {
+        switch (source) {
+        case LOCAL: 
+            return mgmt.getHighAvailabilityManager().getLastManagementPlaneSyncRecord();
+        case REMOTE: 
+            return mgmt.getHighAvailabilityManager().loadManagementPlaneSyncRecord(true);
+        case AUTO: 
+            throw new IllegalStateException("Copy mode AUTO not supported here");
+        }
+        throw new IllegalStateException("Should not come here, unknown mode "+source);
+    }
+    
+
+    private static BrooklynMementoRawData newStateMementoFromLocal(ManagementContext mgmt) {
         BrooklynMementoRawData.Builder result = BrooklynMementoRawData.builder();
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(mgmt.getClass().getClassLoader());
         RetryingMementoSerializer<Object> serializer = new RetryingMementoSerializer<Object>(rawSerializer, 1);
@@ -160,25 +187,70 @@ public class BrooklynPersistenceUtils {
      * this may be taken from {@link MementoCopyMode#LOCAL} current state 
      * or {@link MementoCopyMode#REMOTE} persisted state, or the default {@link MementoCopyMode#AUTO} detected
      */
-    public static void writeMemento(ManagementContext mgmt, PersistenceObjectStore targetStore, MementoCopyMode preferredOrigin) {
-        if (preferredOrigin==null || preferredOrigin==MementoCopyMode.AUTO) 
-            preferredOrigin = (mgmt.getHighAvailabilityManager().getNodeState()==ManagementNodeState.MASTER ? MementoCopyMode.LOCAL : MementoCopyMode.REMOTE);
+    public static void writeMemento(ManagementContext mgmt, PersistenceObjectStore targetStore, MementoCopyMode source) {
+        if (source==null || source==MementoCopyMode.AUTO) 
+            source = (mgmt.getHighAvailabilityManager().getNodeState()==ManagementNodeState.MASTER ? MementoCopyMode.LOCAL : MementoCopyMode.REMOTE);
 
         Stopwatch timer = Stopwatch.createStarted();
         
-        BrooklynMementoRawData dataRecord = null; 
-        switch (preferredOrigin) {
-        case LOCAL: dataRecord = newFullMemento(mgmt); break;
-        case REMOTE: dataRecord = mgmt.getRebindManager().retrieveMementoRawData(); break;
-        case AUTO: throw new IllegalStateException("Should not come here, should have autodetected");
-        }
+        BrooklynMementoRawData dataRecord = newStateMemento(mgmt, source); 
+        ManagementPlaneSyncRecord mgmtRecord = newManagerMemento(mgmt, source);
 
-        ManagementPlaneSyncRecord mgmtRecord = mgmt.getHighAvailabilityManager().getManagementPlaneSyncState();
-        
         writeMemento(mgmt, dataRecord, targetStore);
         writeManagerMemento(mgmt, mgmtRecord, targetStore);
         
         log.debug("Wrote full memento to "+targetStore+" in "+Time.makeTimeStringRounded(Duration.of(timer)));
     }
-    
+
+    public static void createBackup(ManagementContext managementContext, String label, MementoCopyMode source) {
+        if (source==null || source==MementoCopyMode.AUTO) {
+            if ("promotion".equalsIgnoreCase(label)) source = MementoCopyMode.REMOTE;
+            else if ("demotion".equalsIgnoreCase(label)) source = MementoCopyMode.LOCAL;
+            else throw new IllegalArgumentException("Cannot detect copy mode for "+label+"/"+source);
+        }
+        BrooklynMementoRawData memento = null;
+        ManagementPlaneSyncRecord planeState = null;
+        
+        try {
+            log.debug("Loading persisted state on "+label+" for backup purposes");
+            memento = newStateMemento(managementContext, source);
+            try {
+                planeState = newManagerMemento(managementContext, source);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                log.warn("Unable to access management plane sync state on "+label+" (ignoring): "+e, e);
+            }
+        
+            PersistenceObjectStore destinationObjectStore = null;
+            String backupSpec = managementContext.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_LOCATION_SPEC);
+            try {
+                String backupContainer = BrooklynServerPaths.newBackupPersistencePathResolver(managementContext).location(backupSpec)
+                    .resolveWithSubpathFor(managementContext, label);
+                destinationObjectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(managementContext, backupSpec, backupContainer);
+                log.debug("Backing up persisted state on "+label+", to "+destinationObjectStore.getSummaryName());
+                BrooklynPersistenceUtils.writeMemento(managementContext, memento, destinationObjectStore);
+                BrooklynPersistenceUtils.writeManagerMemento(managementContext, planeState, destinationObjectStore);
+                log.info("Back-up of persisted state created on "+label+", in "+destinationObjectStore.getSummaryName());
+                
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                PersistenceObjectStore failedStore = destinationObjectStore;
+                if (!Strings.isBlank(backupSpec) && !"localhost".equals(backupSpec)) {
+                    backupSpec = "localhost";
+                    String backupContainer = BrooklynServerPaths.newBackupPersistencePathResolver(managementContext).location(backupSpec)
+                        .resolveWithSubpathFor(managementContext, label);
+                    destinationObjectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(managementContext, backupSpec, backupContainer);
+                    log.warn("Persisted state back-up to "+failedStore.getSummaryName()+" failed with "+e, e);
+                    
+                    log.debug("Backing up persisted state on "+label+", locally because remote failed, to "+destinationObjectStore.getSummaryName());
+                    BrooklynPersistenceUtils.writeMemento(managementContext, memento, destinationObjectStore);
+                    BrooklynPersistenceUtils.writeManagerMemento(managementContext, planeState, destinationObjectStore);
+                    log.info("Back-up of persisted state created on "+label+", locally because remote failed, in "+destinationObjectStore.getSummaryName());
+                }
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Unable to backup management plane sync state on "+label+" (ignoring): "+e, e);
+        }
+    }
 }

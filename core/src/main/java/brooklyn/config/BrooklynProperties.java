@@ -33,8 +33,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +49,6 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -247,6 +244,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public BrooklynProperties addFrom(Map map) {
         putAll(Maps.transformValues(map, StringFunctions.trim()));
         return this;

@@ -34,8 +34,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
@@ -105,9 +103,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     }
 
     protected ManagementContextInternal newLocalManagementContext() {
-        BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED, false);
-        return new LocalManagementContextForTests(props);
+        return LocalManagementContextForTests.newInstance();
     }
 
     protected abstract PersistenceObjectStore newPersistenceObjectStore();
@@ -190,7 +186,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         tickerAdvance(Duration.FIVE_SECONDS);
         
         manager.start(HighAvailabilityMode.AUTO);
-        ManagementPlaneSyncRecord memento = manager.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento = manager.loadManagementPlaneSyncRecord(true);
         
         // Note can assert timestamp because not "real" time; it's using our own Ticker
         assertEquals(memento.getMasterNodeId(), ownNodeId);
@@ -218,7 +214,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         
         manager.start(HighAvailabilityMode.HOT_STANDBY);
         
-        ManagementPlaneSyncRecord state = manager.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord state = manager.loadManagementPlaneSyncRecord(true);
         assertEquals(state.getManagementNodes().get("node1").getStatus(), ManagementNodeState.MASTER);
         assertEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
         
@@ -226,7 +222,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         // its own heartbeat with the new time; but node1's record is now out-of-date.
         tickerAdvance(Duration.seconds(31));
         
-        ManagementPlaneSyncRecord state2 = manager.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord state2 = manager.loadManagementPlaneSyncRecord(true);
         assertEquals(state2.getManagementNodes().get("node1").getStatus(), ManagementNodeState.FAILED);
         assertNotEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.FAILED);
     }
