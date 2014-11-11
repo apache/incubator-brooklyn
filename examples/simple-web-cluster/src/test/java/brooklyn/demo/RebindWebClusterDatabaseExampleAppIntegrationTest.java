@@ -162,7 +162,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         // expect auto-scaler policy to be there, and to be functional (e.g. can trigger resize)
         AutoScalerPolicy autoScalerPolicy = (AutoScalerPolicy) Iterables.find(webCluster.getPolicies(), Predicates.instanceOf(AutoScalerPolicy.class));
         
-        autoScalerPolicy.setConfig(AutoScalerPolicy.MIN_POOL_SIZE, 3);
+        autoScalerPolicy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 3);
         EntityTestUtils.assertGroupSizeEqualsEventually(web, 3);
         final Collection<Entity> webMembersAfterGrow = web.getMembers();
         
@@ -190,7 +190,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         EntityTestUtils.assertAttributeChangesEventually(web, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW);
 
         // Restore the web-cluster to its original size of 2
-        autoScalerPolicy.setConfig(AutoScalerPolicy.MIN_POOL_SIZE, 2);
+        autoScalerPolicy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 2);
         EntityTestUtils.assertGroupSizeEqualsEventually(web, 2);
         
         final Entity removedAppserver = Iterables.getOnlyElement(Sets.difference(ImmutableSet.copyOf(webMembersAfterGrow), ImmutableSet.copyOf(web.getMembers())));

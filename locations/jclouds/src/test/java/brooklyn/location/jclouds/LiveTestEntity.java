@@ -28,6 +28,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 
@@ -57,7 +58,7 @@ public interface LiveTestEntity extends TestEntity {
             addLocations(locs);
             provisioningLocation = (JcloudsLocation) Iterables.find(locs, Predicates.instanceOf(JcloudsLocation.class));
             try {
-                obtainedLocation = provisioningLocation.obtain(provisioningLocation.getAllConfig(true));
+                obtainedLocation = provisioningLocation.obtain(((LocationInternal)provisioningLocation).config().getBag().getAllConfig());
             } catch (NoMachinesAvailableException e) {
                 throw Throwables.propagate(e);
             }

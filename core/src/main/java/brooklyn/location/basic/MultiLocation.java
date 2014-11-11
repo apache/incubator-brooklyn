@@ -120,7 +120,7 @@ public class MultiLocation<T extends MachineLocation> extends AbstractLocation i
         // TODO shouldn't have to copy config bag as it should be inherited (but currently it is not used inherited everywhere; just most places)
         return getManagementContext().getLocationManager().createLocation(LocationSpec.create(getClass())
                 .parent(this)
-                .configure(getLocalConfigBag().getAllConfig())  // FIXME Should this just be inherited?
+                .configure(config().getLocalBag().getAllConfig())  // FIXME Should this just be inherited?
                 .configure(newFlags));
     }
 

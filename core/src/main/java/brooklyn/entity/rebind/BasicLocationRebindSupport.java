@@ -31,6 +31,7 @@ import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
 
@@ -68,9 +69,9 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
         // FIXME Treat config like we do for entities; this code will disappear when locations become entities.
         
         // Note that the flags have been set in the constructor
-        // FIXME Relies on location.getLocalConfigBag being mutable (to modify the location's own config)
+        // FIXME Relies on location.config().getLocalBag() being mutable (to modify the location's own config)
         
-        location.getLocalConfigBag().putAll(memento.getLocationConfig()).markAll(
+        location.config().getLocalBag().putAll(memento.getLocationConfig()).markAll(
                 Sets.difference(memento.getLocationConfig().keySet(), memento.getLocationConfigUnused())).
                 setDescription(memento.getLocationConfigDescription());
 
@@ -93,7 +94,7 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
                     value = TypeCoercions.coerce(entry.getValue(), fieldType);
                 }
                 if (value != null) {
-                    location.getLocalConfigBag().putStringKey(flagName, value);
+                    location.config().addToLocalBag(MutableMap.of(flagName, value));
                     FlagUtils.setFieldFromFlag(location, flagName, value);
                 }
             } catch (NoSuchElementException e) {

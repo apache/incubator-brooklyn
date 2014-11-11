@@ -435,12 +435,12 @@ public class AutoScalerPolicy extends AbstractPolicy {
 
     public void setMetricLowerBound(Number val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing metricLowerBound from {} to {}", new Object[] {this, getMetricLowerBound(), val});
-        setConfig(METRIC_LOWER_BOUND, checkNotNull(val));
+        config().set(METRIC_LOWER_BOUND, checkNotNull(val));
     }
     
     public void setMetricUpperBound(Number val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing metricUpperBound from {} to {}", new Object[] {this, getMetricUpperBound(), val});
-        setConfig(METRIC_UPPER_BOUND, checkNotNull(val));
+        config().set(METRIC_UPPER_BOUND, checkNotNull(val));
     }
     
     /**
@@ -452,7 +452,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
 
     public void setMinPeriodBetweenExecs(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing minPeriodBetweenExecs from {} to {}", new Object[] {this, getMinPeriodBetweenExecs(), val});
-        setConfig(MIN_PERIOD_BETWEEN_EXECS, val);
+        config().set(MIN_PERIOD_BETWEEN_EXECS, val);
     }
 
     /**
@@ -464,7 +464,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     public void setResizeUpStabilizationDelay(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpStabilizationDelay from {} to {}", new Object[] {this, getResizeUpStabilizationDelay(), val});
-        setConfig(RESIZE_UP_STABILIZATION_DELAY, val);
+        config().set(RESIZE_UP_STABILIZATION_DELAY, val);
     }
     
     /**
@@ -476,17 +476,17 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     public void setResizeDownStabilizationDelay(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing resizeDownStabilizationDelay from {} to {}", new Object[] {this, getResizeDownStabilizationDelay(), val});
-        setConfig(RESIZE_DOWN_STABILIZATION_DELAY, val);
+        config().set(RESIZE_DOWN_STABILIZATION_DELAY, val);
     }
     
     public void setMinPoolSize(int val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing minPoolSize from {} to {}", new Object[] {this, getMinPoolSize(), val});
-        setConfig(MIN_POOL_SIZE, val);
+        config().set(MIN_POOL_SIZE, val);
     }
     
     public void setMaxPoolSize(int val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing maxPoolSize from {} to {}", new Object[] {this, getMaxPoolSize(), val});
-        setConfig(MAX_POOL_SIZE, val);
+        config().set(MAX_POOL_SIZE, val);
     }
     
     private AttributeSensor<? extends Number> getMetric() {

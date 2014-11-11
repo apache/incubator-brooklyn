@@ -401,7 +401,7 @@ public class Entities {
     public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
         out.append(currentIndentation+loc.toString()+"\n");
 
-        for (Object entryO : ((LocationInternal)loc).getAllConfigBag().getAllConfig().entrySet()) {
+        for (Object entryO : ((LocationInternal)loc).config().getBag().getAllConfig().entrySet()) {
             Map.Entry entry = (Map.Entry)entryO;
             Object keyO = entry.getKey();
             String key =

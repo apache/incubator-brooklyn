@@ -163,7 +163,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     /** In most clouds, the public hostname is the only way to ensure VMs in different zones can access each other. */
     @Override
     public String getSubnetHostname() {
-        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
+        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), config().getBag());
         return publicHostname;
     }
 
@@ -174,7 +174,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             return privateAddress.get();
         }
 
-        String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
+        String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), config().getBag());
         if (hostname != null && !Networking.isValidIp4(hostname)) {
             try {
                 return InetAddress.getByName(hostname).getHostAddress();

@@ -108,8 +108,8 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigCanBeSetOnPolicy() throws Exception {
         MyPolicy policy = new MyPolicy();
-        policy.setConfig(MyPolicy.STR_KEY, "aval");
-        policy.setConfig(MyPolicy.INT_KEY, 2);
+        policy.config().set(MyPolicy.STR_KEY, "aval");
+        policy.config().set(MyPolicy.INT_KEY, 2);
         app.addPolicy(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "aval");
@@ -121,7 +121,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         MyPolicy policy = new MyPolicy(MutableMap.builder()
                 .put(MyPolicy.STR_KEY, "aval")
                 .build());
-        policy.setConfig(MyPolicy.STR_KEY, "diffval");
+        policy.config().set(MyPolicy.STR_KEY, "diffval");
         app.addPolicy(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "diffval");
@@ -135,7 +135,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         app.addPolicy(policy);
         
         try {
-            policy.setConfig(MyPolicy.STR_KEY,"newval");
+            policy.config().set(MyPolicy.STR_KEY,"newval");
             fail();
         } catch (UnsupportedOperationException e) {
             // success

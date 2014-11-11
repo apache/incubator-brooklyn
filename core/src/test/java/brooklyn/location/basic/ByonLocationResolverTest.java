@@ -88,7 +88,7 @@ public class ByonLocationResolverTest {
         brooklynProperties.put("brooklyn.location.byon.publicKeyData", "myPublicKeyData");
         brooklynProperties.put("brooklyn.location.byon.privateKeyPassphrase", "myprivateKeyPassphrase");
 
-        Map<String, Object> conf = resolve("byon(hosts=\"1.1.1.1\")").getAllConfig(true);
+        Map<String, Object> conf = resolve("byon(hosts=\"1.1.1.1\")").config().getBag().getAllConfig();
         
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -110,7 +110,7 @@ public class ByonLocationResolverTest {
         FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("byon(privateKeyFile=myprivatekeyfile,hosts=\"1.1.1.1\")");
         SshMachineLocation machine = loc.obtain();
         
-        assertEquals(machine.getAllConfig(true).get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(machine.config().getBag().getStringKey("privateKeyFile"), "myprivatekeyfile");
         assertEquals(machine.getAddress(), Networking.getInetAddressWithFixedName("1.1.1.1"));
     }
 
@@ -130,7 +130,7 @@ public class ByonLocationResolverTest {
         // prefer location-generic if nothing else
         brooklynProperties.put("brooklyn.location.privateKeyData", "privateKeyData-inGeneric");
 
-        Map<String, Object> conf = resolve("named:mynamed").getAllConfig(true);
+        Map<String, Object> conf = resolve("named:mynamed").config().getBag().getAllConfig();
         
         assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
         assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
@@ -259,21 +259,21 @@ public class ByonLocationResolverTest {
                 new NamedLocationResolver().newLocationFromString(MutableMap.of(), "named:foo", managementContext.getLocationRegistry());
         
         Assert.assertEquals("/tmp/x", ll.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
-        Assert.assertTrue(ll.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, false));
-        Assert.assertEquals("/tmp/x", ll.getAllConfig(false).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
-        Assert.assertEquals("/tmp/x", ((AbstractLocation)ll).getAllConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
+        Assert.assertTrue(((LocationInternal)ll).config().getLocalRaw(LocationConfigKeys.PRIVATE_KEY_FILE).isPresent());
+        Assert.assertEquals("/tmp/x", ((LocationInternal)ll).config().getLocalBag().getStringKey(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
+        Assert.assertEquals("/tmp/x", ((LocationInternal)ll).config().getBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
 
         SshMachineLocation l = ll.obtain(MutableMap.of());
         
         Assert.assertEquals("/tmp/x", l.getConfig(LocationConfigKeys.PRIVATE_KEY_FILE));
         
-        Assert.assertTrue(l.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, true));
-        Assert.assertFalse(l.hasConfig(LocationConfigKeys.PRIVATE_KEY_FILE, false));
+        Assert.assertTrue(l.config().getRaw(LocationConfigKeys.PRIVATE_KEY_FILE).isPresent());
+        Assert.assertTrue(l.config().getLocalRaw(LocationConfigKeys.PRIVATE_KEY_FILE).isAbsent());
 
-        Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
-        Assert.assertEquals("/tmp/x", l.getAllConfig(true).get(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
+        Assert.assertEquals("/tmp/x", l.config().getBag().getStringKey(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
+        Assert.assertEquals("/tmp/x", l.config().getBag().getStringKey(LocationConfigKeys.PRIVATE_KEY_FILE.getName()));
 
-        Assert.assertEquals("/tmp/x", l.getAllConfigBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
+        Assert.assertEquals("/tmp/x", l.config().getBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
     }
 
     @Test

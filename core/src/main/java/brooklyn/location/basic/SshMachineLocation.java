@@ -76,6 +76,7 @@ import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
@@ -321,7 +322,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     private BasicPool<SshTool> buildPool(final Map<String, ?> properties) {
         return BasicPool.<SshTool>builder()
                 .name(getDisplayName()+"@"+address+":"+getPort()+
-                        (hasConfig(SSH_HOST, true) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
+                        (config().getRaw(SSH_HOST).isPresent() ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
                         ":hash"+System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {
                         @Override public SshTool get() {
@@ -473,7 +474,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public String getUser() {
         if (!truth(user)) {
-            if (hasConfig(SshTool.PROP_USER, false)) {
+            if (config().getLocalRaw(SshTool.PROP_USER).isPresent()) {
                 LOG.warn("User configuration for "+this+" set after deployment; deprecated behaviour may not be supported in future versions");
             }
             return getConfig(SshTool.PROP_USER);
@@ -531,7 +532,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 .configure(SshTool.PROP_HOST, address.getHostName())
                 .putAll(props);
 
-            for (Map.Entry<String,Object> entry: getAllConfigBag().getAllConfig().entrySet()) {
+            for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
                 String key = entry.getKey();
                 if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);

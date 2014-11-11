@@ -76,7 +76,7 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.privateKeyData", "myprivateKeyData");
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.publicKeyData", "myPublicKeyData");
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.privateKeyPassphrase", "myprivateKeyPassphrase");
-        Map<String, Object> conf = resolve("jclouds:aws-ec2").getAllConfig(true);
+        Map<String, Object> conf = resolve("jclouds:aws-ec2").config().getBag().getAllConfig();
 
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -92,7 +92,7 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.location.jclouds.privateKeyData", "myprivateKeyData");
         brooklynProperties.put("brooklyn.location.jclouds.publicKeyData", "myPublicKeyData");
         brooklynProperties.put("brooklyn.location.jclouds.privateKeyPassphrase", "myprivateKeyPassphrase");
-        Map<String, Object> conf = resolve("jclouds:aws-ec2").getAllConfig(true);
+        Map<String, Object> conf = resolve("jclouds:aws-ec2").config().getBag().getAllConfig();
 
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -109,7 +109,7 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.location.jclouds.public-key-data", "myPublicKeyData");
         brooklynProperties.put("brooklyn.location.jclouds.private-key-passphrase", "myprivateKeyPassphrase");
         brooklynProperties.put("brooklyn.location.jclouds.image-id", "myimageid");
-        Map<String, Object> conf = resolve("jclouds:aws-ec2").getAllConfig(true);
+        Map<String, Object> conf = resolve("jclouds:aws-ec2").config().getBag().getAllConfig();
 
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -148,7 +148,7 @@ public class JcloudsLocationResolverTest {
                 "privateKeyPassphrase-inProviderSpecific");
         brooklynProperties.put("brooklyn.location.jclouds.private-key-passphrase", "privateKeyPassphrase-inJcloudsGeneric");
 
-        Map<String, Object> conf = resolve("named:myaws-ec2").getAllConfig(true);
+        Map<String, Object> conf = resolve("named:myaws-ec2").config().getBag().getAllConfig();
 
         assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
         assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
@@ -189,7 +189,7 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.location.jclouds.openstack-nova.endpoint", "myendpoint");
         JcloudsLocation loc = resolve("jclouds:openstack-nova");
         // just checking
-        assertEquals(loc.getLocalConfigBag().getStringKey("endpoint"), "myendpoint");
+        assertEquals(loc.config().getLocalBag().getStringKey("endpoint"), "myendpoint");
         assertEquals(loc.getConfig(CloudLocationConfig.CLOUD_ENDPOINT), "myendpoint");
         // this is the one we really care about!:
         assertEquals(loc.getEndpoint(), "myendpoint");
@@ -199,14 +199,14 @@ public class JcloudsLocationResolverTest {
     public void testJcloudsLegacyRandomProperty() {
         brooklynProperties.put("brooklyn.location.jclouds.openstack-nova.foo", "bar");
         JcloudsLocation loc = resolve("jclouds:openstack-nova");
-        assertEquals(loc.getLocalConfigBag().getStringKey("foo"), "bar");
+        assertEquals(loc.config().getLocalBag().getStringKey("foo"), "bar");
     }
 
     @Test
     public void testJcloudsRandomProperty() {
         brooklynProperties.put("brooklyn.location.jclouds.openstack-nova.foo", "bar");
         JcloudsLocation loc = resolve("jclouds:openstack-nova");
-        assertEquals(loc.getLocalConfigBag().getStringKey("foo"), "bar");
+        assertEquals(loc.config().getLocalBag().getStringKey("foo"), "bar");
     }
 
     @Test
@@ -275,9 +275,9 @@ public class JcloudsLocationResolverTest {
         
         JcloudsLocation l = resolve("named:bar");
         assertJcloudsEquals(l, "softlayer", "138124");
-        assertEquals(l.getAllConfig(false).get("prop3"), "3");
-        assertEquals(l.getAllConfig(false).get("prop2"), "2");
-        assertEquals(l.getAllConfig(false).get("prop1"), "1");
+        assertEquals(l.config().getLocalBag().getStringKey("prop3"), "3");
+        assertEquals(l.config().getLocalBag().getStringKey("prop2"), "2");
+        assertEquals(l.config().getLocalBag().getStringKey("prop1"), "1");
     }
 
 

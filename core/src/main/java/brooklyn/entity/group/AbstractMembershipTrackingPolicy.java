@@ -112,7 +112,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     public void setGroup(Group group) {
         // relies on doReconfigureConfig to make the actual change
         LOG.warn("Deprecated use of setGroup in "+AbstractMembershipTrackingPolicy.class.getSimpleName()+"; group should be set as config");
-        setConfig(GROUP, group);
+        config().set(GROUP, group);
     }
     
     @Override

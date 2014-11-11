@@ -88,7 +88,7 @@ public class JcloudsByonLocationResolverAwsLiveTest extends AbstractJcloudsLiveT
         assertEquals(machine.getAddress().getHostAddress(), awsVmIp);
         assertEquals(machine.getAddress().getHostName(), awsVmHostname);
         assertEquals(machine.getUser(), awsVmUser);
-        assertEquals(machine.getAllConfig(true).get("anotherprop"), "myval");
+        assertEquals(machine.config().getBag().getStringKey("anotherprop"), "myval");
         
         assertTrue(machine.isSshable());
     }
@@ -158,7 +158,7 @@ public class JcloudsByonLocationResolverAwsLiveTest extends AbstractJcloudsLiveT
         brooklynProperties.put("brooklyn.jclouds.aws-ec2.private-key-passphrase", "privateKeyPassphrase-inProviderSpecific");
         brooklynProperties.put("brooklyn.jclouds.private-key-passphrase", "privateKeyPassphrase-inJcloudsGeneric");
 
-        Map<String, Object> conf = resolve("named:mynamed").obtain().getAllConfig(true);
+        Map<String, Object> conf = resolve("named:mynamed").obtain().config().getBag().getAllConfig();
         
         assertEquals(conf.get("user"), awsVmUser);
         assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
