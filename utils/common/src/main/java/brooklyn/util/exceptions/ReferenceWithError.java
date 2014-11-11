@@ -93,5 +93,9 @@ public class ReferenceWithError<T> implements Supplier<T> {
     public boolean hasError() {
         return error!=null;
     }
-    
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName()+"["+object+(error!=null?"/"+(maskError?"masking:":"throwing:")+error:"")+"]";
+    }
 }
