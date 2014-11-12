@@ -449,6 +449,8 @@ public class BrooklynWebServer {
             rh.setDirectoriesListed(true);
             rh.setResourceBase(blueprintExportDir);
             rh.setAliases(false);
+            String stylesheet = getClass().getClassLoader().getResource("blueprints.css").toExternalForm();
+            rh.setStylesheet(stylesheet);
             blueprints.setHandler(rh);
             handlers.addHandler(blueprints);
         }
