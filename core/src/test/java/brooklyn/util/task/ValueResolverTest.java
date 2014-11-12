@@ -20,7 +20,7 @@ package brooklyn.util.task;
 
 import java.util.concurrent.Callable;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

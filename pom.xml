@@ -114,7 +114,7 @@
 
         <!-- Testing -->
         <cobertura.version>1.9.4.1</cobertura.version>
-        <surefire.version>2.17</surefire.version>
+        <surefire.version>2.18</surefire.version>
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
         <includedTestGroups />
@@ -123,12 +123,12 @@
         <!-- Dependencies -->
         <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
         <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
-        <jclouds.version>1.8.0</jclouds.version>
+        <jclouds.version>1.8.1</jclouds.version>
         <guava.version>17.0</guava.version>
         <groovy.version>1.8.6</groovy.version>
         <logback.version>1.0.7</logback.version>
-        <testng.version>6.8</testng.version>
-        <mockito.version>1.9.5</mockito.version>
+        <testng.version>6.8.8</testng.version>
+        <mockito.version>1.10.8</mockito.version>
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
