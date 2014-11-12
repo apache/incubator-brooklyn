@@ -46,7 +46,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 
-/** abstract class which helps track membership of a group, invoking (empty) methods in this class on MEMBER{ADDED,REMOVED} events, as well as SERVICE_UP {true,false} for those members. */
+/**
+ * Abstract class which helps track membership of a group, invoking (empty) methods in this class
+ * on MEMBER{ADDED,REMOVED} events, as well as SERVICE_UP {true,false} for those members.
+ */
 public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractMembershipTrackingPolicy.class);
     
