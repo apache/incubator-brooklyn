@@ -15,19 +15,18 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-name: Example Brooklyn Cluster
-
+id: brooklyn-cluster
+name: "Brooklyn Cluster"
+origin: "https://github.com/brooklyncentral/"
+location: jclouds:softlayer:lon02
 services:
 - type: brooklyn.entity.brooklynnode.BrooklynCluster
   initialSize: 2
   memberSpec:
     $brooklyn:entitySpec: 
-#      type: classpath://brooklyn/entity/brooklynnode/brooklyn-node-persisting-to-tmp.yaml
+#      type: classpath://brooklyn-node-persisting-to-tmp.yaml
       type: brooklyn.entity.brooklynnode.BrooklynNode
       brooklyn.config:
         # persistence location must be the same for all nodes; if anywhere other than localhost configure a shared obj store or nfs mount
         brooklynnode.launch.parameters.extra: --persist auto --persistenceDir /tmp/brooklyn-persistence-example/
-
-# location: localhost

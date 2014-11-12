@@ -15,10 +15,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-name: Example Brooklyn Node
-
+id: brooklyn-node
+name: "Brooklyn Node"
+origin: "https://github.com/brooklyncentral/"
+location: localhost
 services:
 - type: brooklyn.entity.brooklynnode.BrooklynNode
 
@@ -31,5 +32,3 @@ services:
   # brooklynLocalPropertiesContents: |
   #   brooklyn.webconsole.security.users=admin
   #   brooklyn.webconsole.security.user.admin.password=p4ssw0rd
-
-# location: localhost

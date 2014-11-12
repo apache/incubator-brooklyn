@@ -15,10 +15,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-name: Riak Cluster with Webapp Cluster
-location: jclouds:softlayer:sjc01
+id: riak-webapp-cluster
+name: "Riak Cluster with Webapp Cluster"
+origin: "https://github.com/brooklyncentral/"
+location: jclouds:softlayer:lon02
 services:
 - type: brooklyn.entity.nosql.riak.RiakCluster
   initialSize: 2

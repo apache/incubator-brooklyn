@@ -16,16 +16,38 @@
 # specific language governing permissions and limitations
 # under the License.
 
-id: nodejs-hello-world-application
-name: "Node.JS Hello World Application"
-origin: "https://github.com/grkvlt/node-hello-world.git/"
+id: nodejs-todo-application
+name: "Node.JS Todo Application"
+origin: "https://github.com/amirrajan/nodejs-todo/"
 location: jclouds:softlayer:lon02
 services:
+- type: brooklyn.entity.nosql.redis.RedisStore
+  id: redis
+  name: "Redis"
 - type: brooklyn.entity.webapp.nodejs.NodeJsWebAppService
   id: nodejs
   name: "Node.JS"
   brooklyn.config:
     gitRepoUrl:
-      "https://github.com/grkvlt/node-hello-world.git"
-    appFileName: app.js
-    appName: node-hello-world
+      "https://github.com/grkvlt/nodejs-todo/"
+    appFileName: server.js
+    appName: nodejs-todo
+    nodePackages:
+    - express
+    - ejs
+    - jasmine-node
+    - underscore
+    - method-override
+    - cookie-parser
+    - express-session
+    - body-parser
+    - cookie-session
+    - redis
+    - redis-url
+    - connect
+    env:
+      REDISTOGO_URL: >
+        $brooklyn:formatString("redis://%s:%d/",
+        component("redis").attributeWhenReady("host.subnet.hostname"),
+        component("redis").attributeWhenReady("redis.port"))
+    launch.latch: $brooklyn:component("redis").attributeWhenReady("service.isUp")

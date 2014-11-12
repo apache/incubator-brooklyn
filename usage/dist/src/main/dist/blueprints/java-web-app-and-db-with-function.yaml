@@ -15,25 +15,25 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-id: riak-webapp
-name: "Riak Cluster with Webapp"
-location: aws-ec2:eu-west-s
+id: java-cluster-db-example
+name: "Java Webapp Cluster with MySQL Database"
 origin: "https://github.com/brooklyncentral/"
 location: jclouds:softlayer:lon02
 services:
-- type: brooklyn.entity.nosql.riak.RiakCluster
-  initialSize: 2
-  id: cluster
-- type: brooklyn.entity.webapp.jboss.JBoss7Server
-  name: Web
+- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  name: My Web
+  location: localhost
   brooklyn.config:
-    wars.root: "https://s3-eu-west-1.amazonaws.com/brooklyn-clocker/brooklyn-example-hello-world-sql-webapp.war"
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-M2/brooklyn-example-hello-world-sql-webapp-0.6.0-M2.war
+    http.port: 9280+
+    proxy.http.port: 9210+
     java.sysprops: 
-      brooklyn.example.riak.nodes: $brooklyn:component("cluster").attributeWhenReady("riak.cluster.nodeList")
-  provisioning.properties:
-    osFamily: centos
-
-# Alternative URL for War file if available on classpath
-# "classpath://brooklyn-example-hello-world-sql-webapp.war"
+      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
+         component("db").attributeWhenReady("datastore.url"), "visitors", "brooklyn", "br00k11n")
+- type: brooklyn.entity.database.mysql.MySqlNode
+  id: db
+  name: My DB
+  location: localhost
+  brooklyn.config:
+    creationScriptUrl: classpath://visitors-creation-script.sql

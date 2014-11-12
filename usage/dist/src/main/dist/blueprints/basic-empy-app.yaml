@@ -15,25 +15,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-id: riak-webapp
-name: "Riak Cluster with Webapp"
-location: aws-ec2:eu-west-s
+id: basic-empy-app
+name: "Empty no-op Application which does nothing"
 origin: "https://github.com/brooklyncentral/"
-location: jclouds:softlayer:lon02
+location: localhost
 services:
-- type: brooklyn.entity.nosql.riak.RiakCluster
-  initialSize: 2
-  id: cluster
-- type: brooklyn.entity.webapp.jboss.JBoss7Server
-  name: Web
-  brooklyn.config:
-    wars.root: "https://s3-eu-west-1.amazonaws.com/brooklyn-clocker/brooklyn-example-hello-world-sql-webapp.war"
-    java.sysprops: 
-      brooklyn.example.riak.nodes: $brooklyn:component("cluster").attributeWhenReady("riak.cluster.nodeList")
-  provisioning.properties:
-    osFamily: centos
-
-# Alternative URL for War file if available on classpath
-# "classpath://brooklyn-example-hello-world-sql-webapp.war"
+- type: brooklyn.entity.basic.BasicApplication

@@ -1,0 +1,50 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+id: opengamma-cluster
+name: "OpenGamma Cluster"
+origin: "https://github.com/brooklyncentral/brooklyn-opengamma"
+location: jclouds:softlayer:lon02
+services:
+- type: Cluster
+  name: OG Back-End
+  members:
+  - $brooklyn.import("postgresql-chef")
+    id: og-db
+    chef:
+      attributes:
+        postgresql:
+          sql: io/cloudsoft/opengamma/config/create-brooklyn-db.sql
+  - type: brooklyn.entity.messaging.activemq.ActiveMQBroker
+    id: og-amq
+- type: Fabric
+  id: web-fabric
+  spec:
+    type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+    brooklyn.config:
+      dynamiccluster.memberspec:
+        type: io.cloudsoft.opengamma.server.OpenGammaServer
+        opengamma.services.message-bus.entity: og-amq
+        opengamma.services.database.entity: og-db
+- type: brooklyn.entity.dns.geoscaling.GeoscalingDnsService
+  brooklyn.config:
+    username: cloudsoft
+    password: $brooklyn.property("brooklyn.geoscaling.password")
+    primaryDomainName: geopaas.org
+    smartSubdomainName: brooklyn
+    targetProvider: web-fabric

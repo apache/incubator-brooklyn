@@ -15,13 +15,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-name: Example Persisting Brooklyn Node
-
+id: brooklyn-node-persisting
+name: "Persisting Brooklyn Node"
+origin: "https://github.com/brooklyncentral/"
+location: localhost
 services:
 - type: classpath://brooklyn/entity/brooklynnode/brooklyn-node.yaml
   brooklyn.config:
     brooklynnode.launch.parameters.extra: --persist auto --persistenceDir /tmp/brooklyn-persistence-example/
-
-location: localhost
