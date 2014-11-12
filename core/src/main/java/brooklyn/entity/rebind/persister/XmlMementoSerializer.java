@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogBundleDto;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
@@ -90,6 +91,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.alias("enricher", BasicEnricherMemento.class);
         xstream.alias("configKey", BasicConfigKey.class);
         xstream.alias("catalogItem", BasicCatalogItemMemento.class);
+        xstream.alias("bundle", CatalogBundleDto.class);
         xstream.alias("attributeSensor", BasicAttributeSensor.class);
 
         xstream.alias("effector", Effector.class);
@@ -112,6 +114,10 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.registerConverter(new ManagementContextConverter());
         
         xstream.registerConverter(new TaskConverter(xstream.getMapper()));
+    
+        //For compatibility with existing persistence stores content.
+        xstream.aliasField("registeredTypeName", BasicCatalogItemMemento.class, "symbolicName");
+        xstream.registerLocalConverter(BasicCatalogItemMemento.class, "libraries", new CatalogItemLibrariesConverter());
     }
     
     // Warning: this is called in the super-class constuctor, so before this constructor!

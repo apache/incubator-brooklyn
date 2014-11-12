@@ -50,16 +50,16 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
         xstream.aliasType("entity", CatalogEntityItemDto.class);
         xstream.aliasType("policy", CatalogPolicyItemDto.class);
 
-        xstream.aliasAttribute(CatalogItemDtoAbstract.class, "javaType", "type");
+        xstream.aliasField("registeredType", CatalogItemDtoAbstract.class, "symbolicName");
         xstream.aliasAttribute(CatalogItemDtoAbstract.class, "displayName", "name");
+        xstream.useAttributeFor(CatalogItemDtoAbstract.class, "type");
         xstream.useAttributeFor(CatalogItemDtoAbstract.class, "version");
+        xstream.aliasType("bundle", CatalogBundleDto.class);
+        xstream.registerConverter(new CatalogBundleConverter(xstream.getMapper(), xstream.getReflectionProvider()));
 
         xstream.useAttributeFor(CatalogClasspathDto.class, "scan");
         xstream.addImplicitCollection(CatalogClasspathDto.class, "entries", "entry", String.class);
         xstream.registerConverter(new EnumCaseForgivingSingleValueConverter(CatalogScanningModes.class));
-
-        xstream.aliasType("libraries", CatalogLibrariesDto.class);
-        xstream.addImplicitCollection(CatalogLibrariesDto.class, "bundles", "bundle", CatalogBundleDto.class);
 
         // Note: the management context is being omitted because it is unnecessary for
         // representations of catalogues generated with this serializer.

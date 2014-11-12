@@ -25,7 +25,7 @@ import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import java.util.Collection;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.BrooklynCatalog;

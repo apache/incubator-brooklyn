@@ -77,6 +77,12 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
         return getDisplayName();
     }
 
+    @Deprecated
+    @Override
+    public String getRegisteredTypeName() {
+        return getSymbolicName();
+    }
+
     @Override
     public String getDisplayName() {
         return itemDto.getDisplayName();

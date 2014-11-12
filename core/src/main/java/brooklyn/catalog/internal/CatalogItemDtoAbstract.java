@@ -50,12 +50,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @SetFromFlag String symbolicName;
     private @SetFromFlag String version = BasicBrooklynCatalog.NO_VERSION;
 
-    /**@deprecated since 0.7.0, left for deserialization backwards compatibility */
-    private @Deprecated @SetFromFlag String registeredTypeName;
-
     private @SetFromFlag String displayName;
-    /**@deprecated since 0.7.0, left for deserialization backwards compatibility */
-    private @Deprecated @SetFromFlag String name;
     private @SetFromFlag String description;
     private @SetFromFlag String iconUrl;
 
@@ -64,9 +59,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @Deprecated @SetFromFlag String type;
     private @SetFromFlag String planYaml;
 
-    private @SetFromFlag Collection<CatalogBundle> bundles;
-    /**@deprecated since 0.7.0, left for deserialization backwards compatibility */
-    private @Deprecated @SetFromFlag CatalogLibrariesDto libraries;
+    private @SetFromFlag Collection<CatalogBundle> libraries;
     private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
 
     @Override
@@ -90,10 +83,14 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return getDisplayName();
     }
 
+    @Deprecated
+    public String getRegisteredTypeName() {
+        return getSymbolicName();
+    }
+
     @Override
     public String getDisplayName() {
-        if (displayName != null) return displayName;
-        return name;
+        return displayName;
     }
 
     @Override
@@ -109,7 +106,6 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     @Override
     public String getSymbolicName() {
         if (symbolicName != null) return symbolicName;
-        if (registeredTypeName != null) return registeredTypeName;
         return getJavaType();
     }
 
@@ -127,12 +123,9 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Nonnull
     @Override
-    @SuppressWarnings("deprecation")
     public Collection<CatalogBundle> getLibraries() {
-        if (bundles != null) {
-            return ImmutableList.copyOf(bundles);
-        } else if (libraries != null && libraries.getBundles() != null) {
-            return ImmutableList.copyOf(libraries.getBundles());
+        if (libraries != null) {
+            return ImmutableList.copyOf(libraries);
         } else {
             return Collections.emptyList();
         }
@@ -172,7 +165,6 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     @Override
     public void setDisplayName(String newName) {
         this.displayName = newName;
-        this.name = null;
     }
 
     @Override
@@ -263,7 +255,6 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     protected void setSymbolicName(String symbolicName) {
         this.symbolicName = symbolicName;
-        this.registeredTypeName = null;
     }
 
     protected void setVersion(String version) {
@@ -288,7 +279,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     }
 
     protected void setLibraries(Collection<CatalogBundle> libraries) {
-        this.bundles = libraries;
+        this.libraries = libraries;
     }
 
     protected void setTags(Set<Object> tags) {

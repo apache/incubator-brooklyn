@@ -21,7 +21,6 @@ package brooklyn.catalog.internal;
 import java.util.Collection;
 
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogItem.CatalogBundle;
 
 import com.google.common.base.Preconditions;
 
@@ -36,7 +35,7 @@ public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
     }
 
     @Override
-    public Collection<CatalogBundle> getBundles() {
+    public Collection<String> getBundles() {
         return librariesDto.getBundles();
     }
 

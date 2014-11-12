@@ -20,6 +20,10 @@ package brooklyn.entity.rebind.persister;
 
 import static org.testng.Assert.assertEquals;
 
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -51,6 +55,7 @@ import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

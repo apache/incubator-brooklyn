@@ -47,7 +47,7 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
 
     @Deprecated
     public static interface CatalogItemLibraries {
-        Collection<CatalogBundle> getBundles();
+        Collection<String> getBundles();
     }
 
     public CatalogItemType getCatalogItemType();
@@ -64,6 +64,10 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     /** @deprecated since 0.7.0. Use {@link #getDisplayName} */
     @Deprecated
     public String getName();
+
+    /** @deprecated since 0.7.0. Use {@link #getSymbolicName} */
+    @Deprecated
+    public String getRegisteredTypeName();
 
     @Nullable public String getDescription();
 

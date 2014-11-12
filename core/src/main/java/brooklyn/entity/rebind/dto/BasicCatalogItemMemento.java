@@ -25,13 +25,13 @@ import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.mementos.CatalogItemMemento;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-
-import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogItem.CatalogBundle;
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.mementos.CatalogItemMemento;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class BasicCatalogItemMemento extends AbstractMemento implements CatalogItemMemento, Serializable {
@@ -112,7 +112,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
             javaType = other.getJavaType();
             version = other.getVersion();
             planYaml = other.getPlanYaml();
-            libraries = other.getBundles();
+            libraries = other.getLibraries();
             catalogItemType = other.getCatalogItemType();
             catalogItemJavaType = other.getCatalogItemJavaType();
             specType = other.getSpecType();
@@ -130,12 +130,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     private String javaType;
     private String version;
     private String planYaml;
-    //Keep libraries for deserialization compatibility and
-    //introduce bundles to hold the new libraries type from
-    //catalog item
-    private Collection<CatalogItem.CatalogBundle> bundles;
-    @SuppressWarnings("deprecation")
-    private CatalogItem.CatalogItemLibraries libraries;
+    private Collection<CatalogItem.CatalogBundle> libraries;
     private CatalogItem.CatalogItemType catalogItemType;
     private Class<?> catalogItemJavaType;
     private Class<?> specType;
@@ -150,12 +145,16 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
         this.iconUrl = builder.iconUrl;
         this.version = builder.version;
         this.planYaml = builder.planYaml;
-        this.bundles = builder.libraries;
-        this.libraries = null;
+        this.libraries = builder.libraries;
         this.catalogItemJavaType = builder.catalogItemJavaType;
         this.catalogItemType = builder.catalogItemType;
         this.specType = builder.specType;
         this.javaType = builder.javaType;
+    }
+
+    @Override
+    public String getId() {
+        return CatalogUtils.getVersionedId(getSymbolicName(), getVersion());
     }
 
     @Override
@@ -193,16 +192,8 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     }
 
     @Override
-    public Collection<CatalogItem.CatalogBundle> getBundles() {
-        if (bundles != null) {
-            return bundles;
-        } else if (libraries != null) {
-            @SuppressWarnings("deprecation")
-            Collection<CatalogBundle> b = libraries.getBundles();
-            return b;
-        } else {
-            return null;
-        }
+    public Collection<CatalogItem.CatalogBundle> getLibraries() {
+        return libraries;
     }
 
     @Override
@@ -241,7 +232,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
                 .add("iconUrl", getIconUrl())
                 .add("version", getVersion())
                 .add("planYaml", getPlanYaml())
-                .add("bundles", getBundles())
+                .add("libraries", getLibraries())
                 .add("catalogItemJavaType", getCatalogItemJavaType())
                 .add("catalogItemType", getCatalogItemType())
                 .add("javaType", getJavaType())

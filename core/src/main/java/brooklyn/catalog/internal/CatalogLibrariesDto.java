@@ -20,23 +20,29 @@ package brooklyn.catalog.internal;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogItem.CatalogBundle;
 
 import com.google.common.collect.ImmutableList;
 
 @Deprecated
 public class CatalogLibrariesDto implements CatalogItem.CatalogItemLibraries {
 
-    private Collection<CatalogBundle> bundles = new CopyOnWriteArrayList<CatalogBundle>();
+    private final Collection<String> bundles;
+
+    public CatalogLibrariesDto() {
+        this.bundles = Collections.emptyList();
+    }
+
+    public CatalogLibrariesDto(Collection<String> bundles) {
+        this.bundles = bundles;
+    }
 
     /**
      * @return An immutable copy of the bundle URLs referenced by this object
      */
     @Override
-    public Collection<CatalogBundle> getBundles() {
+    public Collection<String> getBundles() {
         if (bundles == null) {
             // can be null on deserialization
             return Collections.emptyList();

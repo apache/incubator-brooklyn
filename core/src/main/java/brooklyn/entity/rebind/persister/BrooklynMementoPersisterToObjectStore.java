@@ -248,8 +248,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                 }
                 
                 String xmlId = (String) XmlUtil.xpath(contents, "/"+type.toCamelCase()+"/id");
-                if (!Objects.equal(id, xmlId))
-                    LOG.warn("ID mismatch on "+type.toCamelCase()+", "+id+" from path, "+xmlId+" from xml");
+                String safeXmlId = Strings.makeValidFilename(xmlId);
+                if (!Objects.equal(id, safeXmlId))
+                    LOG.warn("ID mismatch on "+type.toCamelCase()+", "+id+" from path, "+safeXmlId+" from xml");
                 
                 builder.put(type, xmlId, contents);
             }

@@ -36,7 +36,7 @@ public interface CatalogItemMemento extends Memento {
 
     String getJavaType();
 
-    Collection<CatalogItem.CatalogBundle> getBundles();
+    Collection<CatalogItem.CatalogBundle> getLibraries();
 
     CatalogItem.CatalogItemType getCatalogItemType();
 

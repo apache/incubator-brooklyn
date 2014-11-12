@@ -90,7 +90,7 @@ public class BrooklynTypes {
         if (Entity.class.isAssignableFrom(brooklynClass)) {
             type = new ImmutableEntityType((Class<? extends Entity>)brooklynClass);
         } else if (Location.class.isAssignableFrom(brooklynClass)) {
-            type = new ImmutableEntityType((Class)brooklynClass);
+            type = new ImmutableEntityType((Class<? extends Entity>)brooklynClass);
         } else if (Policy.class.isAssignableFrom(brooklynClass)) {
             type = new PolicyDynamicType((Class<? extends Policy>)brooklynClass); // TODO immutable?
         } else if (Enricher.class.isAssignableFrom(brooklynClass)) {
