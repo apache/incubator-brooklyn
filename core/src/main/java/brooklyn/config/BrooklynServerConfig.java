@@ -19,8 +19,6 @@
 package brooklyn.config;
 
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
-
-import brooklyn.catalog.CatalogLoadMode;
 import io.brooklyn.camp.CampPlatform;
 
 import java.io.File;
@@ -31,7 +29,10 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
@@ -96,6 +97,8 @@ public class BrooklynServerConfig {
     public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
         "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
 
+    public static final AttributeSensor<ManagementContext.PropertiesReloadListener> PROPERTIES_RELOAD_LISTENER = Sensors.newSensor(
+            ManagementContext.PropertiesReloadListener.class, "brooklyn.management.propertiesReloadListenet", "Properties reload listener");
 
     public static String getMgmtBaseDir(ManagementContext mgmt) {
         return getMgmtBaseDir(mgmt.getConfig());
