@@ -765,6 +765,10 @@ public class BrooklynLauncher {
             for (Map.Entry<String, String> webapp : webApps.entrySet()) {
                 webServer.addWar(webapp.getKey(), webapp.getValue());
             }
+            String exportDir = System.getProperty(BrooklynServiceAttributes.BROOKLYN_BLUEPRINT_EXPORT_DIRECTORY);
+            if (Strings.isNonEmpty(exportDir)) {
+                webServer.setExportDirectory(exportDir);
+            }
             webServer.start();
 
         } catch (Exception e) {

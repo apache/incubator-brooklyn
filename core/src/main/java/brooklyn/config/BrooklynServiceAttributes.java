@@ -60,6 +60,9 @@ public class BrooklynServiceAttributes {
      */
     public static StringSystemProperty LOCALHOST_IP_ADDRESS = new StringSystemProperty("brooklyn.location.localhost.address");
 
+    /** Directory with blueprints to be exported over HTTP. */
+    public static final String BROOKLYN_BLUEPRINT_EXPORT_DIRECTORY = "brooklyn.blueprints.exportDir";
+
     /** Jackson ObjectMapper shared among REST resources */ 
     public static final String BROOKLYN_REST_OBJECT_MAPPER = "brooklyn.rest.objectMapper";
     
