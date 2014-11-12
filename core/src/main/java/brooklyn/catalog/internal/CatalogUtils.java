@@ -143,7 +143,7 @@ public class CatalogUtils {
     }
 
     public static boolean looksLikeVersionedId(String versionedId) {
-        return versionedId.indexOf(VERSION_DELIMITER) != -1;
+        return versionedId != null && versionedId.indexOf(VERSION_DELIMITER) != -1;
     }
 
     public static String getIdFromVersionedId(String versionedId) {

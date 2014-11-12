@@ -422,8 +422,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
         DeploymentPlan plan = makePlanFromYaml(yaml);
 
-        Collection<CatalogBundle> libraries = Collections.emptyList();
-
         @SuppressWarnings("rawtypes")
         Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
         MutableMap<String, Object> catalog = MutableMap.of();
@@ -433,6 +431,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             catalog.putAll(catalog2);
         }
 
+        Collection<CatalogBundle> libraries = Collections.emptyList();
         Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
         if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
         if (possibleLibraries.isPresentAndNonNull()) {
@@ -441,69 +440,101 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             libraries = CatalogItemDtoAbstract.parseLibraries((Collection<?>) possibleLibraries.get());
         }
 
-        String symbolicName;
-        String version = null;
+        final String id = (String) catalog.getMaybe("id").orNull();
+        final String version = Strings.toString(catalog.getMaybe("version").orNull());
+        final String symbolicName = (String) catalog.getMaybe("symbolicName").orNull();
+        final String name = (String) catalog.getMaybe("name").orNull();
+        final String displayName = (String) catalog.getMaybe("displayName").orNull();
+        final String description = (String) catalog.getMaybe("description").orNull();
+        final String iconUrl = (String) catalog.getMaybe("iconUrl").orNull();
+        final String iconUrlUnderscore = (String) catalog.getMaybe("icon_url").orNull();
 
-        symbolicName = (String) catalog.getMaybe("symbolicName").orNull();
-        if (Strings.isBlank(symbolicName)) {
-            symbolicName = (String) catalog.getMaybe("id").orNull();
-            if (Strings.isNonBlank(symbolicName) && CatalogUtils.looksLikeVersionedId(symbolicName)) {
-                symbolicName = CatalogUtils.getIdFromVersionedId(symbolicName);
-                version = CatalogUtils.getVersionFromVersionedId(symbolicName);
-            }
-        }
-        if (Strings.isBlank(symbolicName))
-            symbolicName = (String) catalog.getMaybe("name").orNull();
-        // take name from plan if not specified in brooklyn.catalog section not supplied
-        if (Strings.isBlank(symbolicName)) {
-            symbolicName = plan.getName();
-            if (Strings.isBlank(symbolicName)) {
-                if (plan.getServices().size()==1) {
-                    Service svc = Iterables.getOnlyElement(plan.getServices());
-                    symbolicName = svc.getServiceType();
-                }
-            }
+        if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
+                Strings.isNonBlank(displayName) &&
+                Strings.isNonBlank(name) && !name.equals(displayName)) {
+            log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
         }
 
-        Maybe<Object> possibleVersion = catalog.getMaybe("version");
-        if (possibleVersion.isAbsent() && Strings.isBlank(version)) {
-            throw new IllegalArgumentException("'version' attribute missing in 'brooklyn.catalog' section.");
-        } else if (possibleVersion.isPresent()) {
-            //could be coalesced to a number - can be one of Integer, Double, String
-            String versionProperty = possibleVersion.get().toString();
-
-            if (!Strings.isBlank(version) && !versionProperty.equals(version)) {
-                throw new IllegalArgumentException("Discrepency between version set in id/name " + version + " and version property " + versionProperty);
+        final String catalogSymbolicName;
+        if (Strings.isNonBlank(symbolicName)) {
+            catalogSymbolicName = symbolicName;
+        } else if (Strings.isNonBlank(id)) {
+            if (Strings.isNonBlank(id) && CatalogUtils.looksLikeVersionedId(id)) {
+                catalogSymbolicName = CatalogUtils.getIdFromVersionedId(id);
+            } else {
+                catalogSymbolicName = id;
             }
+        } else if (Strings.isNonBlank(name)) {
+            catalogSymbolicName = name;
+        } else if (Strings.isNonBlank(plan.getName())) {
+            catalogSymbolicName = plan.getName();
+        } else if (plan.getServices().size()==1) {
+            Service svc = Iterables.getOnlyElement(plan.getServices());
+            if (Strings.isBlank(svc.getServiceType())) {
+                throw new IllegalStateException("CAMP service type not expected to be missing for " + svc);
+            }
+            catalogSymbolicName = svc.getServiceType();
+        } else {
+            log.error("Can't infer catalog item symbolicName from the following plan:\n" + yaml);
+            throw new IllegalStateException("Can't infer catalog item symbolicName from catalog item description");
+        }
 
-            version = versionProperty;
+        final String catalogVersion;
+        if (CatalogUtils.looksLikeVersionedId(id)) {
+            catalogVersion = CatalogUtils.getVersionFromVersionedId(id);
+            if (version != null  && !catalogVersion.equals(version)) {
+                throw new IllegalArgumentException("Discrepency between version set in id " + catalogVersion + " and version property " + version);
+            }
+        } else if (Strings.isNonBlank(version)) {
+            catalogVersion = version;
+        } else {
+            log.warn("No version specified for catalog item " + catalogSymbolicName + ". Using default value.");
+            catalogVersion = null;
+        }
+
+        final String catalogDisplayName;
+        if (Strings.isNonBlank(displayName)) {
+            catalogDisplayName = displayName;
+        } else if (Strings.isNonBlank(name)) {
+            catalogDisplayName = name;
+        } else if (Strings.isNonBlank(plan.getName())) {
+            catalogDisplayName = plan.getName();
+        } else {
+            catalogDisplayName = null;
+        }
+
+        final String catalogDescription;
+        if (Strings.isNonBlank(description)) {
+            catalogDescription = description;
+        } else if (Strings.isNonBlank(plan.getDescription())) {
+            catalogDescription = plan.getDescription();
+        } else {
+            catalogDescription = null;
+        }
+
+        final String catalogIconUrl;
+        if (Strings.isNonBlank(iconUrl)) {
+            catalogIconUrl = iconUrl;
+        } else if (Strings.isNonBlank(iconUrlUnderscore)) {
+            catalogIconUrl = iconUrlUnderscore;
+        } else {
+            catalogIconUrl = null;
         }
 
         CatalogUtils.installLibraries(mgmt, libraries);
 
-        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, CatalogUtils.newClassLoadingContext(mgmt, CatalogUtils.getVersionedId(symbolicName, version), libraries, getRootClassLoader()));
+        String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion);
+        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries, getRootClassLoader());
+        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, loader);
 
-        CatalogItemBuilder<?> builder = createItemBuilder(spec, symbolicName, version)
+        CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(spec, catalogSymbolicName, catalogVersion)
             .libraries(libraries)
-            .displayName(plan.getName())
-            .description(plan.getDescription())
-            .plan(yaml);
+            .displayName(catalogDisplayName)
+            .description(catalogDescription)
+            .iconUrl(catalogIconUrl)
+            .plan(yaml)
+            .build();
 
-        // and populate other fields
-        Maybe<Object> name = catalog.getMaybe("displayName");
-        if (name.isAbsent()) name = catalog.getMaybe("name");
-        if (name.isAbsent()) name = Maybe.<Object>fromNullable(plan.getName());
-        if (name.isPresent()) builder.displayName((String) name.get());
-
-        Maybe<Object> description = catalog.getMaybe("description");
-        if (description.isPresent()) builder.description((String)description.get());
-
-        Maybe<Object> iconUrl = catalog.getMaybe("iconUrl");
-        if (iconUrl.isAbsent()) iconUrl = catalog.getMaybe("icon_url");
-        if (iconUrl.isPresent()) builder.iconUrl((String)iconUrl.get());
-
-        CatalogItemDtoAbstract<?, ?> dto = builder.build();
-        // Overwrite generated ID
         dto.setManagementContext((ManagementContextInternal) mgmt);
         return dto;
     }
