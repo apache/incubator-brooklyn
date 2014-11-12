@@ -580,7 +580,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
 
     private File getFileFor(File parent, String id) {
-        return new File(parent, FileUtil.getSafeFileName(id));
+        return new File(parent, Strings.makeValidFilename(id));
     }
 
     @Override

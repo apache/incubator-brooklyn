@@ -25,7 +25,6 @@ import brooklyn.util.text.NaturalOrderComparator;
 
 public class CatalogItemComparator implements Comparator<CatalogItem<?, ?>> {
     private static final String SNAPSHOT = "SNAPSHOT";
-    private static final Comparator<String> COMPARATOR = new NaturalOrderComparator();
 
     public static final CatalogItemComparator INSTANCE = new CatalogItemComparator();
 
@@ -40,7 +39,7 @@ public class CatalogItemComparator implements Comparator<CatalogItem<?, ?>> {
             boolean isV1Snapshot = v1.contains(SNAPSHOT);
             boolean isV2Snapshot = v2.contains(SNAPSHOT);
             if (isV1Snapshot == isV2Snapshot) {
-                return -COMPARATOR.compare(v1, v2);
+                return -NaturalOrderComparator.INSTANCE.compare(v1, v2);
             } else if (isV1Snapshot) {
                 return 1;
             } else {

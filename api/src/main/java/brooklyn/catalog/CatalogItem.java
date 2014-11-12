@@ -37,7 +37,7 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     }
     
     public static interface CatalogBundle {
-        public String getName();
+        public String getSymbolicName();
         public String getVersion();
         public String getUrl();
 

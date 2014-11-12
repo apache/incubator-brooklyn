@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,6 @@ import brooklyn.mementos.Memento;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.io.FileUtil;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -659,7 +657,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     }
     
     private String getPath(String subPath, String id) {
-        return subPath+"/"+FileUtil.getSafeFileName(id);
+        return subPath+"/"+Strings.makeValidFilename(id);
     }
 
     @Override

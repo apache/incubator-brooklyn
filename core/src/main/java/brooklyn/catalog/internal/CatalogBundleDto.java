@@ -24,7 +24,7 @@ import com.google.common.base.Preconditions;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 
 public class CatalogBundleDto implements CatalogBundle {
-    private String name;
+    private String symbolicName;
     private String version;
     private String url;
 
@@ -38,19 +38,19 @@ public class CatalogBundleDto implements CatalogBundle {
             Preconditions.checkNotNull(version, "version");
         }
 
-        this.name = name;
+        this.symbolicName = name;
         this.version = version;
         this.url = url;
     }
 
     @Override
     public boolean isNamed() {
-        return name != null && version != null;
+        return symbolicName != null && version != null;
     }
 
     @Override
-    public String getName() {
-        return name;
+    public String getSymbolicName() {
+        return symbolicName;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class CatalogBundleDto implements CatalogBundle {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-                .add("name", name)
+                .add("symbolicName", symbolicName)
                 .add("version", version)
                 .add("url", url)
                 .toString();

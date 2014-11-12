@@ -211,7 +211,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (IllegalStateException e) {
-            Assert.assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} not previously registered, but URL is empty.");
+            Assert.assertEquals(e.getMessage(), "Bundle CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} not previously registered, but URL is empty.");
         }
     }
 
@@ -300,7 +300,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (IllegalStateException e) {
-            assertEquals(e.getMessage(), "Bundle CatalogBundleDto{name=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} " +
+            assertEquals(e.getMessage(), "Bundle CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} " +
                     "not previously registered, but URL is empty.");
         }
     }

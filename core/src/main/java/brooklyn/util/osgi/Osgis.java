@@ -163,7 +163,7 @@ public class Osgis {
 
         public BundleFinder bundle(CatalogBundle bundle) {
             if (bundle.isNamed()) {
-                symbolicName(bundle.getName());
+                symbolicName(bundle.getSymbolicName());
                 version(bundle.getVersion());
             }
             if (bundle.getUrl() != null) {

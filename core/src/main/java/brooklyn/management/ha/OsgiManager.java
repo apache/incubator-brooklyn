@@ -112,10 +112,10 @@ public class OsgiManager {
         String nv = b.getSymbolicName()+":"+b.getVersion().toString();
 
         if (bundle.isNamed() &&
-                (!bundle.getName().equals(b.getSymbolicName()) ||
+                (!bundle.getSymbolicName().equals(b.getSymbolicName()) ||
                 !bundle.getVersion().equals(b.getVersion().toString()))) {
             log.warn("Bundle at " + bundle.getUrl() + " installed as " + nv +
-                    " but user explicitly requested " + bundle.getName() + ":" + bundle.getVersion());
+                    " but user explicitly requested " + bundle.getSymbolicName() + ":" + bundle.getVersion());
         }
 
         List<Bundle> matches = Osgis.bundleFinder(framework)
@@ -139,7 +139,7 @@ public class OsgiManager {
         if (bundleUrl != null) {
             VersionedName nv = urlToBundleIdentifier.get(bundleUrl);
             if (nv!=null) {
-                if (bundle.isNamed() && !nv.equals(bundle.getName(), bundle.getVersion())) {
+                if (bundle.isNamed() && !nv.equals(bundle.getSymbolicName(), bundle.getVersion())) {
                     throw new IllegalStateException("Bundle from "+bundleUrl+" already installed as "+nv+" but user explicitly requested "+bundle);
                 }
                 Maybe<Bundle> installedBundle = Osgis.bundleFinder(framework).requiringFromUrl(bundleUrl).find();
@@ -157,7 +157,7 @@ public class OsgiManager {
                 }
             }
         } else {
-            Maybe<Bundle> installedBundle = Osgis.bundleFinder(framework).symbolicName(bundle.getName()).version(bundle.getVersion()).find();
+            Maybe<Bundle> installedBundle = Osgis.bundleFinder(framework).symbolicName(bundle.getSymbolicName()).version(bundle.getVersion()).find();
             if (installedBundle.isPresent()) {
                 log.trace("Bundle "+bundle+" installed from "+installedBundle.get().getLocation());
             } else {
@@ -231,7 +231,7 @@ public class OsgiManager {
         if (catalogBundle.getUrl() != null) {
             bundleFinder.requiringFromUrl(catalogBundle.getUrl());
         } else {
-            bundleFinder.symbolicName(catalogBundle.getName()).version(catalogBundle.getVersion());
+            bundleFinder.symbolicName(catalogBundle.getSymbolicName()).version(catalogBundle.getVersion());
         }
         return bundleFinder.find();
     }

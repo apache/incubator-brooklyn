@@ -193,7 +193,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     private String getDefaultVersion(String symbolicName) {
         Iterable<CatalogItem<Object, Object>> versions = getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo(symbolicName)));
-        ImmutableSortedSet<CatalogItem<?, ?>> orderedVersions = ImmutableSortedSet.orderedBy(new CatalogItemComparator()).addAll(versions).build();
+        ImmutableSortedSet<CatalogItem<?, ?>> orderedVersions = ImmutableSortedSet.orderedBy(CatalogItemComparator.INSTANCE).addAll(versions).build();
         if (!orderedVersions.isEmpty()) {
             return orderedVersions.iterator().next().getVersion();
         } else {
@@ -469,11 +469,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (possibleVersion.isAbsent() && Strings.isBlank(version)) {
             throw new IllegalArgumentException("'version' attribute missing in 'brooklyn.catalog' section.");
         } else if (possibleVersion.isPresent()) {
-            if (Strings.isNonBlank(version)) {
-                throw new IllegalArgumentException("Can't use both attribute 'version' and versioned id");
-            }
             //could be coalesced to a number - can be one of Integer, Double, String
-            version = possibleVersion.get().toString();
+            String versionProperty = possibleVersion.get().toString();
+
+            if (!Strings.isBlank(version) && !versionProperty.equals(version)) {
+                throw new IllegalArgumentException("Discrepency between version set in id/name " + version + " and version property " + versionProperty);
+            }
+
+            version = versionProperty;
         }
 
         CatalogUtils.installLibraries(mgmt, libraries);

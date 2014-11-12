@@ -45,11 +45,6 @@ public class FileUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileUtil.class);
 
-    //Linux allows any characters except /
-    //Windows reserves the following set: < > : " / \ | ? *
-    //Object stores: ???, better be conservative
-    private static final Pattern FILE_NAME_BLACKLIST_CHARACTERS = Pattern.compile("[^\\w\\d \\-_.()\\[\\]$!]");
-
     private static boolean loggedSetFilePermissionsWarning = false;
     
     // When we move to java 7, we can use Files.setPosixFilePermissions
@@ -204,7 +199,4 @@ public class FileUtil {
         }
     }
 
-    public static String getSafeFileName(String str) {
-        return FILE_NAME_BLACKLIST_CHARACTERS.matcher(str).replaceAll("_");
-    }
 }
