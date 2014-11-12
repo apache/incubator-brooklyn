@@ -42,18 +42,6 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         super(entity, machine);
     }
 
-    protected String getLogFileLocation() {
-        return Os.mergePathsUnix(getRunDir(), "logs/catalina.out");
-    }
-
-    protected String getDeploySubdir() {
-       return "webapps";
-    }
-
-    protected Integer getShutdownPort() {
-        return entity.getAttribute(TomcatServerImpl.SHUTDOWN_PORT);
-    }
-    
     @Override
     public void preInstall() {
         resolver = Entities.newDownloader(this);
@@ -85,14 +73,12 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     @Override
     public void customize() {
         newScript(CUSTOMIZING)
-                .body.append(
-                        "mkdir conf logs webapps temp",
-                        format("cp %s/conf/{server,web}.xml conf/", getExpandedInstallDir()),
-                        format("sed -i.bk s/8080/%s/g conf/server.xml", getHttpPort()),
-                        format("sed -i.bk s/8005/%s/g conf/server.xml", getShutdownPort()),
-                        "sed -i.bk /8009/D conf/server.xml"
-                    )
+                .body.append("mkdir conf logs webapps temp")
+                .failOnNonZeroResultCode()
                 .execute();
+
+        copyTemplate(entity.getConfig(TomcatServer.SERVER_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "server.xml"));
+        copyTemplate(entity.getConfig(TomcatServer.WEB_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "web.xml"));
 
         getEntity().deployInitialWars();
     }
@@ -161,4 +147,19 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
         return shellEnv;
     }
+
+    @Override
+    protected String getLogFileLocation() {
+        return Os.mergePathsUnix(getRunDir(), "logs/catalina.out");
+    }
+
+    @Override
+    protected String getDeploySubdir() {
+       return "webapps";
+    }
+
+    public Integer getShutdownPort() {
+        return entity.getAttribute(TomcatServerImpl.SHUTDOWN_PORT);
+    }
+
 }
