@@ -25,9 +25,12 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -69,8 +72,11 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.crypto.FluentKeySigner;
+import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
@@ -145,6 +151,26 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         if (mgmt != null) {
             Entities.destroyAll(mgmt);
             mgmt = null;
+        }
+    }
+
+    public static File createTemporaryKeyStore(String alias, String password) throws Exception {
+        FluentKeySigner signer = new FluentKeySigner("brooklyn-test").selfsign();
+
+        KeyStore ks = SecureKeys.newKeyStore();
+        ks.setKeyEntry(
+                alias,
+                signer.getKey().getPrivate(),
+                password.toCharArray(),
+                new Certificate[]{signer.getAuthorityCertificate()});
+
+        File file = File.createTempFile("test", "keystore");
+        FileOutputStream fos = new FileOutputStream(file);
+        try {
+            ks.store(fos, "mypass".toCharArray());
+            return file;
+        } finally {
+            Streams.closeQuietly(fos);
         }
     }
 

@@ -20,10 +20,15 @@ package brooklyn.entity.webapp.tomcat;
 
 import static java.lang.String.format;
 
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
 import brooklyn.entity.basic.Entities;
@@ -37,6 +42,9 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Tomcat7SshDriver.class);
+    private static final String KEYSTORE_FILE = "keystore";
 
     public Tomcat7SshDriver(TomcatServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -58,12 +66,6 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
         commands.add(BashCommands.INSTALL_TAR);
         commands.add(format("tar xvzf %s", saveAs));
 
-        if (getEnabledProtocols().size()!=1) {
-            log.warn("TomcatServer only supports one protocol, http; ignoring requested protocols "+getEnabledProtocols());
-        } else if (!"http".equalsIgnoreCase(Iterables.getOnlyElement(getEnabledProtocols()))) {
-            log.warn("TomcatServer only supports one protocol, http; ignoring requested protocol "+getEnabledProtocols());
-        }
-        
         newScript(INSTALLING)
                 .environmentVariablesReset()
                 .body.append(commands)
@@ -79,6 +81,14 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
         copyTemplate(entity.getConfig(TomcatServer.SERVER_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "server.xml"));
         copyTemplate(entity.getConfig(TomcatServer.WEB_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "web.xml"));
+
+        // Deduplicate same code in JBoss
+        if (isProtocolEnabled("HTTPS")) {
+            String keystoreUrl = Preconditions.checkNotNull(getSslKeystoreUrl(), "keystore URL must be specified if using HTTPS for " + entity);
+            String destinationSslKeystoreFile = getHttpsSslKeystoreFile();
+            InputStream keystoreStream = resource.getResourceFromUrl(keystoreUrl);
+            getMachine().copyTo(keystoreStream, destinationSslKeystoreFile);
+        }
 
         getEntity().deployInitialWars();
     }
@@ -160,6 +170,10 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
     public Integer getShutdownPort() {
         return entity.getAttribute(TomcatServerImpl.SHUTDOWN_PORT);
+    }
+
+    public String getHttpsSslKeystoreFile() {
+        return Os.mergePathsUnix(getRunDir(), "conf", KEYSTORE_FILE);
     }
 
 }

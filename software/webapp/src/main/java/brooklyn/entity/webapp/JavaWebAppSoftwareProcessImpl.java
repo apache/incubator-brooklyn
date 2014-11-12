@@ -176,4 +176,31 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
         setAttribute(REQUESTS_PER_SECOND_LAST, 0D);
         setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
     }
+
+    public boolean isHttpEnabled() {
+        return WebAppServiceMethods.isProtocolEnabled(this, "HTTP");
+    }
+
+    public boolean isHttpsEnabled() {
+        return WebAppServiceMethods.isProtocolEnabled(this, "HTTPS");
+    }
+
+    public Integer getHttpPort() {
+        return getAttribute(HTTP_PORT);
+    }
+
+    public Integer getHttpsPort() {
+        return getAttribute(HTTPS_PORT);
+    }
+
+    public String getHttpsSslKeyAlias() {
+        HttpsSslConfig config = getAttribute(HTTPS_SSL_CONFIG);
+        return (config == null) ? null : config.getKeyAlias();
+    }
+
+    public String getHttpsSslKeystorePassword() {
+        HttpsSslConfig config = getAttribute(HTTPS_SSL_CONFIG);
+        return (config == null) ? null : config.getKeystorePassword();
+    }
+
 }
