@@ -91,6 +91,8 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.QuorumCheck;
+import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.FlagUtils;
@@ -136,7 +138,15 @@ public class RebindManagerImpl implements RebindManager {
     public static final ConfigKey<RebindFailureMode> LOAD_POLICY_FAILURE_MODE =
             ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.loadPolicy",
                     "Action to take if a failure occurs when loading a policy or enricher", RebindFailureMode.CONTINUE);
-    
+
+    public static final ConfigKey<QuorumCheck> DANGLING_REFERENCES_MIN_REQUIRED_HEALTHY =
+        ConfigKeys.newConfigKey(QuorumCheck.class, "rebind.failureMode.danglingRefs.minRequiredHealthy",
+                "Number of items which must be rebinded at various sizes; "
+                + "a small number of dangling references is possible if items are in the process of being created or deleted, "
+                + "and that should be resolved on retry; the default set here allows max 2 dangling up to 10 items, "
+                + "then linear regression to allow max 5% at 100 items and above", 
+                QuorumChecks.newLinearRange("[[0,-2],[10,8],[100,95],[200,190]]"));
+
     public static final Logger LOG = LoggerFactory.getLogger(RebindManagerImpl.class);
 
     private final ManagementContextInternal managementContext;
@@ -163,6 +173,7 @@ public class RebindManagerImpl implements RebindManager {
     private RebindFailureMode rebindFailureMode;
     private RebindFailureMode addPolicyFailureMode;
     private RebindFailureMode loadPolicyFailureMode;
+    private QuorumCheck danglingRefsQuorumRequiredHealthy;
 
     /**
      * For tracking if rebinding, for {@link AbstractEnricher#isRebinding()} etc.
@@ -201,6 +212,8 @@ public class RebindManagerImpl implements RebindManager {
         rebindFailureMode = managementContext.getConfig().getConfig(REBIND_FAILURE_MODE);
         addPolicyFailureMode = managementContext.getConfig().getConfig(ADD_POLICY_FAILURE_MODE);
         loadPolicyFailureMode = managementContext.getConfig().getConfig(LOAD_POLICY_FAILURE_MODE);
+        
+        danglingRefsQuorumRequiredHealthy = managementContext.getConfig().getConfig(DANGLING_REFERENCES_MIN_REQUIRED_HEALTHY);
 
         LOG.debug("{} initialized, settings: policies={}, enrichers={}, feeds={}, catalog={}",
                 new Object[]{this, persistPoliciesEnabled, persistEnrichersEnabled, persistFeedsEnabled, persistCatalogItemsEnabled});
@@ -446,6 +459,7 @@ public class RebindManagerImpl implements RebindManager {
         final RebindExceptionHandler exceptionHandler = exceptionHandlerO!=null ? exceptionHandlerO :
             RebindExceptionHandlerImpl.builder()
                 .danglingRefFailureMode(danglingRefFailureMode)
+                .danglingRefQuorumRequiredHealthy(danglingRefsQuorumRequiredHealthy)
                 .rebindFailureMode(rebindFailureMode)
                 .addPolicyFailureMode(addPolicyFailureMode)
                 .loadPolicyFailureMode(loadPolicyFailureMode)
@@ -514,10 +528,11 @@ public class RebindManagerImpl implements RebindManager {
         RebindTracker.setRebinding();
         try {
             Stopwatch timer = Stopwatch.createStarted();
-            exceptionHandler.onStart();
-            
             Reflections reflections = new Reflections(classLoader);
             RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
+            
+            exceptionHandler.onStart(rebindContext);
+            
             if (mode==ManagementNodeState.HOT_STANDBY) {
                 rebindContext.setAllReadOnly();
             } else {
@@ -525,6 +540,7 @@ public class RebindManagerImpl implements RebindManager {
             }
             
             LookupContext realLookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
+            rebindContext.setLookupContext(realLookupContext);
             
             // Mutli-phase deserialization.
             //
@@ -847,7 +863,7 @@ public class RebindManagerImpl implements RebindManager {
             // Reconstruct entities
             logRebindingDebug("RebindManager reconstructing entities");
             for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
-                Entity entity = rebindContext.getEntity(entityMemento.getId());
+                Entity entity = rebindContext.lookup().lookupEntity(entityMemento.getId());
                 logRebindingDebug("RebindManager reconstructing entity {}", entityMemento);
     
                 if (entity == null) {
@@ -1042,7 +1058,7 @@ public class RebindManagerImpl implements RebindManager {
 
     private BrooklynClassLoadingContext getLoadingContextFromCatalogItemId(String catalogItemId, ClassLoader classLoader, RebindContext rebindContext) {
         Preconditions.checkNotNull(catalogItemId, "catalogItemId required (should not be null)");
-        CatalogItem<?, ?> catalogItem = rebindContext.getCatalogItem(catalogItemId);
+        CatalogItem<?, ?> catalogItem = rebindContext.lookup().lookupCatalogItem(catalogItemId);
         if (catalogItem != null) {
             return CatalogUtils.newClassLoadingContext(managementContext, catalogItem);
         } else {

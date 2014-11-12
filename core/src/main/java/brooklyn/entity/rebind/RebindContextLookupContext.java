@@ -41,13 +41,13 @@ public class RebindContextLookupContext implements LookupContext {
     @Nullable
     protected final ManagementContext managementContext;
     
-    protected final RebindContext rebindContext;
+    protected final RebindContextImpl rebindContext;
     protected final RebindExceptionHandler exceptionHandler;
     
-    public RebindContextLookupContext(RebindContext rebindContext, RebindExceptionHandler exceptionHandler) {
+    public RebindContextLookupContext(RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler) {
         this(null, rebindContext, exceptionHandler);
     }
-    public RebindContextLookupContext(ManagementContext managementContext, RebindContext rebindContext, RebindExceptionHandler exceptionHandler) {
+    public RebindContextLookupContext(ManagementContext managementContext, RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler) {
         this.managementContext = managementContext;
         this.rebindContext = rebindContext;
         this.exceptionHandler = exceptionHandler;

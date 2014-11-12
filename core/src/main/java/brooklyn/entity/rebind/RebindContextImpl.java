@@ -28,8 +28,10 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.location.Location;
+import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Maps;
 
@@ -44,6 +46,7 @@ public class RebindContextImpl implements RebindContext {
     
     private final ClassLoader classLoader;
     private final RebindExceptionHandler exceptionHandler;
+    private LookupContext lookupContext;
     
     private boolean allAreReadOnly = false;
     
@@ -92,68 +95,72 @@ public class RebindContextImpl implements RebindContext {
         catalogItems.remove(item.getId());
     }
 
-    @Override
     public Entity getEntity(String id) {
         return entities.get(id);
     }
 
-    @Override
     public Location getLocation(String id) {
         return locations.get(id);
     }
     
-    @Override
     public Policy getPolicy(String id) {
         return policies.get(id);
     }
     
-    @Override
     public Enricher getEnricher(String id) {
         return enrichers.get(id);
     }
 
-    @Override
     public CatalogItem<?, ?> getCatalogItem(String id) {
         return catalogItems.get(id);
     }
 
-    @Override
     public Feed getFeed(String id) {
         return feeds.get(id);
     }
     
-    @Override
     public Class<?> loadClass(String className) throws ClassNotFoundException {
         return classLoader.loadClass(className);
     }
 
-    @Override
     public RebindExceptionHandler getExceptionHandler() {
         return exceptionHandler;
     }
 
-    protected Collection<Location> getLocations() {
+    public Collection<Location> getLocations() {
         return locations.values();
     }
     
-    protected Collection<Entity> getEntities() {
+    public Collection<Entity> getEntities() {
         return entities.values();
     }
     
-    protected Collection<Policy> getPolicies() {
+    public Collection<Policy> getPolicies() {
         return policies.values();
     }
 
-    protected Collection<Enricher> getEnrichers() {
+    public Collection<Enricher> getEnrichers() {
         return enrichers.values();
     }
     
-    protected Collection<Feed> getFeeds() {
+    public Collection<Feed> getFeeds() {
         return feeds.values();
     }
 
-    protected Collection<CatalogItem<?, ?>> getCatalogItems() {
+    public Collection<CatalogItem<?, ?>> getCatalogItems() {
         return catalogItems.values();
+    }
+    
+    @Override
+    public Map<String,BrooklynObject> getAllBrooklynObjects() {
+        MutableMap<String,BrooklynObject> result = MutableMap.of();
+        result.putAll(locations);
+        result.putAll(entities);
+        result.putAll(policies);
+        result.putAll(enrichers);
+        result.putAll(feeds);
+        result.putAll(catalogItems);
+        return result.asUnmodifiable();
     }
 
     public void setAllReadOnly() {
@@ -162,6 +169,15 @@ public class RebindContextImpl implements RebindContext {
     
     public boolean isReadOnly(BrooklynObject item) {
         return allAreReadOnly;
+    }
+
+    public void setLookupContext(LookupContext lookupContext) {
+        this.lookupContext = lookupContext;
+    }
+    
+    @Override
+    public LookupContext lookup() {
+        return lookupContext;
     }
     
 }

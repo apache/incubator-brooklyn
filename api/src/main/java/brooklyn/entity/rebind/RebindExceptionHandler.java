@@ -96,7 +96,7 @@ public interface RebindExceptionHandler {
     RuntimeException onFailed(Exception e);
 
     /** invoked before the rebind pass */
-    void onStart();
+    void onStart(RebindContext context);
     
     /** invoked after the complete rebind pass, always on success and possibly on failure */
     void onDone();

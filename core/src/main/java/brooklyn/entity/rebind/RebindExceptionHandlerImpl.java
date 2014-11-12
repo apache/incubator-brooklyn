@@ -36,6 +36,8 @@ import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
@@ -51,6 +53,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final RebindManager.RebindFailureMode rebindFailureMode;
     protected final RebindFailureMode addPolicyFailureMode;
     protected final RebindFailureMode loadPolicyFailureMode;
+    protected final QuorumCheck danglingRefsQuorumRequiredHealthy;
 
     protected final Set<String> missingEntities = Sets.newConcurrentHashSet();
     protected final Set<String> missingLocations = Sets.newConcurrentHashSet();
@@ -63,6 +66,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<Exception> loadPolicyFailures = Sets.newConcurrentHashSet();
     protected final List<Exception> exceptions = Collections.synchronizedList(Lists.<Exception>newArrayList());
     
+    protected RebindContext context;
     protected boolean started = false;
     protected boolean done = false;
     
@@ -75,6 +79,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         private RebindManager.RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.FAIL_AT_END;
         private RebindManager.RebindFailureMode addPolicyFailureMode = RebindManager.RebindFailureMode.CONTINUE;
         private RebindManager.RebindFailureMode deserializePolicyFailureMode = RebindManager.RebindFailureMode.CONTINUE;
+        private QuorumCheck danglingRefsQuorumRequiredHealthy = RebindManagerImpl.DANGLING_REFERENCES_MIN_REQUIRED_HEALTHY.getDefaultValue();
 
         public Builder danglingRefFailureMode(RebindManager.RebindFailureMode val) {
             danglingRefFailureMode = val;
@@ -92,6 +97,10 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             deserializePolicyFailureMode = val;
             return this;
         }
+        public Builder danglingRefQuorumRequiredHealthy(QuorumCheck val) {
+            danglingRefsQuorumRequiredHealthy = val;
+            return this;
+        }
         public RebindExceptionHandler build() {
             return new RebindExceptionHandlerImpl(this);
         }
@@ -102,15 +111,18 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         this.rebindFailureMode = checkNotNull(builder.rebindFailureMode, "rebindFailureMode");
         this.addPolicyFailureMode = checkNotNull(builder.addPolicyFailureMode, "addPolicyFailureMode");
         this.loadPolicyFailureMode = checkNotNull(builder.deserializePolicyFailureMode, "deserializePolicyFailureMode");
+        this.danglingRefsQuorumRequiredHealthy = checkNotNull(builder.danglingRefsQuorumRequiredHealthy, "danglingRefsQuorumRequiredHealthy");
     }
 
-    public void onStart() {
+    @Override
+    public void onStart(RebindContext context) {
         if (done) {
             throw new IllegalStateException(this+" has already been used on a finished run");
         }
         if (started) {
             throw new IllegalStateException(this+" has already been used on a started run");
         }
+        this.context = context;
         started = true;
     }
     
@@ -364,6 +376,24 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             allExceptions.add(new IllegalStateException(this+" has already been informed of rebind done"));
         }
         done = true;
+        
+        List<String> danglingIds = MutableList.copyOf(missingEntities).appendAll(missingLocations).appendAll(missingPolicies).appendAll(missingEnrichers).appendAll(missingFeeds).appendAll(missingCatalogItems);
+        int totalDangling = danglingIds.size();
+        if (totalDangling>0) {
+            int totalFound = context.getAllBrooklynObjects().size();
+            int totalItems = totalFound + totalDangling;
+            if (context==null) {
+                allExceptions.add(new IllegalStateException("Dangling references ("+totalDangling+" of "+totalItems+") present without rebind context"));
+            } else {
+                if (!danglingRefsQuorumRequiredHealthy.isQuorate(totalFound, totalItems)) {
+                    LOG.warn("Dangling item"+Strings.s(totalDangling)+" ("+totalDangling+" of "+totalItems+") found on rebind exceeds quorum, assuming failed: "+danglingIds);
+                    allExceptions.add(new IllegalStateException("Too many dangling references: "+totalDangling+" of "+totalItems));
+                } else {
+                    LOG.info("Dangling item"+Strings.s(totalDangling)+" ("+totalDangling+" of "+totalItems+") found on rebind, assuming deleted: "+danglingIds);
+                }
+            }
+        }
+        
         if (e != null) {
             allExceptions.add(e);
         }

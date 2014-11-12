@@ -179,6 +179,13 @@ public class MutableList<V> extends ArrayList<V> {
         public ImmutableList<V> buildImmutable() {
             return ImmutableList.copyOf(result);
         }
+
+        public Builder<V> addLists(Iterable<? extends V> ...items) {
+            for (Iterable<? extends V> item: items) {
+                addAll(item);
+            }
+            return this;
+        }
     }
     
     /** as {@link List#add(Object)} but fluent style */

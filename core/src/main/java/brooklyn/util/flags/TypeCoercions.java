@@ -51,6 +51,8 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.util.JavaGroovyEquivalents;
+import brooklyn.util.collections.QuorumCheck;
+import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
@@ -694,6 +696,12 @@ public class TypeCoercions {
             @Override
             public List<String> apply(final String input) {
                 return JavaStringEscapes.unwrapJsonishListIfPossible(input);
+            }
+        });
+        registerAdapter(String.class, QuorumCheck.class, new Function<String,QuorumCheck>() {
+            @Override
+            public QuorumCheck apply(final String input) {
+                return QuorumChecks.of(input);
             }
         });
         registerAdapter(String.class, Map.class, new Function<String,Map>() {

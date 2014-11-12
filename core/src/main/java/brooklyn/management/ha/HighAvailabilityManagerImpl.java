@@ -211,7 +211,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * Defaults to null which means to use the remote timestamp. 
      * Only for testing as this records the remote timestamp in the object.
      * <p>
-     * If this is supplied, one must also set {@link ManagementPlaneSyncRecordPersisterToObjectStore#allowRemoteTimestampInMemento()}. */
+     * If this is supplied, one must also set {@link ManagementPlaneSyncRecordPersisterToObjectStore#useRemoteTimestampInMemento()}. */
     @VisibleForTesting
     public HighAvailabilityManagerImpl setRemoteTicker(Ticker val) {
         this.optionalRemoteTickerUtc = val;

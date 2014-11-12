@@ -29,6 +29,8 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
@@ -169,6 +171,7 @@ public class BrooklynPersistenceUtils {
         for (Location instance: mgmt.getLocationManager().getLocations())
             result.location(instance.getId(), serializer.toString(newObjectMemento(instance)));
         for (Entity instance: mgmt.getEntityManager().getEntities()) {
+            instance = Entities.deproxy(instance);
             result.entity(instance.getId(), serializer.toString(newObjectMemento(instance)));
             for (Feed instanceAdjunct: ((EntityInternal)instance).feeds().getFeeds())
                 result.feed(instanceAdjunct.getId(), serializer.toString(newObjectMemento(instanceAdjunct)));

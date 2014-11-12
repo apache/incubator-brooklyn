@@ -90,7 +90,7 @@ public class PersistenceExceptionHandlerImpl implements PersistenceExceptionHand
             if (!isNew) {
                 if (LOG.isDebugEnabled()) LOG.debug("Repeating problem: "+errmsg, e);
             } else {
-                LOG.warn("Problem: "+errmsg, e);
+                LOG.warn("Problem persisting (ignoring): "+errmsg, e);
             }
         } else {
             if (!isNew) {

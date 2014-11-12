@@ -205,7 +205,7 @@ public class BrooklynServerPaths {
         }
         @Override
         protected String getDefaultDirForAnyFilesystem() {
-            return backupContainerFor(super.getDefaultDirForAnyFilesystem());
+            return backupContainerFor(DEFAULT_PERSISTENCE_CONTAINER_NAME);
         }
         @Override
         protected String getDefaultContainerForAnyNonFilesystem() {
