@@ -59,6 +59,7 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMode;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -285,7 +286,7 @@ public class RebindManagerImpl implements RebindManager {
         LOG.debug("Starting persistence ("+this+"), mgmt "+managementContext.getManagementNodeId());
         if (!persistenceRunning) {
             if (managementContext.getBrooklynProperties().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED_ON_PROMOTION)) {
-                BrooklynPersistenceUtils.createBackup(managementContext, "promotion", MementoCopyMode.REMOTE);
+                BrooklynPersistenceUtils.createBackup(managementContext, CreateBackupMode.PROMOTION, MementoCopyMode.REMOTE);
             }
         }
         persistenceRunning = true;

@@ -44,6 +44,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMode;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
@@ -174,9 +175,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
      * including e.g. {@link Duration#PRACTICALLY_FOREVER} to disable polling;
      * or <code>null</code> to clear a local override */
     public HighAvailabilityManagerImpl setPollPeriod(Duration val) {
-        synchronized (this) {
-            this.pollPeriodLocalOverride = val;
-        }
+        this.pollPeriodLocalOverride = val;
         if (running) {
             registerPollTask();
         }
@@ -196,7 +195,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     /** Overrides {@link #HEARTBEAT_TIMEOUT} from brooklyn config, 
      * including e.g. {@link Duration#PRACTICALLY_FOREVER} to prevent failover due to heartbeat absence;
      * or <code>null</code> to clear a local override */
-    public synchronized HighAvailabilityManagerImpl setHeartbeatTimeout(Duration val) {
+    public HighAvailabilityManagerImpl setHeartbeatTimeout(Duration val) {
         this.heartbeatTimeoutOverride = val;
         return this;
     }
@@ -776,7 +775,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     
     protected void backupOnDemotionIfNeeded() {
         if (managementContext.getBrooklynProperties().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED_ON_DEMOTION)) {
-            BrooklynPersistenceUtils.createBackup(managementContext, "demotion", MementoCopyMode.LOCAL);
+            BrooklynPersistenceUtils.createBackup(managementContext, CreateBackupMode.DEMOTION, MementoCopyMode.LOCAL);
         }
     }
 
