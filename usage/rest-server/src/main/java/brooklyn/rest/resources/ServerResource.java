@@ -58,7 +58,6 @@ import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.flags.TypeCoercions;
@@ -302,13 +301,17 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
 
         try {
+            String label = mgmt().getManagementNodeId()+"-"+Time.makeDateSimpleStampString();
             PersistenceObjectStore targetStore = BrooklynPersistenceUtils.newPersistenceObjectStore(mgmt(), null, 
-                "web-persistence-"+mgmt().getManagementNodeId()+"-"+Time.makeDateStampString()+"-"+Identifiers.makeRandomId(4));
+                "web-persistence-"+label+"-"+Identifiers.makeRandomId(4));
             BrooklynPersistenceUtils.writeMemento(mgmt(), targetStore, preferredOrigin);            
             
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ArchiveBuilder.zip().addDirContentsAt( ((FileBasedObjectStore)targetStore).getBaseDir(), "/" ).stream(baos);
-            return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE).build();
+            String filename = "brooklyn-state-"+label+".zip";
+            return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .header("Content-Disposition","attachment; filename = "+filename)
+                .build();
         } catch (Exception e) {
             log.warn("Unable to serve persistence data (rethrowing): "+e, e);
             throw Exceptions.propagate(e);
