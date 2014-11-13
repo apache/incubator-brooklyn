@@ -40,6 +40,7 @@ import brooklyn.location.jclouds.JcloudsUtil;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -53,7 +54,8 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
 
     private static final Logger log = LoggerFactory.getLogger(JcloudsBlobStoreBasedObjectStore.class);
 
-    private final String containerName;
+    private final String containerNameFirstPart;
+    private final String containerSubPath;
     
     private String locationSpec;
     private JcloudsLocation location;
@@ -63,17 +65,28 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
 
     public JcloudsBlobStoreBasedObjectStore(String locationSpec, String containerName) {
         this.locationSpec = locationSpec;
-        this.containerName = containerName;
+        String[] segments = splitOnce(containerName);
+        this.containerNameFirstPart = segments[0];
+        this.containerSubPath = segments[1];
     }
     
+    private String[] splitOnce(String path) {
+        String separator = subPathSeparator();
+        int index = path.indexOf(separator);
+        if (index<0) return new String[] { path, "" };
+        return new String[] { path.substring(0, index), path.substring(index+separator.length()) };
+    }
+
     public JcloudsBlobStoreBasedObjectStore(JcloudsLocation location, String containerName) {
         this.location = location;
-        this.containerName = containerName;
+        String[] segments = splitOnce(containerName);
+        this.containerNameFirstPart = segments[0];
+        this.containerSubPath = segments[1];
         getBlobStoreContext();
     }
 
     public String getSummaryName() {
-        return (locationSpec!=null ? locationSpec : location)+":"+getContainerName();
+        return (locationSpec!=null ? locationSpec : location)+":"+getContainerNameFull();
     }
     
     public synchronized BlobStoreContext getBlobStoreContext() {
@@ -94,25 +107,40 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
             // TODO do we need to get location from region? can't see the jclouds API.
             // doesn't matter in some places because it's already in the endpoint
 //            String region = location.getConfig(CloudLocationConfig.CLOUD_REGION_ID);
-            context.getBlobStore().createContainerInLocation(null, getContainerName());
+            context.getBlobStore().createContainerInLocation(null, getContainerNameFirstPart());
         }
         return context;
     }
 
     @Override
     public void prepareForMasterUse() {
-        // TODO currently backups not supported here, that is all which is needed for master use
-        // (we have already thrown in prepareForSharedUse if backups have been specified as required)
+        // backups not supported here, that is all which is needed for master use
+        // that's now normally done *prior* to calling in to here for writes
+        // (and we have already thrown in prepareForSharedUse if legacy backups have been specified as required)
     }
     
     public String getContainerName() {
-        return containerName;
+        return getContainerNameFull();
     }
     
+    protected String getContainerNameFull() {
+        return mergePaths(containerNameFirstPart, containerSubPath);
+    }
+
+    protected String getContainerNameFirstPart() {
+        return containerNameFirstPart;
+    }
+    
+    protected String getItemInContainerSubPath(String path) {
+        if (Strings.isBlank(containerSubPath)) return path;
+        return mergePaths(containerSubPath, path);
+    }
+
     @Override
     public void createSubPath(String subPath) {
-        // not needed, and buggy on softlayer w swift w jclouds 1.7.2:
-        // throws a "not found" if we're creating an empty directory from scratch
+        // not needed - subpaths are created on demant
+        // (and buggy on softlayer w swift w jclouds 1.7.2:
+        // throws a "not found" if we're creating an empty directory from scratch)
 //        context.getBlobStore().createDirectory(getContainerName(), subPath);
     }
 
@@ -124,7 +152,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     @Override
     public StoreObjectAccessor newAccessor(String path) {
         checkPrepared();
-        return new JcloudsStoreObjectAccessor(context.getBlobStore(), getContainerName(), path);
+        return new JcloudsStoreObjectAccessor(context.getBlobStore(), getContainerNameFirstPart(), getItemInContainerSubPath(path));
     }
 
     protected String mergePaths(String basePath, String ...subPaths) {
@@ -146,7 +174,8 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     @Override
     public List<String> listContentsWithSubPath(final String parentSubPath) {
         checkPrepared();
-        return FluentIterable.from(context.getBlobStore().list(getContainerName(), ListContainerOptions.Builder.inDirectory(parentSubPath)))
+        return FluentIterable.from(context.getBlobStore().list(getContainerNameFirstPart(), 
+            ListContainerOptions.Builder.inDirectory(getItemInContainerSubPath(parentSubPath))))
                 .transform(new Function<StorageMetadata, String>() {
                     @Override
                     public String apply(@javax.annotation.Nullable StorageMetadata input) {
@@ -165,7 +194,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("blobStoreContext", context)
-                .add("basedir", containerName)
+                .add("basedir", containerNameFirstPart)
                 .toString();
     }
     
@@ -196,7 +225,10 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
 
     @Override
     public void deleteCompletely() {
-        getBlobStoreContext().getBlobStore().deleteContainer(containerName);
+        if (Strings.isBlank(containerSubPath))
+            getBlobStoreContext().getBlobStore().deleteContainer(containerNameFirstPart);
+        else
+            newAccessor(containerSubPath).delete();
     }
     
 }
