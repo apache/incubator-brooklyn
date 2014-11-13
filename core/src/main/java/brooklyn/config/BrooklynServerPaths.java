@@ -162,13 +162,12 @@ public class BrooklynServerPaths {
      * It also includes conveniences for resolving further subpaths, cf {@link PersistenceBackupPathResolver#resolveWithSubpathFor(ManagementContextInternal, String)}.
      */
     public static class PersistenceBackupPathResolver extends PersistencePathResolver {
-        protected String nonBackuplocationSpec;
+        private String nonBackupLocationSpec;
         private PersistenceBackupPathResolver(StringConfigMap brooklynProperties) {
             super(brooklynProperties);
         }
-        @Override
-        public PersistenceBackupPathResolver location(@Nullable String locationSpec) {
-            this.nonBackuplocationSpec = locationSpec;
+        public PersistenceBackupPathResolver nonBackupLocation(@Nullable String locationSpec) {
+            this.nonBackupLocationSpec = locationSpec;
             return this;
         }
         @Override
@@ -176,8 +175,13 @@ public class BrooklynServerPaths {
             super.dir(dirOrContainer);
             return this;
         }
+        @Override
+        public PersistenceBackupPathResolver location(String backupLocationSpec) {
+            super.location(backupLocationSpec);
+            return this;
+        }
         protected boolean isBackupSameLocation() {
-            return Objects.equal(locationSpec, nonBackuplocationSpec);
+            return Objects.equal(locationSpec, nonBackupLocationSpec);
         }
         /** Appends a sub-path to the path returned by {@link #resolve()} */
         public String resolveWithSubpath(String subpath) {

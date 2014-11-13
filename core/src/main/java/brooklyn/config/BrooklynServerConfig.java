@@ -76,7 +76,7 @@ public class BrooklynServerConfig {
     public static final ConfigKey<String> PERSISTENCE_BACKUPS_LOCATION_SPEC = newStringConfigKey(
         "brooklyn.persistence.backups.location.spec", 
         "Location spec string for an object store (e.g. jclouds:swift:URL) where backups of persisted state should be kept; "
-        + "defaults to the same location spec as regular persisted state, failing back to local file system");
+        + "defaults to the local file system");
     
     public static final ConfigKey<Boolean> PERSISTENCE_BACKUPS_REQUIRED_ON_PROMOTION =
         ConfigKeys.newBooleanConfigKey("brooklyn.persistence.backups.required.promotion",

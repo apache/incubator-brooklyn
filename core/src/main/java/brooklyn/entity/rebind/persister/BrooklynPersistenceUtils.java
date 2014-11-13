@@ -230,9 +230,10 @@ public class BrooklynPersistenceUtils {
         
             PersistenceObjectStore destinationObjectStore = null;
             String backupSpec = managementContext.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_BACKUPS_LOCATION_SPEC);
+            String nonBackupSpec = managementContext.getConfig().getConfig(BrooklynServerConfig.PERSISTENCE_LOCATION_SPEC);
             try {
-                String backupContainer = BrooklynServerPaths.newBackupPersistencePathResolver(managementContext).location(backupSpec)
-                    .resolveWithSubpathFor(managementContext, mode.toString());
+                String backupContainer = BrooklynServerPaths.newBackupPersistencePathResolver(managementContext)
+                    .location(backupSpec).nonBackupLocation(nonBackupSpec).resolveWithSubpathFor(managementContext, mode.toString());
                 destinationObjectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(managementContext, backupSpec, backupContainer);
                 log.debug("Backing up persisted state on "+mode+", to "+destinationObjectStore.getSummaryName());
                 BrooklynPersistenceUtils.writeMemento(managementContext, memento, destinationObjectStore);
@@ -243,11 +244,13 @@ public class BrooklynPersistenceUtils {
                 Exceptions.propagateIfFatal(e);
                 PersistenceObjectStore failedStore = destinationObjectStore;
                 if (!Strings.isBlank(backupSpec) && !"localhost".equals(backupSpec)) {
+                    String failedSpec = backupSpec;
                     backupSpec = "localhost";
-                    String backupContainer = BrooklynServerPaths.newBackupPersistencePathResolver(managementContext).location(backupSpec)
-                        .resolveWithSubpathFor(managementContext, mode.toString());
+                    String backupContainer = BrooklynServerPaths.newBackupPersistencePathResolver(managementContext)
+                        .location(backupSpec).nonBackupLocation(nonBackupSpec).resolveWithSubpathFor(managementContext, mode.toString());
                     destinationObjectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(managementContext, backupSpec, backupContainer);
-                    log.warn("Persisted state back-up to "+failedStore.getSummaryName()+" failed with "+e, e);
+                    log.warn("Persisted state back-up to "+(failedStore!=null ? failedStore.getSummaryName() : failedSpec)
+                        +" failed with "+e, e);
                     
                     log.debug("Backing up persisted state on "+mode+", locally because remote failed, to "+destinationObjectStore.getSummaryName());
                     BrooklynPersistenceUtils.writeMemento(managementContext, memento, destinationObjectStore);
