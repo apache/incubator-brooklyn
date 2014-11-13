@@ -34,7 +34,7 @@ import static org.testng.Assert.assertNotNull;
 /**
  * A simple test of installing+running on Docker, using various OS distros and versions.
  */
-public class Jboss7DockerLiveTest extends AbstractDockerLiveTest {
+public class JBoss7ServerDockerLiveTest extends AbstractDockerLiveTest {
 
    private URL warUrl = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"));
 

@@ -18,17 +18,21 @@
  */
 package brooklyn.entity.webapp;
 
-import brooklyn.entity.basic.SoftwareProcess;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
-public interface JavaWebAppSoftwareProcess extends SoftwareProcess, JavaWebAppService, JavaWebAppService.CanDeployAndUndeploy {
-    
-    // exist on the interface for freemarker to pick it up
-    
-    public boolean isHttpEnabled();
-    public boolean isHttpsEnabled();
-    public Integer getHttpPort();
-    public Integer getHttpsPort();
-    public String getHttpsSslKeyAlias();
-    public String getHttpsSslKeystorePassword();
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.flags.TypeCoercions;
 
+public class HttpsSslConfigTest {
+
+    @Test
+    public void testCoerce() {
+        HttpsSslConfig config = TypeCoercions.coerce(MutableMap.of("keystoreUrl", "http://foo", "keystorePassword", "b4r", "keyAlias", "baz"), 
+            HttpsSslConfig.class);
+        Assert.assertEquals(config.getKeystoreUrl(), "http://foo");
+        Assert.assertEquals(config.getKeystorePassword(), "b4r");
+        Assert.assertEquals(config.getKeyAlias(), "baz");
+    }
+    
 }

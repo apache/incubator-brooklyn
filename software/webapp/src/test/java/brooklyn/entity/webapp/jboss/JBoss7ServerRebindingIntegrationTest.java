@@ -35,7 +35,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
@@ -46,11 +45,8 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-/**
- * TODO re-write this like WebAppIntegrationTest, rather than being jboss7 specific.
- */
-public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp {
-    private static final Logger LOG = LoggerFactory.getLogger(Jboss7ServerRebindIntegrationTest.class);
+public class JBoss7ServerRebindingIntegrationTest extends RebindTestFixtureWithApp {
+    private static final Logger LOG = LoggerFactory.getLogger(JBoss7ServerRebindingIntegrationTest.class);
     
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;

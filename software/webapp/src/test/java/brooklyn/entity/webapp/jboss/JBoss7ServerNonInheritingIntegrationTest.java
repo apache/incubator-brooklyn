@@ -22,18 +22,12 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.net.URL;
-import java.security.KeyStore;
-import java.security.cert.Certificate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
@@ -42,18 +36,14 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.crypto.FluentKeySigner;
-import brooklyn.util.crypto.SecureKeys;
-import brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * TODO re-write this like WebAppIntegrationTest, rather than being jboss7 specific.
+ * TODO re-write this like WebAppIntegrationTest, inheriting, rather than being jboss7 specific.
  */
-public class Jboss7ServerIntegrationTest {
-    private static final Logger LOG = LoggerFactory.getLogger(Jboss7ServerIntegrationTest.class);
+public class JBoss7ServerNonInheritingIntegrationTest {
     
     private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
@@ -66,7 +56,7 @@ public class Jboss7ServerIntegrationTest {
         warUrl = getClass().getClassLoader().getResource(warPath);
 
         localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         keystoreFile = AbstractWebAppFixtureIntegrationTest.createTemporaryKeyStore("myname", "mypass");
     }
 

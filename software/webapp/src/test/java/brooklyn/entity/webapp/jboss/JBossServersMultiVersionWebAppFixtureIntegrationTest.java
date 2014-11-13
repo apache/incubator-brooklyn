@@ -28,7 +28,7 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.entity.TestApplication;
 
-public class JbossServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
+public class JBossServersMultiVersionWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
 
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void testReportsServiceDownWhenKilled(final SoftwareProcess entity) throws Exception {
@@ -96,7 +96,7 @@ public class JbossServerWebAppFixtureIntegrationTest extends AbstractWebAppFixtu
 //    }
 
     public static void main(String ...args) throws Exception {
-        JbossServerWebAppFixtureIntegrationTest t = new JbossServerWebAppFixtureIntegrationTest();
+        JBossServersMultiVersionWebAppFixtureIntegrationTest t = new JBossServersMultiVersionWebAppFixtureIntegrationTest();
         t.setUp();
         t.testReportsServiceDownWhenKilled((SoftwareProcess) t.basicEntities()[0][0]);
         t.shutdownApp();

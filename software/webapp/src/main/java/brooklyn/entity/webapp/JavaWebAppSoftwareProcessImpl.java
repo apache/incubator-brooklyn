@@ -200,7 +200,7 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
 
     public String getHttpsSslKeystorePassword() {
         HttpsSslConfig config = getAttribute(HTTPS_SSL_CONFIG);
-        return (config == null) ? null : config.getKeystorePassword();
+        return (config == null) ? "" : config.getKeystorePassword();
     }
 
 }

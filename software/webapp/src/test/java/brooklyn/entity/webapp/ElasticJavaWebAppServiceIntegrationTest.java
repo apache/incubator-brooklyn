@@ -23,7 +23,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.HttpTestUtils;
@@ -39,8 +38,8 @@ public class ElasticJavaWebAppServiceIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        loc = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
+        loc = app.newLocalhostProvisioningLocation();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -48,8 +47,10 @@ public class ElasticJavaWebAppServiceIntegrationTest {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
+    @SuppressWarnings("deprecation")
     @Test(groups = "Integration")
-    public void testFactory() {
+    // TODO a new approach to what ElasticJavaWebAppService.Factory does, giving a different entity depending on location!
+    public void testLegacyFactory() {
         ElasticJavaWebAppService svc =
             new ElasticJavaWebAppService.Factory().newEntity(MutableMap.of("war", "classpath://hello-world.war"), app);
         Entities.manage(svc);

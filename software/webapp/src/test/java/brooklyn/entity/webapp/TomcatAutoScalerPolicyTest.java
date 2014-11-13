@@ -28,7 +28,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
@@ -60,7 +59,7 @@ public class TomcatAutoScalerPolicyTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         managementContext = app.getManagementContext();
         loc = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
                 .configure("name", "london"));

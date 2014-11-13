@@ -423,6 +423,6 @@ public class JmxFeed extends AbstractFeed {
     
     @Override
     public String toString() {
-        return "JmxFeed["+getJmxUri()+"]";
+        return "JmxFeed["+(getManagementContext()!=null&&getManagementContext().isRunning()?getJmxUri():"mgmt-not-running")+"]";
     }
 }

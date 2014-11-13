@@ -52,30 +52,24 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
-import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.FluentKeySigner;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Time;
 
@@ -112,8 +106,8 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        loc = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "london"));
-        getMgmt().getLocationManager().manage(loc);
+        loc = getMgmt().getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
+            .configure("name", "london"));
     }
     
     /*
@@ -239,29 +233,9 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * Stop the given underlying entity, but without our entity instance being told!
      */
     protected void killEntityBehindBack(Entity tokill) throws Exception {
-        // Previously was calling entity.getDriver().kill(); but now our entity instance is a proxy so can't do that
-        ManagementContext newManagementContext = null;
-        File tempDir = Os.newTempDir(getClass());
-        try {
-            ManagementContext managementContext = ((EntityInternal)tokill).getManagementContext();
-            BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
-            
-            BrooklynMementoPersisterToMultiFile oldPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            oldPersister.checkpoint(brooklynMemento, PersistenceExceptionHandlerImpl.builder().build());
-            oldPersister.waitForWritesCompleted(30*1000, TimeUnit.MILLISECONDS);
-
-            BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            newManagementContext = new LocalManagementContextForTests();
-            newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
-            newManagementContext.getRebindManager().rebind(getClass().getClassLoader(), null, ManagementNodeState.MASTER);
-            newManagementContext.getRebindManager().startPersistence();
-            SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(tokill.getId());
-            entity2.stop();
-        } finally {
-            if (newManagementContext != null) ((ManagementContextInternal)newManagementContext).terminate();
-            Os.deleteRecursively(tempDir.getAbsolutePath());
-        }
-        log.info("called to stop {} in parallel mgmt universe", entity);
+        ((JavaWebAppDriver)((DriverDependentEntity<?>)Entities.deproxy(entity)).getDriver()).stop();
+        // old method of doing this did some dodgy legacy rebind and failed due to too many dangling refs; above is better in any case
+        // but TODO we should have some rebind tests for these!
     }
     
     /**

@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * TODO re-write this like WebAppIntegrationTest, rather than being jboss6 specific.
  */
-public class Jboss6ServerIntegrationTest extends BrooklynAppLiveTestSupport {
+public class JBoss6ServerNonInheritingIntegrationTest extends BrooklynAppLiveTestSupport {
     
     // FIXME Fails deploying hello-world.war
     //     07:27:30,958 ERROR [AbstractKernelController] Error installing to Parse: name=vfs:///tmp/brooklyn-aled/apps/FJMcnSjO/entities/JBoss6Server_UZ2gA9HR/server/standard/deploy/ROOT.war state=PreParse mode=Manual requiredState=Parse: org.jboss.deployers.spi.DeploymentException: Error creating managed object for vfs:///tmp/brooklyn-aled/apps/FJMcnSjO/entities/JBoss6Server_UZ2gA9HR/server/standard/deploy/ROOT.war
