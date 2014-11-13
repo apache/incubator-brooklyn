@@ -47,6 +47,8 @@ import com.google.common.collect.Iterables;
 
 public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
 
+    private static final String TEST_VERSION = "0.0.1";
+
     private static final Logger LOG = LoggerFactory.getLogger(RebindCatalogItemTest.class);
     public static class MyPolicy extends AbstractPolicy {}
     private boolean catalogPersistenceWasEnabled;
@@ -101,7 +103,10 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testAddAndRebindEntity() throws Exception {
-        String yaml = "name: rebind-yaml-catalog-item-test\n" +
+        String yaml = 
+                "name: rebind-yaml-catalog-item-test\n" +
+                "brooklyn.catalog:\n" +
+                "  version: " + TEST_VERSION + "\n" +
                 "services:\n" +
                 "- type: io.camp.mock:AppServer";
         CatalogItem<?, ?> added = origManagementContext.getCatalog().addItem(yaml);
@@ -121,7 +126,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         String yaml = "name: Test Policy\n" +
                 "brooklyn.catalog:\n" +
                 "  id: sample_policy\n" +
-                "  version: 0.1.0\n" +
+                "  version: " + TEST_VERSION + "\n" +
                 "brooklyn.policies: \n" +
                 "- type: brooklyn.entity.rebind.RebindCatalogItemTest$MyPolicy\n" +
                 "  brooklyn.config:\n" +
@@ -145,7 +150,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         // persistence window. Because BrooklynMementoPersisterToObjectStore applies writes/deletes
         // asynchronously the winner is down to a race and the test might pass or fail.
         origManagementContext.getRebindManager().forcePersistNow();
-        origManagementContext.getCatalog().deleteCatalogItem(toRemove.getId());
+        origManagementContext.getCatalog().deleteCatalogItem(toRemove.getSymbolicName(), toRemove.getVersion());
         assertEquals(Iterables.size(origManagementContext.getCatalog().getCatalogItems()), 0);
         rebindAndAssertCatalogsAreEqual();
         assertEquals(Iterables.size(newManagementContext.getCatalog().getCatalogItems()), 0);

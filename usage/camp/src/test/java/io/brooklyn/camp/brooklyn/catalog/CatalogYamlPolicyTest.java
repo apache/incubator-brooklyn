@@ -40,27 +40,27 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
     public void testAddCatalogItem() throws Exception {
         assertEquals(countCatalogPolicies(), 0);
 
-        String registeredTypeName = "my.catalog.policy.id.load";
-        addCatalogOSGiPolicy(registeredTypeName, SIMPLE_POLICY_TYPE);
+        String symbolicName = "my.catalog.policy.id.load";
+        addCatalogOSGiPolicy(symbolicName, SIMPLE_POLICY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(registeredTypeName);
-        assertEquals(item.getRegisteredTypeName(), registeredTypeName);
+        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        assertEquals(item.getSymbolicName(), symbolicName);
         assertEquals(countCatalogPolicies(), 1);
 
-        deleteCatalogEntity(registeredTypeName);
+        deleteCatalogEntity(symbolicName);
     }
 
     @Test
     public void testLaunchApplicationReferencingPolicy() throws Exception {
-        String registeredTypeName = "my.catalog.policy.id.launch";
-        addCatalogOSGiPolicy(registeredTypeName, SIMPLE_POLICY_TYPE);
+        String symbolicName = "my.catalog.policy.id.launch";
+        addCatalogOSGiPolicy(symbolicName, SIMPLE_POLICY_TYPE);
         Entity app = createAndStartApplication(
             "name: simple-app-yaml",
             "location: localhost",
             "services: ",
             "  - type: brooklyn.entity.basic.BasicEntity\n" +
             "    brooklyn.policies:\n" +
-            "    - type: " + registeredTypeName,
+            "    - type: " + ver(symbolicName),
             "      brooklyn.config:",
             "        config2: config2 override",
             "        config3: config3");
@@ -72,34 +72,34 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config2")), "config2 override");
         assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config3")), "config3");
 
-        deleteCatalogEntity(registeredTypeName);
+        deleteCatalogEntity(symbolicName);
     }
 
     @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
-        String referencedRegisteredTypeName = "my.catalog.policy.id.referenced";
-        String referrerRegisteredTypeName = "my.catalog.policy.id.referring";
-        addCatalogOSGiPolicy(referencedRegisteredTypeName, SIMPLE_POLICY_TYPE);
+        String referencedSymbolicName = "my.catalog.policy.id.referenced";
+        String referrerSymbolicName = "my.catalog.policy.id.referring";
+        addCatalogOSGiPolicy(referencedSymbolicName, SIMPLE_POLICY_TYPE);
 
         addCatalogItem(
             "brooklyn.catalog:",
-            "  id: " + referrerRegisteredTypeName,
+            "  id: " + referrerSymbolicName,
             "  name: My Catalog App",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",
-            "  version: 0.1.2",
+            "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",
             "services:",
             "- type: " + SIMPLE_ENTITY_TYPE,
             "  brooklyn.policies:",
-            "  - type: " + referencedRegisteredTypeName);
+            "  - type: " + ver(referencedSymbolicName));
 
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: "+referrerRegisteredTypeName;
+                      "  - serviceType: "+ ver(referrerSymbolicName);
 
         Entity app = createAndStartApplication(yaml);
 
@@ -107,17 +107,17 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         Policy policy = Iterables.getOnlyElement(simpleEntity.getPolicies());
         assertEquals(policy.getPolicyType().getName(), SIMPLE_POLICY_TYPE);
 
-        deleteCatalogEntity(referencedRegisteredTypeName);
+        deleteCatalogEntity(referencedSymbolicName);
     }
 
-    private void addCatalogOSGiPolicy(String registeredTypeName, String serviceType) {
+    private void addCatalogOSGiPolicy(String symbolicName, String serviceType) {
         addCatalogItem(
             "brooklyn.catalog:",
-            "  id: " + registeredTypeName,
+            "  id: " + symbolicName,
             "  name: My Catalog Policy",
             "  description: My description",
             "  icon_url: classpath://path/to/myicon.jpg",
-            "  version: 0.1.2",
+            "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",

@@ -18,7 +18,7 @@
  */
 package brooklyn.mementos;
 
-import com.google.common.annotations.Beta;
+import java.util.Collection;
 
 import brooklyn.catalog.CatalogItem;
 
@@ -26,7 +26,7 @@ public interface CatalogItemMemento extends Memento {
 
     String getDescription();
 
-    String getRegisteredTypeName();
+    String getSymbolicName();
 
     String getIconUrl();
 
@@ -36,9 +36,7 @@ public interface CatalogItemMemento extends Memento {
 
     String getJavaType();
 
-    // necessary or part of plan yaml? Necessary for now, but .. ?
-    @Beta
-    CatalogItem.CatalogItemLibraries getLibraries();
+    Collection<CatalogItem.CatalogBundle> getLibraries();
 
     CatalogItem.CatalogItemType getCatalogItemType();
 

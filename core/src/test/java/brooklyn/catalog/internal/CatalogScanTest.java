@@ -99,18 +99,19 @@ public class CatalogScanTest {
         loadAnnotationsOnlyCatalog();
         BrooklynCatalog c = annotsCatalog;
         
-        Iterable<CatalogItem<Object,Object>> bases = c.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("MyBaseEntity")));
+        Iterable<CatalogItem<Object,Object>> bases = c.getCatalogItems(CatalogPredicates.displayName(Predicates.containsPattern("MyBaseEntity")));
         Assert.assertEquals(Iterables.size(bases), 0, "should have been empty: "+bases);
         
-        Iterable<CatalogItem<Object,Object>> asdfjkls = c.getCatalogItems(CatalogPredicates.name(Predicates.containsPattern("__asdfjkls__shouldnotbefound")));
+        Iterable<CatalogItem<Object,Object>> asdfjkls = c.getCatalogItems(CatalogPredicates.displayName(Predicates.containsPattern("__asdfjkls__shouldnotbefound")));
         Assert.assertEquals(Iterables.size(asdfjkls), 0);
         
-        Iterable<CatalogItem<Object,Object>> silly1 = c.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
+        Iterable<CatalogItem<Object,Object>> silly1 = c.getCatalogItems(CatalogPredicates.displayName(Predicates.equalTo("MySillyAppTemplate")));
         Iterable<CatalogItem<Object,Object>> silly2 = c.getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(MySillyAppTemplate.class.getName())));
-        Assert.assertEquals(Iterables.getOnlyElement(silly1), Iterables.getOnlyElement(silly2));
+        CatalogItem<Object, Object> silly1El = Iterables.getOnlyElement(silly1);
+        Assert.assertEquals(silly1El, Iterables.getOnlyElement(silly2));
         
-        CatalogItem<Application,EntitySpec<? extends Application>> s1 = c.getCatalogItem(Application.class, silly1.iterator().next().getId());
-        Assert.assertEquals(s1, Iterables.getOnlyElement(silly1));
+        CatalogItem<Application,EntitySpec<? extends Application>> s1 = c.getCatalogItem(Application.class, silly1El.getSymbolicName(), silly1El.getVersion());
+        Assert.assertEquals(s1, silly1El);
         
         Assert.assertEquals(s1.getDescription(), "Some silly app test");
         

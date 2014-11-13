@@ -68,11 +68,6 @@ public class BrooklynEntityMatcher implements PdpMatcher {
     protected String lookupType(Object deploymentPlanItem) {
         if (deploymentPlanItem instanceof Service) {
             Service service = (Service)deploymentPlanItem;
-            
-            String name = service.getName();
-            if (mgmt.getCatalog().getCatalogItem(name) != null) {
-                return name;
-            }
 
             String serviceType = service.getServiceType();
             BrooklynClassLoadingContext loader = BasicBrooklynCatalog.BrooklynLoaderTracker.getLoader();

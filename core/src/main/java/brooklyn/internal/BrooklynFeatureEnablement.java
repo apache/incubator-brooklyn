@@ -72,6 +72,17 @@ public class BrooklynFeatureEnablement {
      * Defaults to false if system property is not set.
      */
     public static final String FEATURE_RENAME_THREADS = "brooklyn.executionManager.renameThreads";
+
+    /**
+     * When rebinding to store created from a previous version the catalogItemId properties will be missing which
+     * results in errors when OSGi bundles are used. When enabled the code tries to infer the catalogItemId from
+     * <ul>
+     *   <li> parent entities
+     *   <li> catalog items matching the type that needs to be deserialized
+     *   <li> iterating through all catalog items and checking if they can provide the needed type
+     * </ul>
+     */
+    public static final String FEATURE_INFER_CATALOG_ITEM_ON_REBIND = "brooklyn.backwardCompatibility.feature.inferCatalogItemOnRebind";
     
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
@@ -90,6 +101,7 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY, false);
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
         setDefault(FEATURE_RENAME_THREADS, false);
+        setDefault(FEATURE_INFER_CATALOG_ITEM_ON_REBIND, true);
     }
     
     static {

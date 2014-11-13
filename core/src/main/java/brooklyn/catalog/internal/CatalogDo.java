@@ -37,7 +37,6 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
-import com.google.api.client.util.Maps;
 import com.google.common.base.Preconditions;
 
 public class CatalogDo {
@@ -52,7 +51,6 @@ public class CatalogDo {
     List<CatalogDo> childrenCatalogs = new ArrayList<CatalogDo>();
     CatalogClasspathDo classpath;
     private Map<String, CatalogItemDo<?,?>> cacheById;
-    private Map<String, CatalogItemDo<?,?>> cacheByRegisteredTypeName;
 
     AggregateClassLoader childrenClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
     ClassLoader recursiveClassLoader;
@@ -125,7 +123,7 @@ public class CatalogDo {
         Iterable<CatalogItemDtoAbstract<?, ?>> entries = dto.getUniqueEntries();
         if (entries!=null) {
             for (CatalogItemDtoAbstract<?,?> entry : entries) {
-                CatalogUtils.installLibraries(mgmt, entry.getLibrariesDto());
+                CatalogUtils.installLibraries(mgmt, entry.getLibraries());
             }
         }
     }
@@ -165,12 +163,6 @@ public class CatalogDo {
         return cache;
     }
 
-    protected Map<String, CatalogItemDo<?,?>> getRegisteredTypeNameCache() {
-        Map<String, CatalogItemDo<?,?>> cache = this.cacheByRegisteredTypeName;
-        if (cache==null) cache = buildCaches();
-        return cache;
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected synchronized Map<String, CatalogItemDo<?,?>> buildCaches() {
         if (cacheById != null) return cacheById;
@@ -198,18 +190,12 @@ public class CatalogDo {
             for (CatalogItemDtoAbstract<?,?> entry: entriesReversed)
                 cache.put(entry.getId(), new CatalogItemDo(this, entry));
         }
-        Map<String, CatalogItemDo<?, ?>> typeNameCache = Maps.newHashMap();
-        for (CatalogItemDo<?, ?> entry : cache.values()) {
-            typeNameCache.put(entry.getRegisteredTypeName(), entry);
-        }
         this.cacheById = cache;
-        this.cacheByRegisteredTypeName = typeNameCache;
         return cache;
     }
     
     protected synchronized void clearCache(boolean deep) {
         this.cacheById = null;
-        this.cacheByRegisteredTypeName = null;
         if (deep) {
             for (CatalogDo child : childrenCatalogs) {
                 child.clearCache(true);
@@ -227,7 +213,6 @@ public class CatalogDo {
         if (cacheById != null) {
             CatalogItemDo<?, ?> cdo = new CatalogItemDo(this, entry);
             cacheById.put(entry.getId(), cdo);
-            cacheByRegisteredTypeName.put(entry.getRegisteredTypeName(), cdo);
         }
         if (mgmt != null) {
             mgmt.getRebindManager().getChangeListener().onManaged(entry);
@@ -241,7 +226,6 @@ public class CatalogDo {
         dto.removeEntry(entry);
         if (cacheById != null) {
             cacheById.remove(entry.getId());
-            cacheByRegisteredTypeName.remove(entry.getRegisteredTypeName());
         }
         if (mgmt != null) {
             // TODO: Can the entry be in more than one catalogue? The management context has no notion of

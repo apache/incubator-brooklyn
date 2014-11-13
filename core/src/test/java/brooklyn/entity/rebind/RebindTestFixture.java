@@ -32,6 +32,7 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
@@ -182,7 +183,6 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         return rebind(checkSerializable, false);
     }
 
-    @SuppressWarnings("unchecked")
     protected T rebind(boolean checkSerializable, boolean terminateOrigManagementContext) throws Exception {
         return rebind(checkSerializable, terminateOrigManagementContext, (File)null);
     }
@@ -242,8 +242,10 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         Set<String> expectedIds = getCatalogItemIds(expected.getCatalogItems());
         assertEquals(actualIds.size(), Iterables.size(actual.getCatalogItems()), "id keyset size != size of catalog. Are there duplicates in the catalog?");
         assertEquals(actualIds, expectedIds);
-        for (String id : actualIds) {
-            assertCatalogItemsEqual(actual.getCatalogItem(id), expected.getCatalogItem(id));
+        for (String versionedId : actualIds) {
+            String id = CatalogUtils.getIdFromVersionedId(versionedId);
+            String version = CatalogUtils.getVersionFromVersionedId(versionedId);
+            assertCatalogItemsEqual(actual.getCatalogItem(id, version), expected.getCatalogItem(id, version));
         }
     }
 
@@ -251,7 +253,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         return FluentIterable.from(catalogItems)
                 .transform(EntityFunctions.id())
                 .copyInto(Sets.<String>newHashSet());
-    }
+   }
 
     protected void assertCatalogItemsEqual(CatalogItem<?, ?> actual, CatalogItem<?, ?> expected) {
         assertEquals(actual.getClass(), expected.getClass());
@@ -265,11 +267,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         assertEquals(actual.getCatalogItemJavaType(), expected.getCatalogItemJavaType());
         assertEquals(actual.getCatalogItemType(), expected.getCatalogItemType());
         assertEquals(actual.getSpecType(), expected.getSpecType());
-        assertEquals(actual.getRegisteredTypeName(), expected.getRegisteredTypeName());
-        if (actual.getLibraries() != null && expected.getLibraries() != null) {
-            assertEquals(actual.getLibraries().getBundles(), expected.getLibraries().getBundles());
-        } else {
-            assertEquals(actual.getLibraries(), expected.getLibraries());
-        }
+        assertEquals(actual.getSymbolicName(), expected.getSymbolicName());
+        assertEquals(actual.getLibraries(), expected.getLibraries());
     }
 }

@@ -27,7 +27,7 @@ import io.brooklyn.camp.spi.pdp.Service;
 
 import java.io.FileNotFoundException;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -40,6 +40,7 @@ import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.proxying.EntitySpec;
@@ -51,7 +52,6 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
@@ -68,10 +68,12 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 public class BasicBrooklynCatalog implements BrooklynCatalog {
     private static final String POLICIES_KEY = "brooklyn.policies";
+    public static final String NO_VERSION = "0.0.0_SNAPSHOT";
 
     private static final Logger log = LoggerFactory.getLogger(BasicBrooklynCatalog.class);
 
@@ -166,30 +168,71 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return catalog;
     }
 
-    protected CatalogItemDo<?,?> getCatalogItemDo(String idOrRegisteredTypeName) {
+    protected CatalogItemDo<?,?> getCatalogItemDo(String symbolicName, String version) {
+        String fixedVersionId = getFixedVersionId(symbolicName, version);
+        if (fixedVersionId == null) {
+            //no items with symbolicName exist
+            return null;
+        }
+
+        String versionedId = CatalogUtils.getVersionedId(symbolicName, fixedVersionId);
         CatalogItemDo<?, ?> item = null;
-        // TODO really need to remove redundancy of id v registered type;
-        // should also remove "manual additions" bucket; just have one map a la osgi
-        if (manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getIdCache().get(idOrRegisteredTypeName);
-        if (item == null) item = catalog.getIdCache().get(idOrRegisteredTypeName);
-        if (item == null && manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
-        if (item == null) item = catalog.getRegisteredTypeNameCache().get(idOrRegisteredTypeName);
+        //TODO should remove "manual additions" bucket; just have one map a la osgi
+        if (manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getIdCache().get(versionedId);
+        if (item == null) item = catalog.getIdCache().get(versionedId);
         return item;
     }
     
+    private String getFixedVersionId(String symbolicName, String version) {
+        if (!DEFAULT_VERSION.equals(version)) {
+            return version;
+        } else {
+            return getDefaultVersion(symbolicName);
+        }
+    }
+
+    private String getDefaultVersion(String symbolicName) {
+        Iterable<CatalogItem<Object, Object>> versions = getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        ImmutableSortedSet<CatalogItem<?, ?>> orderedVersions = ImmutableSortedSet.orderedBy(CatalogItemComparator.INSTANCE).addAll(versions).build();
+        if (!orderedVersions.isEmpty()) {
+            return orderedVersions.iterator().next().getVersion();
+        } else {
+            return null;
+        }
+    }
+
     @Override
-    public CatalogItem<?,?> getCatalogItem(String idOrRegisteredTypeName) {
-        if (idOrRegisteredTypeName == null) return null;
-        CatalogItemDo<?, ?> itemDo = getCatalogItemDo(idOrRegisteredTypeName);
+    @Deprecated
+    public CatalogItem<?,?> getCatalogItem(String id) {
+        return getCatalogItem(id, DEFAULT_VERSION);
+    }
+    
+    @Override
+    public CatalogItem<?,?> getCatalogItem(String symbolicName, String version) {
+        if (symbolicName == null) return null;
+        checkNotNull(version, "version");
+        CatalogItemDo<?, ?> itemDo = getCatalogItemDo(symbolicName, version);
         if (itemDo == null) return null;
         return itemDo.getDto();
     }
     
     @Override
+    @Deprecated
     public void deleteCatalogItem(String id) {
-        log.debug("Deleting manual catalog item from "+mgmt+": "+id);
+        //Delete only if installed through the
+        //deprecated methods. Don't support DEFAULT_VERSION for delete.
+        deleteCatalogItem(id, NO_VERSION);
+    }
+
+    @Override
+    public void deleteCatalogItem(String id, String version) {
+        log.debug("Deleting manual catalog item from "+mgmt+": "+id + ":" + version);
         checkNotNull(id, "id");
-        CatalogItem<?, ?> item = getCatalogItem(id);
+        checkNotNull(version, "version");
+        if (DEFAULT_VERSION.equals(version)) {
+            throw new IllegalStateException("Deleting items with unspecified version (argument DEFAULT_VERSION) not supported.");
+        }
+        CatalogItem<?, ?> item = getCatalogItem(id, version);
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(item);
         if (itemDto == null) {
             throw new NoSuchElementException("No catalog item found with id "+id);
@@ -208,11 +251,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     }
 
+    @Override
+    @Deprecated
+    public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
+        return getCatalogItem(type, id, DEFAULT_VERSION);
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
-    public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
-        if (id==null) return null;
-        CatalogItem<?,?> result = getCatalogItem(id);
+    public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id, String version) {
+        if (id==null || version==null) return null;
+        CatalogItem<?,?> result = getCatalogItem(id, version);
         if (result==null) return null;
         if (type==null || type.isAssignableFrom(result.getCatalogItemJavaType())) 
             return (CatalogItem<T,SpecT>)result;
@@ -238,8 +287,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @SuppressWarnings("unchecked")
     @Override
     public <T, SpecT> SpecT createSpec(CatalogItem<T, SpecT> item) {
-        CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getId());
-
+        CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getSymbolicName(), item.getVersion());
+        if (loadedItem == null) return null;
         Class<SpecT> specType = loadedItem.getSpecType();
         if (specType==null) return null;
 
@@ -343,7 +392,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (log.isDebugEnabled())
             log.debug("Loading class for catalog item " + item);
         checkNotNull(item);
-        CatalogItemDo<?,?> loadedItem = getCatalogItemDo(item.getId());
+        CatalogItemDo<?,?> loadedItem = getCatalogItemDo(item.getSymbolicName(), item.getVersion());
         if (loadedItem==null) throw new NoSuchElementException("Unable to load '"+item.getId()+"' to instantiate it");
         return (Class<? extends T>) loadedItem.getJavaClass();
     }
@@ -373,8 +422,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
         DeploymentPlan plan = makePlanFromYaml(yaml);
 
-        CatalogLibrariesDto libraries = null;
-
         @SuppressWarnings("rawtypes")
         Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
         MutableMap<String, Object> catalog = MutableMap.of();
@@ -384,60 +431,110 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             catalog.putAll(catalog2);
         }
 
+        Collection<CatalogBundle> libraries = Collections.emptyList();
         Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
         if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
         if (possibleLibraries.isPresentAndNonNull()) {
-            if (!(possibleLibraries.get() instanceof List))
+            if (!(possibleLibraries.get() instanceof Collection))
                 throw new IllegalArgumentException("Libraries should be a list, not "+possibleLibraries.get());
-            libraries = CatalogLibrariesDto.from((List<?>) possibleLibraries.get());
+            libraries = CatalogItemDtoAbstract.parseLibraries((Collection<?>) possibleLibraries.get());
         }
 
-        // TODO clear up the abundance of id, name, registered type, java type
-        String registeredTypeName = (String) catalog.getMaybe("id").orNull();
-        if (Strings.isBlank(registeredTypeName))
-            registeredTypeName = (String) catalog.getMaybe("name").orNull();
-        // take name from plan if not specified in brooklyn.catalog section not supplied
-        if (Strings.isBlank(registeredTypeName)) {
-            registeredTypeName = plan.getName();
-            if (Strings.isBlank(registeredTypeName)) {
-                if (plan.getServices().size()==1) {
-                    Service svc = Iterables.getOnlyElement(plan.getServices());
-                    registeredTypeName = svc.getServiceType();
-                }
+        final String id = (String) catalog.getMaybe("id").orNull();
+        final String version = Strings.toString(catalog.getMaybe("version").orNull());
+        final String symbolicName = (String) catalog.getMaybe("symbolicName").orNull();
+        final String name = (String) catalog.getMaybe("name").orNull();
+        final String displayName = (String) catalog.getMaybe("displayName").orNull();
+        final String description = (String) catalog.getMaybe("description").orNull();
+        final String iconUrl = (String) catalog.getMaybe("iconUrl").orNull();
+        final String iconUrlUnderscore = (String) catalog.getMaybe("icon_url").orNull();
+
+        if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
+                Strings.isNonBlank(displayName) &&
+                Strings.isNonBlank(name) && !name.equals(displayName)) {
+            log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
+        }
+
+        final String catalogSymbolicName;
+        if (Strings.isNonBlank(symbolicName)) {
+            catalogSymbolicName = symbolicName;
+        } else if (Strings.isNonBlank(id)) {
+            if (Strings.isNonBlank(id) && CatalogUtils.looksLikeVersionedId(id)) {
+                catalogSymbolicName = CatalogUtils.getIdFromVersionedId(id);
+            } else {
+                catalogSymbolicName = id;
             }
+        } else if (Strings.isNonBlank(name)) {
+            catalogSymbolicName = name;
+        } else if (Strings.isNonBlank(plan.getName())) {
+            catalogSymbolicName = plan.getName();
+        } else if (plan.getServices().size()==1) {
+            Service svc = Iterables.getOnlyElement(plan.getServices());
+            if (Strings.isBlank(svc.getServiceType())) {
+                throw new IllegalStateException("CAMP service type not expected to be missing for " + svc);
+            }
+            catalogSymbolicName = svc.getServiceType();
+        } else {
+            log.error("Can't infer catalog item symbolicName from the following plan:\n" + yaml);
+            throw new IllegalStateException("Can't infer catalog item symbolicName from catalog item description");
+        }
+
+        final String catalogVersion;
+        if (CatalogUtils.looksLikeVersionedId(id)) {
+            catalogVersion = CatalogUtils.getVersionFromVersionedId(id);
+            if (version != null  && !catalogVersion.equals(version)) {
+                throw new IllegalArgumentException("Discrepency between version set in id " + catalogVersion + " and version property " + version);
+            }
+        } else if (Strings.isNonBlank(version)) {
+            catalogVersion = version;
+        } else {
+            log.warn("No version specified for catalog item " + catalogSymbolicName + ". Using default value.");
+            catalogVersion = null;
+        }
+
+        final String catalogDisplayName;
+        if (Strings.isNonBlank(displayName)) {
+            catalogDisplayName = displayName;
+        } else if (Strings.isNonBlank(name)) {
+            catalogDisplayName = name;
+        } else if (Strings.isNonBlank(plan.getName())) {
+            catalogDisplayName = plan.getName();
+        } else {
+            catalogDisplayName = null;
+        }
+
+        final String catalogDescription;
+        if (Strings.isNonBlank(description)) {
+            catalogDescription = description;
+        } else if (Strings.isNonBlank(plan.getDescription())) {
+            catalogDescription = plan.getDescription();
+        } else {
+            catalogDescription = null;
+        }
+
+        final String catalogIconUrl;
+        if (Strings.isNonBlank(iconUrl)) {
+            catalogIconUrl = iconUrl;
+        } else if (Strings.isNonBlank(iconUrlUnderscore)) {
+            catalogIconUrl = iconUrlUnderscore;
+        } else {
+            catalogIconUrl = null;
         }
 
         CatalogUtils.installLibraries(mgmt, libraries);
 
-        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, CatalogUtils.newClassLoadingContext(mgmt, "<not created yet>", libraries, getRootClassLoader()));
+        String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion);
+        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries, getRootClassLoader());
+        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, loader);
 
-        CatalogItemBuilder<?> builder = createItemBuilder(spec, registeredTypeName)
+        CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(spec, catalogSymbolicName, catalogVersion)
             .libraries(libraries)
-            .displayName(plan.getName())
-            .description(plan.getDescription())
-            .plan(yaml);
+            .displayName(catalogDisplayName)
+            .description(catalogDescription)
+            .iconUrl(catalogIconUrl)
+            .plan(yaml)
+            .build();
 
-        // and populate other fields
-        Maybe<Object> name = catalog.getMaybe("name");
-        if (name.isPresent()) builder.displayName((String) name.get());
-
-        Maybe<Object> description = catalog.getMaybe("description");
-        if (description.isPresent()) builder.description((String)description.get());
-
-        Maybe<Object> iconUrl = catalog.getMaybe("iconUrl");
-        if (iconUrl.isAbsent()) iconUrl = catalog.getMaybe("icon_url");
-        if (iconUrl.isPresent()) builder.iconUrl((String)iconUrl.get());
-
-        // TODO #3 support version info
-
-        CatalogItemDtoAbstract<?, ?> dto = builder.build();
-        // Overwrite generated ID
-        if (catalog.getMaybe("id").isPresent()) {
-            String id = (String) catalog.getMaybe("id").get();
-            log.info("Overwriting id {} with id from yaml: {}", dto.getId(), id);
-            FlagUtils.setFieldsFromFlags(MutableMap.of("id", id), dto);
-        }
-        // TODO: Necessary?
         dto.setManagementContext((ManagementContextInternal) mgmt);
         return dto;
     }
@@ -450,15 +547,15 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
     }
 
-    private CatalogItemBuilder<?> createItemBuilder(AbstractBrooklynObjectSpec<?, ?> spec, String itemId) {
+    private CatalogItemBuilder<?> createItemBuilder(AbstractBrooklynObjectSpec<?, ?> spec, String itemId, String version) {
         if (spec instanceof EntitySpec) {
             if (isApplicationSpec((EntitySpec<?>)spec)) {
-                return CatalogItemBuilder.newTemplate(itemId);
+                return CatalogItemBuilder.newTemplate(itemId, version);
             } else {
-                return CatalogItemBuilder.newEntity(itemId);
+                return CatalogItemBuilder.newEntity(itemId, version);
             }
         } else if (spec instanceof PolicySpec) {
-            return CatalogItemBuilder.newPolicy(itemId);
+            return CatalogItemBuilder.newPolicy(itemId, version);
         } else {
             throw new IllegalStateException("Unknown spec type " + spec.getClass().getName() + " (" + spec + ")");
         }
@@ -479,10 +576,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     @Override
     public CatalogItem<?,?> addItem(String yaml) {
+        return addItem(yaml, false);
+    }
+
+    @Override
+    public CatalogItem<?,?> addItem(String yaml, boolean forceUpdate) {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         checkNotNull(yaml, "yaml");
-        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
+        checkItemNotExists(itemDto, forceUpdate);
+
+        if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(itemDto);
 
         // Ensure the cache is populated and it is persisted by the management context
@@ -497,8 +601,16 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDto;
     }
 
+    private void checkItemNotExists(CatalogItem<?,?> itemDto, boolean forceUpdate) {
+        if (!forceUpdate && getCatalogItemDo(itemDto.getSymbolicName(), itemDto.getVersion()) != null) {
+            throw new IllegalStateException("Updating existing catalog entries is forbidden: " +
+                    itemDto.getId() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
+        }
+    }
+
     @Override @Deprecated /** @deprecated see super */
     public void addItem(CatalogItem<?,?> item) {
+        //assume forceUpdate for backwards compatibility
         log.debug("Adding manual catalog item to "+mgmt+": "+item);
         checkNotNull(item, "item");
         CatalogUtils.installLibraries(mgmt, item.getLibraries());
@@ -508,6 +620,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     @Override @Deprecated /** @deprecated see super */
     public CatalogItem<?,?> addItem(Class<?> type) {
+        //assume forceUpdate for backwards compatibility
         log.debug("Adding manual catalog item to "+mgmt+": "+type);
         checkNotNull(type, "type");
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();

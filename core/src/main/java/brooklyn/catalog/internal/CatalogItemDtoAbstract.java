@@ -18,6 +18,8 @@
  */
 package brooklyn.catalog.internal;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,55 +34,48 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.mementos.CatalogItemMemento;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynObject implements CatalogItem<T, SpecT> {
 
-    private static final Logger log = LoggerFactory.getLogger(CatalogItemDtoAbstract.class);
-    
-    // TODO are ID and registeredType the same?
-    @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
-    @SetFromFlag String registeredType;
-    @SetFromFlag String javaType;
-    @SetFromFlag String description;
-    @SetFromFlag String iconUrl;
-    @SetFromFlag String version;
-    @SetFromFlag CatalogLibrariesDto libraries;
-    @SetFromFlag String planYaml;
+    private static Logger LOG = LoggerFactory.getLogger(CatalogItemDtoAbstract.class);
 
-    // Field left named `name' to maintain the name element in existing catalogues.
-    @SetFromFlag("displayName") String name;
+    private @SetFromFlag String symbolicName;
+    private @SetFromFlag String version = BasicBrooklynCatalog.NO_VERSION;
 
-    /** @deprecated since 0.7.0.
-     * used for backwards compatibility when deserializing.
-     * when catalogs are converted to new yaml format, this can be removed. */
-    @Deprecated
-    @SetFromFlag
-    String type;
+    private @SetFromFlag String displayName;
+    private @SetFromFlag String description;
+    private @SetFromFlag String iconUrl;
 
-    // TODO: Items with neither id nor java type should be rejected at construction.
-    // XStream auto-filling fields makes this a bit awkward.
+    private @SetFromFlag String javaType;
+    /**@deprecated since 0.7.0, left for deserialization backwards compatibility */
+    private @Deprecated @SetFromFlag String type;
+    private @SetFromFlag String planYaml;
+
+    private @SetFromFlag Collection<CatalogBundle> libraries;
+    private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
+
     @Override
     public String getId() {
-        return super.getId() != null ? super.getId() : getJavaType();
+        return getCatalogItemId();
     }
 
     @Override
-    public String getRegisteredTypeName() {
-        if (registeredType!=null) return registeredType;
-        return getJavaType();
+    public String getCatalogItemId() {
+        return CatalogUtils.getVersionedId(getSymbolicName(), getVersion());
     }
 
     @Override
     public String getJavaType() {
-        if (javaType!=null) return javaType;
-        if (type!=null) return type;
-        return null;
+        if (javaType != null) return javaType;
+        return type;
     }
 
     @Deprecated
@@ -88,9 +83,14 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return getDisplayName();
     }
 
+    @Deprecated
+    public String getRegisteredTypeName() {
+        return getSymbolicName();
+    }
+
     @Override
     public String getDisplayName() {
-        return name;
+        return displayName;
     }
 
     @Override
@@ -104,18 +104,31 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     }
 
     @Override
+    public String getSymbolicName() {
+        if (symbolicName != null) return symbolicName;
+        return getJavaType();
+    }
+
+    @Override
     public String getVersion() {
-        return version;
+        // The property is set to NO_VERSION when the object is initialized so it's not supposed to be null ever.
+        // But xstream doesn't call constructors when reading from the catalog.xml file which results in null value
+        // for the version property. That's why we have to fix it in the getter.
+        if (version != null) {
+            return version;
+        } else {
+            return BasicBrooklynCatalog.NO_VERSION;
+        }
     }
 
     @Nonnull
     @Override
-    public CatalogItemLibraries getLibraries() {
-        return getLibrariesDto();
-    }
-
-    public CatalogLibrariesDto getLibrariesDto() {
-        return libraries;
+    public Collection<CatalogBundle> getLibraries() {
+        if (libraries != null) {
+            return ImmutableList.copyOf(libraries);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Nullable @Override
@@ -125,7 +138,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()+"["+getId()+"/"+getName()+"]";
+        return getClass().getSimpleName()+"["+getId()+"/"+getDisplayName()+"]";
     }
 
     public abstract Class<SpecT> getSpecType();
@@ -151,7 +164,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Override
     public void setDisplayName(String newName) {
-        this.name = newName;
+        this.displayName = newName;
     }
 
     @Override
@@ -234,12 +247,97 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         }
     }
 
-    /** Use of this method is discouraged unless it is assigning the same (final) ID that this object already has. */
     @Override
+    @Deprecated
     public void setCatalogItemId(String id) {
-        if (id!=null && !id.equals(getRegisteredTypeName())) {
-            log.warn("Setting 'catalog-item ID' of catalog item "+getId()+"/"+getRegisteredTypeName()+" to "+id+"; if set, catalog-item ID should match the registered type name.");
+        //no op, should be used by rebind code only
+    }
+
+    protected void setSymbolicName(String symbolicName) {
+        this.symbolicName = symbolicName;
+    }
+
+    protected void setVersion(String version) {
+        this.version = version;
+    }
+
+    protected void setDescription(String description) {
+        this.description = description;
+    }
+
+    protected void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
+    }
+
+    protected void setJavaType(String javaType) {
+        this.javaType = javaType;
+        this.type = null;
+    }
+
+    protected void setPlanYaml(String planYaml) {
+        this.planYaml = planYaml;
+    }
+
+    protected void setLibraries(Collection<CatalogBundle> libraries) {
+        this.libraries = libraries;
+    }
+
+    protected void setTags(Set<Object> tags) {
+        this.tags = tags;
+    }
+
+    protected void setSerializer(CatalogXmlSerializer serializer) {
+        this.serializer = serializer;
+    }
+
+    /**
+     * Parses an instance of CatalogLibrariesDto from the given List. Expects the list entries
+     * to be either Strings or Maps of String -> String. Will skip items that are not.
+     */
+    public static Collection<CatalogBundle> parseLibraries(Collection<?> possibleLibraries) {
+        Collection<CatalogBundle> dto = MutableList.of();
+        for (Object object : possibleLibraries) {
+            if (object instanceof Map) {
+                Map<?, ?> entry = (Map<?, ?>) object;
+                String name = stringValOrNull(entry, "name");
+                String version = stringValOrNull(entry, "version");
+                String url = stringValOrNull(entry, "url");
+                dto.add(new CatalogBundleDto(name, version, url));
+            } else if (object instanceof String) {
+                String inlineRef = (String) object;
+
+                final String name;
+                final String version;
+                final String url;
+
+                //Infer reference type (heuristically)
+                if (inlineRef.contains("/") || inlineRef.contains("\\")) {
+                    //looks like an url/file path
+                    name = null;
+                    version = null;
+                    url = inlineRef;
+                } else if (CatalogUtils.looksLikeVersionedId(inlineRef)) {
+                    //looks like a name+version ref
+                    name = CatalogUtils.getIdFromVersionedId(inlineRef);
+                    version = CatalogUtils.getVersionFromVersionedId(inlineRef);
+                    url = null;
+                } else {
+                    //assume it to be relative url
+                    name = null;
+                    version = null;
+                    url = inlineRef;
+                }
+
+                dto.add(new CatalogBundleDto(name, version, url));
+            } else {
+                LOG.debug("Unexpected entry in libraries list neither string nor map: " + object);
+            }
         }
-        super.setCatalogItemId(id);
+        return dto;
+    }
+
+    private static String stringValOrNull(Map<?, ?> map, String key) {
+        Object val = map.get(key);
+        return val != null ? String.valueOf(val) : null;
     }
 }

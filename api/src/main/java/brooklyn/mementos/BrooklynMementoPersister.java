@@ -55,6 +55,10 @@ public interface BrooklynMementoPersister {
         Enricher lookupEnricher(String id);
         Feed lookupFeed(String id);
         CatalogItem<?, ?> lookupCatalogItem(String id);
+        
+        BrooklynObject lookup(BrooklynObjectType type, String objectId);
+        /** like {@link #lookup(BrooklynObjectType, String)} but doesn't record an exception if not found */
+        BrooklynObject peek(BrooklynObjectType type, String objectId);
     }
     
     /**

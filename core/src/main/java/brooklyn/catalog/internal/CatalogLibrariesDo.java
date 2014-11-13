@@ -18,12 +18,13 @@
  */
 package brooklyn.catalog.internal;
 
-import java.util.List;
+import java.util.Collection;
 
 import brooklyn.catalog.CatalogItem;
 
 import com.google.common.base.Preconditions;
 
+@Deprecated
 public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
 
     private final CatalogLibrariesDto librariesDto;
@@ -34,7 +35,7 @@ public class CatalogLibrariesDo implements CatalogItem.CatalogItemLibraries {
     }
 
     @Override
-    public List<String> getBundles() {
+    public Collection<String> getBundles() {
         return librariesDto.getBundles();
     }
 

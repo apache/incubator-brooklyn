@@ -47,6 +47,7 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -559,23 +560,27 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
 
     private File getFileFor(EntityMemento entity) {
-        return new File(entitiesDir, entity.getId());
+        return getFileFor(entitiesDir, entity.getId());
     }
     
     private File getFileFor(LocationMemento location) {
-        return new File(locationsDir, location.getId());
+        return getFileFor(locationsDir, location.getId());
     }
     
     private File getFileFor(PolicyMemento policy) {
-        return new File(policiesDir, policy.getId());
+        return getFileFor(policiesDir, policy.getId());
     }
     
     private File getFileFor(EnricherMemento enricher) {
-        return new File(enrichersDir, enricher.getId());
+        return getFileFor(enrichersDir, enricher.getId());
     }
 
     private File getFileFor(CatalogItemMemento catalogItem) {
-        return new File(catalogItemsDir, catalogItem.getId());
+        return getFileFor(catalogItemsDir, catalogItem.getId());
+    }
+
+    private File getFileFor(File parent, String id) {
+        return new File(parent, Strings.makeValidFilename(id));
     }
 
     @Override

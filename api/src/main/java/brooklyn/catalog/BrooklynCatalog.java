@@ -24,18 +24,39 @@ import java.util.NoSuchElementException;
 import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
+    static String DEFAULT_VERSION = "0.0.0_DEFAULT_VERSION";
 
-    /** @return The item with the given ID or {@link brooklyn.catalog.CatalogItem#getRegisteredTypeName()
-     * registeredTypeName}, or null if not found. */
-    CatalogItem<?,?> getCatalogItem(String idOrRegisteredTypeName);
+    /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+     * symbolicName}, or null if not found.
+     * @deprecated since 0.7.0 use {@link #getCatalogItem(String, String)} */
+    @Deprecated
+    CatalogItem<?,?> getCatalogItem(String symbolicName);
 
-    /** @return Deletes the item with the given ID
+    /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+     * symbolicName}, or null if not found. */
+    CatalogItem<?,?> getCatalogItem(String symbolicName, String version);
+
+    /** @return Deletes the item with the given
+     *  {@link brooklyn.catalog.CatalogItem#getSymbolicName() symbolicName}
+     * @throws NoSuchElementException if not found
+     * @deprecated since 0.7.0 use {@link #deleteCatalogItem(String, String)} */
+    @Deprecated
+    void deleteCatalogItem(String symbolicName);
+
+    /** @return Deletes the item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+     * symbolicName} and version
      * @throws NoSuchElementException if not found */
-    void deleteCatalogItem(String id);
+    void deleteCatalogItem(String symbolicName, String version);
 
-    /** variant of {@link #getCatalogItem(String)} which checks (and casts) type for convenience
+    /** variant of {@link #getCatalogItem(String, String)} which checks (and casts) type for convenience
+     * (returns null if type does not match)
+     * @deprecated since 0.7.0 use {@link #getCatalogItem(Class<T>, String, String)} */
+    @Deprecated
+    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String symbolicName);
+
+    /** variant of {@link #getCatalogItem(String, String)} which checks (and casts) type for convenience
      * (returns null if type does not match) */
-    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id);
+    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String symbolicName, String version);
 
     /** @return All items in the catalog */
     <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems();
@@ -60,10 +81,21 @@ public interface BrooklynCatalog {
 
     /**
      * Adds an item (represented in yaml) to the catalog.
-     * 
+     * Fails if the same version exists in catalog.
+     *
      * @throws IllegalArgumentException if the yaml was invalid
      */
     CatalogItem<?,?> addItem(String yaml);
+    
+    /**
+     * Adds an item (represented in yaml) to the catalog.
+     * 
+     * @param forceUpdate If true allows catalog update even when an
+     * item exists with the same symbolicName and version
+     *
+     * @throws IllegalArgumentException if the yaml was invalid
+     */
+    CatalogItem<?,?> addItem(String yaml, boolean forceUpdate);
     
     /**
      * adds an item to the 'manual' catalog;

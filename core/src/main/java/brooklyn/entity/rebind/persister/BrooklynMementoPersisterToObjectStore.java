@@ -32,11 +32,17 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PeriodicDeltaChangeListener;
@@ -47,6 +53,7 @@ import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
+import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -99,7 +106,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         BrooklynObjectType.ENRICHER, BrooklynObjectType.FEED, BrooklynObjectType.CATALOG_ITEM);
 
     private final PersistenceObjectStore objectStore;
-    private final MementoSerializer<Object> serializer;
+    private final MementoSerializer<Object> serializerWithStandardClassLoader;
 
     private final Map<String, StoreObjectAccessorWithLock> writers = new LinkedHashMap<String, PersistenceObjectStore.StoreObjectAccessorWithLock>();
 
@@ -107,7 +114,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     private volatile boolean writesAllowed = false;
     private volatile boolean writesShuttingDown = false;
-
+    private StringConfigMap brooklynProperties;
+    
     /**
      * Lock used on writes (checkpoint + delta) so that {@link #waitForWritesCompleted(Duration)} can block
      * for any concurrent call to complete.
@@ -116,12 +124,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     public BrooklynMementoPersisterToObjectStore(PersistenceObjectStore objectStore, BrooklynProperties brooklynProperties, ClassLoader classLoader) {
         this.objectStore = checkNotNull(objectStore, "objectStore");
+        this.brooklynProperties = brooklynProperties;
         
         int maxSerializationAttempts = brooklynProperties.getConfig(PERSISTER_MAX_SERIALIZATION_ATTEMPTS);
-        int maxThreadPoolSize = brooklynProperties.getConfig(PERSISTER_MAX_THREAD_POOL_SIZE);
-                
         MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
-        this.serializer = new RetryingMementoSerializer<Object>(rawSerializer, maxSerializationAttempts);
+        this.serializerWithStandardClassLoader = new RetryingMementoSerializer<Object>(rawSerializer, maxSerializationAttempts);
+
+        int maxThreadPoolSize = brooklynProperties.getConfig(PERSISTER_MAX_THREAD_POOL_SIZE);
 
         objectStore.createSubPath("entities");
         objectStore.createSubPath("locations");
@@ -139,6 +148,37 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             }}));
     }
 
+    protected MementoSerializer<Object> getSerializerWithStandardClassLoader() {
+        return serializerWithStandardClassLoader;
+    }
+    
+    protected MementoSerializer<Object> getSerializerWithCustomClassLoader(LookupContext lookupContext, BrooklynObjectType type, String objectId) {
+        ClassLoader cl = getCustomClassLoaderForBrooklynObject(lookupContext, type, objectId);
+        if (cl==null) return serializerWithStandardClassLoader;
+        return getSerializerWithCustomClassLoader(lookupContext, cl);
+    }
+    
+    protected MementoSerializer<Object> getSerializerWithCustomClassLoader(LookupContext lookupContext, ClassLoader classLoader) {
+        int maxSerializationAttempts = brooklynProperties.getConfig(PERSISTER_MAX_SERIALIZATION_ATTEMPTS);
+        MementoSerializer<Object> rawSerializer = new XmlMementoSerializer<Object>(classLoader);
+        MementoSerializer<Object> result = new RetryingMementoSerializer<Object>(rawSerializer, maxSerializationAttempts);
+        result.setLookupContext(lookupContext);
+        return result;
+    }
+    
+    @Nullable protected ClassLoader getCustomClassLoaderForBrooklynObject(LookupContext lookupContext, BrooklynObjectType type, String objectId) {
+        BrooklynObject item = lookupContext.peek(type, objectId);
+        // TODO enrichers etc aren't yet known -- would need to backtrack to the entity to get them from bundles
+        if (item==null || item.getCatalogItemId()==null) {
+            return null;
+        }
+        CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), item.getCatalogItemId());
+        if (catalogItem == null) {
+            throw new IllegalStateException("Catalog item " + item.getCatalogItemId() + " not found. Can't deserialize object " + objectId + " of type " + type);
+        }
+        return ClassLoaderFromBrooklynClassLoadingContext.of(CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), catalogItem));
+    }
+    
     @Override public void enableWriteAccess() {
         writesAllowed = true;
     }
@@ -248,8 +288,9 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                 }
                 
                 String xmlId = (String) XmlUtil.xpath(contents, "/"+type.toCamelCase()+"/id");
-                if (!Objects.equal(id, xmlId))
-                    LOG.warn("ID mismatch on "+type.toCamelCase()+", "+id+" from path, "+xmlId+" from xml");
+                String safeXmlId = Strings.makeValidFilename(xmlId);
+                if (!Objects.equal(id, safeXmlId))
+                    LOG.warn("ID mismatch on "+type.toCamelCase()+", "+id+" from path, "+safeXmlId+" from xml");
                 
                 builder.put(type, xmlId, contents);
             }
@@ -309,7 +350,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                         break;
                     case CATALOG_ITEM:
                         try {
-                            CatalogItemMemento memento = (CatalogItemMemento) serializer.fromString(contents);
+                            CatalogItemMemento memento = (CatalogItemMemento) getSerializerWithStandardClassLoader().fromString(contents);
                             if (memento == null) {
                                 LOG.warn("No "+type.toCamelCase()+"-memento deserialized from " + objectId + "; ignoring and continuing");
                             } else {
@@ -349,7 +390,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     }
     
     @Override
-    public BrooklynMemento loadMemento(BrooklynMementoRawData mementoData, LookupContext lookupContext, final RebindExceptionHandler exceptionHandler) throws IOException {
+    public BrooklynMemento loadMemento(BrooklynMementoRawData mementoData, final LookupContext lookupContext, final RebindExceptionHandler exceptionHandler) throws IOException {
         if (mementoData==null)
             mementoData = loadMementoRawData(exceptionHandler);
 
@@ -361,7 +402,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             @Override
             public void visit(BrooklynObjectType type, String objectId, String contents) throws Exception {
                 try {
-                    Memento memento = (Memento) serializer.fromString(contents);
+                    Memento memento = (Memento) getSerializerWithCustomClassLoader(lookupContext, type, objectId).fromString(contents);
                     if (memento == null) {
                         LOG.warn("No "+type.toCamelCase()+"-memento deserialized from " + objectId + "; ignoring and continuing");
                     } else {
@@ -371,13 +412,15 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                     exceptionHandler.onLoadMementoFailed(type, "memento "+objectId+" deserialization error", e);
                 }
             }
+
         };
 
-        serializer.setLookupContext(lookupContext);
+        // TODO not convinced this is single threaded on reads; maybe should get a new one each time?
+        getSerializerWithStandardClassLoader().setLookupContext(lookupContext);
         try {
             visitMemento("deserialization", mementoData, visitor, exceptionHandler);
         } finally {
-            serializer.unsetLookupContext();
+            getSerializerWithStandardClassLoader().unsetLookupContext();
         }
 
         BrooklynMemento result = builder.build();
@@ -606,7 +649,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     private void persist(String subPath, Memento memento, PersistenceExceptionHandler exceptionHandler) {
         try {
-            getWriter(getPath(subPath, memento.getId())).put(serializer.toString(memento));
+            getWriter(getPath(subPath, memento.getId())).put(getSerializerWithStandardClassLoader().toString(memento));
         } catch (Exception e) {
             exceptionHandler.onPersistMementoFailed(memento, e);
         }
@@ -657,7 +700,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     }
     
     private String getPath(String subPath, String id) {
-        return subPath+"/"+id;
+        return subPath+"/"+Strings.makeValidFilename(id);
     }
 
     @Override

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
@@ -108,7 +109,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
             String policyType = decoLoader.getTypeName().get();
             ManagementContext mgmt = instantiator.loader.getManagementContext();
             BrooklynCatalog catalog = mgmt.getCatalog();
-            CatalogItem<?, ?> item = catalog.getCatalogItem(policyType);
+            CatalogItem<?, ?> item = getPolicyCatalogItem(catalog, policyType);
             PolicySpec<? extends Policy> spec;
             if (item != null) {
                 spec = (PolicySpec<? extends Policy>) catalog.createSpec(item);
@@ -119,6 +120,15 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
                     .configure( decoLoader.getConfigMap() );
             }
             decorations.add(spec);
+        }
+        private CatalogItem<?, ?> getPolicyCatalogItem(BrooklynCatalog catalog, String policyType) {
+            if (CatalogUtils.looksLikeVersionedId(policyType)) {
+                String id = CatalogUtils.getIdFromVersionedId(policyType);
+                String version = CatalogUtils.getVersionFromVersionedId(policyType);
+                return catalog.getCatalogItem(id, version);
+            } else {
+                return catalog.getCatalogItem(policyType, BrooklynCatalog.DEFAULT_VERSION);
+            }
         }
     }
 

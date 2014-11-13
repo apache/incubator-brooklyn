@@ -18,6 +18,8 @@
  */
 package brooklyn.catalog.internal;
 
+import java.util.Collection;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -65,11 +67,6 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     }
 
     @Override
-    public String getRegisteredTypeName() {
-        return itemDto.getRegisteredTypeName();
-    }
-    
-    @Override
     public String getJavaType() {
         return itemDto.getJavaType();
     }
@@ -78,6 +75,12 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     @Override
     public String getName() {
         return getDisplayName();
+    }
+
+    @Deprecated
+    @Override
+    public String getRegisteredTypeName() {
+        return getSymbolicName();
     }
 
     @Override
@@ -105,6 +108,11 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
     public String getIconUrl() {
         return itemDto.getIconUrl();
     }
+    
+    @Override
+    public String getSymbolicName() {
+        return itemDto.getSymbolicName();
+    }
 
     @Override
     public String getVersion() {
@@ -113,7 +121,7 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT> {
 
     @Nonnull  // but it is still null sometimes, see in CatalogDo.loadJavaClass
     @Override
-    public CatalogItemLibraries getLibraries() {
+    public Collection<CatalogBundle> getLibraries() {
         return itemDto.getLibraries();
     }
 

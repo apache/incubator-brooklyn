@@ -33,13 +33,15 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogItemBuilder;
-import brooklyn.catalog.internal.CatalogLibrariesDto;
+import brooklyn.catalog.internal.CatalogItemDtoAbstract;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
@@ -161,12 +163,12 @@ public class XmlMementoSerializerTest {
         final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
         try {
-            CatalogItem<?, ?> catalogItem = CatalogItemBuilder.newEntity("registeredtypename")
+            CatalogItem<?, ?> catalogItem = CatalogItemBuilder.newEntity("symbolicName", "0.0.1")
                     .displayName("test catalog item")
                     .description("description")
                     .plan("yaml plan")
                     .iconUrl("iconUrl")
-                    .libraries(CatalogLibrariesDto.from(ImmutableList.of("library-url")))
+                    .libraries(CatalogItemDtoAbstract.parseLibraries(ImmutableList.of("library-url")))
                     .build();
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
@@ -367,6 +369,33 @@ public class XmlMementoSerializerTest {
                 throw new NoSuchElementException("no catalog item with id "+id+"; contenders are "+catalogItems.keySet());
             }
             return null;
+        }
+        
+        @Override
+        public BrooklynObject lookup(BrooklynObjectType type, String id) {
+            switch (type) {
+            case CATALOG_ITEM: return lookupCatalogItem(id);
+            case ENRICHER: return lookupEnricher(id);
+            case ENTITY: return lookupEntity(id);
+            case FEED: return lookupFeed(id);
+            case LOCATION: return lookupLocation(id);
+            case POLICY: return lookupPolicy(id);
+            case UNKNOWN: return null;
+            }
+            throw new IllegalStateException("Unexpected type "+type+" / id "+id);
+        }
+        @Override
+        public BrooklynObject peek(BrooklynObjectType type, String id) {
+            switch (type) {
+            case CATALOG_ITEM: return catalogItems.get(id);
+            case ENRICHER: return enrichers.get(id);
+            case ENTITY: return entities.get(id);
+            case FEED: return feeds.get(id);
+            case LOCATION: return locations.get(id);
+            case POLICY: return policies.get(id);
+            case UNKNOWN: return null;
+            }
+            throw new IllegalStateException("Unexpected type "+type+" / id "+id);
         }
     };
 }
