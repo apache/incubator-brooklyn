@@ -66,7 +66,6 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.EntityManagerInternal;
@@ -94,6 +93,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.ScheduledTask;
@@ -660,7 +660,7 @@ public class RebindManagerImpl implements RebindManager {
             for (Map.Entry<String, EntityMementoManifest> entry : mementoManifest.getEntityIdToManifest().entrySet()) {
                 String entityId = entry.getKey();
                 EntityMementoManifest entityManifest = entry.getValue();
-                String catalogItemId = findCatalogItemId(mementoManifest.getEntityIdToManifest(), entityManifest);
+                String catalogItemId = findCatalogItemId(classLoader, mementoManifest.getEntityIdToManifest(), entityManifest);
                 
                 if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
                 
@@ -955,7 +955,7 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
 
-    private String findCatalogItemId(Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
+    private String findCatalogItemId(ClassLoader cl, Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
         if (entityManifest.getCatalogItemId() != null) {
             return entityManifest.getCatalogItemId();
         }
@@ -998,20 +998,33 @@ public class RebindManagerImpl implements RebindManager {
                     ptr = null;
                 }
             }
+
+            //As a last resort go through all catalog items trying to load the type and use the first that succeeds.
+            //But first check if can be loaded from the default classpath
+            try {
+                cl.loadClass(entityManifest.getType());
+                return null;
+            } catch (ClassNotFoundException e) {
+            }
+
+            for (CatalogItem<?, ?> item : catalog.getCatalogItems()) {
+                BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(managementContext, item);
+                boolean canLoadClass = loader.tryLoadClass(entityManifest.getType()).isPresent();
+                if (canLoadClass) {
+                    return item.getId();
+                }
+            }
         }
         return null;
     }
 
     private BrooklynClassLoadingContext getLoadingContextFromCatalogItemId(String catalogItemId, ClassLoader classLoader, RebindContext rebindContext) {
-        if (catalogItemId != null) {
-            CatalogItem<?, ?> catalogItem = rebindContext.getCatalogItem(catalogItemId);
-            if (catalogItem != null) {
-                return CatalogUtils.newClassLoadingContext(managementContext, catalogItem);
-            } else {
-                throw new IllegalStateException("Failed to load catalog item " + catalogItemId + " required for rebinding.");
-            }
+        Preconditions.checkNotNull(catalogItemId, "catalogItemId required (should not be null)");
+        CatalogItem<?, ?> catalogItem = rebindContext.getCatalogItem(catalogItemId);
+        if (catalogItem != null) {
+            return CatalogUtils.newClassLoadingContext(managementContext, catalogItem);
         } else {
-            return JavaBrooklynClassLoadingContext.create(managementContext, classLoader);
+            throw new IllegalStateException("Failed to load catalog item " + catalogItemId + " required for rebinding.");
         }
     }
 
@@ -1132,16 +1145,33 @@ public class RebindManagerImpl implements RebindManager {
         @SuppressWarnings("unchecked")
         private <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, String jType, String catalogItemId, String contextSuchAsId) {
             checkNotNull(jType, "Type of %s (%s) must not be null", contextSuchAsId, bType.getSimpleName());
-            if (catalogItemId==null) {
+            if (catalogItemId != null) {
+                BrooklynClassLoadingContext loader = getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext);
+                return loader.loadClass(jType, bType);
+            } else {
                 // we have previously used reflections; not sure if that's needed?
                 try {
                     return (Class<T>)reflections.loadClass(jType);
                 } catch (Exception e) {
                     LOG.warn("Unable to load "+jType+" using reflections; will try standard context");
                 }
+
+                if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND)) {
+                    //Try loading from whichever catalog bundle succeeds.
+                    BrooklynCatalog catalog = managementContext.getCatalog();
+                    for (CatalogItem<?, ?> item : catalog.getCatalogItems()) {
+                        BrooklynClassLoadingContext catalogLoader = CatalogUtils.newClassLoadingContext(managementContext, item);
+                        Maybe<Class<?>> catalogClass = catalogLoader.tryLoadClass(jType);
+                        if (catalogClass.isPresent()) {
+                            return (Class<? extends T>) catalogClass.get();
+                        }
+                    }
+                    throw new IllegalStateException("No catalogItemId specified and can't load class from either classpath of catalog items");
+                } else {
+                    throw new IllegalStateException("No catalogItemId specified and can't load class from classpath");
+                }
+
             }
-            BrooklynClassLoadingContext loader = getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext);
-            return loader.loadClass(jType, bType);
         }
 
         /**

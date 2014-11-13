@@ -23,6 +23,10 @@ import java.util.Comparator;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.util.text.NaturalOrderComparator;
 
+/**
+ * When using the comparator to sort - first using symbolicName
+ * and if equal puts larger versions first, snapshots at the back.
+ */
 public class CatalogItemComparator implements Comparator<CatalogItem<?, ?>> {
     private static final String SNAPSHOT = "SNAPSHOT";
 

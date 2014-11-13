@@ -111,9 +111,9 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Override
     public String getVersion() {
-        //xstream doesn't call constructors
-        //the object is used directly (instead of a memento) when
-        //deserializing directly from catalog.xml
+        // The property is set to NO_VERSION when the object is initialized so it's not supposed to be null ever.
+        // But xstream doesn't call constructors when reading from the catalog.xml file which results in null value
+        // for the version property. That's why we have to fix it in the getter.
         if (version != null) {
             return version;
         } else {

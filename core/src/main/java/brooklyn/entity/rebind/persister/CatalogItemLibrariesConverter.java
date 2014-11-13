@@ -31,6 +31,10 @@ import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
+/**
+ *  Convert old-style rebind file formats to the latest version.
+ *  The code is needed only during transition to the new version, can be removed after a while.
+ */
 @Deprecated
 public class CatalogItemLibrariesConverter implements Converter {
 

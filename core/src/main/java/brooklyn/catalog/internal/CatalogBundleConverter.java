@@ -28,6 +28,10 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.mapper.Mapper;
 
 
+/**
+ *  Convert old-style catalog.xml file formats to the latest version.
+ *  The code is needed only during transition to the new version, can be removed after a while.
+ */
 @Deprecated
 public class CatalogBundleConverter implements Converter {
 

@@ -172,7 +172,10 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         if (item==null || item.getCatalogItemId()==null) {
             return null;
         }
-        CatalogItem<?, ?> catalogItem = lookupContext.lookupCatalogItem(item.getCatalogItemId());
+        CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), item.getCatalogItemId());
+        if (catalogItem == null) {
+            throw new IllegalStateException("Catalog item " + item.getCatalogItemId() + " not found. Can't deserialize object " + objectId + " of type " + type);
+        }
         return ClassLoaderFromBrooklynClassLoadingContext.of(CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), catalogItem));
     }
     
