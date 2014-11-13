@@ -295,6 +295,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         }
         
+        ManagementNodeState oldState = getInternalNodeState();
+        
         // now do election
         switch (startMode) {
         case AUTO:
@@ -336,21 +338,27 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
             break;
         case HOT_BACKUP:
+            setInternalNodeState(ManagementNodeState.HOT_BACKUP);
+            // then continue into next block
         case STANDBY:
         case HOT_STANDBY:
-            if (getInternalNodeState()==ManagementNodeState.STANDBY || getInternalNodeState()==ManagementNodeState.HOT_STANDBY) {
-                if (!preventElectionOnExplicitStandbyMode)
+            if (startMode!=HighAvailabilityMode.HOT_BACKUP) {
+                if (ManagementNodeState.isHotProxy(getInternalNodeState()) && startMode==HighAvailabilityMode.HOT_STANDBY) {
+                    // if was hot_backup, we can immediately go hot_standby
+                    setInternalNodeState(ManagementNodeState.HOT_STANDBY);
+                } else {
+                    // from any other state, set standby, then perhaps switch to hot_standby later on (or might become master in the next block)
+                    setInternalNodeState(ManagementNodeState.STANDBY);
+                }
+            }
+            if (ManagementNodeState.isStandby(getInternalNodeState())) {
+                if (!preventElectionOnExplicitStandbyMode) {
                     publishAndCheck(true);
+                }
                 if (failOnExplicitStandbyModeIfNoMaster && existingMaster==null) {
                     LOG.error("Management node "+ownNodeId+" detected no master when "+startMode+" requested and existing master required; failing.");
                     throw new IllegalStateException("No existing master; cannot start as "+startMode);
                 }
-            }
-            if (startMode==HighAvailabilityMode.HOT_BACKUP) {
-                setInternalNodeState(ManagementNodeState.HOT_BACKUP);
-            } else {
-                setInternalNodeState(ManagementNodeState.STANDBY);
-                // might jump to hot_standby next
             }
             String message = "Management node "+ownNodeId+" running as HA "+getNodeState()+" (";
             if (getNodeState().toString().equals(startMode.toString()))
@@ -391,11 +399,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         }
         if ((getInternalNodeState()==ManagementNodeState.STANDBY && startMode==HighAvailabilityMode.HOT_STANDBY) || 
-                (startMode==HighAvailabilityMode.HOT_BACKUP)) {
+                (startMode==HighAvailabilityMode.HOT_BACKUP && !ManagementNodeState.isHotProxy(oldState))) {
+            // now transition to hot proxy
             nodeStateTransitionComplete = false;
             if (startMode==HighAvailabilityMode.HOT_STANDBY) {
-                // if it should be hot standby, then we need to promote
-                // inform the world that we are transitioning (not eligible for promotion while going in to hot standby)
+                // if it should be hot standby, then we may need to promote
+                // inform the world that we are transitioning (but not eligible for promotion while going in to hot standby)
+                // (no harm in doing this twice)
                 publishHealth();
             }
             try {
@@ -465,6 +475,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     }
     
     protected void setInternalNodeState(ManagementNodeState newState) {
+        ManagementNodeState oldState = getInternalNodeState();
         synchronized (nodeStateHistory) {
             if (this.nodeState != newState) {
                 nodeStateHistory.add(0, MutableMap.<String,Object>of("state", newState, "timestamp", currentTimeMillis()));
@@ -472,8 +483,14 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     nodeStateHistory.remove(nodeStateHistory.size()-1);
                 }
             }
-            
             this.nodeState = newState;
+        }
+        
+        if (ManagementNodeState.isHotProxy(oldState) && !ManagementNodeState.isHotProxy(newState)) {
+            // could perhaps promote standby items on some transitions; but for now we stop the old read-only and re-load them
+            // TODO ideally there'd be an incremental rebind as well as an incremental persist
+            managementContext.getRebindManager().stopReadOnly();
+            clearManagedItems(ManagementTransitionMode.REBINDING_DESTROYED);
         }
     }
 
@@ -719,8 +736,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         if (!initializing) {
             String message = "Management node "+ownNodeId+" detected ";
             if (weAreNewMaster) message += "we should be master, changing from ";
+            else if (currMasterNodeRecord==null && newMasterNodeId==null) message += "master change attempted but no candidates ";
             else message += "master change, from ";
-            message +=currMasterNodeId + " (" + (currMasterNodeRecord==null ? "?" : timestampString(currMasterNodeRecord.getRemoteTimestamp())) + ")"
+            message +=currMasterNodeId + "(" + (currMasterNodeRecord==null ? "<none>" : timestampString(currMasterNodeRecord.getRemoteTimestamp())) + ")"
                 + " to "
                 + (newMasterNodeId == null ? "<none>" :
                     (weAreNewMaster ? "us " : "")
@@ -754,16 +772,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 LOG.warn("Problem in promption-listener (continuing)", e);
             }
         }
-        boolean wasHot = (getInternalNodeState()==ManagementNodeState.HOT_STANDBY || getInternalNodeState()==ManagementNodeState.HOT_BACKUP);
         setInternalNodeState(ManagementNodeState.MASTER);
         publishPromotionToMaster();
         try {
-            if (wasHot) {
-                // could just promote the standby items; but for now we stop the old read-only and re-load them, to make sure nothing has been missed
-                // TODO ideally there'd be an incremental rebind as well as an incremental persist
-                managementContext.getRebindManager().stopReadOnly();
-                clearManagedItems(ManagementTransitionMode.REBINDING_DESTROYED);
-            }
             managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader(), null, getInternalNodeState());
         } catch (Exception e) {
             LOG.error("Management node enountered problem during rebind when promoting self to master; demoting to FAILED and rethrowing: "+e);

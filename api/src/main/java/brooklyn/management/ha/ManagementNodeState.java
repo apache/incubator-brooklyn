@@ -61,4 +61,14 @@ public enum ManagementNodeState {
         // above should be exhaustive
         return Maybe.absent("Requested "+HighAvailabilityMode.class+" mode "+startMode+" was not expected");
     }
+
+    /** true for hot non-master modes, where we are proxying the data from the persistent store */
+    public static boolean isHotProxy(ManagementNodeState state) {
+        return state==HOT_BACKUP || state==HOT_STANDBY;
+    }
+
+    /** true for non-master modes which can be promoted to master */
+    public static boolean isStandby(ManagementNodeState state) {
+        return state==ManagementNodeState.STANDBY || state==ManagementNodeState.HOT_STANDBY;
+    }
 }

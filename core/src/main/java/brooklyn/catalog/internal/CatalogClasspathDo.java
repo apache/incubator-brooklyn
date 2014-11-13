@@ -149,7 +149,7 @@ public class CatalogClasspathDo {
                     baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
                     scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
                 } catch (Exception e) {
-                    log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
+                    log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+"): "+e);
                     Exceptions.propagateIfFatal(e);
                 }
             }

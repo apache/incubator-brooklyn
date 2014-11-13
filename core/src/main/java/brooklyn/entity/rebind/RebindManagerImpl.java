@@ -307,7 +307,7 @@ public class RebindManagerImpl implements RebindManager {
     @SuppressWarnings("unchecked")
     @Override
     public void startReadOnly(final ManagementNodeState mode) {
-        if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP) {
+        if (!ManagementNodeState.isHotProxy(mode)) {
             throw new IllegalStateException("Read-only rebind thread only permitted for hot proxy modes; not "+mode);
         }
         
@@ -1065,6 +1065,7 @@ public class RebindManagerImpl implements RebindManager {
             while (ptr != null) {
                 CatalogItem<?, ?> catalogItem = catalog.getCatalogItem(ptr.getType(), BrooklynCatalog.DEFAULT_VERSION);
                 if (catalogItem != null) {
+                    LOG.debug("Inferred catalog item ID "+catalogItem.getId()+" for "+entityManifest+" from ancestor "+ptr);
                     return catalogItem.getId();
                 }
                 if (ptr.getParent() != null) {
@@ -1086,6 +1087,7 @@ public class RebindManagerImpl implements RebindManager {
                 BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(managementContext, item);
                 boolean canLoadClass = loader.tryLoadClass(entityManifest.getType()).isPresent();
                 if (canLoadClass) {
+                    LOG.warn("Missing catalog item for "+entityManifest.getId()+", inferring as "+item.getId()+" because that is able to load the item");
                     return item.getId();
                 }
             }
