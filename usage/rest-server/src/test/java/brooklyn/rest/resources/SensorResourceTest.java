@@ -163,14 +163,12 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
         return response;
     }
     
-    /** Check we can get a sensor, and it defaults is to non-raw json, that is a string picking up the rendering hint */
-    @Test
-    public void testGet() throws Exception {
-        // the double quotes are here because getEntity(String) does not parse json
-        doSensorTest(null, null, "\"12345 frogs\"");
-    }
-
-    /** Same as {@link #testGet()}, but explicitly requesting json should give json */
+    /**
+     * Check we can get a sensor, explicitly requesting json; gives a string picking up the rendering hint.
+     * 
+     * If no "Accepts" header is given, then we don't control whether json or plain text comes back.
+     * It is dependent on the method order, which is compiler-specific.
+     */
     @Test
     public void testGetJson() throws Exception {
         doSensorTest(null, MediaType.APPLICATION_JSON_TYPE, "\"12345 frogs\"");
@@ -190,13 +188,12 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
         doSensorTest(null, MediaType.TEXT_PLAIN_TYPE, "12345 frogs");
     }
 
-    /** Check setting {@code raw} to {@code true} when we get ignores display value hint */
-    @Test
-    public void testGetRaw() throws Exception {
-        doSensorTest(true, null, 12345);
-    }
-    
-    /** As {@link #testGetRaw()} with json explicitly set (is the same) */
+    /** 
+     * Check that when we set {@code raw = true}, the result ignores the display value hint.
+     *
+     * If no "Accepts" header is given, then we don't control whether json or plain text comes back.
+     * It is dependent on the method order, which is compiler-specific.
+     */
     @Test
     public void testGetRawJson() throws Exception {
         doSensorTest(true, MediaType.APPLICATION_JSON_TYPE, 12345);
