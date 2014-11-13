@@ -38,6 +38,7 @@ import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.rebind.dto.BasicCatalogItemMemento;
 import brooklyn.entity.rebind.dto.BasicEnricherMemento;
 import brooklyn.entity.rebind.dto.BasicEntityMemento;
+import brooklyn.entity.rebind.dto.BasicFeedMemento;
 import brooklyn.entity.rebind.dto.BasicLocationMemento;
 import brooklyn.entity.rebind.dto.BasicPolicyMemento;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
@@ -85,6 +86,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         xstream.alias("entity", BasicEntityMemento.class);
         xstream.alias("location", BasicLocationMemento.class);
         xstream.alias("policy", BasicPolicyMemento.class);
+        xstream.alias("feed", BasicFeedMemento.class);
         xstream.alias("enricher", BasicEnricherMemento.class);
         xstream.alias("configKey", BasicConfigKey.class);
         xstream.alias("catalogItem", BasicCatalogItemMemento.class);

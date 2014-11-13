@@ -50,7 +50,6 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.Task;
-import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
@@ -151,13 +150,13 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
     public void testFunctionFeedRegisteredInInitIsPersisted() throws Exception {
         TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithFunctionFeedImpl.class));
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)1);
-        assertEquals(origEntity.feeds().getFeeds().size(), 1);
+        assertEquals(origEntity.feeds().getFeeds().size(), 2);
 
         newApp = rebind(false);
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
         Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
-        assertEquals(newFeeds.size(), 1);
+        assertEquals(newFeeds.size(), 2);
         
         // Expect the feed to still be polling
         newEntity.setAttribute(SENSOR_INT, null);
@@ -216,6 +215,12 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
                     .poll(FunctionPollConfig.forSensor(SENSOR_INT)
                             .period(POLL_PERIOD)
                             .callable(Callables.returning(1)))
+                    .build());
+            addFeed(FunctionFeed.builder()
+                    .entity(this)
+                    .poll(FunctionPollConfig.forSensor(SENSOR_STRING)
+                            .period(POLL_PERIOD)
+                            .callable(Callables.returning("OK")))
                     .build());
         }
     }
