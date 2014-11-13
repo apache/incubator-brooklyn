@@ -38,10 +38,10 @@ import brooklyn.entity.Feed;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
+import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
-import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.policy.Enricher;
@@ -50,7 +50,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -59,6 +58,7 @@ import brooklyn.util.time.Time;
 
 import com.google.api.client.util.Lists;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -178,17 +178,14 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final Semaphore persistingMutex = new Semaphore(1);
     private final Object startMutex = new Object();
+
+    private PersistenceActivityMetrics metrics;
     
-    /** @deprecated since 0.7.0 pass in an {@link ExecutionContext} and a {@link Duration} */
-    @Deprecated
-    public PeriodicDeltaChangeListener(ExecutionManager executionManager, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, long periodMillis) {
-        this(new BasicExecutionContext(executionManager), persister, exceptionHandler, Duration.of(periodMillis, TimeUnit.MILLISECONDS));
-    }
-    
-    public PeriodicDeltaChangeListener(ExecutionContext executionContext, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, Duration period) {
+    public PeriodicDeltaChangeListener(ExecutionContext executionContext, BrooklynMementoPersister persister, PersistenceExceptionHandler exceptionHandler, PersistenceActivityMetrics metrics, Duration period) {
         this.executionContext = executionContext;
         this.persister = persister;
         this.exceptionHandler = exceptionHandler;
+        this.metrics = metrics;
         this.period = period;
         
         this.persistPoliciesEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_POLICY_PERSISTENCE_PROPERTY);
@@ -210,20 +207,28 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 @Override public Task<Void> call() {
                     return Tasks.<Void>builder().dynamic(false).name("periodic-persister").body(new Callable<Void>() {
                         public Void call() {
+                            Stopwatch timer = Stopwatch.createStarted();
                             try {
                                 persistNow();
+                                metrics.noteSuccess(Duration.of(timer));
                                 return null;
                             } catch (RuntimeInterruptedException e) {
                                 LOG.debug("Interrupted persisting change-delta (rethrowing)", e);
+                                metrics.noteFailure(Duration.of(timer));
+                                metrics.noteError(e.toString());
                                 Thread.currentThread().interrupt();
                                 return null;
                             } catch (Exception e) {
                                 // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
                                 // if we throw an exception, then our task will never get executed again
                                 LOG.error("Problem persisting change-delta", e);
+                                metrics.noteFailure(Duration.of(timer));
+                                metrics.noteError(e.toString());
                                 return null;
                             } catch (Throwable t) {
                                 LOG.warn("Problem persisting change-delta (rethrowing)", t);
+                                metrics.noteFailure(Duration.of(timer));
+                                metrics.noteError(t.toString());
                                 throw Exceptions.propagate(t);
                             }
                         }}).build();

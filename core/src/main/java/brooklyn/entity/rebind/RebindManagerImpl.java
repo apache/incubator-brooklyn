@@ -58,6 +58,7 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
+import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -90,6 +91,7 @@ import brooklyn.mementos.TreeNode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
@@ -174,7 +176,12 @@ public class RebindManagerImpl implements RebindManager {
     private RebindFailureMode addPolicyFailureMode;
     private RebindFailureMode loadPolicyFailureMode;
     private QuorumCheck danglingRefsQuorumRequiredHealthy;
+    
+    private PersistenceActivityMetrics rebindMetrics = new PersistenceActivityMetrics();
+    private PersistenceActivityMetrics persistMetrics = new PersistenceActivityMetrics();
 
+    Integer firstRebindAppCount, firstRebindEntityCount, firstRebindItemCount;
+    
     /**
      * For tracking if rebinding, for {@link AbstractEnricher#isRebinding()} etc.
      *  
@@ -256,7 +263,7 @@ public class RebindManagerImpl implements RebindManager {
         }
         this.persistenceStoreAccess = checkNotNull(val, "persister");
         
-        this.persistenceRealChangeListener = new PeriodicDeltaChangeListener(managementContext.getServerExecutionContext(), persistenceStoreAccess, exceptionHandler, periodicPersistPeriod);
+        this.persistenceRealChangeListener = new PeriodicDeltaChangeListener(managementContext.getServerExecutionContext(), persistenceStoreAccess, exceptionHandler, persistMetrics, periodicPersistPeriod);
         this.persistencePublicChangeListener = new SafeChangeListener(persistenceRealChangeListener);
         
         if (persistenceRunning) {
@@ -530,8 +537,8 @@ public class RebindManagerImpl implements RebindManager {
             rebindActive.acquire();
         } catch (InterruptedException e1) { Exceptions.propagate(e1); }
         RebindTracker.setRebinding();
+        Stopwatch timer = Stopwatch.createStarted();
         try {
-            Stopwatch timer = Stopwatch.createStarted();
             Reflections reflections = new Reflections(classLoader);
             RebindContextImpl rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
             
@@ -970,6 +977,14 @@ public class RebindManagerImpl implements RebindManager {
             }
 
             exceptionHandler.onDone();
+            
+            rebindMetrics.noteSuccess(Duration.of(timer));
+            noteErrors(exceptionHandler, null);
+            if (firstRebindAppCount==null) {
+                firstRebindAppCount = apps.size();
+                firstRebindEntityCount = rebindContext.getEntities().size();
+                firstRebindItemCount = rebindContext.getAllBrooklynObjects().size();
+            }
 
             if (!isEmpty) {
                 BrooklynLogging.log(LOG, shouldLogRebinding() ? LoggingLevel.INFO : LoggingLevel.DEBUG, 
@@ -990,13 +1005,30 @@ public class RebindManagerImpl implements RebindManager {
             return apps;
 
         } catch (Exception e) {
+            rebindMetrics.noteFailure(Duration.of(timer));
+            
+            Exceptions.propagateIfFatal(e);
+            noteErrors(exceptionHandler, e);
             throw exceptionHandler.onFailed(e);
+            
         } finally {
             rebindActive.release();
             RebindTracker.reset();
         }
     }
 
+    private void noteErrors(final RebindExceptionHandler exceptionHandler, Exception primaryException) {
+        List<Exception> exceptions = exceptionHandler.getExceptions();
+        List<String> warnings = exceptionHandler.getWarnings();
+        if (primaryException!=null || !exceptions.isEmpty() || !warnings.isEmpty()) {
+            List<String> messages = MutableList.<String>of();
+            if (primaryException!=null) messages.add(primaryException.toString());
+            for (Exception e: exceptions) messages.add(e.toString());
+            for (String w: warnings) messages.add(w);
+            rebindMetrics.noteError(messages);
+        }
+    }
+    
     private String findCatalogItemId(ClassLoader cl, Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
         if (entityManifest.getCatalogItemId() != null) {
             return entityManifest.getCatalogItemId();
@@ -1418,7 +1450,24 @@ public class RebindManagerImpl implements RebindManager {
     }
 
     @Override
+    public Map<String, Object> getMetrics() {
+        Map<String,Object> result = MutableMap.of();
+
+        result.put("rebind", rebindMetrics.asMap());
+        result.put("persist", persistMetrics.asMap());
+        
+        // include first rebind counts, so we know whether we rebinded or not
+        result.put("firstRebindCounts", MutableMap.of(
+            "applications", firstRebindAppCount,
+            "entities", firstRebindEntityCount,
+            "allItems", firstRebindItemCount));
+        
+        return result;
+    }
+
+    @Override
     public String toString() {
         return super.toString()+"[mgmt="+managementContext.getManagementNodeId()+"]";
     }
+
 }

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -57,6 +58,7 @@ import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.flags.TypeCoercions;
@@ -254,6 +256,11 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         return existingState;
     }
 
+    @Override
+    public Map<String, Object> getHighAvailabilityMetrics() {
+        return mgmt().getHighAvailabilityManager().getMetrics();
+    }
+    
     @Override
     public long getHighAvailabitlityPriority() {
         return mgmt().getHighAvailabilityManager().getPriority();

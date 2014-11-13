@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -124,4 +125,8 @@ public interface RebindManager {
      * setting if the process fails after the clear!) */
     @VisibleForTesting
     public void forcePersistNow(boolean full, @Nullable PersistenceExceptionHandler exceptionHandler);
+
+    /** Metrics about rebind, last success, etc. */
+    public Map<String,Object> getMetrics();
+    
 }

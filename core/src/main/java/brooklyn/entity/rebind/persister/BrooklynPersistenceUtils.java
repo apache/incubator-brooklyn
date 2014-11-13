@@ -29,7 +29,6 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.BrooklynObjectType;

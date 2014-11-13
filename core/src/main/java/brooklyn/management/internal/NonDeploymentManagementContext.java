@@ -530,6 +530,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public BrooklynMementoRawData retrieveMementoRawData() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
+
+        @Override
+        public Map<String, Object> getMetrics() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
     }
 
     /**
@@ -588,6 +593,10 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
         @Override
         public long getPriority() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public Map<String, Object> getMetrics() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }

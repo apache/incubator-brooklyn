@@ -18,6 +18,8 @@
  */
 package brooklyn.rest.api;
 
+import java.util.Map;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -96,6 +98,11 @@ public interface ServerApi {
     @Path("/ha/state")
     @ApiOperation(value = "Returns the HA state of this management node")
     public ManagementNodeState getHighAvailabilityNodeState();
+    
+    @GET
+    @Path("/ha/metrics")
+    @ApiOperation(value = "Returns a collection of HA metrics")
+    public Map<String,Object> getHighAvailabilityMetrics();
     
     @POST
     @Path("/ha/state")

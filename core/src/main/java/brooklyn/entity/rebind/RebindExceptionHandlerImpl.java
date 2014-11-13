@@ -41,6 +41,7 @@ import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -62,9 +63,12 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<String> missingFeeds = Sets.newConcurrentHashSet();
     protected final Set<String> missingCatalogItems = Sets.newConcurrentHashSet();
     protected final Set<String> creationFailedIds = Sets.newConcurrentHashSet();
+    
     protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
     protected final Set<Exception> loadPolicyFailures = Sets.newConcurrentHashSet();
-    protected final List<Exception> exceptions = Collections.synchronizedList(Lists.<Exception>newArrayList());
+    
+    protected final Set<String> warnings = Collections.synchronizedSet(Sets.<String>newLinkedHashSet());
+    protected final Set<Exception> exceptions = Collections.synchronizedSet(Sets.<Exception>newLinkedHashSet());
     
     protected RebindContext context;
     protected boolean started = false;
@@ -113,6 +117,15 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         this.loadPolicyFailureMode = checkNotNull(builder.deserializePolicyFailureMode, "deserializePolicyFailureMode");
         this.danglingRefsQuorumRequiredHealthy = checkNotNull(builder.danglingRefsQuorumRequiredHealthy, "danglingRefsQuorumRequiredHealthy");
     }
+    
+    protected void warn(String message) {
+        warn(message, null);
+    }
+    protected void warn(String message, Throwable optionalError) {
+        if (optionalError==null) LOG.warn(message);
+        else LOG.warn(message, optionalError);
+        warnings.add(message);
+    }
 
     @Override
     public void onStart(RebindContext context) {
@@ -142,7 +155,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
                         loadPolicyFailures.add(new IllegalStateException(errmsg, e));
                         break;
                     case CONTINUE:
-                        LOG.warn(errmsg+"; continuing", e);
+                        warn(errmsg+"; continuing: "+e, e);
                         break;
                     default:
                         throw new IllegalStateException("Unexpected state '"+loadPolicyFailureMode+"' for loadPolicyFailureMode");
@@ -160,7 +173,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No entity found with id "+id);
         } else {
-            LOG.warn("No entity found with id "+id+"; returning null");
+            warn("No entity found with id "+id+"; returning null");
             return null;
         }
     }
@@ -171,7 +184,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No location found with id "+id);
         } else {
-            LOG.warn("No location found with id "+id+"; returning null");
+            warn("No location found with id "+id+"; returning null");
             return null;
         }
     }
@@ -182,7 +195,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No policy found with id "+id);
         } else {
-            LOG.warn("No policy found with id "+id+"; returning null");
+            warn("No policy found with id "+id+"; returning null");
             return null;
         }
     }
@@ -193,7 +206,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No enricher found with id "+id);
         } else {
-            LOG.warn("No enricher found with id "+id+"; returning null");
+            warn("No enricher found with id "+id+"; returning null");
             return null;
         }
     }
@@ -204,7 +217,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No feed found with id "+id);
         } else {
-            LOG.warn("No feed found with id "+id+"; returning null");
+            warn("No feed found with id "+id+"; returning null");
             return null;
         }
     }
@@ -215,7 +228,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No catalog item found with id "+id);
         } else {
-            LOG.warn("No catalog item found with id "+id+"; returning null");
+            warn("No catalog item found with id "+id+"; returning null");
             return null;
         }
     }
@@ -256,7 +269,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
                 addPolicyFailures.add(new IllegalStateException(errmsg, e));
                 break;
             case CONTINUE:
-                LOG.warn(errmsg+"; continuing", e);
+                warn(errmsg+"; continuing", e);
                 creationFailedIds.add(instance.getId());
                 break;
             default:
@@ -282,7 +295,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             addPolicyFailures.add(new IllegalStateException(errmsg, e));
             break;
         case CONTINUE:
-            LOG.warn(errmsg+"; continuing", e);
+            warn(errmsg+"; continuing", e);
             break;
         default:
             throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
@@ -301,7 +314,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             addPolicyFailures.add(new IllegalStateException(errmsg, e));
             break;
         case CONTINUE:
-            LOG.warn(errmsg+"; continuing", e);
+            warn(errmsg+"; continuing", e);
             break;
         default:
             throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
@@ -320,7 +333,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             addPolicyFailures.add(new IllegalStateException(errmsg, e));
             break;
         case CONTINUE:
-            LOG.warn(errmsg+"; continuing", e);
+            warn(errmsg+"; continuing", e);
             break;
         default:
             throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
@@ -349,7 +362,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
                     LOG.debug("Rebind: while interrupted, received "+errmsg+"/"+e+"; throwing interruption", e);
                 throw Exceptions.propagate(new InterruptedException("Detected interruptiong while not sleeping, due to secondary error rebinding: "+errmsg+"/"+e));
             }
-            LOG.warn("Rebind: continuing after "+errmsg, e);
+            warn("Rebind: continuing after "+errmsg, e);
         }
     }
     
@@ -364,6 +377,8 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             throw Exceptions.propagate(e);
         
         onDoneImpl(e);
+        exceptions.add(e);
+        
         throw new IllegalStateException("Rebind failed", e); // should have thrown exception above
     }
     
@@ -386,7 +401,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
                 allExceptions.add(new IllegalStateException("Dangling references ("+totalDangling+" of "+totalItems+") present without rebind context"));
             } else {
                 if (!danglingRefsQuorumRequiredHealthy.isQuorate(totalFound, totalItems)) {
-                    LOG.warn("Dangling item"+Strings.s(totalDangling)+" ("+totalDangling+" of "+totalItems+") found on rebind exceeds quorum, assuming failed: "+danglingIds);
+                    warn("Dangling item"+Strings.s(totalDangling)+" ("+totalDangling+" of "+totalItems+") found on rebind exceeds quorum, assuming failed: "+danglingIds);
                     allExceptions.add(new IllegalStateException("Too many dangling references: "+totalDangling+" of "+totalItems));
                 } else {
                     LOG.info("Dangling item"+Strings.s(totalDangling)+" ("+totalDangling+" of "+totalItems+") found on rebind, assuming deleted: "+danglingIds);
@@ -439,4 +454,15 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             throw compoundException;
         }
     }
+    
+    @Override
+    public List<Exception> getExceptions() {
+        return ImmutableList.copyOf(exceptions);
+    }
+    
+    @Override
+    public List<String> getWarnings() {
+        return ImmutableList.copyOf(warnings);
+    }
+    
 }

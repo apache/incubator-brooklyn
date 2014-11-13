@@ -18,6 +18,8 @@
  */
 package brooklyn.management.ha;
 
+import java.util.Map;
+
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -118,4 +120,8 @@ public interface HighAvailabilityManager {
     
     @VisibleForTesting
     ManagementPlaneSyncRecordPersister getPersister();
+
+    /** Returns a collection of metrics */
+    Map<String,Object> getMetrics();
+    
 }
