@@ -21,6 +21,7 @@ package brooklyn.entity.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -35,14 +36,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynLogging;
+import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
-import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -656,13 +658,17 @@ public class RebindManagerImpl implements RebindManager {
                 String entityId = entry.getKey();
                 EntityMementoManifest entityManifest = entry.getValue();
                 String catalogItemId = findCatalogItemId(mementoManifest.getEntityIdToManifest(), entityManifest);
+                
                 if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
                 
                 try {
                     Entity entity = newEntity(entityId, entityManifest.getType(), getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext));
                     ((EntityInternal)entity).getManagementSupport().setReadOnly( rebindContext.isReadOnly(entity) );
                     rebindContext.registerEntity(entityId, entity);
-                    
+
+                    if (forceCatalogItem(entityManifest)) {
+                        ((EntityInternal)entity).setCatalogItemId(catalogItemId);
+                    }
                 } catch (Exception e) {
                     exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityManifest.getType(), e);
                 }
@@ -948,17 +954,54 @@ public class RebindManagerImpl implements RebindManager {
             RebindTracker.reset();
         }
     }
-    
+
+    private boolean forceCatalogItem(EntityMementoManifest entityManifest) {
+        return entityManifest.getCatalogItemId() == null && 
+                BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND);
+    }
+
     private String findCatalogItemId(Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
-        EntityMementoManifest ptr = entityManifest;
-        while (ptr != null) {
-            if (ptr.getCatalogItemId() != null) {
-                return ptr.getCatalogItemId();
+        if (entityManifest.getCatalogItemId() != null) {
+            return entityManifest.getCatalogItemId();
+        }
+
+        if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND)) {
+            //First check if any of the parent entities has a catalogItemId set.
+            EntityMementoManifest ptr = entityManifest;
+            while (ptr != null) {
+                if (ptr.getCatalogItemId() != null) {
+                    CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(managementContext, ptr.getCatalogItemId());
+                    if (catalogItem != null) {
+                        return catalogItem.getId();
+                    } else {
+                        //Couldn't find a catalog item with this id, but return it anyway and
+                        //let the caller deal with the error.
+                        return ptr.getCatalogItemId();
+                    }
+                }
+                if (ptr.getParent() != null) {
+                    ptr = entityIdToManifest.get(ptr.getParent());
+                } else {
+                    ptr = null;
+                }
             }
-            if (ptr.getParent() != null) {
-                ptr = entityIdToManifest.get(ptr.getParent());
-            } else {
-                ptr = null;
+
+            //If no parent entity has the catalogItemId set try to match them by the type we are trying to load.
+            //The current convention is to set catalog item IDs to the java type (for both plain java or CAMP plan) they represent.
+            //This will be applicable only the first time the store is rebinded, while the catalog items don't have the default
+            //version appended to their IDs, but then we will have catalogItemId set on entities so not neede further anyways.
+            BrooklynCatalog catalog = managementContext.getCatalog();
+            ptr = entityManifest;
+            while (ptr != null) {
+                CatalogItem<?, ?> catalogItem = catalog.getCatalogItem(ptr.getType(), BrooklynCatalog.DEFAULT_VERSION);
+                if (catalogItem != null) {
+                    return catalogItem.getId();
+                }
+                if (ptr.getParent() != null) {
+                    ptr = entityIdToManifest.get(ptr.getParent());
+                } else {
+                    ptr = null;
+                }
             }
         }
         return null;

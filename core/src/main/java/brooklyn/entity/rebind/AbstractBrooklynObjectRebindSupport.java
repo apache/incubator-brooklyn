@@ -48,7 +48,10 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
         if (LOG.isTraceEnabled()) LOG.trace("Reconstructing: {}", memento.toVerboseString());
 
         instance.setDisplayName(memento.getDisplayName());
-        instance.setCatalogItemId(memento.getCatalogItemId());
+        //check if not already forced at entity creation time
+        if (instance.getCatalogItemId() == null) {
+            instance.setCatalogItemId(memento.getCatalogItemId());
+        }
         addConfig(rebindContext, memento);
         addTags(rebindContext, memento);
         addCustoms(rebindContext, memento);

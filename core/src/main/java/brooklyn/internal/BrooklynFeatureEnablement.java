@@ -72,6 +72,8 @@ public class BrooklynFeatureEnablement {
      * Defaults to false if system property is not set.
      */
     public static final String FEATURE_RENAME_THREADS = "brooklyn.executionManager.renameThreads";
+
+    public static final String FEATURE_INFER_CATALOG_ITEM_ON_REBIND = "brooklyn.backwardCompatibility.feature.inferCatalogItemOnRebind";
     
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
@@ -90,6 +92,7 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY, false);
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
         setDefault(FEATURE_RENAME_THREADS, false);
+        setDefault(FEATURE_INFER_CATALOG_ITEM_ON_REBIND, true);
     }
     
     static {
