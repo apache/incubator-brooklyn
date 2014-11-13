@@ -68,6 +68,12 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
         setAttribute(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
     }
 
+    @Override
+    public void rebind() {
+        super.rebind();
+        connectSensorsAsync();
+    }
+
     protected void connectSensorsAsync() {
         Callable<Void> asyncTask = new Callable<Void>() {
             @Override
