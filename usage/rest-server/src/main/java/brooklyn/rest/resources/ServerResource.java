@@ -249,6 +249,9 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public ManagementNodeState setHighAvailabilityNodeState(HighAvailabilityMode mode) {
+        if (mode==null)
+            throw new IllegalStateException("Missing parameter: mode");
+        
         HighAvailabilityManager haMgr = mgmt().getHighAvailabilityManager();
         ManagementNodeState existingState = haMgr.getNodeState();
         haMgr.changeMode(mode);
