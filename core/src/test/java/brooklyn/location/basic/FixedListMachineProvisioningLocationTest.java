@@ -219,7 +219,7 @@ public class FixedListMachineProvisioningLocationTest {
 
         // So no machines left; cannot re-obtain
         try {
-            SshMachineLocation obtained2 = provisioner2.obtain();
+            SshMachineLocation obtained2 = provisioner.obtain();
             fail("obtained="+obtained2);
         } catch (NoMachinesAvailableException e) {
             // success
