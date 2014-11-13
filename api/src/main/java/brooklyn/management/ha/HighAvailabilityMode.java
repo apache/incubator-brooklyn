@@ -52,6 +52,12 @@ public enum HighAvailabilityMode {
     HOT_STANDBY,
     
     /**
+     * Means node must be hot backup; do not attempt to become master (but it <i>can</i> start without a master).
+     * See {@link ManagementNodeState#HOT_BACKUP}. 
+     */
+    HOT_BACKUP,
+    
+    /**
      * Means node must be master; if there is already a master then fail fast on startup.
      * See {@link ManagementNodeState#MASTER}.
      */

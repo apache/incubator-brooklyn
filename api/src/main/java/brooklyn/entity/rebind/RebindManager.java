@@ -69,7 +69,7 @@ public interface RebindManager {
     /** Causes this management context to rebind, loading data from the given backing store.
      * use wisely, as this can cause local entities to be completely lost, or will throw in many other situations.
      * in general it may be invoked for a new node becoming {@link ManagementNodeState#MASTER} 
-     * or periodically for a node in {@link ManagementNodeState#HOT_STANDBY}. */
+     * or periodically for a node in {@link ManagementNodeState#HOT_STANDBY} or {@link ManagementNodeState#HOT_BACKUP}. */
     @Beta
     public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode);
 
@@ -92,13 +92,13 @@ public interface RebindManager {
      * Perform an initial load of state read-only and starts a background process 
      * reading (mirroring) state periodically.
      */
-    public void startReadOnly();
+    public void startReadOnly(ManagementNodeState mode);
     /** Stops the background reading (mirroring) of state. 
      * Interrupts any current activity and waits for it to cease. */
     public void stopReadOnly();
     
     /** Starts the appropriate background processes, {@link #startPersistence()} if {@link ManagementNodeState#MASTER},
-     * {@link #startReadOnly()} if {@link ManagementNodeState#HOT_STANDBY} */
+     * {@link #startReadOnly()} if {@link ManagementNodeState#HOT_STANDBY} or {@link ManagementNodeState#HOT_BACKUP} */
     public void start();
     /** Stops the appropriate background processes, {@link #stopPersistence()} or {@link #stopReadOnly()},
      * waiting for activity there to cease (interrupting in the case of {@link #stopReadOnly()}). */

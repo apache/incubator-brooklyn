@@ -274,10 +274,6 @@ public class ManagementPlaneSyncRecordPersisterToMultiFile implements Management
         return new File(dir, "master");
     }
 
-    private File getFileForPlaneId() {
-        return new File(dir, "plane.id");
-    }
-
     private File getFileForChangeLog() {
         return new File(dir, "change.log");
     }

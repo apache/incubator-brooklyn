@@ -298,7 +298,11 @@ public class RebindManagerImpl implements RebindManager {
     
     @SuppressWarnings("unchecked")
     @Override
-    public void startReadOnly() {
+    public void startReadOnly(final ManagementNodeState mode) {
+        if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP) {
+            throw new IllegalStateException("Read-only rebind thread only permitted for hot proxy modes; not "+mode);
+        }
+        
         if (persistenceRunning) {
             throw new IllegalStateException("Cannot start read-only when already running with persistence");
         }
@@ -315,7 +319,7 @@ public class RebindManagerImpl implements RebindManager {
         readOnlyRebindCount = 0;
 
         try {
-            rebind(null, null, ManagementNodeState.HOT_STANDBY);
+            rebind(null, null, mode);
         } catch (Exception e) {
             Exceptions.propagate(e);
         }
@@ -325,7 +329,7 @@ public class RebindManagerImpl implements RebindManager {
                 return Tasks.<Void>builder().dynamic(false).name("rebind (periodic run").body(new Callable<Void>() {
                     public Void call() {
                         try {
-                            rebind(null, null, ManagementNodeState.HOT_STANDBY);
+                            rebind(null, null, mode);
                             readOnlyRebindCount++;
                             return null;
                         } catch (RuntimeInterruptedException e) {
@@ -376,8 +380,8 @@ public class RebindManagerImpl implements RebindManager {
     @Override
     public void start() {
         ManagementNodeState target = getRebindMode();
-        if (target==ManagementNodeState.HOT_STANDBY) {
-            startReadOnly();
+        if (target==ManagementNodeState.HOT_STANDBY || target==ManagementNodeState.HOT_BACKUP) {
+            startReadOnly(target);
         } else if (target==ManagementNodeState.MASTER) {
             startPersistence();
         } else {
@@ -466,8 +470,8 @@ public class RebindManagerImpl implements RebindManager {
                 .build();
         final ManagementNodeState mode = modeO!=null ? modeO : getRebindMode();
         
-        if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.MASTER)
-            throw new IllegalStateException("Must be either master or read only to rebind (mode "+mode+")");
+        if (mode!=ManagementNodeState.MASTER && mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP)
+            throw new IllegalStateException("Must be either master or hot standby/backup to rebind (mode "+mode+")");
 
         ExecutionContext ec = BasicExecutionContext.getCurrentExecutionContext();
         if (ec == null) {
@@ -533,7 +537,7 @@ public class RebindManagerImpl implements RebindManager {
             
             exceptionHandler.onStart(rebindContext);
             
-            if (mode==ManagementNodeState.HOT_STANDBY) {
+            if (mode==ManagementNodeState.HOT_STANDBY || mode==ManagementNodeState.HOT_BACKUP) {
                 rebindContext.setAllReadOnly();
             } else {
                 Preconditions.checkState(mode==ManagementNodeState.MASTER, "Must be either master or read only to rebind (mode "+mode+")");
@@ -590,7 +594,7 @@ public class RebindManagerImpl implements RebindManager {
             BrooklynMementoManifest mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
 
             boolean isEmpty = mementoManifest.isEmpty();
-            if (mode!=ManagementNodeState.HOT_STANDBY) {
+            if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP) {
                 if (!isEmpty) { 
                     LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
                 } else {

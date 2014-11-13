@@ -72,7 +72,7 @@ public interface HighAvailabilityManager {
      * <p>
      * When this method returns, the status of this node will be set,
      * either {@link ManagementNodeState#MASTER} if appropriate 
-     * or {@link ManagementNodeState#STANDBY} / {@link ManagementNodeState#HOT_STANDBY}.
+     * or {@link ManagementNodeState#STANDBY} / {@link ManagementNodeState#HOT_STANDBY} / {@link ManagementNodeState#HOT_BACKUP}.
      *
      * @param startMode mode to start with
      * @throws IllegalStateException if current state of the management-plane doesn't match that desired by {@code startMode} 

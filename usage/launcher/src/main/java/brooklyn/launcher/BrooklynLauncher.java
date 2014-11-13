@@ -160,8 +160,9 @@ public class BrooklynLauncher {
     private String persistenceDir;
     private String persistenceLocation;
     private Duration persistPeriod = Duration.ONE_SECOND;
-    private Duration haHeartbeatTimeout = Duration.THIRTY_SECONDS;
-    private Duration haHeartbeatPeriod = Duration.ONE_SECOND;
+    // these default values come from config in HighAvailablilityManagerImpl
+    private Duration haHeartbeatTimeoutOverride = null;
+    private Duration haHeartbeatPeriodOverride = null;
     
     private volatile BrooklynWebServer webServer;
     private CampPlatform campPlatform;
@@ -433,7 +434,7 @@ public class BrooklynLauncher {
     }
 
     public BrooklynLauncher haHeartbeatTimeout(Duration val) {
-        this.haHeartbeatTimeout = val;
+        this.haHeartbeatTimeoutOverride = val;
         return this;
     }
 
@@ -446,7 +447,7 @@ public class BrooklynLauncher {
      * Controls both the frequency of heartbeats, and the frequency of checking the health of other nodes.
      */
     public BrooklynLauncher haHeartbeatPeriod(Duration val) {
-        this.haHeartbeatPeriod = val;
+        this.haHeartbeatPeriodOverride = val;
         return this;
     }
 
@@ -770,8 +771,8 @@ public class BrooklynLauncher {
             ManagementPlaneSyncRecordPersister persister =
                 new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext,
                     objectStore, managementContext.getCatalog().getRootClassLoader());
-            ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeout);
-            ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriod);
+            ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeoutOverride);
+            ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriodOverride);
             haManager.setPersister(persister);
         }
     }
@@ -790,19 +791,20 @@ public class BrooklynLauncher {
             // Let the HA manager decide when objectstore.prepare and rebindmgr.rebind need to be called 
             // (based on whether other nodes in plane are already running).
             
-            HighAvailabilityMode startMode;
+            HighAvailabilityMode startMode=null;
             switch (highAvailabilityMode) {
                 case AUTO:
                 case MASTER:
                 case STANDBY:
                 case HOT_STANDBY:
+                case HOT_BACKUP:
                     startMode = highAvailabilityMode;
                     break;
                 case DISABLED:
                     throw new IllegalStateException("Unexpected code-branch for high availability mode "+highAvailabilityMode);
-                default:       
-                    throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
             }
+            if (startMode==null)
+                throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
             
             LOG.debug("Management node (with HA) starting");
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
