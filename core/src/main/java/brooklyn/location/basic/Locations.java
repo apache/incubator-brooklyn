@@ -20,7 +20,9 @@ package brooklyn.location.basic;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,9 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.yaml.Yamls;
 
 import com.google.common.collect.ImmutableList;
 
@@ -104,5 +108,49 @@ public class Locations {
             log.debug("Stack trace for location of: Deprecated use of unmanaged location; will be managed automatically now but not supported in future versions", new Exception("TRACE for: Deprecated use of unmanaged location"));
             managementContext.getLocationManager().manage(loc);
         }
+    }
+
+    public static Location coerce(ManagementContext mgmt, Object rawO) {
+        if (rawO instanceof Location)
+            return (Location)rawO;
+        
+        Object raw = rawO;
+        if (raw instanceof String)
+            raw = Yamls.parseAll((String)raw).iterator().next();
+        
+        String name;
+        Map<?, ?> flags = null;
+        if (raw instanceof Map) {
+            // for yaml, take the key, and merge with locationFlags
+            Map<?,?> tm = ((Map<?,?>)raw);
+            if (tm.size()!=1) {
+                throw new IllegalArgumentException("Location "+rawO+" is invalid; maps must have only one key, being the location spec string");
+            }
+            name = (String) tm.keySet().iterator().next();
+            flags = (Map<?, ?>) tm.values().iterator().next();
+            
+        } else if (raw instanceof String) {
+            name = (String)raw;
+            
+        } else {
+            throw new IllegalArgumentException("Location "+rawO+" is invalid; can only parse strings or maps");
+        }
+        return mgmt.getLocationRegistry().resolve(name, flags);
+    }
+    
+    public static Collection<? extends Location> coerceToCollection(ManagementContext mgmt, Object rawO) {
+        Object raw = rawO;
+        if (raw instanceof Collection) {
+            List<Location> result = MutableList.<Location>of();
+            for (Object o: (Collection<?>)raw)
+                result.add(coerce(mgmt, o));
+            return result;
+        }
+        if (raw instanceof String) {
+            raw = Yamls.parseAll((String)raw).iterator().next();
+            if (raw instanceof Collection)
+                return coerceToCollection(mgmt, raw);
+        }
+        return Collections.singletonList( coerce(mgmt, raw) );
     }
 }
