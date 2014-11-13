@@ -21,7 +21,6 @@ package brooklyn.entity.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObject;
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogLoadMode;
@@ -84,6 +84,7 @@ import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
+import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.policy.Enricher;
@@ -560,8 +561,10 @@ public class RebindManagerImpl implements RebindManager {
             }
 
             //
-            // PHASE TWO
+            // PHASE TWO - build catalog so we can load other things
             //
+            
+            BrooklynObjectInstantiator instantiator = new BrooklynObjectInstantiator(classLoader, rebindContext, reflections);
             
             // Instantiate catalog items
             if (persistCatalogItemsEnabled) {
@@ -569,7 +572,7 @@ public class RebindManagerImpl implements RebindManager {
                 for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating catalog item {}", catalogItemMemento);
                     try {
-                        CatalogItem<?, ?> catalogItem = newCatalogItem(catalogItemMemento, reflections);
+                        CatalogItem<?, ?> catalogItem = instantiator.newCatalogItem(catalogItemMemento);
                         rebindContext.registerCatalogItem(catalogItemMemento.getId(), catalogItem);
                     } catch (Exception e) {
                         exceptionHandler.onCreateFailed(BrooklynObjectType.CATALOG_ITEM, catalogItemMemento.getId(), catalogItemMemento.getType(), e);
@@ -645,7 +648,7 @@ public class RebindManagerImpl implements RebindManager {
                 if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", locId);
                 
                 try {
-                    Location location = newLocation(locId, locType, reflections);
+                    Location location = instantiator.newLocation(locId, locType);
                     rebindContext.registerLocation(locId, location);
                 } catch (Exception e) {
                     exceptionHandler.onCreateFailed(BrooklynObjectType.LOCATION, locId, locType, e);
@@ -662,13 +665,10 @@ public class RebindManagerImpl implements RebindManager {
                 if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
                 
                 try {
-                    Entity entity = newEntity(entityId, entityManifest.getType(), getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext));
+                    Entity entity = (Entity) instantiator.newEntity(entityId, entityManifest.getType(), catalogItemId);
                     ((EntityInternal)entity).getManagementSupport().setReadOnly( rebindContext.isReadOnly(entity) );
                     rebindContext.registerEntity(entityId, entity);
 
-                    if (forceCatalogItem(entityManifest)) {
-                        ((EntityInternal)entity).setCatalogItemId(catalogItemId);
-                    }
                 } catch (Exception e) {
                     exceptionHandler.onCreateFailed(BrooklynObjectType.ENTITY, entityId, entityManifest.getType(), e);
                 }
@@ -693,7 +693,7 @@ public class RebindManagerImpl implements RebindManager {
                     logRebindingDebug("RebindManager instantiating policy {}", policyMemento);
                     
                     try {
-                        Policy policy = newPolicy(policyMemento, getLoadingContextFromCatalogItemId(policyMemento.getCatalogItemId(), classLoader, rebindContext));
+                        Policy policy = instantiator.newPolicy(policyMemento);
                         rebindContext.registerPolicy(policyMemento.getId(), policy);
                     } catch (Exception e) {
                         exceptionHandler.onCreateFailed(BrooklynObjectType.POLICY, policyMemento.getId(), policyMemento.getType(), e);
@@ -710,7 +710,7 @@ public class RebindManagerImpl implements RebindManager {
                     logRebindingDebug("RebindManager instantiating enricher {}", enricherMemento);
 
                     try {
-                        Enricher enricher = newEnricher(enricherMemento, reflections);
+                        Enricher enricher = instantiator.newEnricher(enricherMemento);
                         rebindContext.registerEnricher(enricherMemento.getId(), enricher);
                     } catch (Exception e) {
                         exceptionHandler.onCreateFailed(BrooklynObjectType.ENRICHER, enricherMemento.getId(), enricherMemento.getType(), e);
@@ -727,7 +727,7 @@ public class RebindManagerImpl implements RebindManager {
                     if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating feed {}", feedMemento);
 
                     try {
-                        Feed feed = newFeed(feedMemento, reflections);
+                        Feed feed = instantiator.newFeed(feedMemento);
                         rebindContext.registerFeed(feedMemento.getId(), feed);
                     } catch (Exception e) {
                         exceptionHandler.onCreateFailed(BrooklynObjectType.FEED, feedMemento.getId(), feedMemento.getType(), e);
@@ -955,11 +955,6 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
 
-    private boolean forceCatalogItem(EntityMementoManifest entityManifest) {
-        return entityManifest.getCatalogItemId() == null && 
-                BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND);
-    }
-
     private String findCatalogItemId(Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
         if (entityManifest.getCatalogItemId() != null) {
             return entityManifest.getCatalogItemId();
@@ -1070,184 +1065,226 @@ public class RebindManagerImpl implements RebindManager {
         return result;
     }
 
-    private Entity newEntity(String entityId, String entityType, BrooklynClassLoadingContext loader) {
-        Class<? extends Entity> entityClazz = loader.loadClass(entityType, Entity.class);
+    private class BrooklynObjectInstantiator {
+
+        private final ClassLoader classLoader;
+        private final RebindContextImpl rebindContext;
+        private final Reflections reflections;
         
-        if (InternalFactory.isNewStyle(entityClazz)) {
-            // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called.
-            // Creates an uninitialized entity, but that has correct id + proxy.
-            InternalEntityFactory entityFactory = managementContext.getEntityFactory();
-            Entity entity = entityFactory.constructEntity(entityClazz, Reflections.getAllInterfaces(entityClazz), entityId);
-            
-            return entity;
-
-        } else {
-            LOG.warn("Deprecated rebind of entity without no-arg constructor; this may not be supported in future versions: id="+entityId+"; type="+entityType);
-            
-            // There are several possibilities for the constructor; find one that works.
-            // Prefer passing in the flags because required for Application to set the management context
-            // TODO Feels very hacky!
-
-            Map<Object,Object> flags = Maps.newLinkedHashMap();
-            flags.put("id", entityId);
-            if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
-
-            // TODO document the multiple sources of flags, and the reason for setting the mgmt context *and* supplying it as the flag
-            // (NB: merge reported conflict as the two things were added separately)
-            Entity entity = (Entity) invokeConstructor(null, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
-            
-            // In case the constructor didn't take the Map arg, then also set it here.
-            // e.g. for top-level app instances such as WebClusterDatabaseExampleApp will (often?) not have
-            // interface + constructor.
-            // TODO On serializing the memento, we should capture which interfaces so can recreate
-            // the proxy+spec (including for apps where there's not an obvious interface).
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
-            if (entity instanceof AbstractApplication) {
-                FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
-            }
-            ((AbstractEntity)entity).setManagementContext(managementContext);
-            managementContext.prePreManage(entity);
-            
-            return entity;
+        private BrooklynObjectInstantiator(ClassLoader classLoader, RebindContextImpl rebindContext, Reflections reflections) {
+            this.classLoader = classLoader;
+            this.rebindContext = rebindContext;
+            this.reflections = reflections;
         }
-    }
-    
-    /**
-     * Constructs a new location, passing to its constructor the location id and all of memento.getFlags().
-     */
-    private Location newLocation(String locationId, String locationType, Reflections reflections) {
-        Class<? extends Location> locationClazz = reflections.loadClass(locationType, Location.class);
 
-        if (InternalFactory.isNewStyle(locationClazz)) {
-            // Not using loationManager.createLocation(LocationSpec) because don't want init() to be called
-            // TODO Need to rationalise this to move code into methods of InternalLocationFactory.
-            //      But note that we'll change all locations to be entities at some point!
-            // See same code approach used in #newEntity(EntityMemento, Reflections)
-            InternalLocationFactory locationFactory = managementContext.getLocationFactory();
-            Location location = locationFactory.constructLocation(locationClazz);
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", locationId), location);
-            managementContext.prePreManage(location);
-            ((AbstractLocation)location).setManagementContext(managementContext);
+        private Entity newEntity(String entityId, String entityType, String catalogItemId) {
+            Class<? extends Entity> entityClazz = load(Entity.class, entityType, catalogItemId, entityId);
+
+            Entity entity;
             
-            return location;
-        } else {
-            LOG.warn("Deprecated rebind of location without no-arg constructor; this may not be supported in future versions: id="+locationId+"; type="+locationType);
-            
-            // There are several possibilities for the constructor; find one that works.
-            // Prefer passing in the flags because required for Application to set the management context
-            // TODO Feels very hacky!
-            Map<String,?> flags = MutableMap.of("id", locationId, "deferConstructionChecks", true);
+            if (InternalFactory.isNewStyle(entityClazz)) {
+                // Not using entityManager.createEntity(EntitySpec) because don't want init() to be called.
+                // Creates an uninitialized entity, but that has correct id + proxy.
+                InternalEntityFactory entityFactory = managementContext.getEntityFactory();
+                entity = entityFactory.constructEntity(entityClazz, Reflections.getAllInterfaces(entityClazz), entityId);
 
-            return (Location) invokeConstructor(reflections, locationClazz, new Object[] {flags});
-        }
-        // note 'used' config keys get marked in BasicLocationRebindSupport
-    }
+            } else {
+                LOG.warn("Deprecated rebind of entity without no-arg constructor; this may not be supported in future versions: id="+entityId+"; type="+entityType);
 
-    /**
-     * Constructs a new policy, passing to its constructor the policy id and all of memento.getConfig().
-     */
-    private Policy newPolicy(PolicyMemento memento, BrooklynClassLoadingContext loader) {
-        String id = memento.getId();
-        String policyType = checkNotNull(memento.getType(), "policy type of %s must not be null in memento", id);
-        Class<? extends Policy> policyClazz = loader.loadClass(policyType, Policy.class);
+                // There are several possibilities for the constructor; find one that works.
+                // Prefer passing in the flags because required for Application to set the management context
+                // TODO Feels very hacky!
 
-        if (InternalFactory.isNewStyle(policyClazz)) {
-            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
-            Policy policy = policyFactory.constructPolicy(policyClazz);
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), policy);
-            ((AbstractPolicy)policy).setManagementContext(managementContext);
-            
-            return policy;
+                Map<Object,Object> flags = Maps.newLinkedHashMap();
+                flags.put("id", entityId);
+                if (AbstractApplication.class.isAssignableFrom(entityClazz)) flags.put("mgmt", managementContext);
 
-        } else {
-            LOG.warn("Deprecated rebind of policy without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+policyType);
-            
-            // There are several possibilities for the constructor; find one that works.
-            // Prefer passing in the flags because required for Application to set the management context
-            // TODO Feels very hacky!
-            Map<String, Object> flags = MutableMap.<String, Object>of(
-                    "id", id, 
-                    "deferConstructionChecks", true,
-                    "noConstructionInit", true);
-            flags.putAll(memento.getConfig());
+                // TODO document the multiple sources of flags, and the reason for setting the mgmt context *and* supplying it as the flag
+                // (NB: merge reported conflict as the two things were added separately)
+                entity = (Entity) invokeConstructor(null, entityClazz, new Object[] {flags}, new Object[] {flags, null}, new Object[] {null}, new Object[0]);
 
-            return (Policy) invokeConstructor(null, policyClazz, new Object[] {flags});
-        }
-    }
-
-    /**
-     * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
-     */
-    private Enricher newEnricher(EnricherMemento memento, Reflections reflections) {
-        String id = memento.getId();
-        String enricherType = checkNotNull(memento.getType(), "enricher type of %s must not be null in memento", id);
-        Class<? extends Enricher> enricherClazz = reflections.loadClass(enricherType, Enricher.class);
-
-        if (InternalFactory.isNewStyle(enricherClazz)) {
-            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
-            Enricher enricher = policyFactory.constructEnricher(enricherClazz);
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), enricher);
-            ((AbstractEnricher)enricher).setManagementContext(managementContext);
-            
-            return enricher;
-
-        } else {
-            LOG.warn("Deprecated rebind of enricher without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+enricherType);
-            
-            // There are several possibilities for the constructor; find one that works.
-            // Prefer passing in the flags because required for Application to set the management context
-            // TODO Feels very hacky!
-            Map<String, Object> flags = MutableMap.<String, Object>of(
-                    "id", id, 
-                    "deferConstructionChecks", true,
-                    "noConstructionInit", true);
-            flags.putAll(memento.getConfig());
-
-            return (Enricher) invokeConstructor(reflections, enricherClazz, new Object[] {flags});
-        }
-    }
-
-    /**
-     * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
-     */
-    private Feed newFeed(FeedMemento memento, Reflections reflections) {
-        String id = memento.getId();
-        String feedType = checkNotNull(memento.getType(), "feed type of %s must not be null in memento", id);
-        Class<? extends Feed> feedClazz = reflections.loadClass(feedType, Feed.class);
-
-        if (InternalFactory.isNewStyle(feedClazz)) {
-            InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
-            Feed feed = policyFactory.constructFeed(feedClazz);
-            FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), feed);
-            ((AbstractFeed)feed).setManagementContext(managementContext);
-            
-            return feed;
-
-        } else {
-            throw new IllegalStateException("rebind of feed without no-arg constructor unsupported: id="+id+"; type="+feedType);
-        }
-    }
-
-    @SuppressWarnings({ "rawtypes" })
-    private CatalogItem<?, ?> newCatalogItem(CatalogItemMemento memento, Reflections reflections) {
-        String id = memento.getId();
-        String itemType = checkNotNull(memento.getType(), "catalog item type of %s must not be null in memento", id);
-        Class<? extends CatalogItem> clazz = reflections.loadClass(itemType, CatalogItem.class);
-        return invokeConstructor(reflections, clazz, new Object[]{});
-    }
-    
-    private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
-        for (Object[] args : possibleArgs) {
-            try {
-                Optional<T> v = Reflections.invokeConstructorWithArgs(clazz, args, true);
-                if (v.isPresent()) {
-                    return v.get();
+                // In case the constructor didn't take the Map arg, then also set it here.
+                // e.g. for top-level app instances such as WebClusterDatabaseExampleApp will (often?) not have
+                // interface + constructor.
+                // TODO On serializing the memento, we should capture which interfaces so can recreate
+                // the proxy+spec (including for apps where there's not an obvious interface).
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", entityId), entity);
+                if (entity instanceof AbstractApplication) {
+                    FlagUtils.setFieldsFromFlags(ImmutableMap.of("mgmt", managementContext), entity);
                 }
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
+                ((AbstractEntity)entity).setManagementContext(managementContext);
+                managementContext.prePreManage(entity);
+            }
+            
+            setCatalogItemId(entity, catalogItemId);
+            return entity;
+        }
+
+        private void setCatalogItemId(BrooklynObject item, String catalogItemId) {
+            if (catalogItemId!=null) {
+                ((BrooklynObjectInternal)item).setCatalogItemId(catalogItemId);
             }
         }
-        throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
+
+        private <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, Memento memento) {
+            return load(bType, memento.getType(), memento.getCatalogItemId(), memento.getId());
+        }
+        @SuppressWarnings("unchecked")
+        private <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, String jType, String catalogItemId, String contextSuchAsId) {
+            checkNotNull(jType, "Type of %s (%s) must not be null", contextSuchAsId, bType.getSimpleName());
+            if (catalogItemId==null) {
+                // we have previously used reflections; not sure if that's needed?
+                try {
+                    return (Class<T>)reflections.loadClass(jType);
+                } catch (Exception e) {
+                    LOG.warn("Unable to load "+jType+" using reflections; will try standard context");
+                }
+            }
+            BrooklynClassLoadingContext loader = getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext);
+            return loader.loadClass(jType, bType);
+        }
+
+        /**
+         * Constructs a new location, passing to its constructor the location id and all of memento.getFlags().
+         */
+        private Location newLocation(String locationId, String locationType) {
+            Class<? extends Location> locationClazz = reflections.loadClass(locationType, Location.class);
+
+            if (InternalFactory.isNewStyle(locationClazz)) {
+                // Not using loationManager.createLocation(LocationSpec) because don't want init() to be called
+                // TODO Need to rationalise this to move code into methods of InternalLocationFactory.
+                //      But note that we'll change all locations to be entities at some point!
+                // See same code approach used in #newEntity(EntityMemento, Reflections)
+                InternalLocationFactory locationFactory = managementContext.getLocationFactory();
+                Location location = locationFactory.constructLocation(locationClazz);
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", locationId), location);
+                managementContext.prePreManage(location);
+                ((AbstractLocation)location).setManagementContext(managementContext);
+
+                return location;
+            } else {
+                LOG.warn("Deprecated rebind of location without no-arg constructor; this may not be supported in future versions: id="+locationId+"; type="+locationType);
+
+                // There are several possibilities for the constructor; find one that works.
+                // Prefer passing in the flags because required for Application to set the management context
+                // TODO Feels very hacky!
+                Map<String,?> flags = MutableMap.of("id", locationId, "deferConstructionChecks", true);
+
+                return (Location) invokeConstructor(reflections, locationClazz, new Object[] {flags});
+            }
+            // note 'used' config keys get marked in BasicLocationRebindSupport
+        }
+
+        /**
+         * Constructs a new policy, passing to its constructor the policy id and all of memento.getConfig().
+         */
+        private Policy newPolicy(PolicyMemento memento) {
+            String id = memento.getId();
+            Class<? extends Policy> policyClazz = load(Policy.class, memento.getType(), memento.getCatalogItemId(), id);
+            
+            Policy policy;
+            if (InternalFactory.isNewStyle(policyClazz)) {
+                InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+                policy = policyFactory.constructPolicy(policyClazz);
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), policy);
+                ((AbstractPolicy)policy).setManagementContext(managementContext);
+
+            } else {
+                LOG.warn("Deprecated rebind of policy without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+policyClazz);
+
+                // There are several possibilities for the constructor; find one that works.
+                // Prefer passing in the flags because required for Application to set the management context
+                // TODO Feels very hacky!
+                Map<String, Object> flags = MutableMap.<String, Object>of(
+                    "id", id, 
+                    "deferConstructionChecks", true,
+                    "noConstructionInit", true);
+                flags.putAll(memento.getConfig());
+
+                policy = invokeConstructor(null, policyClazz, new Object[] {flags});
+            }
+            
+            setCatalogItemId(policy, memento.getCatalogItemId());
+            return policy;
+        }
+
+        /**
+         * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
+         */
+        private Enricher newEnricher(EnricherMemento memento) {
+            Class<? extends Enricher> enricherClazz = load(Enricher.class, memento);
+            String id = memento.getId();
+
+            Enricher enricher;
+            if (InternalFactory.isNewStyle(enricherClazz)) {
+                InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+                enricher = policyFactory.constructEnricher(enricherClazz);
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), enricher);
+                ((AbstractEnricher)enricher).setManagementContext(managementContext);
+
+            } else {
+                LOG.warn("Deprecated rebind of enricher without no-arg constructor; this may not be supported in future versions: id="+id+"; type="+enricherClazz);
+
+                // There are several possibilities for the constructor; find one that works.
+                // Prefer passing in the flags because required for Application to set the management context
+                // TODO Feels very hacky!
+                Map<String, Object> flags = MutableMap.<String, Object>of(
+                    "id", id, 
+                    "deferConstructionChecks", true,
+                    "noConstructionInit", true);
+                flags.putAll(memento.getConfig());
+
+                enricher = invokeConstructor(reflections, enricherClazz, new Object[] {flags});
+            }
+            
+            setCatalogItemId(enricher, memento.getCatalogItemId());
+            return enricher;
+        }
+
+        /**
+         * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
+         */
+        private Feed newFeed(FeedMemento memento) {
+            Class<? extends Feed> feedClazz = load(Feed.class, memento);
+            String id = memento.getId();
+
+            Feed feed;
+            if (InternalFactory.isNewStyle(feedClazz)) {
+                InternalPolicyFactory policyFactory = managementContext.getPolicyFactory();
+                feed = policyFactory.constructFeed(feedClazz);
+                FlagUtils.setFieldsFromFlags(ImmutableMap.of("id", id), feed);
+                ((AbstractFeed)feed).setManagementContext(managementContext);
+
+            } else {
+                throw new IllegalStateException("rebind of feed without no-arg constructor unsupported: id="+id+"; type="+feedClazz);
+            }
+            
+            setCatalogItemId(feed, memento.getCatalogItemId());
+            return feed;
+        }
+
+        @SuppressWarnings({ "rawtypes" })
+        private CatalogItem<?, ?> newCatalogItem(CatalogItemMemento memento) {
+            String id = memento.getId();
+            // catalog item subtypes are internal to brooklyn, not in osgi
+            String itemType = checkNotNull(memento.getType(), "catalog item type of %s must not be null in memento", id);
+            Class<? extends CatalogItem> clazz = reflections.loadClass(itemType, CatalogItem.class);
+            return invokeConstructor(reflections, clazz, new Object[]{});
+        }
+
+        private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
+            for (Object[] args : possibleArgs) {
+                try {
+                    Optional<T> v = Reflections.invokeConstructorWithArgs(clazz, args, true);
+                    if (v.isPresent()) {
+                        return v.get();
+                    }
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
+            }
+            throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
+        }
     }
 
     /**

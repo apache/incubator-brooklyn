@@ -74,12 +74,12 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
 
     private static final Logger LOG = LoggerFactory.getLogger(XmlMementoSerializer.class);
 
-    @SuppressWarnings("unused")
     private final ClassLoader classLoader;
     private LookupContext lookupContext;
 
     public XmlMementoSerializer(ClassLoader classLoader) {
         this.classLoader = checkNotNull(classLoader, "classLoader");
+        xstream.setClassLoader(this.classLoader);
         
         // old (deprecated in 070? or earlier) single-file persistence uses this keyword; TODO remove soon in 080 ?
         xstream.alias("brooklyn", MutableBrooklynMemento.class);

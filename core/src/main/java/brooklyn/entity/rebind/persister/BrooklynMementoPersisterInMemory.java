@@ -28,11 +28,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntityProxy;
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindExceptionHandler;
@@ -155,6 +157,24 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                     @Override public CatalogItem<?, ?> lookupCatalogItem(String id) {
                         Class<?> clazz = loadClass(manifest.getCatalogItemMemento(id).getType());
                         return (CatalogItem<?,?>) invokeConstructor(clazz, new Object[0]);
+                    }
+                    
+                    @Override
+                    public BrooklynObject lookup(BrooklynObjectType type, String id) {
+                        switch (type) {
+                        case CATALOG_ITEM: return lookupCatalogItem(id);
+                        case ENRICHER: return lookupEnricher(id);
+                        case ENTITY: return lookupEntity(id);
+                        case FEED: return lookupFeed(id);
+                        case LOCATION: return lookupLocation(id);
+                        case POLICY: return lookupPolicy(id);
+                        case UNKNOWN: return null;
+                        }
+                        throw new IllegalStateException("Unexpected type "+type+" / id "+id);
+                    }
+                    @Override
+                    public BrooklynObject peek(BrooklynObjectType type, String id) {
+                        return lookup(type, id);
                     }
 
                     private Class<?> loadClass(String name) {
