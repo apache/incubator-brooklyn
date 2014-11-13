@@ -51,11 +51,13 @@ services:
     brooklyn.config:
       name: output.last
       command: tail -1 server-input
+      period: 100ms
       
   - type: brooklyn.entity.software.ssh.SshCommandSensor
     brooklyn.config:
       name: output.all
       command: cat server-input
+      period: 100ms
 
 # a client to hit netcat
 - type: brooklyn.entity.basic.VanillaSoftwareProcess

@@ -47,7 +47,7 @@ public class AddSensor<T> implements EntityInitializer {
 
     public static final ConfigKey<String> SENSOR_NAME = ConfigKeys.newStringConfigKey("name", "The name of the sensor to create");
     public static final ConfigKey<Duration> SENSOR_PERIOD = ConfigKeys.newConfigKey(Duration.class, "period", "Period, including units e.g. 1m or 5s or 200ms; default 5 minutes", Duration.FIVE_MINUTES);
-    public static final ConfigKey<String> SENSOR_TYPE = ConfigKeys.newStringConfigKey("targetType", "Target type for the value; default String", "String");
+    public static final ConfigKey<String> SENSOR_TYPE = ConfigKeys.newStringConfigKey("targetType", "Target type for the value; default String", "java.lang.String");
 
     protected final String name;
     protected final Duration period;
@@ -76,14 +76,22 @@ public class AddSensor<T> implements EntityInitializer {
         return Sensors.newSensor(clazz, name);
     }
 
+    @SuppressWarnings("unchecked")
     protected Class<T> getType(String className) {
-        Class<T> clazz = null;
         try {
-            clazz = (Class<T>) Class.forName(className);
+            return (Class<T>) Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Invalid target type for sensor "+name+": " + className);
+            if (!className.contains(".")) {
+                // could be assuming "java.lang" package; try again with that
+                try {
+                    return (Class<T>) Class.forName("java.lang."+className);
+                } catch (ClassNotFoundException e2) {
+                    throw new IllegalArgumentException("Invalid target type for sensor "+name+": " + className+" (also tried java.lang."+className+")");
+                }
+            } else {
+                throw new IllegalArgumentException("Invalid target type for sensor "+name+": " + className);
+            }
         }
-        return clazz;
     }
 
     protected String getFullClassName(String className) {

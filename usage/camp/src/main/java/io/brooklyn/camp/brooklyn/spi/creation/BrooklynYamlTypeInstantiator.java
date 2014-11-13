@@ -131,11 +131,18 @@ public abstract class BrooklynYamlTypeInstantiator {
             Optional<? extends T> result = Reflections.invokeConstructorWithArgs(type, cfg);
             if (result.isPresent()) 
                 return result.get();
+            
+            ConfigBag cfgBag = ConfigBag.newInstance(cfg);
+            result = Reflections.invokeConstructorWithArgs(type, cfgBag);
+            if (result.isPresent()) 
+                return result.get();
+            
             if (cfg.isEmpty()) {
                 result = Reflections.invokeConstructorWithArgs(type);
                 if (result.isPresent()) 
                     return result.get();
             }
+            
             throw new IllegalStateException("No known mechanism for constructing type "+type+" in "+factory.contextForLogging);
         }
 

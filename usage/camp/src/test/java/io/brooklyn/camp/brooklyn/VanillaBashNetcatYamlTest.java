@@ -82,7 +82,7 @@ public class VanillaBashNetcatYamlTest extends AbstractYamlTest {
         // and check we get the right result 
         EntityTestUtils.assertAttributeEventually(netcat, SENSOR_OUTPUT_ALL, StringPredicates.containsLiteral("hi netcat"));
         log.info("invoked ping from "+pinger+" to "+netcat+", 'all' sensor shows:\n"+
-            netcat.getAttribute(SENSOR_OUTPUT_ALL));
+                netcat.getAttribute(SENSOR_OUTPUT_ALL));
 
         // netcat should now fail and restart
         EntityTestUtils.assertAttributeEventually(netcat, Attributes.SERVICE_STATE_ACTUAL, Predicates.not(Predicates.equalTo(Lifecycle.RUNNING)));
@@ -96,7 +96,7 @@ public class VanillaBashNetcatYamlTest extends AbstractYamlTest {
         // checking right result
         EntityTestUtils.assertAttributeEventually(netcat, SENSOR_OUTPUT_ALL, StringPredicates.containsLiteral("yo yo yo"));
         log.info("invoked ping again from "+pinger+" to "+netcat+", 'all' sensor shows:\n"+
-            netcat.getAttribute(SENSOR_OUTPUT_ALL));
+                netcat.getAttribute(SENSOR_OUTPUT_ALL));
         
         // and it's propagated to the app
         EntityTestUtils.assertAttributeEventually(app, Sensors.newStringSensor("output.last"), StringPredicates.containsLiteral("yo yo yo"));
