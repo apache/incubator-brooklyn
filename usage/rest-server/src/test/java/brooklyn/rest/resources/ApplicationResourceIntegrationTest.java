@@ -61,7 +61,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
             .build();
 
     @Test(groups="Integration")
-    public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
+    public void testDeployRedisApplication() throws Exception {
         ClientResponse response = clientDeploy(redisSpec);
 
         assertEquals(response.getStatus(), 201);
@@ -101,16 +101,19 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     }
 
     @Test(groups="Integration", dependsOnMethods = { "testListSensorsRedis", "testListEntities" })
-    public void testTriggerRedisStopEffector() throws InterruptedException {
+    public void testTriggerRedisStopEffector() throws Exception {
         ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(ClientResponse.class, ImmutableMap.of());
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
         final URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
-        final String expectedStatus = String.format("\"%s\"", Lifecycle.STOPPED.toString());
+        final String expectedStatus = Lifecycle.STOPPED.toString();
         Asserts.succeedsEventually(MutableMap.of("timeout", 60 * 1000), new Runnable() {
             public void run() {
+                // Accept with and without quotes; if don't specify "Accepts" header, then
+                // might get back json or plain text (depending on compiler / java runtime 
+                // used for SensorApi!)
                 String val = client().resource(stateSensor).get(String.class);
                 assertTrue(expectedStatus.equalsIgnoreCase(val) || ("\""+expectedStatus+"\"").equalsIgnoreCase(val), "state="+val);
             }
@@ -118,7 +121,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     }
 
     @Test(groups="Integration", dependsOnMethods = "testTriggerRedisStopEffector" )
-    public void testDeleteRedisApplication() throws TimeoutException, InterruptedException {
+    public void testDeleteRedisApplication() throws Exception {
         int size = getManagementContext().getApplications().size();
         ClientResponse response = client().resource("/v1/applications/redis-app")
                 .delete(ClientResponse.class);
