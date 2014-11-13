@@ -36,6 +36,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
@@ -66,7 +67,7 @@ public class Jboss7ServerIntegrationTest {
 
         localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        keystoreFile = createTemporaryKeyStore("myname", "mypass");
+        keystoreFile = AbstractWebAppFixtureIntegrationTest.createTemporaryKeyStore("myname", "mypass");
     }
 
     @AfterMethod(alwaysRun=true)
@@ -75,26 +76,6 @@ public class Jboss7ServerIntegrationTest {
         if (keystoreFile != null) keystoreFile.delete();
     }
 
-    private File createTemporaryKeyStore(String alias, String password) throws Exception {
-        FluentKeySigner signer = new FluentKeySigner("brooklyn-test").selfsign();
-        
-        KeyStore ks = SecureKeys.newKeyStore();
-        ks.setKeyEntry(
-                alias, 
-                signer.getKey().getPrivate(), 
-                password.toCharArray(), 
-                new Certificate[] { signer.getAuthorityCertificate() });
-        
-        File file = File.createTempFile("test", "keystore");
-        FileOutputStream fos = new FileOutputStream(file);
-        try {
-            ks.store(fos, "mypass".toCharArray());
-            return file;
-        } finally {
-            Streams.closeQuietly(fos);
-        }
-    }
-    
     @Test(groups = "Integration")
     public void testHttp() throws Exception {
         final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)

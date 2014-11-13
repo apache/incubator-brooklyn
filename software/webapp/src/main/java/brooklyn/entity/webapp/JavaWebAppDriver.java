@@ -38,15 +38,17 @@ public interface JavaWebAppDriver extends JavaSoftwareProcessDriver {
     void deploy(File f, String targetName);
 
     /**
-     * deploys a URL as a webapp at the appserver;
-     * returns a token which can be used as an argument to undeploy,
-     * typically the web context with leading slash where the app can be reached (just "/" for ROOT)
+     * Deploys a URL as a webapp at the appserver.
      * <p>
-     * see {@link JavaWebAppSoftwareProcess#deploy(String, String)} for details of how input filenames are handled
+     * See {@link JavaWebAppSoftwareProcess#deploy(String, String)} for details of how input filenames are handled.
+     *
+     * @return A token which can be used as an argument to undeploy.
+     *     Typically the web context with leading slash where the app can be reached (just "/" for ROOT)
      */
     String deploy(String url, String targetName);
     
     void undeploy(String targetName);
     
     FilenameToWebContextMapper getFilenameContextMapper();
+
 }

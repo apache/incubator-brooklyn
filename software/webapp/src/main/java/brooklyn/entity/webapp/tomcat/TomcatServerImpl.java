@@ -53,7 +53,9 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
 
         if (getDriver().isJmxEnabled()) {
             String requestProcessorMbeanName = "Catalina:type=GlobalRequestProcessor,name=\"http-*\"";
-            String connectorMbeanName = format("Catalina:type=Connector,port=%s", getAttribute(HTTP_PORT));
+
+            Integer port = isHttpsEnabled() ? getAttribute(HTTPS_PORT) : getAttribute(HTTP_PORT);
+            String connectorMbeanName = format("Catalina:type=Connector,port=%s", port);
 
             jmxWebFeed = JmxFeed.builder()
                     .entity(this)

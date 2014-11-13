@@ -54,7 +54,7 @@ import com.google.common.collect.Sets;
  * current number of members.
  */
 public abstract class AbstractGroupImpl extends AbstractEntity implements AbstractGroup {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGroup.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractGroupImpl.class);
 
     private Set<Entity> members = Sets.newLinkedHashSet();
 

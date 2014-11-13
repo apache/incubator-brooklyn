@@ -135,12 +135,16 @@ public class Enrichers {
             return new PropagatorBuilder(true, vals);
         }
         
-        /** builds an enricher which transforms a given sensor:
-         * <li> applying a (required) function ({@link TransformerBuilder#computing(Function)}, or {@link TransformerBuilder#computingAverage()}/{@link TransformerBuilder#computingSum()}, mandatory);
+        /**
+         * Builds an enricher which transforms a given sensor:
+         * <li> applying a (required) function ({@link TransformerBuilder#computing(Function)}, or
+         *      {@link AbstractAggregatorBuilder#computingAverage()}/
+         *      {@link AbstractAggregatorBuilder#computingSum()}, mandatory);
          * <li> and publishing it on the entity where the enricher is attached;
          * <li> optionally taking the sensor from a different source entity ({@link TransformerBuilder#from(Entity)});
          * <li> and optionally publishing it as a different sensor ({@link TransformerBuilder#publishing(AttributeSensor)});
-         * <p> (You must supply at least one of the optional values, of course, otherwise the enricher may loop endlessly!) */
+         * <p> You must supply at least one of the optional values, of course, otherwise the enricher may loop endlessly!
+         */
         public <S> TransformerBuilder<S, Object> transforming(AttributeSensor<S> val) {
             return new TransformerBuilder<S, Object>(val);
         }
