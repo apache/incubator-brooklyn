@@ -43,7 +43,11 @@ public class LocationUsage {
         private final String applicationId;
 
         public LocationEvent(Lifecycle state, String entityId, String entityType, String applicationId) {
-            this.date = new Date();
+            this(new Date(), state, entityId, entityType, applicationId);
+        }
+        
+        public LocationEvent(Date date, Lifecycle state, String entityId, String entityType, String applicationId) {
+            this.date = checkNotNull(date, "date");
             this.state = checkNotNull(state, "state");
             this.entityId = checkNotNull(entityId, "entityId");
             this.entityType = checkNotNull(entityType, "entityType");
@@ -68,6 +72,20 @@ public class LocationUsage {
 
         public String getApplicationId() {
             return applicationId;
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof LocationEvent)) return false;
+            LocationEvent o = (LocationEvent) other;
+            return Objects.equal(date, o.date) && Objects.equal(state, o.state) 
+                    && Objects.equal(entityId, o.entityId) && Objects.equal(entityType, o.entityType)
+                    && Objects.equal(applicationId, o.applicationId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(date, state, entityId, entityType, applicationId);
         }
         
         @Override
