@@ -287,11 +287,11 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return isPackageInstall ? "/etc/riak" : Urls.mergePaths(getExpandedInstallDir(), "etc");
     }
 
-    private String getRiakCmd() {
+    protected String getRiakCmd() {
         return isPackageInstall ? "riak" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak");
     }
 
-    private String getRiakAdminCmd() {
+    protected String getRiakAdminCmd() {
         return isPackageInstall ? "riak-admin" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak-admin");
     }
 
@@ -414,10 +414,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return ((RiakNode) entity).hasJoinedCluster();
     }
 
-    private boolean isRiakOnPath() {
+    protected boolean isRiakOnPath() {
         return (newScript("riakOnPath")
                 .body.append("which riak")
                 .execute() == 0);
+    }
+
+    protected boolean isPackageInstall() {
+        return isPackageInstall;
     }
 
     private String getRiakName() {
@@ -429,7 +433,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return isPackageInstall ? "/var/lib/riak/ring" : Urls.mergePaths(getExpandedInstallDir(), "lib/ring");
     }
 
-    private boolean isVersion1() {
+    protected boolean isVersion1() {
         return getVersion().startsWith("1.");
     }
 
