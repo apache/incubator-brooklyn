@@ -310,7 +310,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             BrooklynPersistenceUtils.writeMemento(mgmt(), targetStore, preferredOrigin);            
             
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ArchiveBuilder.zip().addDirContentsAt( ((FileBasedObjectStore)targetStore).getBaseDir(), "/" ).stream(baos);
+            ArchiveBuilder.zip().addDirContentsAt( ((FileBasedObjectStore)targetStore).getBaseDir(), ((FileBasedObjectStore)targetStore).getBaseDir().getName() ).stream(baos);
             String filename = "brooklyn-state-"+label+".zip";
             return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .header("Content-Disposition","attachment; filename = "+filename)
