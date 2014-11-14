@@ -318,6 +318,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             osgiManager.stop();
             osgiManager = null;
         }
+        if (usageManager != null) usageManager.terminate();
         if (execution != null) execution.shutdownNow();
         if (gc != null) gc.shutdownNow();
     }
