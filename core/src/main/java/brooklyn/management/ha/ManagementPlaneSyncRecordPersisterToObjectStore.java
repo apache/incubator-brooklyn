@@ -125,8 +125,16 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     protected synchronized void init() {
         if (!started) {
             started = true;
+            //Leading slash causes problems in SL, it's not a correct file name so remove it.
+            //But once removed we can't load the master file from existing persistence stores.
+            //Try to detect if the old file exists, if so use old-style names, otherwise use the correct names.
             masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/master"));
-            changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
+            if (masterWriter.get() != null) {
+                changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
+            } else {
+                masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("master"));
+                changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("change.log"));
+            }
         }
     }
 
