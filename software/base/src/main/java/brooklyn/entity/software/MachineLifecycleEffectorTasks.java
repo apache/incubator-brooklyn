@@ -152,12 +152,18 @@ public abstract class MachineLifecycleEffectorTasks {
         return new EffectorBody<Void>() {
             @Override
             public Void call(ConfigBag parameters) {
+                Collection<? extends Location> locations  = null;
+
                 Object locationsRaw = parameters.getStringKey(LOCATIONS.getName());
-                Collection<? extends Location> locations = Locations.coerceToCollection(entity().getManagementContext(), locationsRaw);
+                if (locationsRaw != null) {
+                    locations = Locations.coerceToCollection(entity().getManagementContext(), locationsRaw);
+                }
+
                 if (locations==null) {
                     // null/empty will mean to inherit from parent
                     locations = Collections.emptyList();
                 }
+
                 start(locations);
                 return null;
             }
