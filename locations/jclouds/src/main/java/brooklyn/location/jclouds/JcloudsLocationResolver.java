@@ -177,17 +177,20 @@ public class JcloudsLocationResolver implements LocationResolver {
         Map jcloudsProperties = new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties(providerOrApi, regionOrEndpoint, namedLocation, allProperties);
         jcloudsProperties.putAll(locationFlags);
         
-        if (isProvider) {
-            // providers from ServiceLoader take a location (endpoint already configured), and optionally a region name
-            // NB blank might be supplied if spec string is "mycloud:" -- that should be respected, 
-            // whereas no parameter/regionName ie null value -- "mycloud" -- means don't set
-            if (regionOrEndpoint!=null)
-                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionOrEndpoint);
-        } else {
-            // other "providers" are APIs so take an _endpoint_ (but not a location);
-            // see note above re null here
-            if (regionOrEndpoint!=null)
-                jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionOrEndpoint);
+        if (regionOrEndpoint!=null) {
+            // apply the regionOrEndpoint (e.g. from the parameter) as appropriate -- but only if it has not been overridden
+            if (isProvider) {
+                // providers from ServiceLoader take a location (endpoint already configured), and optionally a region name
+                // NB blank might be supplied if spec string is "mycloud:" -- that should be respected, 
+                // whereas no parameter/regionName ie null value -- "mycloud" -- means don't set
+                if (regionOrEndpoint!=null && Strings.isBlank(Strings.toString(jcloudsProperties.get(JcloudsLocationConfig.CLOUD_REGION_ID.getName()))))
+                    jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionOrEndpoint);
+            } else {
+                // other "providers" are APIs so take an _endpoint_ (but not a location);
+                // see note above re null here
+                if (regionOrEndpoint!=null && Strings.isBlank(Strings.toString(jcloudsProperties.get(JcloudsLocationConfig.CLOUD_ENDPOINT.getName()))))
+                    jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionOrEndpoint);
+            }
         }
         
         return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
