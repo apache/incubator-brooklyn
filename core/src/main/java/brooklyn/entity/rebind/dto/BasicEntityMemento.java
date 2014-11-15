@@ -197,9 +197,10 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         }
         ConfigKey<?> resultStatic = getStaticConfigKeys().get(key);
         if (resultStatic!=null) return resultStatic;
-        // if it was a legacy key, if it is added back, drop the legacy reference
         if (result!=null) return result;
-        // can happen on rebind if a key has gone away; it will not be declared in the file or in the 
+        // can come here on rebind if a key has gone away in the class, so create a generic one; 
+        // but if it was previously found to a legacy key (below) which is added back after a regind, 
+        // gnore the legacy description (several lines above) and add the key back from static (code just above)
         log.warn("Config key "+key+": "+LEGACY_KEY_DESCRIPTION);
         return ConfigKeys.newConfigKey(Object.class, key, LEGACY_KEY_DESCRIPTION);
     }
@@ -222,9 +223,8 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
         }
         AttributeSensor<?> resultStatic = (AttributeSensor<?>) getStaticSensorKeys().get(key);
         if (resultStatic!=null) return resultStatic;
-        // if it was a legacy key, if it is added back, drop the legacy reference
         if (result!=null) return result;
-        // can happen on rebind if a key has gone away; it will not be declared in the file or in the 
+        // see notes on legacy config key
         log.warn("Sensor "+key+": "+LEGACY_KEY_DESCRIPTION);
         return Sensors.newSensor(Object.class, key, LEGACY_KEY_DESCRIPTION);
     }

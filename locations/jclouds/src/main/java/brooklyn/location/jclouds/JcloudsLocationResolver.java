@@ -183,12 +183,12 @@ public class JcloudsLocationResolver implements LocationResolver {
                 // providers from ServiceLoader take a location (endpoint already configured), and optionally a region name
                 // NB blank might be supplied if spec string is "mycloud:" -- that should be respected, 
                 // whereas no parameter/regionName ie null value -- "mycloud" -- means don't set
-                if (regionOrEndpoint!=null && Strings.isBlank(Strings.toString(jcloudsProperties.get(JcloudsLocationConfig.CLOUD_REGION_ID.getName()))))
+                if (Strings.isBlank(Strings.toString(jcloudsProperties.get(JcloudsLocationConfig.CLOUD_REGION_ID.getName()))))
                     jcloudsProperties.put(JcloudsLocationConfig.CLOUD_REGION_ID.getName(), regionOrEndpoint);
             } else {
                 // other "providers" are APIs so take an _endpoint_ (but not a location);
                 // see note above re null here
-                if (regionOrEndpoint!=null && Strings.isBlank(Strings.toString(jcloudsProperties.get(JcloudsLocationConfig.CLOUD_ENDPOINT.getName()))))
+                if (Strings.isBlank(Strings.toString(jcloudsProperties.get(JcloudsLocationConfig.CLOUD_ENDPOINT.getName()))))
                     jcloudsProperties.put(JcloudsLocationConfig.CLOUD_ENDPOINT.getName(), regionOrEndpoint);
             }
         }
