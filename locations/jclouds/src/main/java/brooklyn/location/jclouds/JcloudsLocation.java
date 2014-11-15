@@ -888,6 +888,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         if (t instanceof EC2TemplateOptions) {
                             if (v==null) return;
                             ((EC2TemplateOptions)t).userData(v.toString().getBytes());
+                            // TODO avail in next jclouds thanks to @andreaturli
+//                          } else if (t instanceof SoftLayerTemplateOptions) {
+//                              ((SoftLayerTemplateOptions)t).userData(Strings.toString(v));
                         } else {
                             LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
                         }
@@ -897,6 +900,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         if (t instanceof EC2TemplateOptions) {
                             byte[] bytes = toByteArray(v);
                             ((EC2TemplateOptions)t).userData(bytes);
+                          // TODO avail in next jclouds thanks to @andreaturli
+//                        } else if (t instanceof SoftLayerTemplateOptions) {
+//                            ((SoftLayerTemplateOptions)t).userData(Strings.toString(v));
                         } else {
                             LOG.info("ignoring userData({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
                         }

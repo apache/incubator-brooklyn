@@ -111,6 +111,8 @@ public class Locations {
     }
 
     public static Location coerce(ManagementContext mgmt, Object rawO) {
+        if (rawO==null)
+            return null;
         if (rawO instanceof Location)
             return (Location)rawO;
         
