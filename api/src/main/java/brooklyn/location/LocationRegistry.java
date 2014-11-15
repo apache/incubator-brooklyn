@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import javax.annotation.Nullable;
+
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
@@ -98,7 +100,7 @@ public interface LocationRegistry {
     
     /** As {@link #resolve(String, Boolean, Map)}, but unwrapped
      * @throws NoSuchElementException if the spec cannot be resolved */
-    public Location resolve(String spec, Map locationFlags);
+    public Location resolve(String spec, @Nullable Map locationFlags);
     
     /** as {@link #resolve(String)} but returning null (never throwing)
      * @deprecated since 0.7.0 use {@link #resolve(String, Boolean, Map)} */

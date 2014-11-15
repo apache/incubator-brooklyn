@@ -102,7 +102,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     
     @VisibleForTesting
     /** allows, when testing, to be able to override file times / blobstore times with time from the ticker */
-    private boolean allowRemoteTimestampInMemento = false;
+    private boolean preferRemoteTimestampInMemento = false;
 
     /**
      * @param mgmt not used much at present but handy to ensure we know it so that obj store is prepared
@@ -125,14 +125,22 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     protected synchronized void init() {
         if (!started) {
             started = true;
+            //Leading slash causes problems in SL, it's not a correct file name so remove it.
+            //But once removed we can't load the master file from existing persistence stores.
+            //Try to detect if the old file exists, if so use old-style names, otherwise use the correct names.
             masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/master"));
-            changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
+            if (masterWriter.get() != null) {
+                changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
+            } else {
+                masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("master"));
+                changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("change.log"));
+            }
         }
     }
 
     @VisibleForTesting
-    public void allowRemoteTimestampInMemento() {
-        allowRemoteTimestampInMemento = true;
+    public void preferRemoteTimestampInMemento() {
+        preferRemoteTimestampInMemento = true;
     }
     
     @Override
@@ -210,11 +218,12 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
                 // shouldn't happen
                 throw Exceptions.propagate(new IllegalStateException("Node record "+nodeFile+" could not be deserialized when "+mgmt.getManagementNodeId()+" was scanning: "+nodeContents, problem));
             } else {
-                if (memento.getRemoteTimestamp()!=null) {
+                if (memento.getRemoteTimestamp()!=null && preferRemoteTimestampInMemento) {
                     // in test mode, the remote timestamp is stored in the file
-                    if (!allowRemoteTimestampInMemento)
-                        throw new IllegalStateException("Remote timestamps not allowed in memento: "+nodeContents);
                 } else {
+                    if (memento.getRemoteTimestamp()!=null) {
+                        LOG.debug("Ignoring remote timestamp in memento file ("+memento+"); looks like this data has been manually copied in");
+                    }
                     Date lastModifiedDate = objectAccessor.getLastModifiedDate();
                     ((BasicManagementNodeSyncRecord)memento).setRemoteTimestamp(lastModifiedDate!=null ? lastModifiedDate.getTime() : null);
                 }

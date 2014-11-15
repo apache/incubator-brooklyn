@@ -20,6 +20,7 @@ package brooklyn.test.entity;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.ConfigKey;
 import brooklyn.management.internal.LocalManagementContext;
 
 /** management context which allows disabling common time-consuming tasks.
@@ -60,27 +61,37 @@ public class LocalManagementContextForTests extends LocalManagementContext {
     
     public static BrooklynProperties disableOsgi(BrooklynProperties brooklynProperties) {
         if (brooklynProperties==null) return null;
-        brooklynProperties.putIfAbsent(BrooklynServerConfig.USE_OSGI, false);
+        setFailingIfConflicting(brooklynProperties, BrooklynServerConfig.USE_OSGI, false);
         return brooklynProperties;
     }
     
-    public static BrooklynProperties disablePersistentStoreBackup(BrooklynProperties brooklynProperties) {
+    @SuppressWarnings("deprecation")
+    public static BrooklynProperties disablePersistenceBackups(BrooklynProperties brooklynProperties) {
         if (brooklynProperties==null) return null;
-        brooklynProperties.putIfAbsent(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED, false);
+        setFailingIfConflicting(brooklynProperties, BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED_ON_DEMOTION, false);
+        setFailingIfConflicting(brooklynProperties, BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED_ON_PROMOTION, false);
+        setFailingIfConflicting(brooklynProperties, BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED, false);
         return brooklynProperties;
     }
     
+    private static <T> void setFailingIfConflicting(BrooklynProperties brooklynProperties, ConfigKey<T> key, T value) {
+        Object old = brooklynProperties.put(key, value);
+        if (old!=null && !old.equals(value)) {
+            throw new IllegalStateException("Not supported to override value for '"+key+"'; was "+old+", setting "+value);
+        }
+    }
+
     public static class Builder {
-        boolean disablePersistence = false;
+        boolean disablePersistenceBackups = false;
         boolean disableOsgi = false;
         boolean emptyCatalog = false;
         BrooklynProperties properties = null;
         
-        public Builder disablePersistence() { return disablePersistence(true); }
+        public Builder disablePersistenceBackups() { return disablePersistenceBackups(true); }
         public Builder disableOsgi() { return disableOsgi(true); }
         public Builder emptyCatalog() { return emptyCatalog(true); }
 
-        public Builder disablePersistence(boolean disablePersistence) { this.disablePersistence = disablePersistence; return this; }
+        public Builder disablePersistenceBackups(boolean disablePersistenceBackups) { this.disablePersistenceBackups = disablePersistenceBackups; return this; }
         public Builder disableOsgi(boolean disableOsgi) { this.disableOsgi = disableOsgi; return this; }
         public Builder emptyCatalog(boolean emptyCatalog) { this.emptyCatalog = emptyCatalog; return this; }
 
@@ -91,7 +102,7 @@ public class LocalManagementContextForTests extends LocalManagementContext {
         }
         
         public Builder minimal() {
-            disablePersistence();
+            disablePersistenceBackups();
             disableOsgi();
             emptyCatalog();
             properties = null;
@@ -107,7 +118,7 @@ public class LocalManagementContextForTests extends LocalManagementContext {
         
         public BrooklynProperties buildProperties() {
             BrooklynProperties result = emptyIfNull(properties);
-            if (disablePersistence) LocalManagementContextForTests.disablePersistentStoreBackup(result);
+            if (disablePersistenceBackups) LocalManagementContextForTests.disablePersistenceBackups(result);
             if (disableOsgi) LocalManagementContextForTests.disableOsgi(result);
             if (emptyCatalog) LocalManagementContextForTests.setEmptyCatalogAsDefault(result);
             return result;
@@ -122,19 +133,22 @@ public class LocalManagementContextForTests extends LocalManagementContext {
         }
     }
     
-    /** create a new builder, defaulting to empty properties, and with the parameter determining whether 
+    /** Create a new builder, defaulting to empty properties, and with the parameter determining whether 
      * by default to disable common things disabled in tests (and the caller can re-enable selected ones individually)
      * or (if false) leaving everything enabled (so the caller turns things off) */
     public static Builder builder(boolean minimal) { return new Builder().minimal(minimal); }
     
+    /** Creates a new minimal instance */
     public static LocalManagementContext newInstance() {
         return builder(true).build();
     }
 
+    /** Creates a new minimal instance with the given properties then installed. */
     public static LocalManagementContext newInstance(BrooklynProperties properties) {
         return builder(true).useProperties(properties).build();
     }
 
+    /** Creates a new minimal instance with OSGi then enabled. */
     public static LocalManagementContext newInstanceWithOsgi() {
         return builder(true).disableOsgi(false).build();
     }

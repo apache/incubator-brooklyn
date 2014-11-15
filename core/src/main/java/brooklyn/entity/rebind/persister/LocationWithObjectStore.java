@@ -16,16 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic;
+package brooklyn.entity.rebind.persister;
 
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.Rebindable;
+/** Marker interface for locations which can create a {@link PersistenceObjectStore} */
+public interface LocationWithObjectStore {
 
-public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
-    
-    void setCatalogItemId(String id);
-    
-    @SuppressWarnings("rawtypes")  // subclasses typically apply stronger typing
-    RebindSupport getRebindSupport();
+    /** Creates a {@link PersistenceObjectStore} pointed at the given container/directory. */
+    public PersistenceObjectStore newPersistenceObjectStore(String container);
     
 }

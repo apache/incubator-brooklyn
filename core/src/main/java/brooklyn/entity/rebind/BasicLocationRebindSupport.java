@@ -116,7 +116,7 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
 
     protected void addChildren(RebindContext rebindContext, LocationMemento memento) {
         for (String childId : memento.getChildren()) {
-            Location child = rebindContext.getLocation(childId);
+            Location child = rebindContext.lookup().lookupLocation(childId);
             if (child != null) {
                 location.addChild(child);
             } else {
@@ -126,7 +126,7 @@ public class BasicLocationRebindSupport extends AbstractBrooklynObjectRebindSupp
     }
 
     protected void setParent(RebindContext rebindContext, LocationMemento memento) {
-        Location parent = (memento.getParent() != null) ? rebindContext.getLocation(memento.getParent()) : null;
+        Location parent = (memento.getParent() != null) ? rebindContext.lookup().lookupLocation(memento.getParent()) : null;
         if (parent != null) {
             location.setParent(parent);
         } else if (memento.getParent() != null) {

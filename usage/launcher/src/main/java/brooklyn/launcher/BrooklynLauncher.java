@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigPredicates;
@@ -61,10 +62,9 @@ import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
-import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.trait.Startable;
 import brooklyn.internal.BrooklynFeatureEnablement;
@@ -160,8 +160,9 @@ public class BrooklynLauncher {
     private String persistenceDir;
     private String persistenceLocation;
     private Duration persistPeriod = Duration.ONE_SECOND;
-    private Duration haHeartbeatTimeout = Duration.THIRTY_SECONDS;
-    private Duration haHeartbeatPeriod = Duration.ONE_SECOND;
+    // these default values come from config in HighAvailablilityManagerImpl
+    private Duration haHeartbeatTimeoutOverride = null;
+    private Duration haHeartbeatPeriodOverride = null;
     
     private volatile BrooklynWebServer webServer;
     private CampPlatform campPlatform;
@@ -433,7 +434,7 @@ public class BrooklynLauncher {
     }
 
     public BrooklynLauncher haHeartbeatTimeout(Duration val) {
-        this.haHeartbeatTimeout = val;
+        this.haHeartbeatTimeoutOverride = val;
         return this;
     }
 
@@ -446,7 +447,7 @@ public class BrooklynLauncher {
      * Controls both the frequency of heartbeats, and the frequency of checking the health of other nodes.
      */
     public BrooklynLauncher haHeartbeatPeriod(Duration val) {
-        this.haHeartbeatPeriod = val;
+        this.haHeartbeatPeriodOverride = val;
         return this;
     }
 
@@ -467,10 +468,10 @@ public class BrooklynLauncher {
 
     /**
      * @param destinationDir Directory for state to be copied to
-     * @param destinationLocation Optional location if target for copied state is a blob store.
+     * @param destinationLocationSpec Optional location if target for copied state is a blob store.
      * @param transformer Optional transformations to apply to retrieved state before it is copied.
      */
-    public void copyPersistedState(String destinationDir, @Nullable String destinationLocation, @Nullable CompoundTransformer transformer) {
+    public void copyPersistedState(String destinationDir, @Nullable String destinationLocationSpec, @Nullable CompoundTransformer transformer) {
         initManagementContext();
         try {
             highAvailabilityMode = HighAvailabilityMode.HOT_STANDBY;
@@ -478,45 +479,34 @@ public class BrooklynLauncher {
         } catch (Exception e) {
             handleSubsystemStartupError(ignorePersistenceErrors, "persistence", e);
         }
-        ManagementPlaneSyncRecord planeState = managementContext.getHighAvailabilityManager().getManagementPlaneSyncState();
-        BrooklynMementoRawData memento = retrieveState(false);
-        BrooklynMementoRawData newMemento = memento;
-        if (transformer != null) {
-            try {
-                newMemento = transformer.transform(memento);
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
-            }
-        }
-        copyPersistedState(newMemento, planeState, destinationDir, destinationLocation);
+        
+        try {
+            BrooklynMementoRawData memento = managementContext.getRebindManager().retrieveMementoRawData();
+            if (transformer != null) memento = transformer.transform(memento);
+            
+            ManagementPlaneSyncRecord planeState = managementContext.getHighAvailabilityManager().loadManagementPlaneSyncRecord(true);
+            
+            LOG.info("Persisting state to "+destinationDir+(destinationLocationSpec!=null ? " @ "+destinationLocationSpec : ""));
+            PersistenceObjectStore destinationObjectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(
+                managementContext, destinationLocationSpec, destinationDir);
+            BrooklynPersistenceUtils.writeMemento(managementContext, memento, destinationObjectStore);
+            BrooklynPersistenceUtils.writeManagerMemento(managementContext, planeState, destinationObjectStore);
 
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            LOG.debug("Error copying persisted state (rethrowing): " + e, e);
+            throw new FatalRuntimeException("Error copying persisted state: " +
+                Exceptions.collapseText(e), e);
+        }
     }
 
     /** @deprecated since 0.7.0 use {@link #copyPersistedState} instead */
     // Make private after deprecation
     @Deprecated
     public BrooklynMementoRawData retrieveState() {
-        return retrieveState(true);
-    }
-
-    /** To be removed when {@link #retrieveState()} is made private. */
-    private BrooklynMementoRawData retrieveState(boolean initPersistence) {
         initManagementContext();
-        if (initPersistence) {
-            try {
-                initPersistence();
-            } catch (Exception e) {
-                handleSubsystemStartupError(ignorePersistenceErrors, "persistence", e);
-            }
-        }
-        try {
-            return managementContext.getRebindManager().retrieveMementoRawData();
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            LOG.debug("Error rebinding to persisted state (rethrowing): " + e, e);
-            throw new FatalRuntimeException("Error rebinding to persisted state: " +
-                    Exceptions.collapseText(e), e);
-        }
+        initPersistence();
+        return managementContext.getRebindManager().retrieveMementoRawData();
     }
 
     /**
@@ -527,49 +517,11 @@ public class BrooklynLauncher {
      */
     // Make private after deprecation
     @Deprecated
-    public void persistState(BrooklynMementoRawData memento, String destinationDir, @Nullable String destinationLocation) {
-        copyPersistedState(memento, null, destinationDir, destinationLocation);
-    }
-
-    private void copyPersistedState(BrooklynMementoRawData memento, ManagementPlaneSyncRecord planeRecord,
-            String destinationDir, String destinationLocation) {
-        LOG.info("Persisting state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
-
+    public void persistState(BrooklynMementoRawData memento, String destinationDir, @Nullable String destinationLocationSpec) {
         initManagementContext();
-        try {
-            destinationDir = BrooklynServerConfig.resolvePersistencePath(destinationDir, brooklynProperties, destinationLocation);
-            PersistenceObjectStore destinationObjectStore;
-
-            if (Strings.isBlank(destinationLocation)) {
-                File persistenceDirF = new File(destinationDir);
-                if (persistenceDirF.isFile()) throw new FatalConfigurationRuntimeException("Destination directory must not be a file");
-                destinationObjectStore = new FileBasedObjectStore(persistenceDirF);
-            } else {
-                destinationObjectStore = new JcloudsBlobStoreBasedObjectStore(destinationLocation, destinationDir);
-            }
-            destinationObjectStore.injectManagementContext(managementContext);
-            destinationObjectStore.prepareForSharedUse(persistMode, highAvailabilityMode);
-
-            BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
-                    destinationObjectStore,
-                    ((ManagementContextInternal)managementContext).getBrooklynProperties(),
-                    managementContext.getCatalog().getRootClassLoader());
-
-            PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
-            persister.enableWriteAccess();
-            persister.checkpoint(memento, exceptionHandler);
-
-            if (planeRecord != null) {
-                ManagementPlaneSyncRecordPersisterToObjectStore managementPersister = new ManagementPlaneSyncRecordPersisterToObjectStore(
-                        managementContext, destinationObjectStore, managementContext.getCatalog().getRootClassLoader());
-                managementPersister.checkpoint(planeRecord);
-            }
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            LOG.debug("Error rebinding to persisted state (rethrowing): "+e, e);
-            throw new FatalRuntimeException("Error rebinding to persisted state: "+
-                Exceptions.collapseText(e), e);
-        }
+        PersistenceObjectStore destinationObjectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(
+            managementContext, destinationLocationSpec, destinationDir);
+        BrooklynPersistenceUtils.writeMemento(managementContext, memento, destinationObjectStore);
     }
 
     /**
@@ -585,7 +537,7 @@ public class BrooklynLauncher {
         // Create the management context
         initManagementContext();
 
-        // Add a CAMP platform (TODO include a flag for this?)
+        // Add a CAMP platform
         campPlatform = new BrooklynCampPlatformLauncherNoServer()
                 .useManagementContext(managementContext)
                 .launch()
@@ -781,22 +733,23 @@ public class BrooklynLauncher {
             objectStore = null;
             
         } else {
-            if (persistenceLocation == null) {
-                persistenceLocation = brooklynProperties.getConfig(BrooklynServerConfig.PERSISTENCE_LOCATION_SPEC);
-            }
-            
-            persistenceDir = BrooklynServerConfig.resolvePersistencePath(persistenceDir, brooklynProperties, persistenceLocation);
-
-            if (Strings.isBlank(persistenceLocation)) {
-                File persistenceDirF = new File(persistenceDir);
-                if (persistenceDirF.isFile()) throw new FatalConfigurationRuntimeException("Persistence directory must not be a file");
-                objectStore = new FileBasedObjectStore(persistenceDirF);
-            } else {
-                objectStore = new JcloudsBlobStoreBasedObjectStore(persistenceLocation, persistenceDir);
-            }
             try {
-                objectStore.injectManagementContext(managementContext);
-                objectStore.prepareForSharedUse(persistMode, highAvailabilityMode);
+                if (persistenceLocation == null) {
+                    persistenceLocation = brooklynProperties.getConfig(BrooklynServerConfig.PERSISTENCE_LOCATION_SPEC);
+                }
+                persistenceDir = BrooklynServerPaths.newMainPersistencePathResolver(brooklynProperties).location(persistenceLocation).dir(persistenceDir).resolve();
+                objectStore = BrooklynPersistenceUtils.newPersistenceObjectStore(managementContext, persistenceLocation, persistenceDir, 
+                    persistMode, highAvailabilityMode);
+                    
+                RebindManager rebindManager = managementContext.getRebindManager();
+                
+                BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
+                    objectStore,
+                    ((ManagementContextInternal)managementContext).getBrooklynProperties(),
+                    managementContext.getCatalog().getRootClassLoader());
+                PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
+                ((RebindManagerImpl) rebindManager).setPeriodicPersistPeriod(persistPeriod);
+                rebindManager.setPersister(persister, persistenceExceptionHandler);
             } catch (FatalConfigurationRuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -805,16 +758,6 @@ public class BrooklynLauncher {
                 throw new FatalRuntimeException("Error initializing persistence subsystem: "+
                     Exceptions.collapseText(e), e);
             }
-
-            RebindManager rebindManager = managementContext.getRebindManager();
-
-            BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
-                    objectStore,
-                    ((ManagementContextInternal)managementContext).getBrooklynProperties(),
-                    managementContext.getCatalog().getRootClassLoader());
-            PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
-            ((RebindManagerImpl) rebindManager).setPeriodicPersistPeriod(persistPeriod);
-            rebindManager.setPersister(persister, persistenceExceptionHandler);
         }
         
         // Initialise the HA manager as required
@@ -828,8 +771,8 @@ public class BrooklynLauncher {
             ManagementPlaneSyncRecordPersister persister =
                 new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext,
                     objectStore, managementContext.getCatalog().getRootClassLoader());
-            ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeout);
-            ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriod);
+            ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeoutOverride);
+            ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriodOverride);
             haManager.setPersister(persister);
         }
     }
@@ -848,19 +791,20 @@ public class BrooklynLauncher {
             // Let the HA manager decide when objectstore.prepare and rebindmgr.rebind need to be called 
             // (based on whether other nodes in plane are already running).
             
-            HighAvailabilityMode startMode;
+            HighAvailabilityMode startMode=null;
             switch (highAvailabilityMode) {
                 case AUTO:
                 case MASTER:
                 case STANDBY:
                 case HOT_STANDBY:
+                case HOT_BACKUP:
                     startMode = highAvailabilityMode;
                     break;
                 case DISABLED:
                     throw new IllegalStateException("Unexpected code-branch for high availability mode "+highAvailabilityMode);
-                default:       
-                    throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
             }
+            if (startMode==null)
+                throw new IllegalStateException("Unexpected high availability mode "+highAvailabilityMode);
             
             LOG.debug("Management node (with HA) starting");
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
@@ -915,6 +859,7 @@ public class BrooklynLauncher {
             return;
         }
         ApplicationBuilder brooklyn = new ApplicationBuilder() {
+            @SuppressWarnings("deprecation")
             @Override
             protected void doBuild() {
                 addChild(EntitySpec.create(LocalBrooklynNode.class)

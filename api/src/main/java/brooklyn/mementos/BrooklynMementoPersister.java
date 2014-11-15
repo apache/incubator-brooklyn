@@ -20,6 +20,7 @@ package brooklyn.mementos;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -39,6 +40,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -91,8 +93,12 @@ public interface BrooklynMementoPersister {
       * Note that this method is *not* thread safe.
       */
     BrooklynMemento loadMemento(@Nullable BrooklynMementoRawData mementoData, LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException;
-    
+
+    /** @deprecated since 0.7.0, use {@link #checkpoint(BrooklynMementoRawData, PersistenceExceptionHandler)} 
+     * and javadoc on implementations of that */ @Deprecated  // pretty sure this is not used outwith deprecated code
     void checkpoint(BrooklynMemento memento, PersistenceExceptionHandler exceptionHandler);
+    
+    void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler);
 
     void delta(Delta delta, PersistenceExceptionHandler exceptionHandler);
 
@@ -112,6 +118,8 @@ public interface BrooklynMementoPersister {
 
     String getBackingStoreDescription();
     
+    /** All methods on this interface are unmodifiable by the caller. Sub-interfaces may introduce modifiers. */
+    // NB: the type-specific methods aren't actually used anymore; we could remove them to simplify the impl (and use a multiset there)
     public interface Delta {
         Collection<LocationMemento> locations();
         Collection<EntityMemento> entities();
@@ -128,7 +136,14 @@ public interface BrooklynMementoPersister {
         Collection<String> removedCatalogItemIds();
         
         Collection<? extends Memento> getObjectsOfType(BrooklynObjectType type);
-        Collection<String> getRemovedObjectsOfType(BrooklynObjectType type);
+        Collection<String> getRemovedIdsOfType(BrooklynObjectType type);
+    }
+    
+    @Beta
+    public interface MutableDelta extends Delta {
+        void add(BrooklynObjectType type, Memento memento);
+        void addAll(BrooklynObjectType type, Iterable<? extends Memento> memento);
+        void removed(BrooklynObjectType type, Set<String> removedIdsOfType);
     }
 
 }

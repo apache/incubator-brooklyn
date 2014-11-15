@@ -38,43 +38,27 @@ import java.util.Map;
 public interface BrooklynMemento extends Serializable {
 
     public EntityMemento getEntityMemento(String id);
-
     public LocationMemento getLocationMemento(String id);
-    
     public PolicyMemento getPolicyMemento(String id);
-    
     public EnricherMemento getEnricherMemento(String id);
-
     public FeedMemento getFeedMemento(String id);
-    
     public CatalogItemMemento getCatalogItemMemento(String id);
 
     public Collection<String> getApplicationIds();
-    
     public Collection<String> getTopLevelLocationIds();
 
     public Collection<String> getEntityIds();
-    
     public Collection<String> getLocationIds();
-
     public Collection<String> getPolicyIds();
-
     public Collection<String> getEnricherIds();
-
     public Collection<String> getFeedIds();
-    
     public Collection<String> getCatalogItemIds();
 
     public Map<String, EntityMemento> getEntityMementos();
-
     public Map<String, LocationMemento> getLocationMementos();
-
     public Map<String, PolicyMemento> getPolicyMementos();
-
     public Map<String, EnricherMemento> getEnricherMementos();
-
     public Map<String, FeedMemento> getFeedMementos();
-    
     public Map<String, CatalogItemMemento> getCatalogItemMementos();
 
 }

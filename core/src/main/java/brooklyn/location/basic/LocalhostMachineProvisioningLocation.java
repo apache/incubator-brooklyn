@@ -21,6 +21,7 @@ package brooklyn.location.basic;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Map;
@@ -33,6 +34,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.LocationWithObjectStore;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.AddressableLocation;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.OsDetails;
@@ -61,7 +65,7 @@ import com.google.common.collect.Sets;
  * By default you can only obtain a single SshMachineLocation for the localhost. Optionally, you can "overload"
  * and choose to allow localhost to be provisioned multiple times, which may be useful in some testing scenarios.
  */
-public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> implements AddressableLocation {
+public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> implements AddressableLocation, LocationWithObjectStore {
 
     public static final Logger LOG = LoggerFactory.getLogger(LocalhostMachineProvisioningLocation.class);
     
@@ -324,4 +328,11 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         return SudoChecker.isSudoAllowed();
     }
 
+    @Override
+    public PersistenceObjectStore newPersistenceObjectStore(String container) {
+        File basedir = new File(container);
+        if (basedir.isFile()) throw new IllegalArgumentException("Destination directory must not be a file");
+        return new FileBasedObjectStore(basedir);
+    }
+    
 }

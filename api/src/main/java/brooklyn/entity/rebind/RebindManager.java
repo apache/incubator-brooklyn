@@ -18,10 +18,12 @@
  */
 package brooklyn.entity.rebind;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.annotation.Nullable;
 
 import brooklyn.entity.Application;
 import brooklyn.management.ha.ManagementNodeState;
@@ -68,11 +70,11 @@ public interface RebindManager {
     /** Causes this management context to rebind, loading data from the given backing store.
      * use wisely, as this can cause local entities to be completely lost, or will throw in many other situations.
      * in general it may be invoked for a new node becoming {@link ManagementNodeState#MASTER} 
-     * or periodically for a node in {@link ManagementNodeState#HOT_STANDBY}. */
+     * or periodically for a node in {@link ManagementNodeState#HOT_STANDBY} or {@link ManagementNodeState#HOT_BACKUP}. */
     @Beta
     public List<Application> rebind(ClassLoader classLoader, RebindExceptionHandler exceptionHandler, ManagementNodeState mode);
 
-    public BrooklynMementoRawData retrieveMementoRawData() throws IOException;
+    public BrooklynMementoRawData retrieveMementoRawData();
 
     public ChangeListener getChangeListener();
 
@@ -91,13 +93,13 @@ public interface RebindManager {
      * Perform an initial load of state read-only and starts a background process 
      * reading (mirroring) state periodically.
      */
-    public void startReadOnly();
+    public void startReadOnly(ManagementNodeState mode);
     /** Stops the background reading (mirroring) of state. 
      * Interrupts any current activity and waits for it to cease. */
     public void stopReadOnly();
     
     /** Starts the appropriate background processes, {@link #startPersistence()} if {@link ManagementNodeState#MASTER},
-     * {@link #startReadOnly()} if {@link ManagementNodeState#HOT_STANDBY} */
+     * {@link #startReadOnly()} if {@link ManagementNodeState#HOT_STANDBY} or {@link ManagementNodeState#HOT_BACKUP} */
     public void start();
     /** Stops the appropriate background processes, {@link #stopPersistence()} or {@link #stopReadOnly()},
      * waiting for activity there to cease (interrupting in the case of {@link #stopReadOnly()}). */
@@ -110,7 +112,21 @@ public interface RebindManager {
     /** waits for any needed or pending writes to complete */
     @VisibleForTesting
     public void waitForPendingComplete(Duration duration) throws InterruptedException, TimeoutException;
-    /** Forcibly performs persistence, in the foreground */
+    /** Forcibly performs persistence, in the foreground 
+     * @deprecated since 0.7.0; use {@link #forcePersistNow(boolean)}, 
+     * default parameter here is false to mean incremental, with  */
     @VisibleForTesting
     public void forcePersistNow();
+    /** Forcibly performs persistence, in the foreground, either full (all entities) or incremental;
+     * if no exception handler specified, the default one from the persister is used.
+     * <p>
+     * Note that full persistence does *not* delete items; incremental should normally be sufficient.
+     * (A clear then full persistence would have the same effect, but that is risky in a production
+     * setting if the process fails after the clear!) */
+    @VisibleForTesting
+    public void forcePersistNow(boolean full, @Nullable PersistenceExceptionHandler exceptionHandler);
+
+    /** Metrics about rebind, last success, etc. */
+    public Map<String,Object> getMetrics();
+    
 }

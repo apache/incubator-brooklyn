@@ -56,9 +56,9 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     @BeforeMethod(alwaysRun = true)
     @Override
     public void setUp() throws Exception {
-        super.setUp();
         catalogPersistenceWasEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
         BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
+        super.setUp();
         BasicCampPlatform platform = new CampPlatformWithJustBrooklynMgmt(origManagementContext);
         MockWebPlatform.populate(platform, TestAppAssemblyInstantiator.class);
         origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -149,7 +149,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         // Must make sure that the original catalogue item is not managed and unmanaged in the same
         // persistence window. Because BrooklynMementoPersisterToObjectStore applies writes/deletes
         // asynchronously the winner is down to a race and the test might pass or fail.
-        origManagementContext.getRebindManager().forcePersistNow();
+        origManagementContext.getRebindManager().forcePersistNow(false, null);
         origManagementContext.getCatalog().deleteCatalogItem(toRemove.getSymbolicName(), toRemove.getVersion());
         assertEquals(Iterables.size(origManagementContext.getCatalog().getCatalogItems()), 0);
         rebindAndAssertCatalogsAreEqual();

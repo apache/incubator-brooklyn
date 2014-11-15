@@ -18,14 +18,19 @@
  */
 package brooklyn.rest.resources;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +40,9 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
+import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.management.entitlement.Entitlements;
@@ -42,6 +50,7 @@ import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
+import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.domain.HighAvailabilitySummary;
@@ -50,6 +59,9 @@ import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.file.ArchiveBuilder;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
@@ -75,6 +87,10 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     public void shutdown(final boolean stopAppsFirst, final boolean forceShutdownOnError,
             String shutdownTimeoutRaw, String requestTimeoutRaw, String delayForHttpReturnRaw,
             Long delayMillis) {
+        
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ALL_SERVER_INFO, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+        
         log.info("REST call to shutdown server, stopAppsFirst="+stopAppsFirst+", delayForHttpReturn="+shutdownTimeoutRaw);
 
         final Duration shutdownTimeout = parseDuration(shutdownTimeoutRaw, Duration.of(20, TimeUnit.SECONDS));
@@ -233,12 +249,20 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public ManagementNodeState setHighAvailabilityNodeState(HighAvailabilityMode mode) {
+        if (mode==null)
+            throw new IllegalStateException("Missing parameter: mode");
+        
         HighAvailabilityManager haMgr = mgmt().getHighAvailabilityManager();
         ManagementNodeState existingState = haMgr.getNodeState();
         haMgr.changeMode(mode);
         return existingState;
     }
 
+    @Override
+    public Map<String, Object> getHighAvailabilityMetrics() {
+        return mgmt().getHighAvailabilityManager().getMetrics();
+    }
+    
     @Override
     public long getHighAvailabitlityPriority() {
         return mgmt().getHighAvailabilityManager().getPriority();
@@ -254,7 +278,9 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public HighAvailabilitySummary getHighAvailabilityPlaneStates() {
-        ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getLastManagementPlaneSyncRecord();
+        if (memento==null) memento = mgmt().getHighAvailabilityManager().loadManagementPlaneSyncRecord(true);
+        if (memento==null) return null;
         return HighAvailabilityTransformer.highAvailabilitySummary(mgmt().getManagementNodeId(), memento);
     }
 
@@ -265,6 +291,33 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             return entitlementContext.user();
         } else {
             return null; //User can be null if no authentication was requested
+        }
+    }
+
+    @Override
+    public Response exportPersistenceData(String preferredOrigin) {
+        return exportPersistenceData(TypeCoercions.coerce(preferredOrigin, MementoCopyMode.class));
+    }
+    
+    protected Response exportPersistenceData(MementoCopyMode preferredOrigin) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ALL_SERVER_INFO, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+
+        try {
+            String label = mgmt().getManagementNodeId()+"-"+Time.makeDateSimpleStampString();
+            PersistenceObjectStore targetStore = BrooklynPersistenceUtils.newPersistenceObjectStore(mgmt(), null, 
+                "web-persistence-"+label+"-"+Identifiers.makeRandomId(4));
+            BrooklynPersistenceUtils.writeMemento(mgmt(), targetStore, preferredOrigin);            
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ArchiveBuilder.zip().addDirContentsAt( ((FileBasedObjectStore)targetStore).getBaseDir(), ((FileBasedObjectStore)targetStore).getBaseDir().getName() ).stream(baos);
+            String filename = "brooklyn-state-"+label+".zip";
+            return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .header("Content-Disposition","attachment; filename = "+filename)
+                .build();
+        } catch (Exception e) {
+            log.warn("Unable to serve persistence data (rethrowing): "+e, e);
+            throw Exceptions.propagate(e);
         }
     }
 

@@ -24,7 +24,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
@@ -88,7 +88,7 @@ public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLaunch
     }
 
     protected void checkPersistenceContainerNameIsDefault() {
-        checkPersistenceContainerNameIs(BrooklynServerConfig.DEFAULT_PERSISTENCE_CONTAINER_NAME);
+        checkPersistenceContainerNameIs(BrooklynServerPaths.DEFAULT_PERSISTENCE_CONTAINER_NAME);
     }
 
     @Override @Test(groups="Live")

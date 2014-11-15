@@ -55,9 +55,9 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
-import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
@@ -313,17 +313,22 @@ public class Main extends AbstractMain {
         protected final static String HA_OPTION_MASTER = "master";
         protected final static String HA_OPTION_STANDBY = "standby";
         protected final static String HA_OPTION_HOT_STANDBY = "hot_standby";
-        static { Enums.checkAllEnumeratedIgnoreCase(HighAvailabilityMode.class, HA_OPTION_AUTO, HA_OPTION_DISABLED, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY); }
+        protected final static String HA_OPTION_HOT_BACKUP = "hot_backup";
+        static { Enums.checkAllEnumeratedIgnoreCase(HighAvailabilityMode.class, HA_OPTION_AUTO, HA_OPTION_DISABLED, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY, HA_OPTION_HOT_BACKUP); }
         
-        @Option(name = { HA_OPTION }, allowedValues = { HA_OPTION_DISABLED, HA_OPTION_AUTO, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY },
+        @Option(name = { HA_OPTION }, allowedValues = { HA_OPTION_DISABLED, HA_OPTION_AUTO, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY, HA_OPTION_HOT_BACKUP },
                 title = "high availability mode",
                 description =
                         "The high availability mode. Possible values are: \n"+
                         "disabled: management node works in isolation - will not cooperate with any other standby/master nodes in management plane; \n"+
                         "auto: will look for other management nodes, and will allocate itself as standby or master based on other nodes' states; \n"+
                         "master: will startup as master - if there is already a master then fails immediately; \n"+
-                        "standby: will start up as lukewarm standby - if there is not already a master then fails immediately; \n"+
-                        "hot_standby: will start up as hot standby - if there is not already a master then fails immediately")
+                        "standby: will start up as lukewarm standby with no state - if there is not already a master then fails immediately, "
+                        + "and if there is a master which subsequently fails, this node can promote itself; \n"+
+                        "hot_standby: will start up as hot standby in read-only mode - if there is not already a master then fails immediately, "
+                        + "and if there is a master which subseuqently fails, this node can promote itself; \n"+
+                        "hot_backup: will start up as hot backup in read-only mode - no master is required, and this node will not become a master"
+                        )
         public String highAvailability = HA_OPTION_AUTO;
 
         @VisibleForTesting
@@ -472,7 +477,10 @@ public class Main extends AbstractMain {
                     if (highAvailabilityMode.get() == HighAvailabilityMode.AUTO)
                         return HighAvailabilityMode.DISABLED;
                     throw new FatalConfigurationRuntimeException("Cannot specify highAvailability when persistence is disabled");
-                } else if (persistMode == PersistMode.CLEAN && (highAvailabilityMode.get() == HighAvailabilityMode.STANDBY || highAvailabilityMode.get() == HighAvailabilityMode.HOT_STANDBY)) {
+                } else if (persistMode == PersistMode.CLEAN && 
+                        (highAvailabilityMode.get() == HighAvailabilityMode.STANDBY 
+                        || highAvailabilityMode.get() == HighAvailabilityMode.HOT_STANDBY
+                        || highAvailabilityMode.get() == HighAvailabilityMode.HOT_BACKUP)) {
                     throw new FatalConfigurationRuntimeException("Cannot specify highAvailability "+highAvailabilityMode.get()+" when persistence is CLEAN");
                 }
             }
@@ -784,13 +792,8 @@ public class Main extends AbstractMain {
             return null;
         }
 
-        protected CompoundTransformer loadTransformer(String transformations) {
-            if (transformations == null) {
-                return CompoundTransformer.NOOP; 
-            } else {
-                String contents = ResourceUtils.create(this).getResourceAsString(transformations);
-                return CompoundTransformerLoader.load(contents);
-            }
+        protected CompoundTransformer loadTransformer(String transformationsFileUrl) {
+            return BrooklynPersistenceUtils.loadTransformer(ResourceUtils.create(this), transformationsFileUrl);
         }
         
         @Override

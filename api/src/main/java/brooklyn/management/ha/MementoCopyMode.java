@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic;
+package brooklyn.management.ha;
 
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.Rebindable;
-
-public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
-    
-    void setCatalogItemId(String id);
-    
-    @SuppressWarnings("rawtypes")  // subclasses typically apply stronger typing
-    RebindSupport getRebindSupport();
-    
+public enum MementoCopyMode {
+    /** Use items currently managed at this node */ 
+    LOCAL,
+    /** Use items as stored in the remote persistence store */ 
+    REMOTE, 
+    /** Auto-detect whether to use {@link #LOCAL} or {@link #REMOTE} depending on the
+     * HA mode of this management node (usually {@link #LOCAL} for master and {@link #REMOTE} otherwise)*/ 
+    AUTO 
 }

@@ -76,6 +76,7 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
 
+import com.google.api.client.repackaged.com.google.common.base.Objects;
 import com.google.common.base.Function;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
@@ -382,14 +383,21 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      * is scanning the default classpath.  Usually it infers the right thing, but some classloaders
      * (e.g. surefire) do funny things which the underlying org.reflections.Reflectiosn library can't see in to. 
      * <p>
-     * Only settable once, before catalog is loaded.
+     * This should normally be invoked early in the server startup.  Setting it after the catalog is loaded will not
+     * take effect without an explicit internal call to do so.  Once set, it can be changed prior to catalog loading
+     * but it cannot be <i>changed</i> once the catalog is loaded.
      * <p>
-     * ClasspathHelper.forJavaClassPath() is often a good argument to pass. */
+     * ClasspathHelper.forJavaClassPath() is often a good argument to pass, and is used internally in some places
+     * when no items are found on the catalog. */
     @Override
     public void setBaseClassPathForScanning(Iterable<URL> urls) {
-        if (baseClassPathForScanning == urls) return;
-        if (baseClassPathForScanning != null) throw new IllegalStateException("Cannot change base class path for scanning (in "+this+")");
-        if (catalog != null) throw new IllegalStateException("Cannot set base class path for scanning after catalog has been loaded (in "+this+")");
+        if (Objects.equal(baseClassPathForScanning, urls)) return;
+        if (baseClassPathForScanning != null) {
+            if (catalog==null)
+                log.warn("Changing scan classpath to "+urls+" from "+baseClassPathForScanning);
+            else
+                throw new IllegalStateException("Cannot change base class path for scanning (in "+this+")");
+        }
         this.baseClassPathForScanning = urls;
     }
     /** 

@@ -31,12 +31,14 @@ public class BasicParameterType<T> implements ParameterType<T> {
     private String name;
     private Class<T> type;
     private String description;
-    private T defaultValue = (T) NONE;
+    private Boolean hasDefaultValue = null;
+    private T defaultValue = null;
 
     public BasicParameterType() {
         this(Collections.emptyMap());
     }
     
+    @SuppressWarnings("unchecked")
     public BasicParameterType(Map<?, ?> arguments) {
         if (arguments.containsKey("name")) name = (String) arguments.get("name");
         if (arguments.containsKey("type")) type = (Class<T>) arguments.get("type");
@@ -45,22 +47,29 @@ public class BasicParameterType<T> implements ParameterType<T> {
     }
 
     public BasicParameterType(String name, Class<T> type) {
-        this(name, type, null, (T) NONE);
+        this(name, type, null, null, false);
     }
     
     public BasicParameterType(String name, Class<T> type, String description) {
-        this(name, type, description, (T) NONE);
+        this(name, type, description, null, false);
     }
     
     public BasicParameterType(String name, Class<T> type, String description, T defaultValue) {
+        this(name, type, description, defaultValue, true);
+    }
+    
+    public BasicParameterType(String name, Class<T> type, String description, T defaultValue, boolean hasDefaultValue) {
         this.name = name;
         this.type = type;
         this.description = description;
         this.defaultValue = defaultValue;
+        if (defaultValue!=null && !defaultValue.getClass().equals(Object.class)) {
+            // if default value is null (or is an Object, which is ambiguous on resolution to to rebind), 
+            // don't bother to set this as it creates noise in the persistence files
+            this.hasDefaultValue = hasDefaultValue;
+        }
     }
 
-    private static Object NONE = new Object();
-    
     @Override
     public String getName() { return name; }
 
@@ -79,7 +88,8 @@ public class BasicParameterType<T> implements ParameterType<T> {
     }
 
     public boolean hasDefaultValue() {
-        return defaultValue != NONE;
+        // a new Object() was previously used to indicate no default value, but that doesn't work well across serialization boundaries!
+        return hasDefaultValue!=null ? hasDefaultValue : defaultValue!=null && !defaultValue.getClass().equals(Object.class);
     }
     
     @Override

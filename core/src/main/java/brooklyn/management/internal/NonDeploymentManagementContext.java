@@ -491,7 +491,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
 
         @Override
-        public void startReadOnly() {
+        public void startReadOnly(ManagementNodeState state) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         
@@ -523,7 +523,16 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
+        public void forcePersistNow(boolean full, PersistenceExceptionHandler exceptionHandler) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
         public BrooklynMementoRawData retrieveMementoRawData() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+
+        @Override
+        public Map<String, Object> getMetrics() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }
@@ -567,6 +576,14 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
+        public ManagementPlaneSyncRecord getLastManagementPlaneSyncRecord() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public ManagementPlaneSyncRecord loadManagementPlaneSyncRecord(boolean x) {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
         public void changeMode(HighAvailabilityMode startMode) {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
@@ -576,6 +593,10 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
         @Override
         public long getPriority() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        @Override
+        public Map<String, Object> getMetrics() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }

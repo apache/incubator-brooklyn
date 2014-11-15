@@ -21,6 +21,7 @@ package brooklyn.entity.rebind.dto;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Set;
 
@@ -375,6 +376,10 @@ public class MementosGenerators {
     }
     
     private static void populateBrooklynObjectMementoBuilder(BrooklynObject instance, AbstractMemento.Builder<?> builder) {
+        if (Proxy.isProxyClass(instance.getClass())) {
+            throw new IllegalStateException("Attempt to create memento from proxy "+instance+" (would fail with wrong type)");
+        }
+        
         builder.id = instance.getId();
         builder.displayName = instance.getDisplayName();
         builder.catalogItemId = instance.getCatalogItemId();

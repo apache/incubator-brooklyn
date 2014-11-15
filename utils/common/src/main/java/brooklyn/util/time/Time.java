@@ -39,6 +39,7 @@ public class Time {
 
     public static final String DATE_FORMAT_PREFERRED = "yyyy-MM-dd HH:mm:ss.SSS";
     public static final String DATE_FORMAT_STAMP = "yyyyMMdd-HHmmssSSS";
+    public static final String DATE_FORMAT_SIMPLE_STAMP = "yyyy-MM-dd-HHmm";
 
     public static final long MILLIS_IN_SECOND = 1000;
     public static final long MILLIS_IN_MINUTE = 60*MILLIS_IN_SECOND;
@@ -46,12 +47,13 @@ public class Time {
     public static final long MILLIS_IN_DAY = 24*MILLIS_IN_HOUR;
     public static final long MILLIS_IN_YEAR = 365*MILLIS_IN_DAY;
     
-    /** returns the current time in YYYY-MM-DD HH:MM:SS.mss format */
+    /** returns the current time in {@value #DATE_FORMAT_PREFERRED} format,
+     * numeric big-endian but otherwise optimized for people to read, with spaces and colons and dots */
     public static String makeDateString() {
         return makeDateString(System.currentTimeMillis());
     }
 
-    /** returns the time in YYYY-MM-DD HH:MM:SS.mss format, given a long (e.g. returned by System.currentTimeMillis) */
+    /** returns the time in {@value #DATE_FORMAT_PREFERRED} format, given a long (e.g. returned by System.currentTimeMillis) */
     public static String makeDateString(long date) {
         return new SimpleDateFormat(DATE_FORMAT_PREFERRED).format(new Date(date));
     }
@@ -66,14 +68,29 @@ public class Time {
             }
         };
 
-    /** returns the current time in YYYYMMDD-HHMMSSmss format */
+    /** returns the current time in {@value #DATE_FORMAT_STAMP} format,
+     * suitable for machines to read with only numbers and dashes and quite precise (ms) */
     public static String makeDateStampString() {
         return makeDateStampString(System.currentTimeMillis());
     }
 
-    /** returns the time in YYYY-MM-DD HH:MM:SS.mss format, given a long (e.g. returned by System.currentTimeMillis) */
+    /** returns the time in {@value #DATE_FORMAT_STAMP} format, given a long (e.g. returned by System.currentTimeMillis);
+     * cf {@link #makeDateStampString()} */
     public static String makeDateStampString(long date) {
         return new SimpleDateFormat(DATE_FORMAT_STAMP).format(new Date(date));
+    }
+
+    /** returns the current time in {@value #DATE_FORMAT_SIMPLE_STAMP} format, 
+     * suitable for machines to read but easier for humans too, 
+     * like {@link #makeDateStampString()} but not as precise */
+    public static String makeDateSimpleStampString() {
+        return makeDateSimpleStampString(System.currentTimeMillis());
+    }
+
+    /** returns the time in {@value #DATE_FORMAT_SIMPLE_STAMP} format, given a long (e.g. returned by System.currentTimeMillis);
+     * cf {@link #makeDateSimpleStampString()} */
+    public static String makeDateSimpleStampString(long date) {
+        return new SimpleDateFormat(DATE_FORMAT_SIMPLE_STAMP).format(new Date(date));
     }
 
     public static Function<Long, String> toDateStampString() { return dateStampString; }
