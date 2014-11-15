@@ -161,7 +161,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         File file = File.createTempFile("test", "keystore");
         FileOutputStream fos = new FileOutputStream(file);
         try {
-            ks.store(fos, "mypass".toCharArray());
+            ks.store(fos, password.toCharArray());
             return file;
         } finally {
             Streams.closeQuietly(fos);
