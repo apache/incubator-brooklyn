@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.text.Strings;
@@ -38,6 +41,7 @@ import com.google.common.io.Files;
  * @author aled
  */
 public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.StoreObjectAccessor {
+    private static final Logger LOG = LoggerFactory.getLogger(FileBasedStoreObjectAccessor.class);
 
     public FileBasedStoreObjectAccessor(File file, String tmpExtension) {
         this.file = file;
@@ -92,8 +96,12 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
 
     @Override
     public void delete() {
-        file.delete();
-        tmpFile.delete();
+        if (!file.delete()) {
+            LOG.error("Unable to delete " + file.getAbsolutePath() + ". Probably still locked.");
+        }
+        if (!tmpFile.delete()) {
+            LOG.error("Unable to delete " + tmpFile.getAbsolutePath() + ". Probably still locked.");
+        }
     }
 
     @Override
