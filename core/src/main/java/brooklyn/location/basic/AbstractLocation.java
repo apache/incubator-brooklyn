@@ -568,7 +568,6 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     @Override
     public Map<String, String> toMetadataRecord() {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-        builder.put("id", getId());
         if (getDisplayName() != null) builder.put("displayName", getDisplayName());
         return builder.build();
     }

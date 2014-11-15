@@ -322,7 +322,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             OsDetails osDetails = getOsDetails();
             putIfNotNull(builder, "osName", osDetails.getName());
             putIfNotNull(builder, "osArch", osDetails.getArch());
-            putIfNotNull(builder, "64bit", osDetails.is64bit() ? "true" : "false");
+            putIfNotNull(builder, "is64bit", osDetails.is64bit() ? "true" : "false");
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             LOG.warn("Unable to get OS Details for "+node+"; continuing", e);

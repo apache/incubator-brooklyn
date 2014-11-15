@@ -31,6 +31,7 @@ import brooklyn.management.usage.ApplicationUsage;
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
 import brooklyn.management.usage.LocationUsage;
 import brooklyn.management.usage.LocationUsage.LocationEvent;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
@@ -45,6 +46,12 @@ public interface UsageManager {
             new TypeToken<List<UsageListener>>() {},
             "brooklyn.usageManager.listeners", "Optional usage listeners (i.e. for metering)",
             ImmutableList.<UsageListener>of());
+    
+    public static final ConfigKey<Duration> USAGE_LISTENER_TERMINATION_TIMEOUT = ConfigKeys.newConfigKey(
+            Duration.class,
+            "brooklyn.usageManager.listeners.timeout",
+            "Timeout on termination, to wait for queue of usage listener events to be processed",
+            Duration.TEN_SECONDS);
 
     public interface UsageListener {
         public static final UsageListener NOOP = new UsageListener() {
