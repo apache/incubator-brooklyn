@@ -164,7 +164,8 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         String reverse = getConfig(REVERSE_LOOKUP_NETWORK);
         if (Strings.isBlank(reverse)) reverse = getAttribute(ADDRESS);
         setAttribute(REVERSE_LOOKUP_CIDR, new Cidr(reverse + "/24"));
-        String reverseLookupDomain = Iterables.toString(Iterables.skip(Lists.reverse(Lists.newArrayList(Splitter.on('.').split(reverse))), 1)) + ".in-addr.arpa";
+        String reverseLookupDomain = Joiner.on('.').join(Iterables.skip(Lists.reverse(Lists.newArrayList(
+                Splitter.on('.').split(reverse))), 1)) + ".in-addr.arpa";
         setAttribute(REVERSE_LOOKUP_DOMAIN, reverseLookupDomain);
 
         addPolicy(PolicySpec.create(MemberTrackingPolicy.class)

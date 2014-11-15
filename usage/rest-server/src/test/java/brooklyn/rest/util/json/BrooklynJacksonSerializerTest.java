@@ -54,6 +54,8 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.gson.Gson;
 
 public class BrooklynJacksonSerializerTest {
@@ -198,8 +200,19 @@ public class BrooklynJacksonSerializerTest {
         ll.add(1); ll.add("two");
         String result = checkSerializesAs(ll, null);
         log.info("LLIST json is: "+result);
-        Assert.assertFalse(result.toString().contains("error"), "Shouldn't have had an error, instead got: "+result);
+        Assert.assertFalse(result.contains("error"), "Shouldn't have had an error, instead got: "+result);
         Assert.assertEquals(Strings.collapseWhitespace(result, ""), "[1,\"two\"]");
+    }
+
+    @Test
+    public void testMultiMapSerialization() throws Exception {
+        Multimap<String, Integer> m = MultimapBuilder.hashKeys().arrayListValues().build();
+        m.put("bob", 24);
+        m.put("bob", 25);
+        String result = checkSerializesAs(m, null);
+        log.info("multimap serialized as: " + result);
+        Assert.assertFalse(result.contains("error"), "Shouldn't have had an error, instead got: "+result);
+        Assert.assertEquals(Strings.collapseWhitespace(result, ""), "{\"bob\":[24,25]}");
     }
 
     @Test
@@ -235,7 +248,7 @@ public class BrooklynJacksonSerializerTest {
     protected Map<?,?> checkSerializesAsMapWithErrorAndToString(Object x) {
         Map<?,?> rt = checkSerializesAs(x, Map.class);
         Assert.assertEquals(rt.get("toString"), x.toString());
-        Assert.assertEquals(rt.get("error"), true);
+        Assert.assertEquals(rt.get("error"), Boolean.TRUE);
         return rt;
     }
     protected void checkNonSerializableWhenStrict(Object x) {
@@ -357,7 +370,7 @@ public class BrooklynJacksonSerializerTest {
             // (but with our custom VisibilityChecker server just gives us the nicer error!)
             log.info("CONFIG SERVER is:\n"+content);
             assertErrorObjectMatchingToString(content, server);
-            Assert.assertTrue(content.indexOf(NotSerializableException.class.getCanonicalName())>=0, "server should have contained things which are not serializable");
+            Assert.assertTrue(content.contains(NotSerializableException.class.getCanonicalName()), "server should have contained things which are not serializable");
             Assert.assertTrue(content.length() < 1024, "content should not have been very long; instead was: "+content.length());
             
         } finally {

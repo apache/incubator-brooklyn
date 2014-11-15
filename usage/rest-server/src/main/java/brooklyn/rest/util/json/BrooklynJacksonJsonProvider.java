@@ -41,40 +41,40 @@ import brooklyn.management.ManagementContextInjectable;
 public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements ManagementContextInjectable {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynJacksonJsonProvider.class);
-    
+
     public static final String BROOKLYN_REST_OBJECT_MAPPER = BrooklynServiceAttributes.BROOKLYN_REST_OBJECT_MAPPER;
-    
+
     @Context protected ServletContext servletContext;
-    
+
     protected ObjectMapper ourMapper;
     protected boolean notFound = false;
 
     private ManagementContext mgmt;
-    
+
     public ObjectMapper locateMapper(Class<?> type, MediaType mediaType) {
-        if (ourMapper!=null) 
+        if (ourMapper != null)
             return ourMapper;
-        
+
         findSharedMapper();
-        
-        if (ourMapper!=null)
+
+        if (ourMapper != null)
             return ourMapper;
-        
+
         if (!notFound) {
             log.warn("Management context not available; using default ObjectMapper in "+this);
             notFound = true;
         }
-        
+
         return super.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
     }
-    
+
     protected synchronized ObjectMapper findSharedMapper() {
-        if (ourMapper!=null || notFound) 
+        if (ourMapper != null || notFound)
             return ourMapper;
-                
+
         ourMapper = findSharedObjectMapper(servletContext, mgmt);
-        if (ourMapper==null) return null;
-        
+        if (ourMapper == null) return null;
+
         if (notFound) {
             notFound = false;
         }
@@ -82,25 +82,27 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
 
         return ourMapper;
     }
-    
-    /** finds a shared {@link ObjectMapper} or makes a new one, stored against the servlet context;
-     * returns null if a shared instance cannot be created */
+
+    /**
+     * Finds a shared {@link ObjectMapper} or makes a new one, stored against the servlet context;
+     * returns null if a shared instance cannot be created.
+     */
     public static ObjectMapper findSharedObjectMapper(ServletContext servletContext, ManagementContext mgmt) {
-        if (servletContext!=null) {
+        if (servletContext != null) {
             synchronized (servletContext) {
                 ObjectMapper mapper = (ObjectMapper) servletContext.getAttribute(BROOKLYN_REST_OBJECT_MAPPER);
-                if (mapper!=null) return mapper;
+                if (mapper != null) return mapper;
 
                 mapper = newPrivateObjectMapper(getManagementContext(servletContext));
                 servletContext.setAttribute(BROOKLYN_REST_OBJECT_MAPPER, mapper);
                 return mapper;
             }
         }
-        if (mgmt!=null) {
+        if (mgmt != null) {
             synchronized (mgmt) {
                 ConfigKey<ObjectMapper> key = ConfigKeys.newConfigKey(ObjectMapper.class, BROOKLYN_REST_OBJECT_MAPPER);
                 ObjectMapper mapper = mgmt.getConfig().getConfig(key);
-                if (mapper!=null) return mapper;
+                if (mapper != null) return mapper;
 
                 mapper = newPrivateObjectMapper(mgmt);
                 log.debug("Storing new ObjectMapper against "+mgmt+" because no ServletContext available: "+mapper);
@@ -111,49 +113,55 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
         return null;
     }
 
-    /** like {@link #findSharedObjectMapper(ServletContext)} but will create a private one if it can,
-     * from the servlet context and/or the management context, or else fail */
+    /**
+     * Like {@link #findSharedObjectMapper(ServletContext, ManagementContext)} but will create a private
+     * ObjectMapper if it can, from the servlet context and/or the management context, or else fail
+     */
     public static ObjectMapper findAnyObjectMapper(ServletContext servletContext, ManagementContext mgmt) {
         ObjectMapper mapper = findSharedObjectMapper(servletContext, mgmt);
-        if (mapper!=null) return mapper;
-        
-        if (mgmt==null && servletContext!=null) {
+        if (mapper != null) return mapper;
+
+        if (mgmt == null && servletContext != null) {
             mgmt = getManagementContext(servletContext);
         }
         return newPrivateObjectMapper(mgmt);
     }
 
-    /** creates a new Brooklyn-specific ObjectMapper; normally {@link #findSharedObjectMapper(ServletContext)} is preferred */
+    /**
+     * @return A new Brooklyn-specific ObjectMapper.
+     *   Normally {@link #findSharedObjectMapper(ServletContext, ManagementContext)} is preferred
+     */
     public static ObjectMapper newPrivateObjectMapper(ManagementContext mgmt) {
-        if (mgmt==null) {
+        if (mgmt == null) {
             throw new IllegalStateException("No management context available for creating ObjectMapper");
         }
-        
+
         SerializationConfig defaultConfig = new ObjectMapper().getSerializationConfig();
         SerializationConfig sc = new SerializationConfig(
-            defaultConfig.getClassIntrospector() /* ObjectMapper.DEFAULT_INTROSPECTOR */, 
-            defaultConfig.getAnnotationIntrospector() /* ObjectMapper.DEFAULT_ANNOTATION_INTROSPECTOR */, 
+            defaultConfig.getClassIntrospector() /* ObjectMapper.DEFAULT_INTROSPECTOR */,
+            defaultConfig.getAnnotationIntrospector() /* ObjectMapper.DEFAULT_ANNOTATION_INTROSPECTOR */,
             new PossiblyStrictPreferringFieldsVisibilityChecker(),
             null, null, TypeFactory.defaultInstance(), null);
-        
+
         ConfigurableSerializerProvider sp = new ConfigurableSerializerProvider();
         sp.setUnknownTypeSerializer(new ErrorAndToStringUnknownTypeSerializer());
-        
+
         ObjectMapper mapper = new ObjectMapper(null, sp, null, sc, null);
         SimpleModule mapperModule = new SimpleModule("Brooklyn", new Version(0, 0, 0, "ignored"));
-        
+
         new BidiSerialization.ManagementContextSerialization(mgmt).install(mapperModule);
         new BidiSerialization.EntitySerialization(mgmt).install(mapperModule);
         new BidiSerialization.LocationSerialization(mgmt).install(mapperModule);
-        
+        mapperModule.addSerializer(new MultimapSerializer());
+
         mapper.registerModule(mapperModule);
         return mapper;
     }
 
     public static ManagementContext getManagementContext(ServletContext servletContext) {
-        if (servletContext==null)
+        if (servletContext == null)
             return null;
-        
+
         return (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
     }
 
@@ -161,5 +169,5 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
     public void injectManagementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
-    
+
 }
