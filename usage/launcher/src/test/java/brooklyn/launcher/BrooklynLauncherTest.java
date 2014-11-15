@@ -41,6 +41,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
@@ -173,7 +174,7 @@ public class BrooklynLauncherTest {
     
     @Test
     public void testUsesSuppliedManagementContext() throws Exception {
-        LocalManagementContext myManagementContext = new LocalManagementContext();
+        LocalManagementContext myManagementContext = LocalManagementContextForTests.newInstance();
         launcher = BrooklynLauncher.newInstance()
                 .webconsole(false)
                 .managementContext(myManagementContext)
