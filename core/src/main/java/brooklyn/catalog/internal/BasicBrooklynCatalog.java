@@ -604,7 +604,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private void checkItemNotExists(CatalogItem<?,?> itemDto, boolean forceUpdate) {
         if (!forceUpdate && getCatalogItemDo(itemDto.getSymbolicName(), itemDto.getVersion()) != null) {
             throw new IllegalStateException("Updating existing catalog entries is forbidden: " +
-                    itemDto.getId() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
+                    itemDto.getSymbolicName() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
         }
     }
 

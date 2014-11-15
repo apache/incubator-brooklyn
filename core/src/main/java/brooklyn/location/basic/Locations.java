@@ -111,6 +111,8 @@ public class Locations {
     }
 
     public static Location coerce(ManagementContext mgmt, Object rawO) {
+        if (rawO==null)
+            return null;
         if (rawO instanceof Location)
             return (Location)rawO;
         
@@ -139,6 +141,7 @@ public class Locations {
     }
     
     public static Collection<? extends Location> coerceToCollection(ManagementContext mgmt, Object rawO) {
+        if (rawO==null) return null;
         Object raw = rawO;
         if (raw instanceof Collection) {
             List<Location> result = MutableList.<Location>of();

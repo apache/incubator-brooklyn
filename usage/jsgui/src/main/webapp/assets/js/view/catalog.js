@@ -185,7 +185,10 @@ define([
                     .done(function (data, status, xhr) {
                         // Can extract location of new item with:
                         //model.url = Brooklyn.util.pathOf(xhr.getResponseHeader("Location"));
+                        submitButton.button("reset");
+                        self.close();  // one of the calls below should draw a different view
                         parent.loadAccordionItem("entities", data.id);
+                        parent.loadAccordionItem("applications", data.id);
                     })
                     .fail(function (xhr, status, error) {
                         submitButton.button("reset");
@@ -232,6 +235,8 @@ define([
                 location.save()
                     .done(function (newModel) {
                         newModel = new Location.Model(newModel);
+                        submitButton.button("reset");
+                        self.close();  // the call below should draw a different view
                         parent.loadAccordionItem("locations", newModel.id);
                     })
                     .fail(function (response) {
@@ -370,9 +375,9 @@ define([
     
     var AccordionEntityView = AccordionItemView.extend({
         renderEntries: function() {
-            var symbolicNameFn = function(model) {return model.get("type")};
+            var symbolicNameFn = function(model) {return model.get("symbolicName")};
             var groups = this.collection.groupBy(symbolicNameFn);
-            var orderedIds = _.uniq(this.collection.map(symbolicNameFn), true);
+            var orderedIds = _.uniq(this.collection.map(symbolicNameFn));
 
             function getLatestStableVersion(items) {
                 //the server sorts items by descending version, snapshots at the back
@@ -429,9 +434,13 @@ define([
                     autoOpen: this.options.kind == "entities"
                 }),
                 "policies": new AccordionEntityView({
+                    // TODO needs parsing, and probably its own model
+                    // but cribbing "entity" works for now 
+                    // (and not setting a model can cause errors intermittently)
                     onItemSelected: _.partial(this.showCatalogItem, DetailsEntityHtml),
                     name: "policies",
                     singular: "policy",
+                    model: Entity.Model,
                     autoOpen: this.options.kind == "policies"
                 }),
                 "locations": new AccordionItemView({
@@ -499,13 +508,15 @@ define([
             } else {
                 var accordion = this.accordion[kind];
                 var self = this;
-                accordion.collection.fetch()
+                // reset is needed because we rely on server's ordering;
+                // without it, server additions are placed at end of list
+                accordion.collection.fetch({reset: true})
                     .then(function() {
                         var model = accordion.collection.get(id);
                         if (!model) {
-                            self.setDetailsView(new CatalogItemDetailsView().renderEmpty(
-                                    "No " + accordion.options.singular + " with id: " + id));
+                            // caller probably passed the wrong kind (in case of entity v app, the caller might try both)                        
                         } else {
+                            Backbone.history.navigate("/v1/catalog/"+kind+"/"+id);
                             activeDetailsView = kind;
                             accordion.activeCid = model.cid;
                             accordion.options.onItemSelected(kind, model);

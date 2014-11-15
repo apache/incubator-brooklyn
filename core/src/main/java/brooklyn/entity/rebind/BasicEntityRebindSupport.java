@@ -40,6 +40,7 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.location.Location;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.basic.AbstractPolicy;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -85,8 +86,9 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
                 @SuppressWarnings("unused") // just to ensure we can load the declared type? or maybe not needed
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
                 ((EntityInternal)entity).setAttributeWithoutPublishing((AttributeSensor<Object>)key, value);
-            } catch (ClassNotFoundException e) {
-                throw Throwables.propagate(e);
+            } catch (Exception e) {
+                LOG.warn("Error adding custom sensor "+entry+" when rebinding "+entity+" (rethrowing): "+e);
+                throw Exceptions.propagate(e);
             }
         }
         
