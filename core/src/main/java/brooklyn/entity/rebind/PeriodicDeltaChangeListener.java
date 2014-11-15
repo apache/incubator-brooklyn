@@ -106,6 +106,9 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         public void add(BrooklynObject instance) {
             BrooklynObjectType type = BrooklynObjectType.of(instance);
             getUnsafeCollectionOfType(type).add(instance);
+            if (type==BrooklynObjectType.CATALOG_ITEM) {
+                removedCatalogItemIds.remove(instance.getId());
+            }
         }
         
         public void addIfNotRemoved(BrooklynObject instance) {

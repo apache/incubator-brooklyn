@@ -32,8 +32,11 @@ import org.testng.annotations.Test;
 
 import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
 import brooklyn.camp.lite.TestAppAssemblyInstantiator;
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogLoadMode;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.proxying.EntitySpec;
@@ -169,6 +172,24 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         toTag = Iterables.getOnlyElement(newManagementContext.getCatalog().getCatalogItems());
         assertTrue(toTag.tags().containsTag(tag));
         toTag.tags().removeTag(tag);
+    }
+
+    @Test
+    public void testSameCatalogItemIdRemovalAndAdditionRebinds() throws Exception {
+        //The test is not reliable on Windows (doesn't catch the pre-fix problem) -
+        //the store is unable to delete still locked files so the bug doesn't manifest.
+        //TODO investigate if locked files not caused by unclosed streams!
+        String yaml = 
+                "name: rebind-yaml-catalog-item-test\n" +
+                "brooklyn.catalog:\n" +
+                "  version: " + TEST_VERSION + "\n" +
+                "services:\n" +
+                "- type: io.camp.mock:AppServer";
+        BasicBrooklynCatalog catalog = (BasicBrooklynCatalog) origManagementContext.getCatalog();
+        catalog.addItem(yaml);
+        String catalogXml = catalog.toXmlString();
+        catalog.reset(CatalogDto.newDtoFromXmlContents(catalogXml, "Test reset"));
+        rebindAndAssertCatalogsAreEqual();
     }
 
     private void rebindAndAssertCatalogsAreEqual() {
