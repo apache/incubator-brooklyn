@@ -379,6 +379,8 @@ public class Main extends AbstractMain {
                 
                 computeAndSetApp(launcher, utils, loader);
                 
+                customize(launcher);
+                
             } catch (FatalConfigurationRuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -424,6 +426,10 @@ public class Main extends AbstractMain {
             return null;
         }
 
+        /** can be overridden by subclasses which need to customize the launcher and/or management */
+        protected void customize(BrooklynLauncher launcher) {
+        }
+        
         protected void computeLocations() {
             boolean hasLocations = !Strings.isBlank(locations);
             if (app != null) {

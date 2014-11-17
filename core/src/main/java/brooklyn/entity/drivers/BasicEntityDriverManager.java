@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.drivers;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.location.Location;
 
 public class BasicEntityDriverManager implements EntityDriverManager {
@@ -28,6 +30,12 @@ public class BasicEntityDriverManager implements EntityDriverManager {
     public BasicEntityDriverManager() {
         registry = new RegistryEntityDriverFactory();
         reflective = new ReflectiveEntityDriverFactory();
+    }
+    
+    /** driver override mechanism; experimental @since 0.7.0 */
+    @Beta
+    public ReflectiveEntityDriverFactory getReflectiveDriverFactory() {
+        return reflective;
     }
     
     public <D extends EntityDriver> void registerDriver(Class<D> driverInterface, Class<? extends Location> locationClazz, Class<? extends D> driverClazz) {
