@@ -36,6 +36,8 @@ import javax.servlet.DispatcherType;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -135,6 +137,9 @@ public class BrooklynWebServer {
     /** The address that this server's management context will be publically available on. */
     @SetFromFlag
     protected InetAddress publicAddress = null;
+
+    @SetFromFlag
+    protected String blueprintExportDir = null;
 
     /**
      * map of context-prefix to file
@@ -276,6 +281,12 @@ public class BrooklynWebServer {
      */
     public BrooklynWebServer setPublicAddress(InetAddress address) {
         publicAddress = address;
+        return this;
+    }
+
+    /** Directory containing blueprints to export. */
+    public BrooklynWebServer setExportDirectory(String exportDir) {
+        blueprintExportDir = exportDir;
         return this;
     }
 
@@ -430,6 +441,18 @@ public class BrooklynWebServer {
         rootContext.addFilter(LoggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         installAsServletFilter(rootContext);
+
+        if (Strings.isNonEmpty(blueprintExportDir)) {
+            ContextHandler blueprints = new ContextHandler("/blueprints");
+            ResourceHandler rh = new ResourceHandler();
+            rh.setDirectoriesListed(true);
+            rh.setResourceBase(blueprintExportDir);
+            rh.setAliases(false);
+            String stylesheet = getClass().getClassLoader().getResource("blueprints.css").toExternalForm();
+            rh.setStylesheet(stylesheet);
+            blueprints.setHandler(rh);
+            handlers.addHandler(blueprints);
+        }
 
         server.setHandler(handlers);
         server.start();

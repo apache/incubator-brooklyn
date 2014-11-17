@@ -81,14 +81,14 @@ if ( $javabin -eq $null ) {
 # set up the classpath
 $cp = Get-ChildItem ${BROOKLYN_HOME}\conf | Select-Object -ExpandProperty FullName
 
-if ( Test-Path ${BROOKLYN_HOME}\patch ) {
-    $cp += Get-ChildItem ${BROOKLYN_HOME}\patch | Select-Object -ExpandProperty FullName
+if ( Test-Path ${BROOKLYN_HOME}\lib\patch ) {
+    $cp += Get-ChildItem ${BROOKLYN_HOME}\lib\patch | Select-Object -ExpandProperty FullName
 }
 
 $cp += Get-ChildItem ${BROOKLYN_HOME}\lib\brooklyn | Select-Object -ExpandProperty FullName
 
-if ( Test-Path ${BROOKLYN_HOME}\dropins ) {
-    $cp += Get-ChildItem ${BROOKLYN_HOME}\dropins | Select-Object -ExpandProperty FullName
+if ( Test-Path ${BROOKLYN_HOME}\lib\dropins ) {
+    $cp += Get-ChildItem ${BROOKLYN_HOME}\lib\dropins | Select-Object -ExpandProperty FullName
 }
 
 $INITIAL_CLASSPATH = $cp -join ';'
@@ -111,6 +111,10 @@ if ( $env:JAVA_OPTS -eq $null ) {
 # force resolution of localhost to be loopback, otherwise we hit problems
 # TODO should be changed in code
 $javaargs += "-Dbrooklyn.localhost.address=127.0.0.1 $($JAVA_OPTS)"
+
+# add blueprint export directory
+$javaargs += "$($JAVA_OPTS) -Dbrooklyn.blueprints.exportDir=${BROOKLYN_HOME}\blueprints"
+
 
 # workaround for http://bugs.sun.com/view_bug.do?bug_id=4787931
 $javaargs += "-Duser.home=`"$env:USERPROFILE`""

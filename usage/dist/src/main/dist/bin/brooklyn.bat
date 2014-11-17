@@ -76,6 +76,9 @@ REM force resolution of localhost to be loopback, otherwise we hit problems
 REM TODO should be changed in code
 SET JAVA_OPTS=-Dbrooklyn.location.localhost.address=127.0.0.1 %JAVA_OPTS%
 
+REM add blueprint export directory
+SET JAVA_OPTS=%JAVA_OPTS% -Dbrooklyn.blueprints.exportDir=%BROOKLYN_HOME%blueprints"
+
 REM workaround for http://bugs.sun.com/view_bug.do?bug_id=4787931
 SET JAVA_OPTS=-Duser.home="%USERPROFILE%" %JAVA_OPTS%
 
