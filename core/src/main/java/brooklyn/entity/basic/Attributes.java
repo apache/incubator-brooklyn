@@ -141,6 +141,10 @@ public interface Attributes {
      * Brooklyn management attributes (optional)
      */
 
+    /**
+     * Used by entities registering a {@link ManagementContext.PropertiesReloadListener} to store a persistent
+     * reference to it, for use when unregistering the listener.
+     */
     AttributeSensor<ManagementContext.PropertiesReloadListener> PROPERTIES_RELOAD_LISTENER = Sensors.newSensor(
             ManagementContext.PropertiesReloadListener.class,
             "brooklyn.management.propertiesReloadListener", "Properties reload listener");
