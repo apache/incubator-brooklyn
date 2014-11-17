@@ -32,7 +32,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.ConfigKey;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
@@ -53,19 +55,24 @@ public class OsgiManager {
     
     /* see Osgis for info on starting framework etc */
     
+    protected ManagementContext mgmt;
     protected Framework framework;
-    protected File osgiTempDir;
+    protected File osgiCacheDir;
 
     // we could manage without this map but it is useful to validate what is a user-supplied url
     protected Map<String,VersionedName> urlToBundleIdentifier = MutableMap.of();
 
+
+    public OsgiManager(ManagementContext mgmt) {
+        this.mgmt = mgmt;
+    }
+
     public void start() {
         try {
-            // TODO any extra startup args?
-            // TODO dir to come from brooklyn properties;
-            // note dir must be different for each if starting multiple instances
-            osgiTempDir = Os.newTempDir("brooklyn-osgi-cache");
-            framework = Osgis.newFrameworkStarted(osgiTempDir.getAbsolutePath(), false, MutableMap.of());
+            osgiCacheDir = BrooklynServerPaths.getOsgiCacheDirCleanedIfNeeded(mgmt);
+            
+            // any extra OSGi startup args could go here
+            framework = Osgis.newFrameworkStarted(osgiCacheDir.getAbsolutePath(), false, MutableMap.of());
             
         } catch (Exception e) {
             throw Exceptions.propagate(e);
@@ -83,11 +90,13 @@ public class OsgiManager {
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
-        DeletionResult deleteRecursively = Os.deleteRecursively(osgiTempDir);
-        if (deleteRecursively.getThrowable()!=null) {
-            log.debug("Unable to delete "+osgiTempDir+" (possibly already deleted?): "+deleteRecursively.getThrowable());
+        if (BrooklynServerPaths.isOsgiCacheForCleaning(mgmt, osgiCacheDir)) {
+            DeletionResult deleteRecursively = Os.deleteRecursively(osgiCacheDir);
+            if (deleteRecursively.getThrowable()!=null) {
+                log.debug("Unable to delete "+osgiCacheDir+" (possibly already deleted?): "+deleteRecursively.getThrowable());
+            }
         }
-        osgiTempDir = null;
+        osgiCacheDir = null;
         framework = null;
     }
 

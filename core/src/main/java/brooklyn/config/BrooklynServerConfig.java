@@ -109,14 +109,26 @@ public class BrooklynServerConfig {
             "The mode the management context should use to load the catalog when first starting",
             CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL);
 
+    /** string used in places where the management node ID is needed to resolve a path */
+    public static final String MANAGEMENT_NODE_ID_PROPERTY = "brooklyn.mgmt.node.id";
+    
     public static final ConfigKey<Boolean> USE_OSGI = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.enabled",
         "Whether OSGi is enabled, defaulting to true", true);
+    public static final ConfigKey<String> OSGI_CACHE_DIR = ConfigKeys.newStringConfigKey("brooklyn.osgi.cache.dir",
+        "Directory to use for OSGi cache, potentially including Freemarker template variables "
+        + "${"+MGMT_BASE_DIR.getName()+"} (which is the default for relative paths), "
+        + "${"+Os.TmpDirFinder.BROOKLYN_OS_TMPDIR_PROPERTY+"} if it should be in the tmp dir space,  "
+        + "and ${"+MANAGEMENT_NODE_ID_PROPERTY+"} to include the management node ID (recommended if running multiple OSGi paths)",
+        "osgi/cache/${"+MANAGEMENT_NODE_ID_PROPERTY+"}/");
+    public static final ConfigKey<Boolean> OSGI_CACHE_CLEAN = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.cache.clean",
+        "Whether to delete the OSGi directory before and after use; if unset, it will delete if the node ID forms part of the cache dir path (which by default it does) to avoid file leaks");
 
     public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
         "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
 
     public static final AttributeSensor<ManagementContext.PropertiesReloadListener> PROPERTIES_RELOAD_LISTENER = Sensors.newSensor(
             ManagementContext.PropertiesReloadListener.class, "brooklyn.management.propertiesReloadListenet", "Properties reload listener");
+
 
     /** @see BrooklynServerPaths#getMgmtBaseDir(ManagementContext) */
     public static String getMgmtBaseDir(ManagementContext mgmt) {
