@@ -76,8 +76,8 @@ public class LocalManagementContextForTests extends LocalManagementContext {
     
     private static <T> void setFailingIfConflicting(BrooklynProperties brooklynProperties, ConfigKey<T> key, T value) {
         Object old = brooklynProperties.put(key, value);
-        if (old!=null && !old.equals(value)) {
-            throw new IllegalStateException("Not supported to override value for '"+key+"'; was "+old+", setting "+value);
+        if (old != null && !old.equals(value)) {
+            throw new IllegalStateException("Cannot change value for '" + key + "' from " + old + " to " + value);
         }
     }
 
