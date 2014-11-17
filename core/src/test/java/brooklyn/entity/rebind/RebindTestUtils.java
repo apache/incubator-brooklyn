@@ -29,7 +29,6 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.collections.Maps;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
@@ -56,6 +55,7 @@ import brooklyn.util.javalang.Serializers.ObjectReplacer;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 public class RebindTestUtils {
 
