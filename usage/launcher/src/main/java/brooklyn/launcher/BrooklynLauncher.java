@@ -101,6 +101,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -154,6 +155,8 @@ public class BrooklynLauncher {
     private boolean ignoreAppErrors = false;
     
     private StopWhichAppsOnShutdown stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
+    
+    private Function<ManagementContext,Void> customizeManagement = null;
     
     private PersistMode persistMode = PersistMode.DISABLED;
     private HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
@@ -402,6 +405,11 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher customizeManagement(Function<ManagementContext,Void> customizeManagement) {
+        this.customizeManagement = customizeManagement;
+        return this;
+    }
+
     public BrooklynLauncher shutdownOnExit(boolean val) {
         LOG.warn("Call to deprecated `shutdownOnExit`", new Throwable("source of deprecated call"));
         stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
@@ -637,6 +645,10 @@ public class BrooklynLauncher {
         } else if (brooklynProperties == null) {
             brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
             brooklynProperties.addFromMap(brooklynAdditionalProperties);
+        }
+        
+        if (customizeManagement!=null) {
+            customizeManagement.apply(managementContext);
         }
     }
 

@@ -19,6 +19,7 @@
 package brooklyn.rest.resources;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -61,6 +62,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
@@ -303,20 +305,32 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ALL_SERVER_INFO, null))
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
 
+        File dir = null;
         try {
             String label = mgmt().getManagementNodeId()+"-"+Time.makeDateSimpleStampString();
             PersistenceObjectStore targetStore = BrooklynPersistenceUtils.newPersistenceObjectStore(mgmt(), null, 
-                "web-persistence-"+label+"-"+Identifiers.makeRandomId(4));
+                "tmp/web-persistence-"+label+"-"+Identifiers.makeRandomId(4));
+            dir = ((FileBasedObjectStore)targetStore).getBaseDir();
+            // only register the parent dir because that will prevent leaks for the random ID
+            Os.deleteOnExitEmptyParentsUpTo(dir.getParentFile(), dir.getParentFile());
             BrooklynPersistenceUtils.writeMemento(mgmt(), targetStore, preferredOrigin);            
             
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ArchiveBuilder.zip().addDirContentsAt( ((FileBasedObjectStore)targetStore).getBaseDir(), ((FileBasedObjectStore)targetStore).getBaseDir().getName() ).stream(baos);
+            Os.deleteRecursively(dir);
             String filename = "brooklyn-state-"+label+".zip";
             return Response.ok(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .header("Content-Disposition","attachment; filename = "+filename)
                 .build();
         } catch (Exception e) {
             log.warn("Unable to serve persistence data (rethrowing): "+e, e);
+            if (dir!=null) {
+                try {
+                    Os.deleteRecursively(dir);
+                } catch (Exception e2) {
+                    log.warn("Ignoring error deleting '"+dir+"' after another error, throwing original error ("+e+"); ignored error deleting is: "+e2);
+                }
+            }
             throw Exceptions.propagate(e);
         }
     }

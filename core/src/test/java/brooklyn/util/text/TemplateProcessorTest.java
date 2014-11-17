@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.FixedLocaleTest;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -109,14 +110,6 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
-    public void testManagementContextConfigWithDot() {
-        mgmt.getBrooklynProperties().put("global.mykey", "myval");
-        String templateContents = "${mgmt['global.mykey']}";
-        String result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
-        assertEquals(result, "myval");
-    }
-    
-    @Test
     public void testManagementContextDefaultValue() {
         String templateContents = "${(missing)!\"defval\"}";
         Object result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
@@ -131,9 +124,17 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
+    public void testManagementContextConfigWithDot() {
+        mgmt.getBrooklynProperties().put("global.mykey", "myval");
+        String templateContents = "${mgmt['global.mykey']}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
+        assertEquals(result, "myval");
+    }
+    
+    @Test
     public void testManagementContextErrors() {
         try {
-            // NB: dot has special meaning so this should fail
+            // NB: dot has special meaning so this should fail; must be accessed using bracket notation as above
             mgmt.getBrooklynProperties().put("global.mykey", "myval");
             String templateContents = "${mgmt.global.mykey}";
             TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
@@ -154,4 +155,25 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
         String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.<String,Object>of());
         assertEquals(result, "myval");
     }
+    
+    @Test
+    public void testDotSeparatedKey() {
+        String templateContents = "${a.b}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, (ManagementContextInternal)null, 
+            ImmutableMap.<String,Object>of("a.b", "myval"));
+        assertEquals(result, "myval");
+    }
+    
+    @Test
+    public void testDotSeparatedKeyCollisionFailure() {
+        String templateContents = "${aaa.bbb}";
+        try {
+            TemplateProcessor.processTemplateContents(templateContents, (ManagementContextInternal)null, 
+                ImmutableMap.<String,Object>of("aaa.bbb", "myval", "aaa", "blocker"));
+            Assert.fail("Should not have found value with intermediate dot where prefix is overridden");
+        } catch (Exception e) {
+            Assert.assertTrue(e.toString().contains("aaa"), "Should have mentioned missing key 'aaa' in error");
+        }
+    }
+
 }

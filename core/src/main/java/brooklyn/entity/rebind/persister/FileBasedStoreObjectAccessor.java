@@ -97,10 +97,15 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
     @Override
     public void delete() {
         if (!file.delete()) {
-            LOG.error("Unable to delete " + file.getAbsolutePath() + ". Probably still locked.");
+            if (!file.exists()) {
+                LOG.debug("Unable to delete " + file.getAbsolutePath() + ". Probably did not exist.");
+            } else {
+                LOG.warn("Unable to delete " + file.getAbsolutePath() + ". Probably still locked.");
+            }
         }
-        if (!tmpFile.delete()) {
-            LOG.error("Unable to delete " + tmpFile.getAbsolutePath() + ". Probably still locked.");
+        if (tmpFile.exists() && !tmpFile.delete()) {
+            // tmpFile is probably already deleted, so don't even log debug if it does not exist
+            LOG.warn("Unable to delete " + tmpFile.getAbsolutePath() + ". Probably still locked.");
         }
     }
 

@@ -186,7 +186,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         this.usageManager = new LocalUsageManager(this);
         
         if (configMap.getConfig(OsgiManager.USE_OSGI)) {
-            this.osgiManager = new OsgiManager();
+            this.osgiManager = new OsgiManager(this);
             osgiManager.start();
         }
         

@@ -29,12 +29,14 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
@@ -234,6 +236,45 @@ public class BrooklynServerPaths {
         }
     }
 
-    // TODO OSGi
+    public static File getOsgiCacheDir(ManagementContext mgmt) {
+        StringConfigMap brooklynProperties = mgmt.getConfig();
+        String cacheDir = brooklynProperties.getConfig(BrooklynServerConfig.OSGI_CACHE_DIR);
+        
+        // note dir should be different for each instance if starting multiple instances
+        // hence default including management node ID
+        
+        cacheDir = TemplateProcessor.processTemplateContents(cacheDir, (ManagementContextInternal)mgmt, 
+            MutableMap.of(BrooklynServerConfig.MGMT_BASE_DIR.getName(), getMgmtBaseDir(mgmt),
+                BrooklynServerConfig.MANAGEMENT_NODE_ID_PROPERTY, mgmt.getManagementNodeId(),
+                Os.TmpDirFinder.BROOKLYN_OS_TMPDIR_PROPERTY, Os.tmp()));
+        cacheDir = resolveAgainstBaseDir(mgmt.getConfig(), cacheDir);
+        
+        return new File(cacheDir);
+    }
+
+    public static boolean isOsgiCacheForCleaning(ManagementContext mgmt, File cacheDir) {
+        StringConfigMap brooklynProperties = mgmt.getConfig();
+        Boolean clean = brooklynProperties.getConfig(BrooklynServerConfig.OSGI_CACHE_CLEAN);
+        if (clean==null) {
+            // as per javadoc on key, clean defaults to iff it is a node-id-specific directory
+            clean = cacheDir.getName().contains(mgmt.getManagementNodeId());
+        }
+        return clean;
+    }
     
+    public static File getOsgiCacheDirCleanedIfNeeded(ManagementContext mgmt) {
+        File cacheDirF = getOsgiCacheDir(mgmt);
+        boolean clean = isOsgiCacheForCleaning(mgmt, cacheDirF);
+        log.debug("OSGi cache dir computed as "+cacheDirF.getName()+" ("+
+            (cacheDirF.exists() ? "already exists" : "does not exist")+", "+
+            (clean ? "cleaning now (and on exit)" : "cleaning not requested"));
+
+        if (clean) {
+            Os.deleteRecursively(cacheDirF);
+            Os.deleteOnExitRecursively(cacheDirF);
+        }
+        
+        return cacheDirF;
+    }
+
 }
