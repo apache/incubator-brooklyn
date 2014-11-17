@@ -402,7 +402,16 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
     @Deprecated
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
-        Iterable<CatalogItem<Object,Object>> resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
+        // Automated tests and manual tests suggests that typeName is either symbolic-name or symbolic-name:version so
+        // detect which has been passed in.
+        final Iterable<CatalogItem<Object,Object>> resultL;
+        if (typeName.indexOf(':') == -1) {
+            resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
+        }
+        else {
+            resultL = getCatalogItems(CatalogPredicates.typeName(typeName));
+        }
+
         if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
         CatalogItem<?,?> resultI = resultL.iterator().next();
         if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
