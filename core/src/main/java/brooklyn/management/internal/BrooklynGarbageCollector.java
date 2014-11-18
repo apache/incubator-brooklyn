@@ -222,6 +222,7 @@ public class BrooklynGarbageCollector {
             Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
             Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory" +
             " ("+Strings.makeSizeString(MemoryUsageTracker.SOFT_REFERENCES.getBytesUsed()) + " soft); "+
+            Thread.activeCount()+" threads; "+
             "storage: " + storage.getStorageMetrics() + "; " +
             "tasks: " +
             executionManager.getNumActiveTasks()+" active, "+
