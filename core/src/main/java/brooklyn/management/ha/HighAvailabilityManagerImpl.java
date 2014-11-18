@@ -253,7 +253,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     
     @VisibleForTesting
     @Beta
-    public void changeMode(HighAvailabilityMode startMode, boolean preventElectionOnExplicitStandbyMode, boolean failOnExplicitStandbyModeIfNoMaster) {
+    public void changeMode(HighAvailabilityMode startMode, boolean preventElectionOnExplicitStandbyMode, boolean failOnExplicitModesIfUnusual) {
         if (!running) {
             // if was not running then start as disabled mode, then proceed as normal
             LOG.info("HA changing mode to "+startMode+" from "+getInternalNodeState()+" when not running, forcing an intermediate start as DISABLED then will convert to "+startMode);
@@ -334,9 +334,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
             break;
         case MASTER:
-            if (existingMaster == null) {
+            if (!failOnExplicitModesIfUnusual || existingMaster==null) {
                 promoteToMaster();
-                LOG.info("Management node "+ownNodeId+" running as HA MASTER explicitly");
+                if (existingMaster!=null) {
+                    LOG.info("Management node "+ownNodeId+" running as HA MASTER explicitly");
+                } else {
+                    LOG.info("Management node "+ownNodeId+" running as HA MASTER explicitly, stealing from "+existingMaster);
+                }
             } else if (!weAreRecognisedAsMaster) {
                 throw new IllegalStateException("Master already exists; cannot run as master (master "+existingMaster.toVerboseString()+"); "
                     + "to trigger a promotion, set a priority and demote the current master");
@@ -362,7 +366,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 if (!preventElectionOnExplicitStandbyMode) {
                     publishAndCheck(true);
                 }
-                if (failOnExplicitStandbyModeIfNoMaster && existingMaster==null) {
+                if (failOnExplicitModesIfUnusual && existingMaster==null) {
                     LOG.error("Management node "+ownNodeId+" detected no master when "+startMode+" requested and existing master required; failing.");
                     throw new IllegalStateException("No existing master; cannot start as "+startMode);
                 }
