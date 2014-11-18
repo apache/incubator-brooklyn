@@ -51,11 +51,11 @@ public class EntityTestUtils {
     // and deprecate methods in TestUtils until deleted).
     
     public static <T> void assertAttributeEquals(Entity entity, AttributeSensor<T> attribute, T expected) {
-        assertEquals(entity.getAttribute(attribute), expected);
+        assertEquals(entity.getAttribute(attribute), expected, "entity="+entity+"; attribute="+attribute);
     }
     
     public static <T> void assertConfigEquals(Entity entity, ConfigKey<T> configKey, T expected) {
-        assertEquals(entity.getConfig(configKey), expected);
+        assertEquals(entity.getConfig(configKey), expected, "entity="+entity+"; configKey="+configKey);
     }
     
     public static <T> void assertAttributeEqualsEventually(final Entity entity, final AttributeSensor<T> attribute, final T expected) {
