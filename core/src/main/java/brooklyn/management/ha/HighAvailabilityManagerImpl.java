@@ -241,9 +241,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     @Override
     public void start(HighAvailabilityMode startMode) {
         nodeStateTransitionComplete = true;
-        // always start in standby, unless hot backup; it may get promoted to master or hot_standby in this method
-        // (depending on startMode; but for startMode STANDBY or HOT_STANDBY it will not promote until the next election)
-        setInternalNodeState(startMode==HighAvailabilityMode.HOT_BACKUP ? ManagementNodeState.HOT_BACKUP : ManagementNodeState.STANDBY);
         disabled = false;
         running = true;
         changeMode(startMode, true, true);
@@ -264,8 +261,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
         if (getNodeState()==ManagementNodeState.FAILED || getNodeState()==ManagementNodeState.INITIALIZING) {
             if (startMode!=HighAvailabilityMode.DISABLED) {
-                // if coming from FAILED (or INITIALIZING because we skipped start call) then treat as cold standby
-                setInternalNodeState(ManagementNodeState.STANDBY);
+                // if coming from FAILED (or INITIALIZING because we skipped start call) then treat as initializing
+                setInternalNodeState(ManagementNodeState.INITIALIZING);
             }
         }
         
@@ -303,6 +300,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         switch (startMode) {
         case AUTO:
             // don't care; let's start and see if we promote ourselves
+            if (getInternalNodeState()==ManagementNodeState.INITIALIZING) {
+                setInternalNodeState(ManagementNodeState.STANDBY);
+            }
             publishAndCheck(true);
             switch (getInternalNodeState()) {
             case HOT_BACKUP:
@@ -312,6 +312,11 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 startMode = HighAvailabilityMode.HOT_STANDBY;
             case HOT_STANDBY:
             case STANDBY:
+                if (getInternalNodeState()==ManagementNodeState.STANDBY && oldState==ManagementNodeState.INITIALIZING
+                        && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY)) {
+                    // auto requested; not promoted; so it should become hot standby
+                    setInternalNodeState(ManagementNodeState.HOT_STANDBY);
+                }
                 ManagementPlaneSyncRecord newState = loadManagementPlaneSyncRecord(true);
                 String masterNodeId = newState.getMasterNodeId();
                 ManagementNodeSyncRecord masterNodeDetails = newState.getManagementNodes().get(masterNodeId);
@@ -676,6 +681,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         ManagementNodeSyncRecord ownNodeRecord = memento.getManagementNodes().get(ownNodeId);
         
         ManagementNodeSyncRecord newMasterNodeRecord = null;
+        boolean weWereMaster = getNodeState()==ManagementNodeState.MASTER;
         boolean demotingSelfInFavourOfOtherMaster = false;
         
         if (currMasterNodeRecord != null && currMasterNodeRecord.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(currMasterNodeRecord, ownNodeRecord)) {
@@ -759,7 +765,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     (weAreNewMaster ? "us " : "")
                     + newMasterNodeId + " (" + timestampString(newMasterNodeRecord.getRemoteTimestamp()) + ")" 
                     + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  );
-            LOG.warn(message);
+            if (weWereMaster || weAreNewMaster) LOG.info(message);
+            else LOG.debug(message);
         }
 
         // New master is ourself: promote

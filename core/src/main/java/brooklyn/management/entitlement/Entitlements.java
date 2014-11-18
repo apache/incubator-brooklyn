@@ -301,11 +301,15 @@ public class Entitlements {
         if ("minimal".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(minimal());
         if (Strings.isNonBlank(type)) {
             try {
-                Class<?> clazz = ((ManagementContextInternal)mgmt).getBaseClassLoader().loadClass(type);
+                ClassLoader cl = ((ManagementContextInternal)mgmt).getBaseClassLoader();
+                if (cl==null) cl = Entitlements.class.getClassLoader();
+                Class<?> clazz = cl.loadClass(type);
                 Optional<?> result = Reflections.invokeConstructorWithArgs(clazz, brooklynProperties);
                 if (result.isPresent()) return (EntitlementManager) result.get();
                 return (EntitlementManager) clazz.newInstance();
-            } catch (Exception e) { throw Exceptions.propagate(e); }
+            } catch (Exception e) { 
+                throw Exceptions.propagate(e); 
+            }
         }
         throw new IllegalStateException("Invalid entitlement manager specified: '"+type+"'");
     }
