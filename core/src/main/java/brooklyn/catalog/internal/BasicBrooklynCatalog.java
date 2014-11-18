@@ -274,7 +274,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     /**
-     * Loads this catalog
+     * Loads this catalog. No effect if already loaded.
      */
     public void load() {
         log.debug("Loading catalog for " + mgmt);
@@ -668,6 +668,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems() {
+        if (!getCatalog().isLoaded()) {
+            // some callers use this to force the catalog to load (maybe when starting as hot_backup without a catalog ?)
+            log.debug("Forcing catalog load on access of catalog items");
+            load();
+        }
         return ImmutableList.copyOf((Iterable)catalog.getIdCache().values());
     }
     

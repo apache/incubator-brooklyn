@@ -37,6 +37,7 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
+import com.google.api.client.util.Objects;
 import com.google.common.base.Preconditions;
 
 public class CatalogDo {
@@ -83,7 +84,13 @@ public class CatalogDo {
      * (but does not load all JARs)
      */
     public synchronized CatalogDo load(ManagementContext mgmt, CatalogDo parent) {
-        if (isLoaded()) return this;
+        if (isLoaded()) {
+            if (mgmt!=null && !Objects.equal(mgmt, this.mgmt)) {
+                throw new IllegalStateException("Cannot set mgmt "+mgmt+" on "+this+" after catalog is loaded");
+            }
+            log.debug("Catalog "+this+" is already loaded");
+            return this;
+        }
         loadThisCatalog(mgmt, parent);
         loadChildrenCatalogs();
         buildCaches();
