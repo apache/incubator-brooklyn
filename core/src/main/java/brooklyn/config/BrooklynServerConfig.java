@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.guava.Maybe;
@@ -125,10 +124,6 @@ public class BrooklynServerConfig {
 
     public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
         "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
-
-    public static final AttributeSensor<ManagementContext.PropertiesReloadListener> PROPERTIES_RELOAD_LISTENER = Sensors.newSensor(
-            ManagementContext.PropertiesReloadListener.class, "brooklyn.management.propertiesReloadListenet", "Properties reload listener");
-
 
     /** @see BrooklynServerPaths#getMgmtBaseDir(ManagementContext) */
     public static String getMgmtBaseDir(ManagementContext mgmt) {
