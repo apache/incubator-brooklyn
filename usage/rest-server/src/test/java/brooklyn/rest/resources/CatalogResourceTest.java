@@ -194,6 +194,19 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   }
 
   @Test
+  @Deprecated
+  //If we move to using a yaml catalog item, the details will be of the wrapping app,
+  //not of the entity itself, so the test won't make sense any more.
+  public void testGetCatalogEntityPlusVersionDetails() {
+      CatalogEntitySummary details = client().resource(
+              URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore:0.0.0.SNAPSHOT"))
+              .get(CatalogEntitySummary.class);
+      assertTrue(details.toString().contains("redis.port"), "expected more config, only got: "+details);
+      String expectedIconUrl = "/v1/catalog/icon/" + details.getSymbolicName() + "/" + details.getVersion();
+      assertEquals(details.getIconUrl(), expectedIconUrl, "expected brooklyn URL for icon image ("+expectedIconUrl+"), but got: "+details.getIconUrl());
+  }
+
+  @Test
   public void testGetCatalogEntityIconDetails() throws IOException {
       String catalogItemId = "testGetCatalogEntityIconDetails";
       addTestCatalogItem(catalogItemId);
