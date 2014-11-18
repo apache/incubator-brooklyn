@@ -74,6 +74,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
@@ -93,8 +94,8 @@ public class Osgis {
     private static final Set<String> SYSTEM_BUNDLES = MutableSet.of();
 
     public static class VersionedName {
-        private String symbolicName;
-        private Version version;
+        private final String symbolicName;
+        private final Version version;
         public VersionedName(Bundle b) {
             this.symbolicName = b.getSymbolicName();
             this.version = b.getVersion();
@@ -112,11 +113,21 @@ public class Osgis {
         public boolean equals(String sn, Version v) {
             return symbolicName.equals(sn) && (version == null && v == null || version != null && version.equals(v));
         }
-        protected String getSymbolicName() {
+        public String getSymbolicName() {
             return symbolicName;
         }
-        protected Version getVersion() {
+        public Version getVersion() {
             return version;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(symbolicName, version);
+        }
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof VersionedName)) return false;
+            VersionedName o = (VersionedName) other;
+            return Objects.equal(symbolicName, o.symbolicName) && Objects.equal(version, o.version);
         }
     }
     
@@ -610,8 +621,8 @@ public class Osgis {
     }
 
     /** Takes a string which might be of the form "symbolic-name" or "symbolic-name:version" (or something else entirely)
-     * and returns an array of 1 or 2 string items being the symbolic name or symbolic name and version if possible
-     * (or returning {@link Maybe#absent()} if not, with a suitable error message). */
+     * and returns a VersionedName. The versionedName.getVersion() will be null if if there was no version in the input
+     * (or returning {@link Maybe#absent()} if not valid, with a suitable error message). */
     public static Maybe<VersionedName> parseOsgiIdentifier(String symbolicNameOptionalWithVersion) {
         if (Strings.isBlank(symbolicNameOptionalWithVersion))
             return Maybe.absent("OSGi identifier is blank");
@@ -621,10 +632,12 @@ public class Osgis {
             return Maybe.absent("OSGi identifier has too many parts; max one ':' symbol");
         
         Version v = null;
-        try {
-            v = Version.parseVersion(parts[1]);
-        } catch (IllegalArgumentException e) {
-            return Maybe.absent("OSGi identifier has invalid version string");
+        if (parts.length == 2) {
+            try {
+                v = Version.parseVersion(parts[1]);
+            } catch (IllegalArgumentException e) {
+                return Maybe.absent("OSGi identifier has invalid version string ("+e.getMessage()+")");
+            }
         }
         
         return Maybe.of(new VersionedName(parts[0], v));
