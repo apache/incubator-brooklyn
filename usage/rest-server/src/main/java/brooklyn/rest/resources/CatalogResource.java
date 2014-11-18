@@ -34,7 +34,6 @@ import javax.ws.rs.core.Response.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
@@ -131,7 +130,10 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Deprecated
     public void deleteEntity(String entityId) throws Exception {
         try {
-            brooklyn().getCatalog().deleteCatalogItem(entityId);
+            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), entityId);
+            if (item==null)
+                throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
+            brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
         } catch (NoSuchElementException e) {
             throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
         }
@@ -160,11 +162,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public CatalogEntitySummary getEntity(String entityId) {
-        //TODO These casts are not pretty, we could just provide separate get methods for the different types?
-        //Or we could provide asEntity/asPolicy cast methods on the CataloItem doing a safety check internally
-        @SuppressWarnings("unchecked")
         CatalogItem<? extends Entity,EntitySpec<?>> result =
-                (CatalogItem<? extends Entity,EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(entityId, BrooklynCatalog.DEFAULT_VERSION);
+                CatalogUtils.getCatalogItemOptionalVersion(mgmt(), Entity.class, entityId);
 
         if (result==null) {
             throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
@@ -175,6 +174,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     
     @Override
     public CatalogEntitySummary getEntity(String entityId, String version) {
+        //TODO These casts are not pretty, we could just provide separate get methods for the different types?
+        //Or we could provide asEntity/asPolicy cast methods on the CataloItem doing a safety check internally
         @SuppressWarnings("unchecked")
         CatalogItem<? extends Entity, EntitySpec<?>> result =
               (CatalogItem<? extends Entity, EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(entityId, version);
@@ -205,9 +206,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public CatalogItemSummary getPolicy(String policyId) {
-        @SuppressWarnings("unchecked")
         CatalogItem<? extends Policy, PolicySpec<?>> result =
-                (CatalogItem<? extends Policy, PolicySpec<?>>) brooklyn().getCatalog().getCatalogItem(policyId, BrooklynCatalog.DEFAULT_VERSION);
+            CatalogUtils.getCatalogItemOptionalVersion(mgmt(), Policy.class, policyId);
 
         if (result==null) {
             throw WebResourceUtils.notFound("Policy with id '%s' not found", policyId);
@@ -248,7 +248,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public Response getIcon(String itemId) {
-        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId, BrooklynCatalog.DEFAULT_VERSION);
+        CatalogItem<?,?> result = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), itemId);
         return getCatalogItemIcon(result);
     }
 
