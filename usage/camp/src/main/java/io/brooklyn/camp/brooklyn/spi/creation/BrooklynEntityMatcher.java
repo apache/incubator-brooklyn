@@ -71,7 +71,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
 
             String serviceType = service.getServiceType();
             BrooklynClassLoadingContext loader = BasicBrooklynCatalog.BrooklynLoaderTracker.getLoader();
-            if (loader == null) loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
+            if (loader == null) loader = JavaBrooklynClassLoadingContext.create(mgmt);
             if (BrooklynComponentTemplateResolver.Factory.supportsType(loader, serviceType))
                 return serviceType;
 
@@ -212,7 +212,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         try {
             // TODO don't use the mgmt loader, but instead use something like catalog.createSpec
             // currently we get warnings and are unable to retrieve flags for items which come from catalog 
-            Class<? extends Entity> type = BrooklynComponentTemplateResolver.Factory.newInstance(JavaBrooklynClassLoadingContext.newDefault(mgmt), typeName).loadEntityClass();
+            Class<? extends Entity> type = BrooklynComponentTemplateResolver.Factory.newInstance(JavaBrooklynClassLoadingContext.create(mgmt), typeName).loadEntityClass();
             ConfigBag bag = ConfigBag.newInstance(attrs);
             List<FlagConfigKeyAndValueRecord> values = FlagUtils.findAllFlagsAndConfigKeys(null, type, bag);
             

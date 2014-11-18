@@ -36,7 +36,6 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
@@ -44,6 +43,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTags;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.VanillaSoftwareProcess;
@@ -56,6 +56,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
@@ -65,6 +66,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -191,7 +193,7 @@ public class BrooklynComponentTemplateResolver {
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
         String type = getBrooklynType();
         if (type != null) {
-            return CatalogUtils.getCatalogItemOptionalVersion(loader.getManagementContext(), Entity.class,  type);
+            return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  type);
         } else {
             return null;
         }
@@ -385,10 +387,20 @@ public class BrooklynComponentTemplateResolver {
     }
 
     protected static class SpecialFlagsTransformer implements Function<Object, Object> {
-        // TODO this may be large when serialized as it includes the context search bundles
-        final BrooklynClassLoadingContext loader;
+        protected final ManagementContext mgmt;
+        /* TODO find a way to make do without loader here?
+         * it is not very nice having to serialize it; but serialization of BLCL is now relatively clean.
+         * 
+         * it is only used to instantiate classes, and now most things should be registered with catalog;
+         * the notable exception is when one entity in a bundle is creating another in the same bundle,
+         * it wants to use his bundle CLC to do that.  but we can set up some unique reference to the entity 
+         * which can be used to find it from mgmt, rather than pass the loader.
+         */
+        private BrooklynClassLoadingContext loader = null;
+        
         public SpecialFlagsTransformer(BrooklynClassLoadingContext loader) {
             this.loader = loader;
+            mgmt = loader.getManagementContext();
         }
         public Object apply(Object input) {
             if (input instanceof Map)
@@ -411,6 +423,16 @@ public class BrooklynComponentTemplateResolver {
             return Iterables.transform(flag, this);
         }
         
+        protected BrooklynClassLoadingContext getLoader() {
+            if (loader!=null) return loader;
+            // TODO currently loader will non-null unless someone has messed with the rebind files,
+            // but we'd like to get rid of it; ideally we'd have a reference to the entity.
+            // for now, this is a slightly naff way to do it, if we have to set loader=null as a workaround
+            Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
+            if (entity!=null) return CatalogUtils.getClassLoadingContext(entity);
+            return JavaBrooklynClassLoadingContext.create(mgmt);
+        }
+        
         /**
          * Makes additional transformations to the given flag with the extra knowledge of the flag's management context.
          * @return The modified flag, or the flag unchanged.
@@ -423,7 +445,7 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(loader, specConfig.getSpecConfiguration()).resolveSpec();
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec();
             }
             if (flag instanceof ManagementContextInjectable) {
                 if (log.isDebugEnabled()) { log.debug("Injecting Brooklyn management context info object: {}", flag); }

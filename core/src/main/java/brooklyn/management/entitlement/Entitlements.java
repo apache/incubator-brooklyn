@@ -21,25 +21,26 @@ package brooklyn.management.entitlement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.Beta;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.reflect.TypeToken;
-
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.util.ResourceUtils;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.reflect.TypeToken;
 
 /** @since 0.7.0 */
 @Beta
@@ -288,19 +289,19 @@ public class Entitlements {
         + "or supply the name of an "+EntitlementManager.class+" class to instantiate, taking a 1-arg BrooklynProperties constructor or a 0-arg constructor",
         "root");
     
-    public static EntitlementManager newManager(ResourceUtils loader, BrooklynProperties brooklynProperties) {
-        EntitlementManager result = newGlobalManager(loader, brooklynProperties);
+    public static EntitlementManager newManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {
+        EntitlementManager result = newGlobalManager(mgmt, brooklynProperties);
         // TODO read per user settings from brooklyn.properties, if set there ?
         return result;
     }
-    private static EntitlementManager newGlobalManager(ResourceUtils loader, BrooklynProperties brooklynProperties) {
+    private static EntitlementManager newGlobalManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {
         String type = brooklynProperties.getConfig(GLOBAL_ENTITLEMENT_MANAGER);
         if ("root".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(root());
         if ("readonly".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(readOnly());
         if ("minimal".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(minimal());
         if (Strings.isNonBlank(type)) {
             try {
-                Class<?> clazz = loader.getLoader().loadClass(type);
+                Class<?> clazz = ((ManagementContextInternal)mgmt).getBaseClassLoader().loadClass(type);
                 Optional<?> result = Reflections.invokeConstructorWithArgs(clazz, brooklynProperties);
                 if (result.isPresent()) return (EntitlementManager) result.get();
                 return (EntitlementManager) clazz.newInstance();
