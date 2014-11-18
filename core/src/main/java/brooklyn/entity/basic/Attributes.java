@@ -30,8 +30,10 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+import brooklyn.management.ManagementContext;
 import brooklyn.util.net.UserAndHostAndPort;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
@@ -135,5 +137,18 @@ public interface Attributes {
             RendererHints.register(MAIN_URI, RendererHints.namedActionWithUrl());
         }
     }
+
+    /*
+     * Brooklyn management attributes (optional)
+     */
+
+    /**
+     * Used by entities registering a {@link ManagementContext.PropertiesReloadListener} to store a persistent
+     * reference to it, for use when unregistering the listener.
+     */
+    @Beta
+    AttributeSensor<ManagementContext.PropertiesReloadListener> PROPERTIES_RELOAD_LISTENER = Sensors.newSensor(
+            ManagementContext.PropertiesReloadListener.class,
+            "brooklyn.management.propertiesReloadListener", "Properties reload listener");
 
 }

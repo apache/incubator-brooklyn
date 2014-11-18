@@ -45,11 +45,6 @@ public class RebindEntityDynamicTypeInfoTest extends RebindTestFixtureWithApp {
 
     private static final Logger log = LoggerFactory.getLogger(RebindEntityDynamicTypeInfoTest.class);
     
-    @Override
-    protected TestApplication rebind() throws Exception {
-        return rebind(false);
-    }
-    
     public static class SayHiBody extends EffectorBody<String> {
         public static final ConfigKey<String> NAME_KEY = ConfigKeys.newStringConfigKey("name");
         public static final Effector<String> EFFECTOR = Effectors.effector(String.class, "say_hi").description("says hello")

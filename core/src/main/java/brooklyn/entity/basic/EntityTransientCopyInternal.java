@@ -80,6 +80,8 @@ public interface EntityTransientCopyInternal {
     <T> T getConfig(HasConfigKey<T> key);
     Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited);
     Maybe<Object> getConfigRaw(HasConfigKey<?> key, boolean includeInherited);
+    TagSupport tags();
+    @Deprecated TagSupport getTagSupport();
     @Deprecated Set<Object> getTags();
     @Deprecated boolean containsTag(@Nonnull Object tag);
     String getCatalogItemId();
@@ -103,10 +105,8 @@ public interface EntityTransientCopyInternal {
     EntityManagementSupport getManagementSupport();
     ManagementContext getManagementContext();
     Effector<?> getEffector(String effectorName);
-    FeedSupport getFeedSupport();
+    @Deprecated FeedSupport getFeedSupport();
     FeedSupport feeds();
-    TagSupport getTagSupport();
-    TagSupport tags();
     RebindSupport<EntityMemento> getRebindSupport();
     // for REST calls on read-only entities which want to resolve values
     ExecutionContext getExecutionContext();

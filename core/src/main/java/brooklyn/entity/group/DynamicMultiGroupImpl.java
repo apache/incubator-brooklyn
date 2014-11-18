@@ -37,6 +37,7 @@ import brooklyn.event.feed.function.FunctionPollConfig;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -161,7 +162,7 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
             }
 
             // Remove any now-empty buckets
-            Set<String> empty = Sets.difference(buckets.keySet(), entityMapping.keySet());
+            Set<String> empty = ImmutableSet.copyOf(Sets.difference(buckets.keySet(), entityMapping.keySet()));
             for (String name : empty) {
                 Group removed = buckets.remove(name);
                 removeChild(removed);

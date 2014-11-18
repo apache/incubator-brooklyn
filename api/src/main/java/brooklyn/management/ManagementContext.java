@@ -18,6 +18,7 @@
  */
 package brooklyn.management;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
 
@@ -191,13 +192,21 @@ public interface ManagementContext {
     AccessController getAccessController();
 
     /**
-     * Reloads locations from brooklyn.properties. Any changes will apply only to newly created applications
-     * @return 
+     * Reloads locations from {@code brooklyn.properties}. Any changes will apply only to newly created applications
      */
     void reloadBrooklynProperties();
-    
-    interface PropertiesReloadListener {
+
+    /**
+     * Listener for {@code brooklyn.properties} reload events.
+     *
+     * @see {@link #raddPropertiesReloadListenerPropertiesReloadListener)}
+     * @see {@link #removePropertiesReloadListener(PropertiesReloadListener)}
+     */
+    interface PropertiesReloadListener extends Serializable {
+
+        /** Called when {@code brooklyn.properties} is reloaded. */
         void reloaded();
+
     }
     
     /**

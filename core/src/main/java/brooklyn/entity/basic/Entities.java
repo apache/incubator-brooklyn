@@ -1022,7 +1022,7 @@ public class Entities {
                     .rethrowException().backoffTo(Duration.ONE_SECOND)
                     .until(new Callable<Boolean>() {
                         public Boolean call() {
-                            return entity.getAttribute(Startable.SERVICE_UP);
+                            return Boolean.TRUE.equals(entity.getAttribute(Startable.SERVICE_UP));
                         }})
                     .run()) {
                 throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+entity);

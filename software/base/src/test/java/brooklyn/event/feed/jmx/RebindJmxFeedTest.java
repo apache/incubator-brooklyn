@@ -103,7 +103,7 @@ public class RebindJmxFeedTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_STRING, "myval");
         assertEquals(origEntity.feeds().getFeeds().size(), 1);
 
-        newApp = rebind(false);
+        newApp = rebind();
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
         Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
