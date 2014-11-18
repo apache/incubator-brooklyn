@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -81,7 +82,7 @@ public class CassandraDatacenterRebindIntegrationTest extends RebindTestFixtureW
         Set<BigInteger> origTokens = origNode.getAttribute(CassandraNode.TOKENS);
         assertNotNull(origToken);
         
-        newApp = rebind(false, true);
+        newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         final CassandraDatacenter newDatacenter = (CassandraDatacenter) Iterables.find(newApp.getChildren(), Predicates.instanceOf(CassandraDatacenter.class));
         final CassandraNode newNode = (CassandraNode) Iterables.find(newDatacenter.getMembers(), Predicates.instanceOf(CassandraNode.class));
         

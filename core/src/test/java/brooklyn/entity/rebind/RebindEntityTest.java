@@ -247,7 +247,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         reffer.myEntity = origE;
         origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
 
-        newApp = rebind(false);
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         ReffingEntity reffer2 = (ReffingEntity)newApp.getConfig(TestEntity.CONF_OBJECT);
         
@@ -267,7 +267,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         reffer.resizable = origE;
         origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
 
-        newApp = rebind(false);
+        newApp = rebind();
         MyEntityWithMultipleInterfaces newE = (MyEntityWithMultipleInterfaces) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityWithMultipleInterfaces.class));
         ReffingEntity newReffer = (ReffingEntity)newApp.getConfig(TestEntity.CONF_OBJECT);
         
@@ -281,7 +281,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         origE.tags().addTag("foo");
         origE.tags().addTag(origApp);
 
-        newApp = rebind(false);
+        newApp = rebind();
         MyEntity newE = Iterables.getOnlyElement( Entities.descendants(newApp, MyEntity.class) );
 
         assertTrue(newE.tags().containsTag("foo"), "tags are "+newE.tags().getTags());
@@ -390,7 +390,10 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         Thread thread = new Thread() {
             public void run() {
                 try {
-                    RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader());
+                    RebindTestUtils.rebind(RebindOptions.create()
+                            .newManagementContext(newManagementContext)
+                            .mementoDir(mementoDir)
+                            .classLoader(RebindEntityTest.class.getClassLoader()));
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }

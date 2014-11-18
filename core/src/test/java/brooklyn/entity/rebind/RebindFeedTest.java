@@ -108,7 +108,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         log.info("Tasks before rebind: "+
             ((BasicExecutionManager)origManagementContext.getExecutionManager()).getAllTasks());
         
-        newApp = rebind(false);
+        newApp = rebind();
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
         Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
@@ -152,7 +152,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)1);
         assertEquals(origEntity.feeds().getFeeds().size(), 2);
 
-        newApp = rebind(false);
+        newApp = rebind();
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
         Collection<Feed> newFeeds = newEntity.feeds().getFeeds();
@@ -176,7 +176,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(origEntity, SENSOR_INT, (Integer)0);
         assertEquals(origEntity.feeds().getFeeds().size(), 1);
 
-        newApp = rebind(false);
+        newApp = rebind();
         TestEntity newEntity = (TestEntity) Iterables.getOnlyElement(newApp.getChildren());
         
         Collection<Feed> newFeeds = newEntity.feeds().getFeeds();

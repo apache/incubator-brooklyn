@@ -44,6 +44,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.LocationSpec;
@@ -131,7 +132,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         WebAppMonitor monitor = newWebAppMonitor(rootUrl, 404);
         final String origConfigFile = origNginx.getConfigFile();
         
-        newApp = rebind(false, true);
+        newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
 
         assertEquals(newNginx.getConfigFile(), origConfigFile);
@@ -175,7 +176,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         final String origConfigFile = origNginx.getConfigFile();
         
         // Rebind
-        newApp = rebind(false, true);
+        newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         final DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
@@ -253,7 +254,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         final String origConfigFile = origNginx.getConfigFile();
         
         // Create a rebinding
-        newApp = rebind(false, true);
+        newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());

@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -66,7 +67,7 @@ public class ServerPoolRebindTest extends AbstractServerPoolTest {
         LOG.info("Rebind start");
         RebindTestUtils.waitForPersisted(app);
         ((LocalManagementContext) app.getManagementContext()).terminate();
-        Collection<Application> r = RebindTestUtils.rebindAll(mementoDir, getClass().getClassLoader());
+        Collection<Application> r = RebindTestUtils.rebindAll(RebindOptions.create().mementoDir(mementoDir).classLoader(classLoader));
         LOG.info("Rebind complete");
         return r;
     }

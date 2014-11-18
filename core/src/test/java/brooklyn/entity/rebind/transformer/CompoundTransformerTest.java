@@ -35,6 +35,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindExceptionHandler;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;
@@ -68,7 +69,7 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
         super.tearDown();
         if (newMementoDir != null) FileBasedObjectStore.deleteCompletely(mementoDir);
     }
-    
+
     @Test
     public void testNoopTransformation() throws Exception {
         CompoundTransformer transformer = CompoundTransformer.builder()
@@ -155,7 +156,10 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
                 .forLive(useLiveManagementContext())
                 .buildUnstarted();
 
-        return (TestApplication) RebindTestUtils.rebind((LocalManagementContext)newManagementContext, classLoader);
+        return (TestApplication) RebindTestUtils.rebind(RebindOptions.create()
+                .newManagementContext(newManagementContext)
+                .classLoader(classLoader)
+                .mementoDir(newMementoDir));
     }
     
     public static class OrigType {
