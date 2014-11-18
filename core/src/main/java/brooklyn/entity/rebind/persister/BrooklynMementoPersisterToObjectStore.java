@@ -557,7 +557,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
         Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}: "
+        if (LOG.isDebugEnabled()) LOG.debug("7 in {}: "
                 + "updated {} entities, {} locations, {} policies, {} enrichers, {} catalog items; "
                 + "removed {} entities, {} locations, {} policies, {} enrichers, {} catalog items",
                     new Object[] {Time.makeTimeStringRounded(stopwatch),

@@ -238,7 +238,11 @@ public class BrooklynPersistenceUtils {
                 log.debug("Backing up persisted state on "+mode+", to "+destinationObjectStore.getSummaryName());
                 BrooklynPersistenceUtils.writeMemento(managementContext, memento, destinationObjectStore);
                 BrooklynPersistenceUtils.writeManagerMemento(managementContext, planeState, destinationObjectStore);
-                log.info("Back-up of persisted state created on "+mode+", in "+destinationObjectStore.getSummaryName());
+                if (!memento.isEmpty()) {
+                    log.info("Back-up of persisted state created on "+mode+", in "+destinationObjectStore.getSummaryName());
+                } else {
+                    log.debug("Back-up of (empty) persisted state created on "+mode+", in "+destinationObjectStore.getSummaryName());
+                }
                 
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);

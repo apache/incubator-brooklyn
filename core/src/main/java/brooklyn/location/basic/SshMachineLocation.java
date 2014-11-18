@@ -798,7 +798,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public String toString() {
-        return "SshMachineLocation["+getDisplayName()+":"+address+"]";
+        return "SshMachineLocation["+getDisplayName()+":"+address+"@"+getId()+"]";
     }
 
     @Override

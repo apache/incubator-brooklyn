@@ -268,9 +268,8 @@ public class LocalLocationManager implements LocationManagerInternal {
         if (shouldSkipUnmanagement(loc)) return;
 
         if (hasBeenReplaced) {
-            // we are unmanaging an old instance after having replaced it
-            unmanageNonRecursiveClearItsFields(loc, mode);
-            
+            // we are unmanaging an old instance after having replaced it; 
+            // don't unmanage or even clear its fields, because there might be references to it
             if (mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
                 // when migrating away, these all need to be called
                 managementContext.getRebindManager().getChangeListener().onUnmanaged(loc);
@@ -280,6 +279,8 @@ public class LocalLocationManager implements LocationManagerInternal {
                 if (!mode.wasReadOnly())
                     log.warn("Should not be unmanaging "+loc+" in mode "+mode+"; ignoring");
             }
+            // do not remove from maps below, bail out now
+            return;
 
         } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED || mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
             // we are unmanaging an instance whose primary management is elsewhere (either we were secondary, or we are being demoted)

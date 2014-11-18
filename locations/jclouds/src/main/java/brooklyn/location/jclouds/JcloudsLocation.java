@@ -269,7 +269,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (configDescription!=null && configDescription.startsWith(getClass().getSimpleName()))
             return configDescription;
         return getClass().getSimpleName()+"["+getDisplayName()+":"+(identity != null ? identity : null)+
-                (configDescription!=null ? "/"+configDescription : "") + "]";
+                (configDescription!=null ? "/"+configDescription : "") + "@" + getId() + "]";
     }
 
     @Override

@@ -66,6 +66,7 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
@@ -114,6 +115,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -601,12 +603,24 @@ public class RebindManagerImpl implements RebindManager {
             BrooklynMementoRawData mementoRawData = persistenceStoreAccess.loadMementoRawData(exceptionHandler);
             BrooklynMementoManifest mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
 
+            boolean overwritingMaster = false;
             boolean isEmpty = mementoManifest.isEmpty();
             if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP) {
                 if (!isEmpty) { 
-                    LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+"...");
+                    LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+" for "+Strings.toLowerCase(Strings.toString(mode))+" "+managementContext.getManagementNodeId()+"...");
                 } else {
                     LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
+                }
+                
+                if (!managementContext.getEntityManager().getEntities().isEmpty() || !managementContext.getLocationManager().getLocations().isEmpty()) {
+                    // this is discouraged if we were already master
+                    Entity anEntity = Iterables.getFirst(managementContext.getEntityManager().getEntities(), null);
+                    if (anEntity!=null && !((EntityInternal)anEntity).getManagementSupport().isReadOnly()) {
+                        overwritingMaster = true;
+                        LOG.warn("Rebind requested for "+mode+" node "+managementContext.getManagementNodeId()+" "
+                            + "when it already has active state; discouraged, "
+                            + "will likely overwrite: "+managementContext.getEntityManager().getEntities()+" and "+managementContext.getLocationManager().getLocations()+" and more");
+                    }
                 }
             }
 
@@ -928,7 +942,7 @@ public class RebindManagerImpl implements RebindManager {
             Set<String> oldLocations = Sets.newLinkedHashSet(locationManager.getLocationIds());
             for (Location location: rebindContext.getLocations()) {
                 ManagementTransitionMode oldMode = locationManager.getLastManagementTransitionMode(location.getId());
-                locationManager.setManagementTransitionMode(location, computeMode(location, oldMode, rebindContext.isReadOnly(location)) );
+                locationManager.setManagementTransitionMode(location, computeMode(managementContext, location, oldMode, rebindContext.isReadOnly(location)) );
                 if (oldMode!=null)
                     oldLocations.remove(location.getId());
             }
@@ -943,6 +957,8 @@ public class RebindManagerImpl implements RebindManager {
                 }
             }
             // destroy old
+            if (!oldLocations.isEmpty()) BrooklynLogging.log(LOG, overwritingMaster ? BrooklynLogging.LoggingLevel.WARN : BrooklynLogging.LoggingLevel.DEBUG, 
+                "Destroying unused locations on rebind: "+oldLocations);
             for (String oldLocationId: oldLocations) {
                locationManager.unmanage(locationManager.getLocation(oldLocationId), ManagementTransitionMode.REBINDING_DESTROYED); 
             }
@@ -953,7 +969,7 @@ public class RebindManagerImpl implements RebindManager {
             Set<String> oldEntities = Sets.newLinkedHashSet(entityManager.getEntityIds());
             for (Entity entity: rebindContext.getEntities()) {
                 ManagementTransitionMode oldMode = entityManager.getLastManagementTransitionMode(entity.getId());
-                entityManager.setManagementTransitionMode(entity, computeMode(entity, oldMode, rebindContext.isReadOnly(entity)) );
+                entityManager.setManagementTransitionMode(entity, computeMode(managementContext,entity, oldMode, rebindContext.isReadOnly(entity)) );
                 if (oldMode!=null)
                     oldEntities.remove(entity.getId());
             }
@@ -973,6 +989,8 @@ public class RebindManagerImpl implements RebindManager {
                 }
             }
             // destroy old
+            if (!oldLocations.isEmpty()) BrooklynLogging.log(LOG, overwritingMaster ? BrooklynLogging.LoggingLevel.WARN : BrooklynLogging.LoggingLevel.DEBUG, 
+                "Destroying unused entities on rebind: "+oldEntities);
             for (String oldEntityId: oldEntities) {
                entityManager.unmanage(entityManager.getEntity(oldEntityId), ManagementTransitionMode.REBINDING_DESTROYED); 
             }
@@ -1105,11 +1123,11 @@ public class RebindManagerImpl implements RebindManager {
         }
     }
 
-    static ManagementTransitionMode computeMode(BrooklynObject item, ManagementTransitionMode oldMode, boolean isNowReadOnly) {
-        return computeMode(item, oldMode==null ? null : oldMode.wasReadOnly(), isNowReadOnly);
+    static ManagementTransitionMode computeMode(ManagementContext mgmt, BrooklynObject item, ManagementTransitionMode oldMode, boolean isNowReadOnly) {
+        return computeMode(mgmt, item, oldMode==null ? null : oldMode.wasReadOnly(), isNowReadOnly);
     }
 
-    static ManagementTransitionMode computeMode(BrooklynObject item, Boolean wasReadOnly, boolean isNowReadOnly) {
+    static ManagementTransitionMode computeMode(ManagementContext mgmt, BrooklynObject item, Boolean wasReadOnly, boolean isNowReadOnly) {
         if (wasReadOnly==null) {
             // not known
             if (Boolean.TRUE.equals(isNowReadOnly)) return ManagementTransitionMode.REBINDING_READONLY;
@@ -1122,7 +1140,8 @@ public class RebindManagerImpl implements RebindManager {
             else if (isNowReadOnly)
                 return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
             else {
-                LOG.warn("Transitioning to master, though never stopped being a master - " + item);
+                // for the most part we handle this correctly, although there may be leaks; see HighAvailabilityManagerInMemoryTest.testLocationsStillManagedCorrectlyAfterDoublePromotion
+                LOG.warn("Node "+(mgmt!=null ? mgmt.getManagementNodeId() : null)+" rebinding as master when already master (discouraged, may have stale references); for: "+item);
                 return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
             }
         }
