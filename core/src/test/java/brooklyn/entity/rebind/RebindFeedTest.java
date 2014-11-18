@@ -67,8 +67,8 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
 
     private static final Logger log = LoggerFactory.getLogger(RebindFeedTest.class);
     
-    final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
-    final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor( "aLong", "");
+    public final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
+    public final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor( "aLong", "");
 
     private BetterMockWebServer server;
     private URL baseUrl;

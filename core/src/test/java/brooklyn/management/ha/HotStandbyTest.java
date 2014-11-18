@@ -19,8 +19,11 @@
 package brooklyn.management.ha;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Deque;
 import java.util.List;
@@ -35,10 +38,13 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
+import brooklyn.entity.rebind.RebindFeedTest;
 import brooklyn.entity.rebind.RebindManagerImpl;
+import brooklyn.entity.rebind.RebindFeedTest.MyEntityWithFunctionFeedImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.ListeningObjectStore;
@@ -594,4 +600,21 @@ public class HotStandbyTest {
         assertEquals(n2.ha.getNodeState(), ManagementNodeState.FAILED);
     }
     
+    @Test
+    public void testHotStandbyDoesNoStartFeeds() throws Exception {
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
+        TestApplication app = createFirstAppAndPersist(n1);
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithFunctionFeedImpl.class));
+        forcePersistNow(n1);
+        for (Feed feed : entity.feeds().getFeeds()) {
+            assertTrue(feed.isActive(), "Feed expected running, but it is non-running");
+        }
+
+        HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
+        TestEntity entityRO = (TestEntity) n2.mgmt.lookup(entity.getId(), Entity.class);
+        for (Feed feedRO : entityRO.feeds().getFeeds()) {
+            assertFalse(feedRO.isActive(), "Feed expected non-active, but it is running");
+        }
+    }
+
 }
