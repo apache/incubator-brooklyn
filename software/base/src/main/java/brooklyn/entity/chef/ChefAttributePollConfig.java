@@ -47,8 +47,7 @@ public class ChefAttributePollConfig<T> extends PollConfig<Object, T, ChefAttrib
         this.chefAttributePath = val; return this;
     }
     
-    @Override
-    public String toString() {
-        return "chef["+chefAttributePath+"]";
-    }
+    @Override protected String toStringBaseName() { return "chef"; }
+    @Override protected String toStringPollSource() { return chefAttributePath; }
+    
 }

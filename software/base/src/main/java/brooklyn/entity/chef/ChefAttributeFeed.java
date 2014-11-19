@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -118,6 +117,7 @@ public class ChefAttributeFeed extends AbstractFeed {
         private String nodeName;
         private Set<ChefAttributePollConfig> polls = Sets.newLinkedHashSet();
         private Duration period = Duration.of(30, TimeUnit.SECONDS);
+        private String uniqueTag;
         private volatile boolean built;
 
         public Builder entity(EntityLocal val) {
@@ -137,6 +137,7 @@ public class ChefAttributeFeed extends AbstractFeed {
             polls.add(config);
             return this;
         }
+        @SuppressWarnings("unchecked")
         public Builder addSensor(String chefAttributePath, AttributeSensor sensor) {
             return addSensor(new ChefAttributePollConfig(sensor).chefAttributePath(chefAttributePath));
         }
@@ -166,6 +167,10 @@ public class ChefAttributeFeed extends AbstractFeed {
         }
         public Builder period(long val, TimeUnit units) {
             return period(Duration.of(val, units));
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
+            return this;
         }
         public ChefAttributeFeed build() {
             built = true;
@@ -200,6 +205,7 @@ public class ChefAttributeFeed extends AbstractFeed {
             polls.add(configCopy);
         }
         setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls);
     }
 
     @Override
@@ -208,7 +214,6 @@ public class ChefAttributeFeed extends AbstractFeed {
         final Set<ChefAttributePollConfig<?>> polls = getConfig(POLLS);
         
         long minPeriod = Integer.MAX_VALUE;
-        SortedSet<String> performanceCounterNames = Sets.newTreeSet();
         for (ChefAttributePollConfig<?> config : polls) {
             minPeriod = Math.min(minPeriod, config.getPeriod());
         }

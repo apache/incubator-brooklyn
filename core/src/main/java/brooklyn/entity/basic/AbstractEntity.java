@@ -1247,9 +1247,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
     }
     private <T extends EntityAdjunct> T findApparentlyEqual(Collection<? extends T> itemsCopy, T newItem) {
-        // TODO workaround for issue where enrichers can get added multiple times on rebind,
-        // if it's added in onBecomingManager or connectSensors; the right fix will be more disciplined about how/where these are added
-        // (easier done when sensor feeds are persisted)
+        // TODO workaround for issue where enrichers/feeds/policies can get added multiple times on rebind,
+        // if it's added in onBecomingManager or connectSensors; 
+        // the right fix will be more disciplined about how/where these are added;
+        // furthermore unique tags should be preferred;
+        // when they aren't supplied, a reflection equals is done ignoring selected fields,
+        // which is okay but not great ... and if it misses something (e.g. because an 'equals' isn't implemented)
+        // then you can get a new instance on every rebind
+        // (and currently these aren't readily visible, except looking at the counts or in persisted state) 
         Class<?> beforeEntityAdjunct = newItem.getClass();
         while (beforeEntityAdjunct.getSuperclass()!=null && !beforeEntityAdjunct.getSuperclass().equals(AbstractEntityAdjunct.class))
             beforeEntityAdjunct = beforeEntityAdjunct.getSuperclass();
@@ -1267,8 +1272,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                         // from aggregator
                         "transformation",
                         // from averager
-                        "values", "timestamps", "lastAverage")) {
-                    
+                        "values", "timestamps", "lastAverage",
+                        // from some feeds
+                        "poller",
+                        "pollerStateMutex"
+                        )) {
                     
                     return oldItem;
                 }

@@ -37,6 +37,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
@@ -117,6 +118,20 @@ public class HttpFeedTest extends BrooklynAppUnitTestSupport {
         
         assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
+    }
+    
+    @Test
+    public void testFeedDeDupe() throws Exception {
+        testPollsAndParsesHttpGetResponse();
+        entity.addFeed(feed);
+        log.info("Feed 0 is: "+feed);
+        
+        testPollsAndParsesHttpGetResponse();
+        log.info("Feed 1 is: "+feed);
+        entity.addFeed(feed);
+                
+        FeedSupport feeds = ((EntityInternal)entity).feeds();
+        Assert.assertEquals(feeds.getFeeds().size(), 1, "Wrong feed count: "+feeds.getFeeds());
     }
     
     @Test

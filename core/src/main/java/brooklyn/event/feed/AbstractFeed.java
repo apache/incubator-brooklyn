@@ -20,6 +20,8 @@ package brooklyn.event.feed;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,8 @@ import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.mementos.FeedMemento;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
+import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.text.Strings;
 
 /** 
  * Captures common fields and processes for sensor feeds.
@@ -79,7 +83,39 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
             ((EntityInternal)entity).feeds().addFeed(this);
         }
     }
+
+    protected void initUniqueTag(String uniqueTag, Object ...valsForDefault) {
+        if (Strings.isNonBlank(uniqueTag)) this.uniqueTag = uniqueTag;
+        else if (Strings.isBlank(this.uniqueTag)) this.uniqueTag = getDefaultUniqueTag(valsForDefault);
+    }
+
+    @Override
+    public String getUniqueTag() {
+        if (Strings.isBlank(uniqueTag)) initUniqueTag(null);
+        return super.getUniqueTag();
+    }
     
+    protected String getDefaultUniqueTag(Object ...valsForDefault) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(JavaClassNames.simpleClassName(this));
+        if (valsForDefault.length==0) {
+            sb.append("@");
+            sb.append(hashCode());
+        } else if (valsForDefault.length==1 && valsForDefault[0] instanceof Collection){
+            sb.append(Strings.toUniqueString(valsForDefault[0], 80));
+        } else {
+            sb.append("[");
+            boolean first = true;
+            for (Object x: valsForDefault) {
+                if (!first) sb.append(";");
+                else first = false;
+                sb.append(Strings.toUniqueString(x, 80));
+            }
+            sb.append("]");
+        }
+        return sb.toString(); 
+    }
+
     @Override
     public boolean isActivated() {
         return activated;

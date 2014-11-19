@@ -27,6 +27,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.GroovyJavaMethods;
+import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Supplier;
 
@@ -87,4 +88,16 @@ public class FunctionPollConfig<S, T> extends PollConfig<S, T, FunctionPollConfi
         this.callable = GroovyJavaMethods.callableFromClosure(checkNotNull(val, "closure"));
         return this;
     }
+
+    @Override protected String toStringBaseName() { return "fn"; }
+    @Override protected String toStringPollSource() {
+        if (callable==null) return null;
+        String cs = callable.toString();
+        if (!cs.contains( ""+Integer.toHexString(callable.hashCode()) )) {
+            return cs;
+        }
+        // if hashcode is in callable it's probably a custom internal; return class name
+        return JavaClassNames.simpleClassName(callable);
+    }
+
 }

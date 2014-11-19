@@ -23,7 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.concurrent.TimeUnit;
 
 import brooklyn.event.AttributeSensor;
-import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Duration;
 
 /**
@@ -70,10 +70,16 @@ public class PollConfig<V, T, F extends PollConfig<V, T, F>> extends FeedConfig<
         return self();
     }
     
-    @Override
-    public String toString() {
-        if (description!=null) return description;
-        return JavaClassNames.simpleClassName(this);
+    public String getDescription() {
+        return description;
+    }
+    
+    @Override protected MutableList<Object> toStringOtherFields() {
+        return super.toStringOtherFields().appendIfNotNull(description);
     }
 
+    @Override
+    protected MutableList<Object> equalsFields() {
+        return super.equalsFields().appendIfNotNull(period);
+    }
 }
