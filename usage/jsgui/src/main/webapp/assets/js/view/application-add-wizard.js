@@ -49,6 +49,35 @@ define([
     function setEnablement(obj, isEnabled) {
         obj.attr("disabled", !isEnabled)
     }
+    
+    function specToCAMP(spec) {
+        var services;
+        if (spec.type) {
+            services = [entityToCAMP(spec)];
+        } else if (spec.entities) {
+            services = [];
+            var entities = spec.entities;
+            for (var i = 0; i < entities.length; i++) {
+                services.push(entityToCAMP(entities[i]));
+            }
+        }
+
+        return {
+            name: spec.name,
+            locations: spec.locations,
+            services: services
+        };
+
+    }
+
+    function entityToCAMP(entity) {
+        return {
+            name: entity.name,
+            type: entity.type,
+            "brooklyn.config": entity.config
+        };
+    }
+
 
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
@@ -166,37 +195,27 @@ define([
             var $modal = $('.add-app #modal-container .modal')
             $modal.fadeTo(500,0.5);
             
+            var yaml;
             if (this.model.mode == "yaml") {
-                $.ajax({
-                    url:'/v1/applications',
-                    type:'post',
-                    contentType:'application/yaml',
-                    processData:false,
-                    data:this.model.yaml,
-                    success:function (data) {
-                        that.onSubmissionComplete(true, data, $modal)
-                    },
-                    error:function (data) {
-                        that.onSubmissionComplete(false, data, $modal)
-                    }
-                })
-
+                yaml = this.model.yaml;
             } else {
-                $.ajax({
-                    url:'/v1/applications',
-                    type:'post',
-                    contentType:'application/json',
-                    processData:false,
-                    data:JSON.stringify(this.model.spec.toJSON()),
-                    success:function (data) {
-                        that.onSubmissionComplete(true, data, $modal)
-                    },
-                    error:function (data) {
-                        that.onSubmissionComplete(false, data, $modal)
-                    }
-                })
+                yaml = JSON.stringify(specToCAMP(this.model.spec.toJSON()));
             }
-            
+
+            $.ajax({
+                url:'/v1/applications',
+                type:'post',
+                contentType:'application/yaml',
+                processData:false,
+                data:yaml,
+                success:function (data) {
+                    that.onSubmissionComplete(true, data, $modal)
+                },
+                error:function (data) {
+                    that.onSubmissionComplete(false, data, $modal)
+                }
+            });
+
             return false
         },
         onSubmissionComplete: function(succeeded, data, $modal) {
@@ -222,7 +241,7 @@ define([
                 that.steps[that.currentStep].view.showFailure(summary)
             }
         },
-        
+
         prevStep:function () {
             this.currentStep -= 1
             this.renderCurrentStep()
@@ -701,7 +720,7 @@ define([
             if (!this.model.spec.get("config") || _.keys(this.model.spec.get("config")).length==0) {
                 delete this.model.spec.attributes["config"]
             }
-            this.$('#app-summary').val(Util.toTextAreaString(this.model.spec))
+            this.$('#app-summary').val(Util.toTextAreaString(specToCAMP(this.model.spec.toJSON())))
         },
         render:function () {
             this.delegateEvents()
