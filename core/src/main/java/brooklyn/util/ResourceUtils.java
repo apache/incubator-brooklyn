@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -146,7 +147,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
-        this(JavaBrooklynClassLoadingContext.create(loader), contextObject, contextMessage);
+        this(getClassLoadingContextInternal(loader, contextObject), contextObject, contextMessage);
     }
     
     public ResourceUtils(BrooklynClassLoadingContext loader, Object contextObject, String contextMessage) {
@@ -156,7 +157,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(Object contextObject, String contextMessage) {
-        this(contextObject==null ? null : getClassLoadingContextForObject(contextObject), contextObject, contextMessage);
+        this(contextObject==null ? null : getClassLoadingContextInternal(null, contextObject), contextObject, contextMessage);
     }
 
     public ResourceUtils(Object contextObject) {
@@ -168,7 +169,9 @@ public class ResourceUtils {
         classLoaderProviders.add(provider);
     }
     
-    public static BrooklynClassLoadingContext getClassLoadingContextForObject(Object contextObject) {
+    // TODO rework this class so it accepts but does not require a BCLC ?
+    @SuppressWarnings("deprecation")
+    protected static BrooklynClassLoadingContext getClassLoadingContextInternal(ClassLoader loader, Object contextObject) {
         if (contextObject instanceof BrooklynClassLoadingContext)
             return (BrooklynClassLoadingContext) contextObject;
         
@@ -176,22 +179,23 @@ public class ResourceUtils {
             BrooklynClassLoadingContext result = provider.apply(contextObject);
             if (result!=null) return result;
         }
-        
-        ClassLoader cl = contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
+
+        BrooklynClassLoadingContext bl = BrooklynLoaderTracker.getLoader();
+        ManagementContext mgmt = (bl!=null ? bl.getManagementContext() : null);
+
+        ClassLoader cl = loader;
+        if (cl==null) cl = contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
             contextObject instanceof ClassLoader ? ((ClassLoader)contextObject) : 
                 contextObject.getClass().getClassLoader();
-        return getClassLoadingContextForClassLoader(cl);
+            
+        return JavaBrooklynClassLoadingContext.create(mgmt, cl);
     }
     
-    protected static BrooklynClassLoadingContext getClassLoadingContextForClassLoader(ClassLoader loader) {
-        ManagementContext mgmt = null;
-        BrooklynClassLoadingContext bl = BrooklynLoaderTracker.getLoader();
-        if (bl!=null) mgmt = bl.getManagementContext();
-        return JavaBrooklynClassLoadingContext.create(mgmt, loader);
-    }
-    
-    public BrooklynClassLoadingContext getLoader() {
-        return (loader!=null ? loader : getClassLoadingContextForClassLoader(getClass().getClassLoader()));
+    /** This should not be exposed as it risks it leaking into places where it would be serialized.
+     * Better for callers use {@link CatalogUtils#getClassLoadingContext(brooklyn.entity.Entity)} or similar. }.
+     */
+    private BrooklynClassLoadingContext getLoader() {
+        return (loader!=null ? loader : getClassLoadingContextInternal(null, contextObject!=null ? contextObject : this));
     }
     
     /**

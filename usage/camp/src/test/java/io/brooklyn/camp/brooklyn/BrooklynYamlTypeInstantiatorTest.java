@@ -36,7 +36,7 @@ import brooklyn.util.time.Duration;
 public class BrooklynYamlTypeInstantiatorTest extends AbstractYamlTest {
 
     protected BrooklynClassLoadingContext loader() {
-        return JavaBrooklynClassLoadingContext.newDefault(mgmt());
+        return JavaBrooklynClassLoadingContext.create(mgmt());
     }
     
     @Test

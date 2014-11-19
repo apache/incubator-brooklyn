@@ -32,12 +32,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.enricher.Enrichers;
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.effector.EffectorBody;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.Location;
@@ -48,11 +50,11 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Functionals;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -128,12 +130,50 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     @Override
     protected void initEnrichers() {
         super.initEnrichers();
-        ServiceNotUpLogic.updateNotUpIndicator(this, SERVICE_PROCESS_IS_RUNNING, "No information yet about whether this service is running");
-        // add an indicator above so that if is_running comes through it clears the map and guarantees an update
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
-            .from(SERVICE_PROCESS_IS_RUNNING)
-            .computing(Functionals.ifNotEquals(true).value("The software process for this entity does not appear to be running"))
-            .build());
+        ServiceNotUpLogic.updateNotUpIndicator(this, SERVICE_PROCESS_IS_RUNNING, "No information yet on whether this service is running");
+        // add an indicator above so that if is_running comes through, the map is cleared and an update is guaranteed
+        addEnricher(EnricherSpec.create(UpdatingNotUpFromServiceProcessIsRunning.class).uniqueTag("service-process-is-running-updating-not-up"));
+    }
+    
+    /** subscribes to SERVICE_PROCESS_IS_RUNNING and SERVICE_UP; the latter has no effect if the former is set,
+     * but to support entities which set SERVICE_UP directly we want to make sure that the absence of 
+     * SERVICE_PROCESS_IS_RUNNING does not trigger any not-up indicators */
+    protected static class UpdatingNotUpFromServiceProcessIsRunning extends AbstractEnricher implements SensorEventListener<Object> {
+        public UpdatingNotUpFromServiceProcessIsRunning() {}
+        
+        @Override
+        public void setEntity(EntityLocal entity) {
+            super.setEntity(entity);
+            subscribe(entity, SERVICE_PROCESS_IS_RUNNING, this);
+            subscribe(entity, Attributes.SERVICE_UP, this);
+            onUpdated();
+        }
+
+        @Override
+        public void onEvent(SensorEvent<Object> event) {
+            onUpdated();
+        }
+
+        protected void onUpdated() {
+            Boolean isRunning = entity.getAttribute(SERVICE_PROCESS_IS_RUNNING);
+            if (Boolean.FALSE.equals(isRunning)) {
+                ServiceNotUpLogic.updateNotUpIndicator(entity, SERVICE_PROCESS_IS_RUNNING, "The software process for this entity does not appear to be running");
+                return;
+            }
+            if (Boolean.TRUE.equals(isRunning)) {
+                ServiceNotUpLogic.clearNotUpIndicator(entity, SERVICE_PROCESS_IS_RUNNING);
+                return;
+            }
+            // no info on "isRunning"
+            Boolean isUp = entity.getAttribute(Attributes.SERVICE_UP);
+            if (Boolean.TRUE.equals(isUp)) {
+                // if service explicitly set up, then don't apply our rule
+                ServiceNotUpLogic.clearNotUpIndicator(entity, SERVICE_PROCESS_IS_RUNNING);
+                return;
+            }
+            // service not up, or no info
+            ServiceNotUpLogic.updateNotUpIndicator(entity, SERVICE_PROCESS_IS_RUNNING, "No information on whether this service is running");
+        }
     }
     
       /**
