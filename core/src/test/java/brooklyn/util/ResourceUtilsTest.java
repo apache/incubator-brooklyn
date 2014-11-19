@@ -36,6 +36,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 
@@ -168,5 +169,7 @@ public class ResourceUtilsTest {
         assertEquals(utils.getResourceAsString("data:hello"), "hello");
         assertEquals(utils.getResourceAsString("data://hello"), "hello");
         assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
+        assertEquals(utils.getResourceAsString(Urls.asDataUrlBase64("hello world")), "hello world");
     }
+
 }

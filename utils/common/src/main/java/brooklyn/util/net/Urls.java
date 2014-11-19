@@ -28,10 +28,13 @@ import java.net.URLEncoder;
 
 import javax.annotation.Nullable;
 
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
+
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.net.MediaType;
 
 public class Urls {
 
@@ -206,6 +209,20 @@ public class Urls {
         } else {
             return new File(fileUrl);
         }
+    }
+
+    /** as {@link #asDataUrlBase64(String)} with plain text */
+    public static String asDataUrlBase64(String data) {
+        return asDataUrlBase64(MediaType.PLAIN_TEXT_UTF_8, data.getBytes());
+    }
+    
+    /** 
+     * Creates a "data:..." scheme URL for use with supported parsers.
+     * (But note, by default Java's URL is not one of them.)
+     * It is not necessary to base64 encode it, but good practise;
+     * null type means no type included. */
+    public static String asDataUrlBase64(MediaType type, byte[] bytes) {
+        return "data:"+(type!=null ? type.withoutParameters().toString() : "")+";base64,"+new String(Base64Coder.encode(bytes));
     }
 
 }
