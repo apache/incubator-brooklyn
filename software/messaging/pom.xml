@@ -148,7 +148,7 @@
         <!-- for activemq -->
         <dependency>
             <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-core</artifactId>
+            <artifactId>activemq-broker</artifactId>
             <version>${activemq.version}</version>
             <scope>test</scope>
             <exclusions>

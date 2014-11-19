@@ -55,7 +55,7 @@ public class ActiveMQQueueImpl extends ActiveMQDestinationImpl implements Active
 
     @Override
     protected void connectSensors() {
-        String queue = String.format("org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=%s", getName());
+        String queue = String.format("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=%s", getName());
         
         jmxFeed = JmxFeed.builder()
                 .entity(this)

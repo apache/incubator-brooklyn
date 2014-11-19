@@ -88,7 +88,7 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
     protected void connectSensors() {
         setAttribute(BROKER_URL, String.format("tcp://%s:%d", getAttribute(HOSTNAME), getAttribute(OPEN_WIRE_PORT)));
         
-        String brokerMbeanName = "org.apache.activemq:BrokerName=localhost,Type=Broker";
+        String brokerMbeanName = "org.apache.activemq:brokerName=localhost,type=Broker";
         
         jmxFeed = JmxFeed.builder()
                 .entity(this)
