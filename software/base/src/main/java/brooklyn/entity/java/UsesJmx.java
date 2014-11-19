@@ -43,7 +43,12 @@ public interface UsesJmx extends UsesJava {
     /** Chosen by Java itself by default, setting this will only have any effect if using an agent. */
     @SetFromFlag("jmxPort")
     PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(
-            "jmx.direct.port", "JMX direct/private port (e.g. JMX RMI server port, or JMXMP port, but not RMI registry port)", PortRanges.fromString("31001+")) {
+        "jmx.direct.port", "JMX direct/private port (e.g. JMX RMI server port, or JMXMP port, but not RMI registry port)", PortRanges.fromString("31001+"));
+    
+    /** @deprecated since 0.7.0, kept for rebinding with the anonymous class; code should only ever use {@link #JMX_PORT} */ @Deprecated
+    PortAttributeSensorAndConfigKey JMX_PORT_LEGACY = new PortAttributeSensorAndConfigKey(
+            "jmx.direct.port.legacy.NOT_USED", "Legacy definition JMX direct/private port (e.g. JMX RMI server port, or JMXMP port, but not RMI registry port)", PortRanges.fromString("31001+")) {
+        private static final long serialVersionUID = 3846846080809179437L;
         @Override protected Integer convertConfigToSensor(PortRange value, Entity entity) {
             // TODO when using JmxAgentModes.NONE we should *not* convert, but leave it null
             // (e.g. to prevent a warning in e.g. ActiveMQIntegrationTest)
@@ -53,7 +58,7 @@ public interface UsesJmx extends UsesJava {
             return super.convertConfigToSensor(value, entity);
         }
     };
-
+    
     /** Well-known port used by Java itself to start the RMI registry where JMX private port can be discovered, ignored if using JMXMP agent. */
     @SetFromFlag("rmiRegistryPort")
     PortAttributeSensorAndConfigKey RMI_REGISTRY_PORT = ConfigKeys.newPortSensorAndConfigKey(
@@ -100,6 +105,8 @@ public interface UsesJmx extends UsesJava {
     /* Currently these are only used to connect, so only applies where systems set this up themselves. */
     AttributeSensorAndConfigKey<String, String> JMX_USER = ConfigKeys.newStringSensorAndConfigKey("jmx.user", "JMX username");
     AttributeSensorAndConfigKey<String, String> JMX_PASSWORD = ConfigKeys.newStringSensorAndConfigKey("jmx.password", "JMX password");
+    
+    AttributeSensorAndConfigKey<String, String> JMX_AGENT_LOCAL_PATH = ConfigKeys.newStringSensorAndConfigKey("jmx.agent.local.path", "Path to JMX driver on the local machine");
 
     /*
      * Synopsis of how the keys work for JMX_SSL:
