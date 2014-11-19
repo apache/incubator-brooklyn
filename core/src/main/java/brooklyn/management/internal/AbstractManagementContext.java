@@ -125,7 +125,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
                 if (input instanceof EntityManagementSupport)
                     return apply(((EntityManagementSupport)input).getManagementContext());
                 if (input instanceof ManagementContext)
-                    return JavaBrooklynClassLoadingContext.newDefault((ManagementContext) input);
+                    return JavaBrooklynClassLoadingContext.create((ManagementContext) input);
                 return null;
             }
         });
@@ -172,7 +172,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
         
-        this.entitlementManager = Entitlements.newManager(ResourceUtils.create(getBaseClassLoader()), brooklynProperties);
+        this.entitlementManager = Entitlements.newManager(this, brooklynProperties);
     }
 
     @Override

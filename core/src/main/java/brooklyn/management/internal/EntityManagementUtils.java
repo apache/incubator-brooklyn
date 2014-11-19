@@ -25,7 +25,6 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.StringReader;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -106,7 +105,7 @@ public class EntityManagementUtils {
         }
         Assembly assembly;
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
+            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
             
             EntitySpec<?> spec = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
             Entity app = mgmt.getEntityManager().createEntity(spec);
@@ -183,7 +182,7 @@ public class EntityManagementUtils {
             throw Exceptions.propagate(e);
         }
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.newDefault(mgmt);
+            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
             EntitySpec<?> specA = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, false);
 
             // see whether we can promote children

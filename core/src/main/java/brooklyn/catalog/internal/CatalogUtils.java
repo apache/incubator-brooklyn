@@ -33,6 +33,7 @@ import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -42,6 +43,7 @@ import brooklyn.management.classloading.OsgiBrooklynClassLoadingContext;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
@@ -59,10 +61,22 @@ public class CatalogUtils {
         if (item.getLibraries() == null) {
             log.debug("CatalogItemDtoAbstract.getLibraries() is null.", new Exception("Trace for null CatalogItemDtoAbstract.getLibraries()"));
         }
-        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), mgmt.getCatalog().getRootClassLoader());
+        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries());
+    }
+    
+    public static BrooklynClassLoadingContext getClassLoadingContext(Entity entity) {
+        ManagementContext mgmt = ((EntityInternal)entity).getManagementContext();
+        String catId = entity.getCatalogItemId();
+        if (Strings.isBlank(catId)) return JavaBrooklynClassLoadingContext.create(mgmt);
+        CatalogItem<?, ?> cat = getCatalogItemOptionalVersion(mgmt, catId);
+        if (cat==null) {
+            log.warn("Cannot load "+catId+" to get classloader for "+entity+"; will try with standard loader, but might fail subsequently");
+            return JavaBrooklynClassLoadingContext.create(mgmt);
+        }
+        return newClassLoadingContext(mgmt, cat);
     }
 
-    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<CatalogBundle> libraries, ClassLoader classLoader) {
+    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<CatalogBundle> libraries) {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
         if (libraries!=null && !libraries.isEmpty()) {
@@ -74,7 +88,26 @@ public class CatalogUtils {
             result.add(loader);
         }
 
-        result.addSecondary(JavaBrooklynClassLoadingContext.create(mgmt, classLoader));
+        result.addSecondary(JavaBrooklynClassLoadingContext.create(mgmt));
+        return result;
+    }
+
+    /**
+     * @deprecated since 0.7.0 only for legacy catalog items which provide a non-osgi loader; see {@link #newDefault(ManagementContext)}
+     */ @Deprecated
+    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<CatalogBundle> libraries, ClassLoader customClassLoader) {
+        BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
+
+        if (libraries!=null && !libraries.isEmpty()) {
+            result.add(new OsgiBrooklynClassLoadingContext(mgmt, catalogItemId, libraries));
+        }
+
+        BrooklynClassLoadingContext loader = BrooklynLoaderTracker.getLoader();
+        if (loader != null) {
+            result.add(loader);
+        }
+
+        result.addSecondary(JavaBrooklynClassLoadingContext.create(mgmt, customClassLoader));
         return result;
     }
 

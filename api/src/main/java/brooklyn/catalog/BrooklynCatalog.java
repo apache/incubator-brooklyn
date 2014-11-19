@@ -28,7 +28,8 @@ public interface BrooklynCatalog {
 
     /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
      * symbolicName}, or null if not found.
-     * @deprecated since 0.7.0 use {@link #getCatalogItem(String, String)} */
+     * @deprecated since 0.7.0 use {@link #getCatalogItem(String, String)};
+     * or see also CatalogUtils getCatalogItemOptionalVersion */
     @Deprecated
     CatalogItem<?,?> getCatalogItem(String symbolicName);
 

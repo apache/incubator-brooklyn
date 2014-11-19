@@ -217,14 +217,25 @@ public class HighAvailabilityManagerSplitBrainTest {
             assertNestedRebindException(e);
         }
 
+        // re-check should re-assert successfully, no rebind expected as he was previously master
+        n1.ha.publishAndCheck(false);
+        ManagementPlaneSyncRecord memento;
+        memento = n1.ha.loadManagementPlaneSyncRecord(true);
+        assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.MASTER);
+        assertEquals(memento.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.FAILED);
+
+        // hot backup permitted by the TestEntityFailingRebind
+        n1.ha.changeMode(HighAvailabilityMode.HOT_BACKUP);
+        memento = n1.ha.loadManagementPlaneSyncRecord(true);
+        assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.HOT_BACKUP);
         try {
-            n1.ha.publishAndCheck(false);
+            n1.ha.changeMode(HighAvailabilityMode.MASTER);
             fail("n1 rebind failure expected");
         } catch (Exception e) {
             assertNestedRebindException(e);
         }
 
-        ManagementPlaneSyncRecord memento = n1.ha.loadManagementPlaneSyncRecord(true);
+        memento = n1.ha.loadManagementPlaneSyncRecord(true);
         assertEquals(memento.getManagementNodes().get(n1.ownNodeId).getStatus(), ManagementNodeState.FAILED);
         assertEquals(memento.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.FAILED);
     }

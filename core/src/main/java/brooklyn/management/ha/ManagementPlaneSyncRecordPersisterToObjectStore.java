@@ -275,7 +275,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
             if (currentRemoteMaster==null) {
                 // okay to have nothing at remote
             } else if (!currentRemoteMaster.trim().equals(optionalExpectedId.trim())) {
-                LOG.warn("Master at server is "+currentRemoteMaster+"; expected "+optionalExpectedId+" "
+                LOG.warn("Master at server is "+(Strings.isBlank(currentRemoteMaster) ? "<none>" : currentRemoteMaster)+"; expected "+optionalExpectedId+" "
                     + (Strings.isNonBlank(nodeId) ? "and would set as "+nodeId : "and would clear") 
                     + ", so not applying (yet)");
                 return;

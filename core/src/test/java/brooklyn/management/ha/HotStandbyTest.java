@@ -23,7 +23,6 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Deque;
 import java.util.List;
@@ -42,9 +41,8 @@ import brooklyn.entity.Feed;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
-import brooklyn.entity.rebind.RebindFeedTest;
-import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.RebindFeedTest.MyEntityWithFunctionFeedImpl;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.ListeningObjectStore;
@@ -185,7 +183,7 @@ public class HotStandbyTest {
     }
 
     protected void forcePersistNow(HaMgmtNode n1) {
-        n1.mgmt.getRebindManager().forcePersistNow();
+        n1.mgmt.getRebindManager().forcePersistNow(false, null);
     }
     
     private Application expectRebindSequenceNumber(HaMgmtNode master, HaMgmtNode hotStandby, Application app, int expectedSensorSequenceValue, boolean immediate) {

@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.Sensors;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;

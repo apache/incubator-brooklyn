@@ -134,7 +134,7 @@ public class WarmStandbyTest {
         TestApplication app = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
         app.start(MutableList.<Location>of());
         
-        n1.mgmt.getRebindManager().forcePersistNow();
+        n1.mgmt.getRebindManager().forcePersistNow(false, null);
 
         HaMgmtNode n2 = newNode();
         n2.ha.start(HighAvailabilityMode.STANDBY);

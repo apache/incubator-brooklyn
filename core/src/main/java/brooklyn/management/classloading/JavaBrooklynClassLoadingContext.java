@@ -31,20 +31,32 @@ import com.google.common.base.Objects;
 
 public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadingContext {
 
-    private final ClassLoader loader;
+    // on deserialization this loader is replaced with the catalog's root loader;
+    // may cause problems for non-osgi catalog items, but that's a reasonable trade-off,
+    // should this be serialized (e.g. in SpecialFlagsTransformer) in such a case!
+    private final transient ClassLoader loader;
 
+    /**
+     * @deprecated since 0.7.0 only for legacy catalog items which provide a non-osgi loader; see {@link #newDefault(ManagementContext)}
+     */ @Deprecated
     public static JavaBrooklynClassLoadingContext create(ClassLoader loader) {
         return new JavaBrooklynClassLoadingContext(null, checkNotNull(loader, "loader"));
     }
     
     /**
      * At least one of mgmt or loader must not be null.
-     */
+     * @deprecated since 0.7.0 only for legacy catalog items which provide a non-osgi loader; see {@link #newDefault(ManagementContext)}
+     */ @Deprecated
     public static JavaBrooklynClassLoadingContext create(ManagementContext mgmt, ClassLoader loader) {
         checkState(mgmt != null || loader != null, "mgmt and loader must not both be null");
         return new JavaBrooklynClassLoadingContext(mgmt, loader);
     }
     
+    public static JavaBrooklynClassLoadingContext create(ManagementContext mgmt) {
+        return new JavaBrooklynClassLoadingContext(checkNotNull(mgmt, "mgmt"), null);
+    }
+
+    @Deprecated /** @deprecated since 0.7.0 use {@link #create(ManagementContext)} */
     public static JavaBrooklynClassLoadingContext newDefault(ManagementContext mgmt) {
         return new JavaBrooklynClassLoadingContext(checkNotNull(mgmt, "mgmt"), null);
     }
@@ -55,10 +67,6 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         this.loader = loader;
     }
     
-    // TODO Ugly workaround for rebind, where the classLoader cannot be serialized/deserialized.
-    // If we're supplying just mgmt (i.e. via {@link #newDefault(ManagementContext)} then can retrieve
-    // class loader from that.
-    // Will not work if trying to serialize/deserialize an instance created with a specific ClassLoader.
     private ClassLoader getClassLoader() {
         if (loader != null) return loader;
         if (mgmt!=null) return mgmt.getCatalog().getRootClassLoader();

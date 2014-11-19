@@ -737,13 +737,13 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
     
     private Entity toRealEntityOrNull(String id) {
-        Entity result = entitiesById.get(id);
-        if (result == null) {
+        Entity result;
+        // prefer the preRegistered and preManaged entities, during hot proxying, they should be newer
+        result = preRegisteredEntitiesById.get(id);
+        if (result==null)
             result = preManagedEntitiesById.get(id);
-        }
-        if (result == null) {
-            result = preRegisteredEntitiesById.get(id);
-        }
+        if (result==null)
+            entitiesById.get(id);
         return result;
     }
     

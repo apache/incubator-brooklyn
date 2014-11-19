@@ -203,8 +203,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     @Override
     @Deprecated
-    public CatalogItem<?,?> getCatalogItem(String id) {
-        return getCatalogItem(id, DEFAULT_VERSION);
+    public CatalogItem<?,?> getCatalogItem(String symbolicName) {
+        return getCatalogItem(symbolicName, DEFAULT_VERSION);
     }
     
     @Override
@@ -225,17 +225,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @Override
-    public void deleteCatalogItem(String id, String version) {
-        log.debug("Deleting manual catalog item from "+mgmt+": "+id + ":" + version);
-        checkNotNull(id, "id");
+    public void deleteCatalogItem(String symbolicName, String version) {
+        log.debug("Deleting manual catalog item from "+mgmt+": "+symbolicName + ":" + version);
+        checkNotNull(symbolicName, "id");
         checkNotNull(version, "version");
         if (DEFAULT_VERSION.equals(version)) {
             throw new IllegalStateException("Deleting items with unspecified version (argument DEFAULT_VERSION) not supported.");
         }
-        CatalogItem<?, ?> item = getCatalogItem(id, version);
+        CatalogItem<?, ?> item = getCatalogItem(symbolicName, version);
         CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(item);
         if (itemDto == null) {
-            throw new NoSuchElementException("No catalog item found with id "+id);
+            throw new NoSuchElementException("No catalog item found with id "+symbolicName);
         }
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.deleteEntry(itemDto);
@@ -274,7 +274,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     /**
-     * Loads this catalog
+     * Loads this catalog. No effect if already loaded.
      */
     public void load() {
         log.debug("Loading catalog for " + mgmt);
@@ -533,7 +533,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         CatalogUtils.installLibraries(mgmt, libraries);
 
         String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion);
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries, getRootClassLoader());
+        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries);
         AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, loader);
 
         CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(spec, catalogSymbolicName, catalogVersion)
@@ -668,6 +668,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems() {
+        if (!getCatalog().isLoaded()) {
+            // some callers use this to force the catalog to load (maybe when starting as hot_backup without a catalog ?)
+            log.debug("Forcing catalog load on access of catalog items");
+            load();
+        }
         return ImmutableList.copyOf((Iterable)catalog.getIdCache().values());
     }
     

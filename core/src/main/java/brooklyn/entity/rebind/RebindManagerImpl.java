@@ -331,7 +331,7 @@ public class RebindManagerImpl implements RebindManager {
         try {
             rebind(null, null, mode);
         } catch (Exception e) {
-            Exceptions.propagate(e);
+            throw Exceptions.propagate(e);
         }
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
@@ -340,7 +340,6 @@ public class RebindManagerImpl implements RebindManager {
                     public Void call() {
                         try {
                             rebind(null, null, mode);
-                            readOnlyRebindCount++;
                             return null;
                         } catch (RuntimeInterruptedException e) {
                             LOG.debug("Interrupted rebinding (re-interrupting): "+e);
@@ -540,6 +539,9 @@ public class RebindManagerImpl implements RebindManager {
             rebindActive.acquire();
         } catch (InterruptedException e1) { Exceptions.propagate(e1); }
         RebindTracker.setRebinding();
+        if (ManagementNodeState.isHotProxy(mode))
+            readOnlyRebindCount++;
+
         Stopwatch timer = Stopwatch.createStarted();
         try {
             Reflections reflections = new Reflections(classLoader);
