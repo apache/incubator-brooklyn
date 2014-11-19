@@ -150,7 +150,7 @@ public class Strings {
     public static String removeFromStart(String string, String ...prefixes) {
         if (isEmpty(string)) return string;
         for (String prefix : prefixes)
-            if (string.startsWith(prefix)) return string.substring(prefix.length());
+            if (prefix!=null && string.startsWith(prefix)) return string.substring(prefix.length());
         return string;
     }
 

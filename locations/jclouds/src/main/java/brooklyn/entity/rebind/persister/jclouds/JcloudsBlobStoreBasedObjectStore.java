@@ -179,7 +179,10 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
                 .transform(new Function<StorageMetadata, String>() {
                     @Override
                     public String apply(@javax.annotation.Nullable StorageMetadata input) {
-                        return input.getName();
+                        String result = input.getName();
+                        result = Strings.removeFromStart(result, containerSubPath);
+                        result = Strings.removeFromStart(result, "/");
+                        return result;
                     }
                 }).toList();
     }
@@ -205,6 +208,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
         this.mgmt = mgmt;
     }
     
+    @SuppressWarnings("deprecation")
     @Override
     public void prepareForSharedUse(@Nullable PersistMode persistMode, HighAvailabilityMode haMode) {
         if (mgmt==null) throw new NullPointerException("Must inject ManagementContext before preparing "+this);
