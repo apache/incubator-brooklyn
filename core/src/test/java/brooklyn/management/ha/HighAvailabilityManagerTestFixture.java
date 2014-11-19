@@ -58,7 +58,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     private static final Logger log = LoggerFactory.getLogger(HighAvailabilityManagerTestFixture.class);
     
     private ManagementPlaneSyncRecordPersister persister;
-    private ManagementContextInternal managementContext;
+    protected ManagementContextInternal managementContext;
     private String ownNodeId;
     private HighAvailabilityManagerImpl manager;
     private Ticker ticker;

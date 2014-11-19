@@ -733,13 +733,21 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     getHeartbeatTimeout()
                 });
         }
+        String message = "Management node "+ownNodeId+" detected ";
+        String currMasterSummary = currMasterNodeId + "(" + (currMasterNodeRecord==null ? "<none>" : timestampString(currMasterNodeRecord.getRemoteTimestamp())) + ")";
+        if (weAreNewMaster && (ownNodeRecord.getStatus() == ManagementNodeState.MASTER)) {
+            LOG.warn(message + "we must reassert master status, as "+currMasterSummary+" attempted to steal");
+            publishHealth();
+            return;
+        }
+        
         if (!initializing) {
-            String message = "Management node "+ownNodeId+" detected ";
-            if (weAreNewMaster) message += "we should be master, changing from ";
+            if (weAreNewMaster) {
+                message += "we should be master, changing from ";
+            }
             else if (currMasterNodeRecord==null && newMasterNodeId==null) message += "master change attempted but no candidates ";
             else message += "master change, from ";
-            message +=currMasterNodeId + "(" + (currMasterNodeRecord==null ? "<none>" : timestampString(currMasterNodeRecord.getRemoteTimestamp())) + ")"
-                + " to "
+            message += currMasterSummary + " to "
                 + (newMasterNodeId == null ? "<none>" :
                     (weAreNewMaster ? "us " : "")
                     + newMasterNodeId + " (" + timestampString(newMasterNodeRecord.getRemoteTimestamp()) + ")" 
@@ -760,7 +768,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     protected void promoteToMaster() {
         if (!running) {
-            LOG.warn("Ignoring promote-to-master request, as HighAvailabilityManager is no longer running");
+            LOG.warn("Ignoring promote-to-master request, as HighAvailabilityManager is not running");
             return;
         }
         
