@@ -41,7 +41,7 @@ public abstract class ActiveMQDestinationImpl extends JMSDestinationImpl impleme
         
         //assume just one BrokerName at this endpoint
         try {
-            brokerMBeanName = new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker");
+            brokerMBeanName = new ObjectName("org.apache.activemq:brokerName=localhost,type=Broker");
             jmxHelper = new JmxHelper((EntityLocal) getParent());
         } catch (MalformedObjectNameException e) {
             throw Exceptions.propagate(e);
