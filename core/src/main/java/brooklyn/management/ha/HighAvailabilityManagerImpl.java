@@ -309,18 +309,21 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                 if (!nodeStateTransitionComplete) throw new IllegalStateException("Cannot switch to AUTO when in the middle of a transition to "+getInternalNodeState());
                 // else change us to standby, desiring to go to hot standby, and continue to below
                 setInternalNodeState(ManagementNodeState.STANDBY);
-                startMode = HighAvailabilityMode.HOT_STANDBY;
+                startMode = HighAvailabilityMode.HOT_BACKUP;
             case HOT_STANDBY:
             case STANDBY:
-                if (getInternalNodeState()==ManagementNodeState.STANDBY && oldState==ManagementNodeState.INITIALIZING
+                if (getInternalNodeState()==ManagementNodeState.STANDBY && oldState==ManagementNodeState.INITIALIZING && startMode!=HighAvailabilityMode.HOT_BACKUP
                         && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY)) {
                     // auto requested; not promoted; so it should become hot standby
-                    setInternalNodeState(ManagementNodeState.HOT_STANDBY);
+                    startMode = HighAvailabilityMode.HOT_STANDBY;
                 }
                 ManagementPlaneSyncRecord newState = loadManagementPlaneSyncRecord(true);
                 String masterNodeId = newState.getMasterNodeId();
                 ManagementNodeSyncRecord masterNodeDetails = newState.getManagementNodes().get(masterNodeId);
-                LOG.info("Management node "+ownNodeId+" running as HA " + getInternalNodeState() + " autodetected, " +
+                LOG.info("Management node "+ownNodeId+" running as HA " + getInternalNodeState() + " autodetected"
+                        + (startMode == HighAvailabilityMode.HOT_STANDBY || startMode == HighAvailabilityMode.HOT_BACKUP ? 
+                            " (will change to "+startMode+")" : "")
+                        + ", " +
                     (Strings.isBlank(masterNodeId) ? "no master currently (other node should promote itself soon)" : "master "
                         + (existingMaster==null ? "(new) " : "")
                         + "is "+masterNodeId +
@@ -402,15 +405,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             throw new IllegalStateException("Unexpected high availability mode "+startMode+" requested for "+this);
         }
         
-        if (startMode==HighAvailabilityMode.AUTO) {
-            if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY)) {
-                startMode = HighAvailabilityMode.HOT_STANDBY;
-            } else {
-                startMode = HighAvailabilityMode.STANDBY;
-            }
-        }
-        if ((getInternalNodeState()==ManagementNodeState.STANDBY && startMode==HighAvailabilityMode.HOT_STANDBY) || 
-                (startMode==HighAvailabilityMode.HOT_BACKUP && !ManagementNodeState.isHotProxy(oldState))) {
+        if ((startMode==HighAvailabilityMode.HOT_STANDBY || startMode==HighAvailabilityMode.HOT_BACKUP) && !ManagementNodeState.isHotProxy(oldState)) {
             // now transition to hot proxy
             nodeStateTransitionComplete = false;
             if (startMode==HighAvailabilityMode.HOT_STANDBY) {
@@ -685,7 +680,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         ManagementNodeSyncRecord ownNodeRecord = memento.getManagementNodes().get(ownNodeId);
         
         ManagementNodeSyncRecord newMasterNodeRecord = null;
-        boolean weWereMaster = getNodeState()==ManagementNodeState.MASTER;
         boolean demotingSelfInFavourOfOtherMaster = false;
         
         if (currMasterNodeRecord != null && currMasterNodeRecord.getStatus() == ManagementNodeState.MASTER && isHeartbeatOk(currMasterNodeRecord, ownNodeRecord)) {
@@ -769,8 +763,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     (weAreNewMaster ? "us " : "")
                     + newMasterNodeId + " (" + timestampString(newMasterNodeRecord.getRemoteTimestamp()) + ")" 
                     + (newMasterNodeUri!=null ? " "+newMasterNodeUri : "")  );
-            if (weWereMaster || weAreNewMaster) LOG.info(message);
-            else LOG.debug(message);
+            // always log, if you're looking at a standby node it's useful to see the new master's URL
+            LOG.info(message);
         }
 
         // New master is ourself: promote
