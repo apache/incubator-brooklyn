@@ -63,8 +63,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "services:",
             "- type: " + SIMPLE_ENTITY_TYPE);
         CatalogItem<?, ?> catalogItem = mgmt().getCatalog().getCatalogItem(id, BrooklynCatalog.DEFAULT_VERSION);
-        assertEquals(catalogItem.getVersion(), "0.0.0_SNAPSHOT");
-        mgmt().getCatalog().deleteCatalogItem(id, "0.0.0_SNAPSHOT");
+        assertEquals(catalogItem.getVersion(), "0.0.0.SNAPSHOT");
+        mgmt().getCatalog().deleteCatalogItem(id, "0.0.0.SNAPSHOT");
     }
 
     @Test

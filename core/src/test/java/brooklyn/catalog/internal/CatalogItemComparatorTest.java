@@ -34,15 +34,24 @@ public class CatalogItemComparatorTest {
         compare("0.0.1", "0.0.2", 1);
         compare("0.0.2", "0.0.1", -1);
         compare("0.0.1-qual", "0.0.2", 1);
+        compare("0.0.1.qual", "0.0.2", 1);
         compare("0.0.1-qual", "0.0.1_qual", 0);
+        compare("0.0.1.qual", "0.0.1.qual", 0);
         compare("0.0.1", "0.0.2-SNAPSHOT", -1);
+        compare("0.0.1", "0.0.2.SNAPSHOT", -1);
         compare("0.0.0_SNAPSHOT", "0.0.1-SNAPSHOT-20141111114709760", 1);
+        compare("0.0.0.SNAPSHOT", "0.0.1.SNAPSHOT-20141111114709760", 1);
         compare("2.0", "2.0.1-BUILD", 1);
+        compare("2.0", "2.0.1.BUILD", 1);
         compare("2.0.1", "2.0-BUILD", -1);
+        compare("2.0.1", "2.0.0.BUILD", -1);
         compare("2.0", "2.0-BUILD", -1);
+        // Note not true for .qualifier: compare("2.0", "2.0.0.BUILD", -1);
         compare("2.1", "2.0-BUILD", -1);
+        compare("2.1", "2.0.0.BUILD", -1);
         compare("1", "1.3", 1);
         compare("1-beta", "1-rc2", 1);
+        // Note not true for .qualifier: compare("1.0.0.beta", "1.0.0.rc2", 1);
         compare("1-beta1", "1-beta10", 1);
 
         compare(STABLE, "10.5", -1);
@@ -51,8 +60,8 @@ public class CatalogItemComparatorTest {
         compare(STABLE, "10.6", 1);
         compare(STABLE, "10.5.8.1", 1);
 
-        compare(RC2, "10.5.8-rc3", 1) ;
-        compare(RC2, "10.5.8-rc1", -1);
+        compare("10.5.8-rc2", "10.5.8-rc3", 1) ;
+        compare("10.5.8-rc2", "10.5.8-rc1", -1);
 
         compare(STABLE, RC2, -1);
 

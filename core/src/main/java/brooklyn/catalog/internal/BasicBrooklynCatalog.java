@@ -73,7 +73,7 @@ import com.google.common.collect.Iterables;
 
 public class BasicBrooklynCatalog implements BrooklynCatalog {
     private static final String POLICIES_KEY = "brooklyn.policies";
-    public static final String NO_VERSION = "0.0.0_SNAPSHOT";
+    public static final String NO_VERSION = "0.0.0.SNAPSHOT";
 
     private static final Logger log = LoggerFactory.getLogger(BasicBrooklynCatalog.class);
 
