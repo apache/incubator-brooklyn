@@ -28,12 +28,11 @@ import java.net.URLEncoder;
 
 import javax.annotation.Nullable;
 
-import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
-
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.io.BaseEncoding;
 import com.google.common.net.MediaType;
 
 public class Urls {
@@ -217,12 +216,20 @@ public class Urls {
     }
     
     /** 
-     * Creates a "data:..." scheme URL for use with supported parsers.
-     * (But note, by default Java's URL is not one of them.)
-     * It is not necessary to base64 encode it, but good practise;
-     * null type means no type included. */
+     * Creates a "data:..." scheme URL for use with supported parsers, using Base64 encoding.
+     * (But note, by default Java's URL is not one of them, although Brooklyn's ResourceUtils does support it.)
+     * <p>
+     * It is not necessary (at least for Brookyn's routines) to base64 encode it, but recommended as that is likely more
+     * portable and easier to work with if odd characters are included.
+     * <p>
+     * It is worth noting that Base64 uses '+' which can be replaced by ' ' in some URL parsing.  
+     * But in practice it does not seem to cause issues.
+     * An alternative is to use {@link BaseEncoding#base64Url()} but it is not clear how widely that is supported
+     * (nor what parameter should be given to indicate that type of encoding, as the spec calls for 'base64'!)
+     * <p>
+     * null type means no type info will be included in the URL. */
     public static String asDataUrlBase64(MediaType type, byte[] bytes) {
-        return "data:"+(type!=null ? type.withoutParameters().toString() : "")+";base64,"+new String(Base64Coder.encode(bytes));
+        return "data:"+(type!=null ? type.withoutParameters().toString() : "")+";base64,"+new String(BaseEncoding.base64().encode(bytes));
     }
 
 }
