@@ -742,8 +742,9 @@ public class Entities {
         for (Location loc : mgmt.getLocationManager().getLocations()) {
             destroyCatching(loc);
         }
-        if (mgmt instanceof ManagementContextInternal)
+        if (mgmt instanceof ManagementContextInternal) {
             ((ManagementContextInternal)mgmt).terminate();
+        }
         if (error!=null) throw Exceptions.propagate(error);
     }
 

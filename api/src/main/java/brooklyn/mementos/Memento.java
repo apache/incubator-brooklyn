@@ -22,7 +22,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.policy.EntityAdjunct;
 
 /**
  * Represents the internal state of something in brooklyn, so that it can be reconstructed (e.g. after restarting brooklyn).
@@ -74,4 +76,8 @@ public interface Memento extends Serializable {
     public Class<?> getTypeClass();
 
     public Collection<Object> getTags();
+    
+    /** Null for {@link Entity}, but important for adjuncts; see {@link EntityAdjunct#getUniqueTag()} */
+    public String getUniqueTag();
+    
 }

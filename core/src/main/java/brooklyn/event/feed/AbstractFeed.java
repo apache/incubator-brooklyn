@@ -86,15 +86,9 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
 
     protected void initUniqueTag(String uniqueTag, Object ...valsForDefault) {
         if (Strings.isNonBlank(uniqueTag)) this.uniqueTag = uniqueTag;
-        else if (Strings.isBlank(this.uniqueTag)) this.uniqueTag = getDefaultUniqueTag(valsForDefault);
+        else this.uniqueTag = getDefaultUniqueTag(valsForDefault);
     }
 
-    @Override
-    public String getUniqueTag() {
-        if (Strings.isBlank(uniqueTag)) initUniqueTag(null);
-        return super.getUniqueTag();
-    }
-    
     protected String getDefaultUniqueTag(Object ...valsForDefault) {
         StringBuilder sb = new StringBuilder();
         sb.append(JavaClassNames.simpleClassName(this));
@@ -114,29 +108,6 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
             sb.append("]");
         }
         return sb.toString(); 
-    }
-
-    @Override
-    public boolean isActivated() {
-        return activated;
-    }
-    
-    @Override
-    public boolean isActive() {
-        return activated && !suspended;
-    }
-    
-    public EntityLocal getEntity() {
-        return entity;
-    }
-    
-    protected boolean isConnected() {
-        // TODO Default impl will result in multiple logs for same error if becomes unreachable
-        // (e.g. if ssh gets NoRouteToHostException, then every AttributePollHandler for that
-        // feed will log.warn - so if polling for 10 sensors/attributes will get 10 log messages).
-        // Would be nice if reduced this logging duplication.
-        // (You can reduce it by providing a better 'isConnected' implementation of course.)
-        return isActivated() && entity!=null && !((EntityInternal)entity).getManagementSupport().isNoLongerManaged();
     }
 
     @Override
@@ -206,13 +177,36 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
     }
 
     @Override
+    public boolean isActivated() {
+        return activated;
+    }
+    
+    @Override
+    public boolean isActive() {
+        return isRunning();
+    }
+    
+    public EntityLocal getEntity() {
+        return entity;
+    }
+    
+    protected boolean isConnected() {
+        // TODO Default impl will result in multiple logs for same error if becomes unreachable
+        // (e.g. if ssh gets NoRouteToHostException, then every AttributePollHandler for that
+        // feed will log.warn - so if polling for 10 sensors/attributes will get 10 log messages).
+        // Would be nice if reduced this logging duplication.
+        // (You can reduce it by providing a better 'isConnected' implementation of course.)
+        return isRunning() && entity!=null && !((EntityInternal)entity).getManagementSupport().isNoLongerManaged();
+    }
+
+    @Override
     public boolean isSuspended() {
         return suspended;
     }
 
     @Override
     public boolean isRunning() {
-        return !isSuspended() && !isDestroyed();
+        return isActivated() && !isSuspended() && !isDestroyed() && getPoller()!=null && getPoller().isRunning();
     }
 
     @Override

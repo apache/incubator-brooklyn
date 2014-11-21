@@ -21,7 +21,9 @@ package brooklyn.entity.rebind;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,18 +33,23 @@ import org.testng.annotations.BeforeMethod;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
+import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.util.os.Os;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 
@@ -93,6 +100,37 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
                 .forLive(useLiveManagementContext())
                 .emptyCatalog(useEmptyCatalog())
                 .buildUnstarted();
+    }
+
+    /** terminates the original management context (not destroying items) and points it at the new one (and same for apps); 
+     * then clears the variables for the new one, so you can re-rebind */
+    protected void switchOriginalToNewManagementContext() {
+        origManagementContext.getRebindManager().stopPersistence();
+        for (Application e: origManagementContext.getApplications()) ((Startable)e).stop();
+        waitForTaskCountToBecome(origManagementContext, 0);
+        origManagementContext.terminate();
+        origManagementContext = (LocalManagementContext) newManagementContext;
+        origApp = newApp;
+        newManagementContext = null;
+        newApp = null;
+    }
+
+    public static void waitForTaskCountToBecome(final ManagementContext mgmt, final int allowedMax) {
+        Repeater.create().every(Duration.millis(20)).limitTimeTo(Duration.TEN_SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                ((LocalManagementContext)mgmt).getGarbageCollector().gcIteration();
+                long taskCountAfterAtOld = ((BasicExecutionManager)mgmt.getExecutionManager()).getNumIncompleteTasks();
+                List<Task<?>> tasks = ((BasicExecutionManager)mgmt.getExecutionManager()).getAllTasks();
+                int unendedTasks = 0;
+                for (Task<?> t: tasks) {
+                    if (!t.isDone()) unendedTasks++;
+                }
+                LOG.info("Count of incomplete tasks now "+taskCountAfterAtOld+", "+unendedTasks+" unended; tasks remembered are: "+
+                    tasks);
+                return taskCountAfterAtOld<=allowedMax;
+            }
+        }).runRequiringTrue();
     }
 
     protected boolean useLiveManagementContext() {
@@ -179,7 +217,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     @SuppressWarnings("unchecked")
     protected T rebind(RebindOptions options) throws Exception {
         if (newApp != null || newManagementContext != null) {
-            throw new IllegalStateException("already rebound");
+            throw new IllegalStateException("already rebound - use switchOriginalToNewManagementContext() if you are trying to rebind multiple times");
         }
         
         options = RebindOptions.create(options);

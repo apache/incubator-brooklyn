@@ -58,8 +58,8 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
-import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMode;
+import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -565,7 +565,7 @@ public class RebindManagerImpl implements RebindManager {
             //  3. instantiate entities+locations so that inter-entity references can subsequently be set during deserialize (and entity config/state is set).
             //  4. deserialize the memento
             //  5. instantiate policies+enricherss+feeds (could perhaps merge this with (3), depending how they are implemented)
-            //  6. reconstruct the entities etc (i.e. calling init on the already-instantiated instances).
+            //  6. reconstruct the entities etc (i.e. calling rebind() on the already-instantiated instances)
             //  7. add policies+enrichers+feeds to all the entities.
             //  8. manage the entities
             
@@ -1473,12 +1473,19 @@ public class RebindManagerImpl implements RebindManager {
         return (readOnlyRebindCount < 5) || (readOnlyRebindCount%1000==0);
     }
 
+    public int getReadOnlyRebindCount() {
+        return readOnlyRebindCount;
+    }
+    
     @Override
     public Map<String, Object> getMetrics() {
         Map<String,Object> result = MutableMap.of();
 
         result.put("rebind", rebindMetrics.asMap());
         result.put("persist", persistMetrics.asMap());
+        
+        if (readOnlyRebindCount>=0)
+            result.put("rebindReadOnlyCount", readOnlyRebindCount);
         
         // include first rebind counts, so we know whether we rebinded or not
         result.put("firstRebindCounts", MutableMap.of(

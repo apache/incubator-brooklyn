@@ -36,6 +36,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.basic.EntityLocal;
@@ -55,6 +56,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Callables;
 
 public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
@@ -101,6 +103,28 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 assertTrue(val != null && val > 2, "val=" + val);
             }
         });
+    }
+    
+    @Test
+    public void testFeedDeDupe() throws Exception {
+        testPollsFunctionRepeatedlyToSetAttribute();
+        entity.addFeed(feed);
+        log.info("Feed 0 is: "+feed);
+        Feed feed0 = feed;
+        
+        testPollsFunctionRepeatedlyToSetAttribute();
+        entity.addFeed(feed);
+        log.info("Feed 1 is: "+feed);
+        Feed feed1 = feed;
+        Assert.assertFalse(feed1==feed0);
+
+        FeedSupport feeds = ((EntityInternal)entity).feeds();
+        Assert.assertEquals(feeds.getFeeds().size(), 1, "Wrong feed count: "+feeds.getFeeds());
+
+        // a couple extra checks, compared to the de-dupe test in other *FeedTest classes
+        Feed feedAdded = Iterables.getOnlyElement(feeds.getFeeds());
+        Assert.assertTrue(feedAdded==feed1);
+        Assert.assertFalse(feedAdded==feed0);
     }
     
     @Test
@@ -222,20 +246,6 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 .period(1)
                 .supplier(Suppliers.ofInstance(1))
                 .onFailureOrException(Functions.<Integer>constant(null));
-    }
-    
-    @Test
-    public void testFeedDeDupe() throws Exception {
-        testPollsFunctionRepeatedlyToSetAttribute();
-        entity.addFeed(feed);
-        log.info("Feed 0 is: "+feed);
-        
-        testPollsFunctionRepeatedlyToSetAttribute();
-        log.info("Feed 1 is: "+feed);
-        entity.addFeed(feed);
-                
-        FeedSupport feeds = ((EntityInternal)entity).feeds();
-        Assert.assertEquals(feeds.getFeeds().size(), 1, "Wrong feed count: "+feeds.getFeeds());
     }
     
     private static class IncrementingCallable implements Callable<Integer> {

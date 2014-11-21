@@ -24,6 +24,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Strings;
 
@@ -106,6 +107,11 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
     }
     /** as {@link #checkSuccess(Predicate)} */
     public F checkSuccess(final Function<? super V,Boolean> val) {
+        return checkSuccess(Functionals.predicate(val));
+    }
+    @SuppressWarnings("unused")
+    /** @deprecated since 0.7.0, kept for rebind */ @Deprecated
+    private F checkSuccessLegacy(final Function<? super V,Boolean> val) {
         return checkSuccess(new Predicate<V>() {
             @Override
             public boolean apply(V input) {

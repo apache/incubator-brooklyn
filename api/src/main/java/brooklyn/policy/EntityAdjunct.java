@@ -45,7 +45,7 @@ public interface EntityAdjunct extends BrooklynObject {
     boolean isDestroyed();
     
     /**
-     * Whether the adjunct is available/active
+     * Whether the adjunct is available/active, ie started and not stopped or interrupted
      */
     boolean isRunning();
     

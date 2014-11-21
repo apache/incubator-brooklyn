@@ -81,6 +81,7 @@ import brooklyn.policy.EntityAdjunct;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
+import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
@@ -1226,13 +1227,24 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
     
     private <T extends EntityAdjunct> T findApparentlyEqualAndWarnIfNotSameUniqueTag(Collection<? extends T> items, T newItem) {
-        T oldItem = findApparentlyEqual(items, newItem);
+        T oldItem = findApparentlyEqual(items, newItem, true);
         
         if (oldItem!=null) {
+            String oldItemTag = oldItem.getUniqueTag();
             String newItemTag = newItem.getUniqueTag();
-            if (newItemTag!=null) {
-                return oldItem;
+            if (oldItemTag!=null || newItemTag!=null) {
+                if (Objects.equal(oldItemTag, newItemTag)) {
+                    // if same tag, return old item for replacing without comment
+                    return oldItem;
+                }
+                // if one has a tag bug not the other, and they are apparently equal,
+                // transfer the tag across
+                T tagged = oldItemTag!=null ? oldItem : newItem;
+                T tagless = oldItemTag!=null ? newItem : oldItem;
+                LOG.warn("Apparently equal items "+oldItem+" and "+newItem+"; but one has a unique tag "+tagged.getUniqueTag()+"; applying to the other");
+                ((AdjunctTagSupport)tagless.tags()).setUniqueTag(tagged.getUniqueTag());
             }
+            
             if (isRebinding()) {
                 LOG.warn("Adding to "+this+", "+newItem+" appears identical to existing "+oldItem+"; will replace. "
                     + "Underlying addition should be modified so it is not added twice during rebind or unique tag should be used to indicate it is identical.");
@@ -1246,7 +1258,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return null;
         }
     }
-    private <T extends EntityAdjunct> T findApparentlyEqual(Collection<? extends T> itemsCopy, T newItem) {
+    private <T extends EntityAdjunct> T findApparentlyEqual(Collection<? extends T> itemsCopy, T newItem, boolean transferUniqueTag) {
         // TODO workaround for issue where enrichers/feeds/policies can get added multiple times on rebind,
         // if it's added in onBecomingManager or connectSensors; 
         // the right fix will be more disciplined about how/where these are added;
@@ -1261,10 +1273,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         
         String newItemTag = newItem.getUniqueTag();
         for (T oldItem: itemsCopy) {
-            if (oldItem.getUniqueTag()!=null) {
-                if ((oldItem.getUniqueTag().equals(newItemTag)))
+            String oldItemTag = oldItem.getUniqueTag();
+            if (oldItemTag!=null && newItemTag!=null) { 
+                if (oldItemTag.equals(newItemTag)) {
                     return oldItem;
-            } else if (newItemTag==null && oldItem.getClass().equals(newItem.getClass())) {
+                } else {
+                    continue;
+                }
+            }
+            // either does not have a unique tag, do deep equality
+            if (oldItem.getClass().equals(newItem.getClass())) {
                 if (EqualsBuilder.reflectionEquals(oldItem, newItem, false,
                         // internal admin in 'beforeEntityAdjunct' should be ignored
                         beforeEntityAdjunct,

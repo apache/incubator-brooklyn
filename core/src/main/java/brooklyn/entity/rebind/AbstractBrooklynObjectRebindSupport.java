@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.mementos.Memento;
+import brooklyn.policy.EntityAdjunct;
+import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
+import brooklyn.util.text.Strings;
 
 public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> implements RebindSupport<T> {
 
@@ -63,6 +66,9 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
     protected abstract void addCustoms(RebindContext rebindContext, T memento);
     
     protected void addTags(RebindContext rebindContext, T memento) {
+        if (instance instanceof EntityAdjunct && Strings.isNonBlank(memento.getUniqueTag())) {
+            ((AdjunctTagSupport)(instance.tags())).setUniqueTag(memento.getUniqueTag());
+        }
         for (Object tag : memento.getTags()) {
             instance.tags().addTag(tag);
         }
