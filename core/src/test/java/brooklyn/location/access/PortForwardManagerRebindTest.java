@@ -76,6 +76,28 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
 
         // We first wait for persisted, to ensure that it is the PortForwardManager.onChanged that is causing persistence.
         RebindTestUtils.waitForPersisted(origApp);
+        origPortForwardManager.associate(publicIpId, HostAndPort.fromParts(publicAddress, 40080), origSimulatedMachine, 80);
+     
+        newApp = rebind();
+        
+        TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
+        Location newSimulatedMachine = newApp.getManagementContext().getLocationManager().getLocation(origSimulatedMachine.getId());
+        PortForwardManager newPortForwardManager = newEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
+        
+        assertEquals(newPortForwardManager.lookup(newSimulatedMachine, 80), HostAndPort.fromParts(publicAddress, 40080));
+        assertEquals(newPortForwardManager.lookup(publicIpId, 80), HostAndPort.fromParts(publicAddress, 40080));
+    }
+    
+    @Test
+    public void testHostAndPortTransformingEnricherLegacy() throws Exception {
+        String publicIpId = "5.6.7.8";
+        String publicAddress = "5.6.7.8";
+
+        TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntity.class));
+        PortForwardManager origPortForwardManager = origEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
+
+        // We first wait for persisted, to ensure that it is the PortForwardManager.onChanged that is causing persistence.
+        RebindTestUtils.waitForPersisted(origApp);
         origPortForwardManager.recordPublicIpHostname(publicIpId, publicAddress);
         origPortForwardManager.acquirePublicPortExplicit(publicIpId, 40080);
         origPortForwardManager.associate(publicIpId, 40080, origSimulatedMachine, 80);
@@ -88,6 +110,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
         
         assertEquals(newPortForwardManager.getPublicIpHostname(publicIpId), publicAddress);
         assertEquals(newPortForwardManager.lookup(newSimulatedMachine, 80), HostAndPort.fromParts(publicAddress, 40080));
+        assertEquals(newPortForwardManager.lookup(publicIpId, 80), HostAndPort.fromParts(publicAddress, 40080));
     }
     
     public static class MyEntity extends TestEntityImpl {
@@ -99,8 +122,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
             super.init();
             
             if (getConfig(PORT_FORWARD_MANAGER) == null) {
-                PortForwardManagerAuthority pfm = new PortForwardManagerAuthority();
-                pfm.injectOwningEntity(this);
+                PortForwardManager pfm = (PortForwardManager) getManagementContext().getLocationRegistry().resolve("portForwardManager(scope=global)");
                 setAttribute(PORT_FORWARD_MANAGER_LIVE, pfm);
                 setConfig(PORT_FORWARD_MANAGER, PortForwardManagerClient.fromAttributeOnEntity(this, PORT_FORWARD_MANAGER_LIVE));
             }
