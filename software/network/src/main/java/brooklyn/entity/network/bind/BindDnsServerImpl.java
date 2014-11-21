@@ -99,45 +99,12 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         super();
     }
 
-    public String getManagementCidr() {
-        return getConfig(MANAGEMENT_CIDR);
-    }
-
-    public Integer getDnsPort() {
-        return getAttribute(DNS_PORT);
-    }
-
-    public String getDomainName() {
-        return getConfig(DOMAIN_NAME);
-    }
-
-    /**
-     * @return A serial number guaranteed to be valid for use in a modified domain.zone or reverse.zone file.
-     */
-    public long getSerial() {
-        long next = getAttribute(SERIAL) + 1;
-        setAttribute(SERIAL, next);
-        return next;
-    }
-
-    public Cidr getReverseLookupNetwork() {
-        return getAttribute(REVERSE_LOOKUP_CIDR);
-    }
-
-    public String getReverseLookupDomain() {
-        return getAttribute(REVERSE_LOOKUP_DOMAIN);
-    }
-
-    public DynamicGroup getEntities() {
-        return getAttribute(ENTITIES);
-    }
-
     @Override
     public void init() {
         super.init();
-        checkNotNull(getConfig(HOSTNAME_SENSOR), "{} requires value for {}", getClass().getName(), HOSTNAME_SENSOR);
+        checkNotNull(getConfig(HOSTNAME_SENSOR), "%s requires value for %s", getClass().getName(), HOSTNAME_SENSOR);
         DynamicGroup entities = addChild(EntitySpec.create(DynamicGroup.class)
-                .configure(DynamicGroup.ENTITY_FILTER, getConfig(ENTITY_FILTER)));
+                .configure(DynamicGroup.ENTITY_FILTER, getEntityFilter()));
         setAttribute(ENTITIES, entities);
         setAttribute(A_RECORDS, ImmutableMap.<String, String>of());
         setAttribute(CNAME_RECORDS, ImmutableMultimap.<String, String>of());
@@ -302,6 +269,45 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         machine.execScript("updating file", ImmutableList.of(
                 BashCommands.sudo(String.format("tee -a %s < %s", destination, temp)),
                 String.format("rm -f %s", temp)));
+    }
+
+    // Mostly used in templates
+
+    protected Predicate<? super Entity> getEntityFilter() {
+        return getConfig(ENTITY_FILTER);
+    }
+
+    public String getManagementCidr() {
+        return getConfig(MANAGEMENT_CIDR);
+    }
+
+    public Integer getDnsPort() {
+        return getAttribute(DNS_PORT);
+    }
+
+    public String getDomainName() {
+        return getConfig(DOMAIN_NAME);
+    }
+
+    /**
+     * @return A serial number guaranteed to be valid for use in a modified domain.zone or reverse.zone file.
+     */
+    public long getSerial() {
+        long next = getAttribute(SERIAL) + 1;
+        setAttribute(SERIAL, next);
+        return next;
+    }
+
+    public Cidr getReverseLookupNetwork() {
+        return getAttribute(REVERSE_LOOKUP_CIDR);
+    }
+
+    public String getReverseLookupDomain() {
+        return getAttribute(REVERSE_LOOKUP_DOMAIN);
+    }
+
+    public DynamicGroup getEntities() {
+        return getAttribute(ENTITIES);
     }
 
     public Map<String, String> getAddressRecords() {

@@ -25,24 +25,25 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Protocol;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;
 import brooklyn.util.ssh.IptablesCommands.Policy;
 import brooklyn.util.text.Strings;
 
-import com.google.common.collect.ImmutableList;
-
 public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver implements BindDnsServerDriver {
 
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerSshDriver.class);
-    private String serviceName = "named";
+    private volatile BindOsSupport osSupport;
 
     public BindDnsServerSshDriver(BindDnsServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -64,13 +65,6 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
                 .failOnNonZeroResultCode()
                 .body.append(commands)
                 .execute();
-
-        ScriptHelper s = newScript("Test to determine service named")
-                .gatherOutput()
-                .noExtraOutput()
-                .body.append("if service --status-all 2>&1 | grep -q bind9; then echo bind9; else echo named; fi");
-        s.execute();
-        serviceName = s.getResultStdout().trim();
     }
 
     @Override
@@ -78,44 +72,63 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
         Integer dnsPort = getEntity().getDnsPort();
         Map<String, Object> ports = MutableMap.<String, Object>of("dnsPort", dnsPort);
         Networking.checkPortsValid(ports);
+
+        List<String> commands = Lists.newArrayList(
+                BashCommands.sudo("mkdir -p " + getDataDirectory() + " " + getDynamicDirectory() + " " + getOsSupport().getConfigDirectory()),
+                BashCommands.sudo("chown -R bind:bind " + getDataDirectory() + " " + getDynamicDirectory()),
+                // TODO determine name of ethernet interface if not eth0?
+                IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.UDP, dnsPort, Policy.ACCEPT),
+                IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.TCP, dnsPort, Policy.ACCEPT),
+                // TODO Iptables is not a service on Ubuntu
+                BashCommands.sudo("service iptables save"),
+                BashCommands.sudo("service iptables restart"));
         newScript(CUSTOMIZING)
-                .body.append(
-                        // TODO determine name of ethernet interface if not eth0?
-                        IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.UDP, dnsPort, Policy.ACCEPT),
-                        IptablesCommands.insertIptablesRule(Chain.INPUT, "eth0", Protocol.TCP, dnsPort, Policy.ACCEPT),
-                        BashCommands.sudo("service iptables save"),
-                        BashCommands.sudo("service iptables restart")
-                ).execute();
+                .body.append(commands)
+                // fails if iptables is not a service, e.g. on ubuntu
+                //.failOnNonZeroResultCode()
+                .execute();
+
+        copyAsRoot("classpath://brooklyn/entity/network/bind/rfc1912.zone", getRfc1912ZonesFile());
+        copyAsRoot("classpath://brooklyn/entity/network/bind/named.localhost", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.localhost"));
+        copyAsRoot("classpath://brooklyn/entity/network/bind/named.loopback", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.loopback"));
+        copyAsRoot("classpath://brooklyn/entity/network/bind/named.empty", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.empty"));
+
+        newScript("Checking BIND configuration")
+                .body.append(BashCommands.sudo("named-checkconf"))
+                .failOnNonZeroResultCode()
+                .execute();
     }
 
     @Override
     public void launch() {
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
-                .body.append(BashCommands.sudo("service "+serviceName+" start"))
+                .body.append(BashCommands.sudo("service " + getOsSupport().getServiceName() + " start"))
                 .execute();
     }
 
     @Override
     public boolean isRunning() {
         return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
-                .body.append(BashCommands.sudo("service "+serviceName+" status"))
+                .body.append(BashCommands.sudo("service " + getOsSupport().getServiceName() + " status"))
                 .execute() == 0;
     }
 
     @Override
     public void stop() {
         newScript(MutableMap.of("usePidFile", false), STOPPING)
-                .body.append(BashCommands.sudo("service "+serviceName+" stop"))
+                .body.append(BashCommands.sudo("service " + getOsSupport().getServiceName() + " stop"))
                 .execute();
     }
 
     @Override
     public void updateBindConfiguration() {
-        copyAsRoot(entity.getConfig(BindDnsServer.NAMED_CONF_TEMPLATE), "/etc/named.conf");
-        copyAsRoot(entity.getConfig(BindDnsServer.DOMAIN_ZONE_FILE_TEMPLATE), "/var/named/domain.zone");
-        copyAsRoot(entity.getConfig(BindDnsServer.REVERSE_ZONE_FILE_TEMPLATE), "/var/named/reverse.zone");
-        int result = getMachine().execScript("restart bind", ImmutableList.of(BashCommands.sudo("service "+serviceName+" restart")));
-        LOG.info("updated named configuration and zone file for '{}' on {} (exit code {}).",
+        LOG.debug("Updating bind configuration at " + getMachine());
+        copyAsRoot(entity.getConfig(BindDnsServer.NAMED_CONF_TEMPLATE), getOsSupport().getRootConfigFile());
+        copyAsRoot(entity.getConfig(BindDnsServer.DOMAIN_ZONE_FILE_TEMPLATE), getDomainZoneFile());
+        copyAsRoot(entity.getConfig(BindDnsServer.REVERSE_ZONE_FILE_TEMPLATE), getReverseZoneFile());
+        int result = getMachine().execScript("restart bind",
+                ImmutableList.of(BashCommands.sudo("service " + getOsSupport().getServiceName() + " restart")));
+        LOG.info("Updated named configuration and zone file for '{}' on {} (exit code {}).",
                 new Object[]{entity.getConfig(BindDnsServer.DOMAIN_NAME), entity, result});
     }
 
@@ -126,4 +139,41 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
         getMachine().execScript("copying file", ImmutableList.of(BashCommands.sudo(String.format("mv %s %s", temp, destination))));
     }
 
+    /** @return The location on the server of the domain zone file */
+    public String getDomainZoneFile() {
+        return Os.mergePaths(getOsSupport().getConfigDirectory(), "domain.zone");
+    }
+
+    /** @return The location on the server of the reverse zone file */
+    public String getReverseZoneFile() {
+        return Os.mergePaths(getOsSupport().getConfigDirectory(), "reverse.zone");
+    }
+
+    public String getDataDirectory() {
+        return Os.mergePaths(getOsSupport().getWorkingDirectory(), "data");
+    }
+
+    public String getDynamicDirectory() {
+        return Os.mergePaths(getOsSupport().getWorkingDirectory(), "dynamic");
+    }
+
+    public String getRfc1912ZonesFile() {
+        return Os.mergePaths(getOsSupport().getConfigDirectory(), "rfc1912.zone");
+    }
+
+    public BindOsSupport getOsSupport() {
+        BindOsSupport result = osSupport;
+        if (result == null) {
+            synchronized(this) {
+                result = osSupport;
+                if (result == null) {
+                    boolean yumExists = newScript("testing for yum")
+                            .body.append(BashCommands.requireExecutable("yum"))
+                            .execute() == 0;
+                    osSupport = result = yumExists ? BindOsSupport.forRhel() : BindOsSupport.forDebian();
+                }
+            }
+        }
+        return result;
+    }
 }

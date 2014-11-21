@@ -21,6 +21,8 @@ package brooklyn.entity.network.bind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.basic.SshMachineLocation;
@@ -30,8 +32,12 @@ public class TestBindDnsServerImpl extends BindDnsServerImpl {
     private static final Logger LOG = LoggerFactory.getLogger(TestBindDnsServerImpl.class);
 
     public static class TestBindDnsServerDriver extends DoNothingSoftwareProcessDriver implements BindDnsServerDriver {
+
+        private final BindDnsServerSshDriver delegate;
+
         public TestBindDnsServerDriver(EntityLocal entity, SshMachineLocation machine) {
             super(entity, machine);
+            delegate = new BindDnsServerSshDriver((BindDnsServerImpl) entity, machine);
         }
 
         @Override
@@ -40,6 +46,31 @@ public class TestBindDnsServerImpl extends BindDnsServerImpl {
             LOG.debug("Configuration:\n{}", processTemplate(entity.getConfig(BindDnsServer.NAMED_CONF_TEMPLATE)));
             LOG.debug("domain.zone:\n{}", processTemplate(entity.getConfig(BindDnsServer.DOMAIN_ZONE_FILE_TEMPLATE)));
             LOG.debug("reverse.zone:\n{}", processTemplate(entity.getConfig(BindDnsServer.REVERSE_ZONE_FILE_TEMPLATE)));
+        }
+
+        @Override
+        public BindOsSupport getOsSupport() {
+            return BindOsSupport.forRhel();
+        }
+
+        public String getDataDirectory() {
+            return delegate.getDataDirectory();
+        }
+
+        public String getDynamicDirectory() {
+            return delegate.getDynamicDirectory();
+        }
+
+        public String getDomainZoneFile() {
+            return delegate.getDomainZoneFile();
+        }
+
+        public String getReverseZoneFile() {
+            return delegate.getReverseZoneFile();
+        }
+
+        public String getRfc1912ZonesFile() {
+            return delegate.getRfc1912ZonesFile();
         }
     }
 
@@ -57,4 +88,5 @@ public class TestBindDnsServerImpl extends BindDnsServerImpl {
     protected void appendTemplate(String template, String destination, SshMachineLocation machine) {
         LOG.debug("Skipped append of template to {}@{}", destination, machine);
     }
+
 }
