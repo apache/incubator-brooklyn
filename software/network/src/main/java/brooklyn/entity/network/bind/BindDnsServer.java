@@ -87,6 +87,11 @@ public interface BindDnsServer extends SoftwareProcess {
             "bind.template.named-conf", "The BIND named configuration file (as FreeMarker template)",
             "classpath://brooklyn/entity/network/bind/named.conf");
 
+    @SetFromFlag("updateRootZonesFile")
+    ConfigKey<Boolean> UPDATE_ROOT_ZONES_FILE = ConfigKeys.newBooleanConfigKey(
+            "bind.updateRootZones", "Instructs the entity to fetch the latest root zones file from ftp.rs.internic.net.",
+            Boolean.FALSE);
+
 
     /* Reverse lookup attributes. */
 

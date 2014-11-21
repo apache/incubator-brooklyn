@@ -82,6 +82,10 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
                 // TODO Iptables is not a service on Ubuntu
                 BashCommands.sudo("service iptables save"),
                 BashCommands.sudo("service iptables restart"));
+        if (getEntity().getConfig(BindDnsServer.UPDATE_ROOT_ZONES_FILE)) {
+            commands.add("wget --user=ftp --password=ftp ftp://ftp.rs.internic.net/domain/db.cache " +
+                    "-O " + getOsSupport().getRootZonesFile());
+        }
         newScript(CUSTOMIZING)
                 .body.append(commands)
                 // fails if iptables is not a service, e.g. on ubuntu
