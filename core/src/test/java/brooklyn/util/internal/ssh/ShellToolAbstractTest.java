@@ -399,10 +399,7 @@ public abstract class ShellToolAbstractTest {
     }
 
     protected String execCommands(List<String> cmds, Map<String,?> env) {
-        execCommands(null, cmds, env);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        tool.execCommands(ImmutableMap.of("out", out), cmds, env);
-        return new String(out.toByteArray());
+        return execCommands(null, cmds, env);
     }
 
     protected String execCommands(ConfigBag config, List<String> cmds, Map<String,?> env) {
