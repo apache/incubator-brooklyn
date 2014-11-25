@@ -19,6 +19,7 @@
 package brooklyn.util.internal.ssh.sshj;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -28,18 +29,23 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.schmizz.sshj.connection.channel.direct.Session;
 
 import org.testng.annotations.Test;
 
+import brooklyn.test.Asserts;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.SshToolAbstractIntegrationTest;
 import brooklyn.util.os.Os;
+import brooklyn.util.time.Duration;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -157,7 +163,91 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
         assertEquals(localtool3.getLocalTempDir(), new File(Os.tidyPath(customRelativeTempDir)));
     }
 
+    @Test(groups = {"Integration"})
+    public void testAsyncExecStdoutAndStderr() throws Exception {
+        // Include a sleep, to ensure that the contents retrieved in first poll and subsequent polls are appended
+        List<String> cmds = ImmutableList.of(
+                "echo mystringToStdout",
+                "echo mystringToStderr 1>&2",
+                "sleep 3",
+                "echo mystringPostSleepToStdout",
+                "echo mystringPostSleepToStderr 1>&2");
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        int exitCode = tool.execScript(
+                ImmutableMap.of("out", out, "err", err, SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_NO_EXTRA_OUTPUT.getName(), true), 
+                cmds, 
+                ImmutableMap.<String,String>of());
+        String outStr = new String(out.toByteArray());
+        String errStr = new String(err.toByteArray());
 
+        assertEquals(exitCode, 0);
+        assertEquals("mystringToStdout\nmystringPostSleepToStdout", outStr.trim());
+        assertEquals("mystringToStderr\nmystringPostSleepToStderr", errStr.trim());
+    }
+
+    @Test(groups = {"Integration"})
+    public void testAsyncExecReturnsExitCode() throws Exception {
+        int exitCode = tool.execScript(
+                ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true), 
+                ImmutableList.of("exit 123"), 
+                ImmutableMap.<String,String>of());
+        assertEquals(exitCode, 123);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testAsyncExecTimesOut() throws Exception {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        try {
+            tool.execScript(
+                ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_ASYNC_TIMEOUT.getName(), Duration.millis(1)), 
+                ImmutableList.of("sleep 60"), 
+                ImmutableMap.<String,String>of());
+            fail();
+        } catch (Exception e) {
+            TimeoutException te = Exceptions.getFirstThrowableOfType(e, TimeoutException.class);
+            if (te == null) throw e;
+        }
+        
+        long seconds = stopwatch.elapsed(TimeUnit.SECONDS);
+        assertTrue(seconds < 30, "exec took "+seconds+" seconds");
+    }
+
+    @Test(groups = {"Integration"})
+    public void testAsyncExecAbortsIfProcessFails() throws Exception {
+        Thread thread = new Thread(new Runnable() {
+            public void run() {
+                Stopwatch stopwatch = Stopwatch.createStarted();
+                int exitStatus = tool.execScript(
+                    ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_ASYNC_TIMEOUT.getName(), Duration.millis(1)), 
+                    ImmutableList.of("sleep 63"), 
+                    ImmutableMap.<String,String>of());
+                
+                assertEquals(exitStatus, 1);
+                
+                long seconds = stopwatch.elapsed(TimeUnit.SECONDS);
+                assertTrue(seconds < 30, "exec took "+seconds+" seconds");
+            }});
+        try {
+            thread.start();
+            
+            Asserts.succeedsEventually(new Runnable() {
+                public void run() {
+                    int exitStatus = tool.execCommands(ImmutableMap.<String,Object>of(), ImmutableList.of("ps aux| grep \"sleep 63\" | grep -v grep"));
+                    assertEquals(exitStatus, 0);
+                }});
+            
+            tool.execCommands(ImmutableMap.<String,Object>of(), ImmutableList.of("ps aux| grep \"sleep 63\" | grep -v grep | awk '{print($2)}' | xargs kill"));
+            
+            thread.join(30*1000);
+            assertFalse(thread.isAlive());
+        } finally {
+            thread.interrupt();
+        }
+    }
+
+    
     protected String execShellDirect(List<String> cmds) {
         return execShellDirect(cmds, ImmutableMap.<String,Object>of());
     }

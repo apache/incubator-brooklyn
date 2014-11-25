@@ -46,6 +46,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 public abstract class ShellAbstractTool implements ShellTool {
 
@@ -220,6 +221,7 @@ public abstract class ShellAbstractTool implements ShellTool {
         protected final Boolean runAsRoot;
         protected final Boolean noExtraOutput;
         protected final Boolean noDeleteAfterExec;
+        protected final String scriptNameWithoutExtension;
         protected final String scriptPath;
 
         public ToolAbstractExecScript(Map<String,?> props) {
@@ -239,10 +241,10 @@ public abstract class ShellAbstractTool implements ShellTool {
                 if (summary.length()>30) 
                     summary = summary.substring(0,30);
             }
-            this.scriptPath = scriptDir+"/brooklyn-"+
-                Time.makeDateStampString()+"-"+Identifiers.makeRandomId(4)+
-                (summary==null ? "" : "-"+summary) +
-                ".sh";
+            this.scriptNameWithoutExtension = "brooklyn-"+
+                    Time.makeDateStampString()+"-"+Identifiers.makeRandomId(4)+
+                    (summary==null ? "" : "-"+summary);
+            this.scriptPath = Os.mergePathsUnix(scriptDir, scriptNameWithoutExtension+".sh");
         }
 
         /** builds the command to run the given script;
@@ -262,7 +264,112 @@ public abstract class ShellAbstractTool implements ShellTool {
             return cmds.build();
         }
 
+        protected String getSummary() {
+            String summary = getOptionalVal(props, PROP_SUMMARY);
+            return (summary != null) ? summary : scriptPath; 
+        }
+
         public abstract int run();
     }
     
+    protected abstract class ToolAbstractAsyncExecScript extends ToolAbstractExecScript {
+        protected final String stdoutPath;
+        protected final String stderrPath;
+        protected final String exitStatusPath;
+        protected final String pidPath;
+
+        public ToolAbstractAsyncExecScript(Map<String,?> props) {
+            super(props);
+
+            stdoutPath = Os.mergePathsUnix(scriptDir, scriptNameWithoutExtension + ".stdout");
+            stderrPath = Os.mergePathsUnix(scriptDir, scriptNameWithoutExtension + ".stderr");
+            exitStatusPath = Os.mergePathsUnix(scriptDir, scriptNameWithoutExtension + ".exitstatus");
+            pidPath = Os.mergePathsUnix(scriptDir, scriptNameWithoutExtension + ".pid");
+        }
+
+        /**
+         * Builds the command to run the given script, asynchronously.
+         * The executed command will return immediately, but the output from the script
+         * will continue to be written 
+         * note that some modes require \$RESULT passed in order to access a variable, whereas most just need $ */
+        protected List<String> buildRunScriptCommand() {
+            // TODO 
+            String touchCmd = String.format("touch %s; touch %s; touch %s; touch %s", stdoutPath, stderrPath, exitStatusPath, pidPath);
+            String cmd = String.format("( %s > %s 2> %s < /dev/null ; echo $? > %s ) & disown", scriptPath, stdoutPath, stderrPath, exitStatusPath);
+            MutableList.Builder<String> cmds = MutableList.<String>builder()
+                    .add((runAsRoot ? BashCommands.sudo(touchCmd) : touchCmd))
+                    .add((runAsRoot ? BashCommands.sudo(cmd) : cmd))
+                    .add("echo $! > "+pidPath)
+                    .add("RESULT=$?");
+            if (noExtraOutput==null || !noExtraOutput) {
+                cmds.add("echo Executing async "+scriptPath);
+            }
+            cmds.add("exit $RESULT");
+            return cmds.build();
+        }
+
+        /**
+         * Builds the command to retrieve the exit status of the command, written to stdout.
+         */
+        protected List<String> buildRetrieveStatusCommand() {
+            String cmd = 
+                    "if test -s "+exitStatusPath+"; then"+"\n"+
+                    "    cat "+exitStatusPath+"\n"+
+                    "elif test -s "+pidPath+"; then"+"\n"+
+                    "    pid=`cat "+pidPath+"`"+"\n"+
+                    "    if ! ps -p $pid > /dev/null < /dev/null; then"+"\n"+
+                    "        # no exit status, and not executing; give a few seconds grace in case just about to write exit status"+"\n"+
+                    "        sleep 3"+"\n"+
+                    "        if test -s "+exitStatusPath+"; then"+"\n"+
+                    "            cat "+exitStatusPath+""+"\n"+
+                    "        else"+"\n"+
+                    "            echo \"No exit status in a.exitstatus, and pid in a.pid ($pid) not executing\""+"\n"+
+                    "            exit 1"+"\n"+
+                    "        fi"+"\n"+
+                    "    fi"+"\n"+
+                    "else"+"\n"+
+                    "    echo \"No exit status in "+exitStatusPath+", and "+pidPath+" is empty\""+"\n"+
+                    "    exit 1"+"\n"+
+                    "fi"+"\n";
+
+            MutableList.Builder<String> cmds = MutableList.<String>builder()
+                    .add((runAsRoot ? BashCommands.sudo(cmd) : cmd))
+                    .add("RESULT=$?");
+            cmds.add("exit $RESULT");
+            return cmds.build();
+        }
+
+        /**
+         * Builds the command to retrieve the stdout and stderr of the async command.
+         * An offset can be given, to only retrieve data starting at a particular character (indexed from 0).
+         */
+        protected List<String> buildRetrieveStdoutAndStderrCommand(int stdoutPosition, int stderrPosition) {
+            // Note that `tail -c +1` means start at the *first* character (i.e. start counting from 1, not 0)
+            String catStdoutCmd = "tail -c +"+(stdoutPosition+1)+" "+stdoutPath;
+            String catStderrCmd = "tail -c +"+(stderrPosition+1)+" "+stderrPath+" 1>&2";
+            MutableList.Builder<String> cmds = MutableList.<String>builder()
+                    .add((runAsRoot ? BashCommands.sudo(catStdoutCmd) : catStdoutCmd))
+                    .add((runAsRoot ? BashCommands.sudo(catStderrCmd) : catStderrCmd))
+                    .add("RESULT=$?");
+            cmds.add("exit $RESULT");
+            return cmds.build();
+        }
+
+        protected List<String> deleteTemporaryFilesCommand() {
+            if (!Boolean.TRUE.equals(noDeleteAfterExec)) {
+                // use "-f" because some systems have "rm" aliased to "rm -i"
+                // use "< /dev/null" to guarantee doesn't hang
+                return ImmutableList.of(
+                        "rm -f "+scriptPath+" < /dev/null",
+                        "rm -f "+stdoutPath+" < /dev/null",
+                        "rm -f "+stderrPath+" < /dev/null",
+                        "rm -f "+exitStatusPath+" < /dev/null",
+                        "rm -f "+pidPath+" < /dev/null");
+            } else {
+                return ImmutableList.<String>of();
+            }
+        }
+
+        public abstract int run();
+    }
 }

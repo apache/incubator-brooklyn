@@ -23,6 +23,7 @@ import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.any;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -33,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import net.schmizz.sshj.connection.ConnectionException;
@@ -47,7 +49,6 @@ import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 
 import org.apache.commons.io.input.ProxyInputStream;
-import org.bouncycastle.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,8 @@ import brooklyn.util.io.FileUtil;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -299,16 +302,134 @@ public class SshjTool extends SshAbstractTool implements SshTool {
      * 
      * So on balance, the script-based approach seems most reliable, even if there is an overhead
      * of separate message(s) for copying the file!
+     * 
+     * Another consideration is long-running scripts. On some clouds when executing a script that takes 
+     * several minutes, we have seen it fail with -1 (e.g. 1 in 20 times). This suggests the ssh connection
+     * is being dropped. To avoid this problem, we can execute the script asynchronously, writing to files
+     * the stdout/stderr/pid/exitStatus. We then periodically poll to retrieve the contents of these files.
+     * Use {@link #PROP_EXEC_ASYNC} to force this mode of execution.
      */
     @Override
     public int execScript(final Map<String,?> props, final List<String> commands, final Map<String,?> env) {
-        return new ToolAbstractExecScript(props) {
+        Boolean execAsync = getOptionalVal(props, PROP_EXEC_ASYNC);
+        if (Boolean.TRUE.equals(execAsync)) {
+            return execScriptAsyncAndPoll(props, commands, env);
+        } else {
+            return new ToolAbstractExecScript(props) {
+                public int run() {
+                    String scriptContents = toScript(props, commands, env);
+                    if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
+                    copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
+                    
+                    return asInt(acquire(new ShellAction(buildRunScriptCommand(), out, err)), -1);                
+                }
+            }.run();
+        }
+    }
+
+    protected int execScriptAsyncAndPoll(final Map<String,?> props, final List<String> commands, final Map<String,?> env) {
+        return new ToolAbstractAsyncExecScript(props) {
             public int run() {
                 String scriptContents = toScript(props, commands, env);
-                if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
+                if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as async script: {}", host, scriptContents);
                 copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
                 
-                return asInt(acquire(new ShellAction(buildRunScriptCommand(), out, err)), -1);                
+                // Execute script asynchronously
+                int execResult = asInt(acquire(new ShellAction(buildRunScriptCommand(), out, err)), -1);
+                if (execResult != 0) return execResult;
+
+                // Poll repeatedly to get the status
+                Duration initialDelayBetweenPolls = Duration.ONE_SECOND;
+                Duration maxDelayBetweenPolls = Duration.seconds(20);
+                double multiplierBetweenPolls = 1.2;
+                int maxConsecutiveSshFailures = 3;
+                Duration delayBetweenPolls = initialDelayBetweenPolls;
+                Stopwatch executionStartTime = Stopwatch.createStarted();
+                Duration timeout = getOptionalVal(props, PROP_EXEC_ASYNC_TIMEOUT);
+                if (timeout == null) timeout = Duration.PRACTICALLY_FOREVER;
+                int stdoutCount = 0;
+                int stderrCount = 0;
+                int iteration = 0;
+                int consecutiveSshFailures = 0;
+                try {
+                    do {
+                        // Retrieve the exit status of the async script
+                        ByteArrayOutputStream statusOut = new ByteArrayOutputStream();
+                        ByteArrayOutputStream statusErr = new ByteArrayOutputStream();
+                        int statusResult = asInt(acquire(new ShellAction(buildRetrieveStatusCommand(), statusOut, statusErr)), -1);
+    
+                        // Retrieve the stdout + stderr of the async script.
+                        // Always do this *after* retrieving exit status, so don't miss anything.
+                        if (out != null || err != null) {
+                            ByteArrayOutputStream streamsOut = new ByteArrayOutputStream();
+                            ByteArrayOutputStream streamsErr = new ByteArrayOutputStream();
+                            int streamsResult = asInt(acquire(new ShellAction(buildRetrieveStdoutAndStderrCommand(stdoutCount, stderrCount), streamsOut, streamsErr)), -1);
+                            
+                            if (streamsResult == 0) {
+                                stdoutCount += streamsOut.size();
+                                stderrCount += streamsErr.size();
+                            } else {
+                                if (out != null) out.write(toUTF8ByteArray("retrieving stdout/stderr failed with exit code "+streamsResult+" (stdout follow)"));
+                                if (err != null) err.write(toUTF8ByteArray("retrieving stdout/stderr failed with exit code "+streamsResult+" (stderr follow)"));
+                            }
+                            if (out != null) out.write(streamsOut.toByteArray());
+                            if (err != null) err.write(streamsErr.toByteArray());
+                        }
+
+                        if (statusResult != 0) {
+                            // Failed to get the exit status; if it was -1 (i.e. connection error) then consider retrying; otherwise abort.
+                            if (out != null) {
+                                out.write(toUTF8ByteArray("retrieving status failed with exit code "+statusResult+" (stdout follow)"));
+                                out.write(statusOut.toByteArray());
+                            }
+                            if (err != null) {
+                                err.write(toUTF8ByteArray("retrieving status failed with exit code "+statusResult+" (stderr follow)"));
+                                err.write(statusErr.toByteArray());
+                            }
+                            if (statusResult == -1) {
+                                // Looks like an ssh timeout/connection error; we are willing to retry
+                                consecutiveSshFailures++;
+                                if (consecutiveSshFailures > maxConsecutiveSshFailures) {
+                                    LOG.warn("Aborting on "+consecutiveSshFailures+" consecutive ssh connection errors when polling for async script to complete on "+SshjTool.this.toString()+" ("+getSummary()+")"+"\n"
+                                            +"\t"+"EXIT STATUS: -1"+"\n"
+                                            +"\t"+"STDERR: "+new String(statusErr.toByteArray())+"\n"
+                                            +"\t"+"STDOUT: "+new String(statusOut.toByteArray())+"\n");
+                                    return -1;
+                                } else {
+                                    LOG.info("ssh connection error when polling for async script to complete on "+SshjTool.this.toString()+" ("+getSummary()+")"+"\n"
+                                            +"\t"+"EXIT STATUS: -1"+"\n"
+                                            +"\t"+"STDERR: "+new String(statusErr.toByteArray())+"\n"
+                                            +"\t"+"STDOUT: "+new String(statusOut.toByteArray())+"\n");
+                                }
+                            } else {
+                                return statusResult;
+                            }
+                        } else {
+                            consecutiveSshFailures = 0;
+                            String statusOutStr = new String(statusOut.toByteArray());
+                            if (Strings.isNonBlank(statusOutStr)) {
+                                return Integer.parseInt(statusOutStr.trim());
+                            }
+                        }
+                        
+                        if (iteration == 0) {
+                            if (LOG.isDebugEnabled()) LOG.debug("Waiting for async script to complete on "+SshjTool.this.toString()+" (polling periodically for "+getSummary()+")");
+                        } else {
+                            if (LOG.isTraceEnabled()) LOG.trace("Still waiting for async script to complete on "+SshjTool.this.toString()+" (polling periodically for "+getSummary()+"; iteration="+iteration+")");
+                        }
+                        Time.sleep(delayBetweenPolls);
+                        delayBetweenPolls = Duration.min(maxDelayBetweenPolls, delayBetweenPolls.multiply(multiplierBetweenPolls));
+                        iteration++;
+                        
+                    } while (timeout.isLongerThan(Duration.millis(executionStartTime.elapsed(TimeUnit.MILLISECONDS))));
+                    
+                    // Timed out
+                    String msg = "Timeout for async script to complete on "+SshjTool.this.toString()+" ("+getSummary()+")";
+                    LOG.warn(msg+"; rethrowing");
+                    throw new TimeoutException(msg);
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
             }
         }.run();
     }
@@ -714,7 +835,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
                 for (CharSequence cmd : commands) {
                     try {
-                        output.write(Strings.toUTF8ByteArray(cmd+"\n"));
+                        output.write(toUTF8ByteArray(cmd+"\n"));
                         output.flush();
                     } catch (ConnectionException e) {
                         if (!shell.isOpen()) {
@@ -784,6 +905,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     }
 
+    private byte[] toUTF8ByteArray(String string) {
+        return org.bouncycastle.util.Strings.toUTF8ByteArray(string);
+    }
+    
     private Supplier<InputStream> newInputStreamSupplier(final byte[] contents) {
         return new Supplier<InputStream>() {
             @Override public InputStream get() {

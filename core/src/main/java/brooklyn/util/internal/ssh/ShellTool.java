@@ -20,7 +20,7 @@ package brooklyn.util.internal.ssh;
 
 import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
-import java.io.File;
+
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +28,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.util.os.Os;
+import brooklyn.util.time.Duration;
 
 /** Methods for executing things in an environment (localhost process, or ssh) */
 public interface ShellTool {
@@ -55,9 +56,13 @@ public interface ShellTool {
     public static final ConfigKey<String> PROP_DIRECT_HEADER = newConfigKey("directHeader", "commands to run at the target before any caller-supplied commands for direct execution", "exec bash -e");
 
     ConfigKey<Boolean> PROP_NO_DELETE_SCRIPT = newConfigKey("noDeleteAfterExec", "Retains the generated script file after executing the commands instead of deleting it", false);
-    
+
     ConfigKey<String> PROP_SUMMARY = ConfigKeys.newStringConfigKey("summary", "Provides a human-readable summary, used in file generation etc");
     
+    ConfigKey<Boolean> PROP_EXEC_ASYNC = newConfigKey("execAsync", "Executes the script asynchronously, and then polls for the result (and for stdout/stderr)", false);
+
+    ConfigKey<Duration> PROP_EXEC_ASYNC_TIMEOUT = newConfigKey("execAsyncTimeout", "Timeout when executing a script asynchronously", Duration.PRACTICALLY_FOREVER);
+
     /**
      * Executes the set of commands in a shell script. Blocks until completion.
      * <p>
