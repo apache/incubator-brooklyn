@@ -69,6 +69,9 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("entityStarted")
     ConfigKey<Boolean> ENTITY_STARTED = BrooklynConfigKeys.ENTITY_STARTED;
 
+    @SetFromFlag("entityRunning")
+    ConfigKey<Boolean> ENTITY_RUNNING = BrooklynConfigKeys.ENTITY_RUNNING;
+
     @SetFromFlag("skipInstall")
     ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_INSTALLATION;
 

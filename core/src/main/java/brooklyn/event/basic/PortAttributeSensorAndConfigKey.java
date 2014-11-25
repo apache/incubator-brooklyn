@@ -93,8 +93,12 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
             }
             if (lo.isPresent()) {
                 Location l = lo.get();
-                Boolean skip = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION)).or(false);
-                Boolean started = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_STARTED)).or(false);
+                Optional<Boolean> locationRunning = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.ENTITY_RUNNING));
+                Optional<Boolean> entityRunning = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_RUNNING));
+                Optional<Boolean> locationInstalled = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION));
+                Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION));
+                Optional<Boolean> entityStarted = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_STARTED));
+                boolean skipCheck = locationRunning.or(entityRunning).or(locationInstalled).or(entityInstalled).or(entityStarted).or(false);
                 if (l instanceof PortSupplier) {
                     int p = ((PortSupplier) l).obtainPort(value);
                     if (p != -1) {
@@ -102,7 +106,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                         return p;
                     }
                     // If we are not skipping install or already started, fail now
-                    if (!(skip || started)) {
+                    if (!skipCheck) {
                         int rangeSize = Iterables.size(value);
                         if (rangeSize == 0) {
                             LOG.warn("{}: no port available for {} (empty range {})", new Object[] { entity, getName(), value });
