@@ -21,6 +21,8 @@ package brooklyn.entity.messaging.activemq;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import com.google.common.base.Preconditions;
+
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.messaging.jms.JMSDestinationImpl;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -31,6 +33,7 @@ public abstract class ActiveMQDestinationImpl extends JMSDestinationImpl impleme
     protected ObjectName brokerMBeanName;
     protected transient JmxHelper jmxHelper;
     protected volatile JmxFeed jmxFeed;
+    protected String brokerName;
 
     public ActiveMQDestinationImpl() {
     }
@@ -39,9 +42,11 @@ public abstract class ActiveMQDestinationImpl extends JMSDestinationImpl impleme
     public void onManagementStarting() {
         super.onManagementStarting();
         
-        //assume just one BrokerName at this endpoint
+        getBrokerName();
+        Preconditions.checkNotNull(brokerName, "ActiveMQ broker name must be specified");
+
         try {
-            brokerMBeanName = new ObjectName("org.apache.activemq:brokerName=localhost,type=Broker");
+            brokerMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName);
             jmxHelper = new JmxHelper((EntityLocal) getParent());
         } catch (MalformedObjectNameException e) {
             throw Exceptions.propagate(e);
@@ -51,5 +56,13 @@ public abstract class ActiveMQDestinationImpl extends JMSDestinationImpl impleme
     @Override
     protected void disconnectSensors() {
         if (jmxFeed != null) jmxFeed.stop();
+    }
+    
+    protected String getBrokerName() {
+        if (brokerName == null) {
+            EntityLocal parent = (EntityLocal)getParent();
+            brokerName = parent != null ? parent.getAttribute(ActiveMQBroker.BROKER_NAME) : null;
+        }
+        return brokerName;
     }
 }
