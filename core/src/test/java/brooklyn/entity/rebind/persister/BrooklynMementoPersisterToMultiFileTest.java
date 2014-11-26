@@ -54,8 +54,8 @@ public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPers
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
         super.tearDown();
+        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
     }
 
     // to have this picked up in the IDE
