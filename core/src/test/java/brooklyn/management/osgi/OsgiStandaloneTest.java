@@ -26,6 +26,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarInputStream;
 
+import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.util.exceptions.Exceptions;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -97,15 +99,24 @@ public class OsgiStandaloneTest {
         }
     }
 
+    protected Bundle installFromClasspath(String resourceName) throws BundleException {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), resourceName);
+        try {
+            return Osgis.install(framework, String.format("classpath:%s", resourceName));
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
     @Test
     public void testInstallBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
     }
 
     @Test
     public void testBootBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+        Bundle bundle = installFromClasspath(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         Class<?> bundleCls = bundle.loadClass("brooklyn.osgi.tests.SimpleEntity");
         Assert.assertEquals(Entity.class,  bundle.loadClass(Entity.class.getName()));
         Assert.assertEquals(Entity.class, bundleCls.getClassLoader().loadClass(Entity.class.getName()));
@@ -137,7 +148,7 @@ public class OsgiStandaloneTest {
 
     @Test
     public void testAMultiplier() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
         setAMultiplier(bundle, 5);
         checkMath(bundle, 3, 15);
@@ -147,7 +158,7 @@ public class OsgiStandaloneTest {
      * on a fresh install the multiplier is reset */
     @Test
     public void testANOtherMultiple() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
         setAMultiplier(bundle, 14);
         checkMath(bundle, 3, 42);
@@ -155,23 +166,23 @@ public class OsgiStandaloneTest {
 
     @Test
     public void testGetBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         setAMultiplier(bundle, 3);
 
         // can look it up based on the same location string (no other "location identifier" reference string seems to work here, however) 
-        Bundle bundle2 = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle2 = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle2, 3, 9);
     }
 
     @Test
     public void testUninstallAndReinstallBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
         setAMultiplier(bundle, 3);
         checkMath(bundle, 3, 9);
         bundle.uninstall();
         
-        Bundle bundle2 = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle2 = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle2, 3, 6);
     }
 
@@ -207,6 +218,7 @@ public class OsgiStandaloneTest {
     
     @Test
     public void testReadKnownManifest() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         InputStream in = this.getClass().getResourceAsStream(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         JarInputStream jarIn = new JarInputStream(in);
         ManifestHelper helper = Osgis.ManifestHelper.forManifest(jarIn.getManifest());
@@ -217,7 +229,7 @@ public class OsgiStandaloneTest {
     
     @Test
     public void testLoadOsgiBundleDependencies() throws Exception {
-        Bundle bundle = install(BROOKLYN_TEST_OSGI_ENTITIES_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         Assert.assertNotNull(bundle);
         Class<?> aClass = bundle.loadClass("brooklyn.osgi.tests.SimpleApplicationImpl");
         Object aInst = aClass.newInstance();

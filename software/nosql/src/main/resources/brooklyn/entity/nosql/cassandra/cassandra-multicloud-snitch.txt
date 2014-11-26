@@ -24,6 +24,10 @@ The source will be contributed to the Cassandra project; when it is available in
 Cassandra distro (and when we don't want to give backwards compatibility support for
 older Cassandra versions), then we can delete it from Brooklyn.
 
-It is included here in binary form to simplify the Brooklyn build process.
 The jar can be uploaded to a Cassandra Node as part of deployment, for if
 this multi-cloud snitch is desired.
+
+Under Apache conventions, binary files are not part of the source
+release. If you are using the source release, you may add this file
+by copying it from the master repository, which is accessible on the
+web at https://github.com/apache/incubator-brooklyn

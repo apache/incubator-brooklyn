@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
@@ -98,6 +99,7 @@ public class OsgiVersionMoreEntityTest {
             InternalPolicyFactory policyFactory = new InternalPolicyFactory(managementContext);
             factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry(), policyFactory);
 
+            TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
             Bundle bundle = Osgis.install(framework, BROOKLYN_TEST_OSGI_ENTITIES_PATH);
             @SuppressWarnings("unchecked")
             Class<? extends Entity> bundleCls = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntityImpl");
@@ -167,6 +169,8 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
         
         // test load and instantiate
@@ -193,6 +197,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1Policy() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
         
         // test load and instantiate
@@ -213,6 +220,8 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV2FailsWithoutBasicTestOsgiEntitiesBundle() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V2_URL);
         
@@ -231,6 +240,8 @@ public class OsgiVersionMoreEntityTest {
     // and has policy, with policy item catalog ID is reasonable
     @Test
     public void testMoreEntitiesV2() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
         
@@ -250,6 +261,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1ThenV2GivesV2() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
         addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
@@ -265,6 +279,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV2ThenV1GivesV1() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 
             BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
         addCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, 

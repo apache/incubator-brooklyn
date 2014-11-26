@@ -20,4 +20,7 @@ simple OSGi bundle that can be deployed.
 
 The jar contains its source code.
 
-It is included as a (small) binary to prevent build complication.
+Under Apache conventions, binary files are not part of the source
+release. If you are using the source release, you may add this file
+by copying it from the master repository, which is accessible on the
+web at https://github.com/apache/incubator-brooklyn
