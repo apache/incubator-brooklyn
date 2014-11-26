@@ -24,6 +24,7 @@ import static org.testng.Assert.assertNull;
 import java.net.URL;
 import java.util.Map;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -43,6 +44,8 @@ import brooklyn.util.text.Identifiers;
 import com.google.common.collect.ImmutableList;
 
 public class KarafContainerTest extends BrooklynAppLiveTestSupport {
+
+    private static final String HELLO_WORLD_JAR = "/hello-world.jar";
 
     LocalhostMachineProvisioningLocation localhost;
     KarafContainer karaf;
@@ -116,6 +119,10 @@ public class KarafContainerTest extends BrooklynAppLiveTestSupport {
     // registered so we are never able to connect to them over jmx.
     @Test(groups = {"Integration", "WIP"})
     public void testCanInstallAndUninstallBundle() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), HELLO_WORLD_JAR);
+        URL jarUrl = getClass().getResource(HELLO_WORLD_JAR);
+        assertNotNull(jarUrl);
+
         karaf = app.createAndManageChild(EntitySpec.create(KarafContainer.class)
             .configure("name", Identifiers.makeRandomId(8))
             .configure("displayName", "Karaf Test")
@@ -123,9 +130,6 @@ public class KarafContainerTest extends BrooklynAppLiveTestSupport {
             .configure("rmiRegistryPort", "9099+"));
         
         app.start(ImmutableList.of(localhost));
-        
-        URL jarUrl = getClass().getClassLoader().getResource("hello-world.jar");
-        assertNotNull(jarUrl);
         
         long bundleId = karaf.installBundle("wrap:"+jarUrl.toString());
         

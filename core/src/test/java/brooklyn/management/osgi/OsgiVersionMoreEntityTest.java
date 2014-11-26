@@ -24,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
@@ -106,6 +107,7 @@ public class OsgiVersionMoreEntityTest {
             InternalPolicyFactory policyFactory = new InternalPolicyFactory(managementContext);
             factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry(), policyFactory);
 
+            TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
             Bundle bundle = Osgis.install(framework, BROOKLYN_TEST_OSGI_ENTITIES_PATH);
             @SuppressWarnings("unchecked")
             Class<? extends Entity> bundleCls = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntityImpl");
@@ -188,6 +190,8 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
@@ -217,6 +221,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1Policy() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
@@ -242,6 +249,8 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV2FailsWithoutBasicTestOsgiEntitiesBundle() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
@@ -262,6 +271,8 @@ public class OsgiVersionMoreEntityTest {
     // and has policy, with policy item catalog ID is reasonable
     @Test
     public void testMoreEntitiesV2() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
@@ -284,6 +295,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV1ThenV2GivesV2() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
@@ -303,6 +317,9 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testMoreEntitiesV2ThenV1GivesV1() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+
         addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
@@ -345,6 +362,10 @@ public class OsgiVersionMoreEntityTest {
 
     @Test
     public void testUnfazedByMoreEntitiesV1AndV2AndV2EvilTwin() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_PATH);
+
         addCatalogItemWithNameAndType("v1",
                 TEST_VERSION,
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
