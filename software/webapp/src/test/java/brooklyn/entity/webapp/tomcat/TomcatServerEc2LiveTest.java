@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
@@ -37,13 +38,16 @@ import com.google.common.collect.ImmutableList;
  * A simple test of installing+running on AWS-EC2, using various OS distros and versions. 
  */
 public class TomcatServerEc2LiveTest extends AbstractEc2LiveTest {
-    
-    private URL warUrl = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"));
-    
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
+    }
+
     @Override
     protected void doTest(Location loc) throws Exception {
         final TomcatServer server = app.createAndManageChild(EntitySpec.create(TomcatServer.class)
-                .configure("war", warUrl.toString()));
+                .configure("war", getTestWar()));
         
         app.start(ImmutableList.of(loc));
         

@@ -24,6 +24,7 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -94,9 +95,11 @@ public class WebAppRunnerTest {
     public static void assertBrooklynEventuallyAt(String url) {
         HttpTestUtils.assertContentEventuallyContainsText(url, "Brooklyn Web Console");
     }
-    
+
     @Test
     public void testStartSecondaryWar() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+
         if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
         BrooklynWebServer server = createWebServer(
@@ -117,6 +120,8 @@ public class WebAppRunnerTest {
 
     @Test
     public void testStartSecondaryWarAfter() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+
         if (!Networking.isPortAvailable(8090))
             fail("Another process is using port 8090 which is required for this test.");
         BrooklynWebServer server = createWebServer(MutableMap.of("port", 8090, "war", "brooklyn.war"));
@@ -137,6 +142,8 @@ public class WebAppRunnerTest {
 
     @Test
     public void testStartWithLauncher() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .brooklynProperties("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
                 .webapp("/hello", "hello-world.war")

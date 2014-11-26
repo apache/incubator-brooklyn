@@ -26,6 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -69,7 +70,6 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(NginxRebindWithHaIntegrationTest.class);
 
-    private URL warUrl;
     private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
     private ExecutorService executor;
     private LocalhostMachineProvisioningLocation loc;
@@ -83,11 +83,15 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
         // to set things like correct Java on path.
         return true;
     }
-    
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
+    }
+
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        warUrl = getClass().getClassLoader().getResource("hello-world.war");
         loc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
             .configure("address", Networking.getLocalHost())
             .configure(SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
@@ -123,7 +127,7 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
     @Test(groups = "Integration")
     public void testChangeModeFailureStopsTasksButHappyUponResumption() throws Exception {
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class).configure("war", warUrl.toString()))
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class).configure("war", getTestWar()))
                 .configure("initialSize", 1));
         
         NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)

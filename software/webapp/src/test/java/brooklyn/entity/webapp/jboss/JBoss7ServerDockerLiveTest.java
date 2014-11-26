@@ -23,6 +23,7 @@ import brooklyn.entity.software.AbstractDockerLiveTest;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestResourceUnavailableException;
 import com.google.common.collect.ImmutableList;
 import org.testng.annotations.Test;
 
@@ -36,12 +37,15 @@ import static org.testng.Assert.assertNotNull;
  */
 public class JBoss7ServerDockerLiveTest extends AbstractDockerLiveTest {
 
-   private URL warUrl = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"));
+   public String getTestWar() {
+      TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+      return "classpath://hello-world.war";
+   }
 
    @Override
    protected void doTest(Location loc) throws Exception {
       final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
-              .configure("war", warUrl.toString()));
+              .configure("war", getTestWar()));
 
       app.start(ImmutableList.of(loc));
 

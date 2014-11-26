@@ -19,19 +19,18 @@
 package brooklyn.entity.proxy.nginx;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -71,28 +70,26 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
     
     private static final Logger log = LoggerFactory.getLogger(NginxUrlMappingIntegrationTest.class);
 
-    private static final String WAR_URL = "classpath://hello-world.war";
-    
     private NginxController nginx;
-    private DynamicCluster cluster;
     private Group urlMappingsGroup;
     private EntityManager entityManager;
     private LocalhostMachineProvisioningLocation localLoc;
     
-    private URL war;
-
     @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        war = getClass().getClassLoader().getResource("hello-world.war");
-        assertNotNull(war, "Unable to locate hello-world.war resource");
-        
+
         urlMappingsGroup = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
                 .configure("childrenAsMembers", true));
         entityManager = app.getManagementContext().getEntityManager();
         
         localLoc = new LocalhostMachineProvisioningLocation();
+    }
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
 
     protected void checkExtraLocalhosts() throws Exception {
@@ -125,7 +122,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c0 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c0)
@@ -136,7 +133,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c1 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(WAR_URL)));
+                .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(getTestWar())));
         UrlMapping u1 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost2")
                 .configure("path", "/hello-world($|/.*)")
@@ -160,7 +157,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         app.start(ImmutableList.of(localLoc));
         final int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT);
         for (Entity member : c2.getMembers()) {
-            ((JBoss7Server)member).deploy(war.toString(), "c2.war");
+            ((JBoss7Server)member).deploy(getTestWar(), "c2.war");
         }
     
         Entities.dumpInfo(app);
@@ -236,10 +233,10 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         final int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT);
         
         for (Entity child : c0.getMembers()) {
-            ((JBoss7Server)child).deploy(war.toString(), "atC0.war");
+            ((JBoss7Server)child).deploy(getTestWar(), "atC0.war");
         }
         for (Entity child : c1.getMembers()) {
-            ((JBoss7Server)child).deploy(war.toString(), "atC1.war");
+            ((JBoss7Server)child).deploy(getTestWar(), "atC1.war");
         }
 
         // Confirm routes requests to the correct cluster
@@ -262,7 +259,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c0 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.ROOT_WAR, war.toString()));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost2")
                 .configure("target", c0)
@@ -296,12 +293,12 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster coreCluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.ROOT_WAR, war.toString()));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         DynamicCluster c1 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(war.toString())));
+                .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(getTestWar())));
         UrlMapping u1 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c1)
@@ -338,7 +335,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c0 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c0)
@@ -391,7 +388,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         final DynamicCluster c1 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.ROOT_WAR, war.toString()));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         final UrlMapping u1 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c1)
@@ -474,7 +471,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         final int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT);
         
         for (Entity child : c0.getMembers()) {
-            ((JBoss7Server)child).deploy(war.toString(), "atC0.war");
+            ((JBoss7Server)child).deploy(getTestWar(), "atC0.war");
         }
 
         // Confirm routes requests to the correct cluster
@@ -497,7 +494,7 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c0 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("httpPort", "8100+"))
-                .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", c0)

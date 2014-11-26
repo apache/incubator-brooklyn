@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
@@ -38,12 +39,15 @@ import com.google.common.collect.ImmutableList;
  */
 public class JBoss6ServerAwsEc2LiveTest extends AbstractEc2LiveTest {
     
-    private URL warUrl = checkNotNull(getClass().getClassLoader().getResource("hello-world-no-mapping.war"));
-    
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world-no-mapping.war");
+        return "classpath://hello-world-no-mapping.war";
+    }
+
     @Override
     protected void doTest(Location loc) throws Exception {
         final JBoss6Server server = app.createAndManageChild(EntitySpec.create(JBoss6Server.class)
-                .configure("war", warUrl.toString()));
+                .configure("war", getTestWar()));
         
         app.start(ImmutableList.of(loc));
         

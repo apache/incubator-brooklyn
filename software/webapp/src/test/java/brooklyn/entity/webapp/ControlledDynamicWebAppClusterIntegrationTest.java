@@ -21,10 +21,10 @@ package brooklyn.entity.webapp;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -58,25 +58,27 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
 
     private static final int TIMEOUT_MS = 10*1000;
     
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation loc;
     private List<LocalhostMachineProvisioningLocation> locs;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        String warPath = "hello-world.war";
-        warUrl = getClass().getClassLoader().getResource(warPath);
-        
+
         loc = app.newLocalhostProvisioningLocation();
         locs = ImmutableList.of(loc);
     }
-    
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
+    }
+
     @Test(groups="Integration")
     public void testConfiguresController() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
         app.start(locs);
 
         String url = cluster.getController().getAttribute(NginxController.ROOT_URL);
@@ -88,7 +90,7 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
     public void testSetsToplevelHostnameFromController() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
         app.start(locs);
 
         String expectedHostname = cluster.getController().getAttribute(LoadBalancer.HOSTNAME);
@@ -108,7 +110,7 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
                 .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class)
-                        .configure(JBoss7Server.ROOT_WAR, warUrl.toString()))
+                        .configure(JBoss7Server.ROOT_WAR, getTestWar()))
                 .configure(ControlledDynamicWebAppCluster.WEB_CLUSTER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
                         .displayName("mydisplayname")));
         app.start(locs);
@@ -147,7 +149,7 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
     public void testTomcatAbsoluteRedirect() {
         final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
             .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class)
-                    .configure(TomcatServer.ROOT_WAR, "classpath://hello-world.war"))
+            .configure(TomcatServer.ROOT_WAR, getTestWar()))
             .configure("initialSize", 1)
             .configure(AbstractController.SERVICE_UP_URL_PATH, "hello/redirectAbsolute")
         );
