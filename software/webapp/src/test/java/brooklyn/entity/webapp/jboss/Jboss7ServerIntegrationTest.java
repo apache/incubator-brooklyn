@@ -23,10 +23,10 @@ import static org.testng.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.net.URL;
+
 import java.security.KeyStore;
 import java.security.cert.Certificate;
-
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -54,16 +54,12 @@ import com.google.common.collect.ImmutableSet;
 public class Jboss7ServerIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(Jboss7ServerIntegrationTest.class);
     
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication app;
     private File keystoreFile;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        String warPath = "hello-world.war";
-        warUrl = getClass().getClassLoader().getResource(warPath);
-
         localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
         app = ApplicationBuilder.newManagedApp(TestApplication.class);
         keystoreFile = createTemporaryKeyStore("myname", "mypass");
@@ -95,10 +91,15 @@ public class Jboss7ServerIntegrationTest {
         }
     }
     
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
+    }
+
     @Test(groups = "Integration")
     public void testHttp() throws Exception {
         final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
-                .configure("war", warUrl.toString()));
+                .configure("war", getTestWar()));
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -126,7 +127,7 @@ public class Jboss7ServerIntegrationTest {
     @Test(groups = {"Integration"})
     public void testHttps() throws Exception {
         final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
-                .configure("war", warUrl.toString())
+                .configure("war", getTestWar())
                 .configure(JBoss7Server.ENABLED_PROTOCOLS, ImmutableSet.of("https"))
                 .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
         
@@ -163,7 +164,7 @@ public class Jboss7ServerIntegrationTest {
     @Test(groups = {"Integration"})
     public void testHttpAndHttps() throws Exception {
         final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
-                .configure("war", warUrl.toString())
+                .configure("war", getTestWar())
                 .configure(JBoss7Server.ENABLED_PROTOCOLS, ImmutableSet.of("http", "https"))
                 .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
         

@@ -34,6 +34,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -405,6 +406,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      */
     @DataProvider(name = "entitiesWithWarAndURL")
     public Object[][] entitiesWithWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world-no-mapping.war");
         List<Object[]> result = Lists.newArrayList();
         
         for (Object[] entity : basicEntities()) {

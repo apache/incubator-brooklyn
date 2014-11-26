@@ -30,6 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -56,7 +57,6 @@ import com.google.common.io.Files;
 public class DynamicWebAppClusterRebindIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(DynamicWebAppClusterRebindIntegrationTest.class);
     
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication origApp;
     private TestApplication newApp;
@@ -69,9 +69,6 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     
     @BeforeMethod(groups = "Integration")
     public void setUp() {
-        String warPath = "hello-world.war";
-        warUrl = getClass().getClassLoader().getResource(warPath);
-        
         executor = Executors.newCachedThreadPool();
 
         mementoDir = Files.createTempDir();
@@ -90,6 +87,11 @@ public class DynamicWebAppClusterRebindIntegrationTest {
         if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
         if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+    }
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
 
     private TestApplication rebind() throws Exception {
@@ -113,7 +115,7 @@ public class DynamicWebAppClusterRebindIntegrationTest {
     @Test(groups = "Integration")
     public void testRebindsToRunningCluster() throws Exception {
         DynamicWebAppCluster origCluster = origApp.createAndManageChild(EntitySpec.create(DynamicWebAppCluster.class)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar()))
                 .configure("initialSize", 1));
         
         origApp.start(ImmutableList.of(localhostProvisioningLocation));

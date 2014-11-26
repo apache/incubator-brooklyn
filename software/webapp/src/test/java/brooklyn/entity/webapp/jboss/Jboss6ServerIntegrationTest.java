@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -49,16 +50,18 @@ public class Jboss6ServerIntegrationTest extends BrooklynAppLiveTestSupport {
     // Port increment for JBoss 6.
     public static final int PORT_INCREMENT = 400;
 
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        String warPath = "hello-world-no-mapping.war";
-        warUrl = getClass().getClassLoader().getResource(warPath);
 
         localhostProvisioningLocation = app.newLocalhostProvisioningLocation();
+    }
+
+    public String getTestWarWithNoMapping() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world-no-mapping.war");
+        return "classpath://hello-world-no-mapping.war";
     }
 
     @Test(groups = "Integration")
@@ -80,7 +83,7 @@ public class Jboss6ServerIntegrationTest extends BrooklynAppLiveTestSupport {
         final JBoss6Server server = app.createAndManageChild(EntitySpec.create(JBoss6Server.class)
                 .configure(JBoss6Server.PORT_INCREMENT, PORT_INCREMENT)
                 .configure(UsesJmx.JMX_AGENT_MODE, jmxAgentMode)
-                .configure("war", warUrl.toString()));
+                .configure("war", getTestWarWithNoMapping()));
 
         app.start(ImmutableList.of(localhostProvisioningLocation));
         

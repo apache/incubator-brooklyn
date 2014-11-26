@@ -23,6 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -41,7 +42,6 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 
@@ -56,7 +56,6 @@ public class NginxHttpsSslIntegrationTest extends BrooklynAppLiveTestSupport {
     private DynamicCluster cluster;
     private Location localLoc;
 
-    private static final String WAR_URL = "classpath://hello-world.war";
     private static final String CERTIFICATE_URL = "classpath://ssl/certs/localhost/server.crt";
     private static final String KEY_URL = "classpath://ssl/certs/localhost/server.key";
     
@@ -67,6 +66,11 @@ public class NginxHttpsSslIntegrationTest extends BrooklynAppLiveTestSupport {
         localLoc = mgmt.getLocationRegistry().resolve("localhost");
     }
 
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
+    }
+
     /**
      * Test that the Nginx proxy starts up and sets SERVICE_UP correctly.
      */
@@ -75,7 +79,7 @@ public class NginxHttpsSslIntegrationTest extends BrooklynAppLiveTestSupport {
         cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
             .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
             .configure("initialSize", 1)
-            .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
+            .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         ProxySslConfig ssl = ProxySslConfig.builder()
                 .certificateSourceUrl(CERTIFICATE_URL)
@@ -132,7 +136,7 @@ public class NginxHttpsSslIntegrationTest extends BrooklynAppLiveTestSupport {
         cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
             .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
             .configure("initialSize", 1)
-            .configure(JavaWebAppService.ROOT_WAR, WAR_URL));
+            .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         ProxySslConfig ssl = ProxySslConfig.builder()
                 .certificateDestination(getFile("ssl/certs/localhost/server.crt"))

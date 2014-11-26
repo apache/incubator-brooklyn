@@ -20,12 +20,12 @@ package brooklyn.entity.webapp.jboss;
 
 import static org.testng.Assert.assertEquals;
 
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -52,7 +52,6 @@ import com.google.common.collect.Iterables;
 public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp {
     private static final Logger LOG = LoggerFactory.getLogger(Jboss7ServerRebindIntegrationTest.class);
     
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication newApp;
     private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
@@ -62,8 +61,6 @@ public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        String warPath = "hello-world.war";
-        warUrl = getClass().getClassLoader().getResource(warPath);
         executor = Executors.newCachedThreadPool();
         localhostProvisioningLocation = (LocalhostMachineProvisioningLocation) origManagementContext.getLocationRegistry().resolve("localhost");
     }
@@ -76,6 +73,11 @@ public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp 
         }
         if (executor != null) executor.shutdownNow();
         super.tearDown();
+    }
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
 
     private WebAppMonitor newWebAppMonitor(String url) {
@@ -91,7 +93,7 @@ public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp 
     public void testRebindsToRunningServer() throws Exception {
         // Start an app-server, and wait for it to be fully up
         JBoss7Server origServer = origApp.createAndManageChild(EntitySpec.create(JBoss7Server.class)
-                    .configure("war", warUrl.toString()));
+                    .configure("war", getTestWar()));
         
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
@@ -111,7 +113,7 @@ public class Jboss7ServerRebindIntegrationTest extends RebindTestFixtureWithApp 
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(newRootUrl, 200);
 
         // confirm that deploy() effector affects the correct jboss server 
-        newServer.deploy(warUrl.toString(), "myhello.war");
+        newServer.deploy(getTestWar(), "myhello.war");
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(newRootUrl+"myhello", 200);
         
         // check we see evidence of the enrichers and sensor-feeds having an effect.

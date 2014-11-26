@@ -30,6 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -65,7 +66,6 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(NginxRebindIntegrationTest.class);
 
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private List<WebAppMonitor> webAppMonitors = new CopyOnWriteArrayList<WebAppMonitor>();
     private ExecutorService executor;
@@ -81,9 +81,13 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        warUrl = getClass().getClassLoader().getResource("hello-world.war");
         localhostProvisioningLocation = origManagementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
         executor = Executors.newCachedThreadPool();
+    }
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
 
     @AfterMethod(alwaysRun=true)
@@ -156,7 +160,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         
         // Set up nginx with a server pool
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", getTestWar()))
                 .configure("initialSize", 1));
         
         NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
@@ -229,7 +233,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
                 .configure("childrenAsMembers", true));
         
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", getTestWar()))
                 .configure("initialSize", 1)); 
 
         UrlMapping origMapping = origApp.getManagementContext().getEntityManager().createEntity(EntitySpec.create(UrlMapping.class)

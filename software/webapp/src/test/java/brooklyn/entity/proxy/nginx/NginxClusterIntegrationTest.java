@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collections;
 import java.util.List;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -62,7 +63,6 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
 
     private static final long TIMEOUT_MS = 60*1000;
     
-    private String war;
     private Location localhostProvisioningLoc;
     private EntityManager entityManager;
     private LoadBalancerCluster loadBalancerCluster;
@@ -73,7 +73,6 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        war = "classpath://hello-world.war";
         localhostProvisioningLoc = app.newLocalhostProvisioningLocation();
         
         urlMappings = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
@@ -81,6 +80,11 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
         entityManager = app.getManagementContext().getEntityManager();
         
         nginxSpec = EntitySpec.create(NginxController.class);
+    }
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
 
     @Test(groups = "Integration")
@@ -107,7 +111,7 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.ROOT_WAR, war.toString()));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure("serverPool", serverPool)
@@ -129,7 +133,7 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c1 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(war)));
+                .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(getTestWar())));
 
         UrlMapping urlMapping = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost")
