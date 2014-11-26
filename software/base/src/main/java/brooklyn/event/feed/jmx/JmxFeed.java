@@ -127,6 +127,7 @@ public class JmxFeed extends AbstractFeed {
         private List<JmxAttributePollConfig<?>> attributePolls = Lists.newArrayList();
         private List<JmxOperationPollConfig<?>> operationPolls = Lists.newArrayList();
         private List<JmxNotificationSubscriptionConfig<?>> notificationSubscriptions = Lists.newArrayList();
+        private String uniqueTag;
         private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
@@ -158,6 +159,10 @@ public class JmxFeed extends AbstractFeed {
         }
         public Builder subscribeToNotification(JmxNotificationSubscriptionConfig<?> config) {
             notificationSubscriptions.add(config);
+            return this;
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
             return this;
         }
         public JmxFeed build() {
@@ -214,6 +219,7 @@ public class JmxFeed extends AbstractFeed {
             notificationSubscriptions.put(config.getNotificationFilter(), config);
         }
         setConfig(NOTIFICATION_SUBSCRIPTIONS, notificationSubscriptions);
+        initUniqueTag(builder.uniqueTag, attributePolls, operationPolls, notificationSubscriptions);
     }
 
     @Override

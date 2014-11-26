@@ -117,6 +117,7 @@ public class SshFeed extends AbstractFeed {
         private Duration period = Duration.of(500, TimeUnit.MILLISECONDS);
         private List<SshPollConfig<?>> polls = Lists.newArrayList();
         private boolean execAsCommand = false;
+        private String uniqueTag;
         private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
@@ -155,6 +156,10 @@ public class SshFeed extends AbstractFeed {
         }
         public Builder execAsScript() {
             execAsCommand = false;
+            return this;
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
             return this;
         }
         public SshFeed build() {
@@ -220,6 +225,7 @@ public class SshFeed extends AbstractFeed {
             polls.put(new SshPollIdentifier(config.getCommandSupplier(), config.getEnvSupplier()), configCopy);
         }
         setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls.values());
     }
 
     protected SshMachineLocation getMachine() {

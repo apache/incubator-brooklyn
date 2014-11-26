@@ -24,6 +24,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
@@ -66,4 +67,9 @@ public class ZabbixPollConfig<T> extends PollConfig<HttpToolResponse, T, ZabbixP
         return this;
     }
 
+    @Override
+    protected MutableList<Object> equalsFields() {
+        return super.equalsFields().appendIfNotNull(itemKey);
+    }
+    
 }

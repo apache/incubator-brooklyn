@@ -23,9 +23,14 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.guava.Functionals;
+import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 
 /**
@@ -102,6 +107,11 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
     }
     /** as {@link #checkSuccess(Predicate)} */
     public F checkSuccess(final Function<? super V,Boolean> val) {
+        return checkSuccess(Functionals.predicate(val));
+    }
+    @SuppressWarnings("unused")
+    /** @deprecated since 0.7.0, kept for rebind */ @Deprecated
+    private F checkSuccessLegacy(final Function<? super V,Boolean> val) {
         return checkSuccess(new Predicate<V>() {
             @Override
             public boolean apply(V input) {
@@ -180,4 +190,82 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
     public boolean hasCheckSuccessHandler() {
         return this.checkSuccess != null;
     }
+
+    
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        result.append(toStringBaseName());
+        result.append("[");
+        boolean contents = false;
+        Object source = toStringPollSource();
+        AttributeSensor<T> s = getSensor();
+        if (Strings.isNonBlank(Strings.toString(source))) {
+            result.append(Strings.toUniqueString(source, 40));
+            if (s!=null) {
+                result.append("->");
+                result.append(s.getName());
+            }
+            contents = true;
+        } else if (s!=null) {
+            result.append(s.getName());
+            contents = true;
+        }
+        MutableList<Object> fields = toStringOtherFields();
+        if (fields!=null) {
+            for (Object field: fields) {
+                if (Strings.isNonBlank(Strings.toString(field))) {
+                    if (contents) result.append(";");
+                    contents = true;
+                    result.append(field);
+                }
+            }
+        }
+        result.append("]");
+        return result.toString();
+    }
+
+    /** can be overridden to supply a simpler base name than the class name */
+    protected String toStringBaseName() {
+        return JavaClassNames.simpleClassName(this);
+    }
+    /** can be overridden to supply add'l info for the {@link #toString()}; subclasses can add to the returned value */
+    protected MutableList<Object> toStringOtherFields() {
+        return MutableList.<Object>of();
+    }
+    /** can be overridden to supply add'l info for the {@link #toString()}, placed before the sensor with -> */
+    protected Object toStringPollSource() {
+        return null;
+    }
+    /** all configs should supply a unique tag element, inserted into the feed */
+    protected String getUniqueTag() {
+        return toString();
+    }
+
+    /** returns fields which should be used for equality, including by default {@link #toStringOtherFields()} and {@link #toStringPollSource()};
+     * subclasses can add to the returned value */
+    protected MutableList<Object> equalsFields() {
+        MutableList<Object> result = MutableList.of().appendIfNotNull(getSensor()).appendIfNotNull(toStringPollSource());
+        for (Object field: toStringOtherFields()) result.appendIfNotNull(field);
+        return result;
+    }
+
+    @Override
+    public int hashCode() { 
+        int hc = super.hashCode();
+        for (Object f: equalsFields())
+            hc = Objects.hashCode(hc, f);
+        return hc;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!super.equals(obj)) return false;
+        PollConfig<?,?,?> other = (PollConfig<?,?,?>) obj;
+        if (!Objects.equal(getUniqueTag(), other.getUniqueTag())) return false;
+        if (!Objects.equal(equalsFields(), other.equalsFields())) return false;
+        return true;
+    }
+
 }

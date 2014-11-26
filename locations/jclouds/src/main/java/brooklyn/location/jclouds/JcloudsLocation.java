@@ -694,7 +694,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
                             : ImmutableMap.<String, String>of();
                     String scriptContent =  ResourceUtils.create(this).getResourceAsString(setupScript);
-                    String script = TemplateProcessor.processTemplateContents(scriptContent, substitutions);
+                    String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
                     sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
                 

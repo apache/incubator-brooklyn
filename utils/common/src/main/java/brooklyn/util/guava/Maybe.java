@@ -33,6 +33,7 @@ import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -277,4 +278,19 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         return JavaClassNames.simpleClassName(this)+"["+(isPresent()?"value="+get():"")+"]";
     }
 
+    @Override
+    public int hashCode() {
+        if (!isPresent()) return Objects.hashCode(31, isPresent());
+        return Objects.hashCode(31, get());
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Maybe)) return false;
+        Maybe<?> other = (Maybe<?>)obj;
+        if (!isPresent()) 
+            return !other.isPresent();
+        return Objects.equal(get(), other.get());
+    }
+    
 }

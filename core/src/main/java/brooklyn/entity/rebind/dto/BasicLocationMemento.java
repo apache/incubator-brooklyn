@@ -55,7 +55,6 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
             locationConfig.putAll(other.getLocationConfig());
             locationConfigUnused.addAll(other.getLocationConfigUnused());
             locationConfigDescription = other.getLocationConfigDescription();
-            fields.putAll(other.getCustomFields());
             return self();
         }
         public LocationMemento build() {

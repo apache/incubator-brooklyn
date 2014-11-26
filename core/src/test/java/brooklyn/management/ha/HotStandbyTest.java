@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,9 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindFeedTest.MyEntityWithFunctionFeedImpl;
+import brooklyn.entity.rebind.RebindFeedTest.MyEntityWithNewFeedsEachTimeImpl;
 import brooklyn.entity.rebind.RebindManagerImpl;
+import brooklyn.entity.rebind.RebindTestFixture;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.ListeningObjectStore;
@@ -60,6 +63,7 @@ import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -599,20 +603,58 @@ public class HotStandbyTest {
     }
     
     @Test
-    public void testHotStandbyDoesNoStartFeeds() throws Exception {
+    public void testHotStandbyDoesNotStartFeeds() throws Exception {
         HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
         TestApplication app = createFirstAppAndPersist(n1);
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithFunctionFeedImpl.class));
         forcePersistNow(n1);
+        Assert.assertTrue(entity.feeds().getFeeds().size() > 0, "Feeds: "+entity.feeds().getFeeds());
         for (Feed feed : entity.feeds().getFeeds()) {
-            assertTrue(feed.isActive(), "Feed expected running, but it is non-running");
+            assertTrue(feed.isRunning(), "Feed expected running, but it is non-running");
         }
 
         HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
         TestEntity entityRO = (TestEntity) n2.mgmt.lookup(entity.getId(), Entity.class);
+        Assert.assertTrue(entityRO.feeds().getFeeds().size() > 0, "Feeds: "+entity.feeds().getFeeds());
         for (Feed feedRO : entityRO.feeds().getFeeds()) {
-            assertFalse(feedRO.isActive(), "Feed expected non-active, but it is running");
+            assertFalse(feedRO.isRunning(), "Feed expected non-active, but it is running");
         }
     }
+    
+    @Test(groups="Integration")
+    public void testHotStandbyDoesNotStartFeedsRebindingManyTimes() throws Exception {
+        testHotStandbyDoesNotStartFeeds();
+        final HaMgmtNode hsb = createHotStandby(Duration.millis(10));
+        Repeater.create("until 10 rebinds").every(Duration.millis(100)).until(
+            new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return ((RebindManagerImpl)hsb.mgmt.getRebindManager()).getReadOnlyRebindCount() >= 10;
+                }
+            }).runRequiringTrue();
+        // make sure not too many tasks (allowing 5 for rebind etc; currently just 2)
+        RebindTestFixture.waitForTaskCountToBecome(hsb.mgmt, 5);
+    }
+
+    @Test(groups="Integration")
+    public void testHotStandbyDoesNotStartFeedsRebindingManyTimesWithAnotherFeedGenerator() throws Exception {
+        HaMgmtNode n1 = createMaster(Duration.PRACTICALLY_FOREVER);
+        TestApplication app = createFirstAppAndPersist(n1);
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntityWithNewFeedsEachTimeImpl.class));
+        forcePersistNow(n1);
+        Assert.assertTrue(entity.feeds().getFeeds().size() == 4, "Feeds: "+entity.feeds().getFeeds());
+        
+        final HaMgmtNode hsb = createHotStandby(Duration.millis(10));
+        Repeater.create("until 10 rebinds").every(Duration.millis(100)).until(
+            new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return ((RebindManagerImpl)hsb.mgmt.getRebindManager()).getReadOnlyRebindCount() >= 10;
+                }
+            }).runRequiringTrue();
+        // make sure not too many tasks (allowing 5 for rebind etc; currently just 2)
+        RebindTestFixture.waitForTaskCountToBecome(hsb.mgmt, 5);
+    }
+
 
 }

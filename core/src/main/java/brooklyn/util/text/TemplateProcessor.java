@@ -107,7 +107,7 @@ public class TemplateProcessor {
     }
 
     /** Processes template contents according to {@link EntityAndMapTemplateModel}. */
-    public static String processTemplateContents(String templateContents, ManagementContextInternal managementContext, Map<String,? extends Object> extraSubstitutions) {
+    public static String processTemplateContents(String templateContents, ManagementContext managementContext, Map<String,? extends Object> extraSubstitutions) {
         return processTemplateContents(templateContents, new EntityAndMapTemplateModel(managementContext, extraSubstitutions));
     }
 

@@ -114,4 +114,8 @@ public class JmxOperationPollConfig<T> extends PollConfig<Object, T, JmxOperatio
             return derivedSignature;
         }
     }
+
+    @Override protected String toStringBaseName() { return "jmx"; }
+    @Override protected String toStringPollSource() { return objectName+":"+operationName+(params!=null ? params : "[]"); }
+
 }

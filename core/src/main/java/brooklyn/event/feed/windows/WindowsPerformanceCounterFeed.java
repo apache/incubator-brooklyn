@@ -112,6 +112,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         private EntityLocal entity;
         private Set<WindowsPerformanceCounterPollConfig<?>> polls = Sets.newLinkedHashSet();
         private Duration period = Duration.of(30, TimeUnit.SECONDS);
+        private String uniqueTag;
         private volatile boolean built;
 
         public Builder entity(EntityLocal val) {
@@ -141,6 +142,10 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         public Builder period(long val, TimeUnit units) {
             return period(Duration.of(val, units));
         }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
+            return this;
+        }
         public WindowsPerformanceCounterFeed build() {
             built = true;
             WindowsPerformanceCounterFeed result = new WindowsPerformanceCounterFeed(this);
@@ -169,6 +174,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
             polls.add(configCopy);
         }
         setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls);
     }
 
     @Override
