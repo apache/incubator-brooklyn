@@ -44,13 +44,17 @@ public abstract class AbstractMemento implements Memento, Serializable {
         protected Class<?> typeClass;
         protected String displayName;
         protected String catalogItemId;
-        protected Map<String, Object> fields = Maps.newLinkedHashMap();
+        protected Map<String, Object> customFields = Maps.newLinkedHashMap();
         protected List<Object> tags = Lists.newArrayList();
+        
+        // only supported for EntityAdjuncts
+        protected String uniqueTag;
 
         @SuppressWarnings("unchecked")
         protected B self() {
             return (B) this;
         }
+        @SuppressWarnings("deprecation")
         public B from(Memento other) {
             brooklynVersion = other.getBrooklynVersion();
             id = other.getId();
@@ -58,34 +62,38 @@ public abstract class AbstractMemento implements Memento, Serializable {
             typeClass = other.getTypeClass();
             displayName = other.getDisplayName();
             catalogItemId = other.getCatalogItemId();
-            fields.putAll(other.getCustomFields());
+            customFields.putAll(other.getCustomFields());
             tags.addAll(other.getTags());
+            uniqueTag = other.getUniqueTag();
             return self();
         }
-        public B brooklynVersion(String val) {
-            brooklynVersion = val; return self();
-        }
-        public B id(String val) {
-            id = val; return self();
-        }
-        public B type(String val) {
-            type = val; return self();
-        }
-        public B typeClass(Class<?> val) {
-            typeClass = val; return self();
-        }
-        public B displayName(String val) {
-            displayName = val; return self();
-        }
-        public B catalogItemId(String val) {
-            catalogItemId = val; return self();
-        }
+        // this method set is incomplete; and they are not used, as the protected fields are set directly
+        // kept in case we want to expose this elsewhere, but we should complete the list
+//        public B brooklynVersion(String val) {
+//            brooklynVersion = val; return self();
+//        }
+//        public B id(String val) {
+//            id = val; return self();
+//        }
+//        public B type(String val) {
+//            type = val; return self();
+//        }
+//        public B typeClass(Class<?> val) {
+//            typeClass = val; return self();
+//        }
+//        public B displayName(String val) {
+//            displayName = val; return self();
+//        }
+//        public B catalogItemId(String val) {
+//            catalogItemId = val; return self();
+//        }
+        
         /**
          * @deprecated since 0.7.0; use config/attributes so generic persistence will work, rather than requiring "custom fields"
          */
         @Deprecated
         public B customFields(Map<String,?> vals) {
-            fields.putAll(vals); return self();
+            customFields.putAll(vals); return self();
         }
     }
     
@@ -95,6 +103,9 @@ public abstract class AbstractMemento implements Memento, Serializable {
     private String displayName;
     private String catalogItemId;
     private List<Object> tags;
+    
+    // for EntityAdjuncts; not used for entity
+    private String uniqueTag;
 
     private transient Class<?> typeClass;
 
@@ -110,8 +121,9 @@ public abstract class AbstractMemento implements Memento, Serializable {
         typeClass = builder.typeClass;
         displayName = builder.displayName;
         catalogItemId = builder.catalogItemId;
-        setCustomFields(builder.fields);
+        setCustomFields(builder.customFields);
         tags = toPersistedList(builder.tags);
+        uniqueTag = builder.uniqueTag;
     }
 
     // "fields" is not included as a field here, so that it is serialized after selected subclass fields
@@ -156,6 +168,11 @@ public abstract class AbstractMemento implements Memento, Serializable {
     @Override
     public List<Object> getTags() {
         return fromPersistedList(tags);
+    }
+
+    @Override
+    public String getUniqueTag() {
+        return uniqueTag;
     }
     
     @Deprecated

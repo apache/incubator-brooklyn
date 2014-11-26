@@ -83,6 +83,7 @@ public class FunctionFeed extends AbstractFeed {
     private static final Logger log = LoggerFactory.getLogger(FunctionFeed.class);
 
     // Treat as immutable once built
+    @SuppressWarnings("serial")
     public static final ConfigKey<SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>>> POLLS = ConfigKeys.newConfigKey(
             new TypeToken<SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>>>() {},
             "polls");
@@ -91,12 +92,17 @@ public class FunctionFeed extends AbstractFeed {
         return new Builder();
     }
     
+    public static Builder builder(String uniqueTag) {
+        return new Builder().uniqueTag(uniqueTag);
+    }
+    
     public static class Builder {
         private EntityLocal entity;
         private boolean onlyIfServiceUp = false;
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<FunctionPollConfig<?,?>> polls = Lists.newArrayList();
+        private String uniqueTag;
         private volatile boolean built;
 
         public Builder entity(EntityLocal val) {
@@ -121,6 +127,10 @@ public class FunctionFeed extends AbstractFeed {
         }
         public Builder poll(FunctionPollConfig<?,?> config) {
             polls.add(config);
+            return this;
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
             return this;
         }
         public FunctionFeed build() {
@@ -153,7 +163,7 @@ public class FunctionFeed extends AbstractFeed {
             return (other instanceof FunctionPollIdentifier) && Objects.equal(job, ((FunctionPollIdentifier)other).job);
         }
     }
-    
+
     /**
      * For rebind; do not call directly; use builder
      */
@@ -172,6 +182,7 @@ public class FunctionFeed extends AbstractFeed {
             polls.put(new FunctionPollIdentifier(job), configCopy);
         }
         setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls.values());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

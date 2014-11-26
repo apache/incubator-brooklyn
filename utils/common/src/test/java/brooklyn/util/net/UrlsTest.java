@@ -66,5 +66,13 @@ public class UrlsTest {
         assertEquals(Urls.getBasename(""), "");
         assertEquals(Urls.getBasename(null), null);
     }
-    
+
+    @Test
+    public void testDataUrl() throws Exception {
+        String input = "hello world";
+        String url = Urls.asDataUrlBase64(input);
+        Assert.assertEquals(url, "data:text/plain;base64,aGVsbG8gd29ybGQ=");
+        // tests for parsing are in core in ResourceUtilsTest
+    }
+
 }

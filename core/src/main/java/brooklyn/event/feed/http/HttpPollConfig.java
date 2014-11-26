@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.URLParamEncoder;
@@ -159,9 +160,12 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
         return MutableMap.<K,V>builder().putAll(map1).putAll(map2).build();
     }
 
+    @Override protected String toStringBaseName() { return "http"; }
+    @Override protected String toStringPollSource() { return suburl; }
     @Override
-    public String toString() {
-        return "http["+suburl+"]";
+    protected MutableList<Object> equalsFields() {
+        return super.equalsFields().appendIfNotNull(method).appendIfNotNull(vars).appendIfNotNull(headers)
+            .appendIfNotNull(body).appendIfNotNull(connectionTimeout).appendIfNotNull(socketTimeout);
     }
-    
+
 }

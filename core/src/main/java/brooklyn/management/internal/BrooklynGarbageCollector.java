@@ -216,13 +216,16 @@ public class BrooklynGarbageCollector {
         if (LOG.isDebugEnabled())
             LOG.debug(prefix+" - using "+getUsageString());
     }
-    
-    public String getUsageString() {
-        return
-            Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
+
+    public static String makeBasicUsageString() {
+        return Strings.makeSizeString(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())+" / "+
             Strings.makeSizeString(Runtime.getRuntime().totalMemory()) + " memory" +
             " ("+Strings.makeSizeString(MemoryUsageTracker.SOFT_REFERENCES.getBytesUsed()) + " soft); "+
-            Thread.activeCount()+" threads; "+
+            Thread.activeCount()+" threads";
+    }
+    
+    public String getUsageString() {
+        return makeBasicUsageString()+"; "+
             "storage: " + storage.getStorageMetrics() + "; " +
             "tasks: " +
             executionManager.getNumActiveTasks()+" active, "+

@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
+import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
@@ -116,4 +117,9 @@ public class ShellPollConfig<T> extends PollConfig<SshPollValue, T, ShellPollCon
         this.timeout = units.toMillis(timeout);
         return this;
     }
+
+    @Override protected String toStringBaseName() { return "shell"; }
+    @Override protected String toStringPollSource() { return command; }
+    @Override protected MutableList<Object> equalsFields() { return super.equalsFields().appendIfNotNull(command); }
+    
 }

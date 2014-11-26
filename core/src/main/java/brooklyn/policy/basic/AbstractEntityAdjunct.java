@@ -365,12 +365,18 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return new AdjunctTagSupport();
     }
 
-    protected class AdjunctTagSupport extends BasicTagSupport {
+    public class AdjunctTagSupport extends BasicTagSupport {
         @Override
         public Set<Object> getTags() {
             ImmutableSet.Builder<Object> rb = ImmutableSet.builder().addAll(super.getTags());
             if (getUniqueTag()!=null) rb.add(getUniqueTag());
             return rb.build();
+        }
+        public String getUniqueTag() {
+            return AbstractEntityAdjunct.this.getUniqueTag();
+        }
+        public void setUniqueTag(String uniqueTag) {
+            AbstractEntityAdjunct.this.uniqueTag = uniqueTag;
         }
     }
 

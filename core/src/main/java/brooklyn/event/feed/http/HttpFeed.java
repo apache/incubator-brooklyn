@@ -127,6 +127,7 @@ public class HttpFeed extends AbstractFeed {
         private Map<String, String> headers = Maps.newLinkedHashMap();
         private boolean suspended = false;
         private Credentials credentials;
+        private String uniqueTag;
         private volatile boolean built;
 
         public Builder entity(EntityLocal val) {
@@ -201,6 +202,10 @@ public class HttpFeed extends AbstractFeed {
             if (username != null && password != null) {
                 this.credentials = new UsernamePasswordCredentials(username, password);
             }
+            return this;
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
             return this;
         }
         public HttpFeed build() {
@@ -300,6 +305,7 @@ public class HttpFeed extends AbstractFeed {
             polls.put(new HttpPollIdentifier(method, baseUriProvider, headers, body, credentials, connectionTimeout, socketTimeout), configCopy);
         }
         setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls.values());
     }
 
     @Override

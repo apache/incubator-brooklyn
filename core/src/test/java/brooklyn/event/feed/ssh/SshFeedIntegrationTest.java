@@ -31,7 +31,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
@@ -104,6 +106,20 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
         Assert.assertEquals(val.trim(), "hello");
     }
 
+    @Test(groups="Integration")
+    public void testFeedDeDupe() throws Exception {
+        testReturnsSshStdoutAndInfersMachine();
+        entity.addFeed(feed);
+        log.info("Feed 0 is: "+feed);
+        
+        testReturnsSshStdoutAndInfersMachine();
+        log.info("Feed 1 is: "+feed);
+        entity.addFeed(feed);
+                
+        FeedSupport feeds = ((EntityInternal)entity).feeds();
+        Assert.assertEquals(feeds.getFeeds().size(), 1, "Wrong feed count: "+feeds.getFeeds());
+    }
+    
     @Test(groups="Integration")
     public void testReturnsSshExitStatus() throws Exception {
         feed = SshFeed.builder()

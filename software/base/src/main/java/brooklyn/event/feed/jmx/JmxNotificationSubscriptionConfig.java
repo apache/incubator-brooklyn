@@ -25,6 +25,7 @@ import javax.management.ObjectName;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.FeedConfig;
+import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -35,6 +36,7 @@ public class JmxNotificationSubscriptionConfig<T> extends FeedConfig<javax.manag
     private NotificationFilter notificationFilter;
     private Function<Notification, T> onNotification;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public JmxNotificationSubscriptionConfig(AttributeSensor<T> sensor) {
         super(sensor);
         onSuccess((Function)Functions.identity());
@@ -78,4 +80,16 @@ public class JmxNotificationSubscriptionConfig<T> extends FeedConfig<javax.manag
     public JmxNotificationSubscriptionConfig<T> onNotification(Function<Notification,T> val) {
         this.onNotification = val; return this;
     }
+
+    @Override
+    protected Object toStringPollSource() {
+        return objectName;
+    }
+
+    @Override
+    protected MutableList<Object> equalsFields() {
+        return super.equalsFields()
+            .appendIfNotNull(notificationFilter).appendIfNotNull(onNotification);
+    }
+    
 }

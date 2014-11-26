@@ -18,12 +18,21 @@
  */
 package brooklyn.util.javalang;
 
+import java.lang.reflect.Field;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.exceptions.Exceptions;
+
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 
 
 public class Equals {
 
+    private static final Logger log = LoggerFactory.getLogger(Equals.class);
+    
     /** Tests whether the objects given are either all null or all equal to the first argument */
     public static boolean objects(Object o1, Object o2, Object... oo) {
         if (!Objects.equal(o1, o2)) return false;
@@ -54,6 +63,32 @@ public class Equals {
         for (Object o: oo) 
             if (!approximately(o1, o)) return false;
         return true;        
+    }
+
+    /** Useful for debugging EqualsBuilder.reflectionEquals */
+    public static void dumpReflectiveEquals(Object o1, Object o2) {
+        log.info("Comparing: "+o1+" "+o2);
+        Class<?> clazz = o1.getClass();
+        while (!(clazz.equals(Object.class))) {
+            log.info("  fields in: "+clazz);
+            for (Field f: clazz.getDeclaredFields()) {
+                f.setAccessible(true);
+                try {
+                    log.info( "    "+(Objects.equal(f.get(o1), f.get(o2)) ? "==" : "!=" ) +
+                        " "+ f.getName()+ " "+ f.get(o1) +" "+ f.get(o2) +
+                        " ("+ classOf(f.get(o1)) +" "+ classOf(f.get(o2)+")") );
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    log.info( "    <error> "+e);
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+    }
+
+    private static String classOf(Object o) {
+        if (o==null) return null;
+        return o.getClass().toString();
     }
 
 }
