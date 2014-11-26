@@ -28,8 +28,10 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.Urls;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableMap;
@@ -125,6 +127,16 @@ public class WebResourceUtils {
         } else {
             if (value==null) return "";
             return value.toString();            
+        }
+    }
+
+    public static String getPathFromVersionedId(String versionedId) {
+        if (CatalogUtils.looksLikeVersionedId(versionedId)) {
+            String symbolicName = CatalogUtils.getIdFromVersionedId(versionedId);
+            String version = CatalogUtils.getVersionFromVersionedId(versionedId);
+            return Urls.encode(symbolicName) + "/" + Urls.encode(version);
+        } else {
+            return Urls.encode(versionedId);
         }
     }
 

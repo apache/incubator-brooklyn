@@ -32,13 +32,18 @@ import brooklyn.util.text.NaturalOrderComparator;
  * When using the comparator to sort - first using symbolicName
  * and if equal puts larger versions first, snapshots at the back.
  */
-public class CatalogItemComparator implements Comparator<CatalogItem<?, ?>> {
+public class CatalogItemComparator<T,SpecT> implements Comparator<CatalogItem<T, SpecT>> {
     private static final String SNAPSHOT = "SNAPSHOT";
 
-    public static final CatalogItemComparator INSTANCE = new CatalogItemComparator();
+    public static final CatalogItemComparator<?, ?> INSTANCE = new CatalogItemComparator<Object, Object>();
+
+    @SuppressWarnings("unchecked")
+    public static <T,SpecT> CatalogItemComparator<T,SpecT> getInstance() {
+        return (CatalogItemComparator<T, SpecT>) INSTANCE;
+    }
 
     @Override
-    public int compare(CatalogItem<?, ?> o1, CatalogItem<?, ?> o2) {
+    public int compare(CatalogItem<T, SpecT> o1, CatalogItem<T, SpecT> o2) {
         int symbolicNameComparison = o1.getSymbolicName().compareTo(o2.getSymbolicName());
         if (symbolicNameComparison != 0) {
             return symbolicNameComparison;
