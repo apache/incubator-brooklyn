@@ -64,7 +64,8 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         private String description;
         private T defaultValue;
         private boolean reconfigurable;
-        
+        private boolean nonNull;
+
         public Builder<T> name(String val) {
             this.name = val; return this;
         }
@@ -83,6 +84,17 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         public Builder<T> reconfigurable(boolean val) {
             this.reconfigurable = val; return this;
         }
+        public Builder<T> reconfigurable() {
+            return reconfigurable(true);
+        }
+        @Beta
+        public Builder<T> nonNull(boolean val) {
+            this.nonNull = val; return this;
+        }
+        @Beta
+        public Builder<T> nonNull() {
+            return nonNull(true);
+        }
         public BasicConfigKey<T> build() {
             return new BasicConfigKey<T>(this);
         }
@@ -94,6 +106,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     private String description;
     private T defaultValue;
     private boolean reconfigurable;
+    private boolean nonNull;
 
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
@@ -127,6 +140,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         
         this.defaultValue = defaultValue;
         this.reconfigurable = false;
+        this.nonNull = false;
     }
 
     protected BasicConfigKey(Builder<T> builder) {
@@ -136,6 +150,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.description = builder.description;
         this.defaultValue = builder.defaultValue;
         this.reconfigurable = builder.reconfigurable;
+        this.nonNull = builder.nonNull;
     }
     
     /** @see ConfigKey#getName() */
@@ -165,7 +180,12 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     public boolean isReconfigurable() {
         return reconfigurable;
     }
-    
+
+    @Override
+    public boolean isNonNull() {
+        return nonNull;
+    }
+
     /** @see ConfigKey#getNameParts() */
     @Override public Collection<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));

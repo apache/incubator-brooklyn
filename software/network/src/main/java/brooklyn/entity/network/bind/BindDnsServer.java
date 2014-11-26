@@ -70,8 +70,11 @@ public interface BindDnsServer extends SoftwareProcess {
             "bind.access.cidr", "Subnet CIDR or ACL allowed to access DNS", "0.0.0.0/0");
 
     @SetFromFlag("hostnameSensor")
-    ConfigKey<AttributeSensor<String>> HOSTNAME_SENSOR = ConfigKeys.newConfigKey(new TypeToken<AttributeSensor<String>>() {},
-            "bind.sensor.hostname", "Sensor on managed entities that reports the hostname");
+    ConfigKey<AttributeSensor<String>> HOSTNAME_SENSOR = ConfigKeys.builder(new TypeToken<AttributeSensor<String>>() {})
+            .name("bind.sensor.hostname")
+            .description("Sensor on managed entities that reports the hostname")
+            .nonNull()
+            .build();
 
     PortAttributeSensorAndConfigKey DNS_PORT =
             new PortAttributeSensorAndConfigKey("bind.port", "BIND DNS port for TCP and UDP", PortRanges.fromString("53"));
