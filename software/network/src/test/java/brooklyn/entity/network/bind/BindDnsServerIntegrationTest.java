@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
@@ -67,6 +69,58 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
                 .configure(DynamicCluster.MEMBER_SPEC, memberSpec)
                 .configure(DynamicCluster.INITIAL_SIZE, 3));
         return app;
+    }
+
+    @Test(groups = "Integration")
+    public void testOneARecordAndNoCnameRecordsWhenEntitiesHaveSameName() {
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
+        EnricherSpec<?> dnsEnricher = Enrichers.builder().transforming(Attributes.HOSTNAME)
+                .computing(Functions.constant("my-name"))
+                .publishing(PrefixAndIdEnricher.SENSOR)
+                .build();
+        EntitySpec<EmptySoftwareProcess> emptySoftwareProcessSpec = EntitySpec.create(EmptySoftwareProcess.class)
+                .enricher(dnsEnricher);
+        dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class, TestBindDnsServerImpl.class)
+                .configure(BindDnsServer.HOSTNAME_SENSOR, PrefixAndIdEnricher.SENSOR));
+
+        // App DNS will listen to
+        cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, emptySoftwareProcessSpec)
+                .configure(DynamicCluster.INITIAL_SIZE, 3));
+
+        app.start(ImmutableList.of(app.newLocalhostProvisioningLocation()));
+
+        assertDnsEntityEventuallyHasActiveMembers(1);
+        // All of the entities publish the same domain name so there should be a single DNS entry and no CNAMEs.
+        assertMapSizes(1, 1, 0, 1);
+    }
+
+    @Test(groups = "Integration")
+    public void testDuplicateAAndCnameRecordsAreIgnored() {
+        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, origManagementContext);
+        EnricherSpec<?> enricher1 = Enrichers.builder().transforming(Attributes.HOSTNAME)
+                .computing(Functions.constant("my-name-1"))
+                .publishing(PrefixAndIdEnricher.SENSOR)
+                .build();
+        EnricherSpec<?> enricher2 = Enrichers.builder().transforming(Attributes.HOSTNAME)
+                .computing(Functions.constant("my-name-2"))
+                .publishing(PrefixAndIdEnricher.SENSOR)
+                .build();
+        dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class, TestBindDnsServerImpl.class)
+                .configure(BindDnsServer.HOSTNAME_SENSOR, PrefixAndIdEnricher.SENSOR));
+
+        // Expect one of my-name-{1,2} to be used as the A record the other to be used as the CNAME.
+        // Expect all duplicate records to be ignored.
+        app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class).enricher(enricher1));
+        app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class).enricher(enricher1));
+        app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class).enricher(enricher1));
+        app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class).enricher(enricher2));
+        app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class).enricher(enricher2));
+        app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class).enricher(enricher2));
+        app.start(ImmutableList.of(app.newLocalhostProvisioningLocation()));
+
+        assertDnsEntityEventuallyHasActiveMembers(2);
+        assertMapSizes(2, 1, 1, 1);
     }
 
     @Test(groups = "Integration")
@@ -122,6 +176,12 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
         logDnsMappings();
         assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).keySet().size(), 1);
         assertMapSizes(3, 1, 2, 1);
+
+        cluster.resize(4);
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, DynamicCluster.GROUP_SIZE, 4);
+        assertDnsEntityEventuallyHasActiveMembers(4);
+        assertMapSizes(4, 1, 3, 1);
+
     }
 
     @Test(invocationCount=1, groups = "Integration")
@@ -174,10 +234,10 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
     }
 
     private void assertMapSizes(int addresses, int aRecords, int cnameRecords, int ptrRecords) {
-        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), addresses);
-        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), aRecords);
-        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), cnameRecords);
-        assertEquals(dns.getAttribute(BindDnsServer.PTR_RECORDS).size(), ptrRecords);
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), addresses, "Mismatched address mappings");
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), aRecords, "Mismatched A records");
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), cnameRecords, "Mismatched CNAME records");
+        assertEquals(dns.getAttribute(BindDnsServer.PTR_RECORDS).size(), ptrRecords, "Mismatched PTR records");
     }
 
     private void logDnsMappings() {

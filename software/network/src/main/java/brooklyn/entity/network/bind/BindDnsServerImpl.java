@@ -213,10 +213,11 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
             LOG.debug("{} updating with entities: {}", this, Iterables.toString(availableEntities));
             ImmutableListMultimap<String, Entity> hostnameToEntity = Multimaps.index(availableEntities,
                     new HostnameTransformer());
+
             Map<String, String> octetToName = Maps.newHashMap();
             BiMap<String, String> ipToARecord = HashBiMap.create();
-            Multimap<String, String> aRecordToCnames = MultimapBuilder.hashKeys().arrayListValues().build();
-            Multimap<String, String> ipToAllNames = MultimapBuilder.hashKeys().arrayListValues().build();
+            Multimap<String, String> aRecordToCnames = MultimapBuilder.hashKeys().hashSetValues().build();
+            Multimap<String, String> ipToAllNames = MultimapBuilder.hashKeys().hashSetValues().build();
 
             for (Map.Entry<String, Entity> e : hostnameToEntity.entries()) {
                 String domainName = e.getKey();
@@ -224,7 +225,10 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
                 if (!location.isPresent()) {
                     LOG.debug("Member {} of {} does not have an SSH location so will not be configured", e.getValue(), this);
                     continue;
+                } else if (ipToARecord.inverse().containsKey(domainName)) {
+                    continue;
                 }
+
                 String address = location.get().getAddress().getHostAddress();
                 ipToAllNames.put(address, domainName);
                 if (!ipToARecord.containsKey(address)) {
