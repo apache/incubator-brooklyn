@@ -84,6 +84,7 @@ If you're interested in building and editing the code, check out:
 * [IDE setup](../build/ide.html)
 * [Tests](../build/tests.html)
 * [Tips](../tips/index.html)
+* [Remote Debugging](../build/debugging-remote-brooklyn.html)
 
 If you want to start writing your own policies and entities, have a look at:
 
