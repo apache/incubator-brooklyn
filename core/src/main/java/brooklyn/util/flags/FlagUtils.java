@@ -44,7 +44,6 @@ import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -68,7 +67,7 @@ public class FlagUtils {
         return setFieldsFromFlagsInternal(o, Arrays.asList(o.getClass().getFields()), flags, null, true);
     }
 
-    /** see {@link #setFieldsFromFlags(Object o, ConfigBag)} */
+    /** see {@link #setFieldsFromFlags(Object, ConfigBag)} */
     public static Map<?, ?> setFieldsFromFlags(Map<?, ?> flags, Object o) {
         return setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), flags, null, true);
     }
@@ -83,12 +82,12 @@ public class FlagUtils {
         setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), configBag.getAllConfig(), configBag, true);
     }
 
-    /** as {@link #setFieldsFromFlags(Object o, ConfigBag)} */
+    /** as {@link #setFieldsFromFlags(Object, ConfigBag)}, but allowing control over whether default values should be set */
     public static void setFieldsFromFlags(Object o, ConfigBag configBag, boolean setDefaultVals) {
         setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), configBag.getAllConfig(), configBag, setDefaultVals);
     }
 
-    /** as {@link #setFieldsFromFlags(Object o, ConfigBag)}, but specifying a subset of flags to use */
+    /** as {@link #setFieldsFromFlags(Object, ConfigBag)}, but specifying a subset of flags to use */
     public static void setFieldsFromFlagsWithBag(Object o, Map<?,?> flags, ConfigBag configBag, boolean setDefaultVals) {
         setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), flags, configBag, setDefaultVals);
     }

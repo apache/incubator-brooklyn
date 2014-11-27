@@ -25,7 +25,6 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;

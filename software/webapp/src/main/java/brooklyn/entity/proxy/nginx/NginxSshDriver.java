@@ -405,7 +405,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         //   sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
         //
         // Note that if conf file is invalid, you'll get no stdout/stderr from `kill` but you
-        // do from using `nginx ... -s reload` so that can be handly when manually debugging.
+        // do from using `nginx ... -s reload` so that can be handy when manually debugging.
 
         log.debug("reloading nginx by simularing restart (kill -HUP) - {}", entity);
         newScript(RESTARTING)
