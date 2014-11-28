@@ -19,8 +19,7 @@
 package brooklyn.location.access;
 
 import static org.testng.Assert.assertEquals;
-
-import java.util.Map;
+import static org.testng.Assert.assertNotEquals;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +38,6 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
 
 import com.google.common.base.Predicates;
@@ -50,11 +48,9 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
 
     private static final Logger log = LoggerFactory.getLogger(PortForwardManagerRebindTest.class);
 
-    private Map<HostAndPort, HostAndPort> portMapping;
     private String machineAddress = "1.2.3.4";
     private SshMachineLocation origSimulatedMachine;
 
-    
     @Override
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -67,7 +63,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
     }
     
     @Test
-    public void testHostAndPortTransformingEnricher() throws Exception {
+    public void testAssociationPreservedOnRebind() throws Exception {
         String publicIpId = "5.6.7.8";
         String publicAddress = "5.6.7.8";
 
@@ -80,6 +76,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
      
         newApp = rebind();
         
+        // After rebind, confirm that lookups still work
         TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
         Location newSimulatedMachine = newApp.getManagementContext().getLocationManager().getLocation(origSimulatedMachine.getId());
         PortForwardManager newPortForwardManager = newEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
@@ -89,7 +86,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
     }
     
     @Test
-    public void testHostAndPortTransformingEnricherLegacy() throws Exception {
+    public void testAssociationPreservedOnRebindLegacy() throws Exception {
         String publicIpId = "5.6.7.8";
         String publicAddress = "5.6.7.8";
 
@@ -104,6 +101,7 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
      
         newApp = rebind();
         
+        // After rebind, confirm that lookups still work
         TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
         Location newSimulatedMachine = newApp.getManagementContext().getLocationManager().getLocation(origSimulatedMachine.getId());
         PortForwardManager newPortForwardManager = newEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
@@ -111,6 +109,27 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
         assertEquals(newPortForwardManager.getPublicIpHostname(publicIpId), publicAddress);
         assertEquals(newPortForwardManager.lookup(newSimulatedMachine, 80), HostAndPort.fromParts(publicAddress, 40080));
         assertEquals(newPortForwardManager.lookup(publicIpId, 80), HostAndPort.fromParts(publicAddress, 40080));
+    }
+    
+    @Test
+    public void testAcquirePortCounterPreservedOnRebindLegacy() throws Exception {
+        String publicIpId = "5.6.7.8";
+
+        TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntity.class));
+        PortForwardManager origPortForwardManager = origEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
+
+        // We first wait for persisted, to ensure that it is the PortForwardManager.onChanged that is causing persistence.
+        RebindTestUtils.waitForPersisted(origApp);
+        int acquiredPort = origPortForwardManager.acquirePublicPort(publicIpId);
+     
+        newApp = rebind();
+        
+        // After rebind, confirm that lookups still work
+        TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
+        PortForwardManager newPortForwardManager = newEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
+        
+        int acquiredPort2 = newPortForwardManager.acquirePublicPort(publicIpId);
+        assertNotEquals(acquiredPort, acquiredPort2);
     }
     
     public static class MyEntity extends TestEntityImpl {
@@ -124,12 +143,8 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
             if (getConfig(PORT_FORWARD_MANAGER) == null) {
                 PortForwardManager pfm = (PortForwardManager) getManagementContext().getLocationRegistry().resolve("portForwardManager(scope=global)");
                 setAttribute(PORT_FORWARD_MANAGER_LIVE, pfm);
-                setConfig(PORT_FORWARD_MANAGER, PortForwardManagerClient.fromAttributeOnEntity(this, PORT_FORWARD_MANAGER_LIVE));
+                setConfig(PORT_FORWARD_MANAGER, pfm);
             }
         }
-        
-        @SetFromFlag("myconfigflagname")
-        public static final ConfigKey<String> MY_CONFIG_WITH_FLAGNAME = ConfigKeys.newStringConfigKey("myentity.myconfigwithflagname");
     }
-    
 }

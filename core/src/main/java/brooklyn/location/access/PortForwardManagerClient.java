@@ -35,8 +35,11 @@ import com.google.common.net.HostAndPort;
 /**
  * @deprecated since 0.7.0; just use the {@link PortForwardManager}, or a direct reference to its impl {@link PortForwardManagerImpl}
  */
+@Deprecated
 public class PortForwardManagerClient implements PortForwardManager {
 
+    private static final long serialVersionUID = -295204304305332895L;
+    
     protected final Supplier<PortForwardManager> delegateSupplier;
     private transient volatile PortForwardManager _delegate;
     
@@ -141,11 +144,6 @@ public class PortForwardManagerClient implements PortForwardManager {
     }    
 
     @Override
-    public boolean isClient() {
-        return true;
-    }
-
-    @Override
     public String toVerboseString() {
         return getClass().getName()+"[wrapping="+getDelegate().toVerboseString()+"]";
     }
@@ -163,6 +161,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; use {@link #acquirePublicPort(String)}, and then use {@link #associate(String, HostAndPort, int)} or {@link #associate(String, HostAndPort, Location, int)}
      */
+    @Override
     @Deprecated
     public int acquirePublicPort(String publicIpId, Location l, int privatePort) {
         return getDelegate().acquirePublicPort(publicIpId, l, privatePort);
@@ -173,6 +172,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; use {@link #associate(String, HostAndPort, int)} or {@link #associate(String, HostAndPort, Location, int)}
      */
+    @Override
     @Deprecated
     public PortMapping acquirePublicPortExplicit(String publicIpId, int publicPort) {
         return getDelegate().acquirePublicPortExplicit(publicIpId, publicPort);
@@ -188,6 +188,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated Use {@link #associate(String, HostAndPort, Location, int)}
      */
+    @Override
     @Deprecated
     public void associate(String publicIpId, int publicPort, Location l, int privatePort) {
         getDelegate().associate(publicIpId, publicPort, l, privatePort);
@@ -200,6 +201,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated Use {@link #associate(String, HostAndPort, int)} or {@link #associate(String, HostAndPort, Location, int)}
      */
+    @Override
     @Deprecated
     public void recordPublicIpHostname(String publicIpId, String hostnameOrPublicIpAddress) {
         getDelegate().recordPublicIpHostname(publicIpId, hostnameOrPublicIpAddress);
@@ -210,6 +212,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated Use {@link #lookup(String, int)} or {@link #lookup(Location, int)}
      */
+    @Override
     @Deprecated
     public String getPublicIpHostname(String publicIpId) {
         return getDelegate().getPublicIpHostname(publicIpId);
@@ -220,9 +223,16 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated Use {@link #forgetPortMapping(String, int)} or {@link #forgetPortMapping(Location, int)}
      */
+    @Override
     @Deprecated
     public boolean forgetPublicIpHostname(String publicIpId) {
         return getDelegate().forgetPublicIpHostname(publicIpId);
+    }
+
+    @Override
+    @Deprecated
+    public boolean isClient() {
+        return true;
     }
 
 
@@ -235,6 +245,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; this method will be internal only
      */
+    @Override
     @Deprecated
     public PortMapping getPortMappingWithPublicSide(String publicIpId, int publicPort) {
         return getDelegate().getPortMappingWithPublicSide(publicIpId, publicPort);
@@ -245,6 +256,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; this method will be internal only
      */
+    @Override
     @Deprecated
     public Collection<PortMapping> getPortMappingWithPublicIpId(String publicIpId) {
         return getDelegate().getPortMappingWithPublicIpId(publicIpId);
@@ -255,6 +267,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; this method will be internal only
      */
+    @Override
     @Deprecated
     public boolean forgetPortMapping(PortMapping m) {
         return getDelegate().forgetPortMapping(m);
@@ -267,6 +280,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; this method will be internal only
      */
+    @Override
     @Deprecated
     public HostAndPort getPublicHostAndPort(PortMapping m) {
         return getDelegate().getPublicHostAndPort(m);
@@ -277,6 +291,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; this method will be internal only
      */
+    @Override
     @Deprecated
     public Collection<PortMapping> getLocationPublicIpIds(Location l) {
         return getDelegate().getLocationPublicIpIds(l);
@@ -287,6 +302,7 @@ public class PortForwardManagerClient implements PortForwardManager {
      * 
      * @deprecated since 0.7.0; this method will be internal only
      */
+    @Override
     @Deprecated
     public PortMapping getPortMappingWithPrivateSide(Location l, int privatePort) {
         return getDelegate().getPortMappingWithPrivateSide(l, privatePort);

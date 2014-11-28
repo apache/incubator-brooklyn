@@ -155,7 +155,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
 
     protected int getNextPort() {
         // far too simple -- see javadoc above
-        return portReserved.incrementAndGet();
+        return portReserved.getAndIncrement();
     }
     
     @Override
@@ -215,7 +215,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     public boolean forgetPortMappings(Location l) {
         List<PortMapping> result = Lists.newArrayList();
         synchronized (this) {
-            for (Iterator<PortMapping> iter = result.iterator(); iter.hasNext();) {
+            for (Iterator<PortMapping> iter = mappings.values().iterator(); iter.hasNext();) {
                 PortMapping m = iter.next();
                 if (l.equals(m.target)) {
                     iter.remove();

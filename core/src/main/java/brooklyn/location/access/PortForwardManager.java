@@ -120,12 +120,6 @@ public interface PortForwardManager extends Location {
      */
     public boolean forgetPortMappings(Location location);
     
-    /**
-     * Returns true if this implementation is a client which is immutable/safe for serialization
-     * i.e. it delegates to something on an entity or location elsewhere.
-     */
-    public boolean isClient();
-    
     public String toVerboseString();
 
     
@@ -191,6 +185,15 @@ public interface PortForwardManager extends Location {
     @Deprecated
     public boolean forgetPublicIpHostname(String publicIpId);
 
+    /**
+     * Returns true if this implementation is a client which is immutable/safe for serialization
+     * i.e. it delegates to something on an entity or location elsewhere.
+     * 
+     * @deprecated since 0.7.0; no need to separate client-proxy from impl
+     */
+    @Deprecated
+    public boolean isClient();
+    
 
     ///////////////////////////////////////////////////////////////////////////////////
     // Deprecated; just internal
