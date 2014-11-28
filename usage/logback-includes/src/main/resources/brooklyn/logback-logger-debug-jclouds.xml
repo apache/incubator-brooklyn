@@ -20,20 +20,28 @@
 <included>
     <!--
 
-        including this file after all other debug configuration will move all of the jclouds
-        logging messages to a separate file, named 'brooklyn-application.jclouds.log'
+        Including this file after all other debug configuration will move all of the jclouds
+        logging messages to two files, named 'brooklyn-application.jclouds.log' and
+        'brooklyn-application.jclouds-persister.log'. The latter will contain all messages
+        logged by jclouds when called from Brooklyn's persistence thread, the former will
+        contain all other messages logged by jclouds.
 
-      -->
+        If you have configured persistence to an object store and your server will manage more
+        than ~ 10 entities then it is recommended to use this appender over
+        logback-logger-debug-jcloud.xml as otherwise your log file will be swamped by
+        persistence-related messages.
 
-    <!-- include jclouds log file appender -->
+     -->
+
+    <!-- Include jclouds log file appender -->
     <include resource="brooklyn/logback-appender-jclouds.xml"/>
 
-    <!-- send jclouds logging categories to the file -->
+    <!-- Send jclouds logging categories to the file -->
     <logger name="org.jclouds" additivity="false">
-        <appender-ref ref="JCLOUDS-FILE" />
+        <appender-ref ref="JCLOUDS-SIFT" />
     </logger>
     <logger name="jclouds" additivity="false">
-        <appender-ref ref="JCLOUDS-FILE" />
+        <appender-ref ref="JCLOUDS-SIFT" />
     </logger>
 
 </included>
