@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -53,6 +54,7 @@ import brooklyn.entity.effector.AddChildrenEffector;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -94,15 +96,8 @@ public class CampYamlLiteTest {
     @Test
     public void testYamlServiceMatchAndBrooklynInstantiate() throws Exception {
         Reader input = new InputStreamReader(getClass().getResourceAsStream("test-app-service-blueprint.yaml"));
-        AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
-        log.info("AT is:\n"+at.toString());
-        Assert.assertEquals(at.getName(), "sample");
-        Assert.assertEquals(at.getPlatformComponentTemplates().links().size(), 1);
-        
-        // now use brooklyn to instantiate - note it won't be faithful, but it will set some config keys
-        Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-        
-        TestApplication app = ((TestAppAssembly)assembly).getBrooklynApp();
+        TestApplication app = (TestApplication)EntityManagementUtils.createUnstarted(mgmt, input);
+
         Assert.assertEquals( app.getConfig(TestEntity.CONF_NAME), "sample" );
         Map<String, String> map = app.getConfig(TestEntity.CONF_MAP_THING);
         Assert.assertEquals( map.get("desc"), "Tomcat sample JSP and servlet application." );

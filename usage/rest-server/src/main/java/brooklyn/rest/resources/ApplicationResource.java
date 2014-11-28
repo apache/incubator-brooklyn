@@ -22,9 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
-import io.brooklyn.camp.spi.AssemblyTemplate;
 
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -51,6 +49,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -61,11 +60,9 @@ import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.internal.EntityManagementUtils;
-import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.transform.ApplicationTransformer;
@@ -266,32 +263,36 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         }
 
         log.debug("Creating app from yaml:\n{}", yaml);
-        AssemblyTemplate at = camp().pdp().registerDeploymentPlan( new StringReader(yaml) );
+        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpec(mgmt(), yaml);
         
-        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, at)) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, spec)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
                 Entitlements.getEntitlementContext().user(), yaml);
         }
 
-        return launch(at);
+        return launch(spec);
     }
 
-    private Response launch(AssemblyTemplate at) {
+    private Response launch(EntitySpec<? extends Application> spec) {
         try {
-            CreationResult<? extends Application, Void> result = EntityManagementUtils.createStarting(mgmt(), at);
-            
-            Application app = result.get();
-            if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, Startable.START.getName()))) {
+            Application app = EntityManagementUtils.createUnstarted(mgmt(), spec);
+            Task<Void> task = EntityManagementUtils.start(app);
+
+            boolean isEntitled = Entitlements.isEntitled(
+                    mgmt().getEntitlementManager(),
+                    Entitlements.INVOKE_EFFECTOR,
+                    EntityAndItem.of(app, Startable.START.getName()));
+
+            if (!isEntitled) {
                 throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
-                    Entitlements.getEntitlementContext().user(), at.getType());
+                    Entitlements.getEntitlementContext().user(), spec.getType());
             }
 
-            log.info("Launched from YAML: " + at + " -> " + app + " (" + result.task() + ")");
+            log.info("Launched from spec: " + spec + " -> " + app + " (" + task + ")");
 
             URI ref = URI.create(app.getApplicationId());
             ResponseBuilder response = created(ref);
-            if (result.task() != null) 
-                response.entity(TaskTransformer.FROM_TASK.apply(result.task()));
+            response.entity(TaskTransformer.FROM_TASK.apply(task));
             return response.build();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
@@ -302,11 +303,13 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     public Response createPoly(byte[] inputToAutodetectType) {
         log.debug("Creating app from autodetecting input");
 
-        boolean looksLikeLegacy = false;
         Exception legacyFormatException = null;
-        // attempt legacy format
+        boolean looksLikeLegacy = false;
         try {
             ApplicationSpec appSpec = mapper().readValue(inputToAutodetectType, ApplicationSpec.class);
+            if (appSpec.getType() != null || appSpec.getEntities() != null) {
+                looksLikeLegacy = true;
+            }
             return createFromAppSpec(appSpec);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
@@ -314,39 +317,17 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             log.debug("Input is not legacy ApplicationSpec JSON (will try others): "+e, e);
         }
 
-        AssemblyTemplate template = null;
-        boolean looksLikeYaml = false;
-        try {
-            template = camp().pdp().registerDeploymentPlan(new StringReader(new String(inputToAutodetectType)));
-            if (!template.getPlatformComponentTemplates().isEmpty() || !template.getApplicationComponentTemplates().isEmpty()) {
-                looksLikeYaml = true;
-            } else {
-                if (template.getCustomAttributes().containsKey("type") || template.getCustomAttributes().containsKey("entities")) {
-                    looksLikeLegacy = true;
-                }
-            }
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            log.debug("Input is not valid YAML: "+e);
-        }
+        //TODO infer encoding from request
+        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpec(mgmt(), new String(inputToAutodetectType));
 
         // TODO not json - try ZIP, etc
-
-        if (template!=null) {
-            try {
-                return launch(template);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                if (looksLikeYaml)
-                    throw Exceptions.propagate(e);
-            }
-        }
-
-        if ((looksLikeLegacy || !looksLikeYaml) && legacyFormatException!=null)
-            // throw the error from legacy creation if it looks like it was the legacy format
+        if (spec != null) {
+            return launch(spec);
+        } else if (looksLikeLegacy) {
             throw Throwables.propagate(legacyFormatException);
-
-        return Response.serverError().entity("Unsupported format; not able to autodetect.").build();
+        } else {
+            return Response.serverError().entity("Unsupported format; not able to autodetect.").build();
+        }
     }
 
     @Override
@@ -378,7 +359,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             return;
         }
 
-        for (EntitySpec entitySpec : applicationSpec.getEntities()) {
+        for (brooklyn.rest.domain.EntitySpec entitySpec : applicationSpec.getEntities()) {
             String entityType = entitySpec.getType();
             checkEntityTypeIsValid(checkNotNull(entityType, "entityType"));
         }

@@ -18,9 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-
+import java.io.InputStream;
 import java.io.Reader;
 import java.util.Set;
 
@@ -28,12 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
@@ -75,11 +73,8 @@ public abstract class YamlLauncherAbstract {
 
     public Application launchAppYaml(String url) {
         try {
-            Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
-            AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
-
-            Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-            Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
+            Application app = createFromUrl(url);
+            EntityManagementUtils.start(app);
             log.info("Launching "+app);
 
             if (getShutdownAppsOnExit()) BrooklynShutdownHooks.invokeStopOnShutdown(app);
@@ -93,6 +88,17 @@ public abstract class YamlLauncherAbstract {
             return (Application)app;
         } catch (Exception e) {
             throw Exceptions.propagate(e);
+        }
+    }
+
+    private Application createFromUrl(String url) {
+        //TODO infer encoding from response
+        InputStream in = new ResourceUtils(this).getResourceFromUrl(url);
+        Reader reader = Streams.reader(in);
+        try {
+            return EntityManagementUtils.createUnstarted(brooklynMgmt, reader);
+        } finally {
+            Streams.closeQuietly(reader);
         }
     }
 

@@ -18,14 +18,19 @@
  */
 package brooklyn.management.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
+import io.brooklyn.camp.spi.pdp.DeploymentPlan;
+import io.brooklyn.camp.spi.pdp.Service;
 
+import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
@@ -33,7 +38,13 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
+import brooklyn.catalog.CatalogItem.CatalogBundle;
+import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.catalog.internal.CatalogItemBuilder;
+import brooklyn.catalog.internal.CatalogItemDtoAbstract;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
@@ -50,6 +61,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
+import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -58,7 +71,9 @@ import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.yaml.Yamls;
 
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -66,8 +81,9 @@ import com.google.common.collect.Iterables;
 
 /** Utility methods for working with entities and applications */
 public class EntityManagementUtils {
-
     private static final Logger log = LoggerFactory.getLogger(EntityManagementUtils.class);
+
+    private static final String POLICIES_KEY = "brooklyn.policies";
 
     /**
      * A marker config value which indicates that an application was created automatically
@@ -82,41 +98,261 @@ public class EntityManagementUtils {
         return app;
     }
 
-    /** convenience for accessing camp */
-    public static Maybe<CampPlatform> getCampPlatform(ManagementContext mgmt) {
-        return BrooklynServerConfig.getCampPlatform(mgmt);
-    }
-    
     /** as {@link #createApplication(ManagementContext, EntitySpec)} but for a YAML spec */
-    public static <T extends Application> T createUnstarted(ManagementContext mgmt, String yaml) {
-        AssemblyTemplate at = getCampPlatform(mgmt).get().pdp().registerDeploymentPlan( new StringReader(yaml) );
-        return createUnstarted(mgmt, at);
+    public static Application createUnstarted(ManagementContext mgmt, String yaml) {
+        return createUnstarted(mgmt, new StringReader(yaml));
     }
     
-    /** as {@link #createApplication(ManagementContext, EntitySpec)} but for an assembly template */
+    public static Application createUnstarted(ManagementContext mgmt, Reader yaml) {
+        EntitySpec<? extends Application> spec = createEntitySpec(mgmt, yaml);
+        return createUnstarted(mgmt, spec);
+    }
+    
+    public static EntitySpec<? extends Application> createEntitySpec(ManagementContext mgmt, String yaml) {
+        return createEntitySpec(mgmt, new StringReader(yaml));
+    }
+
+    public static EntitySpec<? extends Application> createEntitySpec(ManagementContext mgmt, Reader yaml) {
+        BrooklynClassLoadingContext loader = createDefaultLoader(mgmt);
+        return createEntitySpec(mgmt, yaml, loader);
+    }
+
     @SuppressWarnings("unchecked")
-    public static <T extends Application> T createUnstarted(ManagementContext mgmt, AssemblyTemplate at) {
-        CampPlatform camp = getCampPlatform(mgmt).get();
-        AssemblyTemplateInstantiator instantiator;
+    public static EntitySpec<? extends Application> createEntitySpec(ManagementContext mgmt, Reader yaml, BrooklynClassLoadingContext loader) {
+        return (EntitySpec<? extends Application>) createSpec(mgmt, yaml, loader);
+    }
+
+    public static AbstractBrooklynObjectSpec<?, ?> createSpec(ManagementContext mgmt, String yaml, BrooklynClassLoadingContext loader) {
+        return createSpec(mgmt, new StringReader(yaml), loader);
+    }
+
+    public static AbstractBrooklynObjectSpec<?, ?> createSpec(ManagementContext mgmt, Reader yaml, BrooklynClassLoadingContext loader) {
+        Preconditions.checkNotNull(mgmt, "mgmt");
+        Preconditions.checkNotNull(mgmt, "yaml");
+        Preconditions.checkNotNull(mgmt, "loader");
+
+        CampPlatform camp = getCampPlatform(mgmt);
+        DeploymentPlan plan = parseDeploymentPlan(camp, yaml);
+        return createSpec(mgmt, plan, loader);
+    }
+
+    private static DeploymentPlan parseDeploymentPlan(CampPlatform camp, Reader yaml) {
+        return camp.pdp().parseDeploymentPlan(yaml);
+    }
+    
+    private static AssemblyTemplateInstantiator newInstantiator(AssemblyTemplate at) {
         try {
-            instantiator = at.getInstantiator().newInstance();
-        } catch (Exception e) {
+            return at.getInstantiator().newInstance();
+        } catch (InstantiationException e) {
+            throw Exceptions.propagate(e);
+        } catch (IllegalAccessException e) {
             throw Exceptions.propagate(e);
         }
-        Assembly assembly;
-        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-            
-            EntitySpec<?> spec = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
-            Entity app = mgmt.getEntityManager().createEntity(spec);
-            Entities.startManagement((Application)app, mgmt);
-            return (T) app;
-        } else {
-            assembly = instantiator.instantiate(at, camp);
-            return (T) mgmt.getEntityManager().getEntity(assembly.getId());
+    }
+
+    private static AssemblyTemplate registerDeploymentPlan(CampPlatform camp, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+        BrooklynClassLoadingContext prev = BrooklynLoaderTracker.setLoader(loader);
+        try {
+            return camp.pdp().registerDeploymentPlan(plan);
+        } finally {
+            BrooklynLoaderTracker.unsetLoader(loader);
+            if (prev != null) {
+                BrooklynLoaderTracker.setLoader(prev);
+            }
         }
     }
-    
+
+    public static CatalogItemDtoAbstract<?, ?> createCatalogItem(ManagementContext mgmt, String yaml) {
+        DeploymentPlan plan = parseDeploymentPlan(getCampPlatform(mgmt), new StringReader(yaml));
+
+        @SuppressWarnings("rawtypes")
+        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
+        MutableMap<String, Object> catalog = MutableMap.of();
+        if (possibleCatalog.isPresent()) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> catalog2 = (Map<String, Object>) possibleCatalog.get();
+            catalog.putAll(catalog2);
+        }
+
+        Collection<CatalogBundle> libraries = Collections.emptyList();
+        Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
+        if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
+        if (possibleLibraries.isPresentAndNonNull()) {
+            if (!(possibleLibraries.get() instanceof Collection))
+                throw new IllegalArgumentException("Libraries should be a list, not "+possibleLibraries.get());
+            libraries = CatalogItemDtoAbstract.parseLibraries((Collection<?>) possibleLibraries.get());
+        }
+
+        final String id = (String) catalog.getMaybe("id").orNull();
+        final String version = Strings.toString(catalog.getMaybe("version").orNull());
+        final String symbolicName = (String) catalog.getMaybe("symbolicName").orNull();
+        final String name = (String) catalog.getMaybe("name").orNull();
+        final String displayName = (String) catalog.getMaybe("displayName").orNull();
+        final String description = (String) catalog.getMaybe("description").orNull();
+        final String iconUrl = (String) catalog.getMaybe("iconUrl").orNull();
+        final String iconUrlUnderscore = (String) catalog.getMaybe("icon_url").orNull();
+
+        if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
+                Strings.isNonBlank(displayName) &&
+                Strings.isNonBlank(name) && !name.equals(displayName)) {
+            log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
+        }
+
+        final String catalogSymbolicName;
+        if (Strings.isNonBlank(symbolicName)) {
+            catalogSymbolicName = symbolicName;
+        } else if (Strings.isNonBlank(id)) {
+            if (Strings.isNonBlank(id) && CatalogUtils.looksLikeVersionedId(id)) {
+                catalogSymbolicName = CatalogUtils.getIdFromVersionedId(id);
+            } else {
+                catalogSymbolicName = id;
+            }
+        } else if (Strings.isNonBlank(name)) {
+            catalogSymbolicName = name;
+        } else if (Strings.isNonBlank(plan.getName())) {
+            catalogSymbolicName = plan.getName();
+        } else if (plan.getServices().size()==1) {
+            Service svc = Iterables.getOnlyElement(plan.getServices());
+            if (Strings.isBlank(svc.getServiceType())) {
+                throw new IllegalStateException("CAMP service type not expected to be missing for " + svc);
+            }
+            catalogSymbolicName = svc.getServiceType();
+        } else {
+            log.error("Can't infer catalog item symbolicName from the following plan:\n" + yaml);
+            throw new IllegalStateException("Can't infer catalog item symbolicName from catalog item description");
+        }
+
+        final String catalogVersion;
+        if (CatalogUtils.looksLikeVersionedId(id)) {
+            catalogVersion = CatalogUtils.getVersionFromVersionedId(id);
+            if (version != null  && !catalogVersion.equals(version)) {
+                throw new IllegalArgumentException("Discrepency between version set in id " + catalogVersion + " and version property " + version);
+            }
+        } else if (Strings.isNonBlank(version)) {
+            catalogVersion = version;
+        } else {
+            log.warn("No version specified for catalog item " + catalogSymbolicName + ". Using default value.");
+            catalogVersion = null;
+        }
+
+        final String catalogDisplayName;
+        if (Strings.isNonBlank(displayName)) {
+            catalogDisplayName = displayName;
+        } else if (Strings.isNonBlank(name)) {
+            catalogDisplayName = name;
+        } else if (Strings.isNonBlank(plan.getName())) {
+            catalogDisplayName = plan.getName();
+        } else {
+            catalogDisplayName = null;
+        }
+
+        final String catalogDescription;
+        if (Strings.isNonBlank(description)) {
+            catalogDescription = description;
+        } else if (Strings.isNonBlank(plan.getDescription())) {
+            catalogDescription = plan.getDescription();
+        } else {
+            catalogDescription = null;
+        }
+
+        final String catalogIconUrl;
+        if (Strings.isNonBlank(iconUrl)) {
+            catalogIconUrl = iconUrl;
+        } else if (Strings.isNonBlank(iconUrlUnderscore)) {
+            catalogIconUrl = iconUrlUnderscore;
+        } else {
+            catalogIconUrl = null;
+        }
+
+        CatalogUtils.installLibraries(mgmt, libraries);
+
+        String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion);
+        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries);
+        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(mgmt, plan, loader);
+
+        CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(spec, catalogSymbolicName, catalogVersion)
+            .libraries(libraries)
+            .displayName(catalogDisplayName)
+            .description(catalogDescription)
+            .iconUrl(catalogIconUrl)
+            .plan(yaml)
+            .build();
+
+        dto.setManagementContext((ManagementContextInternal) mgmt);
+        return dto;
+    }
+
+    private static CatalogItemBuilder<?> createItemBuilder(AbstractBrooklynObjectSpec<?, ?> spec, String itemId, String version) {
+        if (spec instanceof EntitySpec) {
+            if (isApplicationSpec((EntitySpec<?>)spec)) {
+                return CatalogItemBuilder.newTemplate(itemId, version);
+            } else {
+                return CatalogItemBuilder.newEntity(itemId, version);
+            }
+        } else if (spec instanceof PolicySpec) {
+            return CatalogItemBuilder.newPolicy(itemId, version);
+        } else {
+            throw new IllegalStateException("Unknown spec type " + spec.getClass().getName() + " (" + spec + ")");
+        }
+    }
+
+    private static boolean isApplicationSpec(EntitySpec<?> spec) {
+        return !Boolean.TRUE.equals(spec.getConfig().get(EntityManagementUtils.WRAPPER_APP_MARKER));
+    }
+
+    private static boolean isPolicyPlan(DeploymentPlan plan) {
+        return plan.getCustomAttributes().containsKey(POLICIES_KEY);
+    }
+
+    private static AbstractBrooklynObjectSpec<?,?> createSpec(ManagementContext mgmt, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+        if (isPolicyPlan(plan)) {
+            return createPolicySpec(plan, loader);
+        } else {
+            return createEntitySpec(getCampPlatform(mgmt), plan, loader);
+        }
+    }
+
+    private static EntitySpec<? extends Application> createEntitySpec(CampPlatform camp, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+        AssemblyTemplate at = registerDeploymentPlan(camp, plan, loader);
+        AssemblyTemplateInstantiator instantiator = newInstantiator(at);
+        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
+            @SuppressWarnings("unchecked")
+            EntitySpec<? extends Application> spec = (EntitySpec<? extends Application>) ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
+            return spec;
+        } else {
+            throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator " + instantiator + " for " + at);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T, SpecT> SpecT createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+        //Would ideally re-use io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver.PolicySpecResolver
+        //but it is CAMP specific and there is no easy way to get hold of it.
+        Object policies = checkNotNull(plan.getCustomAttributes().get(POLICIES_KEY), "policy config");
+        if (!(policies instanceof Iterable<?>)) {
+            throw new IllegalStateException("The value of " + POLICIES_KEY + " must be an Iterable.");
+        }
+
+        Object policy = Iterables.getOnlyElement((Iterable<?>)policies);
+
+        Map<String, Object> policyConfig;
+        if (policy instanceof String) {
+            policyConfig = ImmutableMap.<String, Object>of("type", policy);
+        } else if (policy instanceof Map) {
+            policyConfig = (Map<String, Object>) policy;
+        } else {
+            throw new IllegalStateException("Policy exepcted to be string or map. Unsupported object type " + policy.getClass().getName() + " (" + policy.toString() + ")");
+        }
+
+        String policyType = (String) checkNotNull(Yamls.getMultinameAttribute(policyConfig, "policy_type", "policyType", "type"), "policy type");
+        Map<String, Object> brooklynConfig = (Map<String, Object>) policyConfig.get("brooklyn.config");
+        PolicySpec<? extends Policy> spec = PolicySpec.create(loader.loadClass(policyType, Policy.class));
+        if (brooklynConfig != null) {
+            spec.configure(brooklynConfig);
+        }
+        return (SpecT) spec;
+    }
+
     /** container for operation which creates something and which wants to return both
      * the items created and any pending create/start task */
     public static class CreationResult<T,U> {
@@ -140,24 +376,11 @@ public class EntityManagementUtils {
         public CreationResult<T,U> blockUntilComplete() { if (task!=null) task.blockUntilEnded(); return this; }
     }
 
-    public static <T extends Application> CreationResult<T,Void> createStarting(ManagementContext mgmt, EntitySpec<T> appSpec) {
-        return start(createUnstarted(mgmt, appSpec));
-    }
-
-    public static CreationResult<? extends Application,Void> createStarting(ManagementContext mgmt, String appSpec) {
-        return start(createUnstarted(mgmt, appSpec));
-    }
-
-    public static CreationResult<? extends Application,Void> createStarting(ManagementContext mgmt, AssemblyTemplate at) {
-        return start(createUnstarted(mgmt, at));
-    }
-
-    public static <T extends Application> CreationResult<T,Void> start(T app) {
-        Task<Void> task = Entities.invokeEffector((EntityLocal)app, app, Startable.START,
+    public static Task<Void> start(Application app) {
+        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
             // locations already set in the entities themselves;
             // TODO make it so that this arg does not have to be supplied to START !
             MutableMap.of("locations", MutableList.of()));
-        return CreationResult.of(app, task);
     }
     
     public static CreationResult<List<Entity>, List<String>> addChildren(final EntityLocal parent, String yaml, Boolean start) {
@@ -171,49 +394,47 @@ public class EntityManagementUtils {
         log.debug("Creating child of "+parent+" from yaml:\n{}", yaml);
         
         ManagementContext mgmt = parent.getApplication().getManagementContext();
-        CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
-        
-        AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(yaml) );
+        EntitySpec<?> specA = createEntitySpec(mgmt, yaml);
 
-        AssemblyTemplateInstantiator instantiator;
-        try {
-            instantiator = at.getInstantiator().newInstance();
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-            EntitySpec<?> specA = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, false);
-
-            // see whether we can promote children
-            List<EntitySpec<?>> specs = MutableList.of();
-            if (hasNoNameOrCustomKeysOrRoot(at, specA)) {
-                // we can promote
-                for (EntitySpec<?> specC: specA.getChildren()) {
-                    collapseSpec(specA, specC);
-                    specs.add(specC);
-                }
-            } else {
-                // if not promoting, set a nice name if needed
-                if (Strings.isEmpty(specA.getDisplayName())) {
-                    int size = specA.getChildren().size();
-                    String childrenCountString = size+" "+(size!=1 ? "children" : "child");
-                    specA.displayName("Dynamically added "+childrenCountString);
-                }
-                specs.add(specA);
+        // see whether we can promote children
+        List<EntitySpec<?>> specs = MutableList.of();
+        if (canPromote(specA)) {
+            // we can promote
+            for (EntitySpec<?> specC: specA.getChildren()) {
+                collapseSpec(specA, specC);
+                specs.add(specC);
             }
-
-            final List<Entity> children = MutableList.of();
-            for (EntitySpec<?> spec: specs) {
-                Entity child = (Entity)parent.addChild(spec);
-                Entities.manage(child);
-                children.add(child);
-            }
-            
-            return children;
         } else {
-            throw new IllegalStateException("Spec could not be parsed to supply a compatible instantiator");
+            // if not promoting, set a nice name if needed
+            if (Strings.isEmpty(specA.getDisplayName())) {
+                int size = specA.getChildren().size();
+                String childrenCountString = size+" "+(size!=1 ? "children" : "child");
+                specA.displayName("Dynamically added "+childrenCountString);
+            }
+            specs.add(specA);
         }
+
+        final List<Entity> children = MutableList.of();
+        for (EntitySpec<?> spec: specs) {
+            Entity child = (Entity)parent.addChild(spec);
+            Entities.manage(child);
+            children.add(child);
+        }
+        
+        return children;
+    }
+
+    private static boolean canPromote(EntitySpec<?> spec) {
+        //equivalent to no keys starting with "brooklyn."
+        return !isApplicationSpec(spec) && 
+                spec.getEnrichers().isEmpty() && 
+                spec.getInitializers().isEmpty() && 
+                spec.getPolicies().isEmpty();
+    }
+
+    private static JavaBrooklynClassLoadingContext createDefaultLoader(
+            ManagementContext mgmt) {
+        return JavaBrooklynClassLoadingContext.create(mgmt);
     }
 
     public static CreationResult<List<Entity>,List<String>> addChildrenStarting(final EntityLocal parent, String yaml) {
@@ -270,43 +491,9 @@ public class EntityManagementUtils {
         targetToBeExpanded.tags(sourceToBeCollapsed.getTags());
     }
 
-    /** worker method to help determine whether child/children can be promoted */
-    @Beta //where should this live long-term?
-    public static boolean hasNoNameOrCustomKeysOrRoot(AssemblyTemplate template, EntitySpec<?> spec) {
-        if (!Strings.isEmpty(template.getName())) {
-            if (spec.getChildren().size()==1) {
-                String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
-                if (Strings.isEmpty(childName) || childName.equals(template.getName())) {
-                    // if child has no name, or it's the same, could still promote
-                } else {
-                    return false;
-                }
-            } else {
-                // if name set at root and promoting children would be ambiguous, do not promote 
-                return false;
-            }
-        } else if (spec.getChildren().size()>1) {
-            // don't allow multiple children if a name is specified as a root
-            return false;
-        }
-        
-        Set<String> rootAttrs = template.getCustomAttributes().keySet();
-        for (String rootAttr: rootAttrs) {
-            if (rootAttr.equals("brooklyn.catalog") || rootAttr.equals("brooklyn.config")) {
-                // these do not block promotion
-                continue;
-            }
-            if (rootAttr.startsWith("brooklyn.")) {
-                // any others in 'brooklyn' namespace will block promotion
-                return false;
-            }
-            // location is allowed in both, and is copied on promotion
-            // (name also copied)
-            // others are root currently are ignored on promotion; they are usually metadata
-            // TODO might be nice to know what we are excluding
-        }
-        
-        return true;
+    /** convenience for accessing camp */
+    private static CampPlatform getCampPlatform(ManagementContext mgmt) {
+        return BrooklynServerConfig.getCampPlatform(mgmt).get();
     }
     
 }
