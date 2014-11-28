@@ -219,10 +219,11 @@ public interface ManagementContext {
      */
     void removePropertiesReloadListener(PropertiesReloadListener listener);
 
-    /** Active entitlements checker instance. */
+    /**
+     * Active entitlements checker instance.
+     */
     EntitlementManager getEntitlementManager();
  
-
     /** As {@link #lookup(String, Class)} but not constraining the return type */
     public BrooklynObject lookup(String id);
     
