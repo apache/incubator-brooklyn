@@ -48,43 +48,37 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 
+/**
+ * 
+ * @author aled
+ *
+ * TODO This implementation is not efficient, and currently has a cap of about 50000 rules.
+ * Need to improve the efficiency and scale.
+ * A quick win could be to use a different portReserved counter for each publicIpId,
+ * when calling acquirePublicPort?
+ * 
+ * TODO Callers need to be more careful in acquirePublicPort for which ports are actually in use.
+ * If multiple apps sharing the same public-ip (e.g. in the same vcloud-director vOrg) then they 
+ * must not allocate the same public port (e.g. ensure they share the same PortForwardManager
+ * by using the same scope in 
+ * {@code managementContext.getLocationRegistry().resolve("portForwardManager(scope=global)")}.
+ * However, this still doesn't check if the port is *actually* available. For example, if a
+ * different Brooklyn instance is also deploying there then we can get port conflicts, or if 
+ * some ports in that range are already in use (e.g. due to earlier dev/test runs) then this
+ * will not be respected. Callers should probably figure out the port number themselves, but
+ * that also leads to concurrency issues.
+ * 
+ * TODO The publicIpId means different things to different callers:
+ * <ul>
+ *   <li> In acquirePublicPort() it is (often?) an identifier of the actual public ip.
+ *   <li> In later calls to associate(), it is (often?) an identifier for the target machine
+ *        such as the jcloudsMachine.getJcloudsId().
+ * </ul>
+ */
 @SuppressWarnings("serial")
 public class PortForwardManagerImpl extends AbstractLocation implements PortForwardManager {
 
-    // TODO This implementation is not efficient, and currently has a cap of about 50000 rules.
-    // Need to improve the efficiency and scale.
-    // A quick win could be to use a different portReserved counter for each publicIpId,
-    // when calling acquirePublicPort?
-    
-    // TODO Callers need to be more careful in acquirePublicPort for which ports are actually in use.
-    // If multiple apps sharing the same public-ip (e.g. in the same vcloud-director vOrg) then they 
-    // must not allocate the same public port (so can share the same PortForwardManagerAuthority
-    // via PortForwardManager.Factory.sharedInstance).
-    // However, this still doesn't check if the port is *actually* available. For example, if a
-    // different Brooklyn instance is also deploying there then we can get port conflicts, or if 
-    // some ports in that range are already in use (e.g. due to earlier dev/test runs) then this
-    // will not be respected. Callers should probably figure out the port number themselves, but
-    // that also leads to concurrency issues.
-
-    // TODO The publicIpId means different things to different callers:
-    //  - In acquirePublicPort() it is (often?) an identifier of the actual public ip.
-    //  - In later calls to associate(), it is (often?) an identifier for the target machine
-    //    such as the jcloudsMachine.getJcloudsId().
-    
-    // TODO Should PortForwardManager be changed to extend AbstractLocation, or is this wrapper ok?
-    
     private static final Logger log = LoggerFactory.getLogger(PortForwardManagerImpl.class);
-    
-    public static final ConfigKey<String> SCOPE = ConfigKeys.newStringConfigKey(
-            "scope",
-            "The scope that this applies to, defaulting to global",
-            "global");
-
-    @Beta
-    public static final ConfigKey<Integer> PORT_FORWARD_MANAGER_STARTING_PORT = ConfigKeys.newIntegerConfigKey(
-            "brooklyn.portForwardManager.startingPort",
-            "The starting port for assigning port numbers, such as for DNAT",
-            11000);
     
     protected final Map<String,PortMapping> mappings = new LinkedHashMap<String,PortMapping>();
     

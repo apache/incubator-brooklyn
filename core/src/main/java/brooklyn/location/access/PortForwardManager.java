@@ -41,13 +41,17 @@ import com.google.common.net.HostAndPort;
  * To use, see {@link PortForwardManagerLocationResolver}, with code such as 
  * {@code managementContext.getLocationRegistry().resolve("portForwardManager(scope=global)")}.
  * 
- * Implementations typically will not know anything about what the firewall/IP actually is, they just handle a
- * unique identifier for it. It is recommended, however, to {@link #recordPublicIpHostname(String, String)} an
- * accessible hostname with the identifier. This is required in order to use {@link #lookup(Location, int)}.
+ * @see PortForwardManagerImpl for implementation notes and considerations.
  */
 @Beta
 public interface PortForwardManager extends Location {
 
+    /**
+     * The intention is that there is one PortForwardManager instance per "scope". If you 
+     * use global, then it will be a shared instance (for that management context). If you 
+     * pass in your own name (e.g. "docker-fjie3") then it will shared with just any other
+     * places that use that same location spec (e.g. {@code portForwardManager(scope=docker-fjie3)}).
+     */
     public static final ConfigKey<String> SCOPE = ConfigKeys.newStringConfigKey(
             "scope",
             "The scope that this applies to, defaulting to global",
@@ -80,7 +84,7 @@ public interface PortForwardManager extends Location {
     public void associate(String publicIpId, HostAndPort publicEndpoint, Location l, int privatePort);
 
     /**
-     * Records a mapping for pubilcIpId:privatePort to a public endpoint, such that it can
+     * Records a mapping for publicIpId:privatePort to a public endpoint, such that it can
      * subsequently be looked up using {@link #lookup(String, int)}.
      */
     public void associate(String publicIpId, HostAndPort publicEndpoint, int privatePort);
@@ -111,7 +115,7 @@ public interface PortForwardManager extends Location {
     public HostAndPort lookup(String publicIpId, int privatePort);
 
     /** 
-     * Clears the given port mapping, returning the true if there was a match.
+     * Clears the given port mapping, returning true if there was a match.
      */
     public boolean forgetPortMapping(String publicIpId, int publicPort);
     
@@ -180,7 +184,7 @@ public interface PortForwardManager extends Location {
     /**
      * Clears a previous call to {@link #recordPublicIpHostname(String, String)}.
      * 
-     * @deprecated Use {@link #forgetPortMapping(String, int)} or {@link #forgetPortMapping(Location, int)}
+     * @deprecated Use {@link #forgetPortMapping(String, int)} or {@link #forgetPortMappings(Location)}
      */
     @Deprecated
     public boolean forgetPublicIpHostname(String publicIpId);
@@ -216,7 +220,7 @@ public interface PortForwardManager extends Location {
     public Collection<PortMapping> getPortMappingWithPublicIpId(String publicIpId);
 
     /** 
-     * @see #forgetPortMapping(String, int)
+     * @see {@link #forgetPortMapping(String, int)} and {@link #forgetPortMappings(Location)}
      * 
      * @deprecated since 0.7.0; this method will be internal only
      */

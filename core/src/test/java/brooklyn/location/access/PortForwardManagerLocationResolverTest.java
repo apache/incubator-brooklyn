@@ -75,7 +75,7 @@ public class PortForwardManagerLocationResolverTest {
     private void assertNotSame(Location loc1, Location loc2) {
         Assert.assertNotNull(loc1);
         Assert.assertNotNull(loc2);
-        Assert.assertTrue(loc2 instanceof PortForwardManager, "loc1="+loc1);
+        Assert.assertTrue(loc1 instanceof PortForwardManager, "loc1="+loc1);
         Assert.assertTrue(loc2 instanceof PortForwardManager, "loc2="+loc2);
         Assert.assertNotSame(loc1, loc2);
         Assert.assertNotEquals(((PortForwardManager)loc1).getId(), ((PortForwardManager)loc2).getId());
