@@ -201,9 +201,11 @@ public class JmxSupport implements UsesJmx {
     }
 
     public List<String> getJmxJavaConfigOptions() {
-        if (getJmxAgentMode()==JmxAgentModes.NONE)
+        if (EnumSet.<JmxAgentModes>of(JmxAgentModes.NONE, JmxAgentModes.JMX_RMI).contains(getJmxAgentMode())) {
             return MutableList.of();
-        return MutableList.of(String.format("-javaagent:%s", getJmxAgentJarDestinationFilePath()));
+        } else {
+            return MutableList.of(String.format("-javaagent:%s", getJmxAgentJarDestinationFilePath()));
+        }
     }
 
     public String getJmxAgentJarDestinationFilePath() {
