@@ -52,6 +52,10 @@ public interface PortForwardManager extends Location {
      * pass in your own name (e.g. "docker-fjie3") then it will shared with just any other
      * places that use that same location spec (e.g. {@code portForwardManager(scope=docker-fjie3)}).
      */
+    // TODO Note: using name "scope" rather than "brooklyn.portForwardManager.scope" so that location spec 
+    // "portForwardManager(scope=global)" works, rather than having to do 
+    // portForwardManager(brooklyn.portForwardManager.scope=global).
+    // The config being read by the PortForwardManagerLocationResolver doesn't respect @SetFromFlag("scope").
     public static final ConfigKey<String> SCOPE = ConfigKeys.newStringConfigKey(
             "scope",
             "The scope that this applies to, defaulting to global",

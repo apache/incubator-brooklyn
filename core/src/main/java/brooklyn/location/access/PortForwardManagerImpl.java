@@ -31,8 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindContext;
 import brooklyn.entity.rebind.RebindSupport;
@@ -41,7 +39,6 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.collections.MutableMap;
 
-import com.google.common.annotations.Beta;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,6 +85,8 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     // horrible hack -- see javadoc above
     private final AtomicInteger portReserved = new AtomicInteger(11000);
 
+    private final Object mutex = new Object();
+    
     public PortForwardManagerImpl() {
         super();
         if (isLegacyConstruction()) {
@@ -115,10 +114,16 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this) {
             @Override public LocationMemento getMemento() {
+                Map<String, PortMapping> mappingsCopy;
+                Map<String,String> publicIpIdToHostnameCopy;
+                synchronized (mutex) {
+                    mappingsCopy = ImmutableMap.copyOf(mappings);
+                    publicIpIdToHostnameCopy = ImmutableMap.copyOf(publicIpIdToHostname);
+                }
                 return getMementoWithProperties(MutableMap.<String,Object>of(
-                        "mappings", mappings, 
+                        "mappings", mappingsCopy, 
                         "portReserved", portReserved.get(), 
-                        "publicIpIdToHostname", publicIpIdToHostname));
+                        "publicIpIdToHostname", publicIpIdToHostnameCopy));
             }
             @Override
             protected void doReconstruct(RebindContext rebindContext, LocationMemento memento) {
@@ -133,7 +138,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     @Override
     public int acquirePublicPort(String publicIpId) {
         int port;
-        synchronized (this) {
+        synchronized (mutex) {
             // far too simple -- see javadoc above
             port = getNextPort();
             
@@ -163,7 +168,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     }
 
     protected void associateImpl(String publicIpId, HostAndPort publicEndpoint, Location l, int privatePort) {
-        synchronized (this) {
+        synchronized (mutex) {
             String publicIp = publicEndpoint.getHostText();
             int publicPort = publicEndpoint.getPort();
             recordPublicIpHostname(publicIpId, publicIp);
@@ -177,27 +182,31 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     }
 
     @Override
-    public synchronized HostAndPort lookup(Location l, int privatePort) {
-        for (PortMapping m: mappings.values()) {
-            if (l.equals(m.target) && privatePort == m.privatePort)
-                return getPublicHostAndPort(m);
+    public HostAndPort lookup(Location l, int privatePort) {
+        synchronized (mutex) {
+            for (PortMapping m: mappings.values()) {
+                if (l.equals(m.target) && privatePort == m.privatePort)
+                    return getPublicHostAndPort(m);
+            }
         }
         return null;
     }
     
     @Override
-    public synchronized HostAndPort lookup(String publicIpId, int privatePort) {
-        for (PortMapping m: mappings.values()) {
-            if (publicIpId.equals(m.publicIpId) && privatePort==m.privatePort)
-                return getPublicHostAndPort(m);
-        }
+    public HostAndPort lookup(String publicIpId, int privatePort) {
+        synchronized (mutex) {
+            for (PortMapping m: mappings.values()) {
+                if (publicIpId.equals(m.publicIpId) && privatePort==m.privatePort)
+                    return getPublicHostAndPort(m);
+            }
+}
         return null;
     }
     
     @Override
     public boolean forgetPortMapping(String publicIpId, int publicPort) {
         PortMapping old;
-        synchronized (this) {
+        synchronized (mutex) {
             old = mappings.remove(makeKey(publicIpId, publicPort));
             log.debug("cleared port mapping for "+publicIpId+":"+publicPort+" - "+old);
         }
@@ -208,7 +217,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     @Override
     public boolean forgetPortMappings(Location l) {
         List<PortMapping> result = Lists.newArrayList();
-        synchronized (this) {
+        synchronized (mutex) {
             for (Iterator<PortMapping> iter = mappings.values().iterator(); iter.hasNext();) {
                 PortMapping m = iter.next();
                 if (l.equals(m.target)) {
@@ -217,7 +226,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
                 }
             }
         }
-        log.debug("cleared all port mappings for "+l+" - "+result);
+        if (log.isDebugEnabled()) log.debug("cleared all port mappings for "+l+" - "+result);
         if (!result.isEmpty()) {
             onChanged();
         }
@@ -226,12 +235,20 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     
     @Override
     protected ToStringHelper string() {
-        return super.string().add("scope", getScope()).add("mappingsSize", mappings.size());
+        int size;
+        synchronized (mutex) {
+            size = mappings.size();
+        }
+        return super.string().add("scope", getScope()).add("mappingsSize", size);
     }
 
     @Override
     public String toVerboseString() {
-        return string().add("mappings", mappings).toString();
+        String mappingsStr;
+        synchronized (mutex) {
+            mappingsStr = mappings.toString();
+        }
+        return string().add("mappings", mappingsStr).toString();
     }
 
     @Override
@@ -254,7 +271,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     ///////////////////////////////////////////////////////////////////////////////////
 
     public List<PortMapping> getPortMappings() {
-        synchronized (this) {
+        synchronized (mutex) {
             return ImmutableList.copyOf(mappings.values());
         }
     }
@@ -273,7 +290,10 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     public PortMapping acquirePublicPortExplicit(String publicIpId, int port) {
         PortMapping mapping = new PortMapping(publicIpId, port, null, -1);
         log.debug("assigning explicit public port "+port+" at "+publicIpId);
-        PortMapping result = mappings.put(makeKey(publicIpId, port), mapping);
+        PortMapping result;
+        synchronized (mutex) {
+            result = mappings.put(makeKey(publicIpId, port), mapping);
+        }
         onChanged();
         return result;
     }
@@ -288,7 +308,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     @Deprecated
     public void recordPublicIpHostname(String publicIpId, String hostnameOrPublicIpAddress) {
         log.debug("recording public IP "+publicIpId+" associated with "+hostnameOrPublicIpAddress);
-        synchronized (publicIpIdToHostname) {
+        synchronized (mutex) {
             String old = publicIpIdToHostname.put(publicIpId, hostnameOrPublicIpAddress);
             if (old!=null && !old.equals(hostnameOrPublicIpAddress))
                 log.warn("Changing hostname recorded against public IP "+publicIpId+"; from "+old+" to "+hostnameOrPublicIpAddress);
@@ -299,7 +319,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     @Override
     @Deprecated
     public String getPublicIpHostname(String publicIpId) {
-        synchronized (publicIpIdToHostname) {
+        synchronized (mutex) {
             return publicIpIdToHostname.get(publicIpId);
         }
     }
@@ -309,7 +329,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     public boolean forgetPublicIpHostname(String publicIpId) {
         log.debug("forgetting public IP "+publicIpId+" association");
         boolean result;
-        synchronized (publicIpIdToHostname) {
+        synchronized (mutex) {
             result = (publicIpIdToHostname.remove(publicIpId) != null);
         }
         onChanged();
@@ -320,7 +340,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     @Deprecated
     public int acquirePublicPort(String publicIpId, Location l, int privatePort) {
         int publicPort;
-        synchronized (this) {
+        synchronized (mutex) {
             PortMapping old = getPortMappingWithPrivateSide(l, privatePort);
             // only works for 1 public IP ID per location (which is the norm)
             if (old!=null && old.publicIpId.equals(publicIpId)) {
@@ -339,14 +359,14 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     @Override
     @Deprecated
     public void associate(String publicIpId, int publicPort, Location l, int privatePort) {
-        synchronized (this) {
+        synchronized (mutex) {
             associateImpl(publicIpId, publicPort, l, privatePort);
         }
         onChanged();
     }
 
     protected void associateImpl(String publicIpId, int publicPort, Location l, int privatePort) {
-        synchronized (this) {
+        synchronized (mutex) {
             PortMapping mapping = new PortMapping(publicIpId, publicPort, l, privatePort);
             PortMapping oldMapping = getPortMappingWithPublicSide(publicIpId, publicPort);
             log.debug("associating public port "+publicPort+" on "+publicIpId+" with private port "+privatePort+" at "+l+" ("+mapping+")"
@@ -372,31 +392,39 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     }
 
     @Override
-    public synchronized PortMapping getPortMappingWithPublicSide(String publicIpId, int publicPort) {
-        return mappings.get(makeKey(publicIpId, publicPort));
+    public PortMapping getPortMappingWithPublicSide(String publicIpId, int publicPort) {
+        synchronized (mutex) {
+            return mappings.get(makeKey(publicIpId, publicPort));
+        }
     }
 
     @Override
-    public synchronized Collection<PortMapping> getPortMappingWithPublicIpId(String publicIpId) {
+    public Collection<PortMapping> getPortMappingWithPublicIpId(String publicIpId) {
         List<PortMapping> result = new ArrayList<PortMapping>();
-        for (PortMapping m: mappings.values())
-            if (publicIpId.equals(m.publicIpId)) result.add(m);
+        synchronized (mutex) {
+            for (PortMapping m: mappings.values())
+                if (publicIpId.equals(m.publicIpId)) result.add(m);
+        }
         return result;
     }
 
     /** returns the subset of port mappings associated with a given location */
     @Override
-    public synchronized Collection<PortMapping> getLocationPublicIpIds(Location l) {
+    public Collection<PortMapping> getLocationPublicIpIds(Location l) {
         List<PortMapping> result = new ArrayList<PortMapping>();
-        for (PortMapping m: mappings.values())
-            if (l.equals(m.getTarget())) result.add(m);
+        synchronized (mutex) {
+            for (PortMapping m: mappings.values())
+                if (l.equals(m.getTarget())) result.add(m);
+        }
         return result;
     }
 
     @Override
-    public synchronized PortMapping getPortMappingWithPrivateSide(Location l, int privatePort) {
-        for (PortMapping m: mappings.values())
-            if (l.equals(m.getTarget()) && privatePort==m.privatePort) return m;
+    public PortMapping getPortMappingWithPrivateSide(Location l, int privatePort) {
+        synchronized (mutex) {
+            for (PortMapping m: mappings.values())
+                if (l.equals(m.getTarget()) && privatePort==m.privatePort) return m;
+        }
         return null;
     }
 }
