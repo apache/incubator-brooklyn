@@ -89,7 +89,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
   
   @Override
   public String getPlain(String application, String entityToken, String configKeyName, Boolean raw) {
-      return Strings.toString(get(true, application, entityToken, configKeyName, raw));
+      return Strings.toString(get(false, application, entityToken, configKeyName, raw));
   }
 
     public Object get(boolean preferJson, String application, String entityToken, String configKeyName, Boolean raw) {
@@ -108,6 +108,31 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
       return ck;
   }
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @Override
+  public void setFromMap(String application, String entityToken, Boolean recurse, Map<?, ?> newValues) {
+      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+      if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+          throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+              Entitlements.getEntitlementContext().user(), entity);
+      }
+
+      if (LOG.isDebugEnabled())
+          LOG.debug("REST user "+Entitlements.getEntitlementContext()+" setting configs "+newValues);
+      for (Map.Entry<?,?> entry: newValues.entrySet()) {
+          String configName = Strings.toString(entry.getKey());
+          Object newValue = entry.getValue();
+          
+          ConfigKey ck = findConfig(entity, configName);
+          ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
+          if (Boolean.TRUE.equals(recurse)) {
+              for (Entity e2: Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
+                  ((EntityInternal) e2).setConfig(ck, newValue);
+              }
+          }
+      }
+  }
+  
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public void set(String application, String entityToken, String configName, Boolean recurse, Object newValue) {

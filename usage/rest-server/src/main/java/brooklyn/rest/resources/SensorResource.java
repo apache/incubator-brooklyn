@@ -38,6 +38,7 @@ import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.transform.SensorTransformer;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -103,7 +104,27 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         if (s instanceof AttributeSensor) return (AttributeSensor<?>) s;
         return new BasicAttributeSensor<Object>(Object.class, name);
     }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void setFromMap(String application, String entityToken, Map<?, ?> newValues) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+                Entitlements.getEntitlementContext().user(), entity);
+        }
 
+        if (log.isDebugEnabled())
+            log.debug("REST user "+Entitlements.getEntitlementContext()+" setting sensors "+newValues);
+        for (Map.Entry<?,?> entry: newValues.entrySet()) {
+            String sensorName = Strings.toString(entry.getKey());
+            Object newValue = entry.getValue();
+            
+            AttributeSensor sensor = findSensor(entity, sensorName);
+            entity.setAttribute(sensor, newValue);
+        }
+    }
+    
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void set(String application, String entityToken, String sensorName, Object newValue) {

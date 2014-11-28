@@ -109,6 +109,20 @@ public interface SensorApi {
   ) ;
 
   @POST
+  @ApiOperation(value = "Manually set multiple sensor values")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application or entity")
+  })
+  public void setFromMap(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") final String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") final String entityToken,
+      @ApiParam(value = "Map of sensor names to values", required = true)
+      Map<?,?> newValues
+  ) ;
+
+  @POST
   @Path("/{sensor}")
   @ApiOperation(value = "Manually set a sensor value")
   @ApiErrors(value = {

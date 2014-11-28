@@ -104,6 +104,22 @@ public interface EntityConfigApi {
   );
 
   @POST
+  @ApiOperation(value = "Manually set multiple config values")
+  @ApiErrors(value = {
+      @ApiError(code = 404, reason = "Could not find application or entity")
+  })
+  public void setFromMap(
+      @ApiParam(value = "Application ID or name", required = true)
+      @PathParam("application") final String application,
+      @ApiParam(value = "Entity ID or name", required = true)
+      @PathParam("entity") final String entityToken,
+      @ApiParam(value = "Apply the config to all pre-existing descendants", required = false)
+      @QueryParam("recurse") @DefaultValue("false") final Boolean recurse,
+      @ApiParam(value = "Map of config key names to values", required = true)
+      Map<?,?> newValues
+  ) ;
+
+  @POST
   @Path("/{config}")
   @ApiOperation(value = "Manually set a config value")
   @ApiErrors(value = {
@@ -117,7 +133,7 @@ public interface EntityConfigApi {
           @ApiParam(value = "Config key name", required = true)
           @PathParam("config") String configName,
           @ApiParam(value = "Apply the config to all pre-existing descendants", required = false)
-          @QueryParam("raw") @DefaultValue("false") final Boolean recurse,
+          @QueryParam("recurse") @DefaultValue("false") final Boolean recurse,
           @ApiParam(value = "Value to set")
           Object newValue
   ) ;

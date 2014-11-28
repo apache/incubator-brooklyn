@@ -41,6 +41,7 @@ import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.StringFunctions;
 
@@ -233,12 +234,27 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
                 .post(ClientResponse.class, 67890);
             assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
 
+            assertEquals(entity.getAttribute(SENSOR), (Integer)67890);
+            
             String value = client().resource(SENSORS_ENDPOINT + "/" + SENSOR_NAME).accept(MediaType.TEXT_PLAIN_TYPE).get(String.class);
             assertEquals(value, "67890 frogs");
 
         } finally { addAmphibianSensor(entity); }
     }
 
+    @Test
+    public void testSetFromMap() throws Exception {
+        try {
+            ClientResponse response = client().resource(SENSORS_ENDPOINT)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(ClientResponse.class, MutableMap.of(SENSOR_NAME, 67890));
+            assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+            
+            assertEquals(entity.getAttribute(SENSOR), (Integer)67890);
+
+        } finally { addAmphibianSensor(entity); }
+    }
+    
     /** Check we can delete a value */
     @Test
     public void testDelete() throws Exception {

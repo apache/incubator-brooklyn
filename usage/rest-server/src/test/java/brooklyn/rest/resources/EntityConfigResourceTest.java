@@ -18,11 +18,33 @@
  */
 package brooklyn.rest.resources;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
+import brooklyn.util.collections.MutableMap;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -30,26 +52,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 @Test(singleThreaded = true)
 public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     
     private final static Logger log = LoggerFactory.getLogger(EntityConfigResourceTest.class);
-    private URI application;
+    private URI applicationUri;
+    private EntityInternal entity;
 
     @BeforeClass(alwaysRun = true)
     @Override
@@ -65,9 +74,11 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
         ClientResponse response = clientDeploy(simpleSpec);
         int status = response.getStatus();
         assertTrue(status >= 200 && status <= 299, "expected HTTP Response of 2xx but got " + status);
-        application = response.getLocation();
+        applicationUri = response.getLocation();
         log.debug("Built app: application");
-        waitForApplicationToBeRunning(application);
+        waitForApplicationToBeRunning(applicationUri);
+        
+        entity = (EntityInternal) Iterables.find(getManagementContext().getEntityManager().getEntities(), EntityPredicates.displayNameEqualTo("simple-ent"));
     }
 
     @Test
@@ -106,11 +117,57 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     }
 
     @Test
-    public void testGet() throws Exception {
+    public void testGetJson() throws Exception {
         String configValue = client().resource(
                 URI.create("/v1/applications/simple-app/entities/simple-ent/config/install.version"))
+                .accept(MediaType.APPLICATION_JSON_TYPE)
                 .get(String.class);
         assertEquals(configValue, "\"1.0.0\"");
+    }
+
+    @Test
+    public void testGetPlain() throws Exception {
+        String configValue = client().resource(
+                URI.create("/v1/applications/simple-app/entities/simple-ent/config/install.version"))
+                .accept(MediaType.TEXT_PLAIN_TYPE)
+                .get(String.class);
+        assertEquals(configValue, "1.0.0");
+    }
+
+    @Test
+    public void testSet() throws Exception {
+        try {
+            String uri = "/v1/applications/simple-app/entities/simple-ent/config/"+
+                RestMockSimpleEntity.SAMPLE_CONFIG.getName();
+            ClientResponse response = client().resource(uri)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(ClientResponse.class, "\"hello world\"");
+            assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+            assertEquals(entity.getConfig(RestMockSimpleEntity.SAMPLE_CONFIG), "hello world");
+            
+            String value = client().resource(uri).accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+            assertEquals(value, "\"hello world\"");
+
+        } finally { entity.setConfig(RestMockSimpleEntity.SAMPLE_CONFIG, RestMockSimpleEntity.SAMPLE_CONFIG.getDefaultValue()); }
+    }
+
+    @Test
+    public void testSetFromMap() throws Exception {
+        try {
+            String uri = "/v1/applications/simple-app/entities/simple-ent/config";
+            ClientResponse response = client().resource(uri)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(ClientResponse.class, MutableMap.of(
+                    RestMockSimpleEntity.SAMPLE_CONFIG.getName(), "hello world"));
+            assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+            assertEquals(entity.getConfig(RestMockSimpleEntity.SAMPLE_CONFIG), "hello world");
+            
+            String value = client().resource(uri+"/"+RestMockSimpleEntity.SAMPLE_CONFIG.getName()).accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+            assertEquals(value, "\"hello world\"");
+
+        } finally { entity.setConfig(RestMockSimpleEntity.SAMPLE_CONFIG, RestMockSimpleEntity.SAMPLE_CONFIG.getDefaultValue()); }
     }
 
 }
