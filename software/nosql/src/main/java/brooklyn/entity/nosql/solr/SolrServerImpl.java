@@ -18,14 +18,17 @@
  */
 package brooklyn.entity.nosql.solr;
 
-import java.util.concurrent.TimeUnit;
-
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-
+import brooklyn.location.access.BrooklynAccessUtils;
 import com.google.common.base.Functions;
+import com.google.common.net.HostAndPort;
+
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of {@link SolrServer}.
@@ -48,10 +51,15 @@ public class SolrServerImpl extends SoftwareProcessImpl implements SolrServer {
     protected void connectSensors() {
         super.connectSensors();
 
+        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getSolrPort());
+
+        String solrUri = String.format("http://%s:%d/solr", hp.getHostText(), hp.getPort());
+        setAttribute(Attributes.MAIN_URI, URI.create(solrUri));
+
         httpFeed = HttpFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
-                .baseUri(String.format("http://%s:%d/solr", getAttribute(HOSTNAME), getSolrPort()))
+                .baseUri(solrUri)
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                         .onFailureOrException(Functions.constant(false)))

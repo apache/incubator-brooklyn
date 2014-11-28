@@ -25,6 +25,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.java.UsesJava;
+import brooklyn.entity.java.UsesJavaMXBeans;
+import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -41,7 +44,7 @@ import com.google.common.reflect.TypeToken;
 @Catalog(name="Apache Solr Node", description="Solr is the popular, blazing fast open source enterprise search " +
         "platform from the Apache Lucene project.", iconUrl="classpath:///solr-logo.jpeg")
 @ImplementedBy(SolrServerImpl.class)
-public interface SolrServer extends SoftwareProcess {
+public interface SolrServer extends SoftwareProcess, UsesJava, UsesJmx, UsesJavaMXBeans {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "4.7.2");

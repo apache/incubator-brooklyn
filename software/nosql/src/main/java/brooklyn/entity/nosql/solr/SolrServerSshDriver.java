@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import brooklyn.entity.java.UsesJmx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +48,7 @@ import com.google.common.collect.Sets;
 /**
  * Start a {@link SolrServer} in a {@link Location} accessible over ssh.
  */
-public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implements SolrServerDriver {
+public class SolrServerSshDriver extends JavaSoftwareProcessSshDriver implements SolrServerDriver {
 
     private static final Logger log = LoggerFactory.getLogger(SolrServerSshDriver.class);
 
@@ -96,6 +98,8 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
     private Map<String, Integer> getPortMap() {
         return ImmutableMap.<String, Integer>builder()
                 .put("solrPort", getSolrPort())
+                .put("jmxPort", entity.getAttribute(UsesJmx.JMX_PORT))
+                .put("rmiPort", entity.getAttribute(UsesJmx.RMI_REGISTRY_PORT))
                 .build();
     }
 
@@ -145,5 +149,10 @@ public class SolrServerSshDriver extends AbstractSoftwareProcessSshDriver implem
     @Override
     public void stop() {
         newScript(MutableMap.of(USE_PID_FILE, getPidFile()), STOPPING).execute();
+    }
+
+    @Override
+    protected String getLogFileLocation() {
+        return Urls.mergePaths(getRunDir(), "solr", "logs", "solr.log");
     }
 }

@@ -19,8 +19,9 @@
 package brooklyn.entity.nosql.solr;
 
 import brooklyn.entity.basic.SoftwareProcessDriver;
+import brooklyn.entity.java.JavaSoftwareProcessDriver;
 
-public interface SolrServerDriver extends SoftwareProcessDriver {
+public interface SolrServerDriver extends JavaSoftwareProcessDriver {
 
     Integer getSolrPort();
 
