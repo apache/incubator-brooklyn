@@ -113,6 +113,7 @@ public class ShellFeed extends AbstractFeed {
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<ShellPollConfig<?>> polls = Lists.newArrayList();
+        private String uniqueTag;
         private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
@@ -129,6 +130,10 @@ public class ShellFeed extends AbstractFeed {
         }
         public Builder poll(ShellPollConfig<?> config) {
             polls.add(config);
+            return this;
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
             return this;
         }
         public ShellFeed build() {
@@ -204,6 +209,7 @@ public class ShellFeed extends AbstractFeed {
             polls.put(new ShellPollIdentifier(command, env, dir, input, context, timeout), configCopy);
         }
         setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls.values());
     }
 
     @Override

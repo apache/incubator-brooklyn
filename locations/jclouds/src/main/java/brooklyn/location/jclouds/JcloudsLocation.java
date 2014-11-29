@@ -664,6 +664,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 sshMachineLocation.template = template;
             }
 
+            if (usePortForwarding && sshHostAndPortOverride.isPresent()) {
+                // Now that we have the sshMachineLocation, we can associate the port-forwarding address with it.
+                PortForwardManager portForwardManager = setup.get(PORT_FORWARDING_MANAGER);
+                if (portForwardManager != null) {
+                    portForwardManager.associate(node.getId(), sshHostAndPortOverride.get(), sshMachineLocation, node.getLoginPort());
+                } else {
+                    LOG.warn("No port-forward manager for {} so could not associate {} -> {} for {}",
+                            new Object[] {this, node.getLoginPort(), sshHostAndPortOverride, sshMachineLocation});
+                }
+            }
+
             if ("docker".equals(this.getProvider())) {
                 Map<Integer, Integer> portMappings = JcloudsUtil.dockerPortMappingsFor(this, node.getId());
                 PortForwardManager portForwardManager = setup.get(PORT_FORWARDING_MANAGER);
@@ -671,9 +682,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     for(Integer containerPort : portMappings.keySet()) {
                         Integer hostPort = portMappings.get(containerPort);
                         String dockerHost = sshMachineLocation.getSshHostAndPort().getHostText();
-                        portForwardManager.recordPublicIpHostname(node.getId(), dockerHost);
-                        portForwardManager.acquirePublicPortExplicit(node.getId(), hostPort);
-                        portForwardManager.associate(node.getId(), hostPort, sshMachineLocation, containerPort);
+                        portForwardManager.associate(node.getId(), HostAndPort.fromParts(dockerHost, hostPort), sshMachineLocation, containerPort);
                     }
                 } else {
                     LOG.warn("No port-forward manager for {} so could not associate docker port-mappings for {}",
@@ -694,7 +703,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
                             : ImmutableMap.<String, String>of();
                     String scriptContent =  ResourceUtils.create(this).getResourceAsString(setupScript);
-                    String script = TemplateProcessor.processTemplateContents(scriptContent, substitutions);
+                    String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
                     sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
                 

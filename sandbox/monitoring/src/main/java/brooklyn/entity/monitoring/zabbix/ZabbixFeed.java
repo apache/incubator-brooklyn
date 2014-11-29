@@ -137,6 +137,7 @@ public class ZabbixFeed extends AbstractFeed {
         private Function<? super EntityLocal, String> uniqueHostnameGenerator = Functions.compose(
                 EntityFunctions.id(), 
                 EntityFunctions.locationMatching(Predicates.instanceOf(MachineLocation.class)));
+        private String uniqueTag;
 
         @SuppressWarnings("unchecked")
         protected B self() {
@@ -228,6 +229,11 @@ public class ZabbixFeed extends AbstractFeed {
             return self();
         }
         
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
+            return this;
+        }
+        
         @SuppressWarnings("unchecked")
         public T build() {
             // If server not set and other config not available, try to obtain from entity config
@@ -305,6 +311,7 @@ public class ZabbixFeed extends AbstractFeed {
             polls.add(configCopy);
         }
         setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls);
     }
 
     @Override

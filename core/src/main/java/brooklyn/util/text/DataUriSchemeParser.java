@@ -26,12 +26,11 @@ import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.bouncycastle.util.encoders.Base64;
-
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.BaseEncoding;
 //import com.sun.jersey.core.util.Base64;
 
 /** implementation (currently hokey) of RFC-2397 data: URI scheme.
@@ -47,6 +46,7 @@ public class DataUriSchemeParser {
     private boolean isParsed = false;
     private boolean allowMissingComma = false;
     private boolean allowSlashesAfterColon = false;
+    private boolean allowOtherLaxities = false;
     
     private String mimeType;
     private byte[] data;
@@ -100,7 +100,7 @@ public class DataUriSchemeParser {
     // ---- config ------------------
     
     public synchronized DataUriSchemeParser lax() {
-        return allowMissingComma(true).allowSlashesAfterColon(true);
+        return allowMissingComma(true).allowSlashesAfterColon(true).allowOtherLaxities(true);
     }
         
     public synchronized DataUriSchemeParser allowMissingComma(boolean allowMissingComma) {
@@ -112,6 +112,12 @@ public class DataUriSchemeParser {
     public synchronized DataUriSchemeParser allowSlashesAfterColon(boolean allowSlashesAfterColon) {
         assertNotParsed();
         this.allowSlashesAfterColon = allowSlashesAfterColon;
+        return this;
+    }
+    
+    private synchronized DataUriSchemeParser allowOtherLaxities(boolean allowOtherLaxities) {
+        assertNotParsed();
+        this.allowOtherLaxities = allowOtherLaxities;
         return this;
     }
     
@@ -223,13 +229,21 @@ public class DataUriSchemeParser {
 
     private void parseData() throws UnsupportedEncodingException, MalformedURLException {
         if (parameters.containsKey("base64")) {
-            String base64value = parameters.get("base64");
-            if (base64value!=null)
-                throw new MalformedURLException("base64 parameter must not take a value ("+base64value+") in data: URL");
-            data = Base64.decode(remainder());
+            checkNoParamValue("base64");
+            data = BaseEncoding.base64().decode(remainder());
+        } else if (parameters.containsKey("base64url")) {
+            checkNoParamValue("base64url");
+            data = BaseEncoding.base64Url().decode(remainder());
         } else {
             data = URLDecoder.decode(remainder(), getCharset()).getBytes(Charset.forName(getCharset()));
         }
+    }
+
+    private void checkNoParamValue(String param) throws MalformedURLException {
+        if (allowOtherLaxities) return; 
+        String value = parameters.get(param);
+        if (value!=null)
+            throw new MalformedURLException(param+" parameter must not take a value ("+value+") in data: URL");
     }
 
     private String remainder() {

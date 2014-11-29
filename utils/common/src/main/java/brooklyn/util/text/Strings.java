@@ -24,12 +24,14 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Time;
 
@@ -848,4 +850,24 @@ public class Strings {
             return null;
         }
     }
+    
+    /** Returns canonicalized string from the given object, made "unique" by:
+     * <li> putting sets into the toString order
+     * <li> appending a hash code if it's longer than the max (and the max is bigger than 0) */
+    public static String toUniqueString(Object x, int optionalMax) {
+        if (x instanceof Iterable && !(x instanceof List)) {
+            // unsorted collections should have a canonical order imposed
+            MutableList<String> result = MutableList.of();
+            for (Object xi: (Iterable<?>)x) {
+                result.add(toUniqueString(xi, optionalMax));
+            }
+            Collections.sort(result);
+            x = result.toString();
+        }
+        if (x==null) return "{null}";
+        String xs = x.toString();
+        if (xs.length()<=optionalMax || optionalMax<=0) return xs;
+        return maxlenWithEllipsis(xs, optionalMax-8)+"/"+Integer.toHexString(xs.hashCode());
+    }
+
 }

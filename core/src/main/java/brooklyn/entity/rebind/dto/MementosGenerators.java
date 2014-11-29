@@ -44,6 +44,7 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.NonDeploymentManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
@@ -53,6 +54,7 @@ import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.policy.Enricher;
+import brooklyn.policy.EntityAdjunct;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
@@ -178,7 +180,7 @@ public class MementosGenerators {
         for (Location location : entity.getLocations()) {
             builder.locations.add(location.getId()); 
         }
-        
+
         for (Entity child : entity.getChildren()) {
             builder.children.add(child.getId()); 
         }
@@ -385,7 +387,9 @@ public class MementosGenerators {
         builder.catalogItemId = instance.getCatalogItemId();
         builder.type = instance.getClass().getName();
         builder.typeClass = instance.getClass();
-        
+        if (instance instanceof EntityAdjunct) {
+            builder.uniqueTag = ((EntityAdjunct)instance).getUniqueTag();
+        }
         for (Object tag : instance.tags().getTags()) {
             builder.tags.add(tag); 
         }

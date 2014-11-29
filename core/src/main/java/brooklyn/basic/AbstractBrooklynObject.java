@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.internal.ApiObjectsFactory;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.management.ManagementContext;
@@ -131,10 +132,18 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     }
 
     /**
-     * Called by framework on rebind (in new-style instances),
-     * after configuring but before the instance is managed (or is attached to an entity, depending on its type),
-     * and before a reference to this policy is shared.
+     * Called by framework on rebind (in new-style instances):
+     * <ul>
+     * <li> after configuring, but
+     * <li> before the instance is managed, and
+     * <li> before adjuncts are attached to entities, and
+     * <li> before a reference to an object is shared.
+     * </ul>
      * Note that {@link #init()} will not be called on rebind.
+     * <p>
+     * If you need to intercept behaviour <i>after</i> adjuncts are attached,
+     * consider {@link AbstractEntity#onManagementStarting()} 
+     * (but probably worth raising a discussion on the mailing list!)
      */
     public void rebind() {
         // no-op

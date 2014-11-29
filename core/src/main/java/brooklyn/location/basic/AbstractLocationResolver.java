@@ -131,7 +131,7 @@ public abstract class AbstractLocationResolver implements LocationResolver {
         
         public SpecParser(String prefix) {
             this.prefix = prefix;
-            pattern = Pattern.compile("("+prefix.toLowerCase()+"|"+prefix.toUpperCase()+")" + "(:)?" + "(\\((.*)\\))?$");
+            pattern = Pattern.compile("("+prefix+"|"+prefix.toLowerCase()+"|"+prefix.toUpperCase()+")" + "(:)?" + "(\\((.*)\\))?$");
         }
         
         public SpecParser(String prefix, Pattern pattern) {

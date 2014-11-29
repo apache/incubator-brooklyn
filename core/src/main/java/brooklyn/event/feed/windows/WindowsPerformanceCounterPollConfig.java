@@ -46,9 +46,7 @@ public class WindowsPerformanceCounterPollConfig<T> extends PollConfig<Object, T
     public WindowsPerformanceCounterPollConfig<T> performanceCounterName(String val) {
         this.performanceCounterName = val; return this;
     }
+
+    @Override protected String toStringPollSource() { return performanceCounterName; }
     
-    @Override
-    public String toString() {
-        return "windowsPerformanceCounter["+performanceCounterName+"]";
-    }
 }
