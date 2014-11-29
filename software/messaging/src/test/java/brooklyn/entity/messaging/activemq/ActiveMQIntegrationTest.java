@@ -80,7 +80,7 @@ public class ActiveMQIntegrationTest {
         activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class));
 
         activeMQ.start(ImmutableList.of(testLocation));
-        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), activeMQ, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ, Startable.SERVICE_UP, true);
         log.info("JMX URL is "+activeMQ.getAttribute(UsesJmx.JMX_URL));
         activeMQ.stop();
         assertFalse(activeMQ.getAttribute(Startable.SERVICE_UP));
@@ -96,7 +96,7 @@ public class ActiveMQIntegrationTest {
             .configure("jmxPort", "11099+"));
        
         activeMQ.start(ImmutableList.of(testLocation));
-        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), activeMQ, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ, Startable.SERVICE_UP, true);
         log.info("JMX URL is "+activeMQ.getAttribute(UsesJmx.JMX_URL));
         activeMQ.stop();
         assertFalse(activeMQ.getAttribute(Startable.SERVICE_UP));
@@ -109,7 +109,7 @@ public class ActiveMQIntegrationTest {
             .configure("brokerName", "bridge"));
 
         activeMQ.start(ImmutableList.of(testLocation));
-        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), activeMQ, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ, Startable.SERVICE_UP, true);
         log.info("JMX URL is "+activeMQ.getAttribute(UsesJmx.JMX_URL));
         activeMQ.stop();
         assertFalse(activeMQ.getAttribute(Startable.SERVICE_UP));
@@ -122,11 +122,11 @@ public class ActiveMQIntegrationTest {
         ActiveMQBroker activeMQ2 = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class));
 
         activeMQ1.start(ImmutableList.of(testLocation));
-        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), activeMQ1, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ1, Startable.SERVICE_UP, true);
         log.info("JMX URL is "+activeMQ1.getAttribute(UsesJmx.JMX_URL));
 
         activeMQ2.start(ImmutableList.of(testLocation));
-        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), activeMQ2, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ2, Startable.SERVICE_UP, true);
         log.info("JMX URL is "+activeMQ2.getAttribute(UsesJmx.JMX_URL));
     }
 
@@ -177,7 +177,7 @@ public class ActiveMQIntegrationTest {
             .configure(UsesJmx.JMX_AGENT_MODE, mode));
         
         activeMQ.start(ImmutableList.of(testLocation));
-        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 60*1000), activeMQ, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ, Startable.SERVICE_UP, true);
 
         String jmxUrl = activeMQ.getAttribute(UsesJmx.JMX_URL);
         log.info("JMX URL ("+mode+") is "+jmxUrl);

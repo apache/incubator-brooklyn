@@ -57,8 +57,8 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
         "http://www.mirrorservice.org/sites/ftp.apache.org/activemq");
 
     @SetFromFlag("brokerName")
-    public static final AttributeSensorAndConfigKey<String,String> BROKER_NAME = new BasicAttributeSensorAndConfigKey<String>(
-            String.class, "activemq.brokerName", "ActiveMQ Broker Name", "localhost");
+    public static final AttributeSensorAndConfigKey<String,String> BROKER_NAME = 
+        ConfigKeys.newStringSensorAndConfigKey("activemq.brokerName", "ActiveMQ Broker Name", "localhost");
 
     @SetFromFlag("openWirePort")
     public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");
