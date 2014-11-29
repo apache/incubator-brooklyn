@@ -148,7 +148,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected DownloadResolverManager downloadsManager;
 
     protected EntitlementManager entitlementManager;
-    
+
     private final BrooklynStorage storage;
 
     private volatile boolean running = true;

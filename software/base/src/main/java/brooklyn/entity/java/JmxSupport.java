@@ -201,9 +201,11 @@ public class JmxSupport implements UsesJmx {
     }
 
     public List<String> getJmxJavaConfigOptions() {
-        if (getJmxAgentMode()==JmxAgentModes.NONE)
+        if (EnumSet.<JmxAgentModes>of(JmxAgentModes.NONE, JmxAgentModes.JMX_RMI).contains(getJmxAgentMode())) {
             return MutableList.of();
-        return MutableList.of(String.format("-javaagent:%s", getJmxAgentJarDestinationFilePath()));
+        } else {
+            return MutableList.of(String.format("-javaagent:%s", getJmxAgentJarDestinationFilePath()));
+        }
     }
 
     public String getJmxAgentJarDestinationFilePath() {
@@ -287,7 +289,6 @@ public class JmxSupport implements UsesJmx {
             result.put(JmxmpAgent.JMXMP_PORT_PROPERTY, jmxRemotePort);
             // with JMXMP don't try to tell it the hostname -- it isn't needed for JMXMP, and if specified
             // it will break if the hostname we see is not known at the server, e.g. a forwarding public IP
-            // (should not be present, but remove just to be sure)
             result.remove("java.rmi.server.hostname");
             break;
         case JMX_RMI_CUSTOM_AGENT:
