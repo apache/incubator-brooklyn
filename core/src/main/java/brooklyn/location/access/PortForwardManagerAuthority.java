@@ -19,9 +19,28 @@
 package brooklyn.location.access;
 
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
+
 /**
  * @deprecated since 0.7.0; use {@link PortForwardManagerImpl}
  */
 @Deprecated
 public class PortForwardManagerAuthority extends PortForwardManagerImpl {
+    private Entity owningEntity;
+
+    public PortForwardManagerAuthority() {
+    }
+
+    public PortForwardManagerAuthority(Entity owningEntity) {
+        this.owningEntity = owningEntity;
+    }
+
+    protected void onChanged() {
+        if (owningEntity != null) {
+            ((EntityInternal) owningEntity).requestPersist();
+        } else {
+            super.onChanged();
+        }
+    }
 }
