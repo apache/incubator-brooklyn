@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.webapp;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -47,12 +48,17 @@ public class ElasticJavaWebAppServiceIntegrationTest {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
+    }
+
     @SuppressWarnings("deprecation")
     @Test(groups = "Integration")
     // TODO a new approach to what ElasticJavaWebAppService.Factory does, giving a different entity depending on location!
     public void testLegacyFactory() {
         ElasticJavaWebAppService svc =
-            new ElasticJavaWebAppService.Factory().newEntity(MutableMap.of("war", "classpath://hello-world.war"), app);
+            new ElasticJavaWebAppService.Factory().newEntity(MutableMap.of("war", getTestWar()), app);
         Entities.manage(svc);
         app.start(ImmutableList.of(loc));
         

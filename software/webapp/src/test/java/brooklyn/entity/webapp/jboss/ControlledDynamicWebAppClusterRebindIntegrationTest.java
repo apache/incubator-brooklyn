@@ -21,16 +21,15 @@ package brooklyn.entity.webapp.jboss;
 import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -61,7 +60,6 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     
     static { TimeExtras.init(); }
 
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication origApp;
     private TestApplication newApp;
@@ -74,8 +72,6 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        String warPath = "hello-world.war";
-        warUrl = checkNotNull(getClass().getClassLoader().getResource(warPath), "warUrl");
         executor = Executors.newCachedThreadPool();
 
         mementoDir = Files.createTempDir();
@@ -95,6 +91,11 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         if (newApp != null) Entities.destroyAll(newApp.getManagementContext());
         if (origApp != null) Entities.destroyAll(origApp.getManagementContext());
         if (mementoDir != null) RebindTestUtils.deleteMementoDir(mementoDir);
+    }
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
 
     private TestApplication rebind() throws Exception {
@@ -120,7 +121,7 @@ public class ControlledDynamicWebAppClusterRebindIntegrationTest {
         NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class).configure("domain", "localhost"));
 
         origApp.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString()))
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar()))
                 .configure("initialSize", 1)
                 .configure("controller", origNginx));
         

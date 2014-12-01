@@ -25,6 +25,7 @@ import static org.testng.Assert.assertNotSame;
 import java.net.URL;
 import java.util.List;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -59,7 +60,7 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
      * }
      */
 
-    private static final String JAR_PATH = "brooklyn/entity/rebind/brooklyn-AppInCatalog.jar";
+    private static final String JAR_PATH = "/brooklyn/entity/rebind/brooklyn-AppInCatalog.jar";
     private static final String APP_CLASSNAME = "brooklyn.entity.rebind.AppInCatalog";
 
     private URL url;
@@ -78,7 +79,8 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
-        url = getClass().getClassLoader().getResource(JAR_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), JAR_PATH);
+        url = getClass().getResource(JAR_PATH);
         assertNotNull(url, "Could not find on classpath: "+JAR_PATH);
         super.setUp();
     }

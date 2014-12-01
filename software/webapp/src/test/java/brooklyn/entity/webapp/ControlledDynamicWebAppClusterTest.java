@@ -23,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 import java.net.URL;
 import java.util.List;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -51,20 +52,22 @@ import com.google.common.collect.Lists;
 public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSupport {
     private static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterTest.class);
 
-    private URL warUrl;
     private LocalhostMachineProvisioningLocation loc;
     private List<LocalhostMachineProvisioningLocation> locs;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        String warPath = "hello-world.war";
-        warUrl = getClass().getClassLoader().getResource(warPath);
-        
+
         loc = app.newLocalhostProvisioningLocation();
         locs = ImmutableList.of(loc);
     }
-    
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
+    }
+
     @Test
     public void testUsesCustomController() {
         AbstractController controller = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class).displayName("mycustom"));
@@ -72,7 +75,7 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER, controller)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
         app.start(locs);
 
         EntityTestUtils.assertAttributeEqualsEventually(controller, AbstractController.SERVICE_UP, true);
@@ -89,7 +92,7 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
         app.start(locs);
         LoadBalancer controller = cluster.getController();
         

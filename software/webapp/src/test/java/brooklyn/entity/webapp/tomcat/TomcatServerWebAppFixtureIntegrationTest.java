@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -93,6 +94,7 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
     // as parent, but with spring travel
     @DataProvider(name = "entitiesWithWarAndURL")
     public Object[][] entitiesWithWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
         List<Object[]> result = Lists.newArrayList();
         
         for (Object[] entity : basicEntities()) {

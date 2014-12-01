@@ -44,9 +44,6 @@ public class NginxLightIntegrationTest extends BrooklynAppUnitTestSupport {
     private NginxController nginx;
     private DynamicCluster cluster;
 
-    private URL war;
-    private static final String WAR_URL = "classpath://hello-world.war";
-    
     // FIXME Fails because getting addEntity callback for group members while nginx is still starting,
     // so important nginx fields are still null. Therefore get NPE for cluster members, and thus targets
     // is of size zero.

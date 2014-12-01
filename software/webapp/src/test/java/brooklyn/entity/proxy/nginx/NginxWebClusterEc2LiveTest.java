@@ -22,6 +22,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -74,11 +75,12 @@ public class NginxWebClusterEc2LiveTest {
     public void shutdown() {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
-    
+
     @Test(groups = "Live")
     public void testProvisionAwsCluster() {
-        String warName = "hello-world.war";
-        URL war = getClass().getClassLoader().getResource(warName);
+        String warName = "/hello-world.war";
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), warName);
+        URL war = getClass().getResource(warName);
         assertNotNull(war, "Unable to locate resource "+warName);
         
         cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)

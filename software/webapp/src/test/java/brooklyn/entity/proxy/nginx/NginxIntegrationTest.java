@@ -27,6 +27,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -56,8 +57,6 @@ import com.google.common.collect.Iterables;
 public class NginxIntegrationTest extends BrooklynAppLiveTestSupport {
     private static final Logger log = LoggerFactory.getLogger(NginxIntegrationTest.class);
 
-    static final String HELLO_WAR_URL = "classpath://hello-world.war";
-
     private NginxController nginx;
     private DynamicCluster serverPool;
     private Location localLoc;
@@ -67,6 +66,11 @@ public class NginxIntegrationTest extends BrooklynAppLiveTestSupport {
     public void setUp() throws Exception {
         super.setUp();
         localLoc = mgmt.getLocationRegistry().resolve("localhost");
+    }
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
 
     /**
@@ -120,7 +124,7 @@ public class NginxIntegrationTest extends BrooklynAppLiveTestSupport {
         serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", serverPool)
@@ -162,7 +166,7 @@ public class NginxIntegrationTest extends BrooklynAppLiveTestSupport {
         serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
 
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", serverPool)
@@ -205,7 +209,7 @@ public class NginxIntegrationTest extends BrooklynAppLiveTestSupport {
         serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", serverPool)
@@ -281,7 +285,7 @@ public class NginxIntegrationTest extends BrooklynAppLiveTestSupport {
         serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", serverPool));
@@ -341,7 +345,7 @@ public class NginxIntegrationTest extends BrooklynAppLiveTestSupport {
         serverPool = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
                 .configure("initialSize", 1)
-                .configure(JavaWebAppService.ROOT_WAR, HELLO_WAR_URL));
+                .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", serverPool));
