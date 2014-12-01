@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class JBoss6ServerAwsEc2LiveTest extends AbstractEc2LiveTest {
     
-    private URL warUrl = checkNotNull(getClass().getClassLoader().getResource("hello-world.war"));
+    private URL warUrl = checkNotNull(getClass().getClassLoader().getResource("hello-world-no-mapping.war"));
     
     @Override
     protected void doTest(Location loc) throws Exception {
