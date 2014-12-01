@@ -46,6 +46,11 @@ public class ActiveMQSshDriver extends JavaSoftwareProcessSshDriver implements A
     }
 
     @Override
+    public String getBrokerName() { 
+        return entity.getAttribute(ActiveMQBroker.BROKER_NAME);
+    }
+
+    @Override
     public Integer getOpenWirePort() { 
         return entity.getAttribute(ActiveMQBroker.OPEN_WIRE_PORT);
     }

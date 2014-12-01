@@ -93,7 +93,7 @@ public class ActiveMQIntegrationTest {
     @Test(groups = "Integration")
     public void canStartupAndShutdownWithCustomJmx() throws Exception {
         activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class)
-                .configure("jmxPort", "11099+"));
+            .configure("jmxPort", "11099+"));
        
         activeMQ.start(ImmutableList.of(testLocation));
         EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ, Startable.SERVICE_UP, true);
@@ -102,6 +102,20 @@ public class ActiveMQIntegrationTest {
         assertFalse(activeMQ.getAttribute(Startable.SERVICE_UP));
     }
 
+    @Test(groups = "Integration")
+    public void canStartupAndShutdownWithCustomBrokerName() throws Exception {
+        activeMQ = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class)
+            .configure("jmxPort", "11099+")
+            .configure("brokerName", "bridge"));
+
+        activeMQ.start(ImmutableList.of(testLocation));
+        EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", 10*60*1000), activeMQ, Startable.SERVICE_UP, true);
+        log.info("JMX URL is "+activeMQ.getAttribute(UsesJmx.JMX_URL));
+        activeMQ.stop();
+        assertFalse(activeMQ.getAttribute(Startable.SERVICE_UP));
+    }
+
+    
     @Test(groups = "Integration")
     public void canStartTwo() throws Exception {
         ActiveMQBroker activeMQ1 = app.createAndManageChild(EntitySpec.create(ActiveMQBroker.class));

@@ -56,6 +56,10 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     public static final BasicConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "activemq.install.mirror.url", "URL of mirror",
         "http://www.mirrorservice.org/sites/ftp.apache.org/activemq");
 
+    @SetFromFlag("brokerName")
+    public static final AttributeSensorAndConfigKey<String,String> BROKER_NAME = 
+        ConfigKeys.newStringSensorAndConfigKey("activemq.brokerName", "ActiveMQ Broker Name", "localhost");
+
     @SetFromFlag("openWirePort")
     public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");
 
@@ -72,4 +76,5 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     public static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "activemq.templateConfigurationUrl", "Template file (in freemarker format) for the conf/activemq.xml file", 
             "classpath://brooklyn/entity/messaging/activemq/activemq.xml");
+
 }

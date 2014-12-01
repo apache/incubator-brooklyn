@@ -19,7 +19,7 @@
     <!--
         The <broker> element is used to configure the ActiveMQ broker.
     -->
-    <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="[#noparse]${activemq.data}[/#noparse]">
+    <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core" brokerName="${entity.brokerName}" dataDirectory="[#noparse]${activemq.data}[/#noparse]">
 
         <!--
             For better performances use VM cursor and small memory limit.

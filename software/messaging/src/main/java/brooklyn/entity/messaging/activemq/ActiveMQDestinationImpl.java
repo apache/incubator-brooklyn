@@ -21,6 +21,9 @@ package brooklyn.entity.messaging.activemq;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import com.google.common.base.Preconditions;
+
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.messaging.jms.JMSDestinationImpl;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -38,10 +41,12 @@ public abstract class ActiveMQDestinationImpl extends JMSDestinationImpl impleme
     @Override
     public void onManagementStarting() {
         super.onManagementStarting();
-        
-        //assume just one BrokerName at this endpoint
+
+        String brokerName = getBrokerName();
+        Preconditions.checkArgument(brokerName != null && !brokerName.isEmpty(), "ActiveMQ brokerName attribute must be specified");
+
         try {
-            brokerMBeanName = new ObjectName("org.apache.activemq:brokerName=localhost,type=Broker");
+            brokerMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName);
             jmxHelper = new JmxHelper((EntityLocal) getParent());
         } catch (MalformedObjectNameException e) {
             throw Exceptions.propagate(e);
@@ -51,5 +56,10 @@ public abstract class ActiveMQDestinationImpl extends JMSDestinationImpl impleme
     @Override
     protected void disconnectSensors() {
         if (jmxFeed != null) jmxFeed.stop();
+    }
+    
+    protected String getBrokerName() {
+        Preconditions.checkNotNull(getParent(), "JMS Destination must have a broker parent");
+        return getParent().getAttribute(ActiveMQBroker.BROKER_NAME);
     }
 }
