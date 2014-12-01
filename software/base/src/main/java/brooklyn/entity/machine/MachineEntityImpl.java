@@ -24,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EmptySoftwareProcessDriver;
 import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -158,6 +159,7 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
     public String execCommandTimeout(String command, Duration timeout) {
         try {
             ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh(command)
+                    .environmentVariables(((AbstractSoftwareProcessSshDriver) getDriver()).getShellEnvironment())
                     .machine(getMachine())
                     .summary(command)
                     .newTask();
