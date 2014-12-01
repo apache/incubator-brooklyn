@@ -188,8 +188,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     @Override
     public void terminate() {
-        running = false;
         highAvailabilityManager.stop();
+        running = false;
         rebindManager.stop();
         storage.terminate();
         // Don't unmanage everything; different entities get given their events at different times 
