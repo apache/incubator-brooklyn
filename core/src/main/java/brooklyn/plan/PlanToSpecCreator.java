@@ -16,26 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package brooklyn.plan;
 
-import io.brooklyn.camp.BasicCampPlatform;
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
+import java.io.Reader;
+
+import brooklyn.basic.AbstractBrooklynObjectSpec;
+import brooklyn.catalog.internal.CatalogItemDtoAbstract;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
 
-public class CampPlatformWithJustBrooklynMgmt extends BasicCampPlatform implements HasBrooklynManagementContext {
-
-    private ManagementContext mgmt;
-
-    public CampPlatformWithJustBrooklynMgmt(ManagementContext mgmt) {
-        this.mgmt = mgmt;
-        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynServerConfig.CAMP_PLATFORM, this);
-    }
-    
-    @Override
-    public ManagementContext getBrooklynManagementContext() {
-        return mgmt;
-    }
-
+public interface PlanToSpecCreator {
+    String getName();
+    boolean accepts(String mime);
+    AbstractBrooklynObjectSpec<?,?> createSpec(ManagementContext mgmt, Reader plan, BrooklynClassLoadingContext loader);
+    CatalogItemDtoAbstract<?, ?> createCatalogItem(ManagementContext mgmt, Reader plan);
 }

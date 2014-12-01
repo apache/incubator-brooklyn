@@ -20,6 +20,7 @@ package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate.Builder;
@@ -38,12 +39,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
@@ -60,7 +59,6 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
-import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -79,12 +77,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return platform.assemblies().get(app.getApplicationId());
     }
 
-    private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
-        return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
-    }
-
     public Application create(AssemblyTemplate template, CampPlatform platform) {
-        ManagementContext mgmt = getBrooklynManagementContext(platform);
+        ManagementContext mgmt = getManagementContext(platform);
         BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
         EntitySpec<? extends Application> spec = createSpec(template, platform, loader, true);
         Application instance = mgmt.getEntityManager().createEntity(spec);
@@ -202,7 +196,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            EntitySpec<?> spec = resolveSpec(entityResolver, encounteredCatalogTypes);
+            EntitySpec<?> spec = resolveSpec(platform, entityResolver, encounteredCatalogTypes);
             
             result.add(spec);
         }
@@ -210,10 +204,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     protected EntitySpec<?> resolveSpec(
+            CampPlatform platform,
             BrooklynComponentTemplateResolver entityResolver, 
             Set<String> encounteredCatalogTypes) {
-        ManagementContext mgmt = entityResolver.loader.getManagementContext();
-
         String brooklynType = entityResolver.getBrooklynType();
         CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
 
@@ -226,7 +219,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         String protocol = Urls.getProtocol(brooklynType);
         if (protocol != null) {
             if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(protocol)) {
-                spec = tryResolveYamlURLReferenceSpec(brooklynType, entityResolver.loader, encounteredCatalogTypes);
+                spec = tryResolveYamlURLReferenceSpec(platform, brooklynType, entityResolver.loader, encounteredCatalogTypes);
                 if (spec != null) {
                     entityResolver.populateSpec(spec);
                 }
@@ -247,7 +240,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                 spec = entityResolver.resolveSpec();
             } else {
                 //TODO migrate to catalog.createSpec
-                spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+                spec = resolveCatalogYamlReferenceSpec(platform, item, encounteredCatalogTypes);
                 spec.catalogItemId(item.getId());
                 entityResolver.populateSpec(spec);
             }
@@ -257,9 +250,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     private EntitySpec<?> tryResolveYamlURLReferenceSpec(
+            CampPlatform platform,
             String brooklynType, BrooklynClassLoadingContext itemLoader, 
             Set<String> encounteredCatalogTypes) {
-        ManagementContext mgmt = itemLoader.getManagementContext();
         Reader yaml;
         try {
             ResourceUtils ru = ResourceUtils.create(this);
@@ -269,7 +262,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             return null;
         }
         try {
-            return resolveYamlSpec(mgmt, encounteredCatalogTypes, yaml, itemLoader);
+            return resolveYamlSpec(platform, encounteredCatalogTypes, yaml, itemLoader);
         } finally {
             try {
                 yaml.close();
@@ -280,23 +273,21 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     private EntitySpec<?> resolveCatalogYamlReferenceSpec(
-            ManagementContext mgmt,
+            CampPlatform platform,
             CatalogItem<Entity, EntitySpec<?>> item,
             Set<String> encounteredCatalogTypes) {
-        
+        ManagementContext mgmt = getManagementContext(platform);
         String yaml = item.getPlanYaml();
         Reader input = new StringReader(yaml);
         BrooklynClassLoadingContext itemLoader = CatalogUtils.newClassLoadingContext(mgmt, item);
         
-        return resolveYamlSpec(mgmt, encounteredCatalogTypes, input, itemLoader);
+        return resolveYamlSpec(platform, encounteredCatalogTypes, input, itemLoader);
     }
 
-    private EntitySpec<?> resolveYamlSpec(ManagementContext mgmt,
+    private EntitySpec<?> resolveYamlSpec(CampPlatform platform,
             Set<String> encounteredCatalogTypes, Reader input,
             BrooklynClassLoadingContext itemLoader) {
-//        EntityManagementUtils.createSpec(mgmt, input, itemLoader);
-        CampPlatform platform = BrooklynServerConfig.getCampPlatform(mgmt).get();
-        
+
         AssemblyTemplate at;
         BrooklynLoaderTracker.setLoader(itemLoader);
         try {
@@ -323,4 +314,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
     }
 
+    private ManagementContext getManagementContext(CampPlatform platform) {
+        return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
+    }
 }

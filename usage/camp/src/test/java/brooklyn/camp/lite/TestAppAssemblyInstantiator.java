@@ -19,6 +19,7 @@
 package brooklyn.camp.lite;
 
 import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -28,7 +29,6 @@ import io.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
 
 import java.util.Map;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;

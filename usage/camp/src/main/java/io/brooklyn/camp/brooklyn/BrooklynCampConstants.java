@@ -26,6 +26,7 @@ import io.brooklyn.camp.CampPlatform;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 public class BrooklynCampConstants {
@@ -41,7 +42,8 @@ public class BrooklynCampConstants {
     public static final HasConfigKey<String> TEMPLATE_ID = new BasicAttributeSensorAndConfigKey<String>(String.class, "camp.template.id", 
         "UID of the component in the CAMP template from which this entity was created");
 
-    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = BrooklynServerConfig.CAMP_PLATFORM;
+    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
+            "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
 
     public static final Set<String> YAML_URL_PROTOCOL_WHITELIST = ImmutableSet.of("classpath", "http");
 }

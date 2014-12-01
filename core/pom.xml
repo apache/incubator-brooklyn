@@ -53,18 +53,6 @@
             <artifactId>brooklyn-utils-groovy</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn.camp</groupId>
-            <artifactId>camp-base</artifactId>
-            <version>${brooklyn.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn.camp</groupId>
-            <artifactId>camp-base</artifactId>
-            <version>${brooklyn.version}</version>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>net.schmizz</groupId>
@@ -167,6 +155,10 @@
         <dependency>
             <groupId>com.maxmind.geoip2</groupId>
             <artifactId>geoip2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
 
         <dependency>

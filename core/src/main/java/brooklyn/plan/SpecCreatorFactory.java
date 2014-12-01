@@ -16,16 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.brooklyn.api;
+package brooklyn.plan;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import java.util.Collection;
+import java.util.ServiceLoader;
 
-public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
+import com.google.api.client.util.Lists;
 
-    EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrapIfAppropriate);
-    
+public class SpecCreatorFactory {
+    public static final String YAML_CAMP_PLAN_TYPE = "brooklyn.camp/yaml";
+
+    public static PlanToSpecCreator forMime(String mime) {
+        ServiceLoader<PlanToSpecCreator> loader = ServiceLoader.load(PlanToSpecCreator.class);
+        for (PlanToSpecCreator producer : loader) {
+            if (producer.accepts(mime)) {
+                return producer;
+            }
+        }
+        return null;
+    }
+
+    public static Collection<PlanToSpecCreator> all() {
+        return Lists.newArrayList(ServiceLoader.load(PlanToSpecCreator.class));
+    }
 }

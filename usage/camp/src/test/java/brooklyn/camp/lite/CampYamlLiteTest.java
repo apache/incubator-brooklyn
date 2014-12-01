@@ -20,8 +20,6 @@ package brooklyn.camp.lite;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.pdp.PdpYamlTest;
 import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
@@ -32,9 +30,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -74,8 +69,6 @@ import com.google.common.collect.Iterables;
 public class CampYamlLiteTest {
     private static final String TEST_VERSION = "0.1.2";
 
-    private static final Logger log = LoggerFactory.getLogger(CampYamlLiteTest.class);
-    
     protected LocalManagementContext mgmt;
     protected CampPlatformWithJustBrooklynMgmt platform;
     

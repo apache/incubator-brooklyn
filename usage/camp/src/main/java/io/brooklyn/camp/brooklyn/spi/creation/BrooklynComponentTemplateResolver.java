@@ -18,6 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation;
 
+import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import io.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
 import io.brooklyn.camp.spi.AbstractResource;
@@ -289,11 +290,12 @@ public class BrooklynComponentTemplateResolver {
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
                 BrooklynAssemblyTemplateInstantiator instantiator = new BrooklynAssemblyTemplateInstantiator();
+                CampPlatform platform = CampPlanToSpecCreator.getCampPlatform(mgmt);
                 // TODO: Creating a new set of encounteredCatalogTypes prevents the recursive definition check in
                 // BrooklynAssemblyTemplateInstantiator.resolveSpec from correctly determining if a YAML entity is
                 // defined recursively. However, the number of overrides of newInstance, and the number of places
                 // calling populateSpec make it difficult to pass encounteredCatalogTypes in as a parameter
-                EntitySpec<? extends Entity> childSpec = instantiator.resolveSpec(entityResolver, encounteredCatalogTypes);
+                EntitySpec<? extends Entity> childSpec = instantiator.resolveSpec(platform, entityResolver, encounteredCatalogTypes);
                 spec.child(childSpec);
             }
         }
