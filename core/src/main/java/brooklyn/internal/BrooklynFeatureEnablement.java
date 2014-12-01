@@ -84,6 +84,8 @@ public class BrooklynFeatureEnablement {
      */
     public static final String FEATURE_INFER_CATALOG_ITEM_ON_REBIND = "brooklyn.backwardCompatibility.feature.inferCatalogItemOnRebind";
     
+    public static final String FEATURE_SSH_ASYNC_EXEC = "brooklyn.experimental.feature.ssh.asyncExec";
+
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
     private static final Object MUTEX = new Object();
@@ -102,6 +104,7 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
         setDefault(FEATURE_RENAME_THREADS, false);
         setDefault(FEATURE_INFER_CATALOG_ITEM_ON_REBIND, true);
+        setDefault(FEATURE_SSH_ASYNC_EXEC, true);
     }
     
     static {

@@ -176,15 +176,20 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int exitCode = tool.execScript(
-                ImmutableMap.of("out", out, "err", err, SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_NO_EXTRA_OUTPUT.getName(), true), 
+                ImmutableMap.of(
+                        "out", out, 
+                        "err", err, 
+                        SshjTool.PROP_EXEC_ASYNC.getName(), true, 
+                        SshjTool.PROP_NO_EXTRA_OUTPUT.getName(), true,
+                        SshjTool.PROP_EXEC_ASYNC_POLLING_TIMEOUT.getName(), Duration.ONE_SECOND), 
                 cmds, 
                 ImmutableMap.<String,String>of());
         String outStr = new String(out.toByteArray());
         String errStr = new String(err.toByteArray());
 
         assertEquals(exitCode, 0);
-        assertEquals("mystringToStdout\nmystringPostSleepToStdout", outStr.trim());
-        assertEquals("mystringToStderr\nmystringPostSleepToStderr", errStr.trim());
+        assertEquals(outStr.trim(), "mystringToStdout\nmystringPostSleepToStdout");
+        assertEquals(errStr.trim(), "mystringToStderr\nmystringPostSleepToStderr");
     }
 
     @Test(groups = {"Integration"})
@@ -201,7 +206,7 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
         Stopwatch stopwatch = Stopwatch.createStarted();
         try {
             tool.execScript(
-                ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_ASYNC_TIMEOUT.getName(), Duration.millis(1)), 
+                ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_TIMEOUT.getName(), Duration.millis(1)), 
                 ImmutableList.of("sleep 60"), 
                 ImmutableMap.<String,String>of());
             fail();
@@ -220,7 +225,7 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
             public void run() {
                 Stopwatch stopwatch = Stopwatch.createStarted();
                 int exitStatus = tool.execScript(
-                    ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_ASYNC_TIMEOUT.getName(), Duration.millis(1)), 
+                    ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_TIMEOUT.getName(), Duration.millis(1)), 
                     ImmutableList.of("sleep 63"), 
                     ImmutableMap.<String,String>of());
                 

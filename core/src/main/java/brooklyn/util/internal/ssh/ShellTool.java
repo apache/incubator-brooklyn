@@ -59,9 +59,11 @@ public interface ShellTool {
 
     ConfigKey<String> PROP_SUMMARY = ConfigKeys.newStringConfigKey("summary", "Provides a human-readable summary, used in file generation etc");
     
+    ConfigKey<Duration> PROP_EXEC_TIMEOUT = newConfigKey("execTimeout", "Timeout when executing a script", Duration.PRACTICALLY_FOREVER);
+
     ConfigKey<Boolean> PROP_EXEC_ASYNC = newConfigKey("execAsync", "Executes the script asynchronously, and then polls for the result (and for stdout/stderr)", false);
 
-    ConfigKey<Duration> PROP_EXEC_ASYNC_TIMEOUT = newConfigKey("execAsyncTimeout", "Timeout when executing a script asynchronously", Duration.PRACTICALLY_FOREVER);
+    ConfigKey<Duration> PROP_EXEC_ASYNC_POLLING_TIMEOUT = newConfigKey("execAsyncPollTimeout", "Timeout per poll when executing a script asynchronously", Duration.ONE_MINUTE);
 
     /**
      * Executes the set of commands in a shell script. Blocks until completion.

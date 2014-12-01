@@ -43,8 +43,10 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -223,6 +225,7 @@ public abstract class ShellAbstractTool implements ShellTool {
         protected final Boolean noDeleteAfterExec;
         protected final String scriptNameWithoutExtension;
         protected final String scriptPath;
+        protected final Duration execTimeout;
 
         public ToolAbstractExecScript(Map<String,?> props) {
             this.props = props;
@@ -234,6 +237,7 @@ public abstract class ShellAbstractTool implements ShellTool {
             this.runAsRoot = getOptionalVal(props, PROP_RUN_AS_ROOT);
             this.noExtraOutput = getOptionalVal(props, PROP_NO_EXTRA_OUTPUT);
             this.noDeleteAfterExec = getOptionalVal(props, PROP_NO_DELETE_SCRIPT);
+            this.execTimeout = getOptionalVal(props, PROP_EXEC_TIMEOUT);
             
             String summary = getOptionalVal(props, PROP_SUMMARY);
             if (summary!=null) {
@@ -294,11 +298,11 @@ public abstract class ShellAbstractTool implements ShellTool {
          * note that some modes require \$RESULT passed in order to access a variable, whereas most just need $ */
         protected List<String> buildRunScriptCommand() {
             // TODO 
-            String touchCmd = String.format("touch %s; touch %s; touch %s; touch %s", stdoutPath, stderrPath, exitStatusPath, pidPath);
+            String touchCmd = String.format("touch %s %s %s %s", stdoutPath, stderrPath, exitStatusPath, pidPath);
             String cmd = String.format("( %s > %s 2> %s < /dev/null ; echo $? > %s ) & disown", scriptPath, stdoutPath, stderrPath, exitStatusPath);
             MutableList.Builder<String> cmds = MutableList.<String>builder()
-                    .add((runAsRoot ? BashCommands.sudo(touchCmd) : touchCmd))
-                    .add((runAsRoot ? BashCommands.sudo(cmd) : cmd))
+                    .add(runAsRoot ? BashCommands.sudo(touchCmd) : touchCmd)
+                    .add(runAsRoot ? BashCommands.sudo(cmd) : cmd)
                     .add("echo $! > "+pidPath)
                     .add("RESULT=$?");
             if (noExtraOutput==null || !noExtraOutput) {
@@ -312,25 +316,29 @@ public abstract class ShellAbstractTool implements ShellTool {
          * Builds the command to retrieve the exit status of the command, written to stdout.
          */
         protected List<String> buildRetrieveStatusCommand() {
-            String cmd = 
-                    "if test -s "+exitStatusPath+"; then"+"\n"+
-                    "    cat "+exitStatusPath+"\n"+
-                    "elif test -s "+pidPath+"; then"+"\n"+
-                    "    pid=`cat "+pidPath+"`"+"\n"+
-                    "    if ! ps -p $pid > /dev/null < /dev/null; then"+"\n"+
-                    "        # no exit status, and not executing; give a few seconds grace in case just about to write exit status"+"\n"+
-                    "        sleep 3"+"\n"+
-                    "        if test -s "+exitStatusPath+"; then"+"\n"+
-                    "            cat "+exitStatusPath+""+"\n"+
-                    "        else"+"\n"+
-                    "            echo \"No exit status in a.exitstatus, and pid in a.pid ($pid) not executing\""+"\n"+
-                    "            exit 1"+"\n"+
-                    "        fi"+"\n"+
-                    "    fi"+"\n"+
-                    "else"+"\n"+
-                    "    echo \"No exit status in "+exitStatusPath+", and "+pidPath+" is empty\""+"\n"+
-                    "    exit 1"+"\n"+
-                    "fi"+"\n";
+            // Retrieve exit status from file (writtent to stdout), if populated;
+            // if not found and pid still running, then return empty string; else exit code 1.
+            List<String> cmdParts = ImmutableList.of(
+                    "# Retrieve status", // comment is to aid testing - see SshjToolAsyncStubIntegrationTest
+                    "if test -s "+exitStatusPath+"; then",
+                    "    cat "+exitStatusPath,
+                    "elif test -s "+pidPath+"; then",
+                    "    pid=`cat "+pidPath+"`",
+                    "    if ! ps -p $pid > /dev/null < /dev/null; then",
+                    "        # no exit status, and not executing; give a few seconds grace in case just about to write exit status",
+                    "        sleep 3",
+                    "        if test -s "+exitStatusPath+"; then",
+                    "            cat "+exitStatusPath+"",
+                    "        else",
+                    "            echo \"No exit status in "+exitStatusPath+", and pid in "+pidPath+" ($pid) not executing\"",
+                    "            exit 1",
+                    "        fi",
+                    "    fi",
+                    "else",
+                    "    echo \"No exit status in "+exitStatusPath+", and "+pidPath+" is empty\"",
+                    "    exit 1",
+                    "fi"+"\n");
+            String cmd = Joiner.on("\n").join(cmdParts);
 
             MutableList.Builder<String> cmds = MutableList.<String>builder()
                     .add((runAsRoot ? BashCommands.sudo(cmd) : cmd))
@@ -355,16 +363,61 @@ public abstract class ShellAbstractTool implements ShellTool {
             return cmds.build();
         }
 
+        /**
+         * Builds the command to retrieve the stdout and stderr of the async command.
+         * An offset can be given, to only retrieve data starting at a particular character (indexed from 0).
+         */
+        protected List<String> buildLongPollCommand(int stdoutPosition, int stderrPosition, Duration timeout) {
+            // Note that `tail -c +1` means start at the *first* character (i.e. start counting from 1, not 0)
+            // TODO Relies on commands terminating when ssh connection dropped (because not run with `nohup`)
+            String catStdoutCmd = "tail -c +"+(stdoutPosition+1)+" -f "+stdoutPath+" &";
+            String catStderrCmd = "tail -c +"+(stderrPosition+1)+" -f "+stderrPath+" 1>&2 &";
+            long maxTime = Math.max(1, timeout.toSeconds());
+            
+            List<String> waitForExitStatusParts = ImmutableList.of(
+                    "# Long poll", // comment is to aid testing - see SshjToolAsyncStubIntegrationTest
+                    "EXIT_STATUS_PATH="+exitStatusPath,
+                    "PID_PATH="+pidPath,
+                    "MAX_TIME="+maxTime,
+                    "COUNTER=0",
+                    "while [ \"$COUNTER\" -lt $MAX_TIME ]; do",
+                    "    if test -s $EXIT_STATUS_PATH; then",
+                    "        EXIT_STATUS=`cat $EXIT_STATUS_PATH`",
+                    "        exit $EXIT_STATUS",
+                    "    elif test -s $PID_PATH; then",
+                    "        PID=`cat $PID_PATH`",
+                    "        if ! ps -p $PID > /dev/null < /dev/null; then",
+                    "            # no exit status, and not executing; give a few seconds grace in case just about to write exit status",
+                    "            sleep 3",
+                    "            if test -s $EXIT_STATUS_PATH; then",
+                    "                EXIT_STATUS=`cat $EXIT_STATUS_PATH`",
+                    "                exit $EXIT_STATUS",
+                    "            else",
+                    "                echo \"No exit status in $EXIT_STATUS_PATH, and pid in $PID_PATH ($PID) not executing\"",
+                    "                exit 126",
+                    "            fi",
+                    "        fi",
+                    "    fi",
+                    "    # No exit status in $EXIT_STATUS_PATH; keep waiting",
+                    "    sleep 1",
+                    "    COUNTER+=1",
+                    "done",
+                    "exit 125"+"\n");
+            String waitForExitStatus = Joiner.on("\n").join(waitForExitStatusParts);
+
+            MutableList.Builder<String> cmds = MutableList.<String>builder()
+                    .add(runAsRoot ? BashCommands.sudo(catStdoutCmd) : catStdoutCmd)
+                    .add(runAsRoot ? BashCommands.sudo(catStderrCmd) : catStderrCmd)
+                    .add(runAsRoot ? BashCommands.sudo(waitForExitStatus) : waitForExitStatus);
+            return cmds.build();
+        }
+
         protected List<String> deleteTemporaryFilesCommand() {
             if (!Boolean.TRUE.equals(noDeleteAfterExec)) {
                 // use "-f" because some systems have "rm" aliased to "rm -i"
                 // use "< /dev/null" to guarantee doesn't hang
                 return ImmutableList.of(
-                        "rm -f "+scriptPath+" < /dev/null",
-                        "rm -f "+stdoutPath+" < /dev/null",
-                        "rm -f "+stderrPath+" < /dev/null",
-                        "rm -f "+exitStatusPath+" < /dev/null",
-                        "rm -f "+pidPath+" < /dev/null");
+                        "rm -f "+scriptPath+" "+stdoutPath+" "+stderrPath+" "+exitStatusPath+" "+pidPath+" < /dev/null");
             } else {
                 return ImmutableList.<String>of();
             }
