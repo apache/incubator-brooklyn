@@ -18,7 +18,9 @@
  */
 package brooklyn.entity.brooklynnode.effector;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityTasks;
@@ -40,18 +43,21 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.MapConfigKey;
+import brooklyn.location.Location;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
@@ -65,6 +71,8 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
     private static final Logger log = LoggerFactory.getLogger(BrooklynNodeUpgradeEffectorBody.class);
     
     public static final ConfigKey<String> DOWNLOAD_URL = BrooklynNode.DOWNLOAD_URL.getConfigKey();
+    public static final ConfigKey<Boolean> DO_DRY_RUN_FIRST = ConfigKeys.newBooleanConfigKey(
+            "doDryRunFirst", "Test rebinding with a temporary instance before stopping the entity for upgrade.", true);
     public static final ConfigKey<Map<String,Object>> EXTRA_CONFIG = MapConfigKey.builder(new TypeToken<Map<String,Object>>() {})
         .name("extraConfig")
         .description("Additional new config to set on the BrooklynNode as part of upgrading")
@@ -76,6 +84,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
             + "This node must be running for persistence for in-place upgrading to work.")
         .parameter(BrooklynNode.SUGGESTED_VERSION)
         .parameter(DOWNLOAD_URL)
+        .parameter(DO_DRY_RUN_FIRST)
         .parameter(EXTRA_CONFIG)
         .impl(new BrooklynNodeUpgradeEffectorBody()).build();
     
@@ -89,7 +98,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
                 + "In-place node upgrade will not succeed unless a custom launch script enables it.")) );
         }
 
-        ConfigBag parameters = ConfigBag.newInstanceCopying(parametersO);
+        final ConfigBag parameters = ConfigBag.newInstanceCopying(parametersO);
 
         /*
          * all parameters are passed to children, apart from EXTRA_CONFIG
@@ -102,13 +111,67 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
             parameters.putAll(extra);
         }
         log.debug(this+" upgrading, using "+parameters);
+        
+        final String bkName;
+        boolean doDryRunFirst = parameters.get(DO_DRY_RUN_FIRST);
+        if(doDryRunFirst) {
+            bkName = dryRunUpdate(parameters);
+        } else {
+            bkName = "direct-"+Identifiers.makeRandomId(4);
+        }
+        
+        // Stop running instance
+        DynamicTasks.queue(Tasks.builder().name("shutdown node")
+                .add(Effectors.invocation(entity(), BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE, Boolean.FALSE)))
+                .build());
 
+        // backup old files
+        DynamicTasks.queue(Tasks.builder().name("backup old version").body(new Runnable() {
+            @Override
+            public void run() {
+                String runDir = entity().getAttribute(SoftwareProcess.RUN_DIR);
+                String bkDir = Urls.mergePaths(runDir, "..", Urls.getBasename(runDir)+"-backups", bkName);
+                log.debug(this+" storing backup of previous version in "+bkDir);
+                DynamicTasks.queue(SshEffectorTasks.ssh(
+                    "cd "+runDir,
+                    "mkdir -p "+bkDir,
+                    "mv * "+bkDir
+                    // By removing the run dir of the entity we force it to go through
+                    // the customize step again on start and re-generate local-brooklyn.properties.
+                    ).summary("move files"));
+            }
+        }).build());
+        
+        // Reconfigure entity
+        DynamicTasks.queue(Tasks.builder().name("reconfigure").body(new Runnable() {
+            @Override
+            public void run() {
+                DynamicTasks.waitForLast();
+                ((EntityInternal)entity()).setAttribute(SoftwareProcess.INSTALL_DIR, null);
+                entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, null);
+                entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
+                entity().setAttribute(BrooklynNode.DOWNLOAD_URL, entity().getConfig(DOWNLOAD_URL));
+
+                // Setting SUGGESTED_VERSION will result in an new empty INSTALL_FOLDER, but clear it
+                // just in case the user specified already installed version.
+                ((BrooklynNodeDriver)((DriverDependentEntity<?>)entity()).getDriver()).clearInstallDir();
+            }
+        }).build());
+        
+        // Start this entity, running the new version.
+        // This will download and install the new dist (if not already done by the dry run node).
+        DynamicTasks.queue(Effectors.invocation(entity(), BrooklynNode.START, ConfigBag.EMPTY));
+
+        return null;
+    }
+
+    private String dryRunUpdate(ConfigBag parameters) {
         // TODO require entity() node state master or hot standby AND require persistence enabled, or a new 'force_attempt_upgrade' parameter to be applied
         // TODO could have a 'skip_dry_run_upgrade' parameter
         // TODO could support 'dry_run_only' parameter, with optional resumption tasks (eg new dynamic effector)
 
         // 1 add new brooklyn version entity as child (so uses same machine), with same config apart from things in parameters
-        final BrooklynNode dryRunChild = entity().addChild(EntitySpec.create(BrooklynNode.class)
+        final Entity dryRunChild = entity().addChild(createDryRunSpec()
             .displayName("Upgraded Version Dry-Run Node")
             // install dir and label are recomputed because they are not inherited, and download_url will normally be different
             .configure(parameters.getAllConfig()));
@@ -132,44 +195,24 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
             Predicates.equalTo(ManagementNodeState.HOT_STANDBY), Duration.FIVE_MINUTES));
 
         // 3 stop new version
-        // 4 stop old version
-        ConfigBag stopParameters = ConfigBag.newInstance();
-        stopParameters.put(StopSoftwareParameters.STOP_MACHINE, Boolean.FALSE);
-        DynamicTasks.queue(Tasks.builder().name("shutdown original and transient nodes")
-            .add(Effectors.invocation(dryRunChild, BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, stopParameters))
-            .add(Effectors.invocation(entity(), BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, stopParameters))
+        DynamicTasks.queue(Tasks.builder().name("shutdown transient node")
+            .add(Effectors.invocation(dryRunChild, BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE, Boolean.FALSE)))
             .build());
 
-        // 5 move old files, and move new files
-        DynamicTasks.queue(Tasks.builder().name("setup new version").body(new Runnable() {
-            @Override
-            public void run() {
-                String runDir = entity().getAttribute(SoftwareProcess.RUN_DIR);
-                String bkDir = Urls.mergePaths(runDir, "..", Urls.getBasename(runDir)+"-backups", dryRunNodeUid);
-                String dryRunDir = Preconditions.checkNotNull(dryRunChild.getAttribute(SoftwareProcess.RUN_DIR));
-                log.debug(this+" storing backup of previous version in "+bkDir);
-                DynamicTasks.queue(SshEffectorTasks.ssh(
-                    "cd "+runDir,
-                    "mkdir -p "+bkDir,
-                    "mv * "+bkDir,
-                    "cd "+dryRunDir,
-                    "mv * "+runDir
-                    ).summary("move files"));
+        DynamicTasks.queue(Tasks.<Void>builder().name("remove transient node").body(
+            new Runnable() {
+                @Override
+                public void run() {
+                    Entities.unmanage(dryRunChild);
+                }
             }
-        }).build());
-        
-        DynamicTasks.waitForLast();
-        entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, null);
-        entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
-        ((BrooklynNodeDriver)((DriverDependentEntity<?>)entity()).getDriver()).clearInstallDir();
+        ).build());
 
-        // 6 start this entity, running the new version
-        DynamicTasks.queue(Effectors.invocation(entity(), BrooklynNode.START, ConfigBag.EMPTY));
+        return dryRunChild.getId();
+    }
 
-        DynamicTasks.waitForLast();
-        Entities.unmanage(dryRunChild);
-
-        return null;
+    protected EntitySpec<? extends BrooklynNode> createDryRunSpec() {
+        return EntitySpec.create(BrooklynNode.class);
     }
 
     @Beta
