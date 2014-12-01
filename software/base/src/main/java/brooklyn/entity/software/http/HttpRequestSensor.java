@@ -54,9 +54,13 @@ public final class HttpRequestSensor<T> extends AddSensor<T> {
 
     public static final ConfigKey<String> SENSOR_URI = ConfigKeys.newStringConfigKey("uri", "HTTP URI to poll for JSON");
     public static final ConfigKey<String> JSON_PATH = ConfigKeys.newStringConfigKey("jsonPath", "JSON path to select in HTTP response; default $", "$");
+    public static final ConfigKey<String> USERNAME = ConfigKeys.newStringConfigKey("username", "Username for HTTP request, if required");
+    public static final ConfigKey<String> PASSWORD = ConfigKeys.newStringConfigKey("password", "Password for HTTP request, if required");
 
     protected final Supplier<URI> uri;
     protected final String jsonPath;
+    protected final String username;
+    protected final String password;
 
     public HttpRequestSensor(final ConfigBag params) {
         super(params);
@@ -68,6 +72,8 @@ public final class HttpRequestSensor<T> extends AddSensor<T> {
             }
         };
         jsonPath = params.get(JSON_PATH);
+        username = params.get(USERNAME);
+        password = params.get(PASSWORD);
     }
 
     @Override
@@ -86,6 +92,7 @@ public final class HttpRequestSensor<T> extends AddSensor<T> {
 
         HttpFeed.builder().entity(entity)
                 .baseUri(uri)
+                .credentialsIfNotNull(username, password)
                 .poll(pollConfig)
                 .build();
     }
