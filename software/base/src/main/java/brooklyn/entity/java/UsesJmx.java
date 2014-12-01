@@ -45,9 +45,11 @@ public interface UsesJmx extends UsesJava {
     PortAttributeSensorAndConfigKey JMX_PORT = new PortAttributeSensorAndConfigKey(
         "jmx.direct.port", "JMX direct/private port (e.g. JMX RMI server port, or JMXMP port, but not RMI registry port)", PortRanges.fromString("31001+"));
     
+    // Default is deliberately null for this unused config; if we used "31001+" then we'd potentially give this sensor 
+    // the value 31001 and jmx.direct.port the value 31002. See https://issues.apache.org/jira/browse/BROOKLYN-98
     /** @deprecated since 0.7.0, kept for rebinding with the anonymous class; code should only ever use {@link #JMX_PORT} */ @Deprecated
     PortAttributeSensorAndConfigKey JMX_PORT_LEGACY = new PortAttributeSensorAndConfigKey(
-            "jmx.direct.port.legacy.NOT_USED", "Legacy definition JMX direct/private port (e.g. JMX RMI server port, or JMXMP port, but not RMI registry port)", PortRanges.fromString("31001+")) {
+            "jmx.direct.port.legacy.NOT_USED", "Legacy definition JMX direct/private port (e.g. JMX RMI server port, or JMXMP port, but not RMI registry port)", null) {
         private static final long serialVersionUID = 3846846080809179437L;
         @Override protected Integer convertConfigToSensor(PortRange value, Entity entity) {
             // TODO when using JmxAgentModes.NONE we should *not* convert, but leave it null
