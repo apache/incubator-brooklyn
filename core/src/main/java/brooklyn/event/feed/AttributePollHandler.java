@@ -23,9 +23,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.Tasks;
@@ -157,7 +160,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             // get a non-volatile value
             Long currentProblemStartTimeCache = currentProblemStartTime;
             long expiryTime = 
-                    lastSuccessTime!=null ? lastSuccessTime+logWarningGraceTime.toMilliseconds() :
+                    (lastSuccessTime!=null && !isTransitioningOrStopped()) ? lastSuccessTime+logWarningGraceTime.toMilliseconds() :
                     currentProblemStartTimeCache!=null ? currentProblemStartTimeCache+logWarningGraceTimeOnStartup.toMilliseconds() :
                     nowTime+logWarningGraceTimeOnStartup.toMilliseconds();
             if (!lastWasProblem) {
@@ -192,6 +195,13 @@ public class AttributePollHandler<V> implements PollHandler<V> {
                 }
             }
         }
+    }
+
+    protected boolean isTransitioningOrStopped() {
+        if (entity==null) return false;
+        Transition expected = entity.getAttribute(Attributes.SERVICE_STATE_EXPECTED);
+        if (expected==null) return false;
+        return (expected.getState()==Lifecycle.STARTING || expected.getState()==Lifecycle.STOPPING || expected.getState()==Lifecycle.STOPPED);
     }
 
     @SuppressWarnings("unchecked")

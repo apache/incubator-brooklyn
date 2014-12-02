@@ -107,7 +107,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void setFromMap(String application, String entityToken, Map<?, ?> newValues) {
+    public void setFromMap(String application, String entityToken, Map newValues) {
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
@@ -116,9 +116,9 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
 
         if (log.isDebugEnabled())
             log.debug("REST user "+Entitlements.getEntitlementContext()+" setting sensors "+newValues);
-        for (Map.Entry<?,?> entry: newValues.entrySet()) {
-            String sensorName = Strings.toString(entry.getKey());
-            Object newValue = entry.getValue();
+        for (Object entry: newValues.entrySet()) {
+            String sensorName = Strings.toString(((Map.Entry)entry).getKey());
+            Object newValue = ((Map.Entry)entry).getValue();
             
             AttributeSensor sensor = findSensor(entity, sensorName);
             entity.setAttribute(sensor, newValue);

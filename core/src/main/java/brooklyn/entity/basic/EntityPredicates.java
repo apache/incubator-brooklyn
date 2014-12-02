@@ -318,7 +318,7 @@ public class EntityPredicates {
         }
         @Override
         public boolean apply(@Nullable Entity input) {
-            return (input != null) && group.hasMember(input);
+            return (group != null) && (input != null) && group.hasMember(input);
         }
         @Override
         public String toString() {

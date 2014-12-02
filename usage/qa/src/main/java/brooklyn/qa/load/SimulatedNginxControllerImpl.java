@@ -99,7 +99,6 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
                 .period(getConfig(HTTP_POLL_PERIOD))
                 .poll(new FunctionPollConfig<Boolean,Boolean>(SERVICE_UP)
                         .callable(new Callable<Boolean>() {
-                            private int counter = 0;
                             public Boolean call() {
                                 return true;
                             }}))
@@ -158,7 +157,7 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
                 return;
             }
             
-            Networking.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
+            Networking.checkPortsValid(MutableMap.of("httpPort", getPort()));
 
             if (entity.getConfig(SKIP_SSH_ON_START)) {
                 // minimal ssh, so that isRunning will subsequently work
@@ -172,7 +171,7 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
                         .body.append(
                                 format("cd %s", getRunDir()),
                                 "echo skipping exec of requireExecutable ./sbin/nginx",
-                                sudoBashCIfPrivilegedPort(getHttpPort(), format(
+                                sudoBashCIfPrivilegedPort(getPort(), format(
                                         "echo skipping exec of nohup ./sbin/nginx -p %s/ -c conf/server.conf > %s 2>&1 &", getRunDir(), getLogFileLocation())),
                                 format("nohup sleep 100000 > %s 2>&1 < /dev/null &", getLogFileLocation()),
                                 format("echo $! > "+getPidFile()),

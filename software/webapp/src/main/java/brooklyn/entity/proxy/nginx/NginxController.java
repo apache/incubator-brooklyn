@@ -134,4 +134,9 @@ public interface NginxController extends AbstractController, HasShortName {
     
     public static final AttributeSensor<Boolean> NGINX_URL_ANSWERS_NICELY = Sensors.newBooleanSensor( "nginx.url.answers.nicely");
     public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "nginx.pid.file", "PID file");
+    
+    public interface NginxControllerInternal {
+        public void doExtraConfigurationDuringStart();
+    }
+
 }

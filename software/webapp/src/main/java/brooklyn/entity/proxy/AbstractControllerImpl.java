@@ -112,7 +112,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             return; // no-op
         }
         if (serverPoolMemberTrackerPolicy != null) {
-            LOG.warn("Call to addServerPoolMemberTrackingPolicy when serverPoolMemberTrackingPolicy already exists, in {}", this);
+            LOG.debug("Call to addServerPoolMemberTrackingPolicy when serverPoolMemberTrackingPolicy already exists, removing and re-adding, in {}", this);
             removeServerPoolMemberTrackingPolicy();
         }
         for (Policy p: getPolicies()) {
@@ -187,6 +187,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         } 
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onManagementNoLongerMaster() {
         super.onManagementNoLongerMaster(); // TODO remove when deprecated method in parent removed
@@ -226,7 +227,10 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     @Override
     public Integer getPort() {
-        return getAttribute(PROXY_HTTP_PORT);
+        if (isSsl())
+            return getAttribute(PROXY_HTTPS_PORT);
+        else
+            return getAttribute(PROXY_HTTP_PORT);
     }
 
     /** primary URL this controller serves, if one can / has been inferred */
@@ -254,7 +258,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public abstract void reload();
 
     protected String inferProtocol() {
-        return getConfig(SSL_CONFIG)!=null ? "https" : "http";
+        return isSsl() ? "https" : "http";
     }
     
     /** returns URL, if it can be inferred; null otherwise */
@@ -285,13 +289,17 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts();
         if (groovyTruth(getAttribute(PROXY_HTTP_PORT))) result.add(getAttribute(PROXY_HTTP_PORT));
+        if (groovyTruth(getAttribute(PROXY_HTTPS_PORT))) result.add(getAttribute(PROXY_HTTPS_PORT));
         return result;
     }
 
     @Override
     protected void preStart() {
         super.preStart();
-
+        computePortsAndUrls();
+    }
+    
+    protected void computePortsAndUrls() {
         AttributeSensor<String> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
         Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
         Maybe<Object> portSensor = getConfigRaw(PORT_NUMBER_SENSOR, true);
@@ -312,11 +320,6 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        if (getUrl()==null) {
-            setAttribute(MAIN_URI, URI.create(inferUrl()));
-            setAttribute(ROOT_URL, inferUrl());
-        }
-        
         // TODO when rebind policies, and rebind calls connectSensors, then this will cause problems.
         // Also relying on addServerPoolMemberTrackingPolicy to set the serverPoolAddresses and serverPoolTargets.
 

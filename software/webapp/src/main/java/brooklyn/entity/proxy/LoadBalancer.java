@@ -84,8 +84,13 @@ public interface LoadBalancer extends Entity, Startable {
     @SetFromFlag("port")
     /** port where this controller should live */
     public static final PortAttributeSensorAndConfigKey PROXY_HTTP_PORT = new PortAttributeSensorAndConfigKey(
-            "proxy.http.port", "Main HTTP port where this proxy listens", ImmutableList.of(8000, "8001+"));
-    
+            "proxy.http.port", "Main port where this proxy listens if using HTTP", ImmutableList.of(8000, "8001+"));
+
+    @SetFromFlag("httpsPort")
+    /** port where this controller should live */
+    public static final PortAttributeSensorAndConfigKey PROXY_HTTPS_PORT = new PortAttributeSensorAndConfigKey(
+            "proxy.https.port", "Main port where this proxy listens if using HTTPS", ImmutableList.of(8443, "8443+"));
+
     @SetFromFlag("protocol")
     public static final BasicAttributeSensorAndConfigKey<String> PROTOCOL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "proxy.protocol", "Main URL protocol this proxy answers (typically http or https)", null);

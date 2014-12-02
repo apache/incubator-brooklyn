@@ -18,9 +18,11 @@
  */
 package brooklyn.entity.proxy.nginx;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -36,21 +38,25 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxy.AbstractControllerImpl;
 import brooklyn.entity.proxy.ProxySslConfig;
+import brooklyn.entity.proxy.nginx.NginxController.NginxControllerInternal;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.management.SubscriptionHandle;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.guava.Functionals;
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -58,13 +64,14 @@ import com.google.common.collect.Sets;
 /**
  * Implementation of the {@link NginxController} entity.
  */
-public class NginxControllerImpl extends AbstractControllerImpl implements NginxController {
+public class NginxControllerImpl extends AbstractControllerImpl implements NginxController, NginxControllerInternal {
 
     private static final Logger LOG = LoggerFactory.getLogger(NginxControllerImpl.class);
 
     private volatile HttpFeed httpFeed;
     private final Set<String> installedKeysCache = Sets.newLinkedHashSet();
     protected UrlMappingsMemberTrackerPolicy urlMappingsMemberTrackerPolicy;
+    protected SubscriptionHandle targetAddressesHandler;
 
     @Override
     public void reload() {
@@ -82,19 +89,31 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         return getConfig(STICKY);
     }
 
+    private class UrlInferencer implements Supplier<URI> {
+        private Map<String, String> parameters;
+        private UrlInferencer(Map<String,String> parameters) {
+            this.parameters = parameters;
+        }
+        @Override public URI get() { 
+            String baseUrl = inferUrl(true);
+            if (parameters==null || parameters.isEmpty())
+                return URI.create(baseUrl);
+            return URI.create(baseUrl+"?"+HttpTool.encodeUrlParams(parameters));
+        }
+    }
+    
     @Override
     public void connectSensors() {
         super.connectSensors();
 
         ConfigToAttributes.apply(this);
-        String accessibleRootUrl = inferUrl(true);
 
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
         httpFeed = HttpFeed.builder()
+                .uniqueTag("nginx-poll")
                 .entity(this)
                 .period(getConfig(HTTP_POLL_PERIOD))
-                .baseUri(accessibleRootUrl)
-                .baseUriVars(ImmutableMap.of("include-runtime", "true"))
+                .baseUri(new UrlInferencer(ImmutableMap.of("include-runtime", "true")))
                 .poll(new HttpPollConfig<Boolean>(NGINX_URL_ANSWERS_NICELY)
                         // Any response from Nginx is good.
                         .checkSuccess(Predicates.alwaysTrue())
@@ -115,6 +134,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
             ServiceNotUpLogic.updateNotUpIndicator(this, NGINX_URL_ANSWERS_NICELY, "No response from nginx yet");
         }
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .uniqueTag("not-up-unless-url-answers")
             .from(NGINX_URL_ANSWERS_NICELY)
             .computing(Functionals.ifNotEquals(true).value("URL where nginx listens is not answering correctly (with expected header)") )
             .build());
@@ -122,9 +142,9 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
 
         // Can guarantee that parent/managementContext has been set
         Group urlMappings = getConfig(URL_MAPPINGS);
-        if (urlMappings != null) {
+        if (urlMappings!=null && urlMappingsMemberTrackerPolicy==null) {
             // Listen to the targets of each url-mapping changing
-            subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, new SensorEventListener<Collection<String>>() {
+            targetAddressesHandler = subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, new SensorEventListener<Collection<String>>() {
                     @Override public void onEvent(SensorEvent<Collection<String>> event) {
                         updateNeeded();
                     }
@@ -139,6 +159,12 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     protected void removeUrlMappingsMemberTrackerPolicy() {
         if (urlMappingsMemberTrackerPolicy != null) {
             removePolicy(urlMappingsMemberTrackerPolicy);
+            urlMappingsMemberTrackerPolicy = null;
+        }
+        Group urlMappings = getConfig(URL_MAPPINGS);
+        if (urlMappings!=null && targetAddressesHandler!=null) {
+            unsubscribe(urlMappings, targetAddressesHandler);
+            targetAddressesHandler = null;
         }
     }
     
@@ -181,7 +207,10 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     }
 
     public void doExtraConfigurationDuringStart() {
+        computePortsAndUrls();
         reconfigureService();
+        // reconnect sensors if ports have changed
+        connectSensors();
     }
 
     @Override

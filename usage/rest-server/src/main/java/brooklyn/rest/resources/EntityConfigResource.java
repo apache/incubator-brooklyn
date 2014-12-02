@@ -110,7 +110,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public void setFromMap(String application, String entityToken, Boolean recurse, Map<?, ?> newValues) {
+  public void setFromMap(String application, String entityToken, Boolean recurse, Map newValues) {
       final EntityLocal entity = brooklyn().getEntity(application, entityToken);
       if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
           throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
@@ -119,9 +119,9 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
 
       if (LOG.isDebugEnabled())
           LOG.debug("REST user "+Entitlements.getEntitlementContext()+" setting configs "+newValues);
-      for (Map.Entry<?,?> entry: newValues.entrySet()) {
-          String configName = Strings.toString(entry.getKey());
-          Object newValue = entry.getValue();
+      for (Object entry: newValues.entrySet()) {
+          String configName = Strings.toString(((Map.Entry)entry).getKey());
+          Object newValue = ((Map.Entry)entry).getValue();
           
           ConfigKey ck = findConfig(entity, configName);
           ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));

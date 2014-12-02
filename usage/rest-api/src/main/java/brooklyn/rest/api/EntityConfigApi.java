@@ -108,6 +108,7 @@ public interface EntityConfigApi {
   @ApiErrors(value = {
       @ApiError(code = 404, reason = "Could not find application or entity")
   })
+  @SuppressWarnings("rawtypes")
   public void setFromMap(
       @ApiParam(value = "Application ID or name", required = true)
       @PathParam("application") final String application,
@@ -116,7 +117,7 @@ public interface EntityConfigApi {
       @ApiParam(value = "Apply the config to all pre-existing descendants", required = false)
       @QueryParam("recurse") @DefaultValue("false") final Boolean recurse,
       @ApiParam(value = "Map of config key names to values", required = true)
-      Map<?,?> newValues
+      Map newValues
   ) ;
 
   @POST
