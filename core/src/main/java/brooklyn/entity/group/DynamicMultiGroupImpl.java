@@ -39,6 +39,7 @@ import brooklyn.util.collections.MutableMap;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -93,7 +94,7 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
     @Override
     public void init() {
         super.init();
-        setAttribute(BUCKETS, MutableMap.<String, BasicGroup>of());
+        setAttribute(BUCKETS, ImmutableMap.<String, BasicGroup>of());
         connectScanner();
     }
 
@@ -171,7 +172,7 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
             Function<Entity, String> bucketFunction = getConfig(BUCKET_FUNCTION);
             EntitySpec<? extends BasicGroup> bucketSpec = getConfig(BUCKET_SPEC);
             if (bucketFunction == null || bucketSpec == null) return;
-            Map<String, BasicGroup> buckets = getAttribute(BUCKETS);
+            Map<String, BasicGroup> buckets = MutableMap.copyOf(getAttribute(BUCKETS));
 
             // Bucketize the members where the function gives a non-null bucket
             Multimap<String, Entity> entityMapping = Multimaps.index(
@@ -197,7 +198,7 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
             }
 
             // Save the bucket mappings
-            setAttribute(BUCKETS, buckets);
+            setAttribute(BUCKETS, ImmutableMap.copyOf(buckets));
         }
     }
 
