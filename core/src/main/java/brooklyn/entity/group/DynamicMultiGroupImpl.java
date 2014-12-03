@@ -34,12 +34,13 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
@@ -47,22 +48,35 @@ import com.google.common.collect.Sets;
 public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMultiGroup {
 
     /**
+     * {@link Function} for deriving bucket names from a sensor value.
+     */
+    public static class BucketFromAttribute implements Function<Entity, String> {
+        private final AttributeSensor<?> sensor;
+        private final String defaultValue;
+
+        public BucketFromAttribute(AttributeSensor<?> sensor, String defaultValue) {
+            this.sensor = Preconditions.checkNotNull(sensor, "sensor");
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public String apply(@Nullable Entity input) {
+            Object value = input.getAttribute(sensor);
+            if (value == null) {
+                return defaultValue;
+            } else {
+                return String.valueOf(value);
+            }
+        };
+    }
+
+    /**
      * Convenience factory method for the common use-case of deriving the bucket directly from a sensor value.
      *
      * @see DynamicMultiGroup#BUCKET_FUNCTION
      */
     public static Function<Entity, String> bucketFromAttribute(final AttributeSensor<?> sensor, final String defaultValue) {
-        return new Function<Entity, String>() {
-            @Override
-            public String apply(@Nullable Entity input) {
-                Object value = input.getAttribute(sensor);
-                if (value == null) {
-                    return defaultValue;
-                } else {
-                    return String.valueOf(value);
-                }
-            };
-        };
+        return new BucketFromAttribute(sensor, defaultValue);
     }
 
     /**
@@ -74,13 +88,16 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
         return bucketFromAttribute(sensor, null);
     }
 
-    private Map<String, BasicGroup> buckets = Maps.newHashMap();
-    private volatile FunctionFeed rescan;
+    private transient FunctionFeed rescan;
 
     @Override
     public void init() {
         super.init();
+        setAttribute(BUCKETS, MutableMap.<String, BasicGroup>of());
+        connectScanner();
+    }
 
+    private void connectScanner() {
         Long interval = getConfig(RESCAN_INTERVAL);
         if (interval != null && interval > 0L) {
             rescan = FunctionFeed.builder()
@@ -95,6 +112,15 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
                                     }
                                 }))
                     .build();
+        }
+    }
+
+    @Override
+    public void rebind() {
+        super.rebind();
+
+        if (rescan == null) {
+            connectScanner();
         }
     }
 
@@ -145,6 +171,7 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
             Function<Entity, String> bucketFunction = getConfig(BUCKET_FUNCTION);
             EntitySpec<? extends BasicGroup> bucketSpec = getConfig(BUCKET_SPEC);
             if (bucketFunction == null || bucketSpec == null) return;
+            Map<String, BasicGroup> buckets = getAttribute(BUCKETS);
 
             // Bucketize the members where the function gives a non-null bucket
             Multimap<String, Entity> entityMapping = Multimaps.index(
@@ -168,6 +195,9 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
                 removeChild(removed);
                 Entities.unmanage(removed);
             }
+
+            // Save the bucket mappings
+            setAttribute(BUCKETS, buckets);
         }
     }
 

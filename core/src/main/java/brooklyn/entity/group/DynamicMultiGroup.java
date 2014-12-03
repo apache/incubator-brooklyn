@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.group;
 
+import java.util.Map;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
@@ -65,6 +67,9 @@ public interface DynamicMultiGroup extends DynamicGroup {
             EntitySpec.create(BasicGroup.class)
     );
 
+
+    AttributeSensor<Map<String, BasicGroup>> BUCKETS = Sensors.newSensor(new TypeToken<Map<String, BasicGroup>>() { },
+            "brooklyn.multigroup.buckets", "The bucket name to Group mappings");
 
     /**
      * Interval (in seconds) between scans of all entities for membership and distribution into buckets.
