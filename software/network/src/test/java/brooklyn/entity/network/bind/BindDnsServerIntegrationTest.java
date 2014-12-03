@@ -24,25 +24,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixture;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplication> {
 
@@ -67,9 +70,30 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
     }
 
     @Test(groups = "Integration")
+    public void testStripsInvalidCharactersFromHostname() {
+        origApp.start(ImmutableList.of(origApp.newLocalhostProvisioningLocation()));
+        cluster.resize(1);
+        assertDnsEntityEventuallyHasActiveMembers(1);
+        EntityLocal e = (EntityLocal) Iterables.getOnlyElement(cluster.getMembers());
+        e.setAttribute(PrefixAndIdEnricher.SENSOR, " _-pretend.hostname.10.0.0.7.my-cloud.com");
+        EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.A_RECORDS,
+                ImmutableMap.of("pretend-hostname-10-0-0-7-my-cloud-com", e.getAttribute(Attributes.ADDRESS)));
+    }
+
+    @Test(groups = "Integration")
+    public void testHostnameTruncatedTo63Characters() {
+        origApp.start(ImmutableList.of(origApp.newLocalhostProvisioningLocation()));
+        cluster.resize(1);
+        assertDnsEntityEventuallyHasActiveMembers(1);
+        EntityLocal e = (EntityLocal) Iterables.getOnlyElement(cluster.getMembers());
+        e.setAttribute(PrefixAndIdEnricher.SENSOR, Strings.repeat("a", 171));
+        EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.A_RECORDS,
+                ImmutableMap.of(Strings.repeat("a", 63), e.getAttribute(Attributes.ADDRESS)));
+    }
+
+    @Test(groups = "Integration")
     public void testRebindDns() throws Throwable {
-        LocationSpec.create(LocalhostMachineProvisioningLocation.class);
-        origApp.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+        origApp.start(ImmutableList.of(origApp.newLocalhostProvisioningLocation()));
         logDnsMappings();
         assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).keySet().size(), 1);
         assertMapSizes(3, 1, 2, 1);
@@ -103,7 +127,7 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
 
     @Test(groups = "Integration")
     public void testMapsSeveralEntitiesOnOneMachine() {
-        origApp.start(ImmutableList.of(new LocalhostMachineProvisioningLocation()));
+        origApp.start(ImmutableList.of(origApp.newLocalhostProvisioningLocation()));
         EntityTestUtils.assertAttributeEqualsEventually(dns, Attributes.SERVICE_UP, true);
         logDnsMappings();
 
