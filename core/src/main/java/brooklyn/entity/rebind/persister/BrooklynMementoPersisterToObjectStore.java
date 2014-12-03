@@ -138,6 +138,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         
         executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(maxThreadPoolSize, new ThreadFactory() {
             @Override public Thread newThread(Runnable r) {
+                // Note: Thread name referenced in logback-includes' ThreadNameDiscriminator
                 return new Thread(r, "brooklyn-persister");
             }}));
     }
