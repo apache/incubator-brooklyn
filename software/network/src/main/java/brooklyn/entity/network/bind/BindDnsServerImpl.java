@@ -29,6 +29,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -50,7 +52,6 @@ import com.google.common.collect.Multimaps;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
@@ -72,6 +73,27 @@ import brooklyn.util.text.Strings;
 public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
+
+    // As per RFC 952 and RFC 1123.
+    private static final CharMatcher DOMAIN_NAME_FIRST_CHAR_MATCHER = CharMatcher.inRange('a', 'z')
+                .or(CharMatcher.inRange('A', 'Z'))
+                .or(CharMatcher.inRange('0', '9'));
+    private static final CharMatcher DOMAIN_NAME_MATCHER = DOMAIN_NAME_FIRST_CHAR_MATCHER
+            .or(CharMatcher.is('-'));
+
+
+    private class HostnameTransformer implements Function<Entity, String> {
+        @Override
+        public String apply(Entity input) {
+            String hostname = input.getAttribute(getConfig(HOSTNAME_SENSOR));
+            hostname = DOMAIN_NAME_FIRST_CHAR_MATCHER.negate().trimFrom(hostname);
+            hostname = DOMAIN_NAME_MATCHER.negate().trimAndCollapseFrom(hostname, '-');
+            if (hostname.length() > 63) {
+                hostname = hostname.substring(0, 63);
+            }
+            return hostname;
+        }
+    }
 
     public BindDnsServerImpl() {
         super();
@@ -222,7 +244,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
                     .filter(new HasHostnameAndValidLifecycle());
             LOG.debug("{} updating with entities: {}", this, Iterables.toString(availableEntities));
             ImmutableListMultimap<String, Entity> hostnameToEntity = Multimaps.index(availableEntities,
-                    EntityFunctions.attribute(getConfig(HOSTNAME_SENSOR)));
+                    new HostnameTransformer());
             Map<String, String> octetToName = Maps.newHashMap();
             BiMap<String, String> ipToARecord = HashBiMap.create();
             Multimap<String, String> aRecordToCnames = MultimapBuilder.hashKeys().arrayListValues().build();
