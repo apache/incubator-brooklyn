@@ -88,6 +88,11 @@ define([
                         rowId : 0
                     }))
                     var $selectLocations = container.find('#select-location')
+                        .append(this.locationOptionTemplate({
+                                id: "",
+                                name: "None"
+                            }))
+                        .append("<option disabled>------</option>");
                     this.locations.each(function(aLocation) {
                         var $option = that.locationOptionTemplate({
                             id:aLocation.id,
