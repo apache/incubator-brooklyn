@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+exclude: [ LICENSE.txt, Gemfile, Gemfile.lock ]
 markdown: rdiscount
 brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
