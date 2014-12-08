@@ -109,7 +109,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         ConfigToAttributes.apply(this);
 
         // "up" is defined as returning a valid HTTP response from nginx (including a 404 etc)
-        httpFeed = HttpFeed.builder()
+        httpFeed = addFeed(HttpFeed.builder()
                 .uniqueTag("nginx-poll")
                 .entity(this)
                 .period(getConfig(HTTP_POLL_PERIOD))
@@ -126,7 +126,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                                     return actual != null && actual.size() == 1;
                                 }})
                         .setOnException(false))
-                .build();
+                .build());
         
         if (!Lifecycle.RUNNING.equals(getAttribute(SERVICE_STATE_ACTUAL))) {
             // TODO when updating the map, if it would change from empty to empty on a successful run

@@ -1,0 +1,9 @@
+name: Sample Nginx on SSL
+location: localhost
+services:
+- type: brooklyn.entity.proxy.nginx.NginxController
+  ssl:
+    certificateDestination: /tmp/server.crt
+    keyDestination: /tmp/server.key
+  httpsPort: 8443+
+# normally also specify a group, pointing at a web app; or use controlled dynamic web app cluster
