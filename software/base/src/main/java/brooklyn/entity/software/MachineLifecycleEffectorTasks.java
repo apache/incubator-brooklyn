@@ -45,6 +45,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -132,15 +133,19 @@ public abstract class MachineLifecycleEffectorTasks {
 
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newRestartEffector() {
-        return Effectors.effector(Startable.RESTART).
-            parameter(RestartSoftwareParameters.RESTART_CHILDREN).
-            parameter(RestartSoftwareParameters.RESTART_MACHINE).
-            impl(newRestartEffectorTask()).build();
+        return Effectors.effector(Startable.RESTART)
+                .parameter(RestartSoftwareParameters.RESTART_CHILDREN)
+                .parameter(RestartSoftwareParameters.RESTART_MACHINE)
+                .impl(newRestartEffectorTask())
+                .build();
     }
     
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newStopEffector() {
-        return Effectors.effector(Startable.STOP).impl(newStopEffectorTask()).build();
+        return Effectors.effector(Startable.STOP)
+                .parameter(StopSoftwareParameters.STOP_MACHINE)
+                .impl(newStopEffectorTask())
+                .build();
     }
 
     /**
@@ -192,7 +197,7 @@ public abstract class MachineLifecycleEffectorTasks {
         return new EffectorBody<Void>() {
             @Override
             public Void call(ConfigBag parameters) {
-                stop();
+                stop(parameters);
                 return null;
             }
         };
@@ -441,7 +446,7 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     /**
-     * whether when 'auto' mode is specified, the machine should be stopped
+     * whether when 'auto' mode is specified, the machine should be stopped when the restart effector is called
      * <p>
      * with {@link MachineLifecycleEffectorTasks}, a machine will always get created on restart if there wasn't one already
      * (unlike certain subclasses which might attempt a shortcut process-level restart)
@@ -479,7 +484,7 @@ public abstract class MachineLifecycleEffectorTasks {
         } else {
             DynamicTasks.queue("stopping (machine)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
-                stop();
+                stop(ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, true));
                 DynamicTasks.waitForLast();
                 return "Stop of machine completed with no errors.";
             }});            
@@ -514,6 +519,12 @@ public abstract class MachineLifecycleEffectorTasks {
         throw new IllegalArgumentException("Invalid value '"+isRestartChildren+"' for "+RestartSoftwareParameters.RESTART_CHILDREN.getName());
     }
 
+    /** @deprecated since 0.7.0 use {@link #stop(ConfigBag)} */
+    @Deprecated
+    public void stop() {
+        stop(ConfigBag.EMPTY);
+    }
+
     /**
      * Default stop implementation for an entity.
      * <p>
@@ -521,8 +532,13 @@ public abstract class MachineLifecycleEffectorTasks {
      * invokes {@link #preStopCustom()}, {@link #stopProcessesAtMachine()}, then finally
      * {@link #stopAnyProvisionedMachines()} and sets state {@link Lifecycle#STOPPED}
      */
-    public void stop() {
+    public void stop(ConfigBag parameters) {
         log.info("Stopping {} in {}", entity(), entity().getLocations());
+
+        Boolean isStopMachine = parameters.get(StopSoftwareParameters.STOP_MACHINE);
+
+        if (isStopMachine==null)
+            isStopMachine = Boolean.TRUE;
 
         DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
@@ -534,7 +550,7 @@ public abstract class MachineLifecycleEffectorTasks {
             preStopCustom();
             return null;
         }});
-        
+
         if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
             return;
         }
@@ -547,30 +563,40 @@ public abstract class MachineLifecycleEffectorTasks {
             return "Stop at machine completed with no errors.";
         }});
 
-        // Release this machine (even if error trying to stop process - we rethrow that after)
-        Task<StopMachineDetails<Integer>> stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() { public StopMachineDetails<Integer> call() {
-            if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
-                log.debug("Skipping stop of entity "+entity()+" when already stopped");
-                return new StopMachineDetails<Integer>("Already stopped", 0);
-            }
-            return stopAnyProvisionedMachines();
-        }});
 
-        DynamicTasks.drain(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
+        Task<StopMachineDetails<Integer>> stoppingMachine = null;
+        if (isStopMachine) {
+            // Release this machine (even if error trying to stop process - we rethrow that after)
+            stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() {
+                public StopMachineDetails<Integer> call() {
+                    if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL) == Lifecycle.STOPPED) {
+                        log.debug("Skipping stop of entity " + entity() + " when already stopped");
+                        return new StopMachineDetails<Integer>("Already stopped", 0);
+                    }
+                    return stopAnyProvisionedMachines();
+                }
+            });
 
-        // shutdown the machine if stopping process fails or takes too long
-        synchronized (stoppingMachine) {
-            // task also used as mutex by DST when it submits it; ensure it only submits once!
-            if (!stoppingMachine.isSubmitted()) {
-                // force the stoppingMachine task to run by submitting it here
-                log.warn("Submitting machine stop early in background for "+entity()+" because process stop has "+
-                        (stoppingProcess.isDone() ? "finished abnormally" : "not finished"));
-                Entities.submit(entity(), stoppingMachine);
+            DynamicTasks.drain(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
+
+            // shutdown the machine if stopping process fails or takes too long
+            synchronized (stoppingMachine) {
+                // task also used as mutex by DST when it submits it; ensure it only submits once!
+                if (!stoppingMachine.isSubmitted()) {
+                    // force the stoppingMachine task to run by submitting it here
+                    log.warn("Submitting machine stop early in background for "+entity()+" because process stop has "+
+                            (stoppingProcess.isDone() ? "finished abnormally" : "not finished"));
+                    Entities.submit(entity(), stoppingMachine);
+                }
             }
         }
 
         try {
-            if (stoppingMachine.get().value == 0) {
+            // This maintains previous behaviour of silently squashing any errors on the stoppingProcess task if the
+            // stoppingMachine exits with a nonzero value
+            boolean checkStopProcesses = (stoppingMachine == null || stoppingMachine.get().value == 0);
+
+            if (checkStopProcesses) {
                 // TODO we should test for destruction above, not merely successful "stop", as things like localhost and ssh won't be destroyed
                 DynamicTasks.waitForLast();
                 if (sshMachine.isPresent()) {
@@ -578,13 +604,12 @@ public abstract class MachineLifecycleEffectorTasks {
                     stoppingProcess.get();
                 }
             }
-
-            entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
         } catch (Throwable e) {
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
             Exceptions.propagate(e);
         }
+        entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
+        ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
 
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
     }
@@ -592,7 +617,7 @@ public abstract class MachineLifecycleEffectorTasks {
     protected void preStopCustom() {
         // nothing needed here
     }
-    
+
     protected void postStopCustom() {
         // nothing needed here
     }

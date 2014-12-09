@@ -18,29 +18,17 @@
  */
 package brooklyn.entity.basic;
 
-import static org.testng.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.jclouds.util.Throwables2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
+import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
@@ -55,9 +43,25 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import org.jclouds.util.Throwables2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 
 public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
@@ -175,7 +179,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         Assert.assertTrue(d.isRunning());
         entity.stop();
         Assert.assertEquals(d.events, ImmutableList.of("setup", "copyInstallResources", "install", "customize", "copyRuntimeResources", "launch", "stop"));
-        Assert.assertFalse(d.isRunning());
+        assertFalse(d.isRunning());
     }
     
     @Test
@@ -189,8 +193,10 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         loc.removeMachine(Locations.findUniqueSshMachineLocation(entity.getLocations()).get());
         
         // with defaults, it won't reboot machine
+        d.events.clear();
         entity.restart();
-        
+        assertEquals(d.events, ImmutableList.of("stop", "launch"));
+
         // but here, it will try to reboot, and fail because there is no machine available
         TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.RESTART, 
                 ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMachineMode.TRUE)));
@@ -207,7 +213,57 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
             ConfigBag.newInstance().configure(RestartSoftwareParameters.RESTART_MACHINE_TYPED, RestartMachineMode.TRUE)));
         t2.asTask().get();
         
-        Assert.assertFalse(d.isRunning());
+        assertFalse(d.isRunning());
+    }
+
+    @Test
+    public void testBasicSoftwareProcessStopsEverything() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        entity.start(ImmutableList.of(loc));
+        SimulatedDriver d = (SimulatedDriver) entity.getDriver();
+        Location machine = Iterables.getOnlyElement(entity.getLocations());
+
+        d.events.clear();
+        entity.stop();
+        assertEquals(d.events, ImmutableList.of("stop"));
+        assertEquals(entity.getLocations().size(), 0);
+        assertTrue(loc.getAvailable().contains(machine));
+    }
+
+    @Test
+    public void testBasicSoftwareProcessStopEverythingExplicitly() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        entity.start(ImmutableList.of(loc));
+        SimulatedDriver d = (SimulatedDriver) entity.getDriver();
+        Location machine = Iterables.getOnlyElement(entity.getLocations());
+        d.events.clear();
+
+        TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.STOP,
+                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, true)));
+        t1.asTask().get();
+
+        assertEquals(d.events, ImmutableList.of("stop"));
+        assertEquals(entity.getLocations().size(), 0);
+        assertTrue(loc.getAvailable().contains(machine));
+    }
+
+    @Test
+    public void testBasicSoftwareProcessStopsProcess() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        entity.start(ImmutableList.of(loc));
+        SimulatedDriver d = (SimulatedDriver) entity.getDriver();
+        Location machine = Iterables.getOnlyElement(entity.getLocations());
+        d.events.clear();
+
+        TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.STOP,
+                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, false
+
+                )));
+        t1.asTask().get(10, TimeUnit.SECONDS);
+
+        assertEquals(d.events, ImmutableList.of("stop"));
+        assertEquals(ImmutableList.copyOf(entity.getLocations()), ImmutableList.of(machine));
+        assertFalse(loc.getAvailable().contains(machine));
     }
     
     @Test
@@ -259,7 +315,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         Task<Void> t = entity.invoke(Startable.STOP);
         t.blockUntilEnded();
         
-        Assert.assertFalse(t.isError(), "Expected parent to succeed, not fail with "+Tasks.getError(t));
+        assertFalse(t.isError(), "Expected parent to succeed, not fail with " + Tasks.getError(t));
         Iterator<Task<?>> failures;
         failures = Tasks.failed(Tasks.descendants(t, true)).iterator();
         Assert.assertTrue(failures.hasNext(), "Expected error in descendants");
