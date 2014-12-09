@@ -32,29 +32,34 @@ public class ManagementTransitionInfo {
 
     public enum ManagementTransitionMode {
         /** Item is being created fresh, for the first time */ 
-        CREATING(false, false),
+        CREATING(false, false, false),
         /** Item is being destroyed / stopping permanently */ 
-        DESTROYING(false, false),
+        DESTROYING(false, false, false),
         
         /** Item is being mirrored (or refreshed) here from a serialized/specified state */
-        REBINDING_READONLY(true, true),
+        REBINDING_READONLY(true, true, true),
         /** Item management is stopping here, going elsewhere */
-        REBINDING_NO_LONGER_PRIMARY(false, true), 
+        REBINDING_NO_LONGER_PRIMARY(false, true, true), 
         /** Item management is starting here, having previously been running elsewhere */
-        REBINDING_BECOMING_PRIMARY(true, false),
+        REBINDING_BECOMING_PRIMARY(true, false, true),
         /** Item was being mirrored but has now been destroyed  */
-        REBINDING_DESTROYED(true, true);
+        REBINDING_DESTROYED(true, true, true),
+        /** Item management is starting here, where not sure what previous running state was */
+        REBINDING_CREATING(false, false, true);
         
-        private boolean wasReadOnly;
-        private boolean isReadOnly;
-
-        ManagementTransitionMode(boolean wasReadOnly, boolean isReadOnly) {
+        private final boolean wasReadOnly;
+        private final boolean isReadOnly;
+        private final boolean isRebinding;
+        
+        ManagementTransitionMode(boolean wasReadOnly, boolean isReadOnly, boolean isRebinding) {
             this.wasReadOnly = wasReadOnly;
             this.isReadOnly = isReadOnly;
+            this.isRebinding = isRebinding;
         }
         
         public boolean wasReadOnly() { return wasReadOnly; }
         public boolean isReadOnly() { return isReadOnly; }
+        public boolean isRebinding() { return isRebinding; }
     }
     
     public ManagementTransitionInfo(ManagementContext mgmtContext, ManagementTransitionMode mode) {

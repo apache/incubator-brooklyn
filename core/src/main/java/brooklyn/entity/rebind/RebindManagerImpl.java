@@ -1133,7 +1133,7 @@ public class RebindManagerImpl implements RebindManager {
         if (wasReadOnly==null) {
             // not known
             if (Boolean.TRUE.equals(isNowReadOnly)) return ManagementTransitionMode.REBINDING_READONLY;
-            else return ManagementTransitionMode.CREATING;
+            else return ManagementTransitionMode.REBINDING_CREATING;
         } else {
             if (wasReadOnly && isNowReadOnly)
                 return ManagementTransitionMode.REBINDING_READONLY;
