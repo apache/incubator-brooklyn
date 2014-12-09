@@ -251,6 +251,15 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         // TODO feels like that confusion could be eliminated with a single place for pre/post logic!)
         log.debug("disconnecting sensors for "+this+" in entity.preStop");
         disconnectSensors();
+        
+        // Must set the serviceProcessIsRunning explicitly to false - we've disconnected the sensors
+        // so nothing else will.
+        // Otherwise, if restarted, there will be no change to serviceProcessIsRunning, so the
+        // serviceUpIndicators will not change, so serviceUp will not be reset.
+        // TODO Is there a race where disconnectSensors could leave a task of the feeds still running
+        // which could set serviceProcessIsRunning to true again before the task completes and the feed
+        // is fully terminated?
+        setAttribute(SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, false);
     }
 
     /**

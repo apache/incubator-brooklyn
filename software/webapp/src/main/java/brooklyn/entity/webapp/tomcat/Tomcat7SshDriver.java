@@ -28,9 +28,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
@@ -40,6 +37,8 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
+
+import com.google.common.base.Preconditions;
 
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
 
@@ -75,7 +74,7 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     @Override
     public void customize() {
         newScript(CUSTOMIZING)
-                .body.append("mkdir conf logs webapps temp")
+                .body.append("mkdir -p conf logs webapps temp")
                 .failOnNonZeroResultCode()
                 .execute();
 
