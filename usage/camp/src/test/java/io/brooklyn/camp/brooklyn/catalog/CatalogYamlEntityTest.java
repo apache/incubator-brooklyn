@@ -21,6 +21,8 @@ package io.brooklyn.camp.brooklyn.catalog;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+
+import brooklyn.test.TestResourceUnavailableException;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import java.util.Collection;
@@ -42,6 +44,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testAddCatalogItem() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String registeredTypeName = "my.catalog.app.id.load";
         addCatalogOSGiEntity(registeredTypeName);
 
@@ -53,12 +57,16 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testLaunchApplicationReferencingCatalog() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String registeredTypeName = "my.catalog.app.id.launch";
         registerAndLaunchAndAssertSimpleEntity(registeredTypeName, SIMPLE_ENTITY_TYPE);
     }
 
     @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String referencedRegisteredTypeName = "my.catalog.app.id.referenced";
         String referrerRegisteredTypeName = "my.catalog.app.id.referring";
         addCatalogOSGiEntity(referencedRegisteredTypeName, SIMPLE_ENTITY_TYPE);
@@ -79,6 +87,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testLaunchApplicationChildWithCatalogReferencingOtherCatalog() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String referencedRegisteredTypeName = "my.catalog.app.id.child.referenced";
         String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
         addCatalogOSGiEntity(referencedRegisteredTypeName, SIMPLE_ENTITY_TYPE);
@@ -111,6 +121,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testLaunchApplicationWithTypeUsingJavaColonPrefix() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String registeredTypeName = SIMPLE_ENTITY_TYPE;
         String serviceName = "java:"+SIMPLE_ENTITY_TYPE;
         registerAndLaunchAndAssertSimpleEntity(registeredTypeName, serviceName);
@@ -118,6 +130,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testLaunchApplicationLoopWithJavaTypeName() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String registeredTypeName = SIMPLE_ENTITY_TYPE;
         String serviceName = SIMPLE_ENTITY_TYPE;
         registerAndLaunchAndAssertSimpleEntity(registeredTypeName, serviceName);
@@ -125,6 +139,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testLaunchApplicationChildLoopCatalogIdFails() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String referrerRegisteredTypeName = "my.catalog.app.id.child.referring";
         try {
             addCatalogChildOSGiEntity(referrerRegisteredTypeName, referrerRegisteredTypeName);
