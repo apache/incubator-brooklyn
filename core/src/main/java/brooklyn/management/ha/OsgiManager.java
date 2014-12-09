@@ -23,6 +23,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -43,6 +45,8 @@ import brooklyn.util.os.Os.DeletionResult;
 import brooklyn.util.osgi.Osgis;
 import brooklyn.util.osgi.Osgis.BundleFinder;
 import brooklyn.util.osgi.Osgis.VersionedName;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
@@ -83,7 +87,7 @@ public class OsgiManager {
         try {
             if (framework!=null) {
                 framework.stop();
-                framework.waitForStop(0);
+                framework.waitForStop(0); // 0 means indefinite
             }
         } catch (BundleException e) {
             throw Exceptions.propagate(e);
@@ -91,9 +95,21 @@ public class OsgiManager {
             throw Exceptions.propagate(e);
         }
         if (BrooklynServerPaths.isOsgiCacheForCleaning(mgmt, osgiCacheDir)) {
-            DeletionResult deleteRecursively = Os.deleteRecursively(osgiCacheDir);
-            if (deleteRecursively.getThrowable()!=null) {
-                log.debug("Unable to delete "+osgiCacheDir+" (possibly already deleted?): "+deleteRecursively.getThrowable());
+            // See exception reported in https://issues.apache.org/jira/browse/BROOKLYN-72
+            // We almost always fail to delete he OSGi temp directory due to a concurrent modification.
+            // Therefore keep trying.
+            final AtomicReference<DeletionResult> deletionResult = new AtomicReference<DeletionResult>();
+            Repeater.create("Delete OSGi cache dir")
+                    .until(new Callable<Boolean>() {
+                        public Boolean call() {
+                            deletionResult.set(Os.deleteRecursively(osgiCacheDir));
+                            return deletionResult.get().wasSuccessful();
+                        }})
+                    .limitTimeTo(Duration.ONE_SECOND)
+                    .backoffTo(Duration.millis(50))
+                    .run();
+            if (deletionResult.get().getThrowable()!=null) {
+                log.debug("Unable to delete "+osgiCacheDir+" (possibly being modified concurrently?): "+deletionResult.get().getThrowable());
             }
         }
         osgiCacheDir = null;
