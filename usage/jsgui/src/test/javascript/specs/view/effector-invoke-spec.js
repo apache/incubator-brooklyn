@@ -43,6 +43,11 @@ define([
     describe("view/effector-invoke", function () {
         // render and keep the reference to the view
         modalView.render()
+
+        // Select the third item in the option list rather than the "None" and
+        // horizontal bar placeholders.
+        modalView.$("#select-location option:eq(2)").attr("selected", "selected");
+
         it("must render a bootstrap modal", function () {
             expect(modalView.$(".modal-header").length).toBe(1)
             expect(modalView.$(".modal-body").length).toBe(1)
