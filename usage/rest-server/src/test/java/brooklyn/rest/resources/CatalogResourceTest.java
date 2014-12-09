@@ -31,6 +31,7 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -69,6 +70,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
   @Test
   /** based on CampYamlLiteTest */
   public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() {
+    TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
     String registeredTypeName = "my.catalog.entity.id";
     String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
     String yaml =
@@ -119,6 +122,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
   @Test
   public void testRegisterOSGiPolicy() {
+    TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
     String registeredTypeName = "my.catalog.policy.id";
     String policyType = "brooklyn.osgi.tests.SimplePolicy";
     String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
