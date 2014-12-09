@@ -20,6 +20,8 @@ package brooklyn.camp.lite;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+
+import brooklyn.test.TestResourceUnavailableException;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.pdp.PdpYamlTest;
@@ -152,6 +154,8 @@ public class CampYamlLiteTest {
 
     @Test
     public void testYamlServiceForCatalog() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         CatalogItem<?, ?> realItem = mgmt.getCatalog().addItem(Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml")));
         Iterable<CatalogItem<Object, Object>> retrievedItems = mgmt.getCatalog()
                 .getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo("catalog-name")));
@@ -175,6 +179,8 @@ public class CampYamlLiteTest {
 
     @Test
     public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() throws IOException {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String symbolicName = "my.catalog.app.id";
         String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
         String yaml = getSampleMyCatalogAppYaml(symbolicName, bundleUrl);
@@ -186,6 +192,8 @@ public class CampYamlLiteTest {
 
     @Test
     public void testResetXmlWithCustomEntity() throws IOException {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String symbolicName = "my.catalog.app.id";
         String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
         String yaml = getSampleMyCatalogAppYaml(symbolicName, bundleUrl);

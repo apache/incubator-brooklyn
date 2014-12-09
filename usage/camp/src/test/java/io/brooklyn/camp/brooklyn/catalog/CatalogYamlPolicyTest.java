@@ -19,6 +19,8 @@
 package io.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertEquals;
+
+import brooklyn.test.TestResourceUnavailableException;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import org.testng.annotations.Test;
@@ -111,6 +113,8 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
     }
 
     private void addCatalogOSGiPolicy(String symbolicName, String serviceType) {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         addCatalogItem(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
