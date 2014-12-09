@@ -20,6 +20,7 @@ package io.brooklyn.camp.brooklyn;
 
 import java.util.Collection;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -132,6 +133,8 @@ public class ReferencedYamlTest extends AbstractYamlTest {
      */
     @Test
     public void testCatalogLeaksBundlesToReferencedYaml() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String parentCatalogId = "my.catalog.app.id.url.parent";
         addCatalogItem(
             "brooklyn.catalog:",
