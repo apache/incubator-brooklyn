@@ -51,6 +51,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
@@ -305,7 +306,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             switch (item.getCatalogItemType()) {
                 case TEMPLATE:
                 case ENTITY:
-                    spec = createEntitySpec(plan, loader);
+                    spec = createEntitySpec(loadedItem.getSymbolicName(), plan, loader);
                     break;
                 case POLICY:
                     spec = createPolicySpec(plan, loader);
@@ -335,7 +336,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @SuppressWarnings("unchecked")
-    private <T, SpecT> SpecT createEntitySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+    private <T, SpecT> SpecT createEntitySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
 
         // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
@@ -350,7 +351,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         try {
             AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createSpec(at, camp, loader, true);
+                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, MutableSet.of(symbolicName));
             }
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
         } catch (Exception e) {
@@ -529,7 +530,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion);
         BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries);
-        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(plan, loader);
+        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(catalogSymbolicName, plan, loader);
 
         CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(spec, catalogSymbolicName, catalogVersion)
             .libraries(libraries)
@@ -543,11 +544,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return dto;
     }
 
-    private AbstractBrooklynObjectSpec<?,?> createSpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+    private AbstractBrooklynObjectSpec<?,?> createSpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         if (isPolicyPlan(plan)) {
             return createPolicySpec(plan, loader);
         } else {
-            return createEntitySpec(plan, loader);
+            return createEntitySpec(symbolicName, plan, loader);
         }
     }
 
