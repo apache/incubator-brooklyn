@@ -217,19 +217,7 @@ public class BrooklynComponentTemplateResolver {
     
     /** tries to load the Java entity class */
     public Maybe<Class<? extends Entity>> tryLoadEntityClass() {
-        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
-        String typeName = getBrooklynType();
-        
-        if (item!=null) {
-            // add additional bundles
-            loader = new BrooklynClassLoadingContextSequential(mgmt, CatalogUtils.newClassLoadingContext(mgmt, item), loader);
-            
-            if (item.getJavaType() != null) {
-                typeName = item.getJavaType();
-            }
-        }
-        
-        return loader.tryLoadClass(typeName, Entity.class);
+        return loader.tryLoadClass(getBrooklynType(), Entity.class);
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */

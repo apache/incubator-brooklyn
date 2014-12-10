@@ -421,6 +421,23 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         }
     }
 
+    @Test
+    public void testOsgiNotLeakingToParent() {
+        addCatalogOSGiEntity(SIMPLE_ENTITY_TYPE);
+        try {
+            addCatalogItem(
+                    "brooklyn.catalog:",
+                    "  id: " + SIMPLE_ENTITY_TYPE,
+                    "  version: " + TEST_VERSION + "-update",
+                    "",
+                    "services:",
+                    "- type: " + SIMPLE_ENTITY_TYPE);
+            fail("Catalog addition expected to fail due to non-existent java type " + SIMPLE_ENTITY_TYPE);
+        } catch (IllegalStateException e) {
+            assertEquals(e.getMessage(), "Recursive reference to " + SIMPLE_ENTITY_TYPE + " (and cannot be resolved as a Java type)");
+        }
+    }
+    
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
         addCatalogOSGiEntity(symbolicName, serviceType);
         String yaml = "name: simple-app-yaml\n" +
