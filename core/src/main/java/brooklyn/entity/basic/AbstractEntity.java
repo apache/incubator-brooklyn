@@ -102,6 +102,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -144,6 +145,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     
     static { BrooklynLanguageExtensions.init(); }
     
+    public static final BasicNotificationSensor<Location> LOCATION_ADDED = new BasicNotificationSensor<Location>(
+            Location.class, "entity.Location.added", "Location dynamically added to entity");
+    public static final BasicNotificationSensor<Location> LOCATION_REMOVED = new BasicNotificationSensor<Location>(
+            Location.class, "entity.Location.removed", "Location dynamically removed from entity");
+
     public static final BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.added", "Sensor dynamically added to entity");
     public static final BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
@@ -740,6 +746,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             if (truelyNewLocations.size() > 0) {
                 locations.set(ImmutableList.<Location>builder().addAll(oldLocations).addAll(truelyNewLocations).build());
             }
+            
+            for (Location loc : truelyNewLocations) {
+                emit(AbstractEntity.LOCATION_ADDED, loc);
+            }
         }
         
         if (getManagementSupport().isDeployed()) {
@@ -756,7 +766,12 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public void removeLocations(Collection<? extends Location> removedLocations) {
         synchronized (locations) {
             List<Location> oldLocations = locations.get();
+            Set<Location> truelyRemovedLocations = Sets.intersection(ImmutableSet.copyOf(removedLocations), ImmutableSet.copyOf(oldLocations));
             locations.set(MutableList.<Location>builder().addAll(oldLocations).removeAll(removedLocations).buildImmutable());
+            
+            for (Location loc : truelyRemovedLocations) {
+                emit(AbstractEntity.LOCATION_REMOVED, loc);
+            }
         }
         
         // TODO Not calling `Entities.unmanage(removedLocation)` because this location might be shared with other entities.
