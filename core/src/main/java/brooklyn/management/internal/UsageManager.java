@@ -56,11 +56,11 @@ public interface UsageManager {
     public interface UsageListener {
         public static final UsageListener NOOP = new UsageListener() {
             @Override public void onApplicationEvent(String applicationId, String applicationName, String entityType, 
-                    Map<String, String> metadata, ApplicationEvent event) {} 
+                    String catalogItemId, Map<String, String> metadata, ApplicationEvent event) {}
             @Override public void onLocationEvent(String locationId, Map<String, String> metadata, LocationEvent event) {}
         };
         
-        void onApplicationEvent(String applicationId, String applicationName, String entityType, 
+        void onApplicationEvent(String applicationId, String applicationName, String entityType, String catalogItemId,
                 Map<String, String> metadata, ApplicationEvent event);
         
         void onLocationEvent(String locationId, Map<String, String> metadata, LocationEvent event);

@@ -181,10 +181,11 @@ public class LocalUsageManager implements UsageManager {
             final ApplicationUsage.ApplicationEvent event = new ApplicationUsage.ApplicationEvent(state);
             usage.addEvent(event);        
             eventMap.put(app.getId(), usage);
-            
+
             execOnListeners(new Function<UsageListener, Void>() {
                     public Void apply(UsageListener listener) {
-                        listener.onApplicationEvent(app.getId(), app.getDisplayName(), app.getEntityType().getName(), ((EntityInternal)app).toMetadataRecord(), event);
+                        listener.onApplicationEvent(app.getId(), app.getDisplayName(), app.getEntityType().getName(),
+                                app.getCatalogItemId(), ((EntityInternal)app).toMetadataRecord(), event);
                         return null;
                     }
                     public String toString() {

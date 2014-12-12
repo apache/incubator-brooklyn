@@ -87,6 +87,7 @@ public class ApplicationUsageTrackingTest {
         mgmt.getUsageManager().addUsageListener(listener);
         
         app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
+        app.setCatalogItemId("testCatalogItem");
         app.start(ImmutableList.<Location>of());
 
         Asserts.succeedsEventually(new Runnable() {
@@ -97,11 +98,14 @@ public class ApplicationUsageTrackingTest {
                 String appId = (String) events.get(0).get(1);
                 String appName = (String) events.get(0).get(2);
                 String entityType = (String) events.get(0).get(3);
-                Map<?,?> metadata = (Map<?, ?>) events.get(0).get(4);
-                ApplicationEvent appEvent = (ApplicationEvent) events.get(0).get(5);
+                String catalogItemId = (String) events.get(0).get(4);
+                System.out.println(catalogItemId);
+                Map<?,?> metadata = (Map<?, ?>) events.get(0).get(5);
+                ApplicationEvent appEvent = (ApplicationEvent) events.get(0).get(6);
                 
                 assertEquals(appId, app.getId(), "events="+events);
                 assertNotNull(appName, "events="+events);
+                assertEquals(app.getCatalogItemId(), "testCatalogItem");
                 assertNotNull(entityType, "events="+events);
                 assertNotNull(metadata, "events="+events);
                 assertEquals(appEvent.getState(), Lifecycle.STARTING, "events="+events);
