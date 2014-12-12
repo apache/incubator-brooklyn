@@ -18,6 +18,7 @@
  */
 package brooklyn.util.task;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -182,12 +183,15 @@ public class Tasks {
             result[i] = tasks[i].asTask();
         return result;
     }
-    
+
     public static Task<List<?>> parallel(TaskAdaptable<?> ...tasks) {
         return parallelInternal("parallelised tasks", asTasks(tasks));
     }
     public static Task<List<?>> parallel(String name, TaskAdaptable<?> ...tasks) {
         return parallelInternal(name, asTasks(tasks));
+    }
+    public static Task<List<?>> parallel(Iterable<? extends TaskAdaptable<?>> tasks) {
+        return parallel(asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
     }
     public static Task<List<?>> parallel(String name, Iterable<? extends TaskAdaptable<?>> tasks) {
         return parallelInternal(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
@@ -207,6 +211,12 @@ public class Tasks {
     }
     public static TaskFactory<?> sequential(String name, TaskFactory<?> ...taskFactories) {
         return sequentialInternal(name, taskFactories);
+    }
+    public static Task<List<?>> sequential(List<? extends TaskAdaptable<?>> tasks) {
+        return sequential(asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
+    }
+    public static Task<List<?>> sequential(String name, List<? extends TaskAdaptable<?>> tasks) {
+        return sequential(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
     }
     private static Task<List<?>> sequentialInternal(String name, Task<?>[] tasks) {
         return Tasks.<List<?>>builder().name(name).parallel(false).add(tasks).build();
