@@ -21,8 +21,8 @@ package brooklyn.entity.nosql.riak;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -44,16 +44,20 @@ import brooklyn.location.Location;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
+
     private static final Logger log = LoggerFactory.getLogger(RiakClusterImpl.class);
-    private AtomicBoolean isFirstNodeSet = new AtomicBoolean();
+
+    private transient Object mutex = new Object[0];
 
     public void init() {
         super.init();
@@ -99,97 +103,93 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 .configure("group", this));
     }
 
-    protected synchronized void onServerPoolMemberChanged(Entity member) {
-        if (log.isTraceEnabled()) log.trace("For {}, considering membership of {} which is in locations {}",
-                new Object[]{this, member, member.getLocations()});
+    protected void onServerPoolMemberChanged(Entity member) {
+        synchronized (mutex) {
+            log.trace("For {}, considering membership of {} which is in locations {}", new Object[]{ this, member, member.getLocations() });
 
-        Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
-        if (belongsInServerPool(member)) {
-            // TODO can we discover the nodes by asking the riak cluster, rather than assuming what we add will be in there?
-            // TODO and can we do join as part of node starting?
+            Map<Entity, String> nodes = getAttribute(RIAK_CLUSTER_NODES);
+            if (belongsInServerPool(member)) {
+                // TODO can we discover the nodes by asking the riak cluster, rather than assuming what we add will be in there?
+                // TODO and can we do join as part of node starting?
 
-            if (nodes == null) {
-                nodes = Maps.newLinkedHashMap();
-            }
-            
-            String riakName = getRiakName(member);
-            Preconditions.checkNotNull(riakName);
+                if (nodes == null) {
+                    nodes = Maps.newLinkedHashMap();
+                }
+                String riakName = getRiakName(member);
+                Preconditions.checkNotNull(riakName);
 
-            // flag a first node to be the first node in the riak cluster.
-            if (!isFirstNodeSet.getAndSet(true)) {
-                nodes.put(member, riakName);
-                setAttribute(RIAK_CLUSTER_NODES, nodes);
+                // flag a first node to be the first node in the riak cluster.
+                Boolean firstNode = getAttribute(IS_FIRST_NODE_SET);
+                if (!Boolean.TRUE.equals(firstNode)) {
+                    setAttribute(IS_FIRST_NODE_SET, Boolean.TRUE);
 
-                ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
+                    nodes.put(member, riakName);
+                    setAttribute(RIAK_CLUSTER_NODES, nodes);
 
-                log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
-            } else {
-                // TODO: be wary of erroneous nodes but are still flagged 'in cluster'
-                // add the new node to be part of the riak cluster.
-                Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
-                    @Override
-                    public boolean apply(@Nullable Entity node) {
-                        return (node instanceof RiakNode && hasMemberJoinedCluster(node));
-                    }
-                });
+                    ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
 
-                if (anyNodeInCluster.isPresent()) {
-                    if (!nodes.containsKey(member) && !hasMemberJoinedCluster(member)) {
-
-                        String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
-                        Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
-                        if (getAttribute(IS_CLUSTER_INIT)) {
-                            Entities.invokeEffector(RiakClusterImpl.this, anyNodeInCluster.get(), RiakNode.COMMIT_RIAK_CLUSTER);
-                        }
-                        nodes.put(member, riakName);
-                        setAttribute(RIAK_CLUSTER_NODES, nodes);
-                        log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
-                    }
+                    log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
                 } else {
-                    log.error("isFirstNodeSet , but no cluster members found to add {}", member.getId());
-                }
-            }
-        } else {
-            if (nodes != null && nodes.containsKey(member)) {
-                final Entity memberToBeRemoved = member;
+                    // TODO: be wary of erroneous nodes but are still flagged 'in cluster'
+                    // add the new node to be part of the riak cluster.
+                    Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
+                        @Override
+                        public boolean apply(@Nullable Entity node) {
+                            return (node instanceof RiakNode && hasMemberJoinedCluster(node));
+                        }
+                    });
 
-                Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
-
-                    @Override
-                    public boolean apply(@Nullable Entity node) {
-                        return (node instanceof RiakNode && hasMemberJoinedCluster(node) && !node.equals(memberToBeRemoved));
+                    if (anyNodeInCluster.isPresent()) {
+                        if (!nodes.containsKey(member) && !hasMemberJoinedCluster(member)) {
+                            String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
+                            Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
+                            if (getAttribute(IS_CLUSTER_INIT)) {
+                                Entities.invokeEffector(RiakClusterImpl.this, anyNodeInCluster.get(), RiakNode.COMMIT_RIAK_CLUSTER);
+                            }
+                            nodes.put(member, riakName);
+                            setAttribute(RIAK_CLUSTER_NODES, nodes);
+                            log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
+                        }
+                    } else {
+                        log.error("isFirstNodeSet , but no cluster members found to add {}", member.getId());
                     }
-                });
-                if (anyNodeInCluster.isPresent()) {
-                    Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.LEAVE_RIAK_CLUSTER, getRiakName(memberToBeRemoved));
                 }
+            } else {
+                if (nodes != null && nodes.containsKey(member)) {
+                    final Entity memberToBeRemoved = member;
 
-                nodes.remove(member);
-                setAttribute(RIAK_CLUSTER_NODES, nodes);
-                log.info("Removing riak node {}: {}; {} from cluster", new Object[]{this, member, getRiakName(member)});
+                    Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
+                        @Override
+                        public boolean apply(@Nullable Entity node) {
+                            return (node instanceof RiakNode && hasMemberJoinedCluster(node) && !node.equals(memberToBeRemoved));
+                        }
+                    });
+                    if (anyNodeInCluster.isPresent()) {
+                        Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.LEAVE_RIAK_CLUSTER, getRiakName(memberToBeRemoved));
+                    }
 
+                    nodes.remove(member);
+                    setAttribute(RIAK_CLUSTER_NODES, nodes);
+                    log.info("Removing riak node {}: {}; {} from cluster", new Object[]{this, member, getRiakName(member)});
+                }
             }
+
+            ServiceNotUpLogic.updateNotUpIndicatorRequiringNonEmptyMap(this, RIAK_CLUSTER_NODES);
+            if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
+
+            calculateClusterAddresses();
         }
-        
-        ServiceNotUpLogic.updateNotUpIndicatorRequiringNonEmptyMap(this, RIAK_CLUSTER_NODES);
-        if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
-        
-        calculateClusterAddresses();
     }
 
     private void calculateClusterAddresses() {
-        String addresses = "";
+        List<String> addresses = Lists.newArrayList();
         for (Entity entity : this.getMembers()) {
             if (entity instanceof RiakNode && entity.getAttribute(Attributes.SERVICE_UP)) {
                 RiakNode riakNode = (RiakNode) entity;
-                addresses += riakNode.getAttribute(Attributes.SUBNET_HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_WEB_PORT) + ",";
+                addresses.add(riakNode.getAttribute(Attributes.SUBNET_HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_WEB_PORT));
             }
         }
-        if (addresses.length() > 0) {
-            setAttribute(RiakCluster.NODE_LIST, addresses.substring(0, addresses.length() -1));
-        } else {
-            setAttribute(RiakCluster.NODE_LIST, null);
-        }
+        setAttribute(RiakCluster.NODE_LIST, Joiner.on(",").join(addresses));
     }
 
     protected boolean belongsInServerPool(Entity member) {
