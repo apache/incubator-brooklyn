@@ -533,6 +533,8 @@ public abstract class MachineLifecycleEffectorTasks {
      * {@link #stopAnyProvisionedMachines()} and sets state {@link Lifecycle#STOPPED}
      */
     public void stop(ConfigBag parameters) {
+        preStopConfirmCustom();
+
         log.info("Stopping {} in {}", entity(), entity().getLocations());
 
         Boolean isStopMachine = parameters.get(StopSoftwareParameters.STOP_MACHINE);
@@ -612,6 +614,14 @@ public abstract class MachineLifecycleEffectorTasks {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
 
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
+    }
+
+    /** 
+     * Override to check whether stop can be executed.
+     * Throw if stop should be aborted.
+     */
+    protected void preStopConfirmCustom() {
+        // nothing needed here
     }
 
     protected void preStopCustom() {

@@ -111,7 +111,15 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     protected void preStart() {
         ServiceNotUpLogic.clearNotUpIndicator(this, SHUTDOWN.getName());
     }
-    
+
+    @Override
+    protected void preStopConfirmCustom() {
+        super.preStopConfirmCustom();
+        if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
+            Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
+        }
+    }
+
     @Override
     protected void preStop() {
         super.preStop();
@@ -119,7 +127,6 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         // Shutdown only if accessible: any of stop_* could have already been called.
         // Don't check serviceUp=true because stop() will already have set serviceUp=false && expectedState=stopping
         if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
-            Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
             DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.REQUEST_TIMEOUT, Duration.ONE_MINUTE)));
         } else {
             log.info("Skipping children.isEmpty check and shutdown call, because web-console not up for {}", this);
