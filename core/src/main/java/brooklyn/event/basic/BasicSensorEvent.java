@@ -65,6 +65,24 @@ public class BasicSensorEvent<T> implements SensorEvent<T> {
             this.timestamp = System.currentTimeMillis();
         }
     }
+    
+    public static <T> SensorEvent<T> of(Sensor<T> sensor, Entity source, T value, long timestamp) {
+        return new BasicSensorEvent<T>(sensor, source, value, timestamp);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> SensorEvent<T> ofUnchecked(Sensor<T> sensor, Entity source, Object value, long timestamp) {
+        return new BasicSensorEvent<T>(sensor, source, (T)value, timestamp);
+    }
+
+    public static <T> SensorEvent<T> of(Sensor<T> sensor, Entity source, T value) {
+        return new BasicSensorEvent<T>(sensor, source, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> SensorEvent<T> ofUnchecked(Sensor<T> sensor, Entity source, Object value) {
+        return new BasicSensorEvent<T>(sensor, source, (T)value);
+    }
 
     @Override
     public int hashCode() {

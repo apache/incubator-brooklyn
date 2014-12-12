@@ -146,9 +146,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     static { BrooklynLanguageExtensions.init(); }
     
     public static final BasicNotificationSensor<Location> LOCATION_ADDED = new BasicNotificationSensor<Location>(
-            Location.class, "entity.Location.added", "Location dynamically added to entity");
+            Location.class, "entity.location.added", "Location dynamically added to entity");
     public static final BasicNotificationSensor<Location> LOCATION_REMOVED = new BasicNotificationSensor<Location>(
-            Location.class, "entity.Location.removed", "Location dynamically removed from entity");
+            Location.class, "entity.location.removed", "Location dynamically removed from entity");
 
     public static final BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.added", "Sensor dynamically added to entity");
