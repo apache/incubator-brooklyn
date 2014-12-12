@@ -97,6 +97,7 @@ import com.google.common.collect.Iterables;
  *  <li> {@link #preStartCustom(MachineLocation)}
  *  <li> {@link #postStartCustom()}
  *  <li> {@link #preStopCustom()}
+ *  <li> {@link #postStopCustom()}
  * </ul>
  * Note methods at this level typically look after the {@link Attributes#SERVICE_STATE} sensor.
  *
@@ -530,7 +531,8 @@ public abstract class MachineLifecycleEffectorTasks {
      * <p>
      * Aborts if already stopped, otherwise sets state {@link Lifecycle#STOPPING} then
      * invokes {@link #preStopCustom()}, {@link #stopProcessesAtMachine()}, then finally
-     * {@link #stopAnyProvisionedMachines()} and sets state {@link Lifecycle#STOPPED}
+     * {@link #stopAnyProvisionedMachines()} and sets state {@link Lifecycle#STOPPED}.
+     * If no errors were encountered call {@link #postStopCustom()} at the end.
      */
     public void stop(ConfigBag parameters) {
         preStopConfirmCustom();
@@ -612,6 +614,11 @@ public abstract class MachineLifecycleEffectorTasks {
         }
         entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
+
+        DynamicTasks.queue("post-stop", new Callable<Void>() { public Void call() {
+            postStopCustom();
+            return null;
+        }});
 
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
     }

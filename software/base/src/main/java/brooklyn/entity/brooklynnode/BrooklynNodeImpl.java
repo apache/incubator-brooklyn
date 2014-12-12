@@ -80,6 +80,12 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         RendererHints.register(WEB_CONSOLE_URI, RendererHints.namedActionWithUrl());
     }
 
+    private class UnmanageThread extends Thread {
+        public void run() {
+            Entities.unmanage(BrooklynNodeImpl.this);
+        }
+    }
+
     private HttpFeed httpFeed;
     
     public BrooklynNodeImpl() {
@@ -131,6 +137,15 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         } else {
             log.info("Skipping children.isEmpty check and shutdown call, because web-console not up for {}", this);
         }
+    }
+    
+    @Override
+    protected void postStop() {
+        super.postStop();
+        //Don't unmanage in entity's task context as it will self-cancel the task.
+        //The external thread doesn't guarantee that the unmanage will be called *after* the stop effector completes.
+        //How to delay and make sure that we don't cancel the (almost-complete) stop effector?
+        new UnmanageThread().start();
     }
 
     public static class DeployBlueprintEffectorBody extends EffectorBody<String> implements DeployBlueprintEffector {
