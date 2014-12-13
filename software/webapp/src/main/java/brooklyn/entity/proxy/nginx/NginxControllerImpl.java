@@ -262,18 +262,13 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     public String getConfigFile() {
         NginxSshDriver driver = (NginxSshDriver) getDriver();
         if (driver==null) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("No driver for {}, so not generating config file (is entity stopping? state={})",
-                        this, getAttribute(NginxController.SERVICE_STATE_ACTUAL));
+            LOG.debug("No driver for {}, so not generating config file (is entity stopping? state={})",
+                    this, getAttribute(NginxController.SERVICE_STATE_ACTUAL));
             return null;
         }
 
-        String templateUrl = getConfig(NginxController.SERVER_CONF_TEMPLATE_URL);
-        if (templateUrl != null) {
-            return NginxConfigTemplate.generator(driver).configFile();
-        } else {
-            return NginxConfigFileGenerator.generator(driver).configFile();
-        }
+        NginxConfigFileGenerator templateGenerator = getConfig(NginxController.SERVER_CONF_GENERATOR);
+        return templateGenerator.generateConfigFile(driver, this);
     }
 
     @Override

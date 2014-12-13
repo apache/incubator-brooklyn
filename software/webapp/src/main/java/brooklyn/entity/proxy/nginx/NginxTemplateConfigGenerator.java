@@ -21,9 +21,12 @@ package brooklyn.entity.proxy.nginx;
 import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
@@ -31,21 +34,17 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
 /**
- * Processes a FreeMarker template for an {@link NginxController} configuration file.
+ * Processes a FreeMarker template to generate the {@code server.conf} configuration file for an {@link NginxController}.
  */
-public class NginxConfigTemplate {
+public class NginxTemplateConfigGenerator implements NginxConfigFileGenerator {
 
-    private NginxDriver driver;
+    public static final ConfigKey<String> SERVER_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)");
 
-    public static NginxConfigTemplate generator(NginxDriver driver) {
-        return new NginxConfigTemplate(driver);
-    }
+    public NginxTemplateConfigGenerator() { }
 
-    private NginxConfigTemplate(NginxDriver driver) {
-        this.driver = driver;
-    }
-
-    public String configFile() {
+    @Override
+    public String generateConfigFile(NginxDriver driver, NginxController nginx) {
         // Check template URL exists
         String templateUrl = driver.getEntity().getConfig(NginxController.SERVER_CONF_TEMPLATE_URL);
         ResourceUtils.create(this).checkUrlExists(templateUrl);
