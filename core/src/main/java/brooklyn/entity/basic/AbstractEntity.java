@@ -622,7 +622,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
      */
     @Override
     public <T extends Entity> T addChild(EntitySpec<T> spec) {
-        if (spec.getParent() != null && !this.equals(spec.getParent())) {
+        if (spec.getParent()==null) {
+            spec = EntitySpec.create(spec).parent(this);
+        }
+        if (!this.equals(spec.getParent())) {
             throw new IllegalArgumentException("Attempt to create child of "+this+" with entity spec "+spec+
                 " failed because spec has different parent: "+spec.getParent());
         }

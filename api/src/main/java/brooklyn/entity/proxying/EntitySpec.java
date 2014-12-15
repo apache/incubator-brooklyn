@@ -118,7 +118,9 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
                 .addInitializers(spec.getInitializers())
                 .children(spec.getChildren())
                 .members(spec.getMembers())
-                .groups(spec.getGroups());
+                .groups(spec.getGroups())
+                .catalogItemId(spec.getCatalogItemId())
+                .locations(spec.getLocations());
         
         if (spec.getParent() != null) result.parent(spec.getParent());
         if (spec.getImplementation() != null) result.impl(spec.getImplementation());

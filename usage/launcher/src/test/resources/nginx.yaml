@@ -16,9 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Sample Web App
+name: Sample Nginx on SSL
+location: localhost
 services:
-- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
-  name: Analytics Web App
-  brooklyn.config:
-    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-M2/brooklyn-example-hello-world-sql-webapp-0.6.0-M2.war
+- type: brooklyn.entity.proxy.nginx.NginxController
+  ssl:
+    certificateDestination: /tmp/server.crt
+    keyDestination: /tmp/server.key
+  httpsPort: 8443+
+# normally also specify a group, pointing at a web app; or use controlled dynamic web app cluster

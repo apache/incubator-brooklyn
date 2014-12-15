@@ -66,9 +66,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.URLParamEncoder;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 public class HttpTool {
@@ -362,4 +367,16 @@ public class HttpTool {
         return "Basic "+Base64.encodeBase64String( (credentials.getUserName()+":"+credentials.getPassword()).getBytes() );
     }
 
+    public static String encodeUrlParams(Map<?,?> data) {
+        if (data==null) return "";
+        Iterable<String> args = Iterables.transform(data.entrySet(), 
+            new Function<Map.Entry<?,?>,String>() {
+            @Override public String apply(Map.Entry<?,?> entry) {
+                Object k = entry.getKey();
+                Object v = entry.getValue();
+                return URLParamEncoder.encode(Strings.toString(k)) + (v != null ? "=" + URLParamEncoder.encode(Strings.toString(v)) : "");
+            }
+        });
+        return Joiner.on("&").join(args);
+    }
 }

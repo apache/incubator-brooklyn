@@ -19,6 +19,13 @@
 package brooklyn.entity.proxy;
 
 import java.io.Serializable;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Objects;
 
@@ -26,17 +33,19 @@ public class ProxySslConfig implements Serializable {
 
     private static final long serialVersionUID = -2692754611458939617L;
 
+    private static final Logger log = LoggerFactory.getLogger(ProxySslConfig.class);
+    
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
-        protected String certificateSourceUrl;
-        protected String keySourceUrl;
-        protected String certificateDestination;
-        protected String keyDestination;
-        protected boolean targetIsSsl = false;
-        protected boolean reuseSessions = false;
+        @SetFromFlag protected String certificateSourceUrl;
+        @SetFromFlag protected String keySourceUrl;
+        @SetFromFlag protected String certificateDestination;
+        @SetFromFlag protected String keyDestination;
+        @SetFromFlag protected boolean targetIsSsl = false;
+        @SetFromFlag protected boolean reuseSessions = false;
 
         public Builder certificateSourceUrl(String val) {
             certificateSourceUrl = val; return this;
@@ -60,6 +69,13 @@ public class ProxySslConfig implements Serializable {
             ProxySslConfig result = new ProxySslConfig(this);
             return result;
         }
+    }
+    
+    public static ProxySslConfig fromMap(Map<?,?> map) {
+        Builder b = new Builder();
+        Map<?, ?> unused = FlagUtils.setFieldsFromFlags(map, b);
+        if (!unused.isEmpty()) log.warn("Unused flags when populating "+b+" (ignoring): "+unused);
+        return b.build();
     }
 
     private String certificateSourceUrl;

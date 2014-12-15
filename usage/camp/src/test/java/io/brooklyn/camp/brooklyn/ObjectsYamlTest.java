@@ -126,7 +126,6 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         setupAndCheckTestEntityInBasicYamlWith();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynObject() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
@@ -152,7 +151,6 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynConfigurableObject() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
@@ -183,7 +181,6 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         Assert.assertTrue(configKeys.contains(ConfigurableObject.OBJECT.getName()), "Expected OBJECT key: "+configKeys);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynObjectPrefix() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
@@ -196,7 +193,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "    - $brooklyn:object:",
             "        type: brooklyn.entity.proxy.ProxySslConfig");
 
-        List testList = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
+        List<?> testList = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
 
         Assert.assertEquals(testList.size(), 3);
         for (Object entry : testList) {
@@ -204,7 +201,6 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynObjectWithFunction() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(

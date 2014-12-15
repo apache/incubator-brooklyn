@@ -62,7 +62,6 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
         setupAndCheckTestEntityInBasicYamlWith();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynConfigWithMapFunction() throws Exception {
         final Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
@@ -75,7 +74,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
             "      one: $brooklyn:entity(\"one\")",
             "      two: $brooklyn:entity(\"two\")");
 
-        Map<?,?> testMap = (Map) Entities.submit(testEntity, Tasks.builder().body(new Callable<Object>() {
+        Map<?,?> testMap = (Map<?,?>) Entities.submit(testEntity, Tasks.builder().body(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
                 return testEntity.getConfig(TestEntity.CONF_MAP_THING_OBJECT);
@@ -93,7 +92,6 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
         Assert.assertTrue(two instanceof BasicEntity, "Should have found a BasicEntity: " + two);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynConfigWithPlainMapFunction() throws Exception {
         final Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
@@ -106,7 +104,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
             "      one: $brooklyn:entity(\"one\")",
             "      two: $brooklyn:entity(\"two\")");
 
-        Map<?,?> testMap = (Map) Entities.submit(testEntity, Tasks.builder().body(new Callable<Object>() {
+        Map<?,?> testMap = (Map<?,?>) Entities.submit(testEntity, Tasks.builder().body(new Callable<Object>() {
             @Override
             public Object call() throws Exception {
                 return testEntity.getConfig(TestEntity.CONF_MAP_PLAIN);

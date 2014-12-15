@@ -79,8 +79,6 @@ public class Poller<V> {
                             handler.onFailure(val);
                         }
                     } catch (Exception e) {
-                        // 2013-12-21 AH adding add'l logging because seeing strange scheduled task abortion from here
-                        // even though all paths should be catching it
                         if (loggedPreviousException) {
                             if (log.isTraceEnabled()) log.trace("PollJob for {}, repeated consecutive failures, handling {} using {}", new Object[] {job, e, handler});
                         } else {

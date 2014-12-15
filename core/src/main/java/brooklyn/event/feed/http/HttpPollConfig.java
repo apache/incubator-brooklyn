@@ -27,15 +27,12 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
-import brooklyn.util.net.URLParamEncoder;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollConfig<T>> {
 
@@ -130,15 +127,7 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
         Map<String,String> allvars = concat(baseUriVars, vars);
         
         if (allvars != null && allvars.size() > 0) {
-            Iterable<String> args = Iterables.transform(allvars.entrySet(), 
-                    new Function<Map.Entry<String,String>,String>() {
-                        @Override public String apply(Map.Entry<String,String> entry) {
-                            String k = entry.getKey();
-                            String v = entry.getValue();
-                            return URLParamEncoder.encode(k) + (v != null ? "=" + URLParamEncoder.encode(v) : "");
-                        }
-                    });
-            uri += "?" + Joiner.on("&").join(args);
+            uri += "?" + HttpTool.encodeUrlParams(allvars);
         }
         
         return URI.create(uri);

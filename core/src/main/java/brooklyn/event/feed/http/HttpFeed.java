@@ -298,7 +298,7 @@ public class HttpFeed extends AbstractFeed {
                 URI uri = config.buildUri(builder.baseUri, baseUriVars);
                 baseUriProvider = Suppliers.ofInstance(uri);
             } else if (!builder.baseUriVars.isEmpty()) {
-                throw new IllegalStateException("Not permitted to supply URI vars when using a URI provider");
+                throw new IllegalStateException("Not permitted to supply URI vars when using a URI provider; pass the vars to the provider instead");
             }
             checkNotNull(baseUriProvider);
 

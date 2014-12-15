@@ -41,7 +41,7 @@ public interface AbstractController extends SoftwareProcess, LoadBalancer {
 
     @SetFromFlag("ssl")
     ConfigKey<ProxySslConfig> SSL_CONFIG = ConfigKeys.newConfigKey(ProxySslConfig.class,
-            "proxy.ssl.config", "configuration (e.g. certificates) for SSL; will use SSL if set, not use SSL if not set");
+            "proxy.ssl.config", "Configuration (e.g. certificates) for SSL; causes server to run with HTTPS instead of HTTP");
     
 
     @SetFromFlag("serviceUpUrlPath")
