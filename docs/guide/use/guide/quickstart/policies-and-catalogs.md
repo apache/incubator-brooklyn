@@ -17,7 +17,7 @@ Download the template [catalog.xml](catalog.xml) to your `~/.brooklyn/` folder, 
 
 {% highlight bash %}
 $ cd ~/.brooklyn
-$ wget {{site.path.guide}}/use/guide/quickstart/catalog.xml
+$ wget {{site.url_root}}{{site.path.guide}}/use/guide/quickstart/catalog.xml
 
 $ brooklyn launch
 {% endhighlight %}

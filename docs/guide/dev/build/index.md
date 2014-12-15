@@ -74,7 +74,7 @@ If there is a good reason that a file, pattern, or directory should be permanent
 
 * The **developers catalog** ([developers-catalog.xml](developers-catalog.xml)) uses artifacts from your local `~/.m2/repository/...` (after building from source). This avoids unnecessary web requests to Maven Central or Sonatype, and will allow you to work off-line.
   
-  ``wget {{site.path.guide}}/dev/build/developers-catalog.xml > ~/.brooklyn/catalog.xml`` 
+  ``wget {{site.url_root}}{{site.path.guide}}/dev/build/developers-catalog.xml > ~/.brooklyn/catalog.xml`` 
 
 ## Appendix: Sample Output
 

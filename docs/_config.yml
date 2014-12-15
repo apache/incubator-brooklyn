@@ -27,7 +27,7 @@ brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should p
 # url: /v/0.7.0-SNAPSHOT  # BROOKLYN_VERSION
 # url: 
 
-url_root: http://0.0.0.0:4000/
+url_root: http://0.0.0.0:4000
 
 path:
   style: /style

@@ -85,7 +85,7 @@ this file can be installed with:
 {% highlight bash %}
 $ mkdir ~/.brooklyn
 $ cd ~/.brooklyn
-$ wget {{site.path.guide}}/use/guide/quickstart/brooklyn.properties
+$ wget {{site.url_root}}{{site.path.guide}}/use/guide/quickstart/brooklyn.properties
 {% endhighlight %}
 
 Open this file in a text editor and follow the instructions there. The main settings are summarized below:
