@@ -22,12 +22,26 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
-import java.lang.Long;
 import java.util.Collection;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.basic.Machines;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.policy.PolicySpec;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.net.Cidr;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
@@ -49,25 +63,10 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.location.basic.Machines;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.policy.PolicySpec;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Strings;
-
 /**
  * This sets up a BIND DNS server.
  * <p>
- * <b>NOTE</b> This entity has only been certified on <i>CentOS</i>, <i>RHEL</i>,
+ * <b>NOTE</b> This entity has been certified on <i>CentOS</i>, <i>RHEL</i>,
  * <i>Ubuntu</i> and <i>Debian</i> operating systems.
  */
 public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsServer {
@@ -81,22 +80,17 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     private static final CharMatcher DOMAIN_NAME_MATCHER = DOMAIN_NAME_FIRST_CHAR_MATCHER
             .or(CharMatcher.is('-'));
 
-
     private class HostnameTransformer implements Function<Entity, String> {
         @Override
         public String apply(Entity input) {
             String hostname = input.getAttribute(getConfig(HOSTNAME_SENSOR));
-            hostname = DOMAIN_NAME_FIRST_CHAR_MATCHER.negate().trimFrom(hostname);
+            hostname = DOMAIN_NAME_FIRST_CHAR_MATCHER.negate().trimLeadingFrom(hostname);
             hostname = DOMAIN_NAME_MATCHER.negate().trimAndCollapseFrom(hostname, '-');
             if (hostname.length() > 63) {
                 hostname = hostname.substring(0, 63);
             }
             return hostname;
         }
-    }
-
-    public BindDnsServerImpl() {
-        super();
     }
 
     public String getManagementCidr() {
