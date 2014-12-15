@@ -17,18 +17,16 @@
 # under the License.
 #
 exclude: [ LICENSE.txt ]
-markdown: rdiscount
+encoding: utf-8
 
 brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
 
-#@deprecated
-#brooklyn-root-url: /
-# url: /v/0.7.0-SNAPSHOT  # BROOKLYN_VERSION
-# url: 
-
+# where this will publish
 url_root: http://0.0.0.0:4000
 
+# absolute base directories where things will land on the server
+# (prefix each with e.g. /brooklyn to test for absolute reference problems)
 path:
   style: /style
   guide: /guide
