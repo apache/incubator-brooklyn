@@ -48,6 +48,14 @@ Three quick start options are available:
 * Alternatively, [download the latest release](https://github.com/brooklyncentral/brooklyn/tarball/master) (tgz),
 * or, fork or clone the repo: `git clone git://github.com/brooklyncentral/brooklyn.git` then `mvn clean install`.
 
+Please note that there is a known issue with the build which may affect you when
+freshly-extracted source tree
+([BROOKLYN-1](https://issues.apache.org/jira/browse/BROOKLYN-1)). The workaround
+is to issue the command `mvn clean` on the fresh source tree - you should then
+be able to build without problem. Many in the Brooklyn community typically run
+`mvn clean install` and so there may be other idiosyncracies to which this
+workaround applies.
+
 ## Community
 
 
