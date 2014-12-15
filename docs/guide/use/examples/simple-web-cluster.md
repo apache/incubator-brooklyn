@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Elastic Web Cluster
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 <!-- file kept to preserve old links; remove when link not used -->

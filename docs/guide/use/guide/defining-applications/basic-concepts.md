@@ -90,6 +90,6 @@ An entity consists of a Java interface (used when interacting with the entity) a
 the entity's state in attributes (see `getAttribute(AttributeKey)``). If internal fields can be used then the data will be lost on brooklyn 
 restart, and may cause problems if the entity is to be moved to a different brooklyn management node.
 
-Next: [Advanced Concepts]({{site.url}}/use/guide/defining-applications/advanced-concepts.html).
-See also: [Management > Sensors and Effectors]({{site.url}}/use/guide/management/index.html#sensors-and-effectors).
+Next: [Advanced Concepts]({{site.path.guide}}/use/guide/defining-applications/advanced-concepts.html).
+See also: [Management > Sensors and Effectors]({{site.path.guide}}/use/guide/management/index.html#sensors-and-effectors).
 

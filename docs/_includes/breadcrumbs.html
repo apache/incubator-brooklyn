@@ -26,7 +26,7 @@ under the License.
 {% capture toc_string %}{% readj p %}{% endcapture %}
 {% jsonball toc from var toc_string %}
 
-{% capture pagesiteurl %}{{ site.url }}{{ page.url }}{% endcapture %}
+{% capture pagesiteurl %}{{ page.url }}{% endcapture %}
 
 {% for x in toc %}
     {% if pagesiteurl == x.file %}
@@ -55,7 +55,7 @@ under the License.
 
 {% if l1name %}{% else %}
     {% capture l1name %}Home{% endcapture %}
-    {% capture l1link %}{{ site.url }}{% endcapture %}
+    {% capture l1link %}{{ site.todo_page }}{% endcapture %}
     {% capture l2name %}{{ page.title }}{% endcapture %}
     {% capture l2link %}{{ pagesiteurl }}{% endcapture %}
 {% endif %}

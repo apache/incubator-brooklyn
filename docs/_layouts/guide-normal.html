@@ -25,19 +25,19 @@ under the License.
   <meta http-equiv="content-type" content="text/html; charset=iso-8859-1" />
   <title>{{ page.title }}</title>
 
-  <link rel="stylesheet" href="{{ site.url }}/style/css/guide.css" type="text/css" media="screen" />
-  <link rel="stylesheet" href="{{ site.url }}/style/css/guide-toc.css" type="text/css" media="screen" />
-  <link rel="stylesheet" href="{{ site.url }}/style/css/code.css" type="text/css" media="screen" />
+  <link rel="stylesheet" href="{{ site.path.style }}/css/guide.css" type="text/css" media="screen" />
+  <link rel="stylesheet" href="{{ site.path.style }}/css/guide-toc.css" type="text/css" media="screen" />
+  <link rel="stylesheet" href="{{ site.path.style }}/css/code.css" type="text/css" media="screen" />
 
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
   
 	<!-- Sidebar/ToC Scripts and CSS -->
-	<script src="{{ site.url }}/style/deps/jquery.js"></script>
-	<script src="{{ site.url }}/style/deps/jquery-ui/jquery-ui-1.8.18.custom.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style/deps/jquery-ui/jquery-ui-1.8.18.custom.css" />
+	<script src="{{ site.path.style }}/deps/jquery.js"></script>
+	<script src="{{ site.path.style }}/deps/jquery-ui/jquery-ui-1.8.18.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="{{ site.path.style }}/deps/jquery-ui/jquery-ui-1.8.18.custom.css" />
 	
-	<script type="text/javascript" src="{{ site.url }}/style/deps/superfish.js"></script>
-	<script type="text/javascript" src="{{ site.url }}/style/deps/jquery.cookie.js"></script>
+	<script type="text/javascript" src="{{ site.path.style }}/deps/superfish.js"></script>
+	<script type="text/javascript" src="{{ site.path.style }}/deps/jquery.cookie.js"></script>
 	
 	
 <!-- Clipboard support -->
@@ -45,12 +45,12 @@ under the License.
 <style type="text/css">
 .clipboard_container { float: right; padding: 8px; }
 .clipboard_button {
-    background-image: url("{{ site.url }}/style/img/clipboard-green-normal.png");
+    background-image: url("{{ site.path.style }}/img/clipboard-green-normal.png");
     background-size: 18px 21px;
     width: 18px; height: 21px;
 }
-.clipboard_button:hover, .clipboard_button.zeroclipboard-is-hover { background-image: url("{{ site.url }}/style/img/clipboard-green-hover.png"); }
-.clipboard_button:active, .clipboard_button.zeroclipboard-is-active { background-image: url("{{ site.url }}/style/img/clipboard-green-click.png"); }'
+.clipboard_button:hover, .clipboard_button.zeroclipboard-is-hover { background-image: url("{{ site.path.style }}/img/clipboard-green-hover.png"); }
+.clipboard_button:active, .clipboard_button.zeroclipboard-is-active { background-image: url("{{ site.path.style }}/img/clipboard-green-click.png"); }'
 </style>
 <script type="text/javascript"> <!-- clipboard -->
   ZeroClipboard.config({ moviePath: '//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.3.1/ZeroClipboard.swf' });
@@ -123,7 +123,7 @@ console.log("setting text to "+txt);
 			if (!$.cookie('brooklyn_versions') || 
 			        (($.inArray('ALL', $.cookie('brooklyn_versions').split(",")) === -1) &&
 			        ($.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1)) ){
-			    msg += "<div class='warning_banner_image'><img src='{{ site.url }}/style/img/warning.png'/></div>";
+			    msg += "<div class='warning_banner_image'><img src='{{ site.path.style }}/img/warning.png'/></div>";
 				msg += "<p>This content is for <strong>Brooklyn "+thisversion+"</strong>, and may differ across versions.</p>";
 			    msg += "<p>Are you using version "+thisversion+"?</p>";
 				msg += "<p class='warning_banner_buttons'>";
@@ -191,11 +191,11 @@ console.log("setting text to "+txt);
         </div>
         
         <ul id="quicklinks">
-            <li><a href="{{site.url}}/meta/versions.html">{{ site.brooklyn-version }}</a></li>
-            <li><a href="{{site.url}}/start/download.html">Download</a></li>
+            <li><a href="{{site.path.guide}}/meta/versions.html">{{ site.brooklyn-version }}</a></li>
+            <li><a href="{{site.path.guide}}/start/download.html">Download</a></li>
             <li><a href="https://github.com/brooklyncentral">GitHub</a></li>
             <li><a href="https://twitter.com/#!/search?q=brooklyncentral">Twitter</a></li>
-            <li><a href="{{site.url}}/meta/contact.html">Contact</a></li>
+            <li><a href="{{site.path.guide}}/meta/contact.html">Contact</a></li>
         </ul>
 
         <div id="menubar">  

@@ -1,10 +1,10 @@
 [
 { "title": "Overview",
-  "file":  "{{ site.url }}/index.html" },
+  "file":  "{{ site.path.guide }}/index.html" },
 { "title": "Walkthrough",
-  "file": "{{ site.url }}/start/walkthrough/index.html" },
+  "file": "{{ site.path.guide }}/start/walkthrough/index.html" },
 { "title": "Download",
-  "file": "{{ site.url }}/start/download.html" },
+  "file": "{{ site.path.guide }}/start/download.html" },
 { "title": "Documentation",
-  "file": "{{ site.url }}/start/docs-summary.html" }
+  "file": "{{ site.path.guide }}/start/docs-summary.html" }
 ]

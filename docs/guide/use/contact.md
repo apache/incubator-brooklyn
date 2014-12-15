@@ -4,4 +4,4 @@ title: Contact
 toc: ../toc.json
 ---
 
-{% readj /meta/contact.include.md %}
+{% readj ../meta/contact.include.md %}

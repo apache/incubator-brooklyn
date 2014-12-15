@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Overview
-toc: /toc.json
+toc: /guide/toc.json
 categories: [start]
 ---
 

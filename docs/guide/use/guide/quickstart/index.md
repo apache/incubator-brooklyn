@@ -20,7 +20,7 @@ We will be deploying an example 3-tier web application, described using this blu
 
 ## Install Brooklyn
 
-Download the [Brooklyn distribution]({{ this_dist_url_tgz }}) and expand it to your home directory ( `~/` ), or in a location of your choice. (Other [download options]({{site.url}}/start/download.html) are available.)
+Download the [Brooklyn distribution]({{ this_dist_url_tgz }}) and expand it to your home directory ( `~/` ), or in a location of your choice. (Other [download options]({{site.path.guide}}/start/download.html) are available.)
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %}
 Expand the `tar.gz` archive (note: as this is a -SNAPSHOT version, your filename will be slightly different):
@@ -85,7 +85,7 @@ this file can be installed with:
 {% highlight bash %}
 $ mkdir ~/.brooklyn
 $ cd ~/.brooklyn
-$ wget {{site.url}}/use/guide/quickstart/brooklyn.properties
+$ wget {{site.path.guide}}/use/guide/quickstart/brooklyn.properties
 {% endhighlight %}
 
 Open this file in a text editor and follow the instructions there. The main settings are summarized below:
@@ -131,7 +131,7 @@ Some sample settings for this are:
     brooklyn.location.named.softlayer-dal05 = jclouds:softlayer:dal05
     brooklyn.location.named.softlayer-dal05.displayName = Softlayer Dallas
 
-If you want to test Brooklyn on localhost, follow [these instructions]({{site.url}}/use/guide/locations/) 
+If you want to test Brooklyn on localhost, follow [these instructions]({{site.path.guide}}/use/guide/locations/) 
 to ensure that your Brooklyn can access your machine.
 
 Once updated, restart Brooklyn (or reload the properties within the web GUI).

@@ -49,7 +49,7 @@ If you want to run with more than one node in the cluster, you'll need to use a 
 that either points to multiple existing machines or to a cloud provider where you can 
 provision new machines.
 
-With appropriate setup of credentials (as described [here]({{ site.url }}/use/guide/management/index.html#startup-config)) 
+With appropriate setup of credentials (as described [here]({{ site.path.guide }}/use/guide/management/index.html#startup-config)) 
 this example can also be deployed to your favourite cloud. Let's pretend it's Amazon US East, as follows: 
 
 {% highlight bash %}
@@ -279,4 +279,4 @@ If you want to try this with a real example application using the Cassandra clus
 
 ## Contact us!
 
-If you encounter any difficulties or have any comments, please [tell us]({{ site.url }}/meta/contact.html) and we'll do our best to help.
+If you encounter any difficulties or have any comments, please [tell us]({{ site.path.guide }}/meta/contact.html) and we'll do our best to help.

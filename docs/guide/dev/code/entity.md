@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Writing an Entity
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 ## Ways to write an entity
@@ -86,6 +86,6 @@ hierarchy; it is suggested to avoid these, looking at the ones below instead):
 
 You might also find the following helpful:
 
-* **[Entity Design Tips]({{site.url}}/dev/tips/index.html#EntityDesign)**
-* The **[User Guide]({{site.url}}/use/guide/index.html)**
+* **[Entity Design Tips]({{site.path.guide}}/dev/tips/index.html#EntityDesign)**
+* The **[User Guide]({{site.path.guide}}/use/guide/index.html)**
 * The **[Mailing List](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/)**

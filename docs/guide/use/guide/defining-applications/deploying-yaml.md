@@ -6,7 +6,7 @@ categories: [use, guide, defining-applications]
 ---
 
 Once you've [written a YAML blueprint](creating-yaml.md), there are several ways to deploy it.
-These insructions assume you have [installed]({{ site.url }}/use/guide/quickstart/) Brooklyn.
+These insructions assume you have [installed]({{ site.path.guide }}/use/guide/quickstart/) Brooklyn.
 You can then:
 
 - Supply the YAML blueprint file on the CLI when launching the server:

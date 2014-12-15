@@ -1,12 +1,12 @@
 [{ "title": "Entity Lifecycle",
-  "file":  "{{ site.url }}/use/guide/entities/index.html#entity-lifestyle" }, 
+  "file":  "{{ site.path.guide }}/use/guide/entities/index.html#entity-lifestyle" }, 
 { "title": "What to Extend",
-  "file":  "{{ site.url }}/use/guide/entities/index.html#implementation-classes" }, 
+  "file":  "{{ site.path.guide }}/use/guide/entities/index.html#implementation-classes" }, 
 { "title": "Configuration",
-  "file":  "{{ site.url }}/use/guide/entities/index.html#configuration" }, 
+  "file":  "{{ site.path.guide }}/use/guide/entities/index.html#configuration" }, 
 { "title": "Implementing Sensors",
-  "file":  "{{ site.url }}/use/guide/entities/index.html#implementing-sensors" }, 
+  "file":  "{{ site.path.guide }}/use/guide/entities/index.html#implementing-sensors" }, 
 { "title": "Implementing Effectors",
-  "file":  "{{ site.url }}/use/guide/entities/index.html#implementing-effectors" },
+  "file":  "{{ site.path.guide }}/use/guide/entities/index.html#implementing-effectors" },
 { "title": "Testing",
-  "file":  "{{ site.url }}/use/guide/entities/index.html#testing" }]
+  "file":  "{{ site.path.guide }}/use/guide/entities/index.html#testing" }]

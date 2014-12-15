@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: IRC
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 IRC is a basic group chat system used by many open source projects to enable developers to 

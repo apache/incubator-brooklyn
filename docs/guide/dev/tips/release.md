@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Release Process
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 <!--

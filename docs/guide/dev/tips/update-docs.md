@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Updating the Docs
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 The Brooklyn docs live in the **docs** project in the Brooklyn codebase.
@@ -65,6 +65,6 @@ for convenience.
 
 The latest stable version typically lives in the root of the `brooklyncentral.github.com` project.
 Archived versions are kept under `/v/*` with logic in the markdown for 
-[meta/versions]({{ site.url }}/meta/versions.html) to link to related versions.  
+[meta/versions]({{ site.path.guide }}/meta/versions.html) to link to related versions.  
 Additional instructions and scripts for automating the installs can be found in `/docs/_scripts/`.
 

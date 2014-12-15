@@ -1,12 +1,12 @@
 [
 { "title": "User Guide",
-  "file":  "{{ site.url }}/use/guide/index.html",
-  "children": {% readj ./guide/toc.json %} },
+  "file":  "{{ site.path.guide }}/use/guide/index.html",
+  "children": {% readj guide/toc.json %} },
 { "title": "Examples",
-  "file":  "{{ site.url }}/use/examples/index.html", 
-  "children": {% readj ./examples/toc.json %} },
+  "file":  "{{ site.path.guide }}/use/examples/index.html", 
+  "children": {% readj examples/toc.json %} },
 { "title": "API Reference (javadoc)",
-  "file": "{{ site.url }}/use/api/index.html" },
+  "file": "{{ site.path.guide }}/use/api/index.html" },
 { "title": "Discuss",
-  "file": "{{ site.url }}/use/contact.html" }
+  "file": "{{ site.path.guide }}/use/contact.html" }
 ]

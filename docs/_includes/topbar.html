@@ -18,11 +18,11 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-{% assign p = '/toc-menu.json' %}
+{% assign p = '/guide/toc-menu.json' %}
 {% capture tocm_string %}{% readj p %}{% endcapture %}
 {% jsonball tocm from var tocm_string %}
 
-{% capture pagesiteurl %}{{ site.url }}{{ page.url }}{% endcapture %}
+{% capture pagesiteurl %}{{ page.url }}{% endcapture %}
 
 <ul id="mainmenu"><!-- INSERT LINKS -->
             

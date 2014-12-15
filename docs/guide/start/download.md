@@ -5,7 +5,7 @@ toc: ../toc.json
 ---
 {% include fields.md %}
 
-First time user? The [getting started]({{ site.url }}/use/guide/quickstart/index.html) guide will walk you through downloading Brooklyn, setup of your `brooklyn.properties` and `catalog.xml` files, and then trying the [examples](#examples). 
+First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstart/index.html) guide will walk you through downloading Brooklyn, setup of your `brooklyn.properties` and `catalog.xml` files, and then trying the [examples](#examples). 
 
 ## Download Version {{ site.brooklyn-version }}
 
@@ -31,7 +31,7 @@ First time user? The [getting started]({{ site.url }}/use/guide/quickstart/index
 </tr>
 <tr>
 	<td style='text-align:left'>Release notes</td>
-	<td style='text-align:left'><a href='{{ site.url }}/start/release-notes.html'>{{ site.brooklyn-version }}</a></td>
+	<td style='text-align:left'><a href='{{ site.path.guide }}/start/release-notes.html'>{{ site.brooklyn-version }}</a></td>
 	<td> - </td>
 </tr>
 </table>
@@ -72,7 +72,7 @@ This is a single JAR containing all of Brooklyn and its dependencies, for develo
 
 ## Release Notes
 
-Release notes can be found [here]({{ site.url }}/start/release-notes.html).
+Release notes can be found [here]({{ site.path.guide }}/start/release-notes.html).
 
 <a name="examples"></a>
 ## Examples
@@ -86,7 +86,7 @@ When this version is released, the [brooklyn-examples git repository](http://git
 
 You can checkout the examples from the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples).
 
-Maven (v3) is required to build them, as described [here]({{ site.url }}/dev/build/).
+Maven (v3) is required to build them, as described [here]({{ site.path.guide }}/dev/build/).
 The examples for this version ({{ site.brooklyn-version }}) are in the branch 
 `{% if SNAPSHOT %}{{ site.brooklyn-snapshot-git-branch }}{% else %}{{ site.brooklyn-version }}{% endif %}`, so if you have `git` and `mvn` already, you can simply:
 
@@ -112,7 +112,7 @@ These commands should do the trick:
 {% endhighlight %}
 
 
-A good example to start with is the [Elastic Web Cluster]({{site.url}}/use/examples/webcluster.html).
+A good example to start with is the [Elastic Web Cluster]({{site.path.guide}}/use/examples/webcluster.html).
 
 {% endif %} 
 
@@ -176,7 +176,7 @@ or one of the additional snapshot repositories above.
 ## Source Code
 
 Full source is at [github.com/brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).
-Information on working with the source is [here]({{ site.url }}/dev/code).
+Information on working with the source is [here]({{ site.path.guide }}/dev/code).
 
 Alternatively you can download archives of the source directly:
 

@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Global Web Fabric
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 This example shows how to build a multi-site web application *fabric*
@@ -375,4 +375,4 @@ Here are some questions to think about and code challenges to give you a steer f
     between the different clusters.
     This isn't for the faint-hearted, but whatever you create will certainly be of interest
     to people in the Brooklyn community.
-    Please [let us know]({{ site.url }}/meta/contact.html) what you've built!
+    Please [let us know]({{ site.path.guide }}/meta/contact.html) what you've built!

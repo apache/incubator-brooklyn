@@ -33,18 +33,18 @@ open-sourced here and giving you full control over what you want to happen.
 More importantly, however, this code can be shared, improved, and extended.
 
 We're still near the beginning of figuring this out: 
-[join us to make it better]({{site.url}}/meta/contact.html).
+[join us to make it better]({{site.path.guide}}/meta/contact.html).
 
 
 ## To Get Started
 
-* See the [developer's walkthrough]({{site.url}}/start/walkthrough/index.html) for a quick tour
-* Check out the [examples]({{site.url}}/use/examples/), from a global web fabric with geo-DNS to a movable PaaS target
-* Jump in to the [user guide]({{site.url}}/use/guide/) describing the 
-  [concepts]({{site.url}}/use/guide/defining-applications/basic-concepts.html)
-  and including a [tutorial]({{site.url}}/use/guide/quickstart/)
-* Or dive straight in to the code, either [reading]({{site.url}}/dev/code/) about it
+* See the [developer's walkthrough]({{site.path.guide}}/start/walkthrough/index.html) for a quick tour
+* Check out the [examples]({{site.path.guide}}/use/examples/), from a global web fabric with geo-DNS to a movable PaaS target
+* Jump in to the [user guide]({{site.path.guide}}/use/guide/) describing the 
+  [concepts]({{site.path.guide}}/use/guide/defining-applications/basic-concepts.html)
+  and including a [tutorial]({{site.path.guide}}/use/guide/quickstart/)
+* Or dive straight in to the code, either [reading]({{site.path.guide}}/dev/code/) about it
   or [gitting](http://github.com/brooklyncentral/brooklyn/) it
 
 If you like it, or if you have ideas how it could be better,
-[join the discussion]({{site.url}}/meta/contact.html).
+[join the discussion]({{site.path.guide}}/meta/contact.html).

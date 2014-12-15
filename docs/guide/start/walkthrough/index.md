@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Walkthrough
-toc: /toc.json
+toc: /guide/toc.json
 ---
 {% include fields.md %}
 
@@ -44,7 +44,7 @@ $ cd brooklyn-sample
 {% endhighlight %}
 
 *Note*: As this is a snapshot version of Brooklyn, the code above includes a `-DarchetypeCatalog` specification.
-This can be omitted for release versions, or if you already have a local `mvn install` of Brooklyn installed as described [here]({{site.url}}/dev/code/index.html).
+This can be omitted for release versions, or if you already have a local `mvn install` of Brooklyn installed as described [here]({{site.path.guide}}/dev/code/index.html).
 
 {% else %}
 
@@ -84,7 +84,7 @@ provides a template to follow.
 ## Deploying the Application
 
 If you have not already done so, follow the section in the 
-[Getting Started Guide]({{site.url}}/use/guide/quickstart/index.html) to create a `brooklyn.properties` 
+[Getting Started Guide]({{site.path.guide}}/use/guide/quickstart/index.html) to create a `brooklyn.properties` 
 file containing credentials for your preferred cloud provider. 
 
 To launch this application, build the project and run the `start.sh` script in the resulting assembly:
@@ -187,16 +187,16 @@ Fire up a JMeter session (or other load testing tool) and blast the Nginx addres
  
 In addition to the sample project created by the archetype, with its README and
 `assembly` build, you can find additional code related to this example included with Brooklyn as the ``simple-web-cluster`` example,
-described [in detail here]({{site.url}}/use/examples/webcluster).
+described [in detail here]({{site.path.guide}}/use/examples/webcluster).
 
 For your applications, you might want to mix in other data stores, messaging systems, or on-line services including PaaS.
 Brooklyn supports some of these out-of-the-box, including a wide-range of tools which it can use Whirr to provision, such as Hadoop.
 But if you have something you don't see, 
-[let us know]({{site.url}}/meta/contact.html) -- 
+[let us know]({{site.path.guide}}/meta/contact.html) -- 
 we want to work with you to 
-[write a new entity]({{site.url}}/dev/code/entity.html) or
-[policy]({{site.url}}/dev/code/policy.html) 
-and [contribute it]({{site.url}}/dev/how-to-contrib.html).
+[write a new entity]({{site.path.guide}}/dev/code/entity.html) or
+[policy]({{site.path.guide}}/dev/code/policy.html) 
+and [contribute it]({{site.path.guide}}/dev/how-to-contrib.html).
 
 
 <!--
@@ -225,7 +225,7 @@ Alternatively you can just add a ``main`` method to the application class as fol
     }
 {% endhighlight %}
 
-Compile and run this with the [``brooklyn-all`` jar]({{site.url}}/start/download.html) on the classpath,
+Compile and run this with the [``brooklyn-all`` jar]({{site.path.guide}}/start/download.html) on the classpath,
 pointing at your favourite WAR on your filesystem. 
 (If the ``import`` packages aren't picked up correctly,
 you can cheat by looking at [the file in Github](https://github.com/brooklyncentral/brooklyn/blob/master/examples/simple-web-cluster/src/main/java/brooklyn/demo/WebClusterDatabaseExample.java);
@@ -235,6 +235,6 @@ and you'll find a sample WAR which uses the database as configured above
  
 If you want to adventure beyond ``localhost`` (the default),
 simply supply the your favourite cloud (e.g. ``aws-ec2:eu-west-1``)
-with credentials set up as described [here]({{ site.url }}/use/guide/management/index.html#startup-config).
+with credentials set up as described [here]({{ site.path.guide }}/use/guide/management/index.html#startup-config).
 
 -->

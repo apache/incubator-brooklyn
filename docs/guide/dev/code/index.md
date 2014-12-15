@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Code Structure
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 {% readj index.include.md %}

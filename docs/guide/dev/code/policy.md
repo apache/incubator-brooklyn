@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Writing a Policy
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 Policies perform the active management enabled by Brooklyn.  

@@ -286,7 +286,7 @@ TODO Describe how and when objects become "live", pushed out to other nodes.
 Resilience
 ----------
 TODO
-*This section still needs to be written. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
+*This section still needs to be written. Feel free to [fork]({{site.path.guide}}/dev/code) the docs and lend a hand.*
 -->
 
 
@@ -296,7 +296,7 @@ Key APIs
 <!---
 TODO - brief overview of key APIs
 -->
-*This section still needs to be written. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
+*This section still needs to be written. Feel free to [fork]({{site.path.guide}}/dev/code) the docs and lend a hand.*
 
 - ``ManagementContext`` (Java management API)
 - ``EntityLocal`` (used by policies)
@@ -353,7 +353,7 @@ TODO , etc., example
 
 ### SubscriptionManager
 
-*This section is not complete. Feel free to [fork]({{site.url}}/dev/code) the docs and lend a hand.*
+*This section is not complete. Feel free to [fork]({{site.path.guide}}/dev/code) the docs and lend a hand.*
 
 *See the* ``SubscriptionManager`` *class.*
 <!---

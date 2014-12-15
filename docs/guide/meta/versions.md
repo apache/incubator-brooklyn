@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Versions
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 <!--- display which version we are using, based on where it is written -->
@@ -22,7 +22,7 @@ Files must be copied to the brooklyncentral.github.com repo for these links to r
 {% if site.brooklyn-version contains 'SNAPSHOT' %}
 <!--- snapshot version -->
 
-  {% if site.url == '' %}
+  {% if site.path.guide == '' %}
 
 <!--- current version (served off root of site) is snapshot (unusual) -->
 
@@ -50,7 +50,7 @@ rather than a shapshot.
 {% else %}
 <!--- not snapshot -->
 
-  {% if site.url == '' %}
+  {% if site.path.guide == '' %}
    
 <!--- current version (served off root of site) -->
 
@@ -63,7 +63,7 @@ Other versions with documentation available are listed below.
 <!--- archive version -->
 
 This is the archived documentation for Brooklyn {{ site.brooklyn-version }}
-(generated {{ site.time }}, archived under {{ site.url }}).
+(generated {{ site.time }}, archived under {{ site.path.guide }}).
 
 [View current documentation here.](/meta/versions.html)
 

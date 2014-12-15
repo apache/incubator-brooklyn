@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: License
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 Brooklyn is licensed to the public as open source under the 

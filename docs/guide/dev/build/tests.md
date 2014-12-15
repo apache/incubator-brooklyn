@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Tests
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 We have the following tests groups:

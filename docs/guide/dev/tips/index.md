@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Miscellaneous Tips and Tricks
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 ## General Good Ways of Working
@@ -13,7 +13,7 @@ toc: /toc.json
   
 * When debugging an entity, make sure the  [brooklyn.SSH logger](logging.html) is set to DEBUG and accessible.
  
-* Use tests heavily!  These are pretty good to run in the IDE (once you've completed [IDE setup]({{site.url}}/dev/build/ide.html)),
+* Use tests heavily!  These are pretty good to run in the IDE (once you've completed [IDE setup]({{site.path.guide}}/dev/build/ide.html)),
   and far quicker to spot problems than runtime, plus we get early-warning of problems introduced in the future.
   (In particular, Groovy's laxity with compilation means it is easy to introduce silly errors which good test coverage will find much faster.)
   
@@ -37,7 +37,7 @@ toc: /toc.json
   Clusters will take such a ``MachineProvisioningLocation`` (or a singleton list); fabircs take a list of locations.
   Some PaaS systems have their own location model, such as ``OpenShiftLocation``.
 
-Finally, don't be shy about [talking with others]({{site.url}}/meta/contact.html), 
+Finally, don't be shy about [talking with others]({{site.path.guide}}/meta/contact.html), 
 that's far better than spinning your wheels (or worse, having a bad experience),
 plus it means we can hopefully improve things for other people!
 

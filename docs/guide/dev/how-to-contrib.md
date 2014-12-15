@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: How to Contribute
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 ### The Process
@@ -23,7 +23,7 @@ it's easy to give back to the community.  Just:
 1. **Issue a pull request** from your GitHub repo
 
 The same process holds for contributing to this documentation (web site and user guide),
-but see the additional [tips for updating documentation]({{ site.url }}/dev/tips/update-docs.html).
+but see the additional [tips for updating documentation]({{ site.path.guide }}/dev/tips/update-docs.html).
 
 
 ### Some Words of Advice
@@ -33,6 +33,6 @@ but see the additional [tips for updating documentation]({{ site.url }}/dev/tips
                
 * Include javadoc and tests
 
-* See the [tips here]({{site.url}}/dev/tips/index.html)
+* See the [tips here]({{site.path.guide}}/dev/tips/index.html)
 
-* If you get blocked, **[hollar]({{site.url}}/meta/contact.html)**!
+* If you get blocked, **[hollar]({{site.path.guide}}/meta/contact.html)**!

@@ -50,7 +50,7 @@ Note that the installation may take some time, because the default deployment do
 the official repos.  You can monitor start-up activity for each entity in the ``Activity`` pane in the management console,
 and see more detail by tailing the log file (``tail -f brooklyn.log``).
 
-With appropriate setup (as described [here]({{ site.url }}/use/guide/management/index.html#startup-config)) 
+With appropriate setup (as described [here]({{ site.path.guide }}/use/guide/management/index.html#startup-config)) 
 this can also be deployed to your favourite cloud, let's pretend it's Amazon Ireland, as follows: 
 
 {% highlight bash %}
@@ -68,7 +68,7 @@ Ready for something more interesting?  Try this:
   --location localhost
 {% endhighlight %}
 
-This launches the class ``WebClusterDatabaseExample`` (also described in the [walkthrough]({{ site.url }}/start/walkthrough/index.html))
+This launches the class ``WebClusterDatabaseExample`` (also described in the [walkthrough]({{ site.path.guide }}/start/walkthrough/index.html))
 which launches a pool of web-servers -- of size 1 initially,
 but manually configurable (if you stop the policy first, in the GUI, then use the ``resize`` effector) --
 with an Nginx load-balancer set up in front of them, and backed by a MySQL database.
@@ -119,6 +119,6 @@ and a web-only cluster (no database) in `WebClusterExample``.
 
 The webapp that is used is included under ``examples/hello-world-webapp``.
 
-You may wish to check out the [Global Web Fabric example]({{ site.url }}/use/examples/global-web-fabric/) next.
+You may wish to check out the [Global Web Fabric example]({{ site.path.guide }}/use/examples/global-web-fabric/) next.
 
-If you encounter any difficulties, please [tell us]({{ site.url }}/meta/contact.html) and we'll do our best to help.
+If you encounter any difficulties, please [tell us]({{ site.path.guide }}/meta/contact.html) and we'll do our best to help.

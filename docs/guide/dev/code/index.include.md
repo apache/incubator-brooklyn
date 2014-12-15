@@ -21,12 +21,12 @@ bin/brooklyn launch
 {% endhighlight %}
 
 Plenty of examples are in the **examples** sub-dir,
-described [here]({{site.url}}/use/examples),
+described [here]({{site.path.guide}}/use/examples),
 and pushed to the [brooklyn-examples](http://github.com/brooklyncentral/brooklyn-examples) 
 GitHub project when a version is released.
 
 Information on using Brooklyn -- configuring locations (in `brooklyn.properties`) 
-and adding new projects to a catalog -- can be found in the [User's Guide]({{site.url}}/use/guide/quickstart/index.html).
+and adding new projects to a catalog -- can be found in the [User's Guide]({{site.path.guide}}/use/guide/quickstart/index.html).
 This document is intended to help people become familiar with the codebase.
 
 ## Project Structure
@@ -71,8 +71,8 @@ Brooklyn is split into the following projects and sub-projects:
     * **scripts**: various scripts useful for building, updating, etc. (see comments in the scripts)
     * **qa**: longevity and stress tests
     * **test-support**: provides Brooklyn-specific support for tests, used by nearly all projects in scope ``test``
-* **``docs``**: the markdown source code for this documentation, as described [here]({{site.url}}/dev/tips/update-docs.html)
-* **``examples``**: some canonical examples, as listed [here]({{site.url}}/use/examples)
+* **``docs``**: the markdown source code for this documentation, as described [here]({{site.path.guide}}/dev/tips/update-docs.html)
+* **``examples``**: some canonical examples, as listed [here]({{site.path.guide}}/use/examples)
 * **``sandbox``**: various projects, entities, and policies which the Brooklyn Project is incubating
 
  
@@ -90,9 +90,9 @@ If you want to start writing your own policies and entities, have a look at:
 
 * [Writing a Brooklyn Entity](entity.html)
 * [Writing a Brooklyn Policy](policy.html)
-* Or see the [User Guide]({{ site.url }}/use/guide/index.html) 
-  on [policies]({{ site.url }}/use/guide/policies/index.html)
-  and [entities]({{ site.url }}/use/guide/entities/index.html)
+* Or see the [User Guide]({{ site.path.guide }}/use/guide/index.html) 
+  on [policies]({{ site.path.guide }}/use/guide/policies/index.html)
+  and [entities]({{ site.path.guide }}/use/guide/entities/index.html)
 
 Where things aren't documented **please ask us** at 
 [the brooklyn mailing list](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/)

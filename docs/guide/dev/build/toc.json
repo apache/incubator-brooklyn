@@ -1,8 +1,8 @@
 [
 { "title": "Maven",
-  "file":  "{{ site.url }}/dev/build/index.html" },
+  "file":  "{{ site.path.guide }}/dev/build/index.html" },
 { "title": "IDE",
-  "file": "{{ site.url }}/dev/build/ide.html" },
+  "file": "{{ site.path.guide }}/dev/build/ide.html" },
 { "title": "Tests",
-  "file":  "{{ site.url }}/dev/build/tests.html" }
+  "file":  "{{ site.path.guide }}/dev/build/tests.html" }
 ]

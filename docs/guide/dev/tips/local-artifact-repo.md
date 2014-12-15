@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Prepopulating a Local Artifact Repository
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 On occasion it can be useful to have/control/prepopulate a local repository of entity installers <small>[1]</small>.

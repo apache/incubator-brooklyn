@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: IDE Setup
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 Gone are the days when IDE integration always just works...  Maven and Eclipse fight, 
@@ -77,7 +77,7 @@ find . \( -path "*/src/main" -or -path "*/src/test" \) -exec echo {} \; -exec mk
   or edit the ``.project`` manually adding it to the project properties).
   The tips [for jclouds maven-eclipse](http://www.jclouds.org/documentation/devguides/using-eclipse) might be helpful. 
 
-If the pain starts to be too much, come find us on IRC #brooklyncentral or [elsewhere]({{site.url}}/meta/contact.html) and we can hopefully share our pearls.
+If the pain starts to be too much, come find us on IRC #brooklyncentral or [elsewhere]({{site.path.guide}}/meta/contact.html) and we can hopefully share our pearls.
 (And if you have a tip we haven't mentioned please let us know that too!)
 
 

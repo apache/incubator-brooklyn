@@ -21,7 +21,16 @@ markdown: rdiscount
 
 brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
-brooklyn-root-url: /
 
+#@deprecated
+#brooklyn-root-url: /
 # url: /v/0.7.0-SNAPSHOT  # BROOKLYN_VERSION
-url: 
+# url: 
+
+url_root: http://0.0.0.0:4000/
+
+path:
+  style: /style
+  guide: /guide
+  v: /v
+

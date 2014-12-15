@@ -25,14 +25,14 @@ Here's a very simple YAML blueprint plan, to explain the structure:
 * The `name` is just for the benefit of us humans.
 
 * The `location` specifies where this should be deployed.
-  If you've [set up passwordless localhost SSH access]({{ site.url }}/use/guide/locations/) 
+  If you've [set up passwordless localhost SSH access]({{ site.path.guide }}/use/guide/locations/) 
   you can use `localhost` as above, but if not, just wait ten seconds for the next example.
   
 * The `services` block takes a list of the typed services we want to deploy.
   This is the meat of the blueprint plan, as you'll see below.
 
 Finally, that clipboard in the corner lets you easily copy-and-paste into the web-console:
-simply [download and launch]({{ site.url }}/use/guide/quickstart/) Brooklyn,
+simply [download and launch]({{ site.path.guide }}/use/guide/quickstart/) Brooklyn,
 then in the "Add Application" dialog at the web console
 (usually [http://127.0.0.1:8081/](http://127.0.0.1:8081/). 
 There are several other ways to deploy, including `curl` and via the command-line,
@@ -75,7 +75,7 @@ YAML supports this, and sometimes that makes more readable plans.
 (Although in this case a simple `location: localhost` is equivalent and even more succinct, but this is a tutorial.)
 
 For more information see the Locations section of the [YAML reference](yaml-reference.html) 
-and in the [User's Guide]({{ site.url }}/use/guide/locations/).
+and in the [User's Guide]({{ site.path.guide }}/use/guide/locations/).
 Another good reference is the [template brooklyn.properties](/use/guide/quickstart/brooklyn.properties),
 which if you install in `~/.brooklyn/brooklyn.properties` and edit with your credentials,  
 allows you to refer to clouds simply as `location: jclouds:aws-ec2:eu-west-1` or
@@ -97,7 +97,7 @@ ignored if deploying to `localhost` or `byon` fixed-IP machines.*
 
 This will create a VM with the specified parameters in your choice of cloud.
 In the GUI (and in the REST API), the entity is called "VM",
-and the hostname and IP address(es) are reported as [sensors]({{ site.url }}/use/guide/defining-applications/basic-concepts.html).
+and the hostname and IP address(es) are reported as [sensors]({{ site.path.guide }}/use/guide/defining-applications/basic-concepts.html).
 There are many more `provisioning.properties` supported here,
 including:
 
@@ -147,7 +147,7 @@ We've seen the configuration of machines and how to build up clusters.
 Now let's return to our app-server example and explore how more interesting
 services can be configured, composed, and combined.
 
-Also note there are some good overview materials [here]({{site.url}}//use/guide/defining-applications/basic-concepts.html)
+Also note there are some good overview materials [here]({{site.path.guide}}//use/guide/defining-applications/basic-concepts.html)
 covering clusters, sensors, effectors and more, 
 if you're the kind of person who likes to learn more about concepts before seeing them in action.
 
@@ -401,17 +401,17 @@ TODO
 ### More Information
 
 Plenty of examples of blueprints exist in the Brooklyn codebase,
-so a good starting point is to [`git clone`]({{ site.url }}/dev/code/index.html) it
+so a good starting point is to [`git clone`]({{ site.path.guide }}/dev/code/index.html) it
 and search for `*.yaml` files therein.
 
 Brooklyn lived as a Java framework for many years before we felt confident
 to make a declarative front-end, so you can do pretty much anything you want to
 by dropping to the JVM. Information on that is available:
-* in the [user guide]({{site.url}}/use/guide/entities/index.html),
-* through a [Maven archetype]({{site.url}}/use/guide/defining-applications/archetype.html),
+* in the [user guide]({{site.path.guide}}/use/guide/entities/index.html),
+* through a [Maven archetype]({{site.path.guide}}/use/guide/defining-applications/archetype.html),
 * in the [codebase](https://github.com/brooklyncentral/brooklyn),
-* and in plenty of [examples]({{site.url}}/use/examples/index.html).
+* and in plenty of [examples]({{site.path.guide}}/use/examples/index.html).
 
 You can also come talk to us, on IRC (#brooklyncentral on Freenode) or
-any of the usual [hailing frequencies]({{site.url}}/meta/contact.html),
+any of the usual [hailing frequencies]({{site.path.guide}}/meta/contact.html),
 as these documents are a work in progress.

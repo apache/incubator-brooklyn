@@ -1,10 +1,10 @@
 [
 { "title": "Structure",
-  "file":  "{{ site.url }}/dev/code/index.html" },
+  "file":  "{{ site.path.guide }}/dev/code/index.html" },
 { "title": "Writing an Entity",
-  "file": "{{ site.url }}/dev/code/entity.html" },
+  "file": "{{ site.path.guide }}/dev/code/entity.html" },
 { "title": "Writing a Policy",
-  "file":  "{{ site.url }}/dev/code/policy.html" },
+  "file":  "{{ site.path.guide }}/dev/code/policy.html" },
 { "title": "brooklyn.git (github)",
   "file":  "http://github.com/brooklyncentral/brooklyn" }
 ]

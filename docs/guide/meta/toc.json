@@ -1,8 +1,8 @@
 [
 { "title": "Versions",
-  "file":  "{{ site.url }}/meta/versions.html" },
+  "file":  "{{ site.path.guide }}/meta/versions.html" },
 { "title": "Verify",
-  "file":  "{{ site.url }}/meta/verify.html" },
+  "file":  "{{ site.path.guide }}/meta/verify.html" },
 { "title": "Contact",
-  "file":  "{{ site.url }}/meta/contact.html" }
+  "file":  "{{ site.path.guide }}/meta/contact.html" }
 ]

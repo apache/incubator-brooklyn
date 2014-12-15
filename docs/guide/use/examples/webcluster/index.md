@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Elastic Web Cluster
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 {% readj webcluster.include.md %}

@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Contact
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 {% readj contact.include.md %}

@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Brooklyn Remote Debugging
-toc: /toc.json
+toc: /guide/toc.json
 ---
 
 Usually during development, you will be running Brooklyn from your IDE (see [IDE Setup](ide.html)), in which case

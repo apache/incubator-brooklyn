@@ -1,7 +1,7 @@
 ---
 layout: guide-normal
 title: Verify the Integrity of Downloads
-toc: /toc.json
+toc: /guide/toc.json
 ---
 {% include fields.md %}
 
