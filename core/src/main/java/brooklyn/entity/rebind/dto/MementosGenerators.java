@@ -38,13 +38,13 @@ import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.management.internal.NonDeploymentManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
@@ -173,8 +173,10 @@ public class MementosGenerators {
         Map<AttributeSensor, Object> allAttributes = entity.getAllAttributes();
         for (@SuppressWarnings("rawtypes") Map.Entry<AttributeSensor, Object> entry : allAttributes.entrySet()) {
             AttributeSensor<?> key = checkNotNull(entry.getKey(), allAttributes);
-            Object value = entry.getValue();
-            builder.attributes.put((AttributeSensor<?>)key, value);
+            if (key.getPersistenceMode() != SensorPersistenceMode.NONE) {
+                Object value = entry.getValue();
+                builder.attributes.put((AttributeSensor<?>)key, value);
+            }
         }
         
         for (Location location : entity.getLocations()) {

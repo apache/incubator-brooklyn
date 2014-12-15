@@ -18,6 +18,8 @@
  */
 package brooklyn.event.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
@@ -26,16 +28,57 @@ import javax.annotation.Nullable;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 
 public class Sensors {
+
+    @Beta
+    public static <T> Builder<T> builder(TypeToken<T> type, String name) {
+        return new Builder<T>().type(type).name(name);
+    }
+
+    @Beta
+    public static <T> Builder<T> builder(Class<T> type, String name) {
+        return new Builder<T>().type(type).name(name);
+    }
+    
+    @Beta
+    public static class Builder<T> {
+        private String name;
+        private TypeToken<T> type;
+        private String description;
+        private SensorPersistenceMode persistence;
+        
+        protected Builder() { // use builder(type, name) instead
+        }
+        public Builder<T> name(String val) {
+            this.name = checkNotNull(val, "name"); return this;
+        }
+        public Builder<T> type(Class<T> val) {
+            return type(TypeToken.of(val));
+        }
+        public Builder<T> type(TypeToken<T> val) {
+            this.type = checkNotNull(val, "type"); return this;
+        }
+        public Builder<T> description(String val) {
+            this.description = val; return this;
+        }
+        public Builder<T> persistence(SensorPersistenceMode val) {
+            this.persistence = val; return this;
+        }
+        public AttributeSensor<T> build() {
+            return new BasicAttributeSensor<T>(type, name, description, persistence);
+        }
+    }
 
     public static <T> AttributeSensor<T> newSensor(Class<T> type, String name) {
         return new BasicAttributeSensor<T>(type, name);

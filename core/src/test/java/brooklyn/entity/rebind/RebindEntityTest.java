@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -52,6 +53,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -574,6 +576,25 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         
         assertEquals(newApp.getAttribute(MY_DYNAMIC_SENSOR), "myval");
         assertEquals(newApp.getEntityType().getSensor(sensorName).getDescription(), sensorDescription);
+    }
+
+    @Test
+    public void testRebindDoesNotPersistTransientAttribute() throws Exception {
+        final String sensorName = "test.mydynamicsensor";
+        final AttributeSensor<Object> MY_DYNAMIC_SENSOR = Sensors.builder(Object.class, sensorName)
+                .persistence(SensorPersistenceMode.NONE)
+                .build();
+        
+        // Anonymous inner class: we will not be able to rebind that.
+        @SuppressWarnings("serial")
+        Semaphore unrebindableObject = new Semaphore(1) {
+        };
+        
+        origApp.setAttribute(MY_DYNAMIC_SENSOR, unrebindableObject);
+        assertEquals(origApp.getAttribute(MY_DYNAMIC_SENSOR), unrebindableObject);
+
+        newApp = rebind();
+        assertNull(newApp.getAttribute(MY_DYNAMIC_SENSOR));
     }
 
     @Test
