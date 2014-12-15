@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: User Guide
 toc: guide_toc.json
 categories: use

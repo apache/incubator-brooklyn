@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Verify the Integrity of Downloads
 toc: /toc.json
 ---

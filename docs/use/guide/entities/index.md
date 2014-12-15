@@ -1,6 +1,6 @@
 ---
 title: Custom Entity Development
-layout: page
+layout: guide-normal
 toc: ../guide_toc.json
 categories: [use, guide, entities]
 ---

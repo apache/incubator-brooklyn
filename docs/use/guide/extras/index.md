@@ -1,6 +1,6 @@
 ---
 title: Systems Available Out-of-the-Box
-layout: page
+layout: guide-normal
 toc: ../guide_toc.json
 categories: [use, guide]
 ---

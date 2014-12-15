@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Known Issues
 toc: ../toc.json
 ---

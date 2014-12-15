@@ -1,6 +1,6 @@
 ---
 title: Locations
-layout: page
+layout: guide-normal
 toc: ../guide_toc.json
 categories: [use, guide]
 

@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Release Notes
 toc: ../toc.json
 ---

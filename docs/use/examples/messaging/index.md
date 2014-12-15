@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Publish-Subscribe Messagiung
 toc: /toc.json
 ---

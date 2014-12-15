@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Miscellaneous Tips and Tricks
 toc: /toc.json
 ---

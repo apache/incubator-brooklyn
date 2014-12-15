@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Writing a Policy
 toc: /toc.json
 ---

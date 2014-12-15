@@ -1,6 +1,6 @@
 ---
 title: Using Chef in YAML Blueprints
-layout: page
+layout: guide-normal
 toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---

@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Getting to Code
 toc: /toc.json
 ---

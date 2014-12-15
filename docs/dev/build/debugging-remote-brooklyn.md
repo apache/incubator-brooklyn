@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Brooklyn Remote Debugging
 toc: /toc.json
 ---

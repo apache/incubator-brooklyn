@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Brooklyn Licenses
 toc: /toc.json
 ---

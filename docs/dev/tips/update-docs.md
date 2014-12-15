@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Updating the Docs
 toc: /toc.json
 ---

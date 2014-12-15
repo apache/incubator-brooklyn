@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Overview
 toc: /toc.json
 categories: [start]

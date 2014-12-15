@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: API Reference
 toc: ../../toc.json
 ---

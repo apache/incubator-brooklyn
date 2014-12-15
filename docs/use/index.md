@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Using Brooklyn
 toc: ../toc.json
 ---

@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: guide-normal
 title: Code Structure
 toc: /toc.json
 ---
