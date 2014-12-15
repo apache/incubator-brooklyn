@@ -27,6 +27,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 
+import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.SetMultimap;
@@ -57,6 +58,7 @@ public class SubscriptionTracker {
     
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        Preconditions.checkState(context != null, "Invalid subscription context; Management stopped");
         SubscriptionHandle handle = context.subscribe(producer, sensor, listener);
         synchronized (subscriptions) {
             subscriptions.put(producer, handle);
@@ -66,6 +68,7 @@ public class SubscriptionTracker {
     
     /** @see SubscriptionContext#subscribeToChildren(Entity, Sensor, SensorEventListener) */
     public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        Preconditions.checkState(context != null, "Invalid subscription context; Management stopped");
         SubscriptionHandle handle = context.subscribeToChildren(parent, sensor, listener);
         synchronized (subscriptions) {
             subscriptions.put(parent, handle);
@@ -77,6 +80,7 @@ public class SubscriptionTracker {
      * @see SubscriptionContext#subscribeToMembers(Group, Sensor, SensorEventListener)
      */
     public <T> SubscriptionHandle subscribeToMembers(Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        Preconditions.checkState(context != null, "Invalid subscription context; Management stopped");
         SubscriptionHandle handle = context.subscribeToMembers(parent, sensor, listener);
         synchronized (subscriptions) {
             subscriptions.put(parent, handle);
@@ -90,6 +94,7 @@ public class SubscriptionTracker {
      * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
      */
     public boolean unsubscribe(Entity producer) {
+        if (context == null) return false;
         Collection<SubscriptionHandle> handles;
         synchronized (subscriptions) {
             handles = subscriptions.removeAll(producer);
@@ -104,34 +109,37 @@ public class SubscriptionTracker {
     }
 
     /**
-    * Unsubscribes the given producer.
-    *
-    * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
-    */
-   public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
-       synchronized (subscriptions) {
-           subscriptions.remove(producer, handle);
-       }
-       return context.unsubscribe(handle);
-   }
+     * Unsubscribes the given producer.
+     *
+     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+     */
+    public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+        if (context == null) return false;
+        synchronized (subscriptions) {
+            subscriptions.remove(producer, handle);
+        }
+        return context.unsubscribe(handle);
+    }
 
     /**
-    * @return an ordered list of all subscription handles
-    */
-   public Collection<SubscriptionHandle> getAllSubscriptions() {
-       synchronized (subscriptions) {
-           return ImmutableList.copyOf(subscriptions.values());
-       }
-   }
-   
-   public void unsubscribeAll() {
-       Collection<SubscriptionHandle> subscriptionsSnapshot;
-       synchronized (subscriptions) {
-           subscriptionsSnapshot = ImmutableList.copyOf(subscriptions.values());
-           subscriptions.clear();
-       }
-       for (SubscriptionHandle s: subscriptionsSnapshot) {
-           context.unsubscribe(s);
-       }
-   }
+     * @return an ordered list of all subscription handles
+     */
+    public Collection<SubscriptionHandle> getAllSubscriptions() {
+        Preconditions.checkState(context != null, "Invalid subscription context; Management stopped");
+        synchronized (subscriptions) {
+            return ImmutableList.copyOf(subscriptions.values());
+        }
+    }
+
+    public void unsubscribeAll() {
+        if (context == null) return;
+        Collection<SubscriptionHandle> subscriptionsSnapshot;
+        synchronized (subscriptions) {
+            subscriptionsSnapshot = ImmutableList.copyOf(subscriptions.values());
+            subscriptions.clear();
+        }
+        for (SubscriptionHandle s: subscriptionsSnapshot) {
+            context.unsubscribe(s);
+        }
+    }
 }
