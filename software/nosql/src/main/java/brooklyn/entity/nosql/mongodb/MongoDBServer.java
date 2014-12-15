@@ -25,6 +25,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
@@ -48,8 +49,10 @@ public interface MongoDBServer extends AbstractMongoDBServer {
     AttributeSensor<String> HTTP_INTERFACE_URL = Sensors.newStringSensor(
             "mongodb.server.http_interface", "URL of the server's HTTP console");
 
-    AttributeSensor<BasicBSONObject> STATUS_BSON = Sensors.newSensor(BasicBSONObject.class,
-            "mongodb.server.status.bson", "Server status (BSON/JSON map ojbect)");
+    AttributeSensor<BasicBSONObject> STATUS_BSON = Sensors.builder(BasicBSONObject.class, "mongodb.server.status.bson")
+            .description("Server status (BSON/JSON map ojbect)")
+            .persistence(SensorPersistenceMode.NONE)
+            .build();
     
     AttributeSensor<Double> UPTIME_SECONDS = Sensors.newDoubleSensor(
             "mongodb.server.uptime", "Server uptime in seconds");
