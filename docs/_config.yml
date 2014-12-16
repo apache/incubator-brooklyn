@@ -26,9 +26,23 @@ brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should p
 url_root: http://0.0.0.0:4000
 
 # absolute base directories where things will land on the server
-# (prefix each with e.g. /brooklyn to test for absolute reference problems)
 path:
   style: /style
   guide: /guide
+  website: /website
   v: /v
+# (to test for absolute reference problems you can prefix each of the above,
+# with e.g. /brooklyn , and set the baseurl below)
+#baseurl: /brooklyn
+
+# Use local copies of dependencies in dev build (switched to remote using URLs for prod build)
+dependency_mode: local
+dependency_urls:
+  bootstrap.css: https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css
+  bootstrap.js: https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js
+  jquery.js: https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
+
+# These files should not be included in the final build (in addition to _* contents)
+
+exclude: ['README.md']
 
