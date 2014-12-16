@@ -178,6 +178,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
     @Override
     public void disconnectSensors() {
+        super.disconnectSensors();
         disconnectServiceUpIsRunning();
     }
 
