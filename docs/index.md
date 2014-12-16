@@ -11,3 +11,10 @@ Consider looking at:
 * <a href="{{ site.path.guide }}/">the brooklyn user guide (version 0.7.0-SNAPSHOT <!-- BROOKLYN_VERSION --></a>
 
 Also see the file <code>README.md</code> in this directory.
+
+For reference, this build uses the following variables:
+
+* url:  `{{ site.url }}`
+* baseurl: `{{ site.baseurl }}`
+* path map: `{{ site.path }}`
+

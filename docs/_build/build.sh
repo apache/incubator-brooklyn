@@ -22,24 +22,24 @@ function help() {
   echo "* original : to build the files in their original location (website it /website and guide in /guide/, for testing)"
   echo "and supported ARGS are:"
   echo "* --skip-javadoc : to skip javadoc build"
+  echo "* --serve : serve files from _site after building (for testing)"
   echo 'with any remaining ARGS passed to jekyll as `jekyll build --config ... ARGS`.'
 }
 
-function deduce_config() {
-  DIRS_TO_MOVE=( )
+function parse_command() {
   case $1 in
   help)
     help
     exit 0 ;;
   website-root)
-    CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-guide.yml,_build/config-website-root.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-guide.yml,_build/config-website-root.yml
     DIRS_TO_MOVE[0]=website
     DIRS_TO_MOVE_TARGET[0]=""
     SKIP_JAVADOC=true
     SUMMARY="website files in the root"
     ;;
   guide-latest)
-    CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-latest.yml,_build/config-style-latest.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-latest.yml,_build/config-style-latest.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=style
@@ -48,7 +48,7 @@ function deduce_config() {
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
   guide-version)
-    CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-version.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-version.yml
     # Mac bash defaults to v3 not v4, so can't use assoc arrays :(
     DIRS_TO_MOVE[0]=guide
     # BROOKLYN_VERSION_BELOW
@@ -59,14 +59,14 @@ function deduce_config() {
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
   test-guide-root)
-    CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-root.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-root.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=""
     JAVADOC_TARGET=_site/use/api/
     SUMMARY="user guide files in the root"
     ;;
   test-both)
-    CONFIG=_config.yml,_build/config-production.yml,_build/config-website-root.yml,_build/config-guide-latest.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-website-root.yml,_build/config-guide-latest.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=website
@@ -75,7 +75,7 @@ function deduce_config() {
     SUMMARY="all files, website in root and guide in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
   test-both-sub)
-    CONFIG=_config.yml,_build/config-production.yml,_build/config-subpath-brooklyn.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-subpath-brooklyn.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=brooklyn/v/latest
     DIRS_TO_MOVE[1]=website
@@ -86,7 +86,7 @@ function deduce_config() {
     SUMMARY="all files in /brooklyn"
     ;;
   original)
-    CONFIG=_config.yml,_build/config-production.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml
     SUMMARY="all files in their original place"
     ;;
   "")
@@ -98,9 +98,32 @@ function deduce_config() {
   esac
 }
 
+function parse_arguments() {
+  while (( "$#" )); do
+    case $1 in
+    "--serve")
+      SERVE_AFTERWARDS=true
+      shift
+      ;;
+    "--skip-javadoc")
+      SKIP_JAVADOC=true
+      shift
+      ;;
+    "--")
+      shift
+      break
+      ;;
+    *)
+      break
+      ;;
+    esac
+  done
+  JEKYLL_ARGS="$@"
+}
+
 function make_jekyll() {
-  echo JEKYLL running with: jekyll build $CONFIG $@
-  jekyll build --config $CONFIG $@ || return 1
+  echo JEKYLL running with: jekyll build $JEKYLL_CONFIG $JEKYLL_ARGS
+  jekyll build --config $JEKYLL_CONFIG $JEKYLL_ARGS || return 1
   echo JEKYLL completed
   for DI in "${!DIRS_TO_MOVE[@]}"; do
     D=${DIRS_TO_MOVE[$DI]}
@@ -111,22 +134,14 @@ function make_jekyll() {
     cp -r _site/$D/* _site/$DT
     rm -rf _site/$D
   done
+  # normally we exclude things but we can also set TARGET as long_grass and it will get destroyed
   rm -rf _site/long_grass
 }
 
-rm -rf _site
-
-deduce_config $@
-shift
-
-if [ "$1" = "--skip-javadoc" ]; then
-  SKIP_JAVADOC=true
-  shift
-fi
-
-make_jekyll || { echo ERROR: could not build docs in `pwd` ; exit 1 ; }
-
-if [ "$SKIP_JAVADOC" != "true" ]; then
+function make_javadoc() {
+  if [ "$SKIP_JAVADOC" == "true" ]; then
+    return
+  fi
   pushd _build > /dev/null
   rm -rf target/apidocs
   ./make-javadoc.sh || { echo ERROR: failed javadoc build ; exit 1 ; }
@@ -134,8 +149,22 @@ if [ "$SKIP_JAVADOC" != "true" ]; then
   if [ ! -z "$JAVADOC_TARGET" ]; then
     mv _build/target/apidocs/* $JAVADOC_TARGET
   fi
-fi
+}
+
+rm -rf _site
+
+parse_command $@
+shift
+parse_arguments $@
+
+make_jekyll || { echo ERROR: failed jekyll docs build in `pwd` ; exit 1 ; }
+
+make_javadoc || { echo ERROR: failed javadoc build ; exit 1 ; }
 
 # TODO build catalog
 
 echo FINISHED: $SUMMARY of `pwd`/_site 
+
+if [ $SERVE_AFTERWARDS == "true" ]; then
+  _build/serve-site.sh
+fi

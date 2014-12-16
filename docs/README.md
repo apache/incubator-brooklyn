@@ -143,11 +143,21 @@ There are a number of different builds possible; to list these, run:
 
     _build/build.sh help
 
-The normal build outputs to `_site/`.  The three builds which are relevant to updating the live site are:
+The normal build outputs to `_site/`.  The three builds which are most relevant to updating the live site are:
 
 * **website-root**: to build the website only, in the root
 * **guide-latest**: to build the guide only, in `/v/latest/`
 * **guide-version**: to build the guide only, in the versioned namespace e.g. `/v/<version>/`
+
+There are some others, including `test-both`, which apply slightly different configurations
+useful for testing.
+Supported options beyond that include `--serve`, to start a web browser serving the content of `_site/`,
+and `--skip-javadoc`, to speed up the build significantly by skipping javadoc generation.
+A handy command for testing the live files, analogous to `jekyll serve` 
+but with the correct file structure, is:
+
+    _build/build.sh test-both --skip-javadoc --serve
+
 
 Publishing the Website and Guide
 --------------------------------
