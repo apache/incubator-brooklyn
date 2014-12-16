@@ -170,15 +170,15 @@ from the Apache subversion repository. We recommend setting this up as a sibling
 `incubator-brooklyn` git project directory:
 
     # verify we're in the right location and the site does not already exist
-    ls _build/build.sh || { echo "ERROR: you should be in the docs/ directory to run this command" ; exit 1 }
-    ls ../../incubator-brooklyn-site-public && { echo "ERROR: incubator-brooklyn-site-public dir already exists ; exit 1 }
-    pushd ../..
+    ls _build/build.sh || { echo "ERROR: you should be in the docs/ directory to run this command" ; exit 1 ; }
+    ls ../../incubator-brooklyn-site-public > /dev/null && { echo "ERROR: incubator-brooklyn-site-public dir already exists" ; exit 1 ; }
+    pushd `pwd -P`/../..
     
-    svn co https://svn.apache.org/repos/asf/incubator/brooklyn/site incubator-brooklyn-site-public
+    svn --non-interactive --trust-server-cert co https://svn.apache.org/repos/asf/incubator/brooklyn/site incubator-brooklyn-site-public
     
     # verify it
     cd incubator-brooklyn-site-public
-    ls style/css/website.css || { echo "ERROR: checkout is wrong" ; exit 1 }
+    ls style/img/apache-brooklyn-logo-244px-wide.png || { echo "ERROR: checkout is wrong" ; exit 1 ; }
     export BROOKLYN_SITE_DIR=`pwd`
     popd
     echo "SUCCESS: checked out site in $BROOKLYN_SITE_DIR"
@@ -188,10 +188,8 @@ with the `--install` option.  (This assumes the relative structure described abo
 structure, set BROOKLYN_SITE_DIR to point to the directory as above.  Alternatively you can copy files manually,
 using the instructions in `build.sh` as a guide.)
 
-**TODO: the `--install` option below is not yet implemented**
-
 A typical update consists of the following commands (or a subset),
-copied to `${BROOKLYN_SITE_DIR:../../incubator-brooklyn-site-public}`:
+copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
 
     # main website, relative to / 
     _build/build.sh website-root --install
@@ -205,18 +203,10 @@ copied to `${BROOKLYN_SITE_DIR:../../incubator-brooklyn-site-public}`:
 Next it is recommended to go to the SVN dir and 
 review the changes using the usual `svn` commands -- `status`, `diff`, `add`, `rm`, etc:
 
-    cd ${BROOKLYN_SITE_DIR:../../incubator-brooklyn-site-public}
+    cd ${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
 
 You must then check in the changes:
 
     svn ci -m 'Update Brooklyn website'
 
 The changes should become live within a few minutes.
-
-
-<!-- OLD notes:
-
-Synchronise the generated site into the Subversion working copy - please amend this command to include the correct paths for your setup:
-
-    rsync -rv --delete --exclude .svn --exclude v ~/incubator-brooklyn-site/_site/ ~/incubator-brooklyn-site-public
--->

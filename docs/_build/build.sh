@@ -23,6 +23,7 @@ function help() {
   echo "and supported ARGS are:"
   echo "* --skip-javadoc : to skip javadoc build"
   echo "* --serve : serve files from _site after building (for testing)"
+  echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
   echo 'with any remaining ARGS passed to jekyll as `jekyll build --config ... ARGS`.'
 }
 
@@ -36,6 +37,8 @@ function parse_command() {
     DIRS_TO_MOVE[0]=website
     DIRS_TO_MOVE_TARGET[0]=""
     SKIP_JAVADOC=true
+    INSTALL_RSYNC_OPTIONS="--exclude v"
+    INSTALL_RSYNC_SUBDIR=""
     SUMMARY="website files in the root"
     ;;
   guide-latest)
@@ -44,6 +47,8 @@ function parse_command() {
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=style
     DIRS_TO_MOVE_TARGET[1]=v/latest/style
+    INSTALL_RSYNC_OPTIONS=""
+    INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=_site/${DIRS_TO_MOVE_TARGET[0]}/use/api/
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
@@ -55,6 +60,8 @@ function parse_command() {
     DIRS_TO_MOVE_TARGET[0]=v/0.7.0-SNAPSHOT
     DIRS_TO_MOVE[1]=style
     DIRS_TO_MOVE_TARGET[1]=${DIRS_TO_MOVE_TARGET[0]}/style
+    INSTALL_RSYNC_OPTIONS=""
+    INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=_site/${DIRS_TO_MOVE_TARGET[0]}/use/api/
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
@@ -96,17 +103,22 @@ function parse_command() {
     echo "ERROR: invalid argument '$1'; try 'help'"
     exit 1 ;;
   esac
+  SUMMARY="$SUMMARY of `pwd`/_site"
 }
 
 function parse_arguments() {
   while (( "$#" )); do
     case $1 in
+    "--skip-javadoc")
+      SKIP_JAVADOC=true
+      shift
+      ;;
     "--serve")
       SERVE_AFTERWARDS=true
       shift
       ;;
-    "--skip-javadoc")
-      SKIP_JAVADOC=true
+    "--install")
+      INSTALL_AFTERWARDS=true
       shift
       ;;
     "--")
@@ -151,6 +163,24 @@ function make_javadoc() {
   fi
 }
 
+function make_install() {
+  if [ "$INSTALL_AFTERWARDS" != "true" ]; then
+    return
+  fi
+  SITE_DIR=${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
+  ls $SITE_DIR/style/img/apache-brooklyn-logo-244px-wide.png > /dev/null || { echo "ERROR: cannot find incubator-brooklyn-site-public; set BROOKLYN_SITE_DIR" ; return 1 ; }
+  if [ -z ${INSTALL_RSYNC_OPTIONS+SET} ]; then echo "ERROR: --install not supported for this build" ; return 1 ; fi
+  if [ -z ${INSTALL_RSYNC_SUBDIR+SET} ]; then echo "ERROR: --install not supported for this build" ; return 1 ; fi
+  
+  RSYNC_COMMAND_BASE="rsync -rvi --delete --exclude .svn"
+  RSYNC_COMMAND="$RSYNC_COMMAND_BASE $INSTALL_RSYNC_OPTIONS ./_site/$INSTALL_RSYNC_SUBDIR $SITE_DIR/$INSTALL_RSYNC_SUBDIR"
+  echo INSTALLING to local site svn repo with: $RSYNC_COMMAND
+  $RSYNC_COMMAND || return 1
+  
+  SUMMARY="$SUMMARY, installed to $SITE_DIR"
+}
+
+
 rm -rf _site
 
 parse_command $@
@@ -163,8 +193,14 @@ make_javadoc || { echo ERROR: failed javadoc build ; exit 1 ; }
 
 # TODO build catalog
 
-echo FINISHED: $SUMMARY of `pwd`/_site 
+# TODO install
 
-if [ $SERVE_AFTERWARDS == "true" ]; then
+if [ "$INSTALL_AFTERWARDS" == "true" ]; then
+  make_install || { echo ERROR: failed to install ; exit 1 ; }
+fi
+
+echo FINISHED: $SUMMARY 
+
+if [ "$SERVE_AFTERWARDS" == "true" ]; then
   _build/serve-site.sh
 fi
