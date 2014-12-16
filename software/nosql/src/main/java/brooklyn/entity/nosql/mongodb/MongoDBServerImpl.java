@@ -160,6 +160,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     @Override
     protected void disconnectSensors() {
+        super.disconnectSensors();
         disconnectServiceUpIsRunning();
         if (serviceStats != null) serviceStats.stop();
         if (replicaSetStats != null) replicaSetStats.stop();
