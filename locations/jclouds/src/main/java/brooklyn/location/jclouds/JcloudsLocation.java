@@ -765,11 +765,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             customizedTimestamp = Duration.of(provisioningStopwatch);
             
             LOG.info("Finished VM "+setup.getDescription()+" creation:"
-                + " "+sshMachineLocation.getUser()+"@"+sshMachineLocation.getAddress() + " ready after "+Duration.of(provisioningStopwatch).toStringRounded()
-                + " ("+template+" template built in "+Duration.of(templateTimestamp).toStringRounded()+";"
-                + " "+node+" provisioned in "+Duration.of(provisionTimestamp).subtract(templateTimestamp).toStringRounded()+";"
-                + " "+sshMachineLocation+" ssh usable in "+Duration.of(usableTimestamp).subtract(provisionTimestamp).toStringRounded()+";"
-                + " and os customized in "+Duration.of(customizedTimestamp).subtract(usableTimestamp).toStringRounded()+" - "+Joiner.on(", ").join(customisationForLogging)+")");
+                    + " "+sshMachineLocation.getUser()+"@"+sshMachineLocation.getAddress()+":"+sshMachineLocation.getPort()
+                    + (Boolean.TRUE.equals(setup.get(LOG_CREDENTIALS))
+                              ? "password=" + (initialCredentials.getOptionalPassword().isPresent() ? initialCredentials.getOptionalPassword() : "<absent>")
+                                      + " && key=" + (initialCredentials.getOptionalPrivateKey().isPresent() ? initialCredentials.getOptionalPrivateKey() : "<absent>")
+                              : "")
+                    + " ready after "+Duration.of(provisioningStopwatch).toStringRounded()
+                    + " ("+template+" template built in "+Duration.of(templateTimestamp).toStringRounded()+";"
+                    + " "+node+" provisioned in "+Duration.of(provisionTimestamp).subtract(templateTimestamp).toStringRounded()+";"
+                    + " "+sshMachineLocation+" ssh usable in "+Duration.of(usableTimestamp).subtract(provisionTimestamp).toStringRounded()+";"
+                    + " and os customized in "+Duration.of(customizedTimestamp).subtract(usableTimestamp).toStringRounded()+" - "+Joiner.on(", ").join(customisationForLogging)+")");
 
             return sshMachineLocation;
         } catch (Exception e) {
@@ -1759,10 +1764,25 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             delayMs = Time.parseTimeString(WAIT_FOR_SSHABLE.getDefaultValue());
         
         String user = expectedCredentials.getUser();
-        LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}:{}{}", new Object[] {
-                setup.getDescription(), Time.makeTimeStringRounded(delayMs),
-                user, vmIp, vmPort,
-                Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")"});
+        if (LOG.isDebugEnabled()) {
+            Optional<String> password;
+            Optional<String> key;
+            if (Boolean.TRUE.equals(setup.get(LOG_CREDENTIALS))) {
+                password = expectedCredentials.getOptionalPassword();
+                key = expectedCredentials.getOptionalPrivateKey();
+            } else {
+                password = expectedCredentials.getOptionalPassword().isPresent() ? Optional.of("******") : Optional.<String>absent();
+                key = expectedCredentials.getOptionalPrivateKey().isPresent() ? Optional.of("******") : Optional.<String>absent();
+            }
+            LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}:{}{}; using credentials password={}; key={}", 
+                    new Object[] {
+                            setup.getDescription(), Time.makeTimeStringRounded(delayMs),
+                            user, vmIp, vmPort,
+                            Objects.equal(user, getUser(setup)) ? "" : " (setup user is different: "+getUser(setup)+")",
+                            (password.isPresent() ? password.get() : "<absent>"),
+                            (key.isPresent() ? key.get() : "<absent>"),
+                    });
+        }
         
         Callable<Boolean> checker;
         if (hostAndPortOverride.isPresent()) {

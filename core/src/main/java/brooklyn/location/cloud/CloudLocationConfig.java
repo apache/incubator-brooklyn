@@ -63,6 +63,11 @@ public interface CloudLocationConfig {
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
             "if 'false', won't check; if 'true' uses default duration; otherwise accepts a time string e.g. '5m' (the default) or a number of milliseconds", "5m");
 
+    public static final ConfigKey<Boolean> LOG_CREDENTIALS = ConfigKeys.newBooleanConfigKey(
+            "logCredentials", 
+            "Whether to log credentials of a new VM - strongly recommended never be used in production, as it is a big security hole!",
+            false);
+
     public static final ConfigKey<Object> CALLER_CONTEXT = LocationConfigKeys.CALLER_CONTEXT;
 
     public static final ConfigKey<Boolean> DESTROY_ON_FAILURE = ConfigKeys.newBooleanConfigKey("destroyOnFailure", "Whether to destroy the VM if provisioningLocation.obtain() fails", true);
