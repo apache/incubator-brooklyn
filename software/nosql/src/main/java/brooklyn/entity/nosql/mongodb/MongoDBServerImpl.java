@@ -32,9 +32,11 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
+import brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
+import com.google.common.net.HostAndPort;
 
 public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBServer {
 
@@ -61,19 +63,14 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         super.connectSensors();
         connectServiceUpIsRunning();
 
-        int port = getAttribute(PORT);
-        int httpConsolePort = getAttribute(HTTP_PORT);
-        if (httpConsolePort !=  port + 1000) {
-            // see comment on HTTP_PORT
-            LOG.warn("{} may not have opened HTTP_PORT correctly as the default was not available: port={}; consolePort={}; resetting consolePort to {}", 
-                    new Object[] {this, port, httpConsolePort, port + 1000});
-            httpConsolePort = port + 1000;
-            setAttribute(HTTP_PORT, httpConsolePort);
-        }
+        int port = getAttribute(MongoDBServer.PORT);
+        HostAndPort accessibleAddress = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
+        setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d",
+                accessibleAddress.getHostText(), accessibleAddress.getPort()));
 
-        
-        setAttribute(HTTP_INTERFACE_URL, String.format("http://%s:%d", getAttribute(HOSTNAME), httpConsolePort));
-        setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d", getAttribute(HOSTNAME), getAttribute(MongoDBServer.PORT)));
+        int httpConsolePort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getAttribute(HTTP_PORT)).getPort();
+        setAttribute(HTTP_INTERFACE_URL, String.format("http://%s:%d",
+                accessibleAddress.getHostText(), httpConsolePort));
 
         try {
             client = MongoDBClientSupport.forServer(this);

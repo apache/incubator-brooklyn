@@ -31,7 +31,6 @@ import brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.math.MathPredicates;
 
@@ -63,9 +62,11 @@ public class MongoDBClientSshDriver extends AbstractMongoDBSshDriver implements 
     @Override
     public void launch() {
         AbstractMongoDBServer server = getServer();
+        // The scripts are going to be run on the machine via SSH so it shouldn't matter
+        // that the accessible host and port might be different.
         String host = server.getAttribute(AbstractMongoDBServer.HOSTNAME);
         Integer port = server.getAttribute(AbstractMongoDBServer.PORT);
-        
+
         List<String> scripts = entity.getConfig(MongoDBClient.STARTUP_JS_SCRIPTS);
         if (scripts!=null) {
             for (String scriptName : scripts) {

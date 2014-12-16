@@ -76,7 +76,7 @@ public class MongoDBRouterImpl extends SoftwareProcessImpl implements MongoDBRou
                         .onException(Functions.<Integer>constant(-1)))
                 .build();
     }
-    
+
     @Override
     protected void disconnectSensors() {
         super.disconnectSensors();

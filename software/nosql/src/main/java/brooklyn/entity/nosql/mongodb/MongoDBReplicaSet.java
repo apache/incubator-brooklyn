@@ -23,6 +23,7 @@ import java.util.List;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -51,13 +52,15 @@ public interface MongoDBReplicaSet extends DynamicCluster {
     ConfigKey<String> REPLICA_SET_NAME = ConfigKeys.newStringConfigKey(
             "mongodb.replicaSet.name", "Name of the MongoDB replica set", "BrooklynCluster");
 
+    ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(Cluster.INITIAL_SIZE, 3);
+
     AttributeSensor<MongoDBServer> PRIMARY_ENTITY = Sensors.newSensor(
             MongoDBServer.class, "mongodb.replicaSet.primary.entity", "The entity acting as primary");
 
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> REPLICA_SET_ENDPOINTS = Sensors.newSensor(new TypeToken<List<String>>() {}, 
         "mongodb.replicaSet.endpoints", "Endpoints active for this replica set");
-    
+
     /**
      * The name of the replica set.
      */

@@ -19,7 +19,6 @@
 name: Mongo Demo app
 description: MongoDB sharded deployment with MongoDB (javascript) client
 origin: http://brooklyn.io
-#location: named:ec2-ubuntu12_0
 location: localhost
 services:
 - serviceType: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment

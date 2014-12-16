@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
 
+import brooklyn.location.access.BrooklynAccessUtils;
+
 /**
  * Simplifies the creation of configuration objects for Mongo DB replica sets.
  * <p/>
@@ -119,7 +121,11 @@ public class ReplicaSetConfig {
      * for hostname and port. Doesn't attempt to check that the id is free.
      */
     public ReplicaSetConfig member(MongoDBServer server, Integer id) {
-        return member(server.getAttribute(MongoDBServer.HOSTNAME), server.getAttribute(MongoDBServer.PORT), id);
+        // TODO: Switch to SUBNET_HOSTNAME and there should be no need for a Brooklyn accessible
+        // address. It will require modification to MongoDBClientSupport, though, since it sets
+        // the primary to the host/port accessible from Brooklyn.
+        HostAndPort hap = BrooklynAccessUtils.getBrooklynAccessibleAddress(server, server.getAttribute(MongoDBServer.PORT));
+        return member(hap.getHostText(), hap.getPort(), id);
     }
 
     /**
@@ -149,7 +155,8 @@ public class ReplicaSetConfig {
 
     /** Removes the first entity using {@link MongoDBServer#HOSTNAME} and {@link MongoDBServer#PORT}. */
     public ReplicaSetConfig remove(MongoDBServer server) {
-        return remove(server.getAttribute(MongoDBServer.HOSTNAME), server.getAttribute(MongoDBServer.PORT));
+        HostAndPort hap = BrooklynAccessUtils.getBrooklynAccessibleAddress(server, server.getAttribute(MongoDBServer.PORT));
+        return remove(hap.getHostText(), hap.getPort());
     }
 
     /** Removes the first entity with host and port matching the given address. */
