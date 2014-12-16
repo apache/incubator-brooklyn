@@ -33,7 +33,7 @@ function deduce_config() {
     CONFIG=_config.yml,_build/config-production.yml,_build/config-website-root.yml
     DIRS_TO_MOVE[0]=website
     DIRS_TO_MOVE_TARGET[0]=""
-    SKIP_JAVADOC=true
+    JAVADOC_TARGET=_site/guide/use/api/
     SUMMARY="root production files, website in root and guide in /guide/"
     ;;
   website-root)
@@ -42,6 +42,7 @@ function deduce_config() {
     DIRS_TO_MOVE_TARGET[0]=""
     DIRS_TO_MOVE[1]=guide
     DIRS_TO_MOVE_TARGET[1]=long_grass
+    SKIP_JAVADOC=true
     SUMMARY="user guide files in the root"
     ;;
   guide-root)
@@ -50,6 +51,7 @@ function deduce_config() {
     DIRS_TO_MOVE_TARGET[0]=""
     DIRS_TO_MOVE[1]=website
     DIRS_TO_MOVE_TARGET[1]=long_grass
+    JAVADOC_TARGET=_site/use/api/
     SUMMARY="user guide files in the root"
     ;;
   guide-version)
@@ -62,6 +64,7 @@ function deduce_config() {
     DIRS_TO_MOVE_TARGET[1]=${DIRS_TO_MOVE_TARGET[0]}/style
     DIRS_TO_MOVE[2]=website
     DIRS_TO_MOVE_TARGET[2]=long_grass
+    JAVADOC_TARGET=_site/${DIRS_TO_MOVE_TARGET[1]}/use/api/
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
   original)
@@ -107,8 +110,12 @@ make_jekyll || { echo ERROR: could not build docs in `pwd` ; exit 1 ; }
 
 if [ "$SKIP_JAVADOC" != "true" ]; then
   pushd _build > /dev/null
+  rm -rf target/apidocs
   ./make-javadoc.sh || { echo ERROR: failed javadoc build ; exit 1 ; }
   popd > /dev/null
+  if [ ! -z "$JAVADOC_TARGET" ]; then
+    mv _build/target/apidocs/* $JAVADOC_TARGET
+  fi
 fi
 
 # TODO build catalog
