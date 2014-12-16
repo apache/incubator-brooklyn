@@ -31,9 +31,6 @@ path:
   guide: /guide
   website: /website
   v: /v
-# (to test for absolute reference problems you can prefix each of the above,
-# with e.g. /brooklyn , and set the baseurl below)
-#baseurl: /brooklyn
 
 # Use local copies of dependencies in dev build (switched to remote using URLs for prod build)
 dependency_mode: local
@@ -43,6 +40,5 @@ dependency_urls:
   jquery.js: https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
 
 # These files should not be included in the final build (in addition to _* contents)
-
-exclude: ['README.md']
+exclude: ['/LICENSE.txt','/README.md']
 

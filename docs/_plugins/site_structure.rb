@@ -26,6 +26,7 @@ module SiteStructure
     end
 
     def generate(site)
+      return nil if site.config['exclude'].index(File.dirname(Pathname.new(SiteStructure::BROOKLYN_WEBSITE_ROOT)))
       root_page = find_page_with_path_absolute_or_relative_to(site, SiteStructure::BROOKLYN_WEBSITE_ROOT, nil)
       navgroups = root_page.data['navgroups']
       navgroups.each do |ng|
