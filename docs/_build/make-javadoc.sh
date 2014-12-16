@@ -32,7 +32,7 @@ ant.groovydoc(
     windowtitle  : "\${title}",
     doctitle     : "\${title}",
     header       : "\${title}",
-    footer       : '<b>Brooklyn Multi-Cloud Application Management Platform</b> <br/> <a href="http://brooklyncentral.github.com/" target="_top">brooklyncentral.github.com</a>. Apache License. &copy; 2012.',
+    footer       : '<b>Apache Brooklyn - Multi-Cloud Application Management Platform</b> <br/> <a href="http://brooklyn.io/" target="_top">brooklyn.io</a>. Apache License. &copy; 2014.',
     private      : "false")
 println "\njavadoc built in target/apidocs\n" 
 END
