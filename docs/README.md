@@ -21,43 +21,44 @@ Workstation Setup
 First, if you have not already done so, clone the `incubator-brooklyn` repository 
 and set up the remotes as described in [Guide for committers][COMMIT].
 
-Install [RVM](http://rvm.io/); this manages Ruby installations and sets of Ruby
-gems.
+The Brooklyn documentation uses Markdown notation (what this file is written in)
+and the Jekyll process. This in turn requires Ruby and gems as described in the `Gemfile`:
+install [RVM](http://rvm.io/) to manage Ruby installations and sets of Ruby gems.
 
     \curl -sSL https://get.rvm.io | bash -s stable
 
-At this point, close your shell session and start a new one, to get the new
-environment that RVM has configured. Now change directory to the location where
-you checked out your repository, and then to the `docs/_build` subdirectory.
+Close your shell session and start a new one, to get the new
+environment that RVM has configured. Change directory to the location where
+you checked out your repository and then to the `docs/` subdirectory (where this file is located).
 
 RVM should detect its configuration inside `Gemfile` and try to configure itself. 
-Most likely it will report that the required version of Ruby is not installed; 
-it will show the command that you need to run to install the correct version. 
-Follow these instructions.
+Most likely it will report that the required version of Ruby is not installed,
+and it will show the command that you need to run to install the correct version. 
+Follow the instructions it shows.
 
 Once the correct version of Ruby is installed, change to your home directory
-(`cd ~`) and then change back to the `_build` dir again (`cd -`). This will cause
-RVM to re-load configuration from `Gemfile` with the correct version of Ruby.
+and then change back (`cd ~ ; cd -`).
+This will cause RVM to re-load configuration from `Gemfile` with the correct version of Ruby.
 
-If you are running Ubuntu, there is a further dependency that is required:
-
-    sudo apt-get install libxslt-dev libxml2-dev
-
-Finally, run this command inside `_build` to install all the required Gems 
+Finally, run this command to install all the required Gems 
 at the correct versions:
 
     bundle install
 
-Any time you need to reset your Ruby environment for jekyll to run correctly,
+Any time you need to reset your Ruby environment for `jekyll` to run correctly,
 return to the `_build` directory and re-run the above command.
 
+On some platforms there may be some fiddling required before `jekyll` runs without errors,
+but the ecosystem is fairly mature and most problems can be resolved with a bit of googling.
+For instance on Ubuntu, there may be additional dependencies required:
 
-Building and Previewing the Website
------------------------------------
+    sudo apt-get install libxslt-dev libxml2-dev
 
-### Using Jekyll's in-built server
 
-In the `docs` directory, run the command:
+Seeing the Website and Docs
+---------------------------
+
+To build and see the documentation, run this command in your `docs` folder:
 
     jekyll serve --watch
     
@@ -65,7 +66,7 @@ This will start up a local web server. The URL is printed by Jekyll when the ser
 e.g. http://localhost:4000/ . The server will continue to run until you press Ctrl+C.
 Modified files will be detected and regenerated (but that might take up to 1m).
 Leave off the `--watch` argument to turn off regeneration, or use `jekyll build` instead
-to generate a site in `_site` without a server, for instance if your browser supports running from disk.
+to generate a site in `_site` without a server.
 
 
 Project Structure

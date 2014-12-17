@@ -1,1 +1,1 @@
-exclude: ['/LICENSE.txt','/README.md','/index.md','/favicon.ico','/website']
+exclude: ['/Gemfile*','/README.md','/index.md','/website']

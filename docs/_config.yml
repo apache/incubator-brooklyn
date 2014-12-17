@@ -16,11 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-exclude: [ LICENSE.txt ]
-encoding: utf-8
 
-brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION
-brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
+encoding: utf-8
 
 # where this will publish
 url_root: http://0.0.0.0:4000
@@ -40,5 +37,8 @@ dependency_urls:
   jquery.js: https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
 
 # These files should not be included in the final build (in addition to _* contents)
-exclude: ['/LICENSE.txt','/README.md']
+exclude: ['/Gemfile*','/README.md']
+
+brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION
+brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
 
