@@ -60,12 +60,12 @@ Seeing the Website and Docs
 
 To build and see the documentation, run this command in your `docs` folder:
 
-    jekyll serve --watch
+    jekyll serve
     
 This will start up a local web server. The URL is printed by Jekyll when the server starts,
 e.g. http://localhost:4000/ . The server will continue to run until you press Ctrl+C.
 Modified files will be detected and regenerated (but that might take up to 1m).
-Leave off the `--watch` argument to turn off regeneration, or use `jekyll build` instead
+Add `--no-watch` argument to turn off regeneration, or use `jekyll build` instead
 to generate a site in `_site` without a server.
 
 
@@ -200,6 +200,10 @@ copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
     
     # versioned guide, relative to /v/<version>/
     _build/build.sh guide-version --install
+
+You can then preview the public site of [localhost:4000](http://localhost:4000) with:
+
+    _build/serve-public-site.sh
 
 Next it is recommended to go to the SVN dir and 
 review the changes using the usual `svn` commands -- `status`, `diff`, `add`, `rm`, etc:
