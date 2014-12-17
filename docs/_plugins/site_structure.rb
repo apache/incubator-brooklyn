@@ -38,7 +38,12 @@ module SiteStructure
       site.data['navgroups'] = navgroups
       site.data['structure'] = gen_structure(site, SiteStructure::BROOKLYN_WEBSITE_ROOT, nil, navgroups)
     end
-    
+
+    def render_liquid(site, page, content)
+      info = { :filters => [Jekyll::Filters], :registers => { :site => site, :page => page } }
+      page.render_liquid(content, site.site_payload, info)
+    end
+        
     def gen_structure(site, pagename, parent, navgroups)
       page = find_page_with_path_absolute_or_relative_to(site, pagename, parent)
       
@@ -72,10 +77,11 @@ module SiteStructure
         page.data['children'].each do |c|
           if c['path']
             # links to another Jekyll site-structured page
-            c['reference'] = gen_structure(site, c['path'], page, navgroups)
+            c['reference'] = gen_structure(site, render_liquid(site, page, c['path']), page, navgroups)
           elsif c['link']
             # links to a non-site-structured page, on this site or elsewhere
-            c['reference'] = { 'url' => c['link'], 'title' => c['title'] }
+            # allow title and link to use vars and tags (liquid processing)
+            c['reference'] = { 'url' => render_liquid(site, page, c['link']), 'title' => render_liquid(site, page, c['title']) }
           end
         end
       end

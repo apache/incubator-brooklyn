@@ -37,18 +37,18 @@ module JekyllRead
       @text = text
     end
     def render(context)
-	filename = @text.strip
-        filename = context[filename] || filename
+      filename = @text.strip
+      filename = context[filename] || filename
 
-        # Pathname API ignores first arg below if second is absolute
-        file = Pathname.new(File.dirname(context['page']['path'])) + filename
-        file = file.cleanpath
-        # is there a better way to trim a leading / ?
-        file = file.relative_path_from(Pathname.new("/")) unless file.relative?
-        raise "No such file #{file} in read call (from #{context['page']['path']})" unless file.exist?
+      # Pathname API ignores first arg below if second is absolute
+      file = Pathname.new(File.dirname(context['page']['path'])) + filename
+      file = file.cleanpath
+      # is there a better way to trim a leading / ?
+      file = file.relative_path_from(Pathname.new("/")) unless file.relative?
+      raise "No such file #{file} in read call (from #{context['page']['path']})" unless file.exist?
 
-	file = File.open(file, "rb")
-	return file.read
+      file = File.open(file, "rb")
+      return file.read
     end
   end
 
@@ -58,25 +58,24 @@ module JekyllRead
       @text = text
     end
     def render(context)
-        filename = @text.strip
-        filename = context[filename] || filename
+      filename = @text.strip
+      filename = context[filename] || filename
 
-        # Pathname API ignores first arg below if second is absolute
-        file = Pathname.new(File.dirname(context['page']['path'])) + filename
-        file = file.cleanpath
-        # is there a better way to trim a leading / ?
-        file = file.relative_path_from(Pathname.new("/")) unless file.relative?
-        raise "No such file #{file} in readj call (from #{context['page']['path']})" unless file.exist?
+      # Pathname API ignores first arg below if second is absolute
+      file = Pathname.new(File.dirname(context['page']['path'])) + filename
+      file = file.cleanpath
+      # is there a better way to trim a leading / ?
+      file = file.relative_path_from(Pathname.new("/")) unless file.relative?
+      raise "No such file #{file} in readj call (from #{context['page']['path']})" unless file.exist?
 
-        # with readj we support vars and paths relative to a file being readj'd
-        jekyllSite = context.registers[:site]
-	targetPage = Jekyll::Page.new(jekyllSite, jekyllSite.source, File.dirname(file), File.basename(file))
-	targetPage.render(jekyllSite.layouts, jekyllSite.site_payload)
-	return targetPage.output
+      # with readj we support vars and paths relative to a file being readj'd
+      jekyllSite = context.registers[:site]
+      targetPage = Jekyll::Page.new(jekyllSite, jekyllSite.source, File.dirname(file), File.basename(file))
+      targetPage.render(jekyllSite.layouts, jekyllSite.site_payload)
+      return targetPage.output
     end
   end
 end
 
 Liquid::Template.register_tag('read', JekyllRead::ReadTag)
 Liquid::Template.register_tag('readj', JekyllRead::ReadjTag)
-

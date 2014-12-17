@@ -2,7 +2,7 @@
 layout: website-normal
 title: Documentation
 children:
-- { link: "/v/latest", title: User Guide }
+- { link: "{{ site.path.guide }}", title: User Guide }
 - { path: glossary.md }
 - { path: documentation/install-on-server.md }
 ---
