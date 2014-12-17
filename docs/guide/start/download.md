@@ -27,7 +27,12 @@ First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstar
   <tr>
 	<td style='text-align:left'>All Jar</td>
 	<td style='text-align:left'><a href='{{ this_alljar_url_jar }}' title='Download the ALL JAR'>brooklyn-all-{{ site.brooklyn-version }}-with-dependencies.jar</a></td>
-	<td ><small><a href='{{ this_alljar_url_jar }}.asc'>PGP</a>, <a href='{{ this_alljar_url_jar }}.sha1'>SHA1</a></small></td>
+	<td><small><a href='{{ this_alljar_url_jar }}.asc'>PGP</a>, <a href='{{ this_alljar_url_jar }}.sha1'>SHA1</a></small></td>
+  </tr>
+  <tr>
+    <td style='text-align:left'>Other Variants</td>
+    <td style='text-align:left'><a href='{{ this_anything_url_search }}' title='Other Variants'><i>listing</i></a></td>
+    <td> - </td>
   </tr>
   <tr>
 	<td style='text-align:left'>Release notes</td>
@@ -36,11 +41,6 @@ First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstar
   </tr>
 </table>
 
-{% if SNAPSHOT %}
-<span style='float:right'><small>Source: <a href='{{ this_anything_url_search }}'>Sonatype</a></small></span>
-{% else %}
-<span style='float:right'><small>Source: <a href='{{ this_anything_url_search }}'>Maven Central</a></small></span>
-{% endif %}
 
 <a name="distro"></a>
 
@@ -48,8 +48,13 @@ First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstar
 
 The distribution archive contains Brooklyn as a standalone executable package.
 
-* previous stable versions: [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-dist/)
-* previous snapshot versions: [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-dist/)
+* [This version ZIP]({{ this_dist_url_zip }})
+* [This version TGZ]({{ this_dist_url_tgz }})
+* [Apache stable versions]({{ apache_releases_repo_groupid_url }}/brooklyn-dist/)
+* [Apache snapshot versions]({{ apache_snapshots_repo_groupid_url }}/brooklyn-dist/)
+
+Very old versions are available at [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-dist/) for stable releases
+and [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-dist/) for snapshot versions.
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %} 
 **Please note**: You are reading the documentation for a snapshot version of Brooklyn.
@@ -61,13 +66,14 @@ You should always confirm that the source and date for snapshot artifacts.
 
 ## The All Jar
 
-This is a single JAR containing all of Brooklyn and its dependencies, for developing Brooklyn into your own applications. Just download your preferred flavour and add it to your classpath.
+This is a single JAR containing all of Brooklyn and its dependencies, for developing Brooklyn into your own applications. If not using maven, just add it to your classpath.
 
-{% if SNAPSHOT %}{% else %}
-* [Version {{ site.brooklyn-version }}](http://search.maven.org/#artifactdetails|io.brooklyn|brooklyn-all|{{ site.brooklyn-version }}|jar) 
-{% endif %}
-* previous stable versions: [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-all/)
-* previous snapshot versions: [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-all/)
+* [This version]({{ this_alljar_url_jar }})
+* [All Apache stable versions]({{ apache_releases_repo_groupid_url }}/brooklyn-all/)
+* [All Apache snapshot versions]({{ apache_snapshots_repo_groupid_url }}/brooklyn-all/)
+
+Very old versions are available at [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-all/) for stable releases
+and [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-all/) for snapshot versions.
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %} 
 **Again**, check the source and date for SNAPSHOT JARs.
@@ -82,44 +88,9 @@ Release notes can be found [here]({{ site.path.guide }}/start/release-notes.html
 
 ## Examples
 
-{% if SNAPSHOT %}
-As this is a snapshot version of Brooklyn, please find the examples in the main Brooklyn codebase (in the `/examples` directory).
-
-When this version is released, the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples) will be updated and instructions for use will be included here. 
-
-{% else %}
-
-You can checkout the examples from the [brooklyn-examples git repository](http://github.com/brooklyncentral/brooklyn-examples).
-
-Maven (v3) is required to build them, as described [here]({{ site.path.guide }}/dev/build/).
-The examples for this version ({{ site.brooklyn-version }}) are in the branch 
-`{% if SNAPSHOT %}{{ site.brooklyn-snapshot-git-branch }}{% else %}{{ site.brooklyn-version }}{% endif %}`, so if you have `git` and `mvn` already, you can simply:
-
-{% highlight bash %}
-% git clone https://github.com/brooklyncentral/brooklyn-examples.git
-% cd brooklyn-examples
-{% if brooklyn_examples_branch == 'master' %}{% else %}% git checkout {{ brooklyn_examples_branch }}
-{% endif %}% mvn clean install
-{% endhighlight %}
- 
-
-If you don't use `git`, you can download the projects as a tarball instead
-from [this link](https://github.com/brooklyncentral/brooklyn-examples/tarball/{{ brooklyn_examples_branch }}). 
-These commands should do the trick:
-
-{% highlight bash %}
-% curl -L -o brooklyn-examples-{{ brooklyn_examples_branch }}.tgz \
-     https://github.com/brooklyncentral/brooklyn-examples/tarball/{{ brooklyn_examples_branch }}
-% tar xvfz brooklyn-examples-{{ brooklyn_examples_branch }}.tgz
-% mv brooklyncentral-brooklyn-examples-* brooklyn-examples-{{ brooklyn_examples_branch }} \
-     # change the strange name which github assigns in the tarball
-% mvn clean install
-{% endhighlight %}
-
+Examples can be found in the main Brooklyn codebase, in the `/examples` directory.
 
 A good example to start with is the [Elastic Web Cluster]({{site.path.guide}}/use/examples/webcluster.html).
-
-{% endif %} 
 
 
 <a name="maven"></a>
@@ -131,7 +102,7 @@ If you use Maven, you can add Brooklyn with the following in your pom:
 {% highlight xml %}
     <dependencies>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>{{ site.brooklyn-version }}</version>
         </dependency>
@@ -143,7 +114,7 @@ If you prefer a smaller repo you might want just ``brooklyn-core``,  ``brooklyn-
 and some of ``brooklyn-software-webapp``,  ``brooklyn-software-database``, ``brooklyn-software-messaging``, or others
 (browse the full list [here]({{ this_anything_url_search }})).
 
-If you wish to use the Apache and/or Cloudsoft repositories (particularly for snapshots),
+If you wish to use the Apache snapshot repo and/or Cloudsoft repositories,
 you can add some of the following sections:
 
 {% highlight xml %}
@@ -182,11 +153,11 @@ or one of the additional snapshot repositories above.
 
 ## Source Code
 
-Full source is at [github.com/brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).
+Full source is at [github.com/apache/incubator-brooklyn](http://github.com/apache/incubator-brooklyn).
 Information on working with the source is [here]({{ site.path.guide }}/dev/code).
 
 Alternatively you can download archives of the source directly:
 
-<a href="https://github.com/brooklyncentral/brooklyn/tarball/master"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
-<a href="https://github.com/brooklyncentral/brooklyn/zipball/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+<a href="https://github.com/apache/incubator-brooklyn/tarball/master"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+<a href="https://github.com/apache/incubator-brooklyn/zipball/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
 
