@@ -9,11 +9,11 @@ children:
 - { path: documentation.md }
 - { path: community/index.md }
 navgroups:
-- { id: learnmore, page: learnmore/index.md, title: learn more }
+- { id: learnmore, page: learnmore/index.md, title: learn more, title_in_menu: Learn More }
 - { id: download, page: download.md, title: download }
-- { id: getstarted, page: quickstart/index.md, title: get started, title_in_menu: Get started }
-- { id: documentation, page: documentation.md, title: documentation, title_in_menu: All documentation }
-- { id: website/community, page: community/index.md, title: community, title_in_menu: Community home }
+- { id: getstarted, page: quickstart/index.md, title: get started, title_in_menu: Get Started }
+- { id: documentation, page: documentation.md, title: documentation, title_in_menu: All Documentation }
+- { id: website/community, page: community/index.md, title: community, title_in_menu: Community Home }
 ---
 
 <div class="jumbotron">

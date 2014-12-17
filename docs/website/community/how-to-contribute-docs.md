@@ -1,6 +1,6 @@
 ---
 layout: website-normal
-title: How to contribute documentation
+title: How to Contribute Documentation
 navgroup: community
 ---
 

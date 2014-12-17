@@ -1,6 +1,6 @@
 ---
 layout: website-normal
-title: How to contribute
+title: How to Contribute
 navgroup: community
 ---
 
