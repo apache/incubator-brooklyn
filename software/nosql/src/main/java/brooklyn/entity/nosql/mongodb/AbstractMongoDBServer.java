@@ -40,7 +40,7 @@ public interface AbstractMongoDBServer extends SoftwareProcess, Entity {
     @SetFromFlag("mongodbConfTemplateUrl")
     ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
             "mongodb.config.url", "Template file (in freemarker format) for a MongoDB configuration file",
-            "classpath://brooklyn/entity/nosql/mongodb/default-mongodb.conf");
+            "classpath://brooklyn/entity/nosql/mongodb/default.conf");
     
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
