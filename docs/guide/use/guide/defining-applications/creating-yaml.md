@@ -409,7 +409,7 @@ to make a declarative front-end, so you can do pretty much anything you want to
 by dropping to the JVM. Information on that is available:
 * in the [user guide]({{site.path.guide}}/use/guide/entities/index.html),
 * through a [Maven archetype]({{site.path.guide}}/use/guide/defining-applications/archetype.html),
-* in the [codebase](https://github.com/brooklyncentral/brooklyn),
+* in the [codebase](https://github.com/apache/incubator-brooklyn),
 * and in plenty of [examples]({{site.path.guide}}/use/examples/index.html).
 
 You can also come talk to us, on IRC (#brooklyncentral on Freenode) or

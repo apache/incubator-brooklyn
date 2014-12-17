@@ -1,8 +1,10 @@
 # Inserts several useful fields that can be referenced using {{ name }} syntax
 #
+# TODO: remove, no need for a plugin i think, this is already set in fields.md
+# (although doing it in ruby might be better!)
+#
 # site.data.brooklyn.version: brooklyn version, such as 0.7.0-M1
 # site.data.brooklyn.is_snapshot: true if this is a snapshot version, otherwise false
-# site.data.brooklyn.url.userguide: URL of the user guide for this version
 #
 module BrooklynMetadata
 
@@ -47,8 +49,6 @@ module BrooklynMetadata
             }
         }
       end
-      
-      url_set['userguide'] = "#{site.config['url']}/v/#{BrooklynMetadata::BROOKLYN_VERSION}"
       
       site.data['brooklyn'] = {
           "version" => BrooklynMetadata::BROOKLYN_VERSION,

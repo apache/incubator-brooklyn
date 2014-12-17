@@ -39,10 +39,9 @@ Grab a copy of the Brooklyn distribution and set up `BROOKLYN_HOME`:
 Grab a copy of the brooklyn-examples source code and build it with Maven:
 
 {% highlight bash %}
-% git clone https://github.com/brooklyncentral/brooklyn-examples.git
-% cd brooklyn-examples
-{% if brooklyn_examples_branch == 'master' %}{% else %}% git checkout {{ brooklyn_examples_branch }}
-{% endif %}% mvn clean install
+% git clone https://github.com/apache/incubator-brooklyn.git
+% cd incubator-brooklyn/examples
+% mvn clean install
 {% endhighlight %}
 
 {% if SNAPSHOT %}

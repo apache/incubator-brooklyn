@@ -79,13 +79,13 @@ Stop Brooklyn with ctrl-c, or in the web-browser (under "Help"), or with `kill`.
 ## Configuring Brooklyn with brooklyn.properties
 
 Brooklyn reads startup configuration from a file `~/.brooklyn/brooklyn.properties`, by default.
-You can create this from a template [brooklyn.properties](brooklyn.properties) file which you edit;
+You can create this from a template [brooklyn.properties]({{brooklyn_properties_url_path}}) file which you edit;
 this file can be installed with:
 
 {% highlight bash %}
 $ mkdir ~/.brooklyn
 $ cd ~/.brooklyn
-$ wget {{site.url_root}}{{site.path.guide}}/use/guide/quickstart/brooklyn.properties
+$ wget {{brooklyn_properties_url_live}}
 {% endhighlight %}
 
 Open this file in a text editor and follow the instructions there. The main settings are summarized below:

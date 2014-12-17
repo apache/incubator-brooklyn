@@ -98,9 +98,7 @@ on startup.
 
 ### Running the Example
 
-You can build and run the example (on *nix or Mac) after checking
-out the Brooklyn [repository](https://www.github.com/brooklyncentral/brooklyn)
-as follows:
+You can run the example as follows:
 
 {% highlight bash %}
 % ${BROOKLYN_HOME}/bin/brooklyn -v launch --app brooklyn.demo.StandaloneQpidBrokerExample --location localhost

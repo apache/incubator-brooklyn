@@ -86,7 +86,7 @@ See 'brooklyn help <command>' for more information on a specific command.
 Here is an example of the commands you might run to get the Brooklyn code, compile it and launch an application:
 
 {% highlight bash %}
-git clone https://github.com/brooklyncentral/brooklyn.git
+git clone https://github.com/apache/incubator-brooklyn.git
 cd brooklyn
 mvn clean install -DskipTests
 BROOKLYN_HOME=$(pwd)

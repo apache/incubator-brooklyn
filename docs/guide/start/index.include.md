@@ -44,7 +44,7 @@ We're still near the beginning of figuring this out:
   [concepts]({{site.path.guide}}/use/guide/defining-applications/basic-concepts.html)
   and including a [tutorial]({{site.path.guide}}/use/guide/quickstart/)
 * Or dive straight in to the code, either [reading]({{site.path.guide}}/dev/code/) about it
-  or [gitting](http://github.com/brooklyncentral/brooklyn/) it
+  or [gitting](http://github.com/apache/incubator-brooklyn/) it
 
 If you like it, or if you have ideas how it could be better,
 [join the discussion]({{site.path.guide}}/meta/contact.html).

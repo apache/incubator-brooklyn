@@ -2,6 +2,9 @@
 layout: website-normal
 title: Installing on a Server
 ---
+
+{% include fields.md %}
+
 Here we present two *alternatives* to install Brooklyn:
 
 - [Running the *installation script*](#script)
@@ -82,11 +85,11 @@ By default Brooklyn loads configuration parameters (including credentials for an
 
 The `brooklyn.properties` is the main configuration file for deployment locations. Contains the connection details and credentials for all public or on-premises cloud providers, as well as controlling some application startup and security options.
 
-Create a `.brooklyn` folder in your home directory and download the template [brooklyn.properties](../quickstart/brooklyn.properties) to that folder.
+Create a `.brooklyn` folder in your home directory and download the template [brooklyn.properties]({{brooklyn_properties_url_path}}) to that folder.
 
 {% highlight bash %}
 $ mkdir -p ~/.brooklyn
-$ wget -O ~/.brooklyn/brooklyn.properties {{site.url_root}}{{site.path.website}}/quickstart/brooklyn.properties
+$ wget -O ~/.brooklyn/brooklyn.properties {{brooklyn_properties_url_live}}
 $ chmod 600 ~/.brooklyn/brooklyn.properties
 {% endhighlight %}
 

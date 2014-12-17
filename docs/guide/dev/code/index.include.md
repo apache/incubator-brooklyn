@@ -1,9 +1,9 @@
 ## The Basics
 
-Brooklyn is available at [GitHub brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).  Check it out using:
+Brooklyn is available at [GitHub apache/incubator-brooklyn](http://github.com/apache/incubator-brooklyn).  Check it out using:
 
 {% highlight bash %}
-git clone git@github.com:brooklyncentral/brooklyn.git
+git clone git@github.com:apache/incubator-brooklyn.git
 cd brooklyn
 {% endhighlight %}
 
@@ -21,9 +21,7 @@ bin/brooklyn launch
 {% endhighlight %}
 
 Plenty of examples are in the **examples** sub-dir,
-described [here]({{site.path.guide}}/use/examples),
-and pushed to the [brooklyn-examples](http://github.com/brooklyncentral/brooklyn-examples) 
-GitHub project when a version is released.
+described [here]({{site.path.guide}}/use/examples).
 
 Information on using Brooklyn -- configuring locations (in `brooklyn.properties`) 
 and adding new projects to a catalog -- can be found in the [User's Guide]({{site.path.guide}}/use/guide/quickstart/index.html).

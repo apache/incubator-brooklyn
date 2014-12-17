@@ -6,5 +6,5 @@
 { "title": "Writing a Policy",
   "file":  "{{ site.path.guide }}/dev/code/policy.html" },
 { "title": "brooklyn.git (github)",
-  "file":  "http://github.com/brooklyncentral/brooklyn" }
+  "file":  "http://github.com/apache/incubator-brooklyn" }
 ]

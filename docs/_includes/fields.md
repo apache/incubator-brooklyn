@@ -1,4 +1,8 @@
+
 {% if site.brooklyn-version contains 'SNAPSHOT' %}{% capture SNAPSHOT %}true{% endcapture %}{% endif %}
+
+{% capture brooklyn_properties_url_path %}{{ site.path.guide }}/use/guide/quickstart/brooklyn.properties{% endcapture %}
+{% capture brooklyn_properties_url_live %}{{ site.url_root }}{{ brooklyn_properties_url_path }}{% endcapture %}
 
 {% capture brooklyn_group_id %}org.apache.brooklyn{% endcapture %}
 {% capture brooklyn_group_id_path %}org/apache/brooklyn{% endcapture %}

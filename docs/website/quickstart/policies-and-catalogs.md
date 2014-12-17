@@ -18,7 +18,7 @@ Download the template [catalog.xml](catalog.xml) to your `~/.brooklyn/` folder, 
 
 {% highlight bash %}
 $ cd ~/.brooklyn
-$ wget {{site.data.brooklyn.url.userguide}}/use/guide/quickstart/catalog.xml
+$ wget {{site.url_root}}{{site.path.guide}}/use/guide/quickstart/catalog.xml
 
 $ brooklyn launch
 {% endhighlight %}
@@ -27,7 +27,7 @@ Now when we open the web console, two applications are displayed from the catalo
 
 Select the 'Demo Web Cluster with DB' and click 'Next'.
 
-[![Viewing Catalog entries in Add Application dialog.](images/add-application-catalog-web-cluster-with-db.png)](add-application-catalog-web-cluster-with-db-largea.png)
+[![Viewing Catalog entries in Add Application dialog.](images/add-application-catalog-web-cluster-with-db.png)](add-application-catalog-web-cluster-with-db-large.png)
 
 Select the Location that Brooklyn should deploy to, and name your application:
 
@@ -53,13 +53,13 @@ This policy automatically scales the cluster up or down to be the right size for
 
 The loadbalancer's `targets` policy ensures that the loadbalancer is updated as the cluster size changes.
 
-Sitting idle, this cluster will only contain one server, but you can use a tool like [jmeter](http://jmeter.apache.org/) pointed at the nginx endpoint to create load on the cluster. (Download a [jmeter test plan](https://github.com/brooklyncentral/brooklyn/blob/master/examples/simple-web-cluster/resources/jmeter-test-plan.jmx).)
+Sitting idle, this cluster will only contain one server, but you can use a tool like [jmeter](http://jmeter.apache.org/) pointed at the nginx endpoint to create load on the cluster. (Download a [jmeter test plan](https://github.com/apache/incubator-brooklyn/blob/master/examples/simple-web-cluster/resources/jmeter-test-plan.jmx).)
 
 As load is added, Brooklyn requests a new cloud machine, creates a new app server, and adds it to the cluster. As load is removed, servers are removed from the cluster, and the infrastructure is handed back to the cloud.
 
 ### Next
 
-The [Elastic Web Cluster Example]({{site.data.brooklyn.url.userguide}}/use/examples/webcluster/index.html) page
+The [Elastic Web Cluster Example]({{site.path.guide}}/use/examples/webcluster/index.html) page
 details how to build this demo application from scratch in Java. It shows in more detail how Brooklyn can
 complement your application with policy driven management, and how applications can be
 run from the command line.

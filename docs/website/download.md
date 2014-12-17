@@ -13,7 +13,7 @@ but as a result it has been a long time since the last milestone release.
   as it now has many many features not in 0.7.0-M1!**
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %}{% else %}
-  {% FAIL_needs_updating_for_release %}
+  {% read FAIL_needs_updating_for_release %}
   The alert above should be removed when we make the next release build!
 {% endif %} 
 

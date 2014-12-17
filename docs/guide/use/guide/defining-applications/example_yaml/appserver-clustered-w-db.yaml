@@ -15,4 +15,4 @@ services:
   id: db
   name: DB HelloWorld Visitors
   brooklyn.config:
-    datastore.creation.script.url: https://github.com/brooklyncentral/brooklyn/raw/master/usage/launcher/src/test/resources/visitors-creation-script.sql
+    datastore.creation.script.url: https://github.com/apache/incubator-brooklyn/raw/master/usage/launcher/src/test/resources/visitors-creation-script.sql

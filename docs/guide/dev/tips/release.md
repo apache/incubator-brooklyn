@@ -4,6 +4,8 @@ title: Release Process
 toc: /guide/toc.json
 ---
 
+**This needs substantial updating in light of the Apache move.**
+
 <!--
 TODO
 

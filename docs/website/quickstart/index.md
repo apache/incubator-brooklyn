@@ -5,6 +5,8 @@ children:
 - { path: policies-and-catalogs.md }
 ---
 
+{% include fields.md %}
+
 This guide will walk you through deploying an application to a public cloud.
 
 We will be deploying an example 3-tier web application, described using this blueprint: 
@@ -52,7 +54,7 @@ then answer 'yes', and then repeat the command run again.
 If the response is `hello world`, with no other output or prompts, then your SSH setup is good and Brooklyn should be
 able to use it without a problem.
 
-If these steps are not working, [these instructions]({{ site.data.brooklyn.url.userguide }}/use/guide/locations/) may be
+If these steps are not working, [these instructions]({{ site.path.guide }}/use/guide/locations/) may be
 useful.
 
 
@@ -117,12 +119,12 @@ Locations can be clouds, machines with fixed IPs or localhost (for testing).
 
 Brooklyn loads Location configuration  from `~/.brooklyn/brooklyn.properties`. 
 
-Create a `.brooklyn` folder in your home directory and download the template [brooklyn.properties](brooklyn.properties) to that folder.
+Create a `.brooklyn` folder in your home directory and download the template [brooklyn.properties]({{brooklyn_properties_url_path}}) to that folder.
 
 {% highlight bash %}
 $ mkdir ~/.brooklyn
 $ cd ~/.brooklyn
-$ wget {{site.url_root}}{{site.path.website}}/quickstart/brooklyn.properties
+$ wget {{brooklyn_properties_url_live}}
 {% endhighlight %}
 
 Open brooklyn.properties in a text editor and add your cloud credentials.
