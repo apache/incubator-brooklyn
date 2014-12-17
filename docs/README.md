@@ -206,9 +206,13 @@ You can then preview the public site of [localhost:4000](http://localhost:4000) 
     _build/serve-public-site.sh
 
 Next it is recommended to go to the SVN dir and 
-review the changes using the usual `svn` commands -- `status`, `diff`, `add`, `rm`, etc:
+review the changes using the usual `svn` commands -- `status`, `diff`, `add`, `rm`, etc.
+Note in particular that deleted files need special attention (there is no analogue of
+`git add -A`!). Perhaps use:
 
     cd ${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
+    svn add * --force
+    svn rm $( svn status | sed -e '/^!/!d' -e 's/^!//' )
 
 You must then check in the changes:
 
