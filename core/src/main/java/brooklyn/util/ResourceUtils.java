@@ -474,13 +474,17 @@ public class ResourceUtils {
 
     /** allows failing-fast if URL cannot be read */
     public String checkUrlExists(String url) {
-        if (url==null) throw new NullPointerException("URL must not be null");
+        return checkUrlExists(url, null);
+    }
+    
+    public String checkUrlExists(String url, String message) {
+        if (url==null) throw new NullPointerException("URL "+(message!=null ? message+" " : "")+"must not be null");
         InputStream s;
         try {
             s = getResourceFromUrl(url);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            throw new IllegalArgumentException("Unable to access URL "+url, e);
+            throw new IllegalArgumentException("Unable to access URL "+(message!=null ? message : "")+": "+url, e);
         }
         Streams.closeQuietly(s); 
         return url;
