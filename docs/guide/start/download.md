@@ -10,31 +10,32 @@ First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstar
 ## Download Version {{ site.brooklyn-version }}
 
 <table>
-<tr>
+  <tr>
 	<th style='text-align:left'>Download</th>
 	<th style='text-align:left'>File/Format</th>
 	<th>checksums <small><a href="/meta/verify.html" title='Instructions on verifying the integrity of your downloads.'>(?)</a></small></th>
-</tr>
-<tr>
+  </tr>
+  <tr>
 	<td style='text-align:left;vertical-align:top' rowspan='2'>Distro</td>
 	<td style='text-align:left'><a href='{{ this_dist_url_zip }}' title='Download ZIP archive'>brooklyn-dist-{{ site.brooklyn-version }}-dist.zip</a></td>
 	<td><small><a href='{{ this_dist_url_zip }}.asc'>PGP</a>, <a href='{{ this_dist_url_zip }}.sha1'>SHA1</a></small></td>
-</tr>
-<tr>
+  </tr>
+  <tr>
 	<td style='text-align:left'><a href='{{ this_dist_url_tgz }}' title='Download TGZ archive'>brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz</a></td>
 	<td ><small><a href='{{ this_dist_url_tgz }}.asc'>PGP</a>, <a href='{{ this_dist_url_tgz }}.sha1'>SHA1</a></small></td>
-</tr>
-<tr>
+  </tr>
+  <tr>
 	<td style='text-align:left'>All Jar</td>
 	<td style='text-align:left'><a href='{{ this_alljar_url_jar }}' title='Download the ALL JAR'>brooklyn-all-{{ site.brooklyn-version }}-with-dependencies.jar</a></td>
-	<td ><small><a href='{{ this_alljar_url_jar }}.asc'>PGP</a>, <a href='{{ this_alljar_url_jar }}.sha1'>SHA1<a/></small></td>
-</tr>
-<tr>
+	<td ><small><a href='{{ this_alljar_url_jar }}.asc'>PGP</a>, <a href='{{ this_alljar_url_jar }}.sha1'>SHA1</a></small></td>
+  </tr>
+  <tr>
 	<td style='text-align:left'>Release notes</td>
 	<td style='text-align:left'><a href='{{ site.path.guide }}/start/release-notes.html'>{{ site.brooklyn-version }}</a></td>
 	<td> - </td>
-</tr>
+  </tr>
 </table>
+
 {% if SNAPSHOT %}
 <span style='float:right'><small>Source: <a href='{{ this_anything_url_search }}'>Sonatype</a></small></span>
 {% else %}
@@ -42,6 +43,7 @@ First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstar
 {% endif %}
 
 <a name="distro"></a>
+
 ## The Distro
 
 The distribution archive contains Brooklyn as a standalone executable package.
@@ -56,6 +58,7 @@ You should always confirm that the source and date for snapshot artifacts.
 
 
 <a name="alljar"></a>
+
 ## The All Jar
 
 This is a single JAR containing all of Brooklyn and its dependencies, for developing Brooklyn into your own applications. Just download your preferred flavour and add it to your classpath.
@@ -74,7 +77,9 @@ This is a single JAR containing all of Brooklyn and its dependencies, for develo
 
 Release notes can be found [here]({{ site.path.guide }}/start/release-notes.html).
 
+
 <a name="examples"></a>
+
 ## Examples
 
 {% if SNAPSHOT %}
@@ -118,6 +123,7 @@ A good example to start with is the [Elastic Web Cluster]({{site.path.guide}}/us
 
 
 <a name="maven"></a>
+
 ## Maven
 
 If you use Maven, you can add Brooklyn with the following in your pom:
@@ -173,6 +179,7 @@ or one of the additional snapshot repositories above.
 
 
 <a name="source"></a>
+
 ## Source Code
 
 Full source is at [github.com/brooklyncentral/brooklyn](http://github.com/brooklyncentral/brooklyn).
