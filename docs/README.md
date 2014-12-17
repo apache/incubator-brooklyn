@@ -198,7 +198,7 @@ copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
     # latest guide, relative to /v/latest/
     _build/build.sh guide-latest --install
     
-    # latest guide, relative to /v/<version>/
+    # versioned guide, relative to /v/<version>/
     _build/build.sh guide-version --install
 
 Next it is recommended to go to the SVN dir and 
@@ -211,3 +211,46 @@ You must then check in the changes:
     svn ci -m 'Update Brooklyn website'
 
 The changes should become live within a few minutes.
+
+
+More Notes on the Code
+----------------------
+
+# Plugins
+
+We use some custom Jekyll plugins, in the `_plugins` dir:
+
+* include markdown files inside other files (see, for example, the `*.include.md` files 
+  which contain text which is used in multiple other files)
+* parse JSON which we can loop over in our markdown docs (to do the TOC in the `guide`)
+* generate the site structure (for the `website`)
+* trim whitespace of ends of variables
+
+
+# Guide ToC
+
+In the `guide`, JSON table-of-contents files (toc.json) are our lightweight solution to the 
+problem of making the site structure navigable (the menus at left). 
+If you add a page, simply add the file and a title to the `toc.json` in that directory 
+and it will get included in the menu. 
+
+You can also configure a special toc to show on your page, if you wish, by setting the toc variable in the header. 
+Most pages declare the `guide-normal` layout (in `_layouts/`) which builds a menu in the left side-bar 
+(`_includes/sidebar.html`) using the JSON, automatically detecting which page is active.
+
+
+# Website ToC
+
+The `website` follows a different, simpler pattern, using the `site-structure` plugin
+and front-matter in each page.  When adding a page, simply add the relevant front matter
+in the page(s) which refer to them.
+
+
+# Versions
+
+Archived versions are kept under `/v/` in the website.  New versions should be added with
+the appropriate directory (`guide-version` above will do this).  These versions take their
+own copy of the `style` files so that changes there will not affect future versions.
+
+A list of available versions also needs to be updated.  This is referenced from the `website`.
+<!-- TODO: where -->

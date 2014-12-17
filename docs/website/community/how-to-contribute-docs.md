@@ -4,6 +4,11 @@ title: How to Contribute Documentation
 navgroup: community
 ---
 
+<!-- TODO do we want this page?  can be simplified a lot since the process is identical as for how-to-contribute,
+     with the exception of the "Edit this Page" (and reminder we can accept small changes without CLA or Jira);
+     we could promote much of the content from README.md to here... -->
+
+
 Welcome and thank you for your interest in contributing to Apache Brooklyn! This guide will take you through the
 process of making contributions to the Apache Brooklyn website and documentation.
 
@@ -11,16 +16,20 @@ process of making contributions to the Apache Brooklyn website and documentation
 Two types of documentation
 --------------------------
 
+The Brooklyn docs live in the **docs** project in the Brooklyn codebase,
+built using standard jekyll/markdown with a few extensions.
+
 The Brooklyn documentation is split into two parts:
 
 - **The main website and shared documentation**. This covers the root website
-  and all pages that are not part of the version-specific user manual. This
-  guide describes how to work with this documentation.
-- **Version-specific user manual**. These pages have a URL with a path that
-  begins /v/*version-number* - for example,
-  https://brooklyn.incubator.apache.org/v/0.7.0-M1. This documentation is part
-  of the main source code, so please refer to the [How to contribute source
-  code](how-to-contribute.html) for help with modifying these pages.
+  and all pages that are not part of the version-specific user guide.
+  Content for this is in the `website` directory.
+  
+- **Version-specific user guide**. These pages have a URL with a path that
+  begins /v/*version-number*: for example,
+  https://brooklyn.incubator.apache.org/v/0.7.0-SNAPSHOT and <!-- BROOKLYN-VERSION -->
+  the special *latest* set at https://brooklyn.incubator.apache.org/v/latest .  
+  Content for this is in the `guide` directory.
 
 
 Contributor license agreement
@@ -82,7 +91,7 @@ Contributing using GitHub
 -------------------------
 
 Our GitHub repository is located at
-[https://github.com/apache/incubator-brooklyn-site](https://github.com/apache/incubator-brooklyn-site)
+[https://github.com/apache/incubator-brooklyn](https://github.com/apache/incubator-brooklyn)
 
 Your commit messages must properly describes the changes that have been made and
 their purpose ([here are some
@@ -105,6 +114,7 @@ again if master has moved before accepting your patch.
 
 Finally, add a comment in the Jira issue with a link to the pull request so we
 know the code is ready to be reviewed.
+
 
 ### Reviews
 
@@ -138,3 +148,11 @@ patches attached to a Jira issue.  Our canonical repository is located at
 When producing patches, please use `git format-patch` or a similar mechanism -
 this will ensure that you are properly attributed as the author of the patch
 when a committer merges it.
+
+
+For More Information
+--------------------
+
+Advanced instructions for building, previewing and publishing docs are in a `README.md` file
+in the `docs` folder; see those instructions
+[here](https://github.com/apache/incubator-brooklyn/tree/master/docs/README.md).
