@@ -4,9 +4,11 @@ title: Release Notes
 toc: ../toc.json
 ---
 
-## Brooklyn Version (Version)
+## Brooklyn Version ({{ site.brooklyn-version }})
 
-You are viewing a SNAPSHOT release (master branch), so this is a template for the release notes.
+{% if SNAPSHOT %}
+**You are viewing a SNAPSHOT release (master branch), so this list is incomplete.**
+{% endif %}
 
 * Introduction
 * New Features
@@ -15,42 +17,35 @@ You are viewing a SNAPSHOT release (master branch), so this is a template for th
 
 ### Introduction
 
-This milestone release includes many big features, and brings us much closer to NEXT VERSION.
+This version includes many big features,
+incorporating a lot of improvements and feedback from our community. Thank you!
 
-It incorporates a lot of improvements and feedback from our community. Thank you!
+Thanks also go to Brooklyn's commercial users who have funded this development and
+made some major contributions. 
 
-Thanks also go to Brooklyn's commercial users. Already Brooklyn has been adopted into some very exciting projects including 
+For more information, please visit [brooklyn.io](http://brooklyn.io).
 
-For more information, please checkout [brooklyncentral.github.io](http://brooklyncentral.github.io), and our
-[mailing list at Apache](https://mail-archives.apache.org/mod_mbox/incubator-brooklyn-dev/).
 
 ### New Features
 
-The major changes between M1 and M2 are:
+* A huge expansion of what can be done in YAML.
 
-1. Entry
+* First-class Chef integration
 
-2. Entry
-	* With sublist
-	* list item
-	* list item
-3. [Links](#) formatting. (Example.)
+* New clouds:  GCE, Softlayer
 
-4. List of new providers
+* Networking
 
-5. List of new entities
+* Docker support:  see [clocker.io](clocker.io)
 
 
 ### Backwards Compatibility
 
-For upgrading from OLD to NEW version.
+* Persistence has been radically overhauled. In most cases the state files from previous versions are compatible,
+  but some items have had to change. For most users this should not be an issue as persistence in the previous version
+  was not working well in any case. 
 
-1. Entry
-
-1. Lists can use 1. 1. 1. 1. 
-
-1. (Jekyll counts for you.)
 
 ### Community Activity
 
-Any activity related to Brooklyn, but not part of Brooklyn itself.
+Brooklyn has moved into the Apache Software Foundation.
