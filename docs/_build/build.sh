@@ -26,6 +26,7 @@ function help() {
   echo ""
   echo "and supported ARGS are:"
   echo "* --skip-javadoc : to skip javadoc build"
+  echo "* --quick-javadoc : to do a quick javadoc build (for testing)"
   echo "* --serve : serve files from _site after building (for testing)"
   echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
   echo ""
@@ -117,6 +118,10 @@ function parse_arguments() {
       SKIP_JAVADOC=true
       shift
       ;;
+    "--quick-javadoc")
+      QUICK_JAVADOC=true
+      shift
+      ;;
     "--serve")
       SERVE_AFTERWARDS=true
       shift
@@ -156,9 +161,18 @@ function make_javadoc() {
   fi
   pushd _build > /dev/null
   rm -rf target/apidocs
-  ./make-javadoc.sh || { echo ERROR: failed javadoc build ; exit 1 ; }
+  if [ "$QUICK_JAVADOC" == "true" ]; then
+    ./quick-make-few-javadoc.sh || { echo ERROR: failed javadoc build ; exit 1 ; }
+  else
+    ./make-javadoc.sh || { echo ERROR: failed javadoc build ; exit 1 ; }
+  fi
   popd > /dev/null
   if [ ! -z "$JAVADOC_TARGET" ]; then
+    if [ ! -d "$JAVADOC_TARGET" ]; then
+      echo "ERROR: javadoc target directory $JAVADOC_TARGET gone; is there a jekyll already watching?"
+      return 1
+    fi
+    echo mv _build/target/apidocs/* $JAVADOC_TARGET
     mv _build/target/apidocs/* $JAVADOC_TARGET
   fi
 }
@@ -167,6 +181,22 @@ function make_install() {
   if [ "$INSTALL_AFTERWARDS" != "true" ]; then
     return
   fi
+  if [ -d _site/website ]; then
+    echo "ERROR: _site/website dir exists, not installing as files may be corrupted; is there a jekyll already watching?"
+    return 1
+  fi
+  if [ -d _site/guide ]; then
+    echo "ERROR: _site/guide dir exists, not installing as files may be corrupted; is there a jekyll already watching?"
+    return 1
+  fi
+  if [ ! -z ${QUICK_JAVADOC+SET} ]; then echo "ERROR: --install not permitted when doing quick javadoc" ; return 1 ; fi
+  if [ ! -z ${JAVADOC_TARGET+SET} ]; then
+    if [ ! -z ${SKIP_JAVADOC+SET} ]; then
+      echo "ERROR: --install not permitted when skipping javadoc for this target which wants to install javadoc"
+      return 1
+    fi
+  fi
+
   SITE_DIR=${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
   ls $SITE_DIR/style/img/apache-brooklyn-logo-244px-wide.png > /dev/null || { echo "ERROR: cannot find incubator-brooklyn-site-public; set BROOKLYN_SITE_DIR" ; return 1 ; }
   if [ -z ${INSTALL_RSYNC_OPTIONS+SET} ]; then echo "ERROR: --install not supported for this build" ; return 1 ; fi

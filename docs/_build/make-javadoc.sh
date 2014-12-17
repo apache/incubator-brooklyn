@@ -29,7 +29,8 @@ fi
 rm -rf target/apidocs/
 
 export DATESTAMP=`date "+%Y-%m-%d"`
-echo "building javadoc from $SOURCE_PATH at $DATESTAMP"
+echo "building javadoc at $DATESTAMP from:
+$SOURCE_PATHS"
 
 
 $GROOVY_CMD -q << END
