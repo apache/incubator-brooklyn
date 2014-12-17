@@ -1,0 +1,8 @@
+[
+{ "title": "Maven",
+  "file":  "{{ site.path.guide }}/dev/build/index.html" },
+{ "title": "IDE",
+  "file": "{{ site.path.guide }}/dev/build/ide.html" },
+{ "title": "Tests",
+  "file":  "{{ site.path.guide }}/dev/build/tests.html" }
+]

@@ -1,0 +1,11 @@
+[{ "title": "Web",
+  "file":  "{{ site.path.guide }}/use/guide/extras/index.html#web" }, 
+{ "title": "Database",
+  "file":  "{{ site.path.guide }}/use/guide/extras/index.html#database" }, 
+{ "title": "NoSQL",
+  "file":  "{{ site.path.guide }}/use/guide/extras/index.html#nosql" }, 
+{ "title": "Messaging",
+  "file":  "{{ site.path.guide }}/use/guide/extras/index.html#messaging" },
+{ "title": "Provisioning",
+  "file":  "{{ site.path.guide }}/use/guide/extras/index.html#provisioning" }  
+]

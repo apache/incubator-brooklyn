@@ -1,8 +1,0 @@
-[
-{ "title": "Versions",
-  "file":  "{{ site.url }}/meta/versions.html" },
-{ "title": "Verify",
-  "file":  "{{ site.url }}/meta/verify.html" },
-{ "title": "Contact",
-  "file":  "{{ site.url }}/meta/contact.html" }
-]

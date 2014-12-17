@@ -1,0 +1,4 @@
+[{ "title": "Download & Deploy",
+  "file":  "{{ site.path.guide }}/use/guide/quickstart/index.html" },
+{ "title": "Policies & Catalogs",
+  "file":  "{{ site.path.guide }}/use/guide/quickstart/policies-and-catalogs.html" }]
