@@ -172,7 +172,6 @@ function make_javadoc() {
       echo "ERROR: javadoc target directory $JAVADOC_TARGET gone; is there a jekyll already watching?"
       return 1
     fi
-    echo mv _build/target/apidocs/* $JAVADOC_TARGET
     mv _build/target/apidocs/* $JAVADOC_TARGET
   fi
 }
