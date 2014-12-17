@@ -120,7 +120,7 @@ console.log("setting text to "+txt);
 			var thisversion = document.location.pathname.split("/")[2],
 				msg = "";
 			
-			if (!$.cookie('brooklyn_versions') || 
+			if (thisversion != 'latest' && !$.cookie('brooklyn_versions') || 
 			        (($.inArray('ALL', $.cookie('brooklyn_versions').split(",")) === -1) &&
 			        ($.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1)) ){
 			    msg += "<div class='warning_banner_image'><img src='{{ site.path.style }}/img/warning.png'/></div>";
@@ -128,8 +128,8 @@ console.log("setting text to "+txt);
 			    msg += "<p>Are you using version "+thisversion+"?</p>";
 				msg += "<p class='warning_banner_buttons'>";
 				msg += "<a href = '#' onclick=\"set_user_version('"+thisversion+"');\">Yes, hide this warning</a>";
-			    msg += "<a href = '/'>No, show me the latest version</a>";
-				msg += "<a href = '/meta/versions.html'>Show all versions</a>";
+			    msg += "<a href = '{{ site.page.guide }}'>No, show me the latest version</a>";
+				msg += "<a href = '{{ site.page.guide }}/meta/versions.html'>Show all versions</a>";
 				msg += "</p>"
 							
 				$('#page_notes').html(msg);
