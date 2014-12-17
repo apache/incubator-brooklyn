@@ -1,0 +1,41 @@
+---
+# layout for most website (non-guide) pages, inheriting base for the menu bar, and providing a main column of content and a menu column
+layout: website-base
+---
+<div class="container">
+    <div class="row">
+        <div class="col-md-9">
+            <h1>{{ page.title }}</h1>
+            {{ content }}
+        </div>
+        <div class="col-md-3">
+            {% if page.menu2 %}
+            <div class="list-group">
+                <h4><a href="{{page.menu2parent.url}}" class="list-group-item{% if page.menu2parent.path == page.path %} active{% endif %}">{{ page.menu2parent.title }}</a></h4>
+                {% for child in page.menu2 %}
+                <a href="{{child.reference.url}}" class="list-group-item{% if child.reference.path == page.path %} active{% endif %}">{{ child.reference.title }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-10 text-muted">
+                Apache Brooklyn is distributed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache
+                License v2.0</a>.
+                <br />
+                Apache Brooklyn is currently undergoing Incubation at The Apache Software
+                Foundation.
+            </div>
+            <div class="col-md-2">
+                <a class="btn btn-sm btn-default" href="https://github.com/apache/incubator-brooklyn/edit/master/docs/{{ page.path }}">Edit This Page</a>
+                <br />
+                <a href="{{ site.url_root }}{{ site.path.website }}/community/how-to-contribute-docs.html">help with editing</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -27,7 +27,7 @@ under the License.
 {% capture toc_string %}{% readj p %}{% endcapture %}
 {% jsonball toc from var toc_string %}
 
-{% capture pagesiteurl %}{{ site.url }}{{ page.url }}{% endcapture %}
+{% capture pagesiteurl %}{{ page.url }}{% endcapture %}
 
 <div id="sidebar_toc">
 {% for x in toc %}

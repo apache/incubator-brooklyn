@@ -1,0 +1,66 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <title>Brooklyn Entity - PostgreSQL Node</title>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../items.css" type="text/css" media="screen"/>
+  </head>
+  <body>
+    <div id="container">
+      <div id="header">
+        <div id="identity">
+          <a href="http://brooklyncentral.github.com/" rel="home">Brooklyn</a>
+        </div>
+      </div>
+
+      <div id="summary"></div>
+
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#configKeys" data-toggle="tab">Config Keys</a></li>
+        <li><a href="#sensors" data-toggle="tab">Sensors</a></li>
+        <li><a href="#effectors" data-toggle="tab">Effectors</a></li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane active" id="configKeys"></div>
+        <div class="tab-pane" id="sensors"></div>
+        <div class="tab-pane" id="effectors"></div>
+      </div>
+    </div>
+
+    <script src="../../../style/js/underscore-min.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="../common.js" type="text/javascript"></script>
+    <script src="../items.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var item = brooklyn.findItemOfType(items.entities, "brooklyn.entity.database.postgresql.PostgreSqlNode");
+            $("#summary").html(brooklyn.typeSummary(item));
+            item.config.forEach(function (element) { $("#configKeys").append(brooklyn.configKeyCard(element)); });
+            item.sensors.forEach(function (element) { $("#sensors").append(brooklyn.sensorCard(element)); });
+            if (item.effectors != undefined) {
+                item.effectors.forEach(function (element) { $("#effectors").append(brooklyn.effectorCard(element)); });
+            }
+        });
+    </script>
+  </body>
+</html>

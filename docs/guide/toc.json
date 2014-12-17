@@ -1,0 +1,21 @@
+[
+{ "title": "Start",
+  "file":  "{{ site.path.guide }}/start/index.html",
+  "exclude": true,
+  "children": {% readj start/toc.json %} },
+{ "title": "Using brooklyn",
+  "file":  "{{ site.path.guide }}/use/index.html",
+  "children": {% readj use/toc.json %} },
+{ "title": "Contributing",
+  "file": "{{ site.path.guide }}/dev/code/index.html",
+  "exclude": true,
+  "children": {% readj dev/toc.json %} },
+{ "title": "License",
+  "file": "{{ site.path.guide }}/license/index.html",
+  "exclude": true,
+  "children": {% readj license/toc.json %} },
+{ "title": "Meta",
+  "file": "{{ site.path.guide }}/meta/versions.html",
+  "exclude": true,
+  "children": {% readj meta/toc.json %} }
+]

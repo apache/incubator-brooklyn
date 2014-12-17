@@ -1,0 +1,25 @@
+[
+{ "title": "Start",
+  "file":  "{{ site.path.guide }}/start/index.html" },
+
+{ "title": "User Guide",
+  "file": "{{ site.path.guide }}/use/guide/index.html",
+  "children": {% readj toc.json %} },
+{ "title": "Elsewhere",
+  "file":  "{{ site.path.guide }}/start/index.html",
+  "children": [
+
+{ "title": "Examples",
+  "file":  "{{ site.path.guide }}/use/examples/index.html", 
+  "children": {% readj /guide/use/examples/toc.json %} },
+{ "title": "API Reference",
+  "file": "{{ site.path.guide }}/use/api/index.html" },
+  
+{ "title": "Contributing",
+  "file": "{{ site.path.guide }}/dev/code/index.html",
+  "children": {% readj /guide/dev/toc.json %} },
+{ "title": "License",
+  "file": "{{ site.path.guide }}/license/index.html" }  
+]}
+
+]

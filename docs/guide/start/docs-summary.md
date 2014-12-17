@@ -1,0 +1,9 @@
+---
+layout: guide-normal
+title: Documentation
+toc: ../toc.json
+---
+
+{% readj docs-summary.include.md %}
+
+Beyond this, [just come chat to us]({{site.path.guide}}/meta/contact.html).
