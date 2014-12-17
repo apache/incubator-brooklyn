@@ -5,6 +5,18 @@ title: Download
 
 ## Download Brooklyn Binary Distributions
 
+**Snapshot Alert**: 
+We are working our way through the Apache process for an official Apache release,
+but as a result it has been a long time since the last milestone release.
+
+**You may wish to use a [snapshot release]({{ site.path.guide }}/start/download.html) 
+  as it now has many many features not in 0.7.0-M1!**
+
+{% if site.brooklyn-version contains 'SNAPSHOT' %}{% else %}
+  {% FAIL_needs_updating_for_release %}
+  The alert above should be removed when we make the next release build!
+{% endif %} 
+
 **New to Brooklyn**? Download the *Milestone* release below then take a look
 at the [Get Started](quickstart/) page.
 
