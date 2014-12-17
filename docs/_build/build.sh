@@ -9,9 +9,12 @@ if [ ! -x _build/build.sh ] ; then
 fi
 
 function help() {
+  echo ""
   echo "This will build the documentation in _site/."
+  echo ""
   echo "Usage:  _build/build.sh MODE [ARGS]"
-  echo "where MODE is:"
+  echo ""
+  echo "where MODE can be any of:"
   echo "* website-root  : to build the website only, in the root"
   echo "* guide-latest  : to build the guide only, in /v/latest/"
   # BROOKLYN_VERSION_BELOW
@@ -20,14 +23,15 @@ function help() {
   echo "* test-both : to build the website to root and guide to /v/latest/ (for testing)"
   echo "* test-both-sub : to build the website to /sub/ and guide to /sub/v/latest/ (for testing)"
   echo "* original : to build the files in their original location (website it /website and guide in /guide/, for testing)"
+  echo ""
   echo "and supported ARGS are:"
   echo "* --skip-javadoc : to skip javadoc build"
   echo "* --serve : serve files from _site after building (for testing)"
   echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
-  echo 'with any remaining ARGS passed to jekyll as `jekyll build --config ... ARGS`.'
+  echo ""
 }
 
-function parse_command() {
+function parse_mode() {
   case $1 in
   help)
     help
@@ -97,10 +101,10 @@ function parse_command() {
     SUMMARY="all files in their original place"
     ;;
   "")
-    echo "ERROR: arguments are required; try 'help'"
+    echo "ERROR: mode is required; try 'help'"
     exit 1 ;;
   *)
-    echo "ERROR: invalid argument '$1'; try 'help'"
+    echo "ERROR: invalid mode '$1'; try 'help'"
     exit 1 ;;
   esac
   SUMMARY="$SUMMARY of `pwd`/_site"
@@ -121,21 +125,17 @@ function parse_arguments() {
       INSTALL_AFTERWARDS=true
       shift
       ;;
-    "--")
-      shift
-      break
-      ;;
     *)
-      break
+      echo "ERROR: invalid argument '"$1"'"
+      exit 1
       ;;
     esac
   done
-  JEKYLL_ARGS="$@"
 }
 
 function make_jekyll() {
-  echo JEKYLL running with: jekyll build $JEKYLL_CONFIG $JEKYLL_ARGS
-  jekyll build --config $JEKYLL_CONFIG $JEKYLL_ARGS || return 1
+  echo JEKYLL running with: jekyll build $JEKYLL_CONFIG
+  jekyll build --config $JEKYLL_CONFIG || return 1
   echo JEKYLL completed
   for DI in "${!DIRS_TO_MOVE[@]}"; do
     D=${DIRS_TO_MOVE[$DI]}
@@ -183,7 +183,7 @@ function make_install() {
 
 rm -rf _site
 
-parse_command $@
+parse_mode $@
 shift
 parse_arguments $@
 
