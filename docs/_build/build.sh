@@ -78,7 +78,7 @@ function parse_mode() {
     SUMMARY="user guide files in the root"
     ;;
   test-both)
-    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-website-root.yml,_build/config-guide-latest.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-root-index.yml,_build/config-website-root.yml,_build/config-guide-latest.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=website
@@ -87,7 +87,7 @@ function parse_mode() {
     SUMMARY="all files, website in root and guide in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
   test-both-sub)
-    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-subpath-brooklyn.yml
+    JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-root-index.yml,_build/config-subpath-brooklyn.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=brooklyn/v/latest
     DIRS_TO_MOVE[1]=website
